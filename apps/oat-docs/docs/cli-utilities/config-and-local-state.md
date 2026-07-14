@@ -14,6 +14,7 @@ Use these commands when you need operational support around the toolkit rather t
 Use the `oat backlog` group when you want direct CLI support for the file-backed backlog under `.oat/repo/pjm/backlog/`.
 
 - `oat backlog init` - scaffold `.oat/repo/pjm/backlog/` with starter files and directories for a fresh repo
+- `oat backlog new <title>` - validate and create a file-backed backlog item from the canonical template, then regenerate the managed index
 - `oat backlog generate-id <title>` - generate a deterministic `BL-YYMMDD-slug` backlog ID from a title
 - `oat backlog generate-id <title> --created-at <timestamp>` - generate a reproducible ID for a known creation timestamp
 - `oat backlog archive <id>` - atomic close-out: set a terminal status, record the completion in `completed.md`, move the item into `archived/`, and regenerate the index in one step
@@ -21,9 +22,17 @@ Use the `oat backlog` group when you want direct CLI support for the file-backed
 
 Backlog IDs are deterministic date+slug identifiers (`BL-YYMMDD-slug`) derived from the creation date and title, so two machines or worktrees produce the same ID for the same record without scanning the local checkout. The slug is capped at 30 characters at the last whole-word boundary (with trailing stop-words trimmed), so prefer concise, meaningful titles. Index regeneration is deterministic and safe to re-run when resolving an index merge conflict.
 
-Run `oat backlog init` first when the local backlog scaffold does not exist yet in a fresh repo. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
+Run `oat backlog init` directly when you need to create or repair only the backlog scaffold. `oat backlog new` initializes a missing scaffold automatically after validating its inputs. This command group is primarily used by the `oat-pjm-*` project-management skills, but it is also available directly when you need to inspect or repair backlog metadata by hand.
 
 For the end-to-end states an item moves through — and how `oat backlog archive` and `oat pjm doctor` keep the backlog honest — see [Backlog Lifecycle](backlog-lifecycle.md).
+
+### `oat backlog new`
+
+`oat backlog new <title> [--priority <priority>] [--scope <scope>] [--scope-estimate <size>] [--labels <labels>] [--description <text>] [--backlog-root <path>]` creates one active item and refreshes the managed backlog index.
+
+Defaults are `priority: medium` and `scope: task`. Valid priorities are `urgent`, `high`, `medium`, `low`, and `none`; valid scopes are `idea`, `task`, `feature`, and `initiative`; scope estimates accept `XS`, `S`, `M`, `L`, `XL`, or `XXL`. Pass labels as a comma-delimited list.
+
+The command validates all inputs before creating the scaffold or writing an item. It uses the repo-local canonical backlog template when available, falls back to the CLI's bundled template, writes structured YAML frontmatter, and rejects an ID collision in either `items/` or `archived/` without overwriting the existing record. If managed-index regeneration fails after the item write, OAT removes only the new item and restores the prior index.
 
 ### `oat backlog archive`
 
@@ -33,22 +42,23 @@ For the end-to-end states an item moves through — and how `oat backlog archive
 
 - `<id>` (required) - the backlog item id (`BL-YYMMDD-slug`); the item file must live under `items/`.
 - `--wont-do` - close the item as `wont_do` instead of the default terminal status `closed`.
-- `--summary <text>` - one-line outcome summary recorded in `completed.md`.
+- `--summary <text>` - one-line outcome summary recorded in `completed.md`; required and nonblank for the default `closed` path.
 - `--backlog-root <path>` - override the backlog root (defaults to `.oat/repo/pjm/backlog`).
 - `--json` - emit the machine-readable result payload instead of human log lines.
 
 **Behavior:**
 
 - Validates the item's current `status` against the enum (`open | in_progress | closed | wont_do`); an out-of-enum value such as `done` is a hard error with a fix hint. Archiving is legal from any valid status — a `closed` item still in `items/` just gets its move finished.
+- For the default `closed` path, validates and trims a nonblank `--summary` before any file or index mutation. The `wont_do` path may omit the summary and completion-ledger entry.
 - Rewrites only the `status:` and `updated:` frontmatter lines (preserving any inline enum comment), then moves the item from `items/` to `archived/` with `git mv` inside a work tree, falling back to a plain rename (with a warning) outside git or if `git mv` fails.
-- `closed` archives always append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`); when `--summary` is omitted the entry carries a visible `TODO: summarize outcome` placeholder. `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
+- `closed` archives append a canonical newest-first `completed.md` entry (`YYYY-MM-DD — <id> — Title — summary`). `wont_do` archives append an entry only when `--summary` is provided. A missing `completed.md` is scaffolded from the starter template; a missing `## Completed Items` heading is scaffolded with a warning.
 - Regenerates the managed backlog index after the move.
 - Idempotent: re-running on an item already in `archived/` is a no-op warning with no writes.
 
 **Exit codes:**
 
 - `0` - item archived, or already-archived no-op.
-- `1` - actionable error: unknown id (no file under `items/`) or an out-of-enum current status. The message names the file path, the valid statuses, and the fix.
+- `1` - actionable error: unknown id, out-of-enum current status, duplicate active/archived ID, or a missing closed-item summary. The message includes the recovery action.
 - `2` - reserved for unexpected system/runtime failures.
 
 **JSON payload (`--json`):**
@@ -76,9 +86,11 @@ For full project-management repo-reference setup, use [`oat pjm init`](tool-pack
 Use the `oat decision` group for file-per-record decisions under `.oat/repo/reference/decisions/`. Each decision is its own file with a deterministic `DR-YYMMDD-slug` ID (the slug is capped at 30 characters at the last whole-word boundary, with trailing stop-words trimmed), and the human-facing index is a committed generated view.
 
 - `oat decision init` - scaffold `.oat/repo/reference/decisions/` and the managed decision index
-- `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, and `--created-at`
+- `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, `--decision`, `--consequences`, and `--created-at`
 - `oat decision regenerate-index` - rebuild the managed decision index table from record frontmatter
 - `oat decision migrate` - convert a legacy single `decision-record.md` into file-per-record decisions, preserving each old `ADR-NNN`/`DR-NNN` ID as `legacy_id`; applies by default, so pass `--dry-run` to preview the legacy-to-new mappings without writing, and `--delete-legacy` to remove the source file after a verified migration (unlike `oat pjm migrate`, which defaults to dry-run)
+
+Pass `--context`, `--decision`, and `--consequences` together when creating a resolved decision so every substantive template section is complete in the same atomic creation step. Callers that omit them retain the template's placeholder content for later editing.
 
 The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate-index` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
 
@@ -239,4 +251,6 @@ For the full state model, repair semantics, and examples, see [Instruction Sync]
 - `oat internal validate-oat-skills` - validate `oat-*` skill contracts and metadata
 - `oat doctor` - run environment and setup diagnostics, including installed-vs-bundled skill version checks
 
-`oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. The `/oat-doctor` skill (installed via the core pack) provides richer diagnostics with check and summary modes, including config explanations sourced from bundled documentation.
+`oat doctor` is the quickest way to confirm that your runtime, directory structure, and installed OAT assets are healthy before deeper debugging. At project scope it also scans bounded repository script and documentation surfaces for known-stale CLI grammar, such as `oat --scope all sync`, and reports file/line evidence plus the current `oat sync --scope all` form. Generated provider views, OAT lifecycle artifacts, archived content, dependencies, build output, and nested worktrees are excluded.
+
+The `/oat-doctor` skill (installed via the core pack) provides richer diagnostics with check and summary modes, including config explanations sourced from bundled documentation.

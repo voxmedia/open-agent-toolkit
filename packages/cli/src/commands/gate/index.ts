@@ -146,6 +146,7 @@ interface ProcessRunOptions {
   livenessIntervalMs?: number;
   onLiveness?: (snapshot: GateLivenessSnapshot) => void;
   purpose: 'host-detection' | 'availability' | 'execute';
+  stdin: 'ignore' | 'inherit';
   stdio: 'ignore' | 'inherit' | 'pipe';
   timeoutMs: number;
 }
@@ -510,7 +511,9 @@ async function runChildProcess(
       cwd: options.cwd,
       env: options.env,
       stdio:
-        options.stdio === 'pipe' ? ['inherit', 'pipe', 'pipe'] : options.stdio,
+        options.stdio === 'pipe'
+          ? [options.stdin, 'pipe', 'pipe']
+          : options.stdio,
     });
     const recordActivity = (): void => {
       lastActivityAt = Date.now();
@@ -1389,6 +1392,7 @@ async function checkArgv(
       cwd: context.cwd,
       env: dependencies.processEnv,
       purpose,
+      stdin: 'ignore',
       stdio: 'ignore',
       timeoutMs: GATE_CHECK_TIMEOUT_MS,
     });
@@ -1555,6 +1559,7 @@ async function executeTarget(
           }
         },
         purpose: 'execute',
+        stdin: 'ignore',
         stdio: 'pipe',
         timeoutMs,
       },

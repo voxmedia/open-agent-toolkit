@@ -63,6 +63,8 @@ import type { ConcreteScope } from '@shared/types';
 import { type DoctorCheck, formatDoctorResults } from '@ui/output';
 import { Command } from 'commander';
 
+import { checkStaleInvocations } from './stale-invocations';
+
 interface DoctorDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveScopeRoot: (
@@ -99,6 +101,7 @@ interface DoctorDependencies {
     assetsRoot: string,
     pathExists: (path: string) => Promise<boolean>,
   ) => Promise<SkillVersionReport>;
+  checkStaleInvocations: (repoRoot: string) => Promise<DoctorCheck>;
 }
 
 interface OutdatedSkillVersion {
@@ -277,6 +280,7 @@ function createDependencies(): DoctorDependencies {
       assetsRoot,
       pathExists = pathExistsDefault,
     ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
+    checkStaleInvocations,
   };
 }
 
@@ -784,6 +788,8 @@ async function runChecksForScope(
   );
 
   if (scope === 'project') {
+    checks.push(await dependencies.checkStaleInvocations(scopeRoot));
+
     try {
       const assetsRoot = await dependencies.resolveAssetsRoot();
       const skillVersions = await dependencies.checkSkillVersions(

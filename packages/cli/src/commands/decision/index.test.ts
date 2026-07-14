@@ -167,6 +167,10 @@ describe('createDecisionCommand', () => {
         'accepted',
         '--context',
         'Shared monoliths collide.',
+        '--decision',
+        'Split project management into file-backed records.',
+        '--consequences',
+        'Parallel worktrees can update independent records.',
         '--created-at',
         '2026-06-22T10:30:00Z',
       ],
@@ -179,6 +183,8 @@ describe('createDecisionCommand', () => {
       title: 'Adopt PJM Split',
       status: 'accepted',
       context: 'Shared monoliths collide.',
+      decision: 'Split project management into file-backed records.',
+      consequences: 'Parallel worktrees can update independent records.',
       createdAt: '2026-06-22T10:30:00Z',
     });
     expect(capture.jsonPayloads[0]).toEqual({

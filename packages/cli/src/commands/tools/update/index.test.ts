@@ -1,12 +1,138 @@
-import { describe, expect, it } from 'vitest';
+import { Command } from 'commander';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const { buildCommandContext, loggerCapture } = vi.hoisted(() => {
+  const loggerCapture = {
+    error: [] as string[],
+  };
+
+  return {
+    buildCommandContext: vi.fn(() => ({
+      scope: 'all' as const,
+      dryRun: false,
+      verbose: false,
+      json: false,
+      cwd: '/tmp/project',
+      home: '/tmp/home',
+      interactive: false,
+      logger: {
+        debug: vi.fn(),
+        info: vi.fn(),
+        warn: vi.fn(),
+        error(message: string) {
+          loggerCapture.error.push(message);
+        },
+        success: vi.fn(),
+        json: vi.fn(),
+      },
+    })),
+    loggerCapture,
+  };
+});
+
+vi.mock('@app/command-context', () => ({
+  buildCommandContext,
+}));
 
 import {
   buildSyncSubprocessArgs,
+  createToolsUpdateCommand,
   formatUpdatedToolMessage,
   shouldBackfillWorkflowGitignore,
   shouldRefreshCoreDocs,
 } from './index';
-import type { UpdateResult, UpdateTarget } from './update-tools';
+import type {
+  UpdateResult,
+  UpdateTarget,
+  UpdateToolsDependencies,
+} from './update-tools';
+
+function createUpdateDependencies(): UpdateToolsDependencies {
+  return {
+    scanTools: vi.fn(async () => []),
+    resolveScopeRoot: vi.fn(async (_scope, cwd) => cwd),
+    resolveAssetsRoot: vi.fn(async () => '/assets'),
+    copyDirWithStatus: vi.fn(async () => 'updated'),
+    copyFileWithStatus: vi.fn(async () => 'updated'),
+    fileExists: vi.fn(async () => true),
+  };
+}
+
+async function runUpdateCommand(
+  command: Command,
+  args: string[] = [],
+): Promise<void> {
+  const program = new Command()
+    .name('oat')
+    .option('--json')
+    .option('--verbose')
+    .option('--cwd <path>')
+    .exitOverride();
+  const tools = new Command('tools');
+  tools.addCommand(command);
+  program.addCommand(tools);
+
+  await program.parseAsync(['tools', 'update', ...args], { from: 'user' });
+}
+
+describe('createToolsUpdateCommand target validation', () => {
+  let originalExitCode: number | undefined;
+
+  beforeEach(() => {
+    originalExitCode = process.exitCode;
+    process.exitCode = undefined;
+    loggerCapture.error.length = 0;
+  });
+
+  afterEach(() => {
+    process.exitCode = originalExitCode;
+  });
+
+  it('suggests the exact all-tools command when no target is specified', async () => {
+    const dependencies = createUpdateDependencies();
+
+    await runUpdateCommand(createToolsUpdateCommand(dependencies));
+
+    expect(process.exitCode).toBe(1);
+    expect(loggerCapture.error).toEqual([
+      'Specify a tool name, --pack <pack>, or --all. To update all tools, run: oat tools update --all',
+    ]);
+    expect(dependencies.scanTools).not.toHaveBeenCalled();
+    expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
+  });
+
+  it('reports an invalid pack without suggesting an all-tools update', async () => {
+    const dependencies = createUpdateDependencies();
+
+    await runUpdateCommand(createToolsUpdateCommand(dependencies), [
+      '--pack',
+      'invalid',
+    ]);
+
+    expect(process.exitCode).toBe(1);
+    expect(loggerCapture.error).toEqual([
+      "Invalid pack 'invalid'. Expected one of: core, ideas, docs, workflows, utility, project-management, research, brainstorm.",
+    ]);
+    expect(dependencies.scanTools).not.toHaveBeenCalled();
+    expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
+  });
+
+  it('reports mutually exclusive targets without suggesting an all-tools update', async () => {
+    const dependencies = createUpdateDependencies();
+
+    await runUpdateCommand(createToolsUpdateCommand(dependencies), [
+      'oat-docs',
+      '--all',
+    ]);
+
+    expect(process.exitCode).toBe(1);
+    expect(loggerCapture.error).toEqual([
+      'Specify exactly one update target: a tool name, --pack <pack>, or --all.',
+    ]);
+    expect(dependencies.scanTools).not.toHaveBeenCalled();
+    expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
+  });
+});
 
 function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
   return {

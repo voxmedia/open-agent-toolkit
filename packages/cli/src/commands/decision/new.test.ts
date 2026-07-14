@@ -79,6 +79,8 @@ describe('createDecisionRecord', () => {
       title: 'Adopt PJM Split',
       status: 'accepted',
       context: 'Shared monoliths collide across worktrees.',
+      decision: 'Split project management into file-backed records.',
+      consequences: 'Parallel worktrees can update independent records.',
       createdAt: '2026-06-22T10:30:00Z',
     });
 
@@ -91,6 +93,13 @@ describe('createDecisionRecord', () => {
     expect(record).not.toContain('oat_template:');
     expect(record).toContain('# Adopt PJM Split');
     expect(record).toContain('Shared monoliths collide across worktrees.');
+    expect(record).toContain(
+      'Split project management into file-backed records.',
+    );
+    expect(record).toContain(
+      'Parallel worktrees can update independent records.',
+    );
+    expect(record).not.toContain('TODO');
 
     const index = await readFile(join(decisionsRoot, 'index.md'), 'utf8');
     expect(index).toContain(

@@ -65,6 +65,8 @@ Codex effort values are preferred controls. `oat-project-implement` caps them wh
 
 ---
 
+RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
+
 ## Phase 1: {Phase Name}
 
 ### Task p01-t01: {Task Name}

@@ -100,6 +100,26 @@ describe('archiveBacklogItem', () => {
     expect(index).not.toContain(id);
   });
 
+  it('trims a padded summary before writing the completed entry', async () => {
+    const backlogRoot = await freshBacklog();
+    const id = 'BL-260705-padded-summary';
+    await seedItem(backlogRoot, id);
+
+    await archiveBacklogItem(backlogRoot, id, {
+      summary: '  Shipped it  ',
+      now: FIXED_NOW,
+    });
+
+    const completed = await readFile(join(backlogRoot, 'completed.md'), 'utf8');
+    const completedEntry = completed
+      .split('\n')
+      .find((line) => line.includes(id));
+    expect(completedEntry).toBe(
+      `- 2026-07-05 — ${id} — Demo Item — Shipped it`,
+    );
+    expect(completed).not.toContain('  Shipped it  ');
+  });
+
   it('preserves a "#"-bearing title verbatim in the completed entry', async () => {
     const backlogRoot = await freshBacklog();
     const id = 'BL-260705-hash';
@@ -161,19 +181,43 @@ describe('archiveBacklogItem', () => {
     );
   });
 
-  it('scaffolds a TODO summary when closing without --summary', async () => {
-    const backlogRoot = await freshBacklog();
-    const id = 'BL-260705-demo';
-    await seedItem(backlogRoot, id);
+  it.each([undefined, '   '])(
+    'rejects closing without a non-empty summary before any mutation',
+    async (summary) => {
+      const backlogRoot = await freshBacklog();
+      const id = 'BL-260705-demo';
+      await seedItem(backlogRoot, id);
+      const itemsPath = join(backlogRoot, 'items', `${id}.md`);
+      const archivedPath = join(backlogRoot, 'archived', `${id}.md`);
+      const completedPath = join(backlogRoot, 'completed.md');
+      const indexPath = join(backlogRoot, 'index.md');
+      const [itemBefore, completedBefore, indexBefore] = await Promise.all([
+        readFile(itemsPath, 'utf8'),
+        readFile(completedPath, 'utf8'),
+        readFile(indexPath, 'utf8'),
+      ]);
 
-    const result = await archiveBacklogItem(backlogRoot, id, {
-      now: FIXED_NOW,
-    });
+      let caught: unknown;
+      try {
+        await archiveBacklogItem(backlogRoot, id, {
+          summary,
+          now: FIXED_NOW,
+        });
+      } catch (error) {
+        caught = error;
+      }
 
-    expect(result.completedEntry).toBe('written');
-    const completed = await readFile(join(backlogRoot, 'completed.md'), 'utf8');
-    expect(completed).toContain('TODO: summarize outcome');
-  });
+      expect(caught).toBeInstanceOf(BacklogArchiveError);
+      expect((caught as BacklogArchiveError).message).toContain(
+        'rerun with `--summary "<outcome>"`',
+      );
+
+      expect(await readFile(itemsPath, 'utf8')).toBe(itemBefore);
+      expect(await readFile(completedPath, 'utf8')).toBe(completedBefore);
+      expect(await fileExists(archivedPath)).toBe(false);
+      expect(await readFile(indexPath, 'utf8')).toBe(indexBefore);
+    },
+  );
 
   it('marks --wont-do with a summary and writes an entry', async () => {
     const backlogRoot = await freshBacklog();

@@ -11,12 +11,21 @@ import { createBacklogCommand } from './index';
 function createHarness(): {
   capture: LoggerCapture;
   command: Command;
+  createBacklogItem: ReturnType<typeof vi.fn>;
   initializeBacklog: ReturnType<typeof vi.fn>;
   archiveBacklogItem: ReturnType<typeof vi.fn>;
   pathExists: ReturnType<typeof vi.fn>;
+  resolveAssetsRoot: ReturnType<typeof vi.fn>;
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const createBacklogItem = vi.fn(async (options) => ({
+    id: 'BL-260714-streaming-cache-layer',
+    backlogRoot: options.backlogRoot,
+    filePath: `${options.backlogRoot}/items/BL-260714-streaming-cache-layer.md`,
+    templatePath: '/tmp/assets/templates/backlog-item.md',
+    index: { itemCount: 1, warnings: [] },
+  }));
   const initializeBacklog = vi.fn(async (_backlogRoot: string) => {});
   const archiveBacklogItem = vi.fn(
     async (_backlogRoot: string, id: string) => ({
@@ -33,6 +42,7 @@ function createHarness(): {
   const resolveProjectRoot = vi.fn(
     async (_cwd: string) => '/tmp/workspace/repo',
   );
+  const resolveAssetsRoot = vi.fn(async () => '/tmp/assets');
 
   const command = createBacklogCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -45,18 +55,22 @@ function createHarness(): {
       interactive: !(globalOptions.json ?? false),
       logger: capture.logger,
     }),
+    createBacklogItem,
     initializeBacklog,
     archiveBacklogItem,
     pathExists,
+    resolveAssetsRoot,
     resolveProjectRoot,
   });
 
   return {
     capture,
     command,
+    createBacklogItem,
     initializeBacklog,
     archiveBacklogItem,
     pathExists,
+    resolveAssetsRoot,
     resolveProjectRoot,
   };
 }
@@ -181,6 +195,66 @@ describe('createBacklogCommand', () => {
       titleOrSlug: 'Streaming Cache Layer',
       createdAt: '2026-06-22T10:00:00Z',
     });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('creates a backlog item with parsed options and structured JSON output', async () => {
+    const { command, capture, createBacklogItem } = createHarness();
+
+    await runCommand(
+      command,
+      'new',
+      ['--json'],
+      [
+        'Streaming Cache Layer',
+        '--priority',
+        'high',
+        '--scope',
+        'feature',
+        '--scope-estimate',
+        'L',
+        '--labels',
+        "owner's,api:edge,#ready",
+        '--description',
+        'Cache repeated reads.',
+        '--backlog-root',
+        'custom/backlog',
+      ],
+    );
+
+    expect(createBacklogItem).toHaveBeenCalledWith({
+      backlogRoot: '/tmp/workspace/custom/backlog',
+      assetsRoot: '/tmp/assets',
+      templatesRoot: '/tmp/workspace/repo/.oat/templates',
+      title: 'Streaming Cache Layer',
+      priority: 'high',
+      scope: 'feature',
+      scopeEstimate: 'L',
+      labels: ["owner's", 'api:edge', '#ready'],
+      description: 'Cache repeated reads.',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      id: 'BL-260714-streaming-cache-layer',
+      filePath:
+        '/tmp/workspace/custom/backlog/items/BL-260714-streaming-cache-layer.md',
+      index: { itemCount: 1, warnings: [] },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports human output for a created backlog item', async () => {
+    const { command, capture } = createHarness();
+
+    await runCommand(command, 'new', [], ['Streaming Cache Layer']);
+
+    expect(capture.info).toContain(
+      'Created backlog item BL-260714-streaming-cache-layer',
+    );
+    expect(capture.info).toContain(
+      'Wrote /tmp/workspace/repo/.oat/repo/pjm/backlog/items/BL-260714-streaming-cache-layer.md',
+    );
+    expect(capture.info).toContain('Regenerated backlog index with 1 item.');
     expect(process.exitCode).toBe(0);
   });
 

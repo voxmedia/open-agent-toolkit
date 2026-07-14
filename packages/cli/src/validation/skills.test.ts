@@ -1431,7 +1431,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.16'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.7'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.1'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.1'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.2.1'],
@@ -3279,5 +3279,36 @@ describe('validateOatSkills', () => {
       validatedSkillCount: 1,
       findings: [],
     });
+  });
+
+  it('requires project-summary decision promotion to pass every record section', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+    const stepSix = content.match(
+      /### Step 6: Promote Key Decisions[\s\S]*?(?=### Step 7:)/,
+    )?.[0];
+
+    expect(stepSix).toBeDefined();
+    expect(stepSix).toMatch(
+      /oat decision new "<title>"[\s\S]*--context "<context>"[\s\S]*--decision "<decision>"[\s\S]*--consequences "<consequences>"/,
+    );
+    expect(stepSix).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
+  });
+
+  it('requires backlog capture to use atomic CLI creation with the confirmed estimate', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-pjm-add-backlog-item/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /oat backlog new "\{title\}"[\s\S]*--scope-estimate "<confirmed-scope-estimate>"/,
+    );
+    expect(content).toMatch(
+      /oat backlog new[\s\S]*Acceptance Criteria[\s\S]*Curated Overview/,
+    );
+    expect(content).not.toContain('oat backlog generate-id');
+    expect(content).not.toContain('oat backlog regenerate-index');
+    expect(content).not.toContain('ITEM_PATH=');
   });
 });
