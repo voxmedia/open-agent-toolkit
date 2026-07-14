@@ -520,11 +520,24 @@ Gate failure behavior is owned by the gate-aware skill:
 available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
 
-Gate target execution has a child-process timeout (default 15 minutes, override
-with `OAT_GATE_EXEC_TIMEOUT_MS`). When a review target times out, JSON output
-reports `status: review_failed`, `outcome: review_did_not_complete`,
-`timedOut: true`, and the timeout value so automation can distinguish a hung
-provider prompt from a completed review with findings.
+Gate target execution has a child-process timeout. Set
+`OAT_GATE_EXEC_TIMEOUT_MS` to a positive integer number of milliseconds to
+override the 900,000 ms (15-minute) default. An unset, non-integer, or
+non-positive value uses the default.
+
+After a review target times out, OAT re-scans the project reviews for exactly
+one artifact carrying that invocation's `oat_gate_run_id`. A recovered artifact
+still passes through the normal project, timestamp, invocation, normalization,
+threshold, and handoff checks. If those checks produce `status: ok` or
+`status: blocked`, the envelope also includes `lateCompletion: true`. This is
+additive recovery telemetry, not a new status: route review-receive from
+`status`, `receiveEligible`, and `handoff` as usual.
+
+When no run-correlated artifact can be recovered, JSON output reports
+`status: review_failed`, `outcome: review_did_not_complete`, `timedOut: true`,
+the timeout value, and `noOutputProduced`. That field is `true` only when the
+timed-out child emitted zero stdout and stderr bytes; it is `false` when the
+child emitted any captured output.
 
 ## Current limits
 
