@@ -726,6 +726,24 @@ describe('scaffoldProject', () => {
     );
   });
 
+  it('permits non-TDD task bodies while preserving plan invariants', async () => {
+    const planTemplate = await readFile(
+      join(REPO_ROOT, '.oat', 'templates', 'plan.md'),
+      'utf8',
+    );
+
+    expect(planTemplate).toMatch(
+      /RED\/GREEN\/Refactor[\s\S]*recommended default[\s\S]*not a validator requirement/i,
+    );
+    expect(planTemplate).toMatch(
+      /other task-body shapes[\s\S]*allowed when appropriate/i,
+    );
+    expect(planTemplate).toMatch(/non-TDD shapes/i);
+    expect(planTemplate).toContain('stable `pNN-tNN` IDs');
+    expect(planTemplate).toContain('per-task verification');
+    expect(planTemplate).toContain('atomic commits');
+  });
+
   it('keeps the repo state template ready for explicit PR tracking', async () => {
     const stateTemplate = await readFile(
       join(REPO_ROOT, '.oat', 'templates', 'state.md'),
