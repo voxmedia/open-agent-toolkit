@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 95b90b85b0100c780fe17216f757ede9435c856e
+oat_last_commit: 4d1025b5a84afc8fb362927ae5c5c32683dac749
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -34,7 +34,7 @@ oat_post_implement_sequence:
   status: pre_approval
   final_phase: p07
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -47,7 +47,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T16:14:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T16:24:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,7 +59,7 @@ oat_generated: false
 
 ## Current Phase
 
-Closeout pre-approval - summary pending
+Closeout pre-approval - documentation pending
 
 ## Artifacts
 
@@ -115,7 +115,8 @@ Closeout pre-approval - summary pending
 - ✓ Release, skill-version, type-check, lint, and format gates passed
 - ✓ Final workspace tests, builds, docs build, and release gates passed
 - ✓ Final review round 3 passed with zero findings
-- ⧗ Pre-approval sequence: summary → document → PR
+- ✓ Project summary generated and nine decisions promoted
+- ⧗ Pre-approval sequence remaining: document → PR
 - ⧗ Final HiLL approval pending after pre-approval sequence
 
 ## Blockers
@@ -124,4 +125,4 @@ None
 
 ## Next Milestone
 
-Run summary, document, and PR pre-approval steps
+Run documentation and PR pre-approval steps
