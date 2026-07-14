@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 4d1025b5a84afc8fb362927ae5c5c32683dac749
+oat_last_commit: 709fe8a3e243e7670d9604e1584e945d8b388233
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -34,7 +34,7 @@ oat_post_implement_sequence:
   status: pre_approval
   final_phase: p07
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -47,7 +47,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T16:35:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T16:37:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,7 +59,7 @@ oat_generated: false
 
 ## Current Phase
 
-Closeout pre-approval - documentation pending
+Closeout pre-approval - PR pending
 
 ## Artifacts
 
@@ -116,7 +116,8 @@ Closeout pre-approval - documentation pending
 - ✓ Final workspace tests, builds, docs build, and release gates passed
 - ✓ Final review round 3 passed with zero findings
 - ✓ Project summary generated and nine decisions promoted
-- ⧗ Pre-approval sequence remaining: document → PR
+- ✓ Documentation and PJM reference sync completed
+- ⧗ Pre-approval sequence remaining: PR
 - ⧗ Final HiLL approval pending after pre-approval sequence
 
 ## Blockers
@@ -125,4 +126,4 @@ None
 
 ## Next Milestone
 
-Run documentation and PR pre-approval steps
+Run final PR pre-approval step
