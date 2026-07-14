@@ -443,15 +443,15 @@ git commit -m "feat(p03-t04): document oat project log and bump release versions
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                       |
-| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
-| p01    | code     | pending         | -          | -                                              |
-| p02    | code     | pending         | -          | -                                              |
-| p03    | code     | pending         | -          | -                                              |
-| final  | code     | pending         | -          | -                                              |
-| spec   | artifact | pending         | -          | -                                              |
-| design | artifact | pending         | -          | -                                              |
-| plan   | artifact | fixes_completed | 2026-07-13 | structured (in-session oat-reviewer, 3 rounds) |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T004814Z.md |
 
 **Plan review disposition (2026-07-13):** structured-mode artifact review, 3 rounds (retry bound exhausted). Round 1: 2 Critical / 6 Important / 5 Medium — all fixed. Round 2: 4 Important / 4 Medium / 1 minor — all fixed. Round 3 (final): 1 Medium (assets-scoped unstaged check) + 1 minor (phase-note wording) — both fixed by applying the reviewer's fix guidance verbatim after the final round; no re-dispatch remained within the retry bound to confirm clean. No Critical/Important findings remain. The final code review at implementation covers residual confirmation.
 
