@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,29 +24,29 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p01   | pending | 1     | 0/1       |
-| p02   | pending | 1     | 0/1       |
-| p03   | pending | 1     | 0/1       |
-| p04   | pending | 1     | 0/1       |
-| p05   | pending | 2     | 0/2       |
-| p06   | pending | 2     | 0/2       |
-| p07   | pending | 1     | 0/1       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 1     | 1/1       |
+| p02   | pending     | 1     | 0/1       |
+| p03   | pending     | 1     | 0/1       |
+| p04   | pending     | 1     | 0/1       |
+| p05   | pending     | 2     | 0/2       |
+| p06   | pending     | 2     | 0/2       |
+| p07   | pending     | 1     | 0/1       |
 
-**Total:** 0/9 tasks completed
+**Total:** 1/9 tasks completed
 
 ---
 
 ## Phase 1: Repair project scaffolding
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p01-t01: Render and validate real scaffold templates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `11bc62b959f93aafda87dbbb84646572feb3c77c`
 
 ---
 
@@ -164,7 +164,7 @@ Chronological log of implementation progress.
 
 **Planning handoff:**
 
-- [ ] p01-t01: Render and validate real scaffold templates
+- [x] p01-t01: Render and validate real scaffold templates
 - [ ] p02-t01: Document TDD as the default, not a validator requirement
 - [ ] p03-t01: Suggest the exact all-tools update command
 - [ ] p04-t01: Require a summary before closing backlog items
@@ -293,6 +293,23 @@ Chronological log of implementation progress.
 - Run p07 after all fixes merge.
 - Independent phase gate review is enabled for p01 and p06.
 
+### Phase p01 Implementation Complete — Review Pending
+
+**Request:** `impl-p01-20260714T0050Z-fe3a621a`
+
+**Commit range:** `fe3a621a937a84e977d078a5e2b6fd6011d3fa55..11bc62b959f93aafda87dbbb84646572feb3c77c`
+
+**Task result:**
+
+- p01-t01 completed in `11bc62b959f93aafda87dbbb84646572feb3c77c`.
+- Changed only `packages/cli/src/commands/project/new/scaffold.ts` and `scaffold.test.ts`.
+- RED: 7 expected failures exposed malformed real-template frontmatter and unresolved-token acceptance.
+- GREEN: 28 focused tests passed; CLI type-check passed.
+
+**Dispatch:** `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+
+**Next:** Run the root-owned p01 code review.
+
 ---
 
 ## Deviations from Plan / Design
@@ -307,15 +324,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
-| p02   | -         | -      | -      | -        |
-| p03   | -         | -      | -      | -        |
-| p04   | -         | -      | -      | -        |
-| p05   | -         | -      | -      | -        |
-| p06   | -         | -      | -      | -        |
-| p07   | -         | -      | -      | -        |
+| Phase | Tests Run                          | Passed          | Failed | Coverage |
+| ----- | ---------------------------------- | --------------- | ------ | -------- |
+| p01   | `scaffold.test.ts`; CLI type-check | 28 + type-check | 0      | Focused  |
+| p02   | -                                  | -               | -      | -        |
+| p03   | -                                  | -               | -      | -        |
+| p04   | -                                  | -               | -      | -        |
+| p05   | -                                  | -               | -      | -        |
+| p06   | -                                  | -               | -      | -        |
+| p07   | -                                  | -               | -      | -        |
 
 ## Final Summary (for PR/docs)
 
