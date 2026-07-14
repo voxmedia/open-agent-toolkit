@@ -14,6 +14,8 @@ const REPO_ROOT = resolve(process.cwd(), '..', '..');
 const REPO_TEMPLATES_ROOT = join(REPO_ROOT, '.oat', 'templates');
 const BUNDLED_ASSETS_ROOT = join(REPO_ROOT, 'packages', 'cli', 'assets');
 const CREATED_AT = '2026-07-14T01:23:45.678Z';
+const INDEX_START = '<!-- OAT BACKLOG-INDEX -->';
+const INDEX_END = '<!-- END OAT BACKLOG-INDEX -->';
 
 function parseFrontmatter(content: string): Record<string, unknown> {
   const block = getFrontmatterBlock(content);
@@ -109,6 +111,47 @@ describe('createBacklogItem', () => {
     expect(firstIndex).toContain(
       '| BL-260714-streaming-cache-layer | Streaming Cache Layer | open | medium | task |  |',
     );
+
+    await regenerateBacklogIndex(backlogRoot);
+    await expect(readFile(indexPath, 'utf8')).resolves.toBe(firstIndex);
+  });
+
+  it('safely indexes title markup while preserving curated bytes and idempotence', async () => {
+    const { backlogRoot } = await createTempRoot();
+    await initializeBacklog(backlogRoot);
+    const indexPath = join(backlogRoot, 'index.md');
+    const initialIndex = (await readFile(indexPath, 'utf8')).replace(
+      '- Add brief narrative summaries here as backlog items are created and reprioritized.',
+      '- Preserve this curated overview byte-for-byte.',
+    );
+    await writeFile(indexPath, initialIndex, 'utf8');
+    const initialManagedStart = initialIndex
+      .split('\n')
+      .findIndex((line) => line === INDEX_START);
+    const curatedBefore = initialIndex
+      .split('\n')
+      .slice(0, initialManagedStart)
+      .join('\n');
+    const title = `Parser | cache ${INDEX_END}`;
+
+    const result = await createBacklogItem({
+      backlogRoot,
+      assetsRoot: BUNDLED_ASSETS_ROOT,
+      templatesRoot: REPO_TEMPLATES_ROOT,
+      title,
+      createdAt: CREATED_AT,
+    });
+
+    const firstIndex = await readFile(indexPath, 'utf8');
+    const lines = firstIndex.split('\n');
+    const row = lines.find((line) => line.startsWith(`| ${result.id} |`));
+    expect(row).toBe(
+      `| ${result.id} | Parser \\| cache &lt;!-- END OAT BACKLOG-INDEX --&gt; | open | medium | task |  |`,
+    );
+    expect(row?.match(/(?<!\\)\|/g)).toHaveLength(7);
+    expect(lines.filter((line) => line === INDEX_END)).toHaveLength(1);
+    const managedStart = lines.findIndex((line) => line === INDEX_START);
+    expect(lines.slice(0, managedStart).join('\n')).toBe(curatedBefore);
 
     await regenerateBacklogIndex(backlogRoot);
     await expect(readFile(indexPath, 'utf8')).resolves.toBe(firstIndex);
