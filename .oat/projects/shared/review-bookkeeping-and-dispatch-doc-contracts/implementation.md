@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 4     | 4/4       |
 | Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | pending   | 1     | 0/1       |
+| Phase 3 | completed | 1     | 1/1       |
 
-**Total:** 6/7 tasks completed
+**Total:** 7/7 tasks completed
 
 ---
 
@@ -88,13 +88,17 @@ oat_generated: false
 
 ## Phase 3: Sync and Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-14
 
 ### Task p03-t01: Synchronize and validate the lockstep release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 6973c642
+
+**Phase outcome:** All five public packages are at `0.1.66`, the bundled public-package version asset and sync manifest are current, and release validation passes. Fan-in verification exposed two p01 dispatch-prose prompt-site hashes missing from the autonomy inventory; root repaired that integration drift in `df8f44e9`.
+
+**Verification:** Full CLI suite (2,888 tests), formatting, canonical skill validation, control-plane tests, lint, type checks, docs build, bundled-version assertion, provider sync, and five-package release validation passed.
 
 ---
 
@@ -115,17 +119,17 @@ _- Outstanding Items_
 - Dispatch policy: managed `high` from project state
 - Parallel group: `p01`, `p02`
 
-| Phase | Status  | Tasks | Implementation commits                 | Root review                           |
-| ----- | ------- | ----- | -------------------------------------- | ------------------------------------- |
-| p01   | passed  | 4/4   | `6885ea2e`..`bf913eba`; fix `f227861e` | `b919af82` passed after one fix round |
-| p02   | passed  | 2/2   | `8edfc8af`..`3a7d2915`                 | `f2bdf1c5` passed                     |
-| p03   | pending | 0/1   | -                                      | -                                     |
+| Phase | Status      | Tasks | Implementation commits                 | Root review                           |
+| ----- | ----------- | ----- | -------------------------------------- | ------------------------------------- |
+| p01   | passed      | 4/4   | `6885ea2e`..`bf913eba`; fix `f227861e` | `b919af82` passed after one fix round |
+| p02   | passed      | 2/2   | `8edfc8af`..`3a7d2915`                 | `f2bdf1c5` passed                     |
+| p03   | implemented | 1/1   | `6973c642`; integration fix `df8f44e9` | pending                               |
 
 **Dispatch:** p01/p02 implementation and root reviews used resolver-selected Cursor model `gpt-5.6-sol-high`, `model_axis=selected:gpt-5.6-sol-high`, `effort_axis=not-applicable`, policy `high`.
 
 **Worktrees:** `.worktrees/review-bookkeeping-p01`, `.worktrees/review-bookkeeping-p02`; both merged in plan order after passing review.
 
-**Outstanding:** configured p01/p02 external phase gates, then p03.
+**Outstanding:** p03 root review, final verification, and final review.
 
 <!-- orchestration-runs-end -->
 
@@ -146,6 +150,8 @@ Chronological log of implementation progress.
 - [x] p01 review fixes — `f227861e`; re-review passed
 - [x] p02-t01: Recover run-correlated artifacts after timeout — `8edfc8af`
 - [x] p02-t02: Document timeout controls and recovery fields — `3a7d2915`
+- [x] p03-t01: Synchronize and validate the lockstep release — `6973c642`
+- [x] p01/p03 fan-in inventory repair — `df8f44e9`
 
 **Decisions:**
 
@@ -153,6 +159,7 @@ Chronological log of implementation progress.
 - p01 and p02 execute in isolated worktrees; p03 waits for fan-in.
 - HiLL checkpoint is the final phase only; automatic HiLL review is enabled.
 - p02 link-check failures were verified as pre-existing and did not block the phase.
+- The final CLI suite exposed two descriptive p01 dispatch lines absent from the autonomy prompt-site inventory. Root mapped both to `NG`, bumped `oat-project-autonomous` to `1.0.2`, re-synced providers, and re-ran release validation.
 
 ### Review Received: p01 phase gate
 
@@ -189,12 +196,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase  | Tests Run                                                       | Passed                | Failed | Coverage                         |
-| ------ | --------------------------------------------------------------- | --------------------- | ------ | -------------------------------- |
-| 1      | Targeted control-plane/CLI tests, validation, types, formatting | 273 tests plus checks | 0      | Review-event and skill contracts |
-| 2      | Gate tests, types, lint, docs build, formatting                 | 136 tests plus checks | 0      | Timeout recovery and telemetry   |
-| Fan-in | Combined targeted tests and build checks                        | 273 tests plus checks | 0      | p01/p02 integration              |
-| 3      | -                                                               | -                     | -      | pending                          |
+| Phase  | Tests Run                                                       | Passed                | Failed | Coverage                          |
+| ------ | --------------------------------------------------------------- | --------------------- | ------ | --------------------------------- |
+| 1      | Targeted control-plane/CLI tests, validation, types, formatting | 273 tests plus checks | 0      | Review-event and skill contracts  |
+| 2      | Gate tests, types, lint, docs build, formatting                 | 136 tests plus checks | 0      | Timeout recovery and telemetry    |
+| Fan-in | Combined targeted tests and build checks                        | 273 tests plus checks | 0      | p01/p02 integration               |
+| 3      | Full CLI suite, release validation, formatting, build checks    | 2,888 tests + checks  | 0      | Release and inventory integration |
 
 ## Final Summary (for PR/docs)
 
