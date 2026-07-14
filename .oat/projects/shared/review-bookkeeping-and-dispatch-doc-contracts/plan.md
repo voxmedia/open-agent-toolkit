@@ -166,15 +166,15 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                    |
-| ------ | -------- | ------- | ---------- | --------------------------- |
-| p01    | code     | pending | -          | -                           |
-| p02    | code     | pending | -          | -                           |
-| p03    | code     | pending | -          | -                           |
-| final  | code     | pending | -          | -                           |
-| spec   | artifact | pending | -          | -                           |
-| design | artifact | pending | -          | -                           |
-| plan   | artifact | passed  | 2026-07-14 | in-memory structured review |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-14 | reviews/artifact-plan-review-2026-07-14T214355Z.md |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
