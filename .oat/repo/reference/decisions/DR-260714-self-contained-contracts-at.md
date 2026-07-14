@@ -14,8 +14,13 @@ The approved runtime paragraph is duplicated at every dispatch or lifecycle boun
 
 ## Decision
 
-TODO
+Place the complete artifact hygiene contract at every canonical role, skill,
+and CLI prompt boundary that can write tracked output. Keep the stable
+`Artifact hygiene contract:` lead-in and verify that all runtime copies remain
+equivalent.
 
 ## Consequences
 
-TODO
+Each dispatched writer can enforce formatting without relying on another file
+being loaded in its runtime. The intentional duplication requires canonical
+contract tests and coordinated provider projection whenever a copy changes.

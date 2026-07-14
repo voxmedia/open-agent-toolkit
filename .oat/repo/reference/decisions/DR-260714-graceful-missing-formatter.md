@@ -14,8 +14,12 @@ Writers emit `no format command discovered in repo instructions; skipping` once 
 
 ## Decision
 
-TODO
+When no repository-documented write/fix command is discoverable, emit
+`no format command discovered in repo instructions; skipping` once and
+continue without formatting.
 
 ## Consequences
 
-TODO
+Missing formatter guidance remains visible to operators without blocking the
+lifecycle. Writers must not infer or hardcode a formatter, and repositories
+that require formatted artifacts should document an applicable write command.

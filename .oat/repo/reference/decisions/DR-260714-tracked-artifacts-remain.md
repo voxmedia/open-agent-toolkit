@@ -14,8 +14,12 @@ Ignore patterns were rejected as the upstream solution because project summaries
 
 ## Decision
 
-TODO
+Keep tracked lifecycle artifacts inside repository formatting coverage and make
+their writers responsible for producing valid output. Do not use ignore
+patterns as the upstream substitute for formatting.
 
 ## Consequences
 
-TODO
+Project reviews, summaries, plans, and other tracked Markdown remain suitable
+for whole-tree format gates and code review. Consuming repositories may add
+local exclusions, but those exclusions do not weaken OAT's writer contract.

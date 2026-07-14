@@ -57,6 +57,36 @@ Manual and auto review artifacts do not require the gate-only fields.
 
 Artifacts are the project system of record; automation and routing should derive from these files, not memory.
 
+### Formatting and verification hygiene
+
+Tracked artifacts are part of the repository diff, so artifact writers format
+them before finishing or committing. During plan authoring, OAT resolves the
+repository's documented write/fix command from applicable `AGENTS.md` /
+`CLAUDE.md` instructions and relevant package manifests. Each task that writes
+an artifact receives a concrete invocation, scoped to that task's files when
+the command supports paths.
+
+Downstream implementers execute that supplied command without repeating
+discovery. Roles and lifecycle skills that write outside a planned task,
+including reviewers and documentation, summary, PR, and quick-start flows, use
+the same discovery procedure as a fallback. Gate-originated review prompts also
+carry the contract so review artifacts follow the same rule across runtimes.
+
+Writers must:
+
+- prefer a documented write/fix command over a check-only command;
+- avoid inferring or hardcoding a formatter;
+- scope the write to created or edited files when supported;
+- avoid whole-tree rewrites that could absorb unrelated changes; and
+- warn once with
+  `no format command discovered in repo instructions; skipping` when no command
+  is discoverable, then continue.
+
+Formatting supplements the applicable verification contract. Phase
+implementation runs repository gates over its produced diff, including
+artifact writes. Prose-only lifecycle work runs only checks relevant to the
+files it changed.
+
 ## Coordination parents
 
 Project splitting introduces a coordination-only parent artifact. It records shared context and child relationships, but it is not an executable lifecycle project.

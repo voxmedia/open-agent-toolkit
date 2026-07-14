@@ -14,8 +14,13 @@ Normal implementation resolves a repository-owned write/fix command once during 
 
 ## Decision
 
-TODO
+Resolve the repository's documented write/fix command during plan authoring and
+embed a concrete, file-scoped invocation in every artifact-writing task. Use
+runtime discovery only when that supplied instruction is absent or unusable.
 
 ## Consequences
 
-TODO
+Normal implementation agents execute one pre-resolved command instead of
+repeating repository discovery. Direct lifecycle writers and stale plans retain
+a bounded fallback, and planning must distinguish write/fix commands from
+check-only commands.
