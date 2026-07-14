@@ -164,6 +164,20 @@ oat_generated: false
 
 **Disposition:** Passed with no fixes required.
 
+### Review Received: final (post-merge replacement)
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/final-review-2026-07-14T031411Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:** Passed with no fixes required; supersedes the initial final review for the merged `0.1.64` endpoint.
+
 ### Review Received: plan
 
 **Date:** 2026-07-14
