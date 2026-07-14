@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p03'] # phases to pause AFTER completing (workflow.hillCheckpointDefault=final → pause after last phase)
 oat_plan_parallel_groups: [] # sequential; see ## Parallelism
 oat_plan_source: quick
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: orchestration-run-log
@@ -325,7 +325,7 @@ git commit -m "feat(p02-t02): append gate review structural entries to project l
 
 ## Phase 3: Skill integrations, docs, and release bookkeeping
 
-> Non-TDD phase: tasks 1–3 are canonical-skill prose changes validated by skill validation and format gates, not vitest. This deviation from the RED/GREEN task shape is deliberate; the invariants (stable IDs, per-task verification, atomic commits) hold.
+> Non-test-first phase: tasks 1–3 are canonical-skill prose changes validated by skill validation, format gates, and focused vitest contract tests (`review-skill-contracts.test.ts`) — not RED/GREEN-first development. This deviation from the TDD task shape is deliberate; the invariants (stable IDs, per-task verification, atomic commits) hold.
 
 ### Task p03-t01: `oat-project-implement` append points
 
@@ -425,8 +425,8 @@ Author the command-group docs (append/synthesize/check flags, config keys, entry
 
 **Step 2: Verify**
 
-Run: `pnpm release:validate && pnpm build:docs && git diff --quiet`
-Expected: Release validation passes (version bumps + skill version bumps recognized); docs build green; `git diff --quiet` exits 0 (no UNSTAGED changes — regenerated assets are all staged; staged-but-uncommitted changes are expected until Step 3 commits)
+Run: `pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
+Expected: Release validation passes (version bumps + skill version bumps recognized); docs build green; the assets-scoped `git diff --quiet` exits 0 (no unstaged regenerated assets — other task files remain unstaged until Step 3 stages and commits them)
 
 **Step 3: Commit**
 
@@ -443,15 +443,17 @@ git commit -m "feat(p03-t04): document oat project log and bump release versions
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status          | Date       | Artifact                                       |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------- |
+| p01    | code     | pending         | -          | -                                              |
+| p02    | code     | pending         | -          | -                                              |
+| p03    | code     | pending         | -          | -                                              |
+| final  | code     | pending         | -          | -                                              |
+| spec   | artifact | pending         | -          | -                                              |
+| design | artifact | pending         | -          | -                                              |
+| plan   | artifact | fixes_completed | 2026-07-13 | structured (in-session oat-reviewer, 3 rounds) |
+
+**Plan review disposition (2026-07-13):** structured-mode artifact review, 3 rounds (retry bound exhausted). Round 1: 2 Critical / 6 Important / 5 Medium — all fixed. Round 2: 4 Important / 4 Medium / 1 minor — all fixed. Round 3 (final): 1 Medium (assets-scoped unstaged check) + 1 minor (phase-note wording) — both fixed by applying the reviewer's fix guidance verbatim after the final round; no re-dispatch remained within the retry bound to confirm clean. No Critical/Important findings remain. The final code review at implementation covers residual confirmation.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
