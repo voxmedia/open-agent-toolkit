@@ -503,6 +503,56 @@ git add packages/cli/src/commands/backlog/archive.test.ts
 git commit -m "test(p07-t03): pin backlog summary trimming"
 ```
 
+### Task p07-t04: (review) Re-bump the release after upstream reconciliation
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml` only if pnpm updates workspace metadata
+- Restore exactly from `origin/main`: `.agents/docs/autonomy-contract.md`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/design.md`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/implementation.md`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/plan.md`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/references/oat-user-config.cloud.json`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/spec.md`
+- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/state.md`
+- Restore exactly from `origin/main`: `.oat/repo/pjm/backlog/index.md`
+
+**Step 1: Remove unrelated merge-hook churn**
+
+Restore the eight listed upstream-owned files byte-for-byte from current `origin/main`. Do not change any other sibling-project, autonomy-contract, or backlog file. Confirm `git diff --exit-code origin/main -- <all-eight-paths>` succeeds.
+
+**Step 2: Re-bump the lockstep public release**
+
+Confirm current `origin/main` owns `0.1.63`, then bump all five public package manifests and `packages/cli/assets/public-package-versions.json` to the next unused common version, expected to be `0.1.64`. Update `pnpm-lock.yaml` only if package-manager metadata changes.
+
+**Step 3: Verify**
+
+Run sequentially:
+
+- `pnpm release:validate`
+- `pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main`
+- `pnpm type-check`
+- `pnpm lint`
+- `pnpm format`
+
+Expected: the sibling/upstream files have no base-relative delta, all five public packages validate at the new common version, changed canonical skill bumps remain valid, and workspace static gates pass. Root will rerun final workspace tests/build before re-review.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
+git add .agents/docs/autonomy-contract.md .oat/projects/shared/cursor-cloud-autonomous-projects/design.md .oat/projects/shared/cursor-cloud-autonomous-projects/implementation.md .oat/projects/shared/cursor-cloud-autonomous-projects/plan.md .oat/projects/shared/cursor-cloud-autonomous-projects/references/oat-user-config.cloud.json .oat/projects/shared/cursor-cloud-autonomous-projects/spec.md .oat/projects/shared/cursor-cloud-autonomous-projects/state.md .oat/repo/pjm/backlog/index.md
+git commit -m "chore(p07-t04): re-bump release after upstream collision"
+```
+
+If `pnpm-lock.yaml` changes, stage it explicitly before committing.
+
 ---
 
 ## Reviews
@@ -516,7 +566,7 @@ git commit -m "test(p07-t03): pin backlog summary trimming"
 | p05    | code     | passed      | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
 | p06    | code     | passed      | 2026-07-14 | reviews/archived/p06-review-2026-07-14T021025Z.md           |
 | p07    | code     | passed      | 2026-07-14 | reviews/code-p07-review-2026-07-14T023300Z.md               |
-| final  | code     | fixes_added | 2026-07-14 | reviews/archived/final-review-2026-07-14T024218Z.md         |
+| final  | code     | fixes_added | 2026-07-14 | reviews/final-review-2026-07-14T032359Z.md                  |
 | spec   | artifact | pending     | -          | -                                                           |
 | design | artifact | pending     | -          | -                                                           |
 | plan   | artifact | passed      | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002324Z.md |
@@ -542,11 +592,11 @@ git commit -m "test(p07-t03): pin backlog summary trimming"
 - Phase 4: 1 task - Prevent placeholder backlog summaries
 - Phase 5: 2 tasks - Create complete PJM records atomically
 - Phase 6: 2 tasks - Strengthen CLI upgrade and gate hygiene
-- Phase 7: 3 tasks - Prepare and validate the release
+- Phase 7: 4 tasks - Prepare and validate the release
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
-Final review fixes are queued for implementation.
+Final review round 2 is blocked by the upstream release-version collision. Task `p07-t04` is queued to re-bump the packages and remove unrelated merge-hook formatter churn before re-review.
 
 ---
 

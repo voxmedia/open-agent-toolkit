@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: null
+oat_current_task_id: p07-t04
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 1     | 1/1       |
-| p02   | completed | 1     | 1/1       |
-| p03   | completed | 1     | 1/1       |
-| p04   | completed | 1     | 1/1       |
-| p05   | completed | 2     | 2/2       |
-| p06   | completed | 2     | 2/2       |
-| p07   | completed | 3     | 3/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 1     | 1/1       |
+| p02   | completed   | 1     | 1/1       |
+| p03   | completed   | 1     | 1/1       |
+| p04   | completed   | 1     | 1/1       |
+| p05   | completed   | 2     | 2/2       |
+| p06   | completed   | 2     | 2/2       |
+| p07   | in_progress | 4     | 3/4       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/12 tasks completed
 
 ---
 
@@ -122,7 +122,7 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
@@ -140,6 +140,11 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** `e4ab4d9957b2c5d3506fdb2998a660934f29ec0c`
+
+### Task p07-t04: (review) Re-bump the release after upstream reconciliation
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -547,6 +552,20 @@ Chronological log of implementation progress.
 - Post-merge command-surface tests passed 283/283. Workspace type-check, lint, format, five-package release validation, and base-relative skill-version validation also passed.
 - Final workspace verification passed 2,874 CLI tests across 246 files, all package test tasks, and all five production package builds.
 - All 11 planned tasks are complete. The project is ready for final verification and re-review.
+
+### Final Re-review Round 2 Blocked — Release Re-bump Added
+
+**Review request:** `review-final-r2-20260714T032359Z`
+**Artifact:** `reviews/final-review-2026-07-14T032359Z.md`
+**Validated range:** `508aa013e211570c689b0bc48c23dfc2adfad0b0..ab120df254070c481042f950352cb5b44747451d`
+
+- Findings: Critical 0, Important 1, Medium 1, Minor 1; verdict `BLOCKED`.
+- I1 is accepted as mandatory: `origin/main` now owns `0.1.63`, so the five public packages and bundled version manifest must move to the next unused common version.
+- M1 is accepted because the eight formatter-only deltas are outside this project's declared surfaces and violate the explicit sibling-artifact boundary. `p07-t04` restores them byte-for-byte from `origin/main`.
+- m1 is resolved in this bookkeeping update by recording the blocked round-2 artifact and the newly queued task accurately.
+- Independent focused verification passed 388/388 and CLI type-check passed; release validation failed only because the package versions equal the current base.
+
+**Next:** Execute `p07-t04`, rerun final workspace verification, and run final review round 3.
 
 ---
 
