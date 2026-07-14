@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: b7153024d56791659a470091ad82b4edb4f5d51f
+oat_last_commit: 93438bd3848921df7b56651bd46f69c783aec0fd
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: pr_open # Status: in_progress | complete | pr_open
@@ -30,7 +30,7 @@ oat_dispatch_policy:
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   final_phase: p03
   pre_approval: [summary, document, pr]
   pre_approval_completed: [summary, document, pr]
@@ -46,19 +46,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/147' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:27.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T03:23:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T03:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: agent-artifact-hygiene-contract
 
-**Status:** Implement
+**Status:** Complete
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-13
 
 ## Current Phase
 
-Implementation — PR open, awaiting human review.
+Implementation complete — PR open, awaiting human review
 
 ## Artifacts
 
@@ -88,7 +88,8 @@ Implementation — PR open, awaiting human review.
 - ✓ Pre-approval closeout sequence complete
 - ✓ Post-merge final review passed
 - ✓ Final p03 human approval received
-- ⧗ Finalizing implementation closeout
+- ✓ Implementation closeout complete
+- ⧗ Awaiting PR review
 
 ## Blockers
 
@@ -96,4 +97,7 @@ None
 
 ## Next Milestone
 
-Finalize implementation closeout after approved checkpoint.
+PR #147 is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- When approved for merge: run `oat-project-complete`
