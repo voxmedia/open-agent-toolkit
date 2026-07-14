@@ -67,7 +67,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Implement:**
 
-1. Add RED assertions that no documented resolver command combines `--preferred` with candidate flags.
+1. Add RED assertions that the prose defines two mutually exclusive branches, scopes every `--preferred` instruction to the preferred branch, and forbids exact-candidate guidance from inheriting it. Keep a literal-command check as a secondary guard.
 2. Present preferred selection and exact-candidate selection as mutually exclusive from first mention.
 3. Remove the Claude implication that managed-capped exact-candidate calls also carry `--preferred`; preserve runtime re-resolution and priority routing.
 
