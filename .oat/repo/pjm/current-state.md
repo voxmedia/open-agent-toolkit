@@ -34,6 +34,13 @@ copying their content here. -->
   updates the exact CLI version and requires a shell-aware rerun. Daily
   best-effort checks and three-day same-version notice cadence are cached under
   `~/.oat`; automation and opted-out invocations remain silent.
+- CLI `0.1.65` hardens project scaffolding against unresolved OAT placeholders,
+  permits non-TDD plan task bodies when lifecycle invariants remain intact, and
+  improves operational workflows: targetless tool updates suggest the explicit
+  all-tools command, closed backlog items require real outcomes, decision
+  creation accepts every substantive section, `oat backlog new` owns atomic
+  item creation, project doctor detects known-stale command grammar, and
+  noninteractive gate targets start with closed stdin.
 - Gate reviews now declare and corroborate their project, bind an immutable
   configured invocation record to the review artifact, and fail closed on
   correlation or provenance mismatch.
