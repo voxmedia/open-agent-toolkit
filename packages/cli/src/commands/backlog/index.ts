@@ -3,11 +3,13 @@ import { join, resolve } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import { archiveBacklogItem, BacklogArchiveError } from './archive';
 import { initializeBacklog } from './init';
+import { createBacklogItem } from './new';
 import { regenerateBacklogIndex } from './regenerate-index';
 import { generateBacklogId } from './shared/generate-id';
 
@@ -17,6 +19,15 @@ interface InitOptions {
 
 interface RegenerateIndexOptions {
   backlogRoot?: string;
+}
+
+interface NewOptions {
+  backlogRoot?: string;
+  priority?: string;
+  scope?: string;
+  scopeEstimate?: string;
+  labels?: string[];
+  description?: string;
 }
 
 interface ArchiveOptions {
@@ -32,8 +43,10 @@ interface GenerateIdOptions {
 interface BacklogCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
+  resolveAssetsRoot: typeof resolveAssetsRoot;
   initializeBacklog: typeof initializeBacklog;
   regenerateBacklogIndex: typeof regenerateBacklogIndex;
+  createBacklogItem: typeof createBacklogItem;
   archiveBacklogItem: typeof archiveBacklogItem;
   pathExists: (path: string) => Promise<boolean>;
 }
@@ -59,8 +72,10 @@ async function pathExistsDefault(path: string): Promise<boolean> {
 const DEFAULT_DEPENDENCIES: BacklogCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
+  resolveAssetsRoot,
   initializeBacklog,
   regenerateBacklogIndex,
+  createBacklogItem,
   archiveBacklogItem,
   pathExists: pathExistsDefault,
 };
@@ -116,6 +131,74 @@ export function createBacklogCommand(
         context.logger.info(`Initialized backlog scaffold at ${backlogRoot}`);
       }
       process.exitCode = 0;
+    });
+
+  cmd
+    .command('new')
+    .description('Create a new file-backed backlog item')
+    .argument('<title>', 'Backlog item title')
+    .option('--priority <priority>', 'Item priority', 'medium')
+    .option('--scope <scope>', 'Item scope', 'task')
+    .option(
+      '--scope-estimate <size>',
+      'Optional scope estimate (XS|S|M|L|XL|XXL)',
+    )
+    .option('--labels <labels>', 'Comma-delimited labels', (value: string) =>
+      value.split(','),
+    )
+    .option('--description <text>', 'Initial description body text')
+    .option(
+      '--backlog-root <path>',
+      'Backlog root directory (defaults to .oat/repo/pjm/backlog)',
+    )
+    .action(async (title: string, options: NewOptions, command: Command) => {
+      const context = dependencies.buildCommandContext(
+        readGlobalOptions(command),
+      );
+      try {
+        const projectRoot = await dependencies.resolveProjectRoot(context.cwd);
+        const backlogRoot = await resolveBacklogRoot(
+          context,
+          options.backlogRoot,
+          dependencies,
+        );
+        const assetsRoot = await dependencies.resolveAssetsRoot();
+        const result = await dependencies.createBacklogItem({
+          backlogRoot,
+          assetsRoot,
+          templatesRoot: resolve(projectRoot, '.oat', 'templates'),
+          title,
+          priority: options.priority,
+          scope: options.scope,
+          scopeEstimate: options.scopeEstimate,
+          labels: options.labels,
+          description: options.description,
+        });
+
+        if (context.json) {
+          context.logger.json({ status: 'ok', ...result });
+        } else {
+          for (const warning of result.index.warnings) {
+            context.logger.warn(warning);
+          }
+          context.logger.info(`Created backlog item ${result.id}`);
+          context.logger.info(`Wrote ${result.filePath}`);
+          context.logger.info(
+            `Regenerated backlog index with ${result.index.itemCount} ${
+              result.index.itemCount === 1 ? 'item' : 'items'
+            }.`,
+          );
+        }
+        process.exitCode = 0;
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        if (context.json) {
+          context.logger.json({ status: 'error', message });
+        } else {
+          context.logger.error(message);
+        }
+        process.exitCode = 1;
+      }
     });
 
   cmd

@@ -3180,4 +3180,20 @@ describe('validateOatSkills', () => {
     );
     expect(stepSix).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
   });
+
+  it('requires backlog capture to use atomic CLI creation with the confirmed estimate', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-pjm-add-backlog-item/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /oat backlog new "\{title\}"[\s\S]*--scope-estimate "<confirmed-scope-estimate>"/,
+    );
+    expect(content).toMatch(
+      /oat backlog new[\s\S]*Acceptance Criteria[\s\S]*Curated Overview/,
+    );
+    expect(content).not.toContain('oat backlog generate-id');
+    expect(content).not.toContain('oat backlog regenerate-index');
+    expect(content).not.toContain('ITEM_PATH=');
+  });
 });
