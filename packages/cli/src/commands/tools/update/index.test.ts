@@ -101,7 +101,23 @@ describe('createToolsUpdateCommand target validation', () => {
     expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
   });
 
-  it('continues to reject mutually exclusive targets', async () => {
+  it('reports an invalid pack without suggesting an all-tools update', async () => {
+    const dependencies = createUpdateDependencies();
+
+    await runUpdateCommand(createToolsUpdateCommand(dependencies), [
+      '--pack',
+      'invalid',
+    ]);
+
+    expect(process.exitCode).toBe(1);
+    expect(loggerCapture.error).toEqual([
+      "Invalid pack 'invalid'. Expected one of: core, ideas, docs, workflows, utility, project-management, research, brainstorm.",
+    ]);
+    expect(dependencies.scanTools).not.toHaveBeenCalled();
+    expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
+  });
+
+  it('reports mutually exclusive targets without suggesting an all-tools update', async () => {
     const dependencies = createUpdateDependencies();
 
     await runUpdateCommand(createToolsUpdateCommand(dependencies), [
@@ -110,10 +126,11 @@ describe('createToolsUpdateCommand target validation', () => {
     ]);
 
     expect(process.exitCode).toBe(1);
-    expect(loggerCapture.error[0]).toContain(
-      'Specify a tool name, --pack <pack>, or --all.',
-    );
+    expect(loggerCapture.error).toEqual([
+      'Specify exactly one update target: a tool name, --pack <pack>, or --all.',
+    ]);
     expect(dependencies.scanTools).not.toHaveBeenCalled();
+    expect(dependencies.resolveAssetsRoot).not.toHaveBeenCalled();
   });
 });
 
