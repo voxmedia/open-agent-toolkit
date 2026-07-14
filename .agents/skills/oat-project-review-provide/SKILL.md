@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.16
+version: 1.3.17
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -842,7 +842,7 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 After review artifact is written, update `plan.md` `## Reviews` table _if plan.md exists_.
 
-Update or add a row matching `{scope}`:
+Record this artifact as one append-ordered review event:
 
 - `Scope`: `{scope}` (examples: `p02`, `final`, `spec`, `design`)
   - Phase-range examples such as `p02-p03` are valid code-review scopes and should be preserved exactly.
@@ -850,6 +850,11 @@ Update or add a row matching `{scope}`:
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
+
+For the first event with this Scope + Type, claim an unbound `pending`
+placeholder only when its Artifact is `-`. Otherwise append a new row for the
+new artifact. Never replace or regress a bound event merely because Scope +
+Type matches; distinct artifact filenames are distinct review events.
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
 

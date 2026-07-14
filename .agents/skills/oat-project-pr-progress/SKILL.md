@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-version: 1.2.1
+version: 1.2.2
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
@@ -178,10 +178,13 @@ If `WORKFLOW_MODE != spec-driven` and spec/design are missing:
 
 ### Step 3: Check Review Status (Recommended)
 
-If scope is `pNN`, check `plan.md` `## Reviews` table row:
+If scope is `pNN`, select the latest appended `plan.md` `## Reviews` event
+whose Scope is `pNN` and Type is `code`:
 
-- If `| pNN | code | passed | ...` exists: good
+- If that latest event is `| pNN | code | passed | ...`: good
 - Otherwise: warn that review has not been marked `passed` for this phase (e.g., it may be `received`, `fixes_added`, or `fixes_completed` pending re-review)
+
+Do not let an earlier passed event hide a later event for the same phase.
 
 Do not block PR generation; this is a progress PR.
 

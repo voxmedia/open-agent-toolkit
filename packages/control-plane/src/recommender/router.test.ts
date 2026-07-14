@@ -273,6 +273,30 @@ describe('recommendSkill', () => {
     });
   });
 
+  it('uses the latest appended final review event for routing', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      reviews: [
+        makeReview({
+          scope: 'final',
+          status: 'passed',
+          artifact: 'reviews/final-root-review.md',
+        }),
+        makeReview({
+          scope: 'final',
+          status: 'received',
+          artifact: 'reviews/final-gate-review.md',
+        }),
+      ],
+    });
+
+    expect(recommendSkill(state)).toMatchObject({
+      skill: 'oat-project-review-provide',
+      context: 'code final',
+    });
+  });
+
   it('routes fixes_completed final review to re-review', () => {
     const state = makeState({
       phase: 'implement',

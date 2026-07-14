@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.5.0
+version: 1.5.1
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -149,7 +149,7 @@ Run all gate checks and collect warnings. These are informational — they don't
 PLAN_FILE="${PROJECT_PATH}/plan.md"
 
 if [[ -f "$PLAN_FILE" ]]; then
-  final_row=$(grep -E "^\|\s*final\s*\|" "$PLAN_FILE" | head -1 || true)
+  final_row=$(grep -E "^\|\s*final\s*\|\s*code\s*\|" "$PLAN_FILE" | tail -1 || true)
   if [[ -z "$final_row" ]]; then
     echo "Warning: No final review row found in plan.md."
   elif ! echo "$final_row" | grep -qE "\|\s*passed\s*\|"; then
@@ -160,6 +160,9 @@ else
   echo "Warning: plan.md not found, unable to verify final review status."
 fi
 ```
+
+`final_row` is the latest appended event whose Scope is `final` and Type is
+`code`; earlier events remain history.
 
 #### 3.2: Deferred Medium Findings
 

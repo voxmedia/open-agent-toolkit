@@ -142,9 +142,14 @@ Before requesting final review, ensure the latest project-artifact bookkeeping i
 Check if final review already completed (preferred source of truth: plan.md Reviews table):
 
 ```bash
-FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | head -1)
+FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|\\s*code\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | tail -1)
 echo "$FINAL_ROW"
 ```
+
+`FINAL_ROW` is the latest appended event matching Scope `final` and Type
+`code`. Earlier events remain history and must not override the latest event.
+When fixes advance this event, match its artifact filename and never move its
+status backward.
 
 **If final review row exists and status is `passed`:**
 

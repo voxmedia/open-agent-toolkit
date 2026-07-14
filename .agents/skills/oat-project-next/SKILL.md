@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.7
+version: 1.0.8
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -244,6 +244,8 @@ Before dispatching the target skill, check for unprocessed review artifacts:
 
 **Step 2:** Cross-reference against plan.md Reviews table (if it exists):
 
+- For each active artifact, match the event by Scope + Type + artifact filename;
+  never infer its status from another row that shares only the scope.
 - Status `"passed"` → processed (review completed successfully)
 - Status `"fixes_added"` or `"fixes_completed"` → processed (review-receive already converted findings to tasks)
 - Any other status (blank, `"pending"`, `"in_progress"`, `"received"`) → **UNPROCESSED**
@@ -280,7 +282,8 @@ Run the Review Safety Check (Step 4 above). If unprocessed reviews exist:
 
 **5.3: Final code review not passed**
 
-Parse plan.md Reviews table for a row with `Scope="final"` and `Type="code"`:
+Parse the plan.md Reviews table and select the latest appended event with
+`Scope="final"` and `Type="code"`:
 
 - If no such row exists, OR row exists with `Status="pending"`:
   → Route to `oat-project-review-provide` (with scope hint: "code final")

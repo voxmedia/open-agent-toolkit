@@ -218,8 +218,11 @@ After each phase or parallel group:
 - append an Orchestration Run with phase outcomes, task commits, phase/root
   review result, fix iterations, dispatch stamps, selection reasons,
   candidates, optional nested dispatches, worktrees, and outstanding items;
-- update the plan review row through `fixes_added` / `fixes_completed` /
-  `passed` as appropriate;
+- update only the plan review event whose Scope + Type + artifact filename
+  identifies the review being dispositioned, through `fixes_added` /
+  `fixes_completed` / `passed` as appropriate;
+- never select review bookkeeping by scope alone, replace an earlier event, or
+  move an event status backward;
 - update `state.md` current task, last commit, and timestamp;
 - remove legacy `oat_execution_mode: subagent-driven`; and
 - preserve any configured retry override.

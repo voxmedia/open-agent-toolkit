@@ -58,6 +58,33 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('preserves duplicate-scope rows as distinct review events', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact                         |
+| ----- | ---- | -------- | ---------- | -------------------------------- |
+| final | code | passed   | 2026-04-09 | reviews/final-root-review.md     |
+| final | code | received | 2026-04-10 | reviews/final-gate-review-v2.md  |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'final',
+        type: 'code',
+        status: 'passed',
+        date: '2026-04-09',
+        artifact: 'reviews/final-root-review.md',
+      },
+      {
+        scope: 'final',
+        type: 'code',
+        status: 'received',
+        date: '2026-04-10',
+        artifact: 'reviews/final-gate-review-v2.md',
+      },
+    ]);
+  });
+
   it('returns an empty array when the plan has no reviews section', () => {
     expect(parseReviewTable('# Plan\n\n## Phase 1: Example\n')).toEqual([]);
   });
