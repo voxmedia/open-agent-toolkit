@@ -1363,7 +1363,7 @@ describe('validateOatSkills', () => {
 
     expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
     expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
-    expect(shared).toMatch(/re-run the resolver/i);
+    expect(shared).toMatch(/re-run the\s+resolver/i);
     expect(shared).toMatch(
       /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
     );
@@ -1505,11 +1505,39 @@ describe('validateOatSkills', () => {
       /adoption preserves explicit[\s\S]{0,260}re-run[\s\S]{0,260}(?:incomplete|missing)[\s\S]{0,180}(?:block|not implementation-ready)/i,
     );
     expect(shared).toMatch(
-      /non-interactive[\s\S]{0,300}(?:incomplete|missing) ladder[\s\S]{0,220}(?:block|not implementation-ready)/i,
+      /non-interactive[\s\S]{0,300}(?:incomplete|missing) (?:ladder|effective cells)[\s\S]{0,220}(?:block|not implementation-ready)/i,
     );
     expect(shared).toMatch(
       /project-specific[\s\S]{0,120}(?:active )?(?:policy|ceiling)[\s\S]{0,220}(?:must not|do not|never)[\s\S]{0,120}(?:user|~\/\.oat)/i,
     );
+  });
+
+  it('uses the merged effective config before offering dispatch-ladder adoption', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const adoptionContract = shared.slice(
+      shared.indexOf('### Complete Dispatch Ladder Adoption Contract'),
+      shared.indexOf('### Reviewer Ceiling Contract'),
+    );
+
+    expect(adoptionContract.match(/oat config list --json/g)).toHaveLength(1);
+    expect(adoptionContract).toMatch(
+      /effective-config boundary[\s\S]{0,180}shared repository[\s\S]{0,120}repo-local[\s\S]{0,120}user[\s\S]{0,120}bundled-default precedence/i,
+    );
+    expect(adoptionContract).toMatch(
+      /do not inspect or merge raw\s+config surfaces/i,
+    );
+    expect(adoptionContract).toMatch(
+      /`matrix: null`[\s\S]{0,220}(?:project policy|named ceiling)[\s\S]{0,220}not evidence[\s\S]{0,160}effective candidate ladders are absent/i,
+    );
+    expect(adoptionContract).toMatch(
+      /every effective provider\/tier cell[\s\S]{0,160}complete[\s\S]{0,120}skip adoption[\s\S]{0,180}separate project-ceiling\s+choice/i,
+    );
+    expect(adoptionContract).toMatch(
+      /only when effective provider\/tier cells are missing or incomplete[\s\S]{0,200}bundled recommendation/i,
+    );
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {

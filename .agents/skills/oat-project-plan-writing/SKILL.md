@@ -74,9 +74,18 @@ before each artifact review dispatch.
 
 ### Complete Dispatch Ladder Adoption Contract
 
-Before any plan becomes implementation-ready, inspect the effective
-`workflow.dispatchCeiling.providers` value and compare its ordered candidate
-ladders with the bundled
+Before any plan becomes implementation-ready, query the merged effective
+configuration exactly once:
+
+```bash
+oat config list --json
+```
+
+Treat that output as the effective-config boundary across shared repository,
+repo-local, user, and bundled-default precedence. Do not inspect or merge raw
+config surfaces. Validate the resolved
+`workflow.dispatchCeiling.providers` provider/tier cells and compare their
+ordered candidate ladders with the bundled
 `packages/cli/config/dispatch-matrix-recommendation.json` source (or the
 installed bundle's `config/dispatch-matrix-recommendation.json` asset). A
 complete custom ladder is allowed, but every supported provider must have valid
@@ -84,8 +93,15 @@ ordered `candidates` cells through the named project ceiling. A legacy scalar,
 single fallback route, missing tier, empty candidates array, or malformed
 ordering is not a complete ladder.
 
-When the effective ladder is missing or incomplete, show the complete bundled
-recommendation before asking to write anything:
+Keep effective ladder completeness separate from project-ceiling resolution.
+When `dispatch-ceiling resolve` returns `matrix: null`, that can mean only that
+the project policy or named ceiling is unresolved; it is not evidence that the
+effective candidate ladders are absent. When every effective provider/tier cell
+is complete, skip adoption and proceed directly to the separate project-ceiling
+choice.
+
+Only when effective provider/tier cells are missing or incomplete, show the
+complete bundled recommendation before asking to write anything:
 
 | Provider        | Economy                                                        | Balanced                                                                                                       | High                                                        | Frontier                               |
 | --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
@@ -109,12 +125,12 @@ project's named ceiling is a separate project-state constraint. A
 project-specific active policy or ceiling must not be written to user
 `~/.oat/config.json`.
 
-Adoption preserves explicit cells. Re-run the resolver and re-check the full
-ladder after adoption. If preserved legacy or partial cells still leave the
-ladder incomplete or missing, identify those cells and block; do not overwrite,
-infer, or mark the plan implementation-ready. In non-interactive mode, an
-incomplete or missing ladder blocks readiness without choosing an ownership
-scope.
+Adoption preserves explicit cells. After adoption, repeat the merged
+effective-config query and re-check the full ladder before you re-run the
+resolver. If preserved legacy or partial cells still leave effective cells
+incomplete or missing, identify those cells and block; do not overwrite, infer,
+or mark the plan implementation-ready. In non-interactive mode, incomplete or
+missing effective cells block readiness without choosing an ownership scope.
 
 ### Reviewer Ceiling Contract
 
