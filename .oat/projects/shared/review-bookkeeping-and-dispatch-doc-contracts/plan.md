@@ -6,6 +6,11 @@ oat_last_updated: 2026-07-14
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p01', 'p02']]
+oat_phase_review_gate:
+  enabled: true
+  phases: [p01, p02]
+  review_type: code
+  exit_nonzero_on: important
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
