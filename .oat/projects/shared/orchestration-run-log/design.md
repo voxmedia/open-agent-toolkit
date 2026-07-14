@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
@@ -26,7 +26,7 @@ The feature touches four existing surfaces and adds one new one:
 
 **Key Components:**
 
-- **`oat project log` command group (new):** `packages/cli/src/commands/project/log/` — `append` and `check` subcommands. Single write-owner for the artifact.
+- **`oat project log` command group (new):** `packages/cli/src/commands/project/log/` — `append`, `synthesize`, `check`, and `rollup` subcommands. Single write-owner for the artifact (agents never hand-edit it, including the synthesis section), and executable owner of the roll-up mechanics so the loss-prevention boundary is testable code, not prose (gate-review escalation resolution, operator-approved 2026-07-13).
 - **Artifact template (new):** `.oat/templates/project-log.md` — header logging contract + entries region + pending synthesis section. Bundled asset (ships with CLI).
 - **Config key (new):** `workflow.projectLog: true | false | auto` (default `auto`; local > shared > user precedence via the existing layered-config resolver) and `workflow.projectLogLedgerPath` (default `.oat/repo/reference/project-observations.md`).
 - **Scaffold integration:** `oat project new` gains `--with-project-log` / `--no-project-log` overrides; under `true` config, scaffolds the log up front.
@@ -40,7 +40,8 @@ The feature touches four existing surfaces and adds one new one:
                                         ▼
   oat-project-implement ──prose──▶ ┌──────────────────────┐
   (dispatch/STOP/phase entries)    │  oat project log     │──creates/appends──▶ project-log.md
-  oat gate review ────────code──▶  │  append | check      │        │ (header = contract,
+  oat gate review ────────code──▶  │ append | synthesize  │        │ (header = contract,
+                                   │  check | rollup      │        │
   (per-run structural line)        └──────────────────────┘        │  append-only entries,
   agents (judgment entries) ──────────────▲                        │  synthesis section)
                                 self-teaching --help                │
@@ -106,6 +107,44 @@ Produced headings (the machine-parseable grammar; dates in UTC):
 - One subcommand with `--structural` as the class switch (not two subcommands): keeps the help text unified — an agent reading `append --help` sees both entry classes and the whole contract in one place.
 - Create-on-first-append under `auto` implements the dispatch-count trigger without any runtime counting: log existence is caused by the first append attempt, which in v1 coincides with the first OAT-performed dispatch.
 
+### `oat project log synthesize`
+
+**Purpose:** CLI-owned completion of the end-of-run synthesis section, preserving the single-writer contract (agents never hand-edit the artifact). Replaces the template's pending synthesis marker/section with provided content; never touches `## Entries`.
+
+**Interfaces:**
+
+```
+oat project log synthesize --body <text> | --body - (stdin) [--project <path>] [--json]
+```
+
+**Behavior:** errors if no log exists; errors if synthesis is already written (corrections go through a follow-up judgment entry, per the append-only ethos); after it runs, `check` reports `synthesisPending: false`. Prior entry content is byte-identical afterward.
+
+### `oat project log rollup`
+
+**Purpose:** Executable owner of the roll-up mechanics, so `oat-project-summary`/`oat-project-complete` call one command instead of hand-implementing the ordering-critical writes, and so the enforcement path is exercisable from tests (gate escalation resolution, option (a)).
+
+**Interfaces:**
+
+```
+oat project log rollup [--project <path>] [--summary-path <path>] [--json]
+```
+
+**Behavior:** reads the log; writes/updates the `## Workflow Observations` section in the project's `summary.md` (creating the section, never the whole file — errors if summary.md is absent, since summary authoring stays with the skill); appends `general`-scoped and graduated entries to the ledger at `workflow.projectLogLedgerPath` with date+area dedup; idempotent (re-run updates the section, re-dedups the ledger, no duplicates). Returns a structured outcome the skills route on:
+
+```typescript
+interface ProjectLogRollupResult {
+  status: 'ok' | 'failed';
+  summarySection: 'written' | 'updated';
+  ledgerOutcome: 'appended' | 'deduplicated' | 'skipped_permitted' | 'failed';
+  // skipped_permitted = reference layer absent AND workflow.projectLogLedgerPath unset (warn-and-skip per operator decision)
+  entriesRolledUp: number;
+}
+```
+
+`status: 'failed'` (or `ledgerOutcome: 'failed'` with the key explicitly set) is the signal on which `oat-project-complete` must refuse to seal/archive. The permitted skip is `status: 'ok'`.
+
+**Extension point (design for, don't build):** keep the roll-up's artifact target parameterizable in the internal implementation (module-level, not a CLI flag in v1). The cursor-cloud-autonomous-projects team intends to evaluate migrating their `oat-execution-learnings.md` mechanism onto this substrate and reusing the roll-up-before-archive pattern for its identical durability exposure — do not hard-code the assumption that `project-log.md` is the only append-only artifact needing pre-archive verification.
+
 ### `oat project log check`
 
 **Purpose:** Read-only status probe used by `oat-project-complete` (synthesis warning), `oat-project-summary` (anything to roll up?), and humans.
@@ -133,7 +172,7 @@ interface ProjectLogCheckResult {
 }
 ```
 
-**Behavior:** exit 0 in all normal cases; `--require-synthesis` makes `synthesis_pending` exit 1 (mechanical enforcement hook — not used by v1 skills, which warn rather than block, but available for stricter gate configs). Synthesis detection keys on the template's synthesis section marker. Grammar validation applies the heading regex to `###` lines under `## Entries` and reports (never rejects) violations.
+**Behavior:** exit 0 in all normal cases; `--require-synthesis` makes `synthesis_pending` exit 1 (mechanical enforcement hook — not used by v1 skills, which warn rather than block, but available for stricter gate configs). Synthesis detection keys on the template's synthesis section marker. Grammar validation applies the heading regex to `###` lines under `## Entries` and reports (never rejects) violations. **Scope: strictly `project-log.md`.** Sibling append-only artifacts in the same project directory with different grammars (e.g. `oat-execution-learnings.md` from PR #133's autonomous-execution mechanism) are never scanned, classified as grammar violations, or reported as unmanaged logs.
 
 ### Artifact template (`.oat/templates/project-log.md`)
 
@@ -143,10 +182,11 @@ interface ProjectLogCheckResult {
 
 1. Frontmatter: `oat_generated: false`, `oat_template_name: project-log`, `purpose: project-observations`, `oat_last_updated`.
 2. Title + two-audience purpose statement (this project's execution; general workflow/tooling feedback).
-3. **Logging contract** paragraph: when to append, never delete (strike-through + correction note), version-stamp tool observations, evidence-not-narrative, entries via `oat project log append` (pointing at `--help` for the contract), reference artifacts by path.
-4. Entry format block showing both heading grammars.
-5. `## Entries` (chronological, append-only).
-6. `## End-of-run synthesis (pending — do not skip at project completion)` — verdict, adopted adjustments, graduated-entries ledger; note that roll-up precedes archive.
+3. **Logging contract** paragraph: when to append, corrections via new referencing entries (prior entries are never edited), version-stamp tool observations, evidence-not-narrative, entries via `oat project log append` (pointing at `--help` for the contract), reference artifacts by path, and a **secret-redaction rule**: never record secret values (tokens, keys, signed URLs, credentials) — the log rolls up into tracked surfaces (summary.md, repo ledger); reference secrets by name/source, never by value. Mirrored in the append `--help` text.
+4. **Optional structured judgment body:** judgment entries default to the 1–3 sentence shape, but MAY use an `Observation:` / `Impact:` / `Recommendation:` three-field body for high-value entries — the shape that makes mechanical synthesis reliable (adopted from the cursor-cloud-autonomous-projects team's learnings-mechanism experience, 2026-07-14).
+5. Entry format block showing both heading grammars.
+6. `## Entries` (chronological, append-only).
+7. `## End-of-run synthesis (pending — do not skip at project completion)` — verdict, adopted adjustments, graduated-entries ledger; note that roll-up precedes archive.
 
 ### Config keys
 
@@ -160,12 +200,12 @@ interface ProjectLogCheckResult {
 
 ### Lifecycle integrations (v1)
 
-| Surface                 | Kind  | Integration                                                                                                                                                                                                                                                                                                                                                                                                   |
-| ----------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `oat-project-implement` | prose | Append-point instructions at: each dispatch (stamp: phase, role, resolved target — referencing the implementation.md run record by path+anchor, never mirroring it), STOP/park events (triggering condition), phase outcomes (verdict, fix-loop count), parallel-group merge results. One-line instruction each, deferring format to `append --help`.                                                         |
-| `oat gate review`       | code  | After writing the terminal envelope, internally invoke the append routine (direct function call, not a subprocess) with `--structural --producer 'oat gate review' --ref <review-scope>` and a one-liner: target, threshold, findings counts, exit code, status, artifact path. Honors the same config gate; failures to append are logged as warnings and never affect the gate's own exit code or envelope. |
-| `oat-project-summary`   | prose | New step: run `check`; if entries exist, read the log, write `## Workflow Observations` into summary.md (grouped by type, `general` entries flagged), append `general`/graduated entries to the ledger path (dedup by date+area), and offer backlog graduation for entries marked follow-up.                                                                                                                  |
-| `oat-project-complete`  | prose | Before archive: run `check --json`; if `synthesis_pending`, surface a completion **warning** (not a block) and prompt the orchestrator to write the synthesis. Verify summary's roll-up step ran when entries exist. Append the seal entry (completion timestamp, roll-up performed) as the final structural append, then archive.                                                                            |
+| Surface                 | Kind  | Integration                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| ----------------------- | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --- |
+| `oat-project-implement` | prose | Append-point instructions at: each dispatch (stamp: phase, role, resolved target — referencing the implementation.md run record by path+anchor, never mirroring it), STOP/park events (triggering condition), phase outcomes (verdict, fix-loop count), parallel-group merge results. One-line instruction each, deferring format to `append --help`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `oat gate review`       | code  | A **once-only finalization hook covering every terminal outcome** (successful verdicts, blocking verdicts, child failure, timeout, targeting failure, artifact-validation failure) internally invokes the append routine (direct function call, not a subprocess) with structural producer `oat gate review`, ref = review scope, and a one-liner: target, threshold, findings counts (when available), exit code, status, artifact path (when produced). Honors the same config gate; failures to append are logged as warnings and never affect the gate's own exit code or envelope.                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `oat-project-summary`   | prose | New step: run `check`; if entries exist, run `oat project log rollup --json` after summary.md is authored (the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically), then offer backlog graduation for entries marked follow-up. The skill routes on the structured `ProjectLogRollupResult` rather than hand-implementing the writes. **Coexistence with PR #133's learnings synthesis (coordination contract):** the two summary sections stay distinct (`## Workflow Observations` ours, `## Autonomous Execution Learnings` theirs); our roll-up excludes content already synthesized into the learnings section (one-line cross-reference instead of duplication); our step is sequenced explicitly relative to theirs without rewriting the surrounding prose.                                                                                                                                                                 |     |
+| `oat-project-complete`  | prose | Before archive: run `check --json`. If `synthesis_pending`, surface a completion **warning** (not a block) and prompt the orchestrator to write the synthesis via `oat project log synthesize`. **Roll-up is enforced, not merely verified:** when entries exist, completion runs `oat project log rollup --json` itself if summary's step has not already done so, and must NOT seal/archive unless the structured result reports `status: 'ok'` — the archive is gitignored, so sealing an un-rolled-up log permanently loses observations. The permitted ledger skip (`ledgerOutcome: 'skipped_permitted'`) is `ok` and does not block; `status: 'failed'` blocks. Because enforcement routes on a CLI command's structured outcome, the boundary is testable end-to-end from vitest (gate escalation resolution). Synthesis stays warn-only; roll-up is the hard gate. Append the seal entry (completion timestamp, roll-up performed) as the final structural append, then archive. |
 
 ## Data Models
 
@@ -188,7 +228,9 @@ Covered by the interfaces above (heading grammar + `ProjectLogCheckResult`). No 
 - **check:** counts by class/type/scope; synthesis-pending detection on the template marker; `--require-synthesis` exit behavior; grammar-violation reporting on hand-written headings; `absent` status.
 - **config:** `workflow.projectLog` validation + layered precedence; ledger path default/override.
 - **scaffold:** `--with-project-log`/`--no-project-log` interaction with each config value — tests scaffold **from the real repo template**, not a fixture copy (lesson from the placeholder bug in the sibling project).
-- **gate integration:** stubbed gate run appends the structural line; append failure does not alter gate exit/status; config `false` produces no line.
+- **synthesize:** fills the pending synthesis section from `--body`/stdin; errors on missing log or already-written synthesis; entries byte-identical afterward; `check` flips `synthesisPending` to false; format-stable output.
+- **rollup:** summary section written/updated idempotently; ledger outcomes appended/deduplicated/skipped_permitted each tested; unexpected ledger failure (key set, path unwritable) → `status: 'failed'`; errors when summary.md absent; re-run produces no duplicates.
+- **gate integration:** one structural line per gate run across ALL terminal outcomes (success, blocking verdict, child failure, timeout, targeting-correlation failure, artifact-validation failure — each tested explicitly); append failure does not alter gate exit/status; config `false` produces no line.
 
 ### Integration / Manual
 
@@ -203,7 +245,7 @@ Covered by the interfaces above (heading grammar + `ProjectLogCheckResult`). No 
 
 ### Phase 1: CLI foundation
 
-**Goal:** `oat project log append`/`check`, template, config keys — fully tested, no consumers yet.
+**Goal:** `oat project log append`/`synthesize`/`check`/`rollup`, template, config keys — fully tested, no consumers yet.
 **Verification:** unit suites above; `pnpm release:validate`.
 
 ### Phase 2: Scaffold + gate integration
