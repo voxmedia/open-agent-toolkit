@@ -1,6 +1,6 @@
 ---
 name: create-oat-skill
-version: 1.3.0
+version: 1.4.0
 description: Use when adding a new oat-* workflow skill or lifecycle action. Scaffolds the skill with OAT conventions like mode assertions, progress banners, and project-root resolution.
 argument-hint: '[skill-name]'
 disable-model-invocation: true
@@ -105,6 +105,19 @@ Use `.agents/skills/create-oat-skill/references/oat-skill-template.md` as the ba
   - Codex: use structured user-input tooling when available in the current host/runtime
   - Fallback: ask in plain conversational text
 - Do not hard-code a specific Codex question tool name in the skill text unless the host/runtime contract is guaranteed.
+
+**Autonomy gate inventory (required for inventoried lifecycle skills):**
+
+- Before adding, removing, or rewriting prompt behavior in an inventoried
+  lifecycle skill, consult the canonical OAT autonomy contract in the source
+  repository and run its broadened prompt scan.
+- In the same commit, update the gate inventory when behavior changes and the
+  HEAD prompt-site coverage mapping for every changed match. Map reachable
+  behavior to its gate ID and use `NG` only for unreachable/metadata
+  occurrences; never preserve coverage by line number.
+- Run
+  `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`
+  before considering the skill complete.
 
 **Subagent/worker availability (required when the skill delegates):**
 
