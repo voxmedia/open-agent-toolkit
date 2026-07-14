@@ -495,7 +495,7 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 | final  | code     | pending  | -          | -                                                  |
 | spec   | artifact | pending  | -          | -                                                  |
 | design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T005456Z.md |
+| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md |
 
 **Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max, run a7a501f4, artifact `reviews/artifact-plan-review-2026-07-14T005456Z.md`): blocked with 1 Important (no end-to-end roll-up-before-archive verification → added p03-t05) + 4 Medium (gate `false`-with-artifact case; docs nav-sync/Contents-link requirements; append boundary-validation tests; corrections-never-strike-through contract) — all remediated in this plan revision; gate re-run as attempt 2 per `onFailure: block`.
 
