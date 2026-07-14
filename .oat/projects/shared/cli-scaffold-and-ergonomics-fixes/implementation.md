@@ -32,9 +32,9 @@ oat_generated: false
 | p04   | completed   | 1     | 1/1       |
 | p05   | completed   | 2     | 2/2       |
 | p06   | completed   | 2     | 2/2       |
-| p07   | in_progress | 3     | 1/3       |
+| p07   | in_progress | 3     | 2/3       |
 
-**Total:** 9/11 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -132,13 +132,13 @@ oat_generated: false
 
 ### Task p07-t02: (review) Scope the all-tools remediation to no-argument calls
 
-**Status:** pending
-**Commit:** -
+**Status:** in_progress
+**Commit:** `b4ada61f8a232d3265a35b484dfb4cb2dd50e773`
 
 ### Task p07-t03: (review) Pin successful backlog summary trimming
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e4ab4d9957b2c5d3506fdb2998a660934f29ec0c`
 
 ---
 
@@ -525,6 +525,17 @@ Chronological log of implementation progress.
 - final-m2: resolved during review bookkeeping by aligning the completed p06 section and reopening the p07 overview for the two queued final-review tasks.
 
 **Next:** Execute `p07-t02`, then `p07-t03`, and re-run final review.
+
+### Final Review Fix Tasks Committed — Verification Repair Pending
+
+**Continuation:** `impl-p07-20260714T0220Z-bbda7083` / `review-final-r1-20260714T0240Z`
+
+- p07-t02 committed in `b4ada61f8a232d3265a35b484dfb4cb2dd50e773`; RED produced two expected diagnostic failures and GREEN passed 12/12 focused tests.
+- p07-t03 committed in `e4ab4d9957b2c5d3506fdb2998a660934f29ec0c`; 31/31 backlog tests passed and padded-summary normalization is pinned.
+- Combined focused suites passed 43/43.
+- CLI type-check exposed one local p07-t02 narrowing error: `targetResolution.error` remains `string | undefined`.
+
+**Disposition:** Resume the original p07 implementer for one bounded verification-fix commit in `tools/update/index.ts`, then rerun all declared gates.
 
 ---
 
