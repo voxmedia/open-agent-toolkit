@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: p07-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: cli-scaffold-and-ergonomics-fixes
 
 **Started:** 2026-07-13
-**Last Updated:** 2026-07-13
+**Last Updated:** 2026-07-14
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 1     | 1/1       |
-| p02   | completed   | 1     | 1/1       |
-| p03   | completed   | 1     | 1/1       |
-| p04   | completed   | 1     | 1/1       |
-| p05   | completed   | 2     | 2/2       |
-| p06   | completed   | 2     | 2/2       |
-| p07   | in_progress | 3     | 2/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 1     | 1/1       |
+| p02   | completed | 1     | 1/1       |
+| p03   | completed | 1     | 1/1       |
+| p04   | completed | 1     | 1/1       |
+| p05   | completed | 2     | 2/2       |
+| p06   | completed | 2     | 2/2       |
+| p07   | completed | 3     | 3/3       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -122,7 +122,7 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
@@ -132,8 +132,9 @@ oat_generated: false
 
 ### Task p07-t02: (review) Scope the all-tools remediation to no-argument calls
 
-**Status:** in_progress
+**Status:** completed
 **Commit:** `b4ada61f8a232d3265a35b484dfb4cb2dd50e773`
+**Verification fix:** `581559040564e7b51cff955559f01c123cb95692`
 
 ### Task p07-t03: (review) Pin successful backlog summary trimming
 
@@ -537,6 +538,15 @@ Chronological log of implementation progress.
 
 **Disposition:** Resume the original p07 implementer for one bounded verification-fix commit in `tools/update/index.ts`, then rerun all declared gates.
 
+### Final Review Fix Verification and Upstream Reconciliation Complete
+
+**Continuation:** `impl-p07-20260714T0220Z-bbda7083` / `review-final-r1-20260714T0240Z`
+
+- The type-narrowing repair landed in `581559040564e7b51cff955559f01c123cb95692`; focused fix suites, CLI type-check, lint, format, release validation, and package-version checks passed.
+- `origin/main` advanced the same canonical summary skill to `1.3.0` during verification. Merge commit `ecc1343fd764e33abc5ec76772e2b0e82beaa6dc` preserved upstream autonomous-execution learnings and this project's complete decision-section promotion, then rebumped the skill to `1.3.1`.
+- Post-merge command-surface tests passed 283/283. Workspace type-check, lint, format, five-package release validation, and base-relative skill-version validation also passed.
+- All 11 planned tasks are complete. The project is ready for final verification and re-review.
+
 ---
 
 ## Deviations from Plan / Design
@@ -551,20 +561,20 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                         | Passed            | Failed | Coverage |
-| ----- | ------------------------------------------------------------------------------------------------- | ----------------- | ------ | -------- |
-| p01   | `scaffold.test.ts`; CLI type-check                                                                | 28 + type-check   | 0      | Focused  |
-| p02   | `scaffold.test.ts`                                                                                | 29                | 0      | Focused  |
-| p03   | `tools/update/index.test.ts`                                                                      | 11                | 0      | Focused  |
-| p04   | backlog archive/index tests                                                                       | 28                | 0      | Focused  |
-| p05   | decision/backlog/help/skill tests; CLI type-check                                                 | 198 + type-check  | 0      | Focused  |
-| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                 | 186 + type-check  | 0      | Focused  |
-| p07   | CLI tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + all gates | 0      | Full     |
+| Phase | Tests Run                                                                                                       | Passed                       | Failed | Coverage |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------ | -------- |
+| p01   | `scaffold.test.ts`; CLI type-check                                                                              | 28 + type-check              | 0      | Focused  |
+| p02   | `scaffold.test.ts`                                                                                              | 29                           | 0      | Focused  |
+| p03   | `tools/update/index.test.ts`                                                                                    | 11                           | 0      | Focused  |
+| p04   | backlog archive/index tests                                                                                     | 28                           | 0      | Focused  |
+| p05   | decision/backlog/help/skill tests; CLI type-check                                                               | 198 + type-check             | 0      | Focused  |
+| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                               | 186 + type-check             | 0      | Focused  |
+| p07   | CLI/focused merge tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + 43 + 283 + all gates | 0      | Full     |
 
 ## Final Review Finding Dispositions
 
-- **p03-M1:** Converted to `p07-t02`; implementation pending.
-- **p04-m1:** Converted to `p07-t03`; implementation pending.
+- **p03-M1:** Resolved by `p07-t02`; the `--all` remediation is now limited to no-target calls and exact invalid/conflicting-target messages are pinned.
+- **p04-m1:** Resolved by `p07-t03`; successful padded-summary normalization is directly covered.
 - **final-m2:** Resolved in review bookkeeping by aligning phase status labels with the queued-fix state.
 
 ## Final Summary (for PR/docs)
