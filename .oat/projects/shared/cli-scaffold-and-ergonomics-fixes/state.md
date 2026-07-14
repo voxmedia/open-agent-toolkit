@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T00:20:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T00:29:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,14 +50,14 @@ oat_generated: false
 
 ## Current Phase
 
-Plan - Wave-2 scope revision under artifact re-review
+Plan - Complete and ready for implementation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode; operator selected straight to plan)
-- **Plan:** `plan.md` (in progress; blocking review findings resolved, re-review pending)
+- **Plan:** `plan.md` (complete; wave-2 scope revision review passed)
 - **Implementation:** `implementation.md` (initialized; next task `p01-t01`)
 
 ## Progress
@@ -71,7 +71,8 @@ Plan - Wave-2 scope revision under artifact re-review
 - ✓ Wave-2 backlog-creation scope revision validated
 - ✓ Blocking revision-review findings resolved
 - ✓ Final validation-before-initialization blocker resolved
-- ⧗ Plan artifact re-review pending; implementation readiness withheld
+- ✓ Plan artifact re-review passed with no findings
+- ✓ Implementation readiness restored
 
 ## Blockers
 
@@ -79,4 +80,4 @@ None
 
 ## Next Milestone
 
-Pass the revised plan artifact gate, then restore implementation readiness
+Run `oat-project-implement`
