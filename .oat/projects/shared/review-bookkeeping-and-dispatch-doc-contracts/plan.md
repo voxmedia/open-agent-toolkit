@@ -46,16 +46,16 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ### Task p01-t01: Make Reviews rows event-distinct and monotonic
 
-**Files:** `.agents/skills/oat-project-{plan-writing,review-provide,review-receive,implement,pr-final,complete,next}/**`, `packages/control-plane/src/state/reviews.test.ts`, `packages/control-plane/src/recommender/router{,.test}.ts`, `packages/cli/src/commands/project/validate-plan/index.test.ts`, `packages/cli/src/validation/skills.test.ts`
+**Files:** `.agents/skills/oat-project-{plan-writing,review-provide,review-receive,review-receive-remote,implement,pr-final,complete,next}/**`, `packages/control-plane/src/state/reviews.test.ts`, `packages/control-plane/src/recommender/router{,.test}.ts`, `packages/cli/src/commands/project/validate-plan/index.test.ts`, `packages/cli/src/validation/skills.test.ts`
 
 **Implement:**
 
 1. Add RED tests proving duplicate-scope rows parse/validate and the latest `final` event controls routing.
 2. Define append-ordered event rows in plan-writing; claim only an unbound placeholder, otherwise append distinct artifacts, match later mutations by artifact filename, and forbid status regression.
-3. Apply the contract to provide, receive, implementation fix bookkeeping, and final-row readers; change the control-plane router to the last matching row.
-4. Bump each changed skill once: plan-writing `1.2.14`, review-provide `1.3.17`, review-receive `1.5.8`, implement `2.1.1`, pr-final `1.5.2`, complete `1.5.1`, next `1.0.8`; update pinned tests.
+3. Apply the contract to provide, local and remote receive, implementation fix bookkeeping, and final-row readers; change the control-plane router to the last matching row. For remote receive, record an event-distinct review artifact rather than identifying the ledger entry only by scope and `github-pr #<N>`.
+4. Bump each changed skill once: plan-writing `1.2.14`, review-provide `1.3.17`, review-receive `1.5.8`, review-receive-remote `1.4.1`, implement `2.1.1`, pr-final `1.5.2`, complete `1.5.1`, next `1.0.8`; update pinned tests.
 
-**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-next/SKILL.md packages/control-plane/src/state/reviews.test.ts packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/cli/src/commands/project/validate-plan/index.test.ts packages/cli/src/validation/skills.test.ts`
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-review-receive-remote/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-next/SKILL.md packages/control-plane/src/state/reviews.test.ts packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/cli/src/commands/project/validate-plan/index.test.ts packages/cli/src/validation/skills.test.ts`
 
 **Verify:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts src/recommender/router.test.ts && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan/index.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/cli type-check`
 
