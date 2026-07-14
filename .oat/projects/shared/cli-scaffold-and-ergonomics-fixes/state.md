@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-13T23:54:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T00:20:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -70,6 +70,7 @@ Plan - Wave-2 scope revision under artifact re-review
 - ✓ Plan artifact re-review passed and consumed
 - ✓ Wave-2 backlog-creation scope revision validated
 - ✓ Blocking revision-review findings resolved
+- ✓ Final validation-before-initialization blocker resolved
 - ⧗ Plan artifact re-review pending; implementation readiness withheld
 
 ## Blockers

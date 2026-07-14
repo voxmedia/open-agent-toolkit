@@ -243,6 +243,25 @@ Chronological log of implementation progress.
 
 **Next:** Re-run the plan artifact gate; implementation remains blocked until a passing review restores readiness.
 
+### Wave-2 Plan Artifact Re-review Received
+
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-13T235756Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Artifact resolution:**
+
+- I1: Reordered p05-t02 so all user-controlled input normalization/validation completes before backlog initialization or any write, with absent- and existing-scaffold no-mutation regression cases.
+
+**Disposition:** Finding resolved in the plan; readiness remains withheld pending another gate pass.
+
+**Next:** Re-run the plan artifact gate.
+
 **Execution shape:**
 
 - Run p01 first.
