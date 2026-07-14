@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 1     | 1/1       |
-| p02   | completed | 1     | 1/1       |
-| p03   | completed | 1     | 1/1       |
-| p04   | completed | 1     | 1/1       |
-| p05   | completed | 2     | 2/2       |
-| p06   | completed | 2     | 2/2       |
-| p07   | pending   | 1     | 0/1       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 1     | 1/1       |
+| p02   | completed   | 1     | 1/1       |
+| p03   | completed   | 1     | 1/1       |
+| p04   | completed   | 1     | 1/1       |
+| p05   | completed   | 2     | 2/2       |
+| p06   | completed   | 2     | 2/2       |
+| p07   | in_progress | 1     | 1/1       |
 
-**Total:** 8/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ---
 
@@ -122,13 +122,13 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c6f3da150d051f375a0b5984e93fe515e75c6de3`
 
 ---
 
@@ -446,6 +446,25 @@ Chronological log of implementation progress.
 
 **Next:** Begin p07-t01.
 
+### Phase p07 Implementation Complete — Root Review Pending
+
+**Request:** `impl-p07-20260714T0220Z-bbda7083`
+**Starting HEAD:** `bbda708332f1f2a233a4fc7064d948c791a381fb`
+**Task commit:** `c6f3da150d051f375a0b5984e93fe515e75c6de3`
+**Release version:** `0.1.63`
+
+**Result:**
+
+- Merged the latest `origin/main` baseline first, which advanced the public package set to `0.1.62`.
+- Bumped all five lockstep public packages and the bundled version manifest to the next unused version, `0.1.63`.
+- Left `pnpm-lock.yaml`, generated docs, and provider-linked skill views unchanged.
+- Preserved the merged upstream CLI notification work and the canonical `oat-project-summary` patch bump.
+- Passed 2,853 CLI tests, lint, format, type-check, workspace build, docs build, `release:validate`, and base-relative skill-version validation.
+
+**Dispatch:** `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+
+**Next:** Run the root-owned p07 code review.
+
 ---
 
 ## Deviations from Plan / Design
@@ -460,15 +479,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                         | Passed           | Failed | Coverage |
-| ----- | ----------------------------------------------------------------- | ---------------- | ------ | -------- |
-| p01   | `scaffold.test.ts`; CLI type-check                                | 28 + type-check  | 0      | Focused  |
-| p02   | `scaffold.test.ts`                                                | 29               | 0      | Focused  |
-| p03   | `tools/update/index.test.ts`                                      | 11               | 0      | Focused  |
-| p04   | backlog archive/index tests                                       | 28               | 0      | Focused  |
-| p05   | decision/backlog/help/skill tests; CLI type-check                 | 198 + type-check | 0      | Focused  |
-| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check | 186 + type-check | 0      | Focused  |
-| p07   | -                                                                 | -                | -      | -        |
+| Phase | Tests Run                                                                                         | Passed            | Failed | Coverage |
+| ----- | ------------------------------------------------------------------------------------------------- | ----------------- | ------ | -------- |
+| p01   | `scaffold.test.ts`; CLI type-check                                                                | 28 + type-check   | 0      | Focused  |
+| p02   | `scaffold.test.ts`                                                                                | 29                | 0      | Focused  |
+| p03   | `tools/update/index.test.ts`                                                                      | 11                | 0      | Focused  |
+| p04   | backlog archive/index tests                                                                       | 28                | 0      | Focused  |
+| p05   | decision/backlog/help/skill tests; CLI type-check                                                 | 198 + type-check  | 0      | Focused  |
+| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                 | 186 + type-check  | 0      | Focused  |
+| p07   | CLI tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + all gates | 0      | Full     |
 
 ## Final Summary (for PR/docs)
 
