@@ -79,6 +79,15 @@ Use the same `state.md` read you already perform for `oat_pr_status`/`oat_pr_url
 
 Some questions can be answered automatically from workflow preferences. Read each preference before deciding whether to include its question in the batched prompt:
 
+Both lifecycle orderings are supported:
+
+- **Complete before merge:** run this skill while the PR is open, then merge.
+- **Merge before completion:** merge first, then run this skill.
+
+An open PR is not a blocker. When completion archives project artifacts, the
+existing archive-aware flow regenerates and syncs the open PR body so its links
+remain valid.
+
 ```bash
 ARCHIVE_PREF=$(oat config get workflow.archiveOnComplete 2>/dev/null || true)
 PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)

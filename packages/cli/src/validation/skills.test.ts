@@ -2573,6 +2573,60 @@ describe('validateOatSkills', () => {
     expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.8');
   });
 
+  it('supports project completion before or after PR merge in every mode', async () => {
+    const progress = await readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.6');
+
+    const modeSections = [
+      [
+        'spec-driven',
+        progress.slice(
+          progress.indexOf('**Spec-Driven mode'),
+          progress.indexOf('**Quick mode'),
+        ),
+      ],
+      [
+        'quick',
+        progress.slice(
+          progress.indexOf('**Quick mode'),
+          progress.indexOf('**Import mode'),
+        ),
+      ],
+      ['import', progress.slice(progress.indexOf('**Import mode'))],
+    ] as const;
+
+    for (const [mode, section] of modeSections) {
+      expect(section, `${mode} pr_open route`).toMatch(
+        /\|\s*implement\s*\|\s*pr_open\s*\|\s*`oat-project-complete`/i,
+      );
+    }
+
+    for (const skillName of ['oat-project-pr-final', 'oat-project-complete']) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} completion-before-merge`).toMatch(
+        /complete before merge/i,
+      );
+      expect(content, `${skillName} merge-before-completion`).toMatch(
+        /merge before complet/i,
+      );
+      expect(content, `${skillName} open PR permissive`).toMatch(
+        /open PR is not a blocker/i,
+      );
+      expect(content, `${skillName} no ordering config`).not.toContain(
+        'completeBeforeMerge',
+      );
+    }
+
+    const complete = await readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    expect(complete).toMatch(/sync[\s\S]{0,120}open PR body/i);
+  });
+
   it('documents phase-review setup across project workflow references', async () => {
     const artifacts = await readRepoFile(
       'apps/oat-docs/docs/workflows/projects/artifacts.md',

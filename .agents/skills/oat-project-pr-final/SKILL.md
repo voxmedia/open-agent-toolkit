@@ -407,7 +407,7 @@ After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.
 **Content updates:**
 
 - In `## Current Phase`, set:
-  - `Implementation — PR open, awaiting human review.`
+  - `Implementation — PR open; completion may run before or after merge.`
 - In `## Progress`, add:
   - `- ✓ PR created`
   - `- ⧗ Awaiting human review`
@@ -417,8 +417,13 @@ After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.
   PR is open for review.
 
   - To incorporate feedback: run `oat-project-revise`
-  - When approved: run `oat-project-complete`
+  - Complete before merge: run `oat-project-complete` now, then merge the PR.
+  - Merge before completion: merge the PR, then run `oat-project-complete`.
   ```
+
+Both orderings are supported. An open PR is not a blocker for
+`oat-project-complete`; when completion archives project artifacts, it
+regenerates and syncs the open PR body.
 
 If `state.md` is missing, skip with a warning.
 
@@ -429,4 +434,4 @@ If `state.md` is missing, skip with a warning.
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)
 - Project `state.md` shows `oat_phase_status: pr_open`
-- Next milestone references both `oat-project-revise` (for feedback) and `oat-project-complete` (when approved)
+- Next milestone references both `oat-project-revise` (for feedback) and both supported `oat-project-complete` orderings
