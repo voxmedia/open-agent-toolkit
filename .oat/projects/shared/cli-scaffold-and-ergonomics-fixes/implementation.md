@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 1     | 1/1       |
-| p02   | completed   | 1     | 1/1       |
-| p03   | completed   | 1     | 1/1       |
-| p04   | completed   | 1     | 1/1       |
-| p05   | completed   | 2     | 2/2       |
-| p06   | in_progress | 2     | 2/2       |
-| p07   | pending     | 1     | 0/1       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 1     | 1/1       |
+| p02   | completed | 1     | 1/1       |
+| p03   | completed | 1     | 1/1       |
+| p04   | completed | 1     | 1/1       |
+| p05   | completed | 2     | 2/2       |
+| p06   | completed | 2     | 2/2       |
+| p07   | pending   | 1     | 0/1       |
 
 **Total:** 8/9 tasks completed
 
@@ -180,15 +180,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Branch:** `cli-scaffold-and-ergonomic-fixes`
 **Tier:** Tier 1
 **Dispatch policy:** managed `high`
-**Phases passed / failed / stopped:** 4 / 0 / 0; p06 root review passed with its configured external gate pending
+**Phases passed / failed / stopped:** 5 / 0 / 0
 
-| Phase | Outcome      | Task commits                                         | Root review       | External gate  |
-| ----- | ------------ | ---------------------------------------------------- | ----------------- | -------------- |
-| p02   | passed       | `86615849`                                           | passed            | not configured |
-| p03   | passed       | `8d19e952`                                           | passed (1 Medium) | not configured |
-| p04   | passed       | `26316bea`                                           | passed (1 Minor)  | not configured |
-| p05   | passed       | `6a9de955`, `93a7361d`; fixes `001f26f3`, `70aa45d1` | passed on round 2 | not configured |
-| p06   | gate pending | `6b017d46`, `d02dada9`; fix `470e66f1`               | passed on round 2 | pending        |
+| Phase | Outcome | Task commits                                         | Root review       | External gate  |
+| ----- | ------- | ---------------------------------------------------- | ----------------- | -------------- |
+| p02   | passed  | `86615849`                                           | passed            | not configured |
+| p03   | passed  | `8d19e952`                                           | passed (1 Medium) | not configured |
+| p04   | passed  | `26316bea`                                           | passed (1 Minor)  | not configured |
+| p05   | passed  | `6a9de955`, `93a7361d`; fixes `001f26f3`, `70aa45d1` | passed on round 2 | not configured |
+| p06   | passed  | `6b017d46`, `d02dada9`; fix `470e66f1`               | passed on round 2 | passed         |
 
 **Parallel group:** p02-p06 ran in isolated worktrees from base `f4b6881a`; all five passed root review, merged in plan order, and their worktrees were removed after integration.
 
@@ -199,6 +199,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Root review requests `review-p02-r1-20260714T0142Z` through `review-p06-r1-20260714T0142Z`; p05 and p06 continued through round-2 requests after bounded fixes.
 - `Dispatch: scope=p02-p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - The p02 and p05 round-2 reviewer transports closed after writing complete, valid artifacts; those accepted-launch artifacts were validated and used without replacement dispatches.
+- External p06 gate run `8932a6d7-3a3e-4536-8626-71a85738ce8b`; configured target `codex-5-6-sol-max`; invocation model `gpt-5.6-sol`; reasoning effort `max`.
 
 **Review artifacts:**
 
@@ -209,6 +210,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `reviews/code-p05-review-2026-07-14T015626Z.md`
 - `reviews/code-p06-review-2026-07-14T014731Z.md`
 - `reviews/code-p06-review-2026-07-14T015952Z.md`
+- `reviews/archived/p06-review-2026-07-14T021025Z.md`
 
 **Fix iterations:**
 
@@ -221,7 +223,6 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - p03 Medium: exact no-argument remediation also appears on other target-resolution errors; non-blocking under the configured threshold and deferred for final disposition.
 - p04 Minor: successful trimming is implemented but lacks a padded-summary success regression; non-blocking and deferred for final disposition.
-- p06 external phase gate remains pending.
 
 <!-- orchestration-runs-end -->
 
@@ -415,7 +416,7 @@ Chronological log of implementation progress.
 
 **Next:** Execute the plan-declared parallel group p02-p06.
 
-### Parallel Group p02-p06 Integrated — p06 External Gate Pending
+### Parallel Group p02-p06 Integrated
 
 **Implementation results:**
 
@@ -435,7 +436,15 @@ Chronological log of implementation progress.
 
 **Integration verification:** All five phases merged in plan order. The combined focused suite passed 437/437 tests; workspace type-check, lint, format, and a direct CLI build passed. An initial parallel verification attempt raced concurrent asset bundlers; sequential rerun and direct build established clean results.
 
-**Next:** Commit group bookkeeping, run the configured non-pausing p06 external gate, then begin p07-t01.
+### Phase p06 External Gate Received
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/p06-review-2026-07-14T021025Z.md`
+**Gate run:** `8932a6d7-3a3e-4536-8626-71a85738ce8b`
+**Findings:** Critical 0, Important 0, Medium 0, Minor 0.
+**Disposition:** Passing-gate judgment sweep completed with no findings to address, defer, or reject. Phase p06 passed.
+
+**Next:** Begin p07-t01.
 
 ---
 

@@ -451,19 +451,19 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed   | 2026-07-14 | reviews/archived/p01-review-2026-07-14T010459Z.md           |
-| p02    | code     | passed   | 2026-07-14 | reviews/code-p02-review-2026-07-14T014241Z.md               |
-| p03    | code     | passed   | 2026-07-14 | reviews/code-p03-review-2026-07-14T014251Z.md               |
-| p04    | code     | passed   | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
-| p05    | code     | passed   | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
-| p06    | code     | received | 2026-07-14 | reviews/p06-review-2026-07-14T021025Z.md                    |
-| p07    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002324Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | passed  | 2026-07-14 | reviews/archived/p01-review-2026-07-14T010459Z.md           |
+| p02    | code     | passed  | 2026-07-14 | reviews/code-p02-review-2026-07-14T014241Z.md               |
+| p03    | code     | passed  | 2026-07-14 | reviews/code-p03-review-2026-07-14T014251Z.md               |
+| p04    | code     | passed  | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
+| p05    | code     | passed  | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
+| p06    | code     | passed  | 2026-07-14 | reviews/archived/p06-review-2026-07-14T021025Z.md           |
+| p07    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002324Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
