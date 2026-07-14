@@ -16,22 +16,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status  | Tasks | Completed |
-| -------------------------------------- | ------- | ----- | --------- |
-| p01 Canonical contracts                | pending | 3     | 0/3       |
-| p02 Gate-review prompt                 | pending | 1     | 0/1       |
-| p03 Provider projection/public release | pending | 1     | 0/1       |
+| Phase                                  | Status      | Tasks | Completed |
+| -------------------------------------- | ----------- | ----- | --------- |
+| p01 Canonical contracts                | in_progress | 3     | 0/3       |
+| p02 Gate-review prompt                 | in_progress | 1     | 0/1       |
+| p03 Provider projection/public release | pending     | 1     | 0/1       |
 
 **Total:** 0/5 tasks completed
 
 ## Phase 1: Canonical Planning and Runtime Contracts
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p01-t01: Resolve formatting once during plan authoring
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ### Task p01-t02: Add the runtime artifact hygiene contract
@@ -46,12 +46,12 @@ oat_generated: false
 
 ## Phase 2: Gate-Review Prompt Enforcement
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p02-t01: Inject and test the gate-review hygiene contract
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ## Phase 3: Provider Projection and Public Release
@@ -83,6 +83,7 @@ _No implementation runs yet._
 - Phase gate review: disabled by operator.
 - Quick-start lifecycle gate blocked after two 900-second `review_failed` timeouts against `codex-5-6-sol-max` (run IDs `2157923e-4430-4fd6-844b-ace61cd38990` and `11832394-1aa6-4df9-a82f-3d73e50ef105`). Neither run produced findings, an artifact, or a receive-eligible handoff.
 - Operator-authorized `< /dev/null` recovery completed the gate and produced a corroborated blocking artifact review.
+- Launched parallel phase implementers for p01 and p02 from exact base `0faa4998c964371e683d8a3fbfbea221681c8685` using Cursor target `gpt-5.6-sol-high`.
 
 ### Review Received: plan
 
