@@ -575,7 +575,8 @@ Chronological log of implementation progress.
 - All five public packages and the bundled version manifest are lockstep at `0.1.65`; `pnpm-lock.yaml` did not change.
 - `pnpm release:validate`, skill-version validation, type-check, lint, and format passed.
 - The eight paths previously reported as formatter churn have no diff from current `origin/main`.
-- All 12 planned tasks are complete; final workspace verification and review round 3 remain.
+- Final verification passed 2,877 CLI tests across 246 files, all workspace tests and static checks, five production package builds, the production docs build, release validation at `0.1.65`, and both changed-skill version checks.
+- All 12 planned tasks are complete and verified; review round 3 remains.
 
 ---
 
@@ -599,7 +600,7 @@ Track test execution during implementation.
 | p04   | backlog archive/index tests                                                                                     | 28                | 0      | Focused  |
 | p05   | decision/backlog/help/skill tests; CLI type-check                                                               | 198 + type-check  | 0      | Focused  |
 | p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                               | 186 + type-check  | 0      | Focused  |
-| p07   | CLI/focused merge tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,874 + all gates | 0      | Full     |
+| p07   | CLI/focused merge tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,877 + all gates | 0      | Full     |
 
 ## Final Review Finding Dispositions
 
@@ -638,7 +639,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- 2,874 CLI tests passed across 246 files.
+- 2,877 CLI tests passed across 246 files.
 - Workspace lint, formatting, type checking, package build, and production docs build passed.
 - `pnpm release:validate` packed and validated all five public packages at `0.1.65`.
 - Canonical skill validation and base-relative skill-version-bump validation passed.
