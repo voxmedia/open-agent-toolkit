@@ -3165,4 +3165,19 @@ describe('validateOatSkills', () => {
       findings: [],
     });
   });
+
+  it('requires project-summary decision promotion to pass every record section', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+    const stepSix = content.match(
+      /### Step 6: Promote Key Decisions[\s\S]*?(?=### Step 7:)/,
+    )?.[0];
+
+    expect(stepSix).toBeDefined();
+    expect(stepSix).toMatch(
+      /oat decision new "<title>"[\s\S]*--context "<context>"[\s\S]*--decision "<decision>"[\s\S]*--consequences "<consequences>"/,
+    );
+    expect(stepSix).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
+  });
 });

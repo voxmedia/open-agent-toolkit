@@ -1,6 +1,6 @@
 ---
 name: oat-project-summary
-version: 1.2.0
+version: 1.2.1
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
@@ -221,7 +221,12 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
 
 **6.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
 
-1. **Derive title + rationale.** The decision's bold lead-in / first clause becomes the **title** (a short noun phrase). The remaining explanatory text becomes the **rationale**, passed verbatim as `--context`.
+1. **Derive title + complete sections.** Ground every value in the Key Decision and its project artifacts:
+   - The bold lead-in / first clause becomes the **title** (a short noun phrase).
+   - The problem, constraint, or motivating rationale becomes **context**.
+   - The choice that was made becomes the **decision**.
+   - The resulting tradeoffs, follow-on effects, or operational implications become **consequences**.
+     Each section must contain concrete grounded prose; do not pass placeholder content.
 2. **Compute the slug the CLI would use.** The CLI generates the record ID as `DR-<YYMMDD>-<slug>`, where `<slug>` is the lowercased, ASCII-folded, hyphen-collapsed form of the title, capped at 30 characters at the last whole-word boundary with trailing stop-words (`a, an, the, of, for, and, to, in, on, as, with`) trimmed (the same slug rule the CLI applies). Compute that `<slug>` for the title.
 3. **Dedup on the exact slug, ignoring only the date prefix.** A record ID is `DR-<YYMMDD>-<slug>`, where the date is exactly six digits. Check whether a record for this slug already exists by stripping that fixed `DR-<6 digits>-` prefix from existing record IDs and comparing the remaining slug for **exact equality**. Anchor the date to exactly six characters so the slug must match in full:
 
@@ -237,10 +242,10 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
    - Otherwise → create it:
 
      ```bash
-     oat decision new "<title>" --status accepted --context "<rationale>"
+     oat decision new "<title>" --status accepted --context "<context>" --decision "<decision>" --consequences "<consequences>"
      ```
 
-     The command generates the deterministic `DR-YYMMDD-slug` ID, seeds the body from `.oat/templates/decision.md`, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
+     The command generates the deterministic `DR-YYMMDD-slug` ID, fills every decision body section, and regenerates the managed index automatically — do not hand-edit `index.md`. Optionally pass `--created-at "<project completion date>"` when a project completion date is available, so the record's date reflects when the decision was made.
 
 Because of the date-independent slug dedup, this step is **safe to run every time `summary.md` is (re)generated** — including the pr-final refresh and revision re-runs — without ever creating duplicate decision records. Already-promoted decisions are skipped; only genuinely new Key Decisions become new records.
 

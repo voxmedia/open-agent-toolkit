@@ -292,6 +292,8 @@ describe('help output snapshots', () => {
                                   .oat/repo/reference/decisions)
         --status <status>         Decision status (default: "proposed")
         --context <text>          Initial context body text
+        --decision <text>         Initial decision body text
+        --consequences <text>     Initial consequences body text
         --created-at <timestamp>  Creation timestamp seed for reproducible ID
                                   generation
         -h, --help                display help for command

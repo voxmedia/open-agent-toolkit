@@ -17,6 +17,8 @@ export interface CreateDecisionRecordOptions {
   title: string;
   status?: string;
   context?: string;
+  decision?: string;
+  consequences?: string;
   createdAt?: string;
 }
 
@@ -120,6 +122,8 @@ function renderDecisionRecord(
     date: string;
     status: string;
     context: string;
+    decision: string;
+    consequences: string;
   },
 ): string {
   const bodyTemplate = stripTemplateFrontmatter(template).replace(
@@ -132,8 +136,8 @@ function renderDecisionRecord(
     date: options.date,
     status: options.status,
     context: options.context,
-    decision: 'TODO',
-    consequences: 'TODO',
+    decision: options.decision,
+    consequences: options.consequences,
   });
   const frontmatter = YAML.stringify({
     id: options.id,
@@ -172,6 +176,8 @@ export async function createDecisionRecord(
     date: createdAt.date,
     status,
     context: options.context ?? 'TODO',
+    decision: options.decision ?? 'TODO',
+    consequences: options.consequences ?? 'TODO',
   });
 
   await assertDecisionIndexScaffold(options.decisionsRoot);
