@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.0.41
+version: 2.1.0
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -34,6 +34,23 @@ After resolving `ACTIVE_PROVIDER`, read exactly one active-provider reference
 from `.agents/skills/oat-dispatch-subagents/references/`
 (`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
 merge provider mechanics.
+
+## Autonomy Policy
+
+When `OAT_AUTONOMOUS=1`, read
+`references/docs/autonomy-contract.md` and keep `OAT_NON_INTERACTIVE=1` set for
+this run. Autonomy-specific behavior is routed with the rest of the workflow:
+
+- delegation authorization: `references/dispatch-and-dry-run.md`;
+- HiLL resolution and checkpoint review/receive:
+  `references/plan-and-resume.md`;
+- final review, final HiLL approval, and lifecycle-tail sequencing:
+  `references/completion-and-closeout.md`.
+
+These are additive autonomous branches. When `OAT_AUTONOMOUS` is not exactly
+`1`, preserve every existing interactive prompt and preference path. Never
+persist either autonomy environment signal in project artifacts or config;
+record only the gate decision and its review/dispatch provenance.
 
 ## Mode Assertion
 

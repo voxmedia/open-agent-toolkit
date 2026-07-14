@@ -27,6 +27,13 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- The CLI passively reports newer stable npm releases during eligible ordinary
+  commands. Before `init`, `tools install`, or `tools update` mutates bundled
+  tools, a known newer CLI triggers a default-no freshness guard explaining
+  that the running CLI can only install its older bundled versions. Acceptance
+  updates the exact CLI version and requires a shell-aware rerun. Daily
+  best-effort checks and three-day same-version notice cadence are cached under
+  `~/.oat`; automation and opted-out invocations remain silent.
 - Gate reviews now declare and corroborate their project, bind an immutable
   configured invocation record to the review artifact, and fail closed on
   correlation or provenance mismatch.

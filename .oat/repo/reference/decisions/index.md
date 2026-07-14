@@ -15,6 +15,11 @@
 | DR-260714-planner-first-formatter        | 2026-07-14 | accepted | Planner-first formatter resolution                                      | -      |
 | DR-260714-self-contained-contracts-at    | 2026-07-14 | accepted | Self-contained contracts at writing boundaries                          | -      |
 | DR-260714-tracked-artifacts-remain       | 2026-07-14 | accepted | Tracked artifacts remain formatted                                      | -      |
+| DR-260713-automation-safe-update         | 2026-07-13 | accepted | Automation-safe update eligibility                                      | -      |
+| DR-260713-best-effort-cross-process      | 2026-07-13 | accepted | Best-effort cross-process update cadence                                | -      |
+| DR-260713-dual-update-suppression        | 2026-07-13 | accepted | Dual update suppression controls                                        | -      |
+| DR-260713-passive-notification-only      | 2026-07-13 | accepted | Passive notification only                                               | -      |
+| DR-260713-stable-npm-metadata            | 2026-07-13 | accepted | Stable npm metadata with a dedicated cache                              | -      |
 | DR-260712-accepted-launches-are-not      | 2026-07-12 | accepted | Accepted launches are not silently replaced                             | -      |
 | DR-260712-generic-dispatch-remains       | 2026-07-12 | accepted | Generic dispatch remains separate from project lifecycle policy         | -      |
 | DR-260712-provider-mechanics-remain-load | 2026-07-12 | accepted | Provider mechanics remain load-one-only references                      | -      |

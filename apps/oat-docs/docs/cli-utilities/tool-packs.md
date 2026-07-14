@@ -49,6 +49,25 @@ skills can use the utility engine directly.
 
 The `oat tools` command group provides a unified interface for managing installed tools (skills and agents) across scopes.
 
+### CLI updates before bundled-tool mutations
+
+Tool packs ship inside the OAT CLI package. An older CLI can therefore install or update only the tool versions in its own bundle, while a newer stable CLI release may contain newer bundled versions. This is a bundle-freshness warning, not a claim that tools installed by the current CLI are immediately incompatible with it.
+
+Before an eligible interactive `oat init`, `oat tools install` (including pack subcommands), or `oat tools update` mutation, OAT checks the cached stable CLI availability. If a newer version is known, it explains the bundle difference and offers, with a default answer of no, to install that exact validated version:
+
+```bash
+npm install --global @open-agent-toolkit/cli@<validated-version>
+```
+
+- Accepting updates the CLI package only, stops before changing bundled tools, and asks you to rerun the original command under the new CLI.
+- Declining or aborting warns that the current bundle may be older, then continues the requested command.
+- If npm fails, OAT does not run the tool mutation and reports how to retry the CLI installation.
+- Dry-run, JSON, non-interactive, opted-out, CI, test, source-development, and ephemeral package-runner invocations do not prompt or install.
+
+Set `NO_UPDATE_NOTIFIER` to a truthy value (for example, `1`, `true`, `yes`, or `on`) to suppress checks for one process; empty, `0`, and `false` do not suppress them.
+
+Other eligible commands keep the passive update notice and never launch the installer.
+
 ## Install vs. initialize
 
 The `project-management` pack has two lifecycle steps:
@@ -131,7 +150,7 @@ Key behavior:
 - Pack-oriented install subcommands: `core`, `docs`, `ideas`, `workflows`, `utility`, `project-management`, `research`, `brainstorm`
 - Interactive installs show each pack's current install location in the picker so already-installed packs are visible before you submit
 - Installing is **additive**: choosing a scope for a pack never removes it from another scope. A user-eligible pack installed at user scope plus a project install ends up at `project + user`, not moved
-- For each user-eligible pack (`ideas`, `docs`, `utility`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
+- For each user-eligible pack (`ideas`, `docs`, `workflows`, `utility`, `research`, `brainstorm`), the interactive flow offers a per-pack end-state selector (`project`, `user`, or `both`) defaulting to the pack's current placement; leaving the default makes no changes for that pack
 - `oat init --setup` uses this same additive scope resolver. In guided setup, choosing to customize scope reaches the per-pack selector; choosing the recommended defaults, or running non-interactively, applies additive per-pack defaults without removals
 - The `brainstorm` pack defaults to user scope on fresh installs (driven by `PACK_METADATA[brainstorm].defaultScope = 'user'`); existing installs keep their current placement on re-install, so a re-install never moves a pack between scopes
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
@@ -154,6 +173,7 @@ Key behavior:
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Compares installed versions against bundled versions and copies updated assets
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
+- Pack-targeted updates intentionally rewrite bundled template and script companions in place, even when the pack's installed skills are already current
 - For `--pack <pack>` and `--all`, shared repo config is also reconciled from an installed-pack scan so `tools.*` reflects what is actually available and stale `true` flags are cleared
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
@@ -182,6 +202,33 @@ Tool-pack lifecycle commands now persist pack availability in shared repo config
 - `oat tools remove --pack <pack>` and `oat tools remove --all` rebuild the same map after removals
 
 This matters because other workflows can now check `oat config get tools.<pack>` instead of inferring capabilities from directory existence alone. For example, `oat-project-document` checks `tools.project-management` before auto-running repo-reference refresh work.
+
+## Workflows pack
+
+The workflows pack is installable at project scope, user scope, or both. A
+user-scope install carries the complete versioned asset set:
+
+- skills and agents → `~/.agents/skills/` and `~/.agents/agents/`;
+- templates → `~/.oat/templates/`;
+- executable helper scripts → `~/.oat/scripts/`.
+
+Use either the direct or aggregate form:
+
+```bash
+oat tools install workflows --scope user
+oat init tools workflows --scope user
+```
+
+User scope intentionally skips project-root scaffolding: it does not create a
+home-level `.oat/projects-root`, `.oat/projects/` tree, or projects-root config.
+Projects remain anchored in the target repository. Project-scope installation
+retains its existing scaffolding and local-path setup.
+
+`oat tools update --pack workflows --scope user` refreshes all four asset
+classes in place, including newly bundled skills and agents. Pack removal and a
+confirmed aggregate scope reduction remove those same user-level assets.
+Companion template and script removal is user-scope-only; project-scope removal
+leaves repo-local `.oat/templates/` and `.oat/scripts/` assets intact.
 
 ## Core pack
 

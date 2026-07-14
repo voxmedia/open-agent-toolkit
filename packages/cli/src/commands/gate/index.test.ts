@@ -1649,6 +1649,73 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it.each([
+    {
+      producer: 'gpt-5.6-sol-xhigh',
+      sameFamilyModel: 'gpt-5.6-sol-max',
+    },
+    {
+      producer: 'claude-fable-5-xhigh',
+      sameFamilyModel: 'claude-fable-5-thinking-high',
+    },
+  ])(
+    'selects Grok as a different-family target for producer $producer',
+    async ({ producer, sameFamilyModel }) => {
+      const { root, home } = await setup();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gates: {
+              execTargets: {
+                'codex-default': null,
+                'claude-default': null,
+                'cursor-default': null,
+                'same-family-unavailable': {
+                  runtime: 'cursor',
+                  baseCommand: ['cursor-agent', '-p'],
+                  models: [sameFamilyModel],
+                  availabilityCommand: ['same-family-unavailable'],
+                  priority: 300,
+                },
+                'grok-tertiary': {
+                  runtime: 'cursor',
+                  baseCommand: ['cursor-agent', '-p'],
+                  models: ['cursor-grok-4.5-high'],
+                  priority: 100,
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner();
+
+      const capture = await runCrossProviderExec({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--producer-identity', `${producer}:declared`, 'Run', 'review'],
+        globalArgs: [],
+      });
+
+      expect(runner.calls.at(-1)).toMatchObject({
+        command: 'cursor-agent',
+        args: ['-p', '--model', 'cursor-grok-4.5-high', 'Run', 'review'],
+        purpose: 'execute',
+      });
+      expect(capture.info.join('\n')).toContain(
+        'Gate diversity: achieved=different-family',
+      );
+      expect(capture.info.join('\n')).toContain(
+        'reviewer=grok-tertiary reviewer_family=xai',
+      );
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
   it('uses producer identity from implementation stamps when no flag is supplied', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);

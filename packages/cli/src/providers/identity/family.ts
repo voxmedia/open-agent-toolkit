@@ -1,4 +1,10 @@
-export type ModelFamily = 'claude' | 'openai' | 'composer' | 'glm' | 'unknown';
+export type ModelFamily =
+  | 'claude'
+  | 'openai'
+  | 'xai'
+  | 'composer'
+  | 'glm'
+  | 'unknown';
 
 interface ClassifyModelFamilyInput {
   value: string;
@@ -13,6 +19,7 @@ interface ClassifyModelFamilyInput {
 const PROVIDER_ID_FAMILIES: Array<[RegExp, ModelFamily]> = [
   [/^(anthropic|claude)$/i, 'claude'],
   [/^(openai|codex)$/i, 'openai'],
+  [/^(xai|x-ai|grok)$/i, 'xai'],
   [/^composer$/i, 'composer'],
   [/^(glm|zai|zhipu)$/i, 'glm'],
 ];
@@ -20,6 +27,7 @@ const PROVIDER_ID_FAMILIES: Array<[RegExp, ModelFamily]> = [
 const VALUE_FAMILIES: Array<[RegExp, ModelFamily]> = [
   [/\b(claude|sonnet|opus|haiku|fable)\b/i, 'claude'],
   [/\b(gpt|openai|codex|o[1-9])[-\w.]*\b/i, 'openai'],
+  [/\b(grok|xai|x-ai)\b/i, 'xai'],
   [/\bcomposer\b/i, 'composer'],
   [/\bglm\b/i, 'glm'],
 ];

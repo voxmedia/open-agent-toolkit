@@ -88,6 +88,10 @@ import {
   RESEARCH_AGENTS,
   RESEARCH_SKILLS,
   UTILITY_SKILLS,
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
   resolvePackDefaultScope,
 } from './shared/skill-manifest';
 import { createInitToolsUtilityCommand } from './utility';
@@ -204,7 +208,7 @@ const ALL_TOOL_PACKS = [
 
 type UserEligiblePack = Extract<
   ToolPack,
-  'ideas' | 'docs' | 'utility' | 'research' | 'brainstorm'
+  'ideas' | 'docs' | 'workflows' | 'utility' | 'research' | 'brainstorm'
 >;
 
 const USER_ELIGIBLE_PACK_MEMBERS: Record<
@@ -218,6 +222,10 @@ const USER_ELIGIBLE_PACK_MEMBERS: Record<
   docs: {
     skills: DOCS_SKILLS,
     agents: [],
+  },
+  workflows: {
+    skills: WORKFLOW_SKILLS,
+    agents: WORKFLOW_AGENTS,
   },
   utility: {
     skills: UTILITY_SKILLS,
@@ -280,6 +288,7 @@ const DEFAULT_DEPENDENCIES: InitToolsDependencies = {
 const USER_ELIGIBLE_PACKS: ReadonlySet<ToolPack> = new Set([
   'ideas',
   'docs',
+  'workflows',
   'utility',
   'research',
   'brainstorm',
@@ -456,7 +465,7 @@ function buildPackChoices(
       checked: false,
     },
     {
-      label: `Workflows [project]${installedPackStates.workflows.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.workflows.location)})`}`,
+      label: `Workflows [project|user]${installedPackStates.workflows.location === 'not-installed' ? '' : ` (installed: ${formatInstalledLocation(installedPackStates.workflows.location)})`}`,
       value: 'workflows',
       checked: true,
     },
@@ -497,6 +506,15 @@ async function removePackFromScope(
 
   for (const agent of members.agents) {
     await dependencies.removeFile(join(root, '.agents', 'agents', agent));
+  }
+
+  if (pack === 'workflows') {
+    for (const template of WORKFLOW_TEMPLATES) {
+      await dependencies.removeFile(join(root, '.oat', 'templates', template));
+    }
+    for (const script of WORKFLOW_SCRIPTS) {
+      await dependencies.removeFile(join(root, '.oat', 'scripts', script));
+    }
   }
 }
 
@@ -553,7 +571,7 @@ async function resolvePackScopes(
 ): Promise<PackScopeMap> {
   const scopes: Partial<PackScopeMap> = {};
 
-  // Workflows is always project-only
+  // Packs outside the user-eligible set are project-only.
   for (const pack of selections) {
     if (!USER_ELIGIBLE_PACKS.has(pack)) {
       scopes[pack] = 'project';
@@ -1083,68 +1101,79 @@ export async function runInitTools(
     }
 
     if (selectedPacks.includes('workflows')) {
-      affectedScopes.add('project');
-      const workflowsResult = await dependencies.installWorkflows({
-        assetsRoot,
-        targetRoot: projectRoot,
-      });
-      for (const skill of workflowsResult.outdatedSkills) {
-        outdatedSkills.push({
-          ...skill,
-          targetRoot: projectRoot,
-          selectionKey: `${skill.name}:${projectRoot}`,
-        });
-      }
-
-      const resolvedRoot =
-        workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
-      const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
-      const PR_ARCHIVE_LOCAL_PATHS = [
-        `${projectsBase}/**/pr`,
-        `${projectsBase}/**/reviews/archived`,
-      ];
-
-      const existingConfig = await dependencies.readOatConfig(projectRoot);
-      const existingLocalPaths = new Set(
-        dependencies.resolveLocalPaths(existingConfig),
-      );
-      const alreadyConfigured = PR_ARCHIVE_LOCAL_PATHS.every((p) =>
-        existingLocalPaths.has(p),
-      );
-
-      if (!alreadyConfigured) {
-        let makeLocal = true;
-        if (context.interactive) {
-          const selected = await dependencies.selectWithAbort(
-            'Should shared-project PR directories and archived review history be local-only (gitignored) or version-controlled?',
-            [
-              {
-                label: 'Local only (recommended)',
-                value: 'local',
-                description:
-                  'PR artifacts and archived reviews stay local; active reviews remain tracked until received',
-              },
-              {
-                label: 'Version controlled',
-                value: 'tracked',
-                description:
-                  'PR artifacts and archived reviews are committed to the repo too',
-              },
-            ],
-            { interactive: context.interactive },
-          );
-          makeLocal = selected !== 'tracked';
+      const workflowsAdded = addedScopes('workflows');
+      for (const targetRoot of packTargets('workflows')) {
+        const targetScope: ConcreteScope =
+          targetRoot === userRoot ? 'user' : 'project';
+        if (workflowsAdded.has(targetScope)) {
+          affectedScopes.add(targetScope);
         }
 
-        if (makeLocal) {
-          const addResult = await dependencies.addLocalPaths(
-            projectRoot,
-            PR_ARCHIVE_LOCAL_PATHS,
+        const workflowsResult = await dependencies.installWorkflows({
+          assetsRoot,
+          targetRoot,
+          scope: targetScope,
+        });
+        for (const skill of workflowsResult.outdatedSkills) {
+          outdatedSkills.push({
+            ...skill,
+            targetRoot,
+            selectionKey: `${skill.name}:${targetRoot}`,
+          });
+        }
+
+        if (targetScope === 'project') {
+          const resolvedRoot =
+            workflowsResult.resolvedProjectsRoot || '.oat/projects/shared';
+          const projectsBase = resolvedRoot.replace(/\/[^/]+$/, '');
+          const PR_ARCHIVE_LOCAL_PATHS = [
+            `${projectsBase}/**/pr`,
+            `${projectsBase}/**/reviews/archived`,
+          ];
+
+          const existingConfig = await dependencies.readOatConfig(projectRoot);
+          const existingLocalPaths = new Set(
+            dependencies.resolveLocalPaths(existingConfig),
           );
-          if (addResult.added.length > 0) {
-            const config = await dependencies.readOatConfig(projectRoot);
-            const allPaths = dependencies.resolveLocalPaths(config);
-            await dependencies.applyGitignore(projectRoot, allPaths);
+          const alreadyConfigured = PR_ARCHIVE_LOCAL_PATHS.every((p) =>
+            existingLocalPaths.has(p),
+          );
+
+          if (!alreadyConfigured) {
+            let makeLocal = true;
+            if (context.interactive) {
+              const selected = await dependencies.selectWithAbort(
+                'Should shared-project PR directories and archived review history be local-only (gitignored) or version-controlled?',
+                [
+                  {
+                    label: 'Local only (recommended)',
+                    value: 'local',
+                    description:
+                      'PR artifacts and archived reviews stay local; active reviews remain tracked until received',
+                  },
+                  {
+                    label: 'Version controlled',
+                    value: 'tracked',
+                    description:
+                      'PR artifacts and archived reviews are committed to the repo too',
+                  },
+                ],
+                { interactive: context.interactive },
+              );
+              makeLocal = selected !== 'tracked';
+            }
+
+            if (makeLocal) {
+              const addResult = await dependencies.addLocalPaths(
+                projectRoot,
+                PR_ARCHIVE_LOCAL_PATHS,
+              );
+              if (addResult.added.length > 0) {
+                const config = await dependencies.readOatConfig(projectRoot);
+                const allPaths = dependencies.resolveLocalPaths(config);
+                await dependencies.applyGitignore(projectRoot, allPaths);
+              }
+            }
           }
         }
       }

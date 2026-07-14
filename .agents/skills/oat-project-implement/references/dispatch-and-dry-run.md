@@ -49,16 +49,23 @@ block on user-initiated fresh sessions mid-run):
   context; do not rely on forked full-thread context when pinning a
   specialized OAT role.
   - Available without auth → Tier 1.
-  - Available with auth required → fail closed. Ask the user once at skill
-    start before selecting Tier 2 or starting implementation work:
+  - Available with auth required:
+    - If `OAT_AUTONOMOUS=1`, gate `IMPLEMENT-08` authorizes delegation once
+      for this run, covering only `oat-phase-implementer` and `oat-reviewer`
+      within the plan's bounded phase/review scopes. Record the authorization
+      scope in the dispatch record, re-probe, and use Tier 1 when the host
+      accepts it. If the host requires an out-of-band grant that the current
+      run cannot supply, stop at a reported authorization boundary.
+    - Otherwise, fail closed and ask the user once at skill start before
+      selecting Tier 2 or starting implementation work:
 
-    ```
-    This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?
+      ```
+      This OAT implementation skill normally delegates phase implementation and review to subagents. Authorize subagent delegation for this run?
 
-    Yes authorizes both oat-phase-implementer and oat-reviewer across every phase in this run.
-    ```
+      Yes authorizes both oat-phase-implementer and oat-reviewer across every phase in this run.
+      ```
 
-    Approved → Tier 1. Declined → Tier 2.
+      Approved → Tier 1. Declined → Tier 2.
 
 - If the host does not resolve either generic agent, first attempt the exact
   registered role natively for any concrete managed target. Use the explicitly
@@ -69,8 +76,9 @@ block on user-initiated fresh sessions mid-run):
 **Approval scope rule:** this Tier selection applies to both phase
 implementation and checkpoint review. Do not infer a mixed mode from
 conversational emphasis on review checkpoints. If the user has not explicitly
-approved Tier 1 for the run, stay Tier 2 throughout. Mixed mode is only valid
-when the user explicitly requests it.
+approved Tier 1 for the run, and gate `IMPLEMENT-08` has not supplied the
+bounded autonomous run authorization above, stay Tier 2 throughout. Mixed mode
+is only valid when the user explicitly requests it.
 
 **Codex fail-closed rule:** after this skill is invoked, "user did not
 separately ask for subagents" is not a valid Tier 2 reason. If Codex can spawn

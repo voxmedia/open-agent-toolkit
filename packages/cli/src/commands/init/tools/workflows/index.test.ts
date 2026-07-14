@@ -32,6 +32,7 @@ function createHarness(options: HarnessOptions = {}) {
   const confirmResponses = [...(options.confirmResponses ?? [])];
 
   const resolveProjectRoot = vi.fn(async () => '/tmp/workspace');
+  const resolveScopeRoot = vi.fn(() => '/tmp/home');
   const resolveAssetsRoot = vi.fn(async () => '/tmp/assets');
   const installWorkflows = vi.fn(async () => {
     return (
@@ -72,6 +73,7 @@ function createHarness(options: HarnessOptions = {}) {
       logger: capture.logger,
     }),
     resolveProjectRoot,
+    resolveScopeRoot,
     resolveAssetsRoot,
     installWorkflows,
     confirmAction,
@@ -81,6 +83,7 @@ function createHarness(options: HarnessOptions = {}) {
     capture,
     command,
     resolveProjectRoot,
+    resolveScopeRoot,
     resolveAssetsRoot,
     installWorkflows,
     confirmAction,
@@ -139,14 +142,31 @@ describe('createInitToolsWorkflowsCommand', () => {
     );
   });
 
-  it('--scope user rejected with error', async () => {
-    const { command, capture, installWorkflows } = createHarness();
+  it('--scope user installs the full workflows pack under the user root', async () => {
+    const {
+      command,
+      capture,
+      resolveProjectRoot,
+      resolveScopeRoot,
+      installWorkflows,
+    } = createHarness();
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(process.exitCode).toBe(1);
-    expect(capture.error[0]).toContain('supports only --scope project');
-    expect(installWorkflows).not.toHaveBeenCalled();
+    expect(process.exitCode).toBe(0);
+    expect(resolveScopeRoot).toHaveBeenCalledWith(
+      'user',
+      '/tmp/workspace',
+      '/tmp/home',
+    );
+    expect(resolveProjectRoot).not.toHaveBeenCalled();
+    expect(installWorkflows).toHaveBeenCalledWith({
+      assetsRoot: '/tmp/assets',
+      targetRoot: '/tmp/home',
+      scope: 'user',
+      force: undefined,
+    });
+    expect(capture.info.at(-1)).toContain('oat sync --scope user');
   });
 
   it('--force with interactive confirms before overwriting', async () => {
@@ -179,6 +199,18 @@ describe('createInitToolsWorkflowsCommand', () => {
       result: {
         copiedSkills: ['oat-project-new'],
       },
+    });
+
+    const userJsonHarness = createHarness();
+    await runCommand(
+      userJsonHarness.command,
+      [],
+      ['--scope', 'user', '--json'],
+    );
+    expect(userJsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      scope: 'user',
+      targetRoot: '/tmp/home',
     });
   });
 });
