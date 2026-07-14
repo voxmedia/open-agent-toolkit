@@ -232,15 +232,15 @@ git commit -m "chore(p03-t01): sync and version hygiene contracts"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                    |
-| ------ | -------- | ------- | ---------- | --------------------------- |
-| p01    | code     | pending | -          | -                           |
-| p02    | code     | pending | -          | -                           |
-| p03    | code     | pending | -          | -                           |
-| final  | code     | pending | -          | -                           |
-| spec   | artifact | pending | -          | -                           |
-| design | artifact | pending | -          | -                           |
-| plan   | artifact | passed  | 2026-07-13 | structured review attempt 2 |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T002235Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
