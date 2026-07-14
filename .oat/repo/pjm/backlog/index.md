@@ -23,18 +23,20 @@
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
 
 <!-- OAT BACKLOG-INDEX -->
-| ID | Title | Status | Priority | Scope | Estimate |
-| --- | --- | --- | --- | --- | --- |
-| BL-260711-add-activity-aware-gate | Add activity-aware gate timeouts | open | high | feature | M |
-| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches | open | high | feature | M |
-| BL-260708-enable-oat-reviewer-subagent | Enable oat-reviewer subagent orchestration for faster broad reviews | open | high | feature | M |
-| BL-260712-serialize-cli-asset-bundling | Serialize CLI asset bundling with atomic staging | open | high | task | S |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings | open | high | feature | M |
-| BL-260714-executable-backstops | Executable backstops for contract claims — authoring guidance | open | medium | task | S |
-| BL-260706-front-load-recurring-gate | Front-load recurring gate-finding classes into implementer briefs | open | medium | feature | L |
-| BL-260712-per-project-override | Per-project override to disable configured external gates | open | medium | feature | M |
-| BL-260713-root-agent-judgment-logging | Root-agent judgment logging responsibility for project log | open | medium | feature | S |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs | open | medium | task | S |
+
+| ID                                       | Title                                                               | Status | Priority | Scope   | Estimate |
+| ---------------------------------------- | ------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                    | open   | high     | feature | M        |
+| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches      | open   | high     | feature | M        |
+| BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews | open   | high     | feature | M        |
+| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                    | open   | high     | task    | S        |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
+| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance       | open   | medium   | task    | S        |
+| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
+| BL-260712-per-project-override           | Per-project override to disable configured external gates           | open   | medium   | feature | M        |
+| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log          | open   | medium   | feature | S        |
+| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                          | open   | medium   | task    | S        |
+
 <!-- END OAT BACKLOG-INDEX -->
 
 ## Notes

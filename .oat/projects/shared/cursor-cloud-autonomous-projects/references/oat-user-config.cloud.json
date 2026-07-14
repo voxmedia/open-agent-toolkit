@@ -63,25 +63,16 @@
         },
         "claude": {
           "economy": {
-            "candidates": [
-              "haiku",
-              "sonnet"
-            ]
+            "candidates": ["haiku", "sonnet"]
           },
           "balanced": {
-            "candidates": [
-              "sonnet"
-            ]
+            "candidates": ["sonnet"]
           },
           "high": {
-            "candidates": [
-              "opus"
-            ]
+            "candidates": ["opus"]
           },
           "frontier": {
-            "candidates": [
-              "fable"
-            ]
+            "candidates": ["fable"]
           }
         },
         "cursor": {
@@ -94,16 +85,10 @@
             ]
           },
           "balanced": {
-            "candidates": [
-              "gpt-5.6-terra-high",
-              "cursor-grok-4.5-high"
-            ]
+            "candidates": ["gpt-5.6-terra-high", "cursor-grok-4.5-high"]
           },
           "high": {
-            "candidates": [
-              "gpt-5.6-sol-medium",
-              "gpt-5.6-sol-high"
-            ]
+            "candidates": ["gpt-5.6-sol-medium", "gpt-5.6-sol-high"]
           },
           "frontier": {
             "candidates": [

@@ -61,6 +61,14 @@ copying their content here. -->
 - Config adoption and doctor share pass-scoped Cursor validation: each distinct
   candidate receives one Task probe and broad catalog retrieval is memoized for
   the command pass without treating catalog presence as eligibility evidence.
+- Artifact writers now share a self-contained hygiene contract: planning embeds
+  a repository-documented, file-scoped write/fix command when available, while
+  runtime roles, lifecycle skills, and gate-review prompts use bounded fallback
+  discovery and warn once without failing when no command can be found.
+- Plan authoring now checks merged effective dispatch ladders before offering
+  adoption and treats project ceiling selection as a separate decision; an
+  unresolved project matrix no longer implies that ladder configuration is
+  missing.
 - Cursor GPT-5.6 verification now has a strict structured evidence schema,
   exact Task correlation, control-gated candidate execution, and private-only
   raw identifiers. The current headless client exposed no Task events, so the
