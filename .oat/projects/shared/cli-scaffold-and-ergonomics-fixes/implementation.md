@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-13
-oat_current_task_id: p02-t01
+oat_last_updated: 2026-07-14
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 1     | 1/1       |
-| p02   | pending   | 1     | 0/1       |
-| p03   | pending   | 1     | 0/1       |
-| p04   | pending   | 1     | 0/1       |
-| p05   | pending   | 2     | 0/2       |
-| p06   | pending   | 2     | 0/2       |
-| p07   | pending   | 1     | 0/1       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 1     | 1/1       |
+| p02   | completed   | 1     | 1/1       |
+| p03   | completed   | 1     | 1/1       |
+| p04   | completed   | 1     | 1/1       |
+| p05   | completed   | 2     | 2/2       |
+| p06   | in_progress | 2     | 2/2       |
+| p07   | pending     | 1     | 0/1       |
 
-**Total:** 1/9 tasks completed
+**Total:** 8/9 tasks completed
 
 ---
 
@@ -52,71 +52,71 @@ oat_generated: false
 
 ## Phase 2: Clarify plan task-shape guidance
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-14
 
 ### Task p02-t01: Document TDD as the default, not a validator requirement
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8661584983cb41afd42a8ff804b7d7890ce9bd77`
 
 ---
 
 ## Phase 3: Improve tools update no-args feedback
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-14
 
 ### Task p03-t01: Suggest the exact all-tools update command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8d19e952d9f82e25f0c475a9e17883820b4081d7`
 
 ---
 
 ## Phase 4: Prevent placeholder backlog summaries
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-14
 
 ### Task p04-t01: Require a summary before closing backlog items
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `26316bea2dfd9afd3a1da543475a380a9ed039a3`
 
 ---
 
 ## Phase 5: Create complete PJM records atomically
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-14
 
 ### Task p05-t01: Add decision and consequences inputs to decision creation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6a9de955f2524f8e7091e264f3de50f47075d2fb`
 
 ### Task p05-t02: Scaffold backlog items with a single command
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `93a7361d1ce2fcc2e527da31d15783790ad69a08`
 
 ---
 
 ## Phase 6: Strengthen CLI upgrade and gate hygiene
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6b017d464b32337eb2e30f1b4b8061a311ce0e15`
 
 ### Task p06-t02: Close stdin for noninteractive gate targets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d02dada9284915c04e62f36f2fda1562916b6fba`
 
 ---
 
@@ -175,6 +175,54 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Fix iterations:** 0.
 **Outstanding items:** None.
 
+### Run 2 — 2026-07-14T02:05:26Z
+
+**Branch:** `cli-scaffold-and-ergonomic-fixes`
+**Tier:** Tier 1
+**Dispatch policy:** managed `high`
+**Phases passed / failed / stopped:** 4 / 0 / 0; p06 root review passed with its configured external gate pending
+
+| Phase | Outcome      | Task commits                                         | Root review       | External gate  |
+| ----- | ------------ | ---------------------------------------------------- | ----------------- | -------------- |
+| p02   | passed       | `86615849`                                           | passed            | not configured |
+| p03   | passed       | `8d19e952`                                           | passed (1 Medium) | not configured |
+| p04   | passed       | `26316bea`                                           | passed (1 Minor)  | not configured |
+| p05   | passed       | `6a9de955`, `93a7361d`; fixes `001f26f3`, `70aa45d1` | passed on round 2 | not configured |
+| p06   | gate pending | `6b017d46`, `d02dada9`; fix `470e66f1`               | passed on round 2 | pending        |
+
+**Parallel group:** p02-p06 ran in isolated worktrees from base `f4b6881a`; all five passed root review, merged in plan order, and their worktrees were removed after integration.
+
+**Dispatch records:**
+
+- Implementation requests `impl-p02-20260714T0120Z-f4b6881a` through `impl-p06-20260714T0120Z-f4b6881a`; selection reason `native-catalog`; candidate `gpt-5.6-sol-high`.
+- `Dispatch: scope=p02-p06 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- Root review requests `review-p02-r1-20260714T0142Z` through `review-p06-r1-20260714T0142Z`; p05 and p06 continued through round-2 requests after bounded fixes.
+- `Dispatch: scope=p02-p06 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- The p02 and p05 round-2 reviewer transports closed after writing complete, valid artifacts; those accepted-launch artifacts were validated and used without replacement dispatches.
+
+**Review artifacts:**
+
+- `reviews/code-p02-review-2026-07-14T014241Z.md`
+- `reviews/code-p03-review-2026-07-14T014251Z.md`
+- `reviews/code-p04-review-2026-07-14T014255Z.md`
+- `reviews/code-p05-review-2026-07-14T014634Z.md`
+- `reviews/code-p05-review-2026-07-14T015626Z.md`
+- `reviews/code-p06-review-2026-07-14T014731Z.md`
+- `reviews/code-p06-review-2026-07-14T015952Z.md`
+
+**Fix iterations:**
+
+- p05: one pre-review lint-only correction (`001f26f3`) and one review fix (`70aa45d1`) protecting managed-index cells and exact marker bounds.
+- p06: one review fix (`470e66f1`) excluding nested worktrees and nested generated/lifecycle paths from stale-invocation scans.
+
+**Integration:** Merge commits `52396dcc`, `13f38bf1`, `ac1f205b`, `bd571170`, and `4e4897f4`. Combined verification passed 437/437 focused tests, workspace type-check, lint, format, and an uncached direct CLI build.
+
+**Outstanding items:**
+
+- p03 Medium: exact no-argument remediation also appears on other target-resolution errors; non-blocking under the configured threshold and deferred for final disposition.
+- p04 Minor: successful trimming is implemented but lacks a padded-summary success regression; non-blocking and deferred for final disposition.
+- p06 external phase gate remains pending.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -196,13 +244,13 @@ Chronological log of implementation progress.
 **Planning handoff:**
 
 - [x] p01-t01: Render and validate real scaffold templates
-- [ ] p02-t01: Document TDD as the default, not a validator requirement
-- [ ] p03-t01: Suggest the exact all-tools update command
-- [ ] p04-t01: Require a summary before closing backlog items
-- [ ] p05-t01: Add decision and consequences inputs to decision creation
-- [ ] p05-t02: Scaffold backlog items with a single command
-- [ ] p06-t01: Add a minimal stale-invocation doctor check and release callout
-- [ ] p06-t02: Close stdin for noninteractive gate targets
+- [x] p02-t01: Document TDD as the default, not a validator requirement
+- [x] p03-t01: Suggest the exact all-tools update command
+- [x] p04-t01: Require a summary before closing backlog items
+- [x] p05-t01: Add decision and consequences inputs to decision creation
+- [x] p05-t02: Scaffold backlog items with a single command
+- [x] p06-t01: Add a minimal stale-invocation doctor check and release callout
+- [x] p06-t02: Close stdin for noninteractive gate targets
 - [ ] p07-t01: Bump lockstep packages and run completion gates
 
 ### Plan Artifact Review Received
@@ -367,29 +415,51 @@ Chronological log of implementation progress.
 
 **Next:** Execute the plan-declared parallel group p02-p06.
 
+### Parallel Group p02-p06 Integrated — p06 External Gate Pending
+
+**Implementation results:**
+
+- p02 completed in `8661584983cb41afd42a8ff804b7d7890ce9bd77`.
+- p03 completed in `8d19e952d9f82e25f0c475a9e17883820b4081d7`.
+- p04 completed in `26316bea2dfd9afd3a1da543475a380a9ed039a3`.
+- p05 tasks completed in `6a9de955f2524f8e7091e264f3de50f47075d2fb` and `93a7361d1ce2fcc2e527da31d15783790ad69a08`, followed by lint fix `001f26f3bda1d4922a8394068dacad7c935b08e4` and review fix `70aa45d1dd4b09ed6075ff0a1419aa0cc95c8d40`.
+- p06 tasks completed in `6b017d464b32337eb2e30f1b4b8061a311ce0e15` and `d02dada9284915c04e62f36f2fda1562916b6fba`, followed by review fix `470e66f1aec53e36545fd273cfc1c348e2f351d0`.
+
+**Review results:**
+
+- p02 passed with no findings.
+- p03 passed with one non-blocking Medium finding, deferred for final disposition.
+- p04 passed with one non-blocking Minor finding, deferred for final disposition.
+- p05 round 1 failed with one Important managed-index safety finding; the original implementer fixed it and round 2 passed with no findings.
+- p06 round 1 failed with one Important nested-worktree exclusion finding; the original implementer fixed it and round 2 passed with no findings.
+
+**Integration verification:** All five phases merged in plan order. The combined focused suite passed 437/437 tests; workspace type-check, lint, format, and a direct CLI build passed. An initial parallel verification attempt raced concurrent asset bundlers; sequential rerun and direct build established clean results.
+
+**Next:** Commit group bookkeeping, run the configured non-pausing p06 external gate, then begin p07-t01.
+
 ---
 
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                      | Actual / Accepted                                                                                        | Reason                                                                               | Source of Truth             | Follow-up                           |
+| ------------- | --------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------ | --------------------------- | ----------------------------------- |
+| p05 review I1 | `plan.md`       | p05-t02 delegated index regeneration without changing the shared renderer | Review fix hardened `regenerate-index.ts` to encode all table cells and require exact standalone markers | The safety defect was owned by the shared renderer and affected creation idempotence | Implementation and this log | No further artifact change required |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                          | Passed          | Failed | Coverage |
-| ----- | ---------------------------------- | --------------- | ------ | -------- |
-| p01   | `scaffold.test.ts`; CLI type-check | 28 + type-check | 0      | Focused  |
-| p02   | -                                  | -               | -      | -        |
-| p03   | -                                  | -               | -      | -        |
-| p04   | -                                  | -               | -      | -        |
-| p05   | -                                  | -               | -      | -        |
-| p06   | -                                  | -               | -      | -        |
-| p07   | -                                  | -               | -      | -        |
+| Phase | Tests Run                                                         | Passed           | Failed | Coverage |
+| ----- | ----------------------------------------------------------------- | ---------------- | ------ | -------- |
+| p01   | `scaffold.test.ts`; CLI type-check                                | 28 + type-check  | 0      | Focused  |
+| p02   | `scaffold.test.ts`                                                | 29               | 0      | Focused  |
+| p03   | `tools/update/index.test.ts`                                      | 11               | 0      | Focused  |
+| p04   | backlog archive/index tests                                       | 28               | 0      | Focused  |
+| p05   | decision/backlog/help/skill tests; CLI type-check                 | 198 + type-check | 0      | Focused  |
+| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check | 186 + type-check | 0      | Focused  |
+| p07   | -                                                                 | -                | -      | -        |
 
 ## Final Summary (for PR/docs)
 
