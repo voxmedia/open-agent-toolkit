@@ -168,15 +168,16 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
-| p03    | code     | pending | -          | -                                                           |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T214355Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-07-14 | reviews/archived/code-p01-review-2026-07-14T224102Z.md      |
+| p02    | code     | passed          | 2026-07-14 | reviews/archived/code-p02-review-2026-07-14T224102Z.md      |
+| p03    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T214355Z.md |
+| p01    | code     | passed          | 2026-07-14 | reviews/archived/code-p01-fix-review-2026-07-14T225418Z.md  |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
