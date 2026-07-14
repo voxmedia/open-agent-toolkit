@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
@@ -208,24 +208,34 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Review bookkeeping now preserves distinct append-ordered review events, advances each artifact monotonically, and routes from the latest matching event.
+- Dispatch, phase-gate prompt, and PR-completion guidance now describe mutually exclusive resolver branches and both supported completion orderings.
+- Gate timeouts now recover validated run-correlated late artifacts and expose additive late-completion and zero-output telemetry.
+- All five public packages and bundled release metadata are synchronized at `0.1.66`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Local and remote review flows no longer overwrite or route from stale same-scope review rows.
+- A timed-out gate can return a corroborated artifact with `lateCompletion: true`; unrecovered timeouts report `noOutputProduced`.
+- Project progress and closeout guidance explicitly support completing before or after PR merge.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/control-plane/src/state/reviews.ts` and `packages/control-plane/src/recommender/router.ts` - review-event parsing and latest-event routing.
+- `packages/cli/src/commands/gate/index.ts` - timeout artifact recovery and process-output telemetry.
+- `.agents/skills/oat-project-*/` - canonical review, dispatch, phase-gate, and completion contracts.
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md` and `apps/oat-docs/docs/reference/cli-reference.md` - timeout configuration and envelope documentation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Targeted control-plane, CLI gate, validation, and autonomy-inventory tests.
+- Full CLI suite: 246 files and 2,888 tests passed.
+- Repository formatting, canonical skill validation, lint, type checks, project build, docs build, provider sync, and bundled-version assertion.
+- Five-package `pnpm release:validate` at `0.1.66`.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No design artifact exists in quick mode. Final fan-in added the required autonomy inventory mappings and `oat-project-autonomous` version bump after the full CLI suite exposed two newly scanned descriptive dispatch lines.
 
 ## References
 
