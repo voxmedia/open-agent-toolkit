@@ -176,3 +176,27 @@ gates and explicitly configured review routes. (3) Revisit the cloud seed's
 cursor ladder cells: consider single-family (Sol) execution cells with
 Fable/Grok confined to gate execTargets — discuss before changing; the
 multi-family cells were a deliberate availability-resilience choice.
+
+## 2026-07-14T13:00:00Z - candidate-skill-content - Gate diversity keys on stamped executor; unknown-producer degrades softly
+
+**Observation:** Verified in `packages/cli/src/commands/gate/index.ts`:
+`oat gate review` resolves producer identity from implementation.md dispatch
+stamps filtered to implementer/fix roles (exact scope → latest stamp; range/
+final scopes → aggregated family union), never from the orchestrator's
+selected model. Fable-orchestrator + Sol-implementer projects therefore select
+the Fable gate correctly, and mixed-family execution histories aggregate to
+avoid every producing family (Grok tertiary covers the two-family case). But
+when stamps carry `producer=unknown`, avoidance degrades to same-runtime, and
+in an all-cursor registry falls through to the top-priority target with
+`achieved=unknown-producer` + warning — potentially same-family as the actual
+producer, with no hard stop.
+
+**Impact:** The FR3 cross-family guarantee rests on stamp bookkeeping quality;
+in autonomous runs a silent diversity loss would go unnoticed until summary.
+
+**Recommendation:** Hardening candidate: under `OAT_AUTONOMOUS=1`, a code-scope
+gate review resolving `unknown-producer` should fail closed (boundary stop)
+instead of warn-and-proceed, or at minimum require the explicit
+`--producer-identity` override. Also a docs candidate: state in the dispatch
+references that gate diversity is executor-derived (stamps), orchestrator
+identity is invisible to gate selection.
