@@ -545,6 +545,7 @@ Chronological log of implementation progress.
 - The type-narrowing repair landed in `581559040564e7b51cff955559f01c123cb95692`; focused fix suites, CLI type-check, lint, format, release validation, and package-version checks passed.
 - `origin/main` advanced the same canonical summary skill to `1.3.0` during verification. Merge commit `ecc1343fd764e33abc5ec76772e2b0e82beaa6dc` preserved upstream autonomous-execution learnings and this project's complete decision-section promotion, then rebumped the skill to `1.3.1`.
 - Post-merge command-surface tests passed 283/283. Workspace type-check, lint, format, five-package release validation, and base-relative skill-version validation also passed.
+- Final workspace verification passed 2,874 CLI tests across 246 files, all package test tasks, and all five production package builds.
 - All 11 planned tasks are complete. The project is ready for final verification and re-review.
 
 ---
@@ -561,15 +562,15 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                       | Passed                       | Failed | Coverage |
-| ----- | --------------------------------------------------------------------------------------------------------------- | ---------------------------- | ------ | -------- |
-| p01   | `scaffold.test.ts`; CLI type-check                                                                              | 28 + type-check              | 0      | Focused  |
-| p02   | `scaffold.test.ts`                                                                                              | 29                           | 0      | Focused  |
-| p03   | `tools/update/index.test.ts`                                                                                    | 11                           | 0      | Focused  |
-| p04   | backlog archive/index tests                                                                                     | 28                           | 0      | Focused  |
-| p05   | decision/backlog/help/skill tests; CLI type-check                                                               | 198 + type-check             | 0      | Focused  |
-| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                               | 186 + type-check             | 0      | Focused  |
-| p07   | CLI/focused merge tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + 43 + 283 + all gates | 0      | Full     |
+| Phase | Tests Run                                                                                                       | Passed            | Failed | Coverage |
+| ----- | --------------------------------------------------------------------------------------------------------------- | ----------------- | ------ | -------- |
+| p01   | `scaffold.test.ts`; CLI type-check                                                                              | 28 + type-check   | 0      | Focused  |
+| p02   | `scaffold.test.ts`                                                                                              | 29                | 0      | Focused  |
+| p03   | `tools/update/index.test.ts`                                                                                    | 11                | 0      | Focused  |
+| p04   | backlog archive/index tests                                                                                     | 28                | 0      | Focused  |
+| p05   | decision/backlog/help/skill tests; CLI type-check                                                               | 198 + type-check  | 0      | Focused  |
+| p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                               | 186 + type-check  | 0      | Focused  |
+| p07   | CLI/focused merge tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,874 + all gates | 0      | Full     |
 
 ## Final Review Finding Dispositions
 
@@ -608,7 +609,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- 2,853 CLI tests passed across 245 files.
+- 2,874 CLI tests passed across 246 files.
 - Workspace lint, formatting, type checking, package build, and production docs build passed.
 - `pnpm release:validate` packed and validated all five public packages at `0.1.63`.
 - Canonical skill validation and base-relative skill-version-bump validation passed.
