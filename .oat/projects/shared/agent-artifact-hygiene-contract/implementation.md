@@ -16,11 +16,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status   | Tasks | Completed |
-| -------------------------------------- | -------- | ----- | --------- |
-| p01 Canonical contracts                | complete | 3     | 3/3       |
-| p02 Gate-review prompt                 | complete | 1     | 1/1       |
-| p03 Provider projection/public release | pending  | 1     | 0/1       |
+| Phase                                  | Status      | Tasks | Completed |
+| -------------------------------------- | ----------- | ----- | --------- |
+| p01 Canonical contracts                | complete    | 3     | 3/3       |
+| p02 Gate-review prompt                 | complete    | 1     | 1/1       |
+| p03 Provider projection/public release | in_progress | 1     | 0/1       |
 
 **Total:** 4/5 tasks completed
 
@@ -56,12 +56,12 @@ oat_generated: false
 
 ## Phase 3: Provider Projection and Public Release
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-14
 
 ### Task p03-t01: Sync canonical assets and validate the release
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ## Orchestration Runs
@@ -107,6 +107,7 @@ oat_generated: false
 - Operator-authorized `< /dev/null` recovery completed the gate and produced a corroborated blocking artifact review.
 - Launched parallel phase implementers for p01 and p02 from exact base `0faa4998c964371e683d8a3fbfbea221681c8685` using Cursor target `gpt-5.6-sol-high`.
 - Completed and merged p01/p02 after zero-finding independent reviews; advanced to `p03-t01`.
+- Started p03 provider projection and lockstep `0.1.61` release validation.
 
 ### Review Received: plan
 
