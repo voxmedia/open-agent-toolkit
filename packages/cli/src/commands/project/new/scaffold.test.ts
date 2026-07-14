@@ -89,6 +89,27 @@ async function createRepoRoot(): Promise<string> {
   return repoRoot;
 }
 
+async function writeMarkerTemplate(
+  templateRoot: string,
+  name: string,
+  marker: string,
+): Promise<void> {
+  await mkdir(templateRoot, { recursive: true });
+  await writeFile(
+    join(templateRoot, name),
+    [
+      '---',
+      'oat_template: true',
+      `oat_template_name: ${name.replace('.md', '')}`,
+      '---',
+      '',
+      `# {Project Name} ${marker}`,
+      'Date: YYYY-MM-DD',
+    ].join('\n'),
+    'utf8',
+  );
+}
+
 describe('scaffoldProject', () => {
   const tempDirs: string[] = [];
 
@@ -150,6 +171,139 @@ describe('scaffoldProject', () => {
     });
 
     expect(result.projectPath).toBe('.oat/projects/shared/my_project');
+  });
+
+  it('uses a user template before a differing repo template', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await writeMarkerTemplate(
+      join(repoRoot, '.oat', 'templates'),
+      'plan.md',
+      'REPO-TEMPLATE',
+    );
+    await writeMarkerTemplate(
+      join(home, '.oat', 'templates'),
+      'plan.md',
+      'USER-TEMPLATE',
+    );
+
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'user-first',
+      mode: 'quick',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+
+    const plan = await readFile(
+      join(repoRoot, '.oat', 'projects', 'shared', 'user-first', 'plan.md'),
+      'utf8',
+    );
+    expect(plan).toContain('USER-TEMPLATE');
+    expect(plan).not.toContain('REPO-TEMPLATE');
+  });
+
+  it('uses the repo template when no user template is installed', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await writeMarkerTemplate(
+      join(repoRoot, '.oat', 'templates'),
+      'plan.md',
+      'REPO-TEMPLATE',
+    );
+
+    await scaffoldProject({
+      repoRoot,
+      projectName: 'repo-fallback',
+      mode: 'quick',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+
+    await expect(
+      readFile(
+        join(
+          repoRoot,
+          '.oat',
+          'projects',
+          'shared',
+          'repo-fallback',
+          'plan.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('REPO-TEMPLATE');
+  });
+
+  it('uses bundled templates when neither installed tier exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    await rm(join(repoRoot, '.oat', 'templates'), {
+      recursive: true,
+      force: true,
+    });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'bundled-floor',
+      mode: 'quick',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+
+    expect(result.projectPath).toBe('.oat/projects/shared/bundled-floor');
+    await expect(
+      readFile(join(repoRoot, result.projectPath, 'plan.md'), 'utf8'),
+    ).resolves.toContain('# Implementation Plan: bundled-floor');
+  });
+
+  it('resolves partial template tiers independently for every file', async () => {
+    const repoRoot = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-scaffold-home-'));
+    tempDirs.push(repoRoot, home);
+    const repoTemplates = join(repoRoot, '.oat', 'templates');
+    await writeMarkerTemplate(repoTemplates, 'plan.md', 'REPO-PLAN');
+    await writeMarkerTemplate(repoTemplates, 'discovery.md', 'REPO-DISCOVERY');
+    await writeMarkerTemplate(
+      join(home, '.oat', 'templates'),
+      'plan.md',
+      'USER-PLAN',
+    );
+    await rm(join(repoTemplates, 'state.md'), { force: true });
+    await rm(join(repoTemplates, 'implementation.md'), { force: true });
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'partial-tiers',
+      mode: 'quick',
+      home,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-13',
+    });
+    const projectRoot = join(repoRoot, result.projectPath);
+
+    await expect(
+      readFile(join(projectRoot, 'plan.md'), 'utf8'),
+    ).resolves.toContain('USER-PLAN');
+    await expect(
+      readFile(join(projectRoot, 'discovery.md'), 'utf8'),
+    ).resolves.toContain('REPO-DISCOVERY');
+    await expect(
+      readFile(join(projectRoot, 'state.md'), 'utf8'),
+    ).resolves.toContain('# Project State: partial-tiers');
+    await expect(
+      readFile(join(projectRoot, 'implementation.md'), 'utf8'),
+    ).resolves.toContain('# Implementation: partial-tiers');
   });
 
   it('rejects invalid project names', async () => {

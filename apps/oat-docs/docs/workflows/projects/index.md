@@ -12,6 +12,8 @@ Projects are where the workflow layer becomes concrete: lifecycle phases, `state
 ## Contents
 
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
+- [Autonomous Project Execution](autonomy.md) - Session-scoped autonomy signals, gate boundaries, review requirements, and execution learnings.
+- [OAT in Cursor Cloud](cursor-cloud.md) - Project-home, provisioning, asset-precedence, and execution-surface guidance for cloud agents.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, and provider-specific enforcement.
@@ -34,6 +36,8 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 ## Start Here
 
 - Start with [Lifecycle](lifecycle.md) for the end-to-end flow.
+- Use [Autonomous Project Execution](autonomy.md) for unattended lifecycle runs and defined boundary behavior.
+- Read [OAT in Cursor Cloud](cursor-cloud.md) before running OAT in a cloud workspace.
 - Read [Artifacts](artifacts.md) once you need the file contract behind project execution.
 - Use [Project Splitting](splitting.md) when one discovery or brainstorm should become coordinated child projects.
 - Use [HiLL Checkpoints](hill-checkpoints.md) when you want to understand pause/approval behavior.
@@ -49,6 +53,8 @@ This sub-section is the deep technical surface for how tracked OAT projects exec
 ## Go Deeper
 
 - [Lifecycle](lifecycle.md) - End-to-end flow from discovery through completion.
+- [Autonomous Project Execution](autonomy.md) - Session activation, gate outcomes, independent review, HiLL closeout, and learnings synthesis.
+- [OAT in Cursor Cloud](cursor-cloud.md) - Repository anchoring, environment readiness, user-scope assets, and Cursor execution surfaces.
 - [Design Modes](design-modes.md) - How full design balances collaborative, selective collaborative, and draft-and-review interaction.
 - [HiLL Checkpoints](hill-checkpoints.md) - Human-in-the-Loop Lifecycle configuration and approval behavior.
 - [Dispatch Policy](dispatch-ceiling.md) - Managed capped tiers, managed Uncapped, Inherit Host Defaults, legacy dispatch-ceiling compatibility, and provider-specific enforcement.

@@ -1,6 +1,6 @@
 ---
 name: oat-project-document
-version: 1.5.0
+version: 1.6.0
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
@@ -24,6 +24,11 @@ Read project artifacts and implementation code to identify documentation surface
 **OAT MODE: Project Document**
 
 **Purpose:** Analyze what a project built, identify documentation gaps, and apply approved documentation updates.
+
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and execute
+the existing `--auto` path for this run. Keep `OAT_NON_INTERACTIVE=1`
+session-scoped and never persist either environment signal. This branch is inert
+when autonomy is inactive.
 
 ## Progress Indicators (User-Facing)
 
@@ -81,6 +86,11 @@ Parse `$ARGUMENTS` for:
      AUTO_MODE=true
    fi
    ```
+
+   If `OAT_AUTONOMOUS=1`, set `AUTO_MODE=true` after normal argument parsing
+   even when `--auto` was not passed. Record gate `DOCUMENT-02` and the applied
+   recommendation set in the documentation outcome. This is the existing
+   `--auto` behavior, not a new approval mode.
 
 2. **`project-path`:** Any non-flag argument is treated as an explicit project path.
    ```
@@ -412,6 +422,12 @@ Format and present the recommendations for user approval.
 - If `$AUTO_MODE` is true: skip to Step 7 (apply all recommendations)
 - If no recommendations found: report "No documentation updates identified for this project.", set `oat_docs_updated: complete` in state.md, and exit
 - If only instruction recommendations (no docs): still present, but note the documentation-first priority
+
+Under `OAT_AUTONOMOUS=1`, the auto path applies all non-destructive
+recommendations without presenting Step 6c. A recommendation that deletes
+documentation or broadly restructures existing documentation beyond the
+approved project plan remains gate `DOCUMENT-03`: stop before applying it,
+record the proposed change and evidence, and leave the project resumable.
 
 **6c. Interactive approval:**
 

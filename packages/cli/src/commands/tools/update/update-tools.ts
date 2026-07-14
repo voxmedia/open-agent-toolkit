@@ -28,12 +28,21 @@ export type UpdateTarget =
   | { kind: 'pack'; pack: PackName }
   | { kind: 'all' };
 
+export interface PackAssetRefresh {
+  name: string;
+  type: 'template' | 'script';
+  pack: PackName;
+  scope: ConcreteScope;
+  status: 'planned' | 'refreshed';
+}
+
 export interface UpdateResult {
   updated: ToolInfo[];
   current: ToolInfo[];
   newer: ToolInfo[];
   notInstalled: string[];
   notBundled: ToolInfo[];
+  assetRefreshes: PackAssetRefresh[];
 }
 
 export interface UpdateToolsDependencies {
@@ -55,6 +64,7 @@ export interface UpdateToolsDependencies {
     force: boolean,
   ) => Promise<CopyStatus>;
   fileExists: (path: string) => Promise<boolean>;
+  chmod: (path: string, mode: number) => Promise<void>;
   applyOatCoreGitignore?: (repoRoot: string) => Promise<ApplyOatCoreResult>;
 }
 
@@ -136,6 +146,7 @@ const BUNDLED_PACK_ASSETS: Record<PackName, BundledPackAssets> = {
 
 interface PackAssetTarget {
   pack: PackName;
+  scope: ConcreteScope;
   scopeRoot: string;
 }
 
@@ -154,6 +165,7 @@ export async function updateTools(
     newer: [],
     notInstalled: [],
     notBundled: [],
+    assetRefreshes: [],
   };
 
   const allTools: ToolEntry[] = [];
@@ -233,7 +245,16 @@ export async function updateTools(
         'templates',
         template,
       );
-      await dependencies.copyFileWithStatus(source, destination, true);
+      if (!dryRun) {
+        await dependencies.copyFileWithStatus(source, destination, true);
+      }
+      result.assetRefreshes.push({
+        name: template,
+        type: 'template',
+        pack: assetTarget.pack,
+        scope: assetTarget.scope,
+        status: dryRun ? 'planned' : 'refreshed',
+      });
     }
 
     for (const script of assets.scripts) {
@@ -247,7 +268,17 @@ export async function updateTools(
         'scripts',
         script,
       );
-      await dependencies.copyFileWithStatus(source, destination, true);
+      if (!dryRun) {
+        await dependencies.copyFileWithStatus(source, destination, true);
+        await dependencies.chmod(destination, 0o755);
+      }
+      result.assetRefreshes.push({
+        name: script,
+        type: 'script',
+        pack: assetTarget.pack,
+        scope: assetTarget.scope,
+        status: dryRun ? 'planned' : 'refreshed',
+      });
     }
   }
 
@@ -313,7 +344,8 @@ function getBundledPackMembers(
   scope: ConcreteScope,
 ): BundledPackMember[] {
   return BUNDLED_PACK_MEMBERS[pack].filter(
-    (member) => scope === 'project' || member.type === 'skill',
+    (member) =>
+      scope === 'project' || member.type === 'skill' || pack === 'workflows',
   );
 }
 
@@ -335,7 +367,7 @@ function resolvePackAssetTargets(
 
   const targets: PackAssetTarget[] = [];
 
-  for (const scopeEntries of entriesByScope.values()) {
+  for (const [scope, scopeEntries] of entriesByScope) {
     const scopeRoot = scopeEntries[0]?.scopeRoot;
     if (!scopeRoot) continue;
 
@@ -356,7 +388,7 @@ function resolvePackAssetTargets(
       if (assets.templates.length === 0 && assets.scripts.length === 0) {
         continue;
       }
-      targets.push({ pack, scopeRoot });
+      targets.push({ pack, scope, scopeRoot });
     }
   }
 

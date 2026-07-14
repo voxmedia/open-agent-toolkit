@@ -67,6 +67,30 @@ Pull from implementation.md task notes flagged as issues/blockers.}
 
 {If revisions happened post-PR, what changed and why. One entry per revision round.}
 
+## Autonomous Execution Learnings
+
+<!-- CONDITIONAL: Include this entire section only when the project contains
+     oat-execution-learnings.md with actionable entries. Otherwise remove the
+     heading, category subheadings, and placeholders. Omit empty categories.
+     Each recommendation needs a one-line rationale and a relative pointer to
+     every supporting source entry (timestamp, category, and title). -->
+
+### Agent-instruction updates
+
+{Durable skill, agent-rule, or instruction recommendations.}
+
+### Cloud-environment improvements
+
+{Image, setup, credentials, provisioning, or environment-readiness recommendations.}
+
+### Code follow-ups
+
+{Concrete product or toolkit code recommendations not completed by this project.}
+
+### Workflow issues
+
+{Lifecycle, gate, review, dispatch, or orchestration recommendations.}
+
 ## Follow-up Items
 
 <!-- Omit this section if there are no deferred items or known limitations. -->

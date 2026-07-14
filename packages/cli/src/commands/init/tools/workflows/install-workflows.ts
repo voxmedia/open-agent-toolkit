@@ -14,6 +14,8 @@ import {
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { dirExists, ensureDir, fileExists } from '@fs/io';
 
+export type InstallWorkflowsScope = 'project' | 'user';
+
 export {
   WORKFLOW_AGENTS,
   WORKFLOW_SCRIPTS,
@@ -24,6 +26,7 @@ export {
 export interface InstallWorkflowsOptions {
   assetsRoot: string;
   targetRoot: string;
+  scope?: InstallWorkflowsScope;
   force?: boolean;
 }
 
@@ -55,6 +58,7 @@ export async function installWorkflows(
   options: InstallWorkflowsOptions,
 ): Promise<InstallWorkflowsResult> {
   const force = options.force ?? false;
+  const scope = options.scope ?? 'project';
 
   const result: InstallWorkflowsResult = {
     copiedSkills: [],
@@ -150,6 +154,10 @@ export async function installWorkflows(
     } else {
       result.skippedScripts.push(script);
     }
+  }
+
+  if (scope === 'user') {
+    return result;
   }
 
   const projectsRootPath = join(options.targetRoot, '.oat', 'projects-root');

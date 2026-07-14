@@ -162,6 +162,7 @@ describe('createToolsUpdateCommand config writes', () => {
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
       fileExists: vi.fn(async () => true),
+      chmod: vi.fn(async () => {}),
       applyOatCoreGitignore: vi.fn(async () => ({
         action: 'updated' as const,
         entries: ['.oat/state.md'],
@@ -219,6 +220,7 @@ describe('createToolsUpdateCommand config writes', () => {
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
       fileExists: vi.fn(async () => true),
+      chmod: vi.fn(async () => {}),
       applyOatCoreGitignore,
     };
 
@@ -266,6 +268,7 @@ describe('createToolsUpdateCommand config writes', () => {
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
       fileExists: vi.fn(async () => true),
+      chmod: vi.fn(async () => {}),
       applyOatCoreGitignore,
     };
 
@@ -313,6 +316,7 @@ describe('createToolsUpdateCommand config writes', () => {
       copyDirWithStatus: vi.fn(async () => 'updated' as const),
       copyFileWithStatus: vi.fn(async () => 'updated' as const),
       fileExists: vi.fn(async () => true),
+      chmod: vi.fn(async () => {}),
       applyOatCoreGitignore,
     };
 

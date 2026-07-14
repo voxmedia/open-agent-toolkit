@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.4.2
+version: 1.5.0
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -37,6 +37,11 @@ Generate a PR-ready summary grounded in canonical OAT artifacts, including:
 **OAT MODE: PR (Project)**
 
 **Purpose:** Create final PR description and open the PR.
+
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and keep
+`OAT_NON_INTERACTIVE=1` set for this run. Autonomous resolution is limited to
+the explicit branches below; never persist either environment signal. When
+autonomy is inactive, preserve the existing interactive path unchanged.
 
 ## Progress Indicators (User-Facing)
 
@@ -162,9 +167,23 @@ echo "$FINAL_ROW"
 
 If `FINAL_ROW` is missing or does not contain `passed`:
 
-- Tell user: "Final review is not marked passed. Run the `oat-project-review-provide` skill with `code final` then the `oat-project-review-receive` skill."
-- Ask whether to proceed anyway (allowed, but discouraged).
-  - If the status is `fixes_completed`: fixes were implemented but the re-review hasn't been run/recorded yet; re-run the `oat-project-review-provide` skill with `code final` then the `oat-project-review-receive` skill to reach `passed`.
+- If `OAT_AUTONOMOUS=1`, gate `PRFINAL-03` is a boundary stop. Never select
+  "proceed anyway." Report the current or missing final-review row, record the
+  blocker in project provenance, and stop before writing the PR artifact,
+  pushing, or creating the PR. Route the resumable next step to
+  `oat-project-review-provide code final` followed by
+  `oat-project-review-receive`.
+  - If the status is `fixes_completed`, require that same re-review/receive
+    sequence to reach `passed`; completed fixes alone are not approval.
+- Otherwise:
+  - Tell user: "Final review is not marked passed. Run the
+    `oat-project-review-provide` skill with `code final` then the
+    `oat-project-review-receive` skill."
+  - Ask whether to proceed anyway (allowed, but discouraged).
+    - If the status is `fixes_completed`: fixes were implemented but the
+      re-review hasn't been run/recorded yet; re-run the
+      `oat-project-review-provide` skill with `code final` then the
+      `oat-project-review-receive` skill to reach `passed`.
 
 ### Step 3: Collect Project Summary
 

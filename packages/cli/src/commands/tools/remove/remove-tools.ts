@@ -1,5 +1,10 @@
 import { join } from 'node:path';
 
+import {
+  WORKFLOW_AGENTS,
+  WORKFLOW_SCRIPTS,
+  WORKFLOW_TEMPLATES,
+} from '@commands/init/tools/shared/skill-manifest';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import type { ConcreteScope } from '@shared/types';
@@ -60,6 +65,29 @@ async function removeTool(
   }
 }
 
+async function removePackCompanionAssets(
+  pack: PackName,
+  scope: ConcreteScope,
+  scopeRoot: string,
+  dryRun: boolean,
+  deps: RemoveToolsDependencies,
+): Promise<void> {
+  if (dryRun || pack !== 'workflows' || scope !== 'user') {
+    return;
+  }
+
+  for (const agent of WORKFLOW_AGENTS) {
+    await deps.removeFile(join(scopeRoot, '.agents', 'agents', agent));
+  }
+
+  for (const template of WORKFLOW_TEMPLATES) {
+    await deps.removeFile(join(scopeRoot, '.oat', 'templates', template));
+  }
+  for (const script of WORKFLOW_SCRIPTS) {
+    await deps.removeFile(join(scopeRoot, '.oat', 'scripts', script));
+  }
+}
+
 export async function removeTools(
   target: RemoveTarget,
   scopes: ConcreteScope[],
@@ -79,6 +107,17 @@ export async function removeTools(
     for (const tool of matched) {
       await removeTool(tool, scopeRoot, dryRun, deps);
       removed.push({ name: tool.name, type: tool.type, scope: tool.scope });
+    }
+
+    if (target.kind !== 'name') {
+      const matchedPacks = new Set(
+        matched
+          .map((tool) => tool.pack)
+          .filter((pack): pack is PackName => pack !== 'custom'),
+      );
+      for (const pack of matchedPacks) {
+        await removePackCompanionAssets(pack, scope, scopeRoot, dryRun, deps);
+      }
     }
   }
 

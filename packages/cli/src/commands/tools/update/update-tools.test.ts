@@ -1,7 +1,14 @@
+import { chmod, mkdir, mkdtemp, rm, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+
 import { CORE_SKILLS } from '@commands/init/tools/core/install-core';
 import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
-import type { CopyStatus } from '@commands/init/tools/shared/copy-helpers';
+import {
+  copyFileWithStatus,
+  type CopyStatus,
+} from '@commands/init/tools/shared/copy-helpers';
 import {
   BRAINSTORM_SKILLS,
   DOCS_SCRIPTS,
@@ -37,11 +44,14 @@ function createDeps(
   missingPaths: string[] = [],
 ): UpdateToolsDependencies & {
   copies: Array<{ source: string; dest: string }>;
+  chmods: Array<{ path: string; mode: number }>;
 } {
   const copies: Array<{ source: string; dest: string }> = [];
+  const chmods: Array<{ path: string; mode: number }> = [];
   const missing = new Set(missingPaths);
   return {
     copies,
+    chmods,
     scanTools: async (options) => toolsByScope[options.scope] ?? [],
     resolveScopeRoot: async (scope) =>
       scope === 'project' ? '/project' : '/home/user',
@@ -55,6 +65,9 @@ function createDeps(
       return 'updated';
     },
     fileExists: async (path) => !missing.has(path),
+    chmod: async (path, mode) => {
+      chmods.push({ path, mode });
+    },
   };
 }
 
@@ -440,6 +453,166 @@ describe('updateTools', () => {
         (copy) => copy.source === `/assets/scripts/${WORKFLOW_SCRIPTS[0]}`,
       ),
     ).toBe(true);
+  });
+
+  it('refreshes all four workflows asset classes at user scope', async () => {
+    const staleSkill = createTool({
+      name: WORKFLOW_SKILLS[0],
+      scope: 'user',
+      pack: 'workflows',
+      status: 'outdated',
+      version: '0.9.0',
+      bundledVersion: '1.0.0',
+    });
+    const deps = createDeps({ user: [staleSkill] });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(result.updated).toContainEqual(staleSkill);
+    for (const skill of WORKFLOW_SKILLS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/skills/${skill}`,
+        dest: `/home/user/.agents/skills/${skill}`,
+      });
+    }
+    for (const agent of WORKFLOW_AGENTS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/agents/${agent}`,
+        dest: `/home/user/.agents/agents/${agent}`,
+      });
+    }
+    for (const template of WORKFLOW_TEMPLATES) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/templates/${template}`,
+        dest: `/home/user/.oat/templates/${template}`,
+      });
+    }
+    for (const script of WORKFLOW_SCRIPTS) {
+      expect(deps.copies).toContainEqual({
+        source: `/assets/scripts/${script}`,
+        dest: `/home/user/.oat/scripts/${script}`,
+      });
+      expect(deps.chmods).toContainEqual({
+        path: `/home/user/.oat/scripts/${script}`,
+        mode: 0o755,
+      });
+    }
+  });
+
+  it('reports user-scope pack assets without writing during dry-run', async () => {
+    const currentSkill = createTool({
+      name: WORKFLOW_SKILLS[0],
+      scope: 'user',
+      pack: 'workflows',
+      status: 'current',
+      version: '1.0.0',
+      bundledVersion: '1.0.0',
+    });
+    const deps = createDeps({ user: [currentSkill] });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'workflows' },
+      ['user'],
+      '/cwd',
+      '/home',
+      true,
+      deps,
+    );
+
+    expect(deps.copies).toEqual([]);
+    expect(deps.chmods).toEqual([]);
+    expect(result.assetRefreshes).toEqual([
+      ...WORKFLOW_TEMPLATES.map((name) => ({
+        name,
+        type: 'template' as const,
+        pack: 'workflows' as const,
+        scope: 'user' as const,
+        status: 'planned' as const,
+      })),
+      ...WORKFLOW_SCRIPTS.map((name) => ({
+        name,
+        type: 'script' as const,
+        pack: 'workflows' as const,
+        scope: 'user' as const,
+        status: 'planned' as const,
+      })),
+    ]);
+  });
+
+  it('preserves executable script modes during pack refresh', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-tools-'));
+
+    try {
+      const assetsRoot = join(root, 'assets');
+      const userRoot = join(root, 'user');
+      await mkdir(join(assetsRoot, 'templates'), { recursive: true });
+      await mkdir(join(assetsRoot, 'scripts'), { recursive: true });
+
+      for (const template of WORKFLOW_TEMPLATES) {
+        await writeFile(join(assetsRoot, 'templates', template), template);
+      }
+      for (const script of WORKFLOW_SCRIPTS) {
+        await writeFile(
+          join(assetsRoot, 'scripts', script),
+          '#!/bin/sh\nexit 0\n',
+          { mode: 0o644 },
+        );
+      }
+
+      const currentTools = [
+        ...WORKFLOW_SKILLS.map((name) =>
+          createTool({
+            name,
+            scope: 'user',
+            pack: 'workflows',
+            status: 'current',
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+          }),
+        ),
+        ...WORKFLOW_AGENTS.map((name) =>
+          createTool({
+            name: name.replace(/\.md$/, ''),
+            type: 'agent',
+            scope: 'user',
+            pack: 'workflows',
+            status: 'current',
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+          }),
+        ),
+      ];
+      const deps = createDeps({ user: currentTools });
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => userRoot;
+      deps.copyFileWithStatus = copyFileWithStatus;
+      deps.chmod = chmod;
+
+      await updateTools(
+        { kind: 'pack', pack: 'workflows' },
+        ['user'],
+        '/cwd',
+        '/home',
+        false,
+        deps,
+      );
+
+      for (const script of WORKFLOW_SCRIPTS) {
+        const scriptStat = await stat(
+          join(userRoot, '.oat', 'scripts', script),
+        );
+        expect(scriptStat.mode & 0o111).not.toBe(0);
+      }
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('reconciles docs scripts during pack updates', async () => {

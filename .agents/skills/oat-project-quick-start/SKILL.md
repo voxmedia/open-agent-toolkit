@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.1.15
+version: 2.2.0
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -24,9 +24,16 @@ Create or resume a project in **quick mode** and produce a runnable `plan.md` wi
 
 **Purpose:** Capture intent quickly (`discovery.md`) and generate an execution-ready `plan.md` for `oat-project-implement`.
 
+When `OAT_AUTONOMOUS=1`, read `references/docs/autonomy-contract.md` and keep
+`OAT_NON_INTERACTIVE=1` set for this run. The autonomous branches below are
+inert otherwise. Record decisions and rationale, but never persist either
+autonomy environment signal.
+
 **BLOCKED Activities:**
 
-- No spec-driven spec/design authoring unless user explicitly asks to promote to the spec-driven workflow.
+- No spec-driven spec/design authoring unless the user explicitly asks to
+  promote, or `OAT_AUTONOMOUS=1` selects promotion through the documented
+  design-depth heuristic.
 - No implementation code changes.
 
 **ALLOWED Activities:**
@@ -91,6 +98,10 @@ Before scaffolding, surface the working tree state so unrelated changes don't ge
    - **Abort** — exit the skill so the user can clean up manually.
 
 > **Tool availability is not the same as interactivity.** If `AskUserQuestion` is unavailable but chat is available, present the three choices as a plain chat message and wait for the user's reply. Only fall back to "Proceed anyway" when `OAT_NON_INTERACTIVE=1` is set or there is no user-response channel at all.
+
+When `OAT_AUTONOMOUS=1`, use that existing proceed-anyway branch, record gate
+`QS-01`, and leave all unrelated working-tree files unstaged. A cleanup that
+could discard work remains a destructive-change boundary.
 
 Do not advance past this gate without an explicit choice.
 
@@ -192,6 +203,13 @@ git diff --cached --quiet || git commit -m "chore(oat): capture quick-start disc
 
 **Auto-advance rule:** If the request was classified as **well-understood** in Step 2a and discovery surfaced no architecture decisions, component boundary questions, or unexpected complexity, skip this decision point entirely and continue directly to Step 2.6 (the requirements gate still fires before plan generation). This preserves the minimal-ceremony contract for straightforward requests.
 
+**Autonomous resolution:** If `OAT_AUTONOMOUS=1` and the auto-advance rule did
+not apply, do not present the choice below. Apply the same recommendation
+heuristic to select straight-to-plan, lightweight design, or spec-driven
+promotion. Record gate `QS-04`, the selected depth, and the evidence-based
+rationale in `discovery.md` before following the selected branch. Stop at a
+product-judgment boundary if the available evidence cannot support the choice.
+
 **Otherwise**, present the user with a choice about how to proceed:
 
 > "Discovery is complete. How would you like to proceed?"
@@ -291,6 +309,11 @@ fi
 #   b. Expand discovery (return to Step 2)
 # Route the user accordingly. Do NOT loop back into the gate.
 ```
+
+Under `OAT_AUTONOMOUS=1`, the non-interactive branch above is the gate `QS-05`
+resolution. Record the auto-confirmed requirement set in the discovery/plan
+handoff. Contradictory or materially incomplete requirements remain a
+product-judgment boundary; auto-confirmation is not permission to invent scope.
 
 Before continuing to Step 3, complete discovery through the CLI validation
 boundary:
@@ -702,6 +725,24 @@ git diff --cached --quiet || git commit -m "chore(oat): update quick-start artif
 ```
 
 ### Gate Execution
+
+The quick-start exit-gate review scope is the complete artifact bundle that
+exists at this point:
+
+- `discovery.md`, including assumptions, constraints, and the chosen depth;
+- `design.md` when lightweight design was produced;
+- `plan.md`, including task completeness and executable verification.
+
+Review the bundle as one pre-implementation handoff so discovery assumptions
+and lightweight design decisions are checked with the plan that depends on
+them. This broadens review scope only; it does not change gate configuration
+schema or authorize runtime argument injection.
+
+Legacy quick-start gates whose configured command or prompt explicitly reviews
+only `plan.md` remain valid. Execute those commands unchanged, record
+`legacy-plan-only` scope in gate provenance, and do not require a config
+migration. New or bundle-capable gate declarations should evaluate every
+artifact above that exists.
 
 Before reporting this skill as complete, run the configured gate as the final step after artifact review, state sync, dashboard refresh, and the quick-start artifact commit:
 

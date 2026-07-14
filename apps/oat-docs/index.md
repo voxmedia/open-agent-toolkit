@@ -50,6 +50,8 @@
   - Projects
     - [Workflow & Projects](workflows/projects/index.md) — Lifecycle, project artifacts, reviews, PR flow, and repository analysis for tracked OAT projects.
     - [Project Artifacts](workflows/projects/artifacts.md) — Project artifact contracts: state.md, spec.md, design.md, plan.md, and implementation.md.
+    - [Autonomous Project Execution](workflows/projects/autonomy.md) — Session-scoped autonomy signals, gate boundaries, review requirements, and execution-learnings behavior for OAT projects.
+    - [OAT in Cursor Cloud](workflows/projects/cursor-cloud.md) — How Cursor Cloud agents resolve the OAT project home, verify provisioned tooling, and use cloud-specific execution surfaces safely.
     - [Design Modes](workflows/projects/design-modes.md) — How oat-project-design balances section-by-section collaboration, selective review, and draft-and-review.
     - [Dispatch Policy](workflows/projects/dispatch-ceiling.md) — How OAT combines provider candidate ladders, project and phase named ceilings, exact phase-agent dispatch, and provider-specific enforcement.
     - [Evidence Layers](workflows/projects/evidence-layers.md) — The three-layer dispatch evidence model — policy resolution, launcher-owned configured invocation, and optional runtime-observed identity — used across dispatch records and smoke verification.
