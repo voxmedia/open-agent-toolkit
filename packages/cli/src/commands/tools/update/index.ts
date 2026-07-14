@@ -114,7 +114,9 @@ export function createToolsUpdateCommand(
 
       const target = resolveTarget(name, opts.pack, opts.all);
       if (!target) {
-        logger.error('Specify a tool name, --pack <pack>, or --all.');
+        logger.error(
+          'Specify a tool name, --pack <pack>, or --all. To update all tools, run: oat tools update --all',
+        );
         process.exitCode = 1;
         return;
       }
