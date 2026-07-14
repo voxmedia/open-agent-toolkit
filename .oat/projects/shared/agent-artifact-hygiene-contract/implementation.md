@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p01-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -16,43 +16,43 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status      | Tasks | Completed |
-| -------------------------------------- | ----------- | ----- | --------- |
-| p01 Canonical contracts                | in_progress | 3     | 0/3       |
-| p02 Gate-review prompt                 | in_progress | 1     | 0/1       |
-| p03 Provider projection/public release | pending     | 1     | 0/1       |
+| Phase                                  | Status   | Tasks | Completed |
+| -------------------------------------- | -------- | ----- | --------- |
+| p01 Canonical contracts                | complete | 3     | 3/3       |
+| p02 Gate-review prompt                 | complete | 1     | 1/1       |
+| p03 Provider projection/public release | pending  | 1     | 0/1       |
 
-**Total:** 0/5 tasks completed
+**Total:** 4/5 tasks completed
 
 ## Phase 1: Canonical Planning and Runtime Contracts
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-14
 
 ### Task p01-t01: Resolve formatting once during plan authoring
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `23504924ed13a40875097c28831585dc397a48d1`
 
 ### Task p01-t02: Add the runtime artifact hygiene contract
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e83cf485a5c0ccde2ad15f995a9cf76ee85d3313`
 
 ### Task p01-t03: Harden effective dispatch-ladder preflight
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `29d82c4cc3e28edc0ff166db9089da02ce7edb12`
 
 ## Phase 2: Gate-Review Prompt Enforcement
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-14
 
 ### Task p02-t01: Inject and test the gate-review hygiene contract
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `5e9daea346da180f104c2342a8120b7a91ed62a1`
 
 ## Phase 3: Provider Projection and Public Release
 
@@ -68,7 +68,29 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-_No implementation runs yet._
+### Run 1 — Parallel group p01/p02
+
+**Base:** `0faa4998c964371e683d8a3fbfbea221681c8685`
+**Tier:** Tier 1 (Cursor native subagents)
+**Policy:** High
+
+| Phase | Outcome | Task Commits                       | Review                                                           | Merge      |
+| ----- | ------- | ---------------------------------- | ---------------------------------------------------------------- | ---------- |
+| p01   | passed  | `23504924`, `e83cf485`, `29d82c4c` | 0 findings (`reviews/archived/p01-review-2026-07-14T020114Z.md`) | `5fd9c06c` |
+| p02   | passed  | `5e9daea3`                         | 0 findings (`reviews/archived/p02-review-2026-07-14T015134Z.md`) | `23353917` |
+
+**Dispatch:**
+
+- p01 implementation: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- p01 review: `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- p02 implementation: `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- p02 review: `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+
+**Notes:**
+
+- Both reviewer transports closed after writing complete zero-finding artifacts; the accepted artifacts were validated and recovered without replacement launches.
+- Both worktrees were clean, merged in plan order, integration-verified, and removed.
+- Outstanding items: none.
 
 <!-- orchestration-runs-end -->
 
@@ -84,6 +106,7 @@ _No implementation runs yet._
 - Quick-start lifecycle gate blocked after two 900-second `review_failed` timeouts against `codex-5-6-sol-max` (run IDs `2157923e-4430-4fd6-844b-ace61cd38990` and `11832394-1aa6-4df9-a82f-3d73e50ef105`). Neither run produced findings, an artifact, or a receive-eligible handoff.
 - Operator-authorized `< /dev/null` recovery completed the gate and produced a corroborated blocking artifact review.
 - Launched parallel phase implementers for p01 and p02 from exact base `0faa4998c964371e683d8a3fbfbea221681c8685` using Cursor target `gpt-5.6-sol-high`.
+- Completed and merged p01/p02 after zero-finding independent reviews; advanced to `p03-t01`.
 
 ### Review Received: plan
 
@@ -131,11 +154,11 @@ _No implementation runs yet._
 
 ## Test Results
 
-| Phase | Tests Run | Result |
-| ----- | --------- | ------ |
-| p01   | -         | -      |
-| p02   | -         | -      |
-| p03   | -         | -      |
+| Phase | Tests Run                                                        | Result |
+| ----- | ---------------------------------------------------------------- | ------ |
+| p01   | skill validation, 86 focused tests, 10-file format check         | passed |
+| p02   | 130 focused tests, CLI lint, CLI type-check, 2-file format check | passed |
+| p03   | -                                                                | -      |
 
 ## Final Summary (for PR/docs)
 

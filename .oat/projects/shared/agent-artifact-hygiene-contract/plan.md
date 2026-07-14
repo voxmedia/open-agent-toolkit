@@ -293,8 +293,8 @@ git commit -m "chore(p03-t01): sync and version hygiene contracts"
 
 | Scope  | Type     | Status  | Date       | Artifact                                                    |
 | ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                           |
-| p02    | code     | pending | -          | -                                                           |
+| p01    | code     | passed  | 2026-07-14 | reviews/archived/p01-review-2026-07-14T020114Z.md           |
+| p02    | code     | passed  | 2026-07-14 | reviews/archived/p02-review-2026-07-14T015134Z.md           |
 | p03    | code     | pending | -          | -                                                           |
 | final  | code     | pending | -          | -                                                           |
 | spec   | artifact | pending | -          | -                                                           |
