@@ -514,24 +514,12 @@ git commit -m "test(p07-t03): pin backlog summary trimming"
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `pnpm-lock.yaml` only if pnpm updates workspace metadata
-- Restore exactly from `origin/main`: `.agents/docs/autonomy-contract.md`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/design.md`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/implementation.md`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/plan.md`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/references/oat-user-config.cloud.json`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/spec.md`
-- Restore exactly from `origin/main`: `.oat/projects/shared/cursor-cloud-autonomous-projects/state.md`
-- Restore exactly from `origin/main`: `.oat/repo/pjm/backlog/index.md`
 
-**Step 1: Remove unrelated merge-hook churn**
+**Step 1: Re-bump the lockstep public release**
 
-Restore the eight listed upstream-owned files byte-for-byte from current `origin/main`. Do not change any other sibling-project, autonomy-contract, or backlog file. Confirm `git diff --exit-code origin/main -- <all-eight-paths>` succeeds.
+PR #147 now owns the previously identified formatting deltas and the `0.1.64` release baseline. Confirm current `origin/main` owns `0.1.64`, then bump all five public package manifests and `packages/cli/assets/public-package-versions.json` to the next unused common version, expected to be `0.1.65`. Update `pnpm-lock.yaml` only if package-manager metadata changes.
 
-**Step 2: Re-bump the lockstep public release**
-
-Confirm current `origin/main` owns `0.1.63`, then bump all five public package manifests and `packages/cli/assets/public-package-versions.json` to the next unused common version, expected to be `0.1.64`. Update `pnpm-lock.yaml` only if package-manager metadata changes.
-
-**Step 3: Verify**
+**Step 2: Verify**
 
 Run sequentially:
 
@@ -541,13 +529,12 @@ Run sequentially:
 - `pnpm lint`
 - `pnpm format`
 
-Expected: the sibling/upstream files have no base-relative delta, all five public packages validate at the new common version, changed canonical skill bumps remain valid, and workspace static gates pass. Root will rerun final workspace tests/build before re-review.
+Expected: all five public packages validate at the new common version, changed canonical skill bumps remain valid, workspace static gates pass, and the eight files previously reported as formatter churn have no base-relative delta now that PR #147 owns their formatting. Root will rerun final workspace tests/build before re-review.
 
-**Step 4: Commit**
+**Step 3: Commit**
 
 ```bash
 git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
-git add .agents/docs/autonomy-contract.md .oat/projects/shared/cursor-cloud-autonomous-projects/design.md .oat/projects/shared/cursor-cloud-autonomous-projects/implementation.md .oat/projects/shared/cursor-cloud-autonomous-projects/plan.md .oat/projects/shared/cursor-cloud-autonomous-projects/references/oat-user-config.cloud.json .oat/projects/shared/cursor-cloud-autonomous-projects/spec.md .oat/projects/shared/cursor-cloud-autonomous-projects/state.md .oat/repo/pjm/backlog/index.md
 git commit -m "chore(p07-t04): re-bump release after upstream collision"
 ```
 

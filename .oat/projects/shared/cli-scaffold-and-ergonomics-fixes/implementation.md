@@ -561,11 +561,11 @@ Chronological log of implementation progress.
 
 - Findings: Critical 0, Important 1, Medium 1, Minor 1; verdict `BLOCKED`.
 - I1 is accepted as mandatory: `origin/main` now owns `0.1.63`, so the five public packages and bundled version manifest must move to the next unused common version.
-- M1 is accepted because the eight formatter-only deltas are outside this project's declared surfaces and violate the explicit sibling-artifact boundary. `p07-t04` restores them byte-for-byte from `origin/main`.
+- M1 was valid when reported. PR #147 subsequently merged those exact formatting changes into `origin/main`; merge commit `631f6223a7592133556a6896419c8358e3375f45` now leaves all eight paths with no base-relative delta. `p07-t04` only verifies that clean boundary.
 - m1 is resolved in this bookkeeping update by recording the blocked round-2 artifact and the newly queued task accurately.
 - Independent focused verification passed 388/388 and CLI type-check passed; release validation failed only because the package versions equal the current base.
 
-**Next:** Execute `p07-t04`, rerun final workspace verification, and run final review round 3.
+**Next:** Bump the PR #147 `0.1.64` baseline to `0.1.65` in `p07-t04`, rerun final workspace verification, and run final review round 3.
 
 ---
 

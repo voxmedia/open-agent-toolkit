@@ -1,6 +1,6 @@
 ---
 oat_current_task: p07-t04
-oat_last_commit: ab120df254070c481042f950352cb5b44747451d
+oat_last_commit: 631f6223a7592133556a6896419c8358e3375f45
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T03:31:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T15:54:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -100,7 +100,9 @@ Implementation - final review round 2 fixes queued
 - ✓ Final workspace tests and production build passed
 - ✓ Final review round 2 verified the prior code/test fixes
 - ⧗ Final review round 2 blocked by upstream release-version collision
-- ⧗ p07-t04 queued to re-bump packages and remove unrelated formatter churn
+- ✓ PR #147 formatting/release baseline merged without conflicts
+- ✓ Previously unrelated formatter deltas are now owned by `origin/main`
+- ⧗ p07-t04 queued to re-bump packages from `0.1.64` to `0.1.65`
 
 ## Blockers
 
