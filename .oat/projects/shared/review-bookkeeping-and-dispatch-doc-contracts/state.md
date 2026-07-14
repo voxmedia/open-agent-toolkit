@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T23:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T23:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -72,7 +72,8 @@ Implementation - Tasks complete; awaiting final review
 - ✓ Configured p01/p02 phase gates passed and were received
 - ✓ Phase 3 implementation and release validation passed
 - ✓ Phase 3 root review passed with no findings
-- ⧗ Final verification and final review
+- ✓ Final verification passed
+- ⧗ Final review
 
 ## Blockers
 
@@ -80,4 +81,4 @@ None
 
 ## Next Milestone
 
-Run final verification and final review
+Run the final review
