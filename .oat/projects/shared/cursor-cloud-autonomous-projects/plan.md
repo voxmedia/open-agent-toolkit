@@ -387,6 +387,29 @@ Expected: green; grok participates in cross-family selection; release validation
 
 ---
 
+### Task p02-t09: CLI — gate-inventory drift enforcement (TDD; added 2026-07-14)
+
+> **Amendment (2026-07-14, user direction, Option A):** added post-phase during the p03-t02 operator wait, from the logged code-follow-up. Protects the autonomy contract's exhaustiveness claim at HEAD instead of at a recorded baseline SHA.
+
+**Files:**
+
+- Create: `packages/cli/src/validation/autonomy-gate-inventory.test.ts` (contract test: run the broadened-phrase prompt scan across the 15 skill roots, parse the inventory table in `.agents/docs/autonomy-contract.md`, fail on any unmapped prompt site — match file + gate ID, never line numbers)
+- Modify: `.agents/docs/autonomy-contract.md` (maintenance section: prompt changes require a same-commit inventory row; note the CI backstop)
+- Modify: `.agents/skills/create-oat-skill/SKILL.md` (authoring guidance paragraph + version bump)
+
+**Step 1 (RED):** test fails against a fixture with an unmapped prompt site; passes against current HEAD only if the inventory is genuinely current (refresh rows first if the scan surfaces post-baseline sites).
+
+**Step 2 (GREEN):** implement scan + table parser; refresh any stale inventory rows uncovered.
+
+**Verify:**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/ && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/ && pnpm format`
+Expected: green; inventory current at HEAD; formatting clean (CI parity).
+
+**Commit:** `feat(p02-t09): gate-inventory drift enforcement contract test and guidance`
+
+---
+
 ## Phase 3: OAT release (publish boundary)
 
 **Goal:** Changes published to npm. **p04 end-state validation is hard-blocked on p03-t02 passing.**
