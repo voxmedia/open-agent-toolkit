@@ -1129,6 +1129,8 @@ describe('oat gate', () => {
           options.purpose === 'availability' && command === 'available-reviewer'
             ? 0
             : 1,
+        stdoutBytes: 0,
+        stderrBytes: 0,
       };
     };
     const { command, capture } = createHarness({
