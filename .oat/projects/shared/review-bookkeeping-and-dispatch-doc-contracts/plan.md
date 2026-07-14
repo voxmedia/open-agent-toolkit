@@ -2,203 +2,187 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-13
+oat_last_updated: 2026-07-14
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: [['p01', 'p02']]
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: review-bookkeeping-and-dispatch-doc-contracts
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement`.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make review-event bookkeeping monotonic, reconcile dispatch/lifecycle guidance, and recover validated late gate artifacts without regressing target selection.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Keep the Markdown ledger, use artifact identity for distinct review events, and select the latest appended event on reads. Localize gate changes to process telemetry and post-execution envelope finalization, reusing existing run-ID correlation and validation.
 
-**Tech Stack:** {Key technologies from design}
-
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
-
-## Planning Checklist
-
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
-
----
+**Tech Stack:** TypeScript, Vitest, Markdown skill contracts, Fumadocs, pnpm/Turborepo
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, control-plane routing, and skill tests; p02 owns gate code/tests/docs. Phase p03 runs after fan-in for sync, lockstep versions, and release validation.
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+## Planning Decisions
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
+- `parseReviewTable` preserves duplicate-scope rows and `validate-plan` ignores Reviews uniqueness. The control-plane router does use the first `final` row, so distinct events need that small read-side fix.
+- Event identity is scope + type + artifact filename. The first event may claim an unbound pending placeholder; each later artifact appends a row; an event only advances through the status ladder.
+- Item 2 closes without behavior changes. Existing code/tests couple status and exit; the unused fixed-threshold `ReviewGateVerdict.blocking` is left alone to keep gate work cohesive.
+- Timeout telemetry uses additive `noOutputProduced`. Valid run-correlated timeout artifacts retain `status: ok|blocked` and add `lateCompletion: true`.
+- `workflow.completeBeforeMerge` is not added: both orderings already work and need only clear routing prose.
+- Preserve the landed `stdin: 'ignore'` fix and do not modify target resolution or priority ordering.
 
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+## Phase 1: Lifecycle Contracts and Review Routing
 
----
+### Task p01-t01: Make Reviews rows event-distinct and monotonic
 
-## Dispatch Profile
+**Files:** `.agents/skills/oat-project-{plan-writing,review-provide,review-receive,implement,pr-final,complete,next}/**`, `packages/control-plane/src/state/reviews.test.ts`, `packages/control-plane/src/recommender/router{,.test}.ts`, `packages/cli/src/commands/project/validate-plan/index.test.ts`, `packages/cli/src/validation/skills.test.ts`
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+**Implement:**
 
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
+1. Add RED tests proving duplicate-scope rows parse/validate and the latest `final` event controls routing.
+2. Define append-ordered event rows in plan-writing; claim only an unbound placeholder, otherwise append distinct artifacts, match later mutations by artifact filename, and forbid status regression.
+3. Apply the contract to provide, receive, implementation fix bookkeeping, and final-row readers; change the control-plane router to the last matching row.
+4. Bump each changed skill once: plan-writing `1.2.14`, review-provide `1.3.17`, review-receive `1.5.8`, implement `2.1.1`, pr-final `1.5.2`, complete `1.5.1`, next `1.0.8`; update pinned tests.
 
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-receive/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references/phase-execution.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-next/SKILL.md packages/control-plane/src/state/reviews.test.ts packages/control-plane/src/recommender/router.ts packages/control-plane/src/recommender/router.test.ts packages/cli/src/commands/project/validate-plan/index.test.ts packages/cli/src/validation/skills.test.ts`
 
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+**Verify:** `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts src/recommender/router.test.ts && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/validate-plan/index.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm --filter @open-agent-toolkit/cli type-check`
 
----
+**Commit:** `fix(p01-t01): preserve distinct review events`
 
-## Phase 1: {Phase Name}
+### Task p01-t02: Make resolver selection paths mutually exclusive
 
-### Task p01-t01: {Task Name}
+**Files:** `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`, `packages/cli/src/validation/skills.test.ts`
 
-**Files:**
+**Implement:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+1. Add RED assertions that no documented resolver command combines `--preferred` with candidate flags.
+2. Present preferred selection and exact-candidate selection as mutually exclusive from first mention.
+3. Remove the Claude implication that managed-capped exact-candidate calls also carry `--preferred`; preserve runtime re-resolution and priority routing.
 
-**Step 1: Write test (RED)**
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md packages/cli/src/validation/skills.test.ts`
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+**Commit:** `docs(p01-t02): separate resolver selection paths`
 
-**Step 2: Implement (GREEN)**
+### Task p01-t03: Mandate unambiguous cross-runtime phase-gate prompts
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+**Files:** `.agents/skills/oat-project-{plan-writing,plan,quick-start}/SKILL.md`, `packages/cli/src/validation/skills.test.ts`
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
+**Implement:**
 
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+1. Add RED prompt-contract assertions.
+2. Require the question to name the “cross-runtime phase gate review,” say built-in per-phase root reviews and final review run regardless, and avoid bare `(Recommended)` labels.
+3. Apply the requirement in plan and quick-start without changing eligibility, outcomes, HiLL independence, or target neutrality.
+4. Bump plan to `1.3.15` and quick-start to `2.2.2`; plan-writing was bumped in p01-t01.
 
-**Step 3: Refactor**
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md packages/cli/src/validation/skills.test.ts`
 
-{Any cleanup or improvements while tests stay green}
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
 
-**Step 4: Verify**
+**Commit:** `docs(p01-t03): clarify cross-runtime phase gate choice`
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+### Task p01-t04: Name both supported PR completion orderings
 
-**Step 5: Commit**
+**Files:** `.agents/skills/oat-project-{pr-final,progress,complete}/SKILL.md`, `packages/cli/src/validation/skills.test.ts`
 
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
+**Implement:**
 
----
+1. Add RED assertions for an `implement | pr_open` route in every mode and both supported orderings.
+2. Replace pr-final’s merge-first implication; add `pr_open → oat-project-complete` to spec-driven, quick, and import progress tables.
+3. State that an open PR is not a blocker and archival syncs its body. Do not add configuration.
+4. Bump progress to `1.2.6`; pr-final/complete were bumped in p01-t01.
 
-### Task p01-t02: {Task Name}
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-progress/SKILL.md .agents/skills/oat-project-complete/SKILL.md packages/cli/src/validation/skills.test.ts`
 
-**Files:**
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
 
-- {File list}
+**Commit:** `docs(p01-t04): support completion before or after merge`
 
-**Step 1: Write test (RED)**
+## Phase 2: Gate Timeout Recovery and Telemetry
 
-{Test code}
+### Task p02-t01: Recover run-correlated artifacts after timeout
 
-**Step 2: Implement (GREEN)**
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`
 
-{Implementation code or signatures}
+**Implement:**
 
-**Step 3: Refactor**
+1. Add RED tests for clean/blocking late artifacts and zero/nonzero-output bare timeouts.
+2. Count stdout/stderr bytes in the process result.
+3. On timeout, re-scan and resolve the invocation run ID before failure. Feed one correlated artifact through existing project, timestamp, invocation, normalization, threshold, and handoff checks.
+4. Add `lateCompletion: true` to recovered `ok|blocked` envelopes; add `noOutputProduced` to unrecovered timeout failures.
+5. Do not alter stdin, target selection, priority, or availability code.
 
-{Optional cleanup}
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts`
 
-**Step 4: Verify**
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts && pnpm --filter @open-agent-toolkit/cli type-check && pnpm --filter @open-agent-toolkit/cli lint`
 
-Run: `{verification command}`
-Expected: {output}
+**Commit:** `fix(p02-t01): recover late gate review artifacts`
 
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+### Task p02-t02: Document timeout controls and recovery fields
 
-**Step 5: Commit**
+**Files:** `apps/oat-docs/docs/cli-utilities/workflow-gates.md`, `apps/oat-docs/docs/reference/cli-reference.md`
 
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+**Implement:**
 
----
+1. Document `OAT_GATE_EXEC_TIMEOUT_MS` in milliseconds with its 15-minute default.
+2. Document recovered `lateCompletion: true` and unrecovered timeout `noOutputProduced`.
+3. Keep receive routing based on `status`, `receiveEligible`, and `handoff`; add no new positive status.
 
-## Phase 2: {Phase Name}
+**Format:** `pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/reference/cli-reference.md`
 
-### Task p02-t01: {Task Name}
+**Verify:** `pnpm docs:check-links && pnpm build:docs`
 
-{Continue TDD pattern...}
+**Commit:** `docs(p02-t02): explain gate timeout recovery`
 
----
+## Phase 3: Sync and Release Validation
+
+### Task p03-t01: Synchronize and validate the lockstep release
+
+**Files:** five public `packages/*/package.json` manifests; sync-managed provider views and `.oat/sync/manifest.json`
+
+**Implement:**
+
+1. Bump cli, control-plane, docs-config, docs-theme, and docs-transforms from `0.1.65` to `0.1.66`.
+2. Run `pnpm run cli -- sync --scope all`; never hand-edit provider views.
+3. Run `pnpm format:fix` so every final changed file satisfies artifact hygiene.
+
+**Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/control-plane test && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate`
+
+**Commit:** `chore(p03-t01): validate release assets and versions`
 
 ## Reviews
-
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
 
 | Scope  | Type     | Status  | Date | Artifact |
 | ------ | -------- | ------- | ---- | -------- |
 | p01    | code     | pending | -    | -        |
 | p02    | code     | pending | -    | -        |
+| p03    | code     | pending | -    | -        |
 | final  | code     | pending | -    | -        |
 | spec   | artifact | pending | -    | -        |
 | design | artifact | pending | -    | -        |
+| plan   | artifact | pending | -    | -        |
 
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
-
----
+**Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 ## Implementation Complete
 
-**Summary:**
+- Phase 1: 4 tasks — lifecycle and skill contracts
+- Phase 2: 2 tasks — gate recovery and docs
+- Phase 3: 1 task — sync and release validation
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
-
-**Total: {N} tasks**
-
-Ready for code review and merge.
-
----
+**Total: 7 tasks**
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Gate implementation: `packages/cli/src/commands/gate/index.ts`
+- Review parser: `packages/control-plane/src/state/reviews.ts`
+- Shared planning contract: `.agents/skills/oat-project-plan-writing/SKILL.md`
