@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T00:56:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T01:00:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 1 review pending
+Implement - Phase 1 external gate pending
 
 ## Artifacts
 
@@ -75,7 +75,8 @@ Implement - Phase 1 review pending
 - ✓ Implementation readiness restored
 - ⧗ Implementation started at p01-t01
 - ✓ p01-t01 implementation and focused verification complete
-- ⧗ Root-owned p01 review pending
+- ✓ Root-owned p01 review passed with zero findings
+- ⧗ Independent p01 phase gate pending
 
 ## Blockers
 
@@ -83,4 +84,4 @@ None
 
 ## Next Milestone
 
-Pass the root-owned p01 review and configured external phase gate
+Pass the configured external p01 phase gate
