@@ -105,6 +105,8 @@ Write the template per design (generalized from the operator's `03-run-log-templ
 
 The template must contain NO substitution tokens except those the append command fills at creation (project name, date). Cross-check against the scaffold substitution mechanism actually used — exact-match tokens, no space-padded variants (the `{ OAT_PHASE }` lesson from `cli-scaffold-and-ergonomics-fixes`).
 
+**Correction contract wording:** the template and the append `--help` text must state unambiguously that prior entries are NEVER edited or struck through — corrections are appended as a new judgment entry referencing the original entry and explaining the correction. (The single-writer, byte-preserving contract supersedes the exemplar's hand-maintained strike-through convention.)
+
 Run: `pnpm exec oxfmt --check .oat/templates/project-log.md`
 Expected: Template is format-clean (note: the root `pnpm format` script does NOT cover `.oat/templates/`, so check the file directly)
 
@@ -133,7 +135,7 @@ git commit -m "feat(p01-t02): add project-log artifact template"
 
 **Step 1: Write test (RED)**
 
-Cover, per design: create-on-first-append under `auto` (template instantiated with header contract, then entry appended); plain append when the artifact exists (any config value — artifact-presence-wins); silent no-op JSON (`status: "skipped"`) under `false`; taxonomy rejection for invalid `--type`/`--scope` with the allowed set in the error; judgment heading composition (`### YYYY-MM-DD · <scope> · <type> · <area>`); structural heading composition (`### YYYY-MM-DD · structural · <producer> · <ref>`) via `--structural --producer --ref`; `--body -` stdin support; `--version-note` trailing clause; append-only (prior content byte-identical after append); deterministic formatting (append twice, `oxfmt --check` passes); explicit `--project` vs. active-project resolution; error when no project resolves.
+Cover, per design: create-on-first-append under `auto` (template instantiated with header contract, then entry appended); plain append when the artifact exists (any config value — artifact-presence-wins); silent no-op JSON (`status: "skipped"`) under `false` with no existing artifact; taxonomy rejection for invalid `--type`/`--scope` with the allowed set in the error; **boundary validation with actionable errors naming the accepted option contract:** `--area` containing a newline or exceeding the single-line length cap is rejected; missing required flags per entry class (judgment without `--type`/`--scope`/`--area`; structural without `--producer`/`--ref`) are rejected; incompatible mixed flag sets (`--structural` combined with `--type`/`--scope`, or judgment flags combined with `--producer`/`--ref`) are rejected; judgment heading composition (`### YYYY-MM-DD · <scope> · <type> · <area>`); structural heading composition (`### YYYY-MM-DD · structural · <producer> · <ref>`) via `--structural --producer --ref`; `--body -` stdin support; `--version-note` trailing clause; append-only (prior content byte-identical after append); deterministic formatting (append twice, `oxfmt --check` passes); explicit `--project` vs. active-project resolution; error when no project resolves.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts`
 Expected: Tests fail (RED)
@@ -293,7 +295,7 @@ git commit -m "feat(p02-t01): add project-log scaffold flags to oat project new"
 
 **Step 1: Write test (RED)**
 
-The gate has multiple terminal return paths (successful verdict, blocking verdict, child failure, timeout, targeting-correlation failure, artifact-validation failure). Cases: **exactly one structural entry is appended per gate run for each terminal outcome** (producer `oat gate review`, ref = review scope, one-liner with target, threshold, findings counts when available, exit code, status, artifact path when produced — path referenced, not inlined) — test success, blocking verdict, child failure, timeout, targeting-correlation failure, and validation failure explicitly (all six); config `false` produces no append; **append failure is swallowed to a warning and does not change the gate's exit code, envelope status, or handoff fields**; under `auto` with no prior log, the run creates the log (create-on-first-append via the shared routine).
+The gate has multiple terminal return paths (successful verdict, blocking verdict, child failure, timeout, targeting-correlation failure, artifact-validation failure). Cases: **exactly one structural entry is appended per gate run for each terminal outcome** (producer `oat gate review`, ref = review scope, one-liner with target, threshold, findings counts when available, exit code, status, artifact path when produced — path referenced, not inlined) — test success, blocking verdict, child failure, timeout, targeting-correlation failure, and validation failure explicitly (all six); config `false` **with no existing artifact** produces no append, while config `false` **with an existing log** still receives exactly one structural entry (artifact-presence-wins — the finalizer calls the shared append routine with no gate-only config pre-check); **append failure is swallowed to a warning and does not change the gate's exit code, envelope status, or handoff fields**; under `auto` with no prior log, the run creates the log (create-on-first-append via the shared routine).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'project log'`
 Expected: Tests fail (RED)
@@ -421,18 +423,60 @@ git commit -m "feat(p03-t03): add project-log synthesis check and seal to oat-pr
 
 **Step 1: Implement**
 
-Author the command-group docs (append/synthesize/check flags, config keys, entry grammar, roll-up contract). Run `oat sync --scope all` to refresh provider views for the three changed skills. Bump all five public package versions in lockstep. Regenerate bundled assets **once, after all canonical sources are final** (`bash packages/cli/scripts/bundle-assets.sh`), and stage `packages/cli/assets/` so the generated skill/template/docs assets land in this commit.
+Author the command-group docs (append/synthesize/check flags, config keys, entry grammar, roll-up contract) as a new page under the CLI-utilities docs area (target: `apps/oat-docs/docs/cli-utilities/project-log.md`, adjusted to the docs delta check's placement guidance), and **link it from the nearest authored `## Contents` map** (`apps/oat-docs/docs/cli-utilities/index.md`) with a `.md`-suffixed link per `apps/oat-docs/AGENTS.md`. Run `oat docs nav sync` and the canonical generated-index command (`oat docs generate-index`) and confirm the derived outputs are clean. Run `oat sync --scope all` to refresh provider views for the three changed skills. Bump all five public package versions in lockstep. Regenerate bundled assets **once, after all canonical sources are final** (`bash packages/cli/scripts/bundle-assets.sh`), and stage `packages/cli/assets/` so the generated skill/template/docs assets land in this commit.
 
 **Step 2: Verify**
 
-Run: `pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
-Expected: Release validation passes (version bumps + skill version bumps recognized); docs build green; the assets-scoped `git diff --quiet` exits 0 (no unstaged regenerated assets — other task files remain unstaged until Step 3 stages and commits them)
+Run: `oat docs nav sync && oat docs generate-index && pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
+Expected: Nav sync and generated index clean (new page linked from the authored `## Contents`); release validation passes (version bumps + skill version bumps recognized); docs build green; the assets-scoped `git diff --quiet` exits 0 (no unstaged regenerated assets — other task files remain unstaged until Step 3 stages and commits them)
 
 **Step 3: Commit**
 
 ```bash
 git add apps/oat-docs/ packages/*/package.json packages/cli/assets/ .claude/ .cursor/ .codex/ .oat/sync/
 git commit -m "feat(p03-t04): document oat project log and bump release versions"
+```
+
+---
+
+### Task p03-t05: End-to-end lifecycle integration test
+
+**Files:**
+
+- Create: `packages/cli/src/commands/project/log/lifecycle.integration.test.ts`
+
+**Step 1: Write test (RED)**
+
+One integration test driving the complete lifecycle in a temp repo fixture, asserting the design's hard ordering boundary end-to-end:
+
+1. Scaffold a quick project with config `auto` → no log exists.
+2. First structural append (simulating the first dispatch) → log created from the real bundled template with header contract.
+3. Gate-style structural append + judgment appends land under `## Entries`.
+4. `check` reports `synthesis_pending`; the completion path surfaces the warning (assert via check's `--require-synthesis` exit semantics).
+5. Roll-up: `## Workflow Observations` written to summary.md; ledger outcomes covered as **three cases** — appended (reference layer present), deduplicated (same date+area re-run), and the explicitly-permitted warn-and-skip (reference layer absent, `workflow.projectLogLedgerPath` unset).
+6. `synthesize` completes the synthesis; `check` flips `synthesisPending: false`.
+7. Seal entry appended last; after simulated archival (move to archive dir), the summary section and ledger content remain durable in the tracked tree.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/lifecycle.integration.test.ts`
+Expected: Tests fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+No new production code expected — this task verifies the composition of p01/p02/p03 pieces; fix whatever the integration surfaces.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/`
+Expected: Tests pass (GREEN)
+
+**Step 3: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/log/
+git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration test"
 ```
 
 ---
@@ -453,7 +497,7 @@ git commit -m "feat(p03-t04): document oat project log and bump release versions
 | design | artifact | pending  | -          | -                                                  |
 | plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T005456Z.md |
 
-**Plan review disposition (2026-07-13):** structured-mode artifact review, 3 rounds (retry bound exhausted). Round 1: 2 Critical / 6 Important / 5 Medium — all fixed. Round 2: 4 Important / 4 Medium / 1 minor — all fixed. Round 3 (final): 1 Medium (assets-scoped unstaged check) + 1 minor (phase-note wording) — both fixed by applying the reviewer's fix guidance verbatim after the final round; no re-dispatch remained within the retry bound to confirm clean. No Critical/Important findings remain. The final code review at implementation covers residual confirmation.
+**Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max, run a7a501f4, artifact `reviews/artifact-plan-review-2026-07-14T005456Z.md`): blocked with 1 Important (no end-to-end roll-up-before-archive verification → added p03-t05) + 4 Medium (gate `false`-with-artifact case; docs nav-sync/Contents-link requirements; append boundary-validation tests; corrections-never-strike-through contract) — all remediated in this plan revision; gate re-run as attempt 2 per `onFailure: block`.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -472,9 +516,9 @@ git commit -m "feat(p03-t04): document oat project log and bump release versions
 
 - Phase 1: 5 tasks - CLI foundation (config keys, template + bundling manifests, `append`, `check`, `synthesize`)
 - Phase 2: 2 tasks - Scaffold flags and gate-internal structural append (all terminal outcomes)
-- Phase 3: 4 tasks - Skill integrations (implement/summary/complete), docs, lockstep version bumps
+- Phase 3: 5 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
 Ready for code review and merge.
 
