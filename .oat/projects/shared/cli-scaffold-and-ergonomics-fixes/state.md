@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: aa84f81b1e60b52624ae267234d2f0c7959a77dc
+oat_last_commit: 95b90b85b0100c780fe17216f757ede9435c856e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -30,6 +30,15 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_post_implement_sequence:
+  status: pre_approval
+  final_phase: p07
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
@@ -38,7 +47,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T16:12:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T16:14:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +59,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - final review passed; awaiting final HiLL closeout
+Closeout pre-approval - summary pending
 
 ## Artifacts
 
@@ -106,7 +115,8 @@ Implementation - final review passed; awaiting final HiLL closeout
 - ✓ Release, skill-version, type-check, lint, and format gates passed
 - ✓ Final workspace tests, builds, docs build, and release gates passed
 - ✓ Final review round 3 passed with zero findings
-- ⧗ Final HiLL closeout pending
+- ⧗ Pre-approval sequence: summary → document → PR
+- ⧗ Final HiLL approval pending after pre-approval sequence
 
 ## Blockers
 
@@ -114,4 +124,4 @@ None
 
 ## Next Milestone
 
-Run configured final HiLL/closeout sequence
+Run summary, document, and PR pre-approval steps
