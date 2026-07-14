@@ -87,3 +87,34 @@ numbers). Precedent: existing prose-contract suites in
 `packages/cli/src/validation/skills.test.ts`. (2) Add authoring guidance to
 `create-oat-skill` and the contract doc: prompt changes require a same-commit
 inventory row change.
+
+## 2026-07-14T02:20:00Z - decision - Coexistence with orchestration-run-log (PR #146)
+
+**Observation:** PR #146 designs `orchestration-run-log`: a CLI-owned,
+append-only per-project `project-log.md` (single-writer `oat project log
+append/check/synthesize/rollup`, structural + judgment entry classes, hard
+roll-up-before-archive gate, repo-level ledger). It shares the substrate of our
+FR11/FR14 learnings mechanism (append-only categorized project log →
+summary-time synthesis) but differs in writer model (CLI vs hand-authored),
+taxonomy, lifecycle scope (any project vs autonomous runs), and enforcement
+(tested hard gate vs conditional prose). Both projects amend
+`oat-project-summary` and add an observations-style section to `summary.md`.
+Neither project's artifacts reference the other.
+
+**Impact:** Shipping both as-is creates double-logging ambiguity for agents,
+a same-file collision risk in the summary skill when their p03-t02 lands, and
+asymmetric durability (their log gets a hard pre-archive gate; our learnings
+file has only soft synthesis).
+
+**Recommendation (staged; no changes now — their implementation is
+unstarted, ours is shipped):** When orchestration-run-log lands: (1)
+coordinate the `oat-project-summary` edits — learnings synthesis stays its own
+section, `## Workflow Observations` excludes autonomous-learnings content,
+cross-reference one line; (2) adopt their enforcement pattern — verify
+learnings synthesis before an autonomous project's log is sealed into the
+gitignored archive; (3) file a v2 evaluation for migrating learnings writes
+onto the `oat project log` substrate (extended taxonomy or `learning` entry
+class) with FR14 as a filtered consumer, decided on production evidence; (4)
+feed two suggestions upstream to their project: a secret-redaction entry
+contract, and the Observation/Impact/Recommendation body shape for high-value
+judgment entries. Full comparison recorded in the project log 2026-07-14.
