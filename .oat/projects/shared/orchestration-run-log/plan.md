@@ -107,6 +107,10 @@ The template must contain NO substitution tokens except those the append command
 
 **Correction contract wording:** the template and the append `--help` text must state unambiguously that prior entries are NEVER edited or struck through — corrections are appended as a new judgment entry referencing the original entry and explaining the correction. (The single-writer, byte-preserving contract supersedes the exemplar's hand-maintained strike-through convention.)
 
+**Secret-redaction rule (coordination adoption, 2026-07-14):** template contract and append `--help` both state: never record secret values (tokens, keys, signed URLs, credentials) — the log rolls up into tracked surfaces; reference secrets by name/source, never by value.
+
+**Optional structured judgment body (coordination adoption, 2026-07-14):** the entry-format block documents that judgment entries default to 1–3 sentences but MAY use an `Observation:` / `Impact:` / `Recommendation:` three-field body for high-value entries.
+
 Run: `pnpm exec oxfmt --check .oat/templates/project-log.md`
 Expected: Template is format-clean (note: the root `pnpm format` script does NOT cover `.oat/templates/`, so check the file directly)
 
@@ -142,7 +146,7 @@ Expected: Tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Implement per design Component `oat project log append`, including the self-teaching `--help` text (entry contract, log-worthiness triggers, worked-well rationale, 1–3 sentence guidance, path-not-inline rule). Export the append routine as a plain function so p02-t02 can call it in-process.
+Implement per design Component `oat project log append`, including the self-teaching `--help` text (entry contract, log-worthiness triggers, worked-well rationale, 1–3 sentence guidance with the optional `Observation:`/`Impact:`/`Recommendation:` body for high-value entries, path-not-inline rule, secret-redaction rule). Export the append routine as a plain function so p02-t02 can call it in-process.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts`
 Expected: Tests pass (GREEN)
@@ -175,7 +179,7 @@ git commit -m "feat(p01-t03): add oat project log append command"
 
 **Step 1: Write test (RED)**
 
-Cover the `ProjectLogCheckResult` envelope from design: `absent` status when no log; entry counts by class/type/scope; `lastEntryDate`; `synthesisPending` detection keyed on the template's synthesis-section marker (pending marker present vs. replaced by content); `--require-synthesis` exits 1 on pending, 0 otherwise; `grammarViolations` lists hand-written headings failing the grammar while valid helper-written headings pass; exit 0 for all non-`--require-synthesis` cases.
+Cover the `ProjectLogCheckResult` envelope from design: `absent` status when no log; entry counts by class/type/scope; `lastEntryDate`; `synthesisPending` detection keyed on the template's synthesis-section marker (pending marker present vs. replaced by content); `--require-synthesis` exits 1 on pending, 0 otherwise; `grammarViolations` lists hand-written headings failing the grammar while valid helper-written headings pass; exit 0 for all non-`--require-synthesis` cases; **sibling-artifact scoping:** a project directory containing `oat-execution-learnings.md` (different grammar, PR #133 mechanism) produces zero violations/warnings about that file — check reads strictly `project-log.md`.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/check.test.ts`
 Expected: Tests fail (RED)
@@ -253,7 +257,7 @@ git commit -m "feat(p01-t05): add oat project log synthesize command"
 
 **Step 1: Write test (RED)**
 
-Cover the `ProjectLogRollupResult` contract from design: writes/updates the `## Workflow Observations` section in an existing summary.md (errors when summary.md is absent — summary authoring stays with the skill); ledger outcomes each tested — `appended` (reference layer present), `deduplicated` (same date+area re-run, no duplicates), `skipped_permitted` (reference layer absent AND `workflow.projectLogLedgerPath` unset; `status` stays `ok`), and `failed` (key explicitly set but path unwritable → `status: 'failed'`); idempotence (re-run updates the section in place, re-dedups the ledger); `entriesRolledUp` count; `--json` envelope shape; no-op error when no log exists.
+Cover the `ProjectLogRollupResult` contract from design: writes/updates the `## Workflow Observations` section in an existing summary.md (errors when summary.md is absent — summary authoring stays with the skill); ledger outcomes each tested — `appended` (reference layer present), `deduplicated` (same date+area re-run, no duplicates), `skipped_permitted` (reference layer absent AND `workflow.projectLogLedgerPath` unset; `status` stays `ok`), and `failed` (key explicitly set but path unwritable → `status: 'failed'`); idempotence (re-run updates the section in place, re-dedups the ledger); `entriesRolledUp` count; `--json` envelope shape; no-op error when no log exists; rollup ignores sibling artifacts (`oat-execution-learnings.md`) entirely. **Implementation note (extension point, don't build):** keep the artifact target parameterizable at module level (no CLI flag) — a future v2 may run the same roll-up-before-archive pattern over other append-only artifacts.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/rollup.test.ts`
 Expected: Tests fail (RED)
@@ -399,13 +403,15 @@ git commit -m "feat(p03-t01): add project-log append points to oat-project-imple
 
 ### Task p03-t02: `oat-project-summary` roll-up step
 
+> **Same-file coordination (PR #133):** the autonomous-execution learnings-synthesis step (from the cursor-cloud-autonomous-projects team, summary skill ≥ 1.3.0 after #133 merges) will coexist in this SKILL.md. Rebase onto the merged base before starting. Contract: keep the two summary sections distinct (`## Workflow Observations` ours, `## Autonomous Execution Learnings` theirs); exclude content already synthesized into the learnings section (one-line cross-reference instead of duplication); sequence our step explicitly relative to theirs without rewriting the surrounding prose. If version-pin contract tests exist by then (e.g. `packages/cli/src/validation/skills.test.ts`), update pins in the same commit as the version bump.
+
 **Files:**
 
 - Modify: `.agents/skills/oat-project-summary/SKILL.md`
 
 **Step 1: Implement**
 
-Add a roll-up step per design: run `oat project log check --json`; when entries exist, run `oat project log rollup --json` after summary.md is authored — the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically — and route on the structured `ProjectLogRollupResult` (surface `status: 'failed'` to the user; `skipped_permitted` proceeds with a note). Offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. The skill never hand-implements the roll-up writes. Bump the skill version.
+Add a roll-up step per design: run `oat project log check --json`; when entries exist, run `oat project log rollup --json` after summary.md is authored — the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically — and route on the structured `ProjectLogRollupResult` (surface `status: 'failed'` to the user; `skipped_permitted` proceeds with a note). Offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. The skill never hand-implements the roll-up writes. Honor the same-file coordination contract above. Bump the skill version.
 
 **Files (additional):**
 
