@@ -438,6 +438,8 @@ Expected: exact-version match + both skills present, or a recorded boundary stop
 
 ### Task p04-t01: Dockerfile — install OAT CLI + cursor-agent
 
+> **Amendment (2026-07-14, user direction):** bake the user-scope pack install and seed config into the image itself (build-time `oat tools install --scope user` for all packs + seed `~/.oat/config.json`), so VMs boot with skills already on disk before any setup script or agent init. `install-repos.sh`'s pack/seed step becomes an idempotent freshness refresh (unchanged marker semantics); `CURSOR_API_KEY` wiring remains boot-only (secrets don't exist at build time).
+
 **Files:**
 
 - Modify: `cloud-agent-env-node:.cursor/Dockerfile`
@@ -446,6 +448,7 @@ Expected: exact-version match + both skills present, or a recorded boundary stop
 
 - `npm install -g @open-agent-toolkit/cli` (image layer, after Node install).
 - Install `cursor-agent` CLI via its official install path; no secrets in image.
+- Bake user-scope OAT packs + seed config as the `ubuntu` user (amendment above).
 
 **Verify:**
 
