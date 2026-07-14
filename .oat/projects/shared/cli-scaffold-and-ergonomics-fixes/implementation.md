@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 1     | 1/1       |
-| p02   | pending     | 1     | 0/1       |
-| p03   | pending     | 1     | 0/1       |
-| p04   | pending     | 1     | 0/1       |
-| p05   | pending     | 2     | 0/2       |
-| p06   | pending     | 2     | 0/2       |
-| p07   | pending     | 1     | 0/1       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 1     | 1/1       |
+| p02   | pending   | 1     | 0/1       |
+| p03   | pending   | 1     | 0/1       |
+| p04   | pending   | 1     | 0/1       |
+| p05   | pending   | 2     | 0/2       |
+| p06   | pending   | 2     | 0/2       |
+| p07   | pending   | 1     | 0/1       |
 
 **Total:** 1/9 tasks completed
 
@@ -40,7 +40,7 @@ oat_generated: false
 
 ## Phase 1: Repair project scaffolding
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-14
 
 ### Task p01-t01: Render and validate real scaffold templates
@@ -143,6 +143,37 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — 2026-07-14T01:13:44Z
+
+**Branch:** `cli-scaffold-and-ergonomic-fixes`
+**Tier:** Tier 1
+**Dispatch policy:** managed `high`
+**Phases passed / failed / stopped:** 1 / 0 / 0
+
+| Phase | Outcome | Task commits | Root review | External gate |
+| ----- | ------- | ------------ | ----------- | ------------- |
+| p01   | passed  | `11bc62b9`   | passed      | passed        |
+
+**Parallel groups:** None in this run entry.
+
+**Dispatch records:**
+
+- Implementation request `impl-p01-20260714T0050Z-fe3a621a`; selection reason `native-catalog`; candidates `gpt-5.6-sol-high`.
+- `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- Root review request `review-p01-r1-20260714T0058Z`; selection reason `native-catalog`; candidates `gpt-5.6-sol-high`.
+- `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- External gate run `0f50b8e0-7e25-49cd-85c9-9becfaf03e9b`; configured target `codex-5-6-sol-max`.
+- `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+**Review artifacts:**
+
+- `reviews/archived/code-p01-review-2026-07-14T005923Z.md`
+- `reviews/archived/p01-review-2026-07-14T010459Z.md`
+
+**Optional nested dispatches:** None.
+**Fix iterations:** 0.
+**Outstanding items:** None.
 
 <!-- orchestration-runs-end -->
 
@@ -312,7 +343,7 @@ Chronological log of implementation progress.
 
 ### Phase p01 Root Review Passed — External Gate Pending
 
-**Review artifact:** `reviews/code-p01-review-2026-07-14T005923Z.md`
+**Review artifact:** `reviews/archived/code-p01-review-2026-07-14T005923Z.md`
 
 **Validated range:** `fe3a621a937a84e977d078a5e2b6fd6011d3fa55..11bc62b959f93aafda87dbbb84646572feb3c77c`
 
@@ -323,6 +354,18 @@ Chronological log of implementation progress.
 **Disposition:** Root-owned review passed. The configured independent p01 phase gate remains.
 
 **Next:** Run the non-pausing external phase gate for p01.
+
+### Phase p01 External Gate Received
+
+**Gate artifact:** `reviews/archived/p01-review-2026-07-14T010459Z.md`
+
+**Gate run:** `0f50b8e0-7e25-49cd-85c9-9becfaf03e9b` using configured target `codex-5-6-sol-max`.
+
+**Findings:** Critical 0, Important 0, Medium 0, Minor 0.
+
+**Disposition:** Passing-gate judgment sweep completed with no findings to defer, address, or reject. Phase p01 passed.
+
+**Next:** Execute the plan-declared parallel group p02-p06.
 
 ---
 
