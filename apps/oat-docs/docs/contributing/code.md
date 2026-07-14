@@ -96,6 +96,24 @@ not the steady-state path.
 - Make verification explicit in commit-adjacent notes or review artifacts.
 - If docs behavior changes, update the docs surface in the same change window.
 
+### Breaking CLI grammar changes
+
+When a command, option name, or option placement changes, make the migration visible to both reviewers and release-note readers:
+
+- Use a `BREAKING:` PR title or prominent callout so generated release notes retain the warning.
+- Include the old and new copy-pasteable commands.
+- State the migration action for scripts, docs, and automation that use the old grammar.
+
+For example:
+
+**Breaking change title/callout:** `BREAKING: move scope after the sync command`
+
+**Before:** `oat --scope all sync` <!-- oat-doctor: allow-stale-invocation -->
+
+**After:** `oat sync --scope all`
+
+**Migration action:** Update repository scripts and documentation, then run `oat doctor --scope project` to find known-stale invocations.
+
 ## Related Guides
 
 - [Contributing Docs](documentation.md)
