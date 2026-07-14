@@ -458,7 +458,7 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 | p03    | code     | passed   | 2026-07-14 | reviews/code-p03-review-2026-07-14T014251Z.md               |
 | p04    | code     | passed   | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
 | p05    | code     | passed   | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
-| p06    | code     | received | 2026-07-14 | reviews/code-p06-review-2026-07-14T015952Z.md               |
+| p06    | code     | received | 2026-07-14 | reviews/p06-review-2026-07-14T021025Z.md                    |
 | p07    | code     | pending  | -          | -                                                           |
 | final  | code     | pending  | -          | -                                                           |
 | spec   | artifact | pending  | -          | -                                                           |
