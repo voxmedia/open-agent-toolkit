@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.4.2
+version: 1.4.3
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -86,6 +86,14 @@ Run the `oat-project-pr-final` skill and it will ask for:
   - default when a known ticket is associated: `[{TICKET-NUM}] {Descriptive Project Title}`
   - otherwise default: `{type}: {project description}` using conventional-commit style (for example `feat: add review loop` or `docs: reorganize documentation for discoverability`)
 - base branch (resolved from: explicit `base=` arg → `git.defaultBranch` in `.oat/config.json` → `git rev-parse --abbrev-ref origin/HEAD` → fallback `main`)
+
+## Artifact Hygiene
+
+Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+After formatting, run only repository checks relevant to the files changed;
+writing a PR description or project-state prose does not imply unrelated full
+test suites.
 
 ## Process
 
