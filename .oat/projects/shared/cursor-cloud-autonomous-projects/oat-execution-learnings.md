@@ -67,6 +67,11 @@ revision and recopy it into the environment repository. Add an authoring
 instruction or validation rule requiring literal matching for opaque provider
 model identifiers.
 
+**Disposition (2026-07-14):** Resolved in the approved pre-ship seed revision.
+All six canonical probes now use `grep -Fq --`, and the environment seed is
+byte-identical to the revised reference. No numeric seed-version bump is needed:
+env PR #5 has not shipped, so there is no deployed HOME to migrate.
+
 ## 2026-07-14T01:58:00Z - code-follow-up - Gate-inventory drift enforcement
 
 **Observation:** `.agents/docs/autonomy-contract.md`'s exhaustiveness claim is

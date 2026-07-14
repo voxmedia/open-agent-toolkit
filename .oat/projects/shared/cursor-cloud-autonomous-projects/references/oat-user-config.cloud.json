@@ -8,82 +8,6 @@
     "dispatchCeiling": {
       "recommendationVersion": "2026-07-11.1",
       "providers": {
-        "codex": {
-          "economy": {
-            "candidates": [
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-luna",
-                "effort": "high"
-              },
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-luna",
-                "effort": "xhigh"
-              }
-            ]
-          },
-          "balanced": {
-            "candidates": [
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-terra",
-                "effort": "high"
-              }
-            ]
-          },
-          "high": {
-            "candidates": [
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-sol",
-                "effort": "medium"
-              },
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-sol",
-                "effort": "high"
-              }
-            ]
-          },
-          "frontier": {
-            "candidates": [
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-sol",
-                "effort": "xhigh"
-              },
-              {
-                "harness": "codex",
-                "model": "gpt-5.6-sol",
-                "effort": "max"
-              }
-            ]
-          }
-        },
-        "claude": {
-          "economy": {
-            "candidates": [
-              "haiku",
-              "sonnet"
-            ]
-          },
-          "balanced": {
-            "candidates": [
-              "sonnet"
-            ]
-          },
-          "high": {
-            "candidates": [
-              "opus"
-            ]
-          },
-          "frontier": {
-            "candidates": [
-              "fable"
-            ]
-          }
-        },
         "cursor": {
           "economy": {
             "candidates": [
@@ -135,7 +59,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-max'"
+            "cursor-agent --list-models | grep -Fq -- 'gpt-5.6-sol-max'"
           ]
         },
         "cursor-gpt-5-6-sol-xhigh": {
@@ -155,7 +79,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-xhigh'"
+            "cursor-agent --list-models | grep -Fq -- 'gpt-5.6-sol-xhigh'"
           ]
         },
         "cursor-gpt-5-6-sol-high": {
@@ -175,7 +99,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-high'"
+            "cursor-agent --list-models | grep -Fq -- 'gpt-5.6-sol-high'"
           ]
         },
         "cursor-fable-5-xhigh": {
@@ -195,7 +119,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'claude-fable-5-xhigh'"
+            "cursor-agent --list-models | grep -Fq -- 'claude-fable-5-xhigh'"
           ]
         },
         "cursor-fable-5-thinking-high": {
@@ -215,7 +139,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'claude-fable-5-thinking-high'"
+            "cursor-agent --list-models | grep -Fq -- 'claude-fable-5-thinking-high'"
           ]
         },
         "cursor-grok-4-5-high": {
@@ -235,7 +159,7 @@
           "availabilityCommand": [
             "bash",
             "-lc",
-            "cursor-agent --list-models | grep -q 'cursor-grok-4.5-high'"
+            "cursor-agent --list-models | grep -Fq -- 'cursor-grok-4.5-high'"
           ]
         }
       },
