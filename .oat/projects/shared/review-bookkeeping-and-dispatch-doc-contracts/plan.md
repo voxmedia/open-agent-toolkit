@@ -172,7 +172,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
 | p01    | code     | fixes_completed | 2026-07-14 | reviews/archived/code-p01-review-2026-07-14T224102Z.md      |
 | p02    | code     | passed          | 2026-07-14 | reviews/archived/code-p02-review-2026-07-14T224102Z.md      |
-| p03    | code     | pending         | -          | -                                                           |
+| p03    | code     | passed          | 2026-07-14 | reviews/code-p03-review-2026-07-14T234442Z.md               |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
