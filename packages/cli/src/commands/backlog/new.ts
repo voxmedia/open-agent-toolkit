@@ -118,7 +118,12 @@ function normalizeInputs(options: CreateBacklogItemOptions): {
   description?: string;
 } {
   const title = options.title.trim();
-  if (!title || /[\r\n\0]/.test(title)) {
+  if (
+    !title ||
+    title.includes('\r') ||
+    title.includes('\n') ||
+    title.includes('\0')
+  ) {
     throw new Error('Backlog title must be a non-empty single line.');
   }
 
@@ -153,7 +158,15 @@ function normalizeInputs(options: CreateBacklogItemOptions): {
         );
 
   const labels = (options.labels ?? []).map((label) => label.trim());
-  if (labels.some((label) => !label || /[\r\n\0]/.test(label))) {
+  if (
+    labels.some(
+      (label) =>
+        !label ||
+        label.includes('\r') ||
+        label.includes('\n') ||
+        label.includes('\0'),
+    )
+  ) {
     throw new Error('Backlog labels must be non-empty single-line values.');
   }
 
@@ -250,10 +263,12 @@ export async function createBacklogItem(
       .filter((result) => result.status === 'rejected')
       .map((result) => result.reason);
     if (rollbackErrors.length > 0) {
-      throw new AggregateError(
+      const rollbackError = new AggregateError(
         [error, ...rollbackErrors],
         `Backlog item ${id} creation failed and rollback was incomplete.`,
       );
+      rollbackError.cause = error;
+      throw rollbackError;
     }
     throw error;
   }
