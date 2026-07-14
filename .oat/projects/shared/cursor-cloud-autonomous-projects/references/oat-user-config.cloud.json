@@ -1,0 +1,267 @@
+{
+  "version": 1,
+  "workflow": {
+    "hillCheckpointDefault": "final",
+    "reviewExecutionModel": "subagent",
+    "autoNarrowReReviewScope": true,
+    "designMode": "selective",
+    "dispatchCeiling": {
+      "recommendationVersion": "2026-07-11.1",
+      "providers": {
+        "codex": {
+          "economy": {
+            "candidates": [
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-luna",
+                "effort": "high"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-luna",
+                "effort": "xhigh"
+              }
+            ]
+          },
+          "balanced": {
+            "candidates": [
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-terra",
+                "effort": "high"
+              }
+            ]
+          },
+          "high": {
+            "candidates": [
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "medium"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "high"
+              }
+            ]
+          },
+          "frontier": {
+            "candidates": [
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "xhigh"
+              },
+              {
+                "harness": "codex",
+                "model": "gpt-5.6-sol",
+                "effort": "max"
+              }
+            ]
+          }
+        },
+        "claude": {
+          "economy": {
+            "candidates": ["haiku", "sonnet"]
+          },
+          "balanced": {
+            "candidates": ["sonnet"]
+          },
+          "high": {
+            "candidates": ["opus"]
+          },
+          "frontier": {
+            "candidates": ["fable"]
+          }
+        },
+        "cursor": {
+          "economy": {
+            "candidates": [
+              "gpt-5.6-luna-high",
+              "gpt-5.6-luna-xhigh",
+              "claude-sonnet-5-high",
+              "composer-2.5"
+            ]
+          },
+          "balanced": {
+            "candidates": ["gpt-5.6-terra-high", "cursor-grok-4.5-high"]
+          },
+          "high": {
+            "candidates": ["gpt-5.6-sol-medium", "gpt-5.6-sol-high"]
+          },
+          "frontier": {
+            "candidates": [
+              "gpt-5.6-sol-xhigh",
+              "gpt-5.6-sol-max",
+              "claude-fable-5-thinking-xhigh",
+              "claude-fable-5-thinking-high"
+            ]
+          }
+        }
+      }
+    },
+    "gates": {
+      "execTargets": {
+        "cursor-gpt-5-6-sol-max": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "gpt-5.6-sol-max"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol-max",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 140,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-max'"
+          ]
+        },
+        "cursor-gpt-5-6-sol-xhigh": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "gpt-5.6-sol-xhigh"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol-xhigh",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 135,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-xhigh'"
+          ]
+        },
+        "cursor-gpt-5-6-sol-high": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "gpt-5.6-sol-high"
+          ],
+          "invocation": {
+            "model": "gpt-5.6-sol-high",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 132,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'gpt-5.6-sol-high'"
+          ]
+        },
+        "cursor-fable-5-xhigh": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "claude-fable-5-xhigh"
+          ],
+          "invocation": {
+            "model": "claude-fable-5-xhigh",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 130,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'claude-fable-5-xhigh'"
+          ]
+        },
+        "cursor-fable-5-thinking-high": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "claude-fable-5-thinking-high"
+          ],
+          "invocation": {
+            "model": "claude-fable-5-thinking-high",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 125,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'claude-fable-5-thinking-high'"
+          ]
+        },
+        "cursor-grok-4-5-high": {
+          "runtime": "cursor",
+          "baseCommand": [
+            "cursor-agent",
+            "-p",
+            "--force",
+            "--model",
+            "cursor-grok-4.5-high"
+          ],
+          "invocation": {
+            "model": "cursor-grok-4.5-high",
+            "reasoningEffort": "provider-default"
+          },
+          "priority": 110,
+          "availabilityCommand": [
+            "bash",
+            "-lc",
+            "cursor-agent --list-models | grep -q 'cursor-grok-4.5-high'"
+          ]
+        }
+      },
+      "skills": {
+        "oat-project-implement": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type code --review-scope final --exit-nonzero-on important \"Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime final implementation review before oat-project-implement exits."
+        },
+        "oat-project-plan": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan. Use project state to determine the most appropriate review scope. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime plan artifact review before oat-project-plan exits."
+        },
+        "oat-project-quick-start": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan and its upstream artifact bundle (discovery and lightweight design when present). Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime artifact-bundle review before oat-project-quick-start exits."
+        },
+        "oat-project-import-plan": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope plan --exit-nonzero-on important \"Use oat-project-review-provide artifact plan to review the current project plan. Use project state to determine the most appropriate review scope. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime plan artifact review before oat-project-import-plan exits."
+        },
+        "oat-project-discover": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope discovery --exit-nonzero-on important \"Use oat-project-review-provide artifact discovery to review the current project discovery. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime discovery artifact review before oat-project-discover exits (requires FR4 gate hook)."
+        },
+        "oat-project-design": {
+          "command": "oat gate review --json --project \"$PROJECT_PATH\" --review-type artifact --review-scope design --exit-nonzero-on important \"Use oat-project-review-provide artifact design to review the current project design. Return blocking findings clearly, or say no blocking findings.\"",
+          "onFailure": "block",
+          "maxAttempts": 2,
+          "description": "Semantic cross-runtime design artifact review before oat-project-design exits (requires FR4 gate hook)."
+        }
+      }
+    }
+  }
+}

@@ -1,10 +1,12 @@
 import { execFileSync } from 'node:child_process';
 import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { join } from 'node:path';
 
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { generateStateDashboard } from '@commands/state/generate';
 import { setActiveProject } from '@config/oat-config';
+import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
 import { assertValidProjectStateContent } from '@validation/project-state';
 
@@ -25,6 +27,7 @@ export interface ScaffoldProjectOptions {
    */
   commit?: boolean;
   env?: NodeJS.ProcessEnv;
+  home?: string;
   today?: string;
   nowUtc?: string;
   refreshDashboardCallback?: (repoRoot: string) => void | Promise<void>;
@@ -304,6 +307,7 @@ function commitScaffold(
 }
 
 async function scaffoldModeTemplates(
+  userOatRoot: string,
   repoRoot: string,
   projectPath: string,
   projectName: string,
@@ -311,12 +315,15 @@ async function scaffoldModeTemplates(
   today: string,
   nowUtc: string,
 ): Promise<{ createdFiles: string[]; skippedFiles: string[] }> {
-  const templatesDir = join(repoRoot, '.oat', 'templates');
   const createdFiles: string[] = [];
   const skippedFiles: string[] = [];
 
   for (const templateFile of TEMPLATES_BY_MODE[mode]) {
-    const src = join(templatesDir, templateFile);
+    const src = await resolveTemplateSource(
+      userOatRoot,
+      repoRoot,
+      templateFile,
+    );
     const dest = join(repoRoot, projectPath, templateFile);
 
     if (await fileExists(dest)) {
@@ -341,6 +348,25 @@ async function scaffoldModeTemplates(
   }
 
   return { createdFiles, skippedFiles };
+}
+
+async function resolveTemplateSource(
+  userOatRoot: string,
+  repoRoot: string,
+  templateFile: string,
+): Promise<string> {
+  const userSource = join(userOatRoot, 'templates', templateFile);
+  if (await fileExists(userSource)) {
+    return userSource;
+  }
+
+  const repoSource = join(repoRoot, '.oat', 'templates', templateFile);
+  if (await fileExists(repoSource)) {
+    return repoSource;
+  }
+
+  const assetsRoot = await resolveAssetsRoot();
+  return join(assetsRoot, 'templates', templateFile);
 }
 
 async function ensureStructure(
@@ -370,6 +396,13 @@ export async function scaffoldProject(
   const setActive = options.setActive ?? true;
   const refreshDashboard = options.refreshDashboard ?? true;
   const env = options.env ?? process.env;
+  const home =
+    options.home ??
+    env.HOME ??
+    env.USERPROFILE ??
+    process.env.HOME ??
+    homedir();
+  const userOatRoot = join(home, '.oat');
   const now = new Date();
   const today = options.today ?? now.toISOString().slice(0, 10);
   const nowUtc = options.nowUtc ?? now.toISOString();
@@ -383,6 +416,7 @@ export async function scaffoldProject(
 
   await ensureStructure(options.repoRoot, projectPath, mode);
   const { createdFiles, skippedFiles } = await scaffoldModeTemplates(
+    userOatRoot,
     options.repoRoot,
     projectPath,
     options.projectName,

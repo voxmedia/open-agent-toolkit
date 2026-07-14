@@ -31,6 +31,7 @@
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews | open   | high     | feature | M        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                    | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
+| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance       | open   | medium   | task    | S        |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates           | open   | medium   | feature | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log          | open   | medium   | feature | S        |

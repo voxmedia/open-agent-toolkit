@@ -127,7 +127,7 @@ describe('post-implementation sequence contracts', () => {
     const normalized = normalizeWhitespace(skill);
 
     expect(normalized).toContain(
-      'When the preference is unset, retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
+      'If the preference is unset and autonomy is inactive, do not create a sequence snapshot. Retain the existing next-step prompt only after final approval when a final checkpoint is configured.',
     );
   });
 

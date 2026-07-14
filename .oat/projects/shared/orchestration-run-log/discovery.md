@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-07-13
+oat_last_updated: 2026-07-14
 oat_generated: false
 oat_template: false
 oat_template_name: discovery
@@ -47,7 +47,7 @@ Source material (operator's packet, `~/Downloads/Orchestration Feedback/`):
 2. **Append mechanism — CLI helper:** a `oat project log` command group owns all writes. `oat project log append` takes flag-structured input (entry kind, `--scope project|general`, `--type bug|friction|worked-well|feedback`, `--area`, body) and owns: artifact-exists/config check (silent no-op when off), create-on-first-append (under `auto`), heading composition, append-only discipline, and formatting. Skills call it via one-line prose instructions; `oat gate review` calls it internally from code.
 3. **Self-teaching help:** the helper's `--help` text carries the entry contract — what each flag means, what belongs in each field, log-worthiness triggers, "evidence not narrative," `worked-well` as the do-not-regress evidence base, 1–3 sentence guidance, reference-artifacts-by-path. Agents verify contracts against live `--help`; the contract lives at the point of use.
 4. **Entry format:** pure markdown; the heading line (`### YYYY-MM-DD · [project | general] · [bug | friction | worked-well | feedback] · <area>`) is the machine-parseable grammar. No per-entry YAML/HTML-comment metadata (doubles authoring cost and rots — operator). Grammar is guaranteed by construction for helper-written entries (composed from validated flags); `oat project log check` validates hand-written entries.
-5. **Config:** `workflow.projectLog: true | false | auto` (local > shared > user), **default `auto`**. `auto` = create-on-first-append: the log comes into existence the first time an OAT lifecycle append point fires (in practice, the first subagent dispatch). `true`/`--with-run-log` scaffold it up front; `false`/`--no-run-log` make the helper a silent no-op. Trigger coverage equals appender coverage and widens with the fast-follows. (Operator's dispatch-count answer, reconciled with their earlier default-off note, resolved to `auto`.)
+5. **Config:** `workflow.projectLog: true | false | auto` (local > shared > user), **default `auto`**. `auto` = create-on-first-append: the log comes into existence the first time an OAT lifecycle append point fires (in practice, the first subagent dispatch). `true`/`--with-project-log` scaffold it up front; `false`/`--no-project-log` make the helper a silent no-op. Trigger coverage equals appender coverage and widens with the fast-follows. (Operator's dispatch-count answer, reconciled with their earlier default-off note, resolved to `auto`.)
 6. **v1 appender scope — core trio + roll-up:** `oat-project-implement` (dispatch stamps, STOP/park events, phase outcomes), `oat gate review` (one line per run: target, threshold, findings counts, exit, status, artifact path — internal call), and the completion path (`oat-project-summary` roll-up + `oat-project-complete` seal). Fast-follows: review-receive disposition maps, worktree-bootstrap status lines, quick-start/plan gate results, and root-agent judgment logging (`BL-260713-root-agent-judgment-logging`).
 7. **Separation from implementation.md:** separate artifact; structural entries reference implementation.md run records by path + anchor, never mirror them (stale-duplicate hazard was the exemplar run's worst bookkeeping failure — operator, strongly held).
 8. **Roll-up before archive (hard ordering):** `oat-project-summary` reads the log into a `## Workflow Observations` section of summary.md; general/graduated entries append to the repo-level ledger; follow-ups graduate via `oat-pjm-add-backlog-item`; only then does complete/archive seal the log.
@@ -55,7 +55,7 @@ Source material (operator's packet, `~/Downloads/Orchestration Feedback/`):
 10. **Synthesis enforcement:** `oat project log check` reports log existence, pending-synthesis state, and entry counts. `oat-project-complete` calls it before archive and surfaces a **warning** (not a hard block) when synthesis is pending. Summary uses the same check to know there's something to roll up.
 11. **Size bounds:** structural entries are one-liners referencing artifacts by path; judgment entries 1–3 sentences; no hard caps in v1 (`check` may warn on inlined blocks).
 12. **Ledger dedup:** by entry date + area at roll-up; revisit if cross-project volume demands more.
-13. **Formatting:** every appender path runs the repo's format command on the log (inherits the `agent-artifact-hygiene-contract` project's contract; the helper can do this mechanically).
+13. **Formatting (refined at design, 2026-07-13):** the helper produces deterministically formatted, format-stable output by construction (verified by an append-twice + `oxfmt --check` idempotence test), so per-append repo-format invocations are unnecessary; repo-format enforcement at commit time stays with the agent hygiene contract (`agent-artifact-hygiene-contract` project). This supersedes the earlier "every appender runs the repo format command" phrasing — the intent (the log never trips a repo format gate) is preserved, the mechanism moved into the helper. Design approved with this refinement.
 
 ## Constraints
 

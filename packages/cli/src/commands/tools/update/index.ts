@@ -1,4 +1,5 @@
 import { execFile } from 'node:child_process';
+import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { buildCommandContext } from '@app/command-context';
@@ -41,6 +42,7 @@ const defaultDependencies: UpdateToolsDependencies = {
   copyDirWithStatus,
   copyFileWithStatus,
   fileExists,
+  chmod,
   applyOatCoreGitignore,
 };
 
@@ -249,7 +251,15 @@ export function createToolsUpdateCommand(
         logger.info(`Not bundled (custom): ${tool.name}`);
       }
 
-      if (result.updated.length === 0) {
+      for (const asset of result.assetRefreshes) {
+        const action =
+          asset.status === 'planned' ? 'Would refresh' : 'Refreshed';
+        logger.info(
+          `${action} ${asset.type}: ${asset.name} (${asset.scope} ${asset.pack} pack)`,
+        );
+      }
+
+      if (result.updated.length === 0 && result.assetRefreshes.length === 0) {
         logger.info('No tools to update.');
       }
     });

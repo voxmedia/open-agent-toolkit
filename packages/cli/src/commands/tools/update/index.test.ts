@@ -141,6 +141,7 @@ function createResult(overrides: Partial<UpdateResult> = {}): UpdateResult {
     newer: [],
     notInstalled: [],
     notBundled: [],
+    assetRefreshes: [],
     ...overrides,
   };
 }
