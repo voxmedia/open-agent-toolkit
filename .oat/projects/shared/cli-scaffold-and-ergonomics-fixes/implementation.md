@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: null
+oat_current_task_id: p07-t02
 oat_generated: false
 ---
 
@@ -32,9 +32,9 @@ oat_generated: false
 | p04   | completed   | 1     | 1/1       |
 | p05   | completed   | 2     | 2/2       |
 | p06   | completed   | 2     | 2/2       |
-| p07   | in_progress | 1     | 1/1       |
+| p07   | in_progress | 3     | 1/3       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/11 tasks completed
 
 ---
 
@@ -105,7 +105,7 @@ oat_generated: false
 
 ## Phase 6: Strengthen CLI upgrade and gate hygiene
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-14
 
 ### Task p06-t01: Add a minimal stale-invocation doctor check and release callout
@@ -122,13 +122,23 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
 
 **Status:** completed
 **Commit:** `c6f3da150d051f375a0b5984e93fe515e75c6de3`
+
+### Task p07-t02: (review) Scope the all-tools remediation to no-argument calls
+
+**Status:** pending
+**Commit:** -
+
+### Task p07-t03: (review) Pin successful backlog summary trimming
+
+**Status:** pending
+**Commit:** -
 
 ---
 
@@ -501,6 +511,21 @@ Chronological log of implementation progress.
 
 **Next:** Run the configured final-scope review for the p07 HiLL checkpoint.
 
+### Final Review Received — Fixes Added
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/final-review-2026-07-14T024218Z.md`
+**Validated range:** `c9b0d2aa15b97f9e778f20611391e50dc4f8f6ee..d99f9556994fde1512ed8761c65cd21ac6c56ff3`
+**Findings:** Critical 0, Important 0, Medium 1, Minor 2.
+
+**User-confirmed dispositions:**
+
+- p03-M1: converted to `p07-t02` to scope the `--all` remediation and add exact invalid/conflicting-target message tests.
+- p04-m1: converted to `p07-t03` to pin successful padded-summary normalization.
+- final-m2: resolved during review bookkeeping by aligning the completed p06 section and reopening the p07 overview for the two queued final-review tasks.
+
+**Next:** Execute `p07-t02`, then `p07-t03`, and re-run final review.
+
 ---
 
 ## Deviations from Plan / Design
@@ -525,13 +550,11 @@ Track test execution during implementation.
 | p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                 | 186 + type-check  | 0      | Focused  |
 | p07   | CLI tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + all gates | 0      | Full     |
 
-## Deferred Findings (Medium)
+## Final Review Finding Dispositions
 
-- **p03-M1 — No-argument remediation appears on unrelated target-validation errors.** The p03 review passed at the configured zero-Critical/Important threshold, but `oat tools update` currently appends the `--all` suggestion for invalid packs and mutually exclusive targets as well as for the intended no-argument path. Deferred to final-scope disposition because the behavior remains non-mutating and safely errors, while a fix requires narrowing the shared failure branch and strengthening exact-message tests.
-
-## Deferred Findings
-
-- **p04-m1 — Successful summary trimming lacks a direct padded-input regression.** The implementation trims correctly and all archive behavior tests pass; the deferred hardening is a focused success test proving the completed ledger receives the normalized value.
+- **p03-M1:** Converted to `p07-t02`; implementation pending.
+- **p04-m1:** Converted to `p07-t03`; implementation pending.
+- **final-m2:** Resolved in review bookkeeping by aligning phase status labels with the queued-fix state.
 
 ## Final Summary (for PR/docs)
 

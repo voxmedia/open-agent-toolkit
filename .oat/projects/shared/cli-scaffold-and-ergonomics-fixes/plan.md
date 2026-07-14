@@ -447,23 +447,79 @@ git commit -m "chore(p07-t01): bump public packages for CLI fixes"
 
 If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 
+### Task p07-t02: (review) Scope the all-tools remediation to no-argument calls
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/tools/update/index.test.ts`
+- Modify: `packages/cli/src/commands/tools/update/index.ts`
+
+**Step 1: Write failing diagnostic-boundary tests**
+
+Add exact-message regressions proving that:
+
+- no target still reports `oat tools update --all`;
+- an invalid pack preserves a target-validation-specific error without the broad `--all` remediation; and
+- mutually exclusive targets preserve their target-validation error without the broad remediation.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/index.test.ts`
+Expected: The invalid-pack and mutually-exclusive exact-message assertions fail before the implementation change.
+
+**Step 2: Narrow the remediation branch**
+
+Detect the true no-target case separately from invalid or conflicting target resolution. Append the copy-pasteable `--all` command only when `name`, `--pack`, and `--all` are all absent. Preserve non-mutating exit code 1 behavior for every invalid invocation.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/tools/update/index.test.ts`
+Expected: All tools-update tests pass and exact diagnostics remain scoped to their failure mode.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/tools/update/index.test.ts packages/cli/src/commands/tools/update/index.ts
+git commit -m "fix(p07-t02): scope tools update remediation"
+```
+
+### Task p07-t03: (review) Pin successful backlog summary trimming
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/backlog/archive.test.ts`
+
+**Step 1: Add the characterization regression**
+
+Add a successful closed-item case with a padded summary such as `"  Shipped it  "`. Assert that `completed.md` contains the normalized `Shipped it` value and does not contain the padded form. This is test hardening for behavior already implemented in p04, so no production change is expected.
+
+**Step 2: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/backlog/archive.test.ts src/commands/backlog/index.test.ts`
+Expected: All backlog archive/command tests pass and the normalized ledger output is pinned.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/commands/backlog/archive.test.ts
+git commit -m "test(p07-t03): pin backlog summary trimming"
+```
+
 ---
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed  | 2026-07-14 | reviews/archived/p01-review-2026-07-14T010459Z.md           |
-| p02    | code     | passed  | 2026-07-14 | reviews/code-p02-review-2026-07-14T014241Z.md               |
-| p03    | code     | passed  | 2026-07-14 | reviews/code-p03-review-2026-07-14T014251Z.md               |
-| p04    | code     | passed  | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
-| p05    | code     | passed  | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
-| p06    | code     | passed  | 2026-07-14 | reviews/archived/p06-review-2026-07-14T021025Z.md           |
-| p07    | code     | passed  | 2026-07-14 | reviews/code-p07-review-2026-07-14T023300Z.md               |
-| final  | code     | pending | -          | -                                                           |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002324Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                                    |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | passed      | 2026-07-14 | reviews/archived/p01-review-2026-07-14T010459Z.md           |
+| p02    | code     | passed      | 2026-07-14 | reviews/code-p02-review-2026-07-14T014241Z.md               |
+| p03    | code     | passed      | 2026-07-14 | reviews/code-p03-review-2026-07-14T014251Z.md               |
+| p04    | code     | passed      | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
+| p05    | code     | passed      | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
+| p06    | code     | passed      | 2026-07-14 | reviews/archived/p06-review-2026-07-14T021025Z.md           |
+| p07    | code     | passed      | 2026-07-14 | reviews/code-p07-review-2026-07-14T023300Z.md               |
+| final  | code     | fixes_added | 2026-07-14 | reviews/archived/final-review-2026-07-14T024218Z.md         |
+| spec   | artifact | pending     | -          | -                                                           |
+| design | artifact | pending     | -          | -                                                           |
+| plan   | artifact | passed      | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002324Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -486,11 +542,11 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 - Phase 4: 1 task - Prevent placeholder backlog summaries
 - Phase 5: 2 tasks - Create complete PJM records atomically
 - Phase 6: 2 tasks - Strengthen CLI upgrade and gate hygiene
-- Phase 7: 1 task - Prepare and validate the release
+- Phase 7: 3 tasks - Prepare and validate the release
 
-**Total: 9 tasks**
+**Total: 11 tasks**
 
-Ready for code review and merge.
+Final review fixes are queued for implementation.
 
 ---
 

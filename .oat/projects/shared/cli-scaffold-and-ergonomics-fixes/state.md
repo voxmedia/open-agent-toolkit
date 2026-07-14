@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p07-t02
 oat_last_commit: c6f3da150d051f375a0b5984e93fe515e75c6de3
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T02:34:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T03:05:22Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - p07 complete; final review pending
+Implement - final review fixes queued
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implement - p07 complete; final review pending
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode; operator selected straight to plan)
 - **Plan:** `plan.md` (complete; wave-2 scope revision review passed)
-- **Implementation:** `implementation.md` (9/9 tasks complete; final review pending)
+- **Implementation:** `implementation.md` (9/11 tasks complete; next task `p07-t02`)
 
 ## Progress
 
@@ -88,8 +88,10 @@ Implement - p07 complete; final review pending
 - ✓ Public packages bumped in lockstep to `0.1.63`
 - ✓ Full p07 release validation passed
 - ✓ Root-owned p07 code review passed with zero findings
-- ✓ Phase p07 complete
-- ⧗ Final-scope review pending
+- ✓ Initial final-scope review completed with no Critical/Important findings
+- ✓ Final review dispositions confirmed
+- ✓ Tracking-only status inconsistency corrected
+- ⧗ Final review fix tasks `p07-t02` and `p07-t03` queued
 
 ## Blockers
 
@@ -97,4 +99,4 @@ None
 
 ## Next Milestone
 
-Run and receive the final-scope code review
+Execute p07-t02 and p07-t03, then re-run final review
