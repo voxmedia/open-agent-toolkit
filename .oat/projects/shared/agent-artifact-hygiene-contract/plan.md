@@ -297,15 +297,15 @@ git commit -m "chore(p03-t01): sync and version hygiene contracts"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed   | 2026-07-14 | reviews/archived/p01-review-2026-07-14T020114Z.md           |
-| p02    | code     | passed   | 2026-07-14 | reviews/archived/p02-review-2026-07-14T015134Z.md           |
-| p03    | code     | passed   | 2026-07-14 | reviews/archived/p03-review-2026-07-14T022938Z.md           |
-| final  | code     | received | 2026-07-14 | reviews/final-review-2026-07-14T033313Z.md                  |
-| spec   | artifact | pending  | -          | -                                                           |
-| design | artifact | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T005458Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | passed  | 2026-07-14 | reviews/archived/p01-review-2026-07-14T020114Z.md           |
+| p02    | code     | passed  | 2026-07-14 | reviews/archived/p02-review-2026-07-14T015134Z.md           |
+| p03    | code     | passed  | 2026-07-14 | reviews/archived/p03-review-2026-07-14T022938Z.md           |
+| final  | code     | passed  | 2026-07-14 | reviews/archived/final-review-2026-07-14T033313Z.md         |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T005458Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

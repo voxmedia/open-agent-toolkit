@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 93438bd3848921df7b56651bd46f69c783aec0fd
+oat_last_commit: ee965fa1fcf6901779c5216af6a54f1bca126bba
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -46,7 +46,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/147' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:27.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T03:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T03:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -89,6 +89,7 @@ Implementation complete — PR open, awaiting human review
 - ✓ Post-merge final review passed
 - ✓ Final p03 human approval received
 - ✓ Implementation closeout complete
+- ✓ Configured semantic exit gate passed and was consumed
 - ⧗ Awaiting PR review
 
 ## Blockers
