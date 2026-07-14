@@ -4,8 +4,20 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import YAML from 'yaml';
 
 import { scaffoldProject } from './scaffold';
+
+const REPO_ROOT = join(process.cwd(), '..', '..');
+const PROJECT_TEMPLATE_NAMES = [
+  'state.md',
+  'discovery.md',
+  'spec.md',
+  'design.md',
+  'plan.md',
+  'implementation.md',
+] as const;
+const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
 
 function initGitRepo(root: string): void {
   execFileSync('git', ['init', '-q'], { cwd: root });
@@ -33,43 +45,7 @@ async function seedTemplates(repoRoot: string): Promise<void> {
   for (const name of templateNames) {
     const content =
       name === 'state.md'
-        ? [
-            '---',
-            'oat_template: true',
-            'oat_template_name: state',
-            'oat_hill_checkpoints: {OAT_HILL_CHECKPOINTS}',
-            'oat_phase: {OAT_PHASE}',
-            'oat_phase_status: in_progress',
-            'oat_workflow_mode: {OAT_WORKFLOW_MODE}',
-            'oat_pr_status: null',
-            'oat_pr_url: null',
-            'oat_project_created: null',
-            'oat_project_completed: null',
-            'oat_project_state_updated: null',
-            '---',
-            '',
-            '# Project State: {Project Name}',
-            '',
-            '**Status:** {OAT_STATUS}',
-            '**Started:** YYYY-MM-DD',
-            '**Last Updated:** YYYY-MM-DD',
-            '',
-            '## Current Phase',
-            '',
-            '{OAT_CURRENT_PHASE}',
-            '',
-            '## Artifacts',
-            '',
-            '{OAT_ARTIFACTS}',
-            '',
-            '## Progress',
-            '',
-            '{OAT_PROGRESS}',
-            '',
-            '## Next Milestone',
-            '',
-            '{OAT_NEXT_MILESTONE}',
-          ].join('\n')
+        ? await readFile(join(REPO_ROOT, '.oat', 'templates', name), 'utf8')
         : [
             '---',
             'oat_template: true',
@@ -87,6 +63,30 @@ async function createRepoRoot(): Promise<string> {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-scaffold-'));
   await seedTemplates(repoRoot);
   return repoRoot;
+}
+
+async function createRepoRootWithRealTemplates(): Promise<string> {
+  const repoRoot = await mkdtemp(join(tmpdir(), 'oat-scaffold-real-'));
+  const templatesDir = join(repoRoot, '.oat', 'templates');
+  await mkdir(templatesDir, { recursive: true });
+  await Promise.all(
+    PROJECT_TEMPLATE_NAMES.map(async (name) => {
+      const content = await readFile(
+        join(REPO_ROOT, '.oat', 'templates', name),
+        'utf8',
+      );
+      await writeFile(join(templatesDir, name), content, 'utf8');
+    }),
+  );
+  return repoRoot;
+}
+
+function parseFrontmatter(content: string): Record<string, unknown> {
+  const match = /^---\n([\s\S]*?)\n---/.exec(content);
+  if (!match) {
+    throw new Error('Expected scaffolded artifact to contain frontmatter');
+  }
+  return YAML.parse(match[1]) as Record<string, unknown>;
 }
 
 describe('scaffoldProject', () => {
@@ -180,6 +180,111 @@ describe('scaffoldProject', () => {
         today: '2026-02-16',
       }),
     ).rejects.toThrow(/must not start with a dash/);
+  });
+
+  it.each([
+    {
+      mode: 'spec-driven' as const,
+      hillCheckpoints: ['discovery', 'design'],
+      phase: 'discovery',
+    },
+    { mode: 'quick' as const, hillCheckpoints: [], phase: 'discovery' },
+    { mode: 'import' as const, hillCheckpoints: [], phase: 'plan' },
+  ])(
+    'renders every real $mode scaffold artifact without unresolved OAT placeholders',
+    async ({ mode, hillCheckpoints, phase }) => {
+      const repoRoot = await createRepoRootWithRealTemplates();
+      tempDirs.push(repoRoot);
+      const projectName = `real-${mode}`;
+
+      const result = await scaffoldProject({
+        repoRoot,
+        projectName,
+        mode,
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+        nowUtc: '2026-02-16T12:00:00.000Z',
+      });
+
+      const state = await readFile(
+        join(repoRoot, result.projectPath, 'state.md'),
+        'utf8',
+      );
+      const frontmatter = parseFrontmatter(state);
+      expect(frontmatter.oat_hill_checkpoints).toEqual(hillCheckpoints);
+      expect(frontmatter.oat_phase).toBe(phase);
+      expect(frontmatter.oat_workflow_mode).toBe(mode);
+
+      for (const file of result.createdFiles) {
+        const rendered = await readFile(
+          join(repoRoot, result.projectPath, file),
+          'utf8',
+        );
+        expect(rendered.match(SINGLE_BRACE_OAT_PLACEHOLDER)).toBeNull();
+      }
+    },
+  );
+
+  it('rejects an unresolved single-brace OAT placeholder before writing the artifact', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'plan.md'),
+      '# {Project Name}\n\n{ OAT_UNKNOWN }\n',
+      'utf8',
+    );
+
+    await expect(
+      scaffoldProject({
+        repoRoot,
+        projectName: 'unknown-token',
+        mode: 'quick',
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-02-16',
+      }),
+    ).rejects.toThrow(/unresolved OAT placeholder.*OAT_UNKNOWN/i);
+
+    await expect(
+      readFile(
+        join(
+          repoRoot,
+          '.oat',
+          'projects',
+          'shared',
+          'unknown-token',
+          'plan.md',
+        ),
+        'utf8',
+      ),
+    ).rejects.toThrow();
+  });
+
+  it('allows prose placeholders and double-brace docs dependency tokens', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await writeFile(
+      join(repoRoot, '.oat', 'templates', 'plan.md'),
+      '# {Project Name}\n\nKeep {ordinary_placeholder} and {{OAT_CLI_DEP}}.\n',
+      'utf8',
+    );
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'allowed-placeholders',
+      mode: 'quick',
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-02-16',
+    });
+    const plan = await readFile(
+      join(repoRoot, result.projectPath, 'plan.md'),
+      'utf8',
+    );
+
+    expect(plan).toContain('{ordinary_placeholder}');
+    expect(plan).toContain('{{OAT_CLI_DEP}}');
   });
 
   it('cleans template markers and does not overwrite existing files', async () => {
@@ -607,9 +712,8 @@ describe('scaffoldProject', () => {
   });
 
   it('keeps the repo discovery template workflow-safe for quick projects', async () => {
-    const repoRoot = join(process.cwd(), '..', '..');
     const discoveryTemplate = await readFile(
-      join(repoRoot, '.oat', 'templates', 'discovery.md'),
+      join(REPO_ROOT, '.oat', 'templates', 'discovery.md'),
       'utf8',
     );
 
@@ -623,9 +727,8 @@ describe('scaffoldProject', () => {
   });
 
   it('keeps the repo state template ready for explicit PR tracking', async () => {
-    const repoRoot = join(process.cwd(), '..', '..');
     const stateTemplate = await readFile(
-      join(repoRoot, '.oat', 'templates', 'state.md'),
+      join(REPO_ROOT, '.oat', 'templates', 'state.md'),
       'utf8',
     );
 

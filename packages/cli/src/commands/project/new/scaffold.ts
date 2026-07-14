@@ -69,6 +69,8 @@ const TEMPLATES_BY_MODE: Record<ProjectScaffoldMode, string[]> = {
   import: ['state.md', 'plan.md', 'implementation.md'],
 };
 
+const OAT_PLACEHOLDER_PATTERN = /(?<!\{)\{\s*(OAT_[A-Z0-9_]+)\s*\}(?!\})/g;
+
 interface StateTemplateContent {
   hillCheckpoints: string;
   phase: string;
@@ -147,6 +149,34 @@ const STATE_TEMPLATE_BY_MODE: Record<
   },
 };
 
+function replaceOatPlaceholders(
+  template: string,
+  replacements: Record<string, string>,
+): string {
+  return template.replace(
+    OAT_PLACEHOLDER_PATTERN,
+    (placeholder, token: string) => replacements[token] ?? placeholder,
+  );
+}
+
+function assertNoUnresolvedOatPlaceholders(
+  rendered: string,
+  templateFile: string,
+): void {
+  const unresolved = [
+    ...new Set(
+      [...rendered.matchAll(OAT_PLACEHOLDER_PATTERN)].map(
+        ([placeholder]) => placeholder,
+      ),
+    ),
+  ];
+  if (unresolved.length > 0) {
+    throw new Error(
+      `Cannot scaffold ${templateFile}: unresolved OAT placeholder(s): ${unresolved.join(', ')}`,
+    );
+  }
+}
+
 function validateProjectName(name: string): void {
   if (name.startsWith('-')) {
     throw new Error(
@@ -168,17 +198,19 @@ function applyTemplateReplacements(
   mode: ProjectScaffoldMode,
 ): string {
   const stateContent = STATE_TEMPLATE_BY_MODE[mode];
-  return template
+  const oatReplacements = {
+    OAT_HILL_CHECKPOINTS: stateContent.hillCheckpoints,
+    OAT_WORKFLOW_MODE: mode,
+    OAT_PHASE: stateContent.phase,
+    OAT_STATUS: stateContent.status,
+    OAT_CURRENT_PHASE: stateContent.currentPhase,
+    OAT_ARTIFACTS: stateContent.artifacts.join('\n'),
+    OAT_PROGRESS: stateContent.progress.join('\n'),
+    OAT_NEXT_MILESTONE: stateContent.nextMilestone,
+  };
+  return replaceOatPlaceholders(template, oatReplacements)
     .replaceAll('{Project Name}', projectName)
     .replaceAll('YYYY-MM-DD', today)
-    .replaceAll('{OAT_HILL_CHECKPOINTS}', stateContent.hillCheckpoints)
-    .replaceAll('{OAT_WORKFLOW_MODE}', mode)
-    .replaceAll('{OAT_PHASE}', stateContent.phase)
-    .replaceAll('{OAT_STATUS}', stateContent.status)
-    .replaceAll('{OAT_CURRENT_PHASE}', stateContent.currentPhase)
-    .replaceAll('{OAT_ARTIFACTS}', stateContent.artifacts.join('\n'))
-    .replaceAll('{OAT_PROGRESS}', stateContent.progress.join('\n'))
-    .replaceAll('{OAT_NEXT_MILESTONE}', stateContent.nextMilestone)
     .replaceAll(
       /oat_project_created:\s*null/gi,
       `oat_project_created: "${nowUtc}"`,
@@ -300,6 +332,7 @@ async function scaffoldModeTemplates(
       nowUtc,
       mode,
     );
+    assertNoUnresolvedOatPlaceholders(rendered, templateFile);
     if (templateFile === 'state.md') {
       assertValidProjectStateContent(rendered, { filePath: dest });
     }
