@@ -17,7 +17,6 @@ import {
 const execFileAsync = promisify(execFile);
 
 const COMPLETED_HEADING = '## Completed Items';
-const TODO_SUMMARY = 'TODO: summarize outcome';
 
 const STARTER_COMPLETED = [
   '# OAT Backlog Completed',
@@ -256,6 +255,13 @@ export async function archiveBacklogItem(
   }
 
   const targetStatus: BacklogItemStatus = options.wontDo ? 'wont_do' : 'closed';
+  const summary = options.summary?.trim() ?? '';
+  if (targetStatus === 'closed' && summary.length === 0) {
+    throw new BacklogArchiveError(
+      `Closing backlog item ${id} requires a non-empty outcome summary. Fix: rerun with \`--summary "<outcome>"\`.`,
+    );
+  }
+
   const now = options.now ?? new Date();
   const updatedIso = now.toISOString().replace(/\.\d{3}Z$/, 'Z');
   const entryDate = updatedIso.slice(0, 10);
@@ -273,12 +279,8 @@ export async function archiveBacklogItem(
   // 5. completed.md entry — always for `closed`; only with a summary for
   //    `wont_do`.
   let completedEntry: ArchiveBacklogItemResult['completedEntry'] = 'skipped';
-  const shouldWriteEntry =
-    targetStatus === 'closed' || Boolean(options.summary);
+  const shouldWriteEntry = targetStatus === 'closed' || summary.length > 0;
   if (shouldWriteEntry) {
-    const summary = options.summary?.trim()
-      ? options.summary.trim()
-      : TODO_SUMMARY;
     const entryLine = `- ${entryDate} — ${id} — ${title} — ${summary}`;
 
     const completedPath = join(backlogRoot, 'completed.md');
