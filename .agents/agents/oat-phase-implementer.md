@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.0.7
+version: 1.0.8
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -89,6 +89,14 @@ Read each required artifact once at phase start:
 
 Extract all phase tasks, dependency order, file boundaries, verification
 commands, commit messages, and phase-wide verification before editing.
+
+## Artifact Hygiene
+
+Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+After formatting, run the repository's applicable gate set over the produced
+diff, explicitly including artifact writes. This supplements rather than
+replaces every task and phase verification command below.
 
 ## Mode: Implement
 

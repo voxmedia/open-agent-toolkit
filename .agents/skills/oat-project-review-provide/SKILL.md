@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.15
+version: 1.3.16
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -91,6 +91,14 @@ Run the `oat-project-review-provide` skill and it will:
 1. Ask review type (code or artifact)
 2. Ask scope (task/phase/final/range)
 3. Confirm before running
+
+## Artifact Hygiene
+
+Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+After formatting, run only repository checks relevant to the files changed;
+writing prose artifacts or review bookkeeping does not imply unrelated full
+test suites.
 
 ## Process
 
