@@ -243,6 +243,46 @@ git commit -m "feat(p01-t05): add oat project log synthesize command"
 
 ---
 
+### Task p01-t06: Implement `oat project log rollup`
+
+**Files:**
+
+- Create: `packages/cli/src/commands/project/log/rollup.ts`
+- Create: `packages/cli/src/commands/project/log/rollup.test.ts`
+- Modify: `packages/cli/src/commands/project/log/index.ts` (register the `rollup` subcommand)
+
+**Step 1: Write test (RED)**
+
+Cover the `ProjectLogRollupResult` contract from design: writes/updates the `## Workflow Observations` section in an existing summary.md (errors when summary.md is absent — summary authoring stays with the skill); ledger outcomes each tested — `appended` (reference layer present), `deduplicated` (same date+area re-run, no duplicates), `skipped_permitted` (reference layer absent AND `workflow.projectLogLedgerPath` unset; `status` stays `ok`), and `failed` (key explicitly set but path unwritable → `status: 'failed'`); idempotence (re-run updates the section in place, re-dedups the ledger); `entriesRolledUp` count; `--json` envelope shape; no-op error when no log exists.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/rollup.test.ts`
+Expected: Tests fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+This subcommand is the executable owner of the roll-up mechanics (gate escalation resolution, option (a)): skills call it and route on its structured outcome instead of hand-implementing the ordering-critical writes.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/`
+Expected: Tests pass (GREEN)
+
+**Step 3: Refactor**
+
+Share entry-parsing (heading grammar module) with `check`; share ledger path resolution with config helpers.
+
+**Step 4: Verify**
+
+Run: `pnpm lint && pnpm type-check`
+Expected: No errors
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/log/
+git commit -m "feat(p01-t06): add oat project log rollup command"
+```
+
+---
+
 ## Phase 2: Scaffold and gate integration
 
 > Merge-coordination note (both tasks): in-flight work from the `cli-scaffold-and-ergonomics-fixes` project is changing `packages/cli/src/commands/project/new/scaffold.ts` (placeholder substitution) and `packages/cli/src/commands/gate/index.ts` (stdin `'ignore'` for noninteractive gate execution, task p06-t02). Before starting each task below: rebase onto the latest base, re-read the touched file, preserve those incoming behaviors explicitly, and re-run the complete scaffold/gate suites after any conflict resolution.
@@ -365,7 +405,7 @@ git commit -m "feat(p03-t01): add project-log append points to oat-project-imple
 
 **Step 1: Implement**
 
-Add a roll-up step per design: run `oat project log check --json`; when entries exist, write `## Workflow Observations` into summary.md (grouped by type; `general` entries flagged), append `general`/graduated entries to the ledger at `workflow.projectLogLedgerPath` (dedup by date+area; warn-and-skip when the reference layer is absent and the key unset), and offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. Bump the skill version.
+Add a roll-up step per design: run `oat project log check --json`; when entries exist, run `oat project log rollup --json` after summary.md is authored — the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically — and route on the structured `ProjectLogRollupResult` (surface `status: 'failed'` to the user; `skipped_permitted` proceeds with a note). Offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. The skill never hand-implements the roll-up writes. Bump the skill version.
 
 **Files (additional):**
 
@@ -393,7 +433,7 @@ git commit -m "feat(p03-t02): add project-log roll-up to oat-project-summary"
 
 **Step 1: Implement**
 
-Before archive: run `oat project log check --json`. On `synthesis_pending`, surface a completion **warning** (not a block) prompting the orchestrator to complete the synthesis via `oat project log synthesize`. **Roll-up is a hard ordering gate, not a verification:** when entries exist and the roll-up has not already happened, completion runs it itself; if roll-up fails or cannot be confirmed, completion must NOT seal/archive — the archive is gitignored, so an un-rolled-up log is permanently lost. **Successful roll-up is defined as:** the summary `## Workflow Observations` section written, PLUS a ledger outcome that is any of appended / deduplicated / the explicitly permitted warn-and-skip (reference layer absent and `workflow.projectLogLedgerPath` unset). Only unexpected roll-up failures block archival — the permitted ledger skip does not. This gate overrides the skill's existing tolerance for missing/skipped summary generation whenever a project log with entries exists. Append the seal entry (completion timestamp, roll-up performed) as the final structural append before archiving. Bump the skill version.
+Before archive: run `oat project log check --json`. On `synthesis_pending`, surface a completion **warning** (not a block) prompting the orchestrator to complete the synthesis via `oat project log synthesize`. **Roll-up is a hard ordering gate routed on a structured CLI outcome:** when entries exist and summary's step has not already rolled up, completion runs `oat project log rollup --json` itself; it must NOT seal/archive unless the result reports `status: 'ok'` (`ledgerOutcome: 'skipped_permitted'` is `ok` and does not block; `status: 'failed'` blocks) — the archive is gitignored, so an un-rolled-up log is permanently lost. This gate overrides the skill's existing tolerance for missing/skipped summary generation whenever a project log with entries exists. Append the seal entry (completion timestamp, roll-up performed) as the final structural append before archiving. Bump the skill version.
 
 **Files (additional):**
 
@@ -447,15 +487,17 @@ git commit -m "feat(p03-t04): document oat project log and bump release versions
 
 **Step 1: Write test (RED)**
 
-One integration test driving the complete lifecycle in a temp repo fixture, asserting the design's hard ordering boundary end-to-end:
+One integration test driving the complete lifecycle in a temp repo fixture, asserting the design's hard ordering boundary end-to-end **through the executable enforcement surface** (`rollup`'s structured outcome — the path `oat-project-complete` routes on):
 
 1. Scaffold a quick project with config `auto` → no log exists.
 2. First structural append (simulating the first dispatch) → log created from the real bundled template with header contract.
 3. Gate-style structural append + judgment appends land under `## Entries`.
-4. `check` reports `synthesis_pending`; the completion path surfaces the warning (assert via check's `--require-synthesis` exit semantics).
-5. Roll-up: `## Workflow Observations` written to summary.md; ledger outcomes covered as **three cases** — appended (reference layer present), deduplicated (same date+area re-run), and the explicitly-permitted warn-and-skip (reference layer absent, `workflow.projectLogLedgerPath` unset).
+4. `check` reports `synthesisPending: true` in its JSON envelope (the datum complete's warning routes on; v1 skills do not use `--require-synthesis`).
+5. Roll-up via `oat project log rollup --json`: `## Workflow Observations` written to summary.md; ledger outcomes covered as **four cases** — `appended` (reference layer present), `deduplicated` (same date+area re-run), the explicitly-permitted `skipped_permitted` (reference layer absent, key unset; `status: 'ok'`), and the **negative case**: key explicitly set to an unwritable path → `status: 'failed'` — asserting this is the signal on which completion must refuse to seal (the archival step below is only exercised on the `ok` paths, mirroring the enforcement contract).
 6. `synthesize` completes the synthesis; `check` flips `synthesisPending: false`.
-7. Seal entry appended last; after simulated archival (move to archive dir), the summary section and ledger content remain durable in the tracked tree.
+7. Seal entry appended last; after archival (move to archive dir) on the `ok` path, the summary section and ledger content remain durable in the tracked tree.
+
+The prose half of the contract (complete routes seal/archive on `rollup`'s `status`) is pinned by the p03-t03 contract-test assertions; this task proves the CLI surface those assertions depend on behaves as specified, including the failure signal.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/lifecycle.integration.test.ts`
 Expected: Tests fail (RED)
@@ -497,7 +539,7 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 | design | artifact | pending  | -          | -                                                  |
 | plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md |
 
-**Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max, run a7a501f4, artifact `reviews/artifact-plan-review-2026-07-14T005456Z.md`): blocked with 1 Important (no end-to-end roll-up-before-archive verification → added p03-t05) + 4 Medium (gate `false`-with-artifact case; docs nav-sync/Contents-link requirements; append boundary-validation tests; corrections-never-strike-through contract) — all remediated in this plan revision; gate re-run as attempt 2 per `onFailure: block`.
+**Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max), 2 attempts per `onFailure: block`. Attempt 1 (run a7a501f4, `reviews/artifact-plan-review-2026-07-14T005456Z.md`): 1 Important + 4 Medium — all remediated (added p03-t05; gate `false`-with-artifact case; docs nav-sync/Contents requirements; append boundary-validation tests; corrections-never-strike-through contract). Attempt 2 (run in `reviews/artifact-plan-review-2026-07-14T010828Z.md`): 1 residual Important — p03-t05 could not exercise the skill-owned roll-up/seal enforcement from vitest. Attempts exhausted → escalated per gate contract; **human decision 2026-07-13: option (a)** — new `oat project log rollup` subcommand (p01-t06) makes the enforcement path an executable CLI surface with a structured outcome that skills route on and p03-t05 tests directly, including the failure signal. Remediation applied to design + plan; escalation closed.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -514,11 +556,11 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 
 **Summary:**
 
-- Phase 1: 5 tasks - CLI foundation (config keys, template + bundling manifests, `append`, `check`, `synthesize`)
+- Phase 1: 6 tasks - CLI foundation (config keys, template + bundling manifests, `append`, `check`, `synthesize`, `rollup`)
 - Phase 2: 2 tasks - Scaffold flags and gate-internal structural append (all terminal outcomes)
 - Phase 3: 5 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test
 
-**Total: 12 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge.
 
