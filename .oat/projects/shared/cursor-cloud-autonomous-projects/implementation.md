@@ -200,6 +200,7 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 
 **Status:** awaiting operator — merge of PR #133 → pipeline publish; this task polls for completion and does not publish.
 **Poll evidence (2026-07-13):** `npm view @open-agent-toolkit/cli version` → `0.1.60` (target 0.1.61; not yet published). PR #133 title/body updated with the release description and publish-boundary note. Per the plan's blocking rule, p04 code tasks proceed now; p04-t04 strict end-state validation and p06 e2e remain blocked until the three publish checks pass.
+**Merge update (2026-07-14):** `origin/main` merged into the branch (main had released 0.1.62 via PRs #143–#145). Version conflicts resolved by re-bumping all five public packages 0.1.61 → **0.1.63** (new publish target); `public-package-versions.json` and sync-manifest stamp refreshed via source CLI. Full gate re-run green post-merge: lint, type-check, full test (incl. smoke), build, `release:validate` (5 tarballs at 0.1.63). The env repo's readiness threshold (`>= 0.1.61`) remains satisfied by 0.1.63 — no env-repo change needed.
 
 ## Phase 4: Environment provisioning (cloud-agent-env-node repo)
 
