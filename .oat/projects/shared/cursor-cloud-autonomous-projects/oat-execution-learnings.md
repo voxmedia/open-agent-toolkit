@@ -144,3 +144,35 @@ harness already isolates via fixtures; add an explicit guard to the script
 itself (skip or warn when a target repo's remote already carries injected
 credentials, or gate the loop behind a boot-context marker). (2) Add this
 failure mode to the cloud-env README troubleshooting section.
+
+## 2026-07-14T12:50:00Z - documentation-gap - Cursor rules lack per-task tier classification; one-family convention implicit
+
+**Observation:** Operator's dispatch model: one family of agents per project;
+the orchestrator classifies each task to the appropriate model within that
+family (ceiling = cap, not mandate); reviews always run at the configured
+ceiling; cross-model independence comes from configured gates. Checked against
+`oat-project-implement/references/dispatch-and-dry-run.md`: reviews-at-ceiling
+and gates-as-configured are stated verbatim, and Codex/Claude rules carry
+explicit preferred-effort/model scope-classification tables — but the Cursor
+provider rules have no per-task classification step (opaque strings +
+resolver call only), and the one-family-per-project convention is stated
+nowhere; it is emergent from single-harness providers and breaks on Cursor's
+multi-family catalog. Observed consequence in this run: every phase
+implementer was pinned to the frontier resolution instead of classifying
+docs/config work to lower tiers (operator corrected 2026-07-14).
+
+**Impact:** Cursor-run projects over-dispatch execution work at ceiling and
+have no instruction-level guardrail keeping execution within the selected
+family; the seeded cursor ladder's deliberately multi-family cells (availability
+resilience) can hand a cross-family implementer to a single-family project,
+conflating the execution ladder with the gate layer's cross-family role.
+
+**Recommendation:** (1) Add a per-task tier-classification step to the Cursor
+rules mirroring the Codex scope table, mapped to ladder tiers (economy/
+balanced/high/frontier), with ceiling-as-cap semantics restated. (2) State the
+family-coherence convention explicitly in the dispatch references: execution
+stays within the project's selected family; cross-family is the province of
+gates and explicitly configured review routes. (3) Revisit the cloud seed's
+cursor ladder cells: consider single-family (Sol) execution cells with
+Fable/Grok confined to gate execTargets — discuss before changing; the
+multi-family cells were a deliberate availability-resilience choice.
