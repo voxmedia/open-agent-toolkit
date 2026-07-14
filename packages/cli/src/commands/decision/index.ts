@@ -23,6 +23,8 @@ interface NewOptions {
   decisionsRoot?: string;
   status?: string;
   context?: string;
+  decision?: string;
+  consequences?: string;
   createdAt?: string;
 }
 
@@ -181,6 +183,8 @@ export function createDecisionCommand(
     )
     .option('--status <status>', 'Decision status', 'proposed')
     .option('--context <text>', 'Initial context body text')
+    .option('--decision <text>', 'Initial decision body text')
+    .option('--consequences <text>', 'Initial consequences body text')
     .option(
       '--created-at <timestamp>',
       'Creation timestamp seed for reproducible ID generation',
@@ -204,6 +208,8 @@ export function createDecisionCommand(
           title,
           status: options.status,
           context: options.context,
+          decision: options.decision,
+          consequences: options.consequences,
           createdAt: options.createdAt,
         });
 

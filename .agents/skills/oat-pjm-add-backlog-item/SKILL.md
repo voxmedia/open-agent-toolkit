@@ -1,6 +1,6 @@
 ---
 name: oat-pjm-add-backlog-item
-version: 1.3.0
+version: 1.3.1
 description: Use when the user requests or confirms adding a new repo backlog item — e.g. "add a backlog item for X", "capture that as backlog", "track that follow-up", "file a backlog ticket", or confirms a previously offered backlog capture. Do NOT auto-invoke when a follow-up is mentioned. Creates the item file in the file-per-item backlog structure, regenerates the index, and prompts for curated overview updates.
 disable-model-invocation: false
 user-invocable: true
@@ -29,8 +29,8 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - Before multi-step work, print short step indicators, e.g.:
   - `[1/4] Resolving item details…`
-  - `[2/4] Generating ID + populating template…`
-  - `[3/4] Regenerating backlog index…`
+  - `[2/4] Creating the item + managed index atomically…`
+  - `[3/4] Enriching acceptance criteria…`
   - `[4/4] Updating curated overview guidance…`
 
 ## Process
@@ -47,85 +47,30 @@ Collect the item details from the user or surrounding context:
 If the title is missing, ask the user.
 If the description is missing, ask for 1-3 sentences of context.
 
-### Step 2: Ensure Backlog Scaffold
+Propose an initial scope estimate (`XS`, `S`, `M`, `L`, `XL`, or `XXL`) from the described work, then ask the user to confirm or adjust it before creation.
 
-Before generating IDs or editing backlog files, run:
+### Step 2: Create the Backlog Item Atomically
 
-```bash
-oat backlog init
-```
-
-This command is idempotent. Use it even in existing repos so the canonical backlog scaffold and exact managed index markers are present before `oat backlog regenerate-index` runs.
-
-Do not hand-create the managed marker block in `backlog/index.md`. The scaffold writes the exact markers required by the CLI:
-
-```md
-<!-- OAT BACKLOG-INDEX -->
-<!-- END OAT BACKLOG-INDEX -->
-```
-
-### Step 3: Generate ID
-
-Run:
+Run the single creation command with the confirmed values:
 
 ```bash
-oat backlog generate-id "{title}"
+oat backlog new "{title}" --priority "<priority>" --scope "<scope>" --scope-estimate "<confirmed-scope-estimate>" --labels "<comma-delimited-labels>" --description "<description>"
 ```
 
-The CLI returns a deterministic `BL-YYMMDD-slug` value derived from the creation date and the title. It performs no scan, hash, counter, or random allocation.
+The command validates all inputs, initializes the scaffold when needed, generates and collision-checks the `BL-YYMMDD-slug` ID, renders the canonical template, writes the item, and regenerates the managed index. If it reports a collision, do not overwrite the existing active or archived record; use a more specific title and rerun the same command.
 
-If the command reports a same-day same-slug filename collision against an existing `items/<id>.md` or `archived/<id>.md`, do not overwrite the existing record. Disambiguate by using a more specific title and re-running `oat backlog generate-id`.
+Use the item path and ID reported by the command. Do not hand-author frontmatter or edit the managed index block. The command initializes `external_plans: []`; `oat-repo-improve` owns later reverse-link additions.
 
-### Step 4: Prepare Output Path
+### Step 3: Enrich Acceptance Criteria
 
-Set the output path using the returned ID so the filename stem equals the ID:
+Read the created item and replace only the placeholder bullets under `## Acceptance Criteria` with the acceptance criteria confirmed in Step 1. Preserve the command-generated frontmatter and description. This post-create enrichment is safe because Acceptance Criteria are not index-visible fields.
 
-```bash
-ITEM_PATH=".oat/repo/pjm/backlog/items/{id}.md"
-```
+The item must retain both required body sections:
 
-### Step 5: Copy Template and Fill Frontmatter
+- `## Description`
+- `## Acceptance Criteria`
 
-1. Use `.oat/templates/backlog-item.md` as the source template.
-2. Fill:
-   - `id`
-   - `title`
-   - `created`
-   - `updated`
-   - `status` (default `open`)
-   - `priority` (default `medium` unless the user says otherwise)
-   - `scope` (default `task` unless the user says otherwise)
-   - `labels`
-   - `assignee`
-   - `associated_issues`
-   - `external_plans` (initialize to `[]`; `oat-repo-improve` owns later reverse-link additions)
-3. Keep `external_plans` as a YAML string array of repo-relative paths under `.oat/repo/reference/external-plans/`. Do not pre-populate it from discussion or anticipated work.
-4. The agent should propose an initial `scope_estimate` based on the described work, then ask the user to confirm or adjust it.
-5. Write the item body with:
-   - `## Description`
-   - `## Acceptance Criteria`
-
-### Step 6: Write the Backlog Item
-
-Write the completed file to the path resolved in Step 4:
-
-```bash
-.oat/repo/pjm/backlog/items/{id}.md
-```
-
-Use the template field order from `.oat/templates/backlog-item.md`.
-
-### Step 7: Regenerate Managed Index
-
-Run:
-
-```bash
-oat backlog regenerate-index
-```
-
-This refreshes the managed table inside `.oat/repo/pjm/backlog/index.md`.
-
-### Step 8: Update Curated Overview
+### Step 4: Update Curated Overview
 
 Read `.oat/repo/pjm/backlog/index.md` and update the `## Curated Overview` section with a brief human-written note when helpful, for example:
 
@@ -135,7 +80,7 @@ Read `.oat/repo/pjm/backlog/index.md` and update the `## Curated Overview` secti
 
 Do not edit inside the managed marker section.
 
-### Step 9: Summarize to the User
+### Step 5: Summarize to the User
 
 Report:
 
@@ -151,5 +96,5 @@ Report:
 - Item includes populated frontmatter and both required body sections
 - Item initializes `external_plans: []` for future reverse links
 - `scope_estimate` was proposed and confirmed
-- `oat backlog regenerate-index` ran successfully
+- `oat backlog new` created the item and regenerated the managed index successfully
 - `.oat/repo/pjm/backlog/index.md` remains valid, with managed section untouched except by regeneration

@@ -126,6 +126,39 @@ describe('regenerateBacklogIndex', () => {
     );
   });
 
+  it('recognizes managed bounds only on exact standalone marker lines', async () => {
+    const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-markers-'));
+    tempDirs.push(backlogRoot);
+    await initializeBacklog(backlogRoot);
+    const itemsDir = join(backlogRoot, 'items');
+    await writeBacklogItem(itemsDir, 'alpha.md', {
+      id: 'BL-260714-alpha',
+      title: '"Alpha"',
+      status: 'open',
+      priority: 'medium',
+      scope: 'task',
+      scope_estimate: 'S',
+    });
+    const indexPath = join(backlogRoot, 'index.md');
+    const initialIndex = (await readFile(indexPath, 'utf8')).replace(
+      '- Add brief narrative summaries here as backlog items are created and reprioritized.',
+      `- Mention ${INDEX_END} inline without ending the managed block.`,
+    );
+    await writeFile(indexPath, initialIndex, 'utf8');
+
+    await regenerateBacklogIndex(backlogRoot);
+
+    const first = await readFile(indexPath, 'utf8');
+    expect(first).toContain(
+      `- Mention ${INDEX_END} inline without ending the managed block.`,
+    );
+    expect(first).toContain(
+      '| BL-260714-alpha | Alpha | open | medium | task | S |',
+    );
+    await regenerateBacklogIndex(backlogRoot);
+    await expect(readFile(indexPath, 'utf8')).resolves.toBe(first);
+  });
+
   it('handles an empty items directory gracefully', async () => {
     const backlogRoot = await mkdtemp(join(tmpdir(), 'oat-backlog-empty-'));
     tempDirs.push(backlogRoot);
