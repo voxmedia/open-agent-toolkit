@@ -228,6 +228,7 @@ git commit -m "feat(p02-t01): enforce hygiene in gate review prompts"
 - Generate/modify: sync-managed provider views under `.claude/`, `.cursor/`, and `.codex/`
 - Modify: `.oat/sync/manifest.json` if regenerated
 - Modify: `packages/cli/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `packages/control-plane/package.json`
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
@@ -236,9 +237,9 @@ git commit -m "feat(p02-t01): enforce hygiene in gate review prompts"
 **Steps:**
 
 1. Require a clean worktree at task start; stop instead of absorbing inherited changes.
-2. Run `oat sync --scope all`; do not hand-edit provider views.
-3. Bump all five public packages in lockstep from `0.1.60` to `0.1.61`. If a sibling project lands first, rebase and bump once from the new common version instead.
-4. Build a task-owned path list from only sync-emitted provider files, the sync manifest when changed, and the five package manifests. Reject any changed path outside that allowlist before formatting or staging.
+2. Run `pnpm run cli -- sync --scope all` so projection uses the repository source CLI version; do not hand-edit provider views or use a stale PATH-installed `oat`.
+3. Bump all five public packages in lockstep from `0.1.60` to `0.1.61` and regenerate `packages/cli/assets/public-package-versions.json` with `packages/cli/scripts/bundle-assets.sh`. If a sibling project lands first, rebase and bump once from the new common version instead.
+4. Build a task-owned path list from only sync-emitted provider files, the sync manifest when changed, the five package manifests, and the generated bundled public-package version asset. Reject any changed path outside that allowlist before formatting or staging.
 5. Audit `Artifact hygiene contract:` across canonical and generated surfaces and confirm provider projections match canonical sources.
 6. Format and stage only the captured task-owned paths, then run focused and repository-wide validation.
 
@@ -253,13 +254,15 @@ test -z "$(git status --porcelain)"
 After Steps 1–3, run:
 
 ```bash
-ALLOWED='^(\.claude/|\.cursor/|\.codex/|\.oat/sync/manifest\.json$|packages/(cli|control-plane|docs-config|docs-theme|docs-transforms)/package\.json$)'
+ALLOWED='^(\.claude/|\.cursor/|\.codex/|\.oat/sync/manifest\.json$|packages/cli/assets/public-package-versions\.json$|packages/(cli|control-plane|docs-config|docs-theme|docs-transforms)/package\.json$)'
 UNEXPECTED=$(git status --short | awk '{print $2}' | rg -v "$ALLOWED" || true)
 test -z "$UNEXPECTED"
-git diff --name-only --diff-filter=ACM -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-format-files
-git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-format-files
+git diff --name-only --diff-filter=ACM -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-format-files
+git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-format-files
 sort -u -o /tmp/oat-p03-format-files /tmp/oat-p03-format-files
 test ! -s /tmp/oat-p03-format-files || xargs pnpm exec oxfmt --write < /tmp/oat-p03-format-files
+pnpm exec oxfmt --stdin-filepath=packages/cli/assets/public-package-versions.json < packages/cli/assets/public-package-versions.json > /tmp/oat-p03-public-package-versions.json
+mv /tmp/oat-p03-public-package-versions.json packages/cli/assets/public-package-versions.json
 ```
 
 **Verify:**
@@ -282,11 +285,14 @@ Expected: canonical/provider contract coverage is complete, all workspace gates 
 **Commit:**
 
 ```bash
-git diff --name-only --diff-filter=ACMD -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-owned-files
-git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-owned-files
+git diff --name-only --diff-filter=ACMD -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-owned-files
+git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/assets/public-package-versions.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-owned-files
 sort -u -o /tmp/oat-p03-owned-files /tmp/oat-p03-owned-files
 test ! -s /tmp/oat-p03-owned-files || xargs git add -- < /tmp/oat-p03-owned-files
 git commit -m "chore(p03-t01): sync and version hygiene contracts"
+# Root verification produced two bounded correction commits:
+# fix(p03-t01): regenerate projections with source cli
+# fix(p03-t01): refresh bundled package versions
 ```
 
 ## Reviews

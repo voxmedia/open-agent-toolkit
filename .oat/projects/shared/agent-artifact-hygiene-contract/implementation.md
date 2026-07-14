@@ -108,6 +108,8 @@ oat_generated: false
 - Launched parallel phase implementers for p01 and p02 from exact base `0faa4998c964371e683d8a3fbfbea221681c8685` using Cursor target `gpt-5.6-sol-high`.
 - Completed and merged p01/p02 after zero-finding independent reviews; advanced to `p03-t01`.
 - Started p03 provider projection and lockstep `0.1.61` release validation.
+- Corrected p03 projection provenance after discovering PATH `oat` was 0.1.51; regenerated with the repository 0.1.61 CLI.
+- Added the generated bundled public-package version asset to p03 ownership after verification proved it must match the five manifests.
 
 ### Review Received: plan
 
@@ -149,9 +151,10 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                      | Actual / Accepted                                                  | Reason                                                                          | Source of Truth                   | Follow-up                      |
+| ------------- | --------------- | --------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- | --------------------------------- | ------------------------------ |
+| p03-t01       | plan.md         | Provider views, sync manifest, and five package manifests | Also regenerate `packages/cli/assets/public-package-versions.json` | Release tooling requires the tracked generated asset to match package manifests | Package manifests + bundle script | Plan aligned before p03 review |
+| p03-t01       | plan.md         | PATH `oat` sync and one task commit                       | Repository-source CLI sync plus two bounded correction commits     | PATH `oat` was 0.1.51 and generated stale projection provenance/content         | Repository CLI 0.1.61             | Plan aligned before p03 review |
 
 ## Test Results
 
