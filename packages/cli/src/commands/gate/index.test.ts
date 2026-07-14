@@ -35,6 +35,7 @@ interface HarnessOptions {
 interface ProcessCall {
   command: string;
   args: string[];
+  stdin: 'ignore' | 'inherit';
   livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit' | 'pipe';
@@ -56,6 +57,7 @@ type ProcessRunner = (
     livenessIntervalMs?: number;
     onLiveness?: (snapshot: LivenessSnapshot) => void;
     purpose: ProcessCall['purpose'];
+    stdin: ProcessCall['stdin'];
     stdio: ProcessCall['stdio'];
     timeoutMs: number;
   },
@@ -184,6 +186,7 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      stdin: runOptions.stdin,
       livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
       stdio: runOptions.stdio,
@@ -226,6 +229,7 @@ function createProcessRunner(
         command,
         args: [...args],
         purpose: runOptions.purpose,
+        stdin: runOptions.stdin,
         stdio: runOptions.stdio,
         cwd: runOptions.cwd,
       });
@@ -1080,6 +1084,7 @@ describe('oat gate', () => {
       calls.push({
         command,
         args: [...args],
+        stdin: options.stdin,
         purpose: options.purpose,
         stdio: options.stdio,
         timeoutMs: options.timeoutMs,
@@ -1401,6 +1406,34 @@ describe('oat gate', () => {
       command: 'codex',
       args: ['exec', 'Run', 'review'],
       purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('closes stdin while capturing target stdout and stderr', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        { elapsedMs: 30_000, hardBudgetMs: 900_000, idleMs: 2_000 },
+      ],
+    });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'same-family', 'Review', 'the', 'change'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Review', 'the', 'change'],
+      purpose: 'execute',
+      stdin: 'ignore',
+      stdio: 'pipe',
+      timeoutMs: 900_000,
+      livenessIntervalMs: 30_000,
     });
     expect(process.exitCode).toBe(0);
   });
