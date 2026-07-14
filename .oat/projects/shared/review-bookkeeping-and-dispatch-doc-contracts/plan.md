@@ -151,15 +151,16 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ### Task p03-t01: Synchronize and validate the lockstep release
 
-**Files:** five public `packages/*/package.json` manifests; sync-managed provider views and `.oat/sync/manifest.json`
+**Files:** five public `packages/*/package.json` manifests; `packages/cli/assets/public-package-versions.json`; sync-managed provider views and `.oat/sync/manifest.json`
 
 **Implement:**
 
 1. Bump cli, control-plane, docs-config, docs-theme, and docs-transforms from `0.1.65` to `0.1.66`.
-2. Run `pnpm run cli -- sync --scope all`; never hand-edit provider views.
-3. Run `pnpm format:fix` so every final changed file satisfies artifact hygiene.
+2. Regenerate `packages/cli/assets/public-package-versions.json` through the CLI bundle step and verify every bundled package entry records `0.1.66`.
+3. Run `pnpm run cli -- sync --scope all`; never hand-edit provider views.
+4. Run `pnpm format:fix` so every final changed file satisfies artifact hygiene.
 
-**Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/control-plane test && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate`
+**Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/control-plane test && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate && node -e "const v=JSON.parse(require('fs').readFileSync('packages/cli/assets/public-package-versions.json','utf8')); if(Object.values(v).some(x=>x!=='0.1.66')) process.exit(1)"`
 
 **Commit:** `chore(p03-t01): validate release assets and versions`
 
