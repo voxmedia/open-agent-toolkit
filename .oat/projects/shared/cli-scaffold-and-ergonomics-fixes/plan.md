@@ -459,7 +459,7 @@ If `pnpm-lock.yaml` is unchanged, omit it from `git add`.
 | p04    | code     | passed  | 2026-07-14 | reviews/code-p04-review-2026-07-14T014255Z.md               |
 | p05    | code     | passed  | 2026-07-14 | reviews/code-p05-review-2026-07-14T015626Z.md               |
 | p06    | code     | passed  | 2026-07-14 | reviews/archived/p06-review-2026-07-14T021025Z.md           |
-| p07    | code     | pending | -          | -                                                           |
+| p07    | code     | passed  | 2026-07-14 | reviews/code-p07-review-2026-07-14T023300Z.md               |
 | final  | code     | pending | -          | -                                                           |
 | spec   | artifact | pending | -          | -                                                           |
 | design | artifact | pending | -          | -                                                           |

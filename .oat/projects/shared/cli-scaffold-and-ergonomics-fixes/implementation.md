@@ -122,7 +122,7 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
@@ -223,6 +223,33 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - p03 Medium: exact no-argument remediation also appears on other target-resolution errors; non-blocking under the configured threshold and deferred for final disposition.
 - p04 Minor: successful trimming is implemented but lacks a padded-summary success regression; non-blocking and deferred for final disposition.
+
+### Run 3 — 2026-07-14T02:34:31Z
+
+**Branch:** `cli-scaffold-and-ergonomic-fixes`
+**Tier:** Tier 1
+**Dispatch policy:** managed `high`
+**Phases passed / failed / stopped:** 1 / 0 / 0
+
+| Phase | Outcome | Task commits | Root review | External gate  |
+| ----- | ------- | ------------ | ----------- | -------------- |
+| p07   | passed  | `c6f3da15`   | passed      | not configured |
+
+**Dispatch records:**
+
+- Implementation request `impl-p07-20260714T0220Z-bbda7083`; selection reason `native-catalog`; candidate `gpt-5.6-sol-high`.
+- `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- Root review request `review-p07-r1-20260714T0230Z`; selection reason `native-catalog`; candidate `gpt-5.6-sol-high`.
+- `Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- The reviewer transport closed after writing a complete, valid artifact; the accepted-launch artifact was validated without replacement dispatch.
+
+**Review artifact:** `reviews/code-p07-review-2026-07-14T023300Z.md`
+
+**Fix iterations:** 0.
+
+**Verification:** 2,853 CLI tests plus lint, format, type-check, workspace build, docs build, `release:validate`, and skill-version validation passed independently in implementation and review.
+
+**Outstanding items:** The previously recorded p03 Medium and p04 Minor findings remain for final-scope disposition.
 
 <!-- orchestration-runs-end -->
 
@@ -464,6 +491,15 @@ Chronological log of implementation progress.
 **Dispatch:** `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 
 **Next:** Run the root-owned p07 code review.
+
+### Phase p07 Root Review Passed
+
+**Review artifact:** `reviews/code-p07-review-2026-07-14T023300Z.md`
+**Validated range:** `bbda708332f1f2a233a4fc7064d948c791a381fb..c6f3da150d051f375a0b5984e93fe515e75c6de3`
+**Findings:** Critical 0, Important 0, Medium 0, Minor 0.
+**Disposition:** Phase p07 passed. All nine plan tasks and all phase reviews are complete.
+
+**Next:** Run the configured final-scope review for the p07 HiLL checkpoint.
 
 ---
 
