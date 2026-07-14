@@ -1,18 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - Gate review revisions applied; clean re-review required.
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p01', 'p02']]
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: agent-artifact-hygiene-contract
@@ -241,14 +240,17 @@ git commit -m "feat(p02-t01): enforce hygiene in gate review prompts"
 5. Audit `Artifact hygiene contract:` across canonical and generated surfaces and confirm provider projections match canonical sources.
 6. Format and stage only the captured task-owned paths, then run focused and repository-wide validation.
 
-**Format:**
-
-Run after sync and version edits:
+Before any task mutation, run:
 
 ```bash
 test -z "$(git status --porcelain)"
-oat sync --scope all
-# Apply the five lockstep package version edits, then:
+```
+
+**Format:**
+
+After Steps 1–3, run:
+
+```bash
 ALLOWED='^(\.claude/|\.cursor/|\.codex/|\.oat/sync/manifest\.json$|packages/(cli|control-plane|docs-config|docs-theme|docs-transforms)/package\.json$)'
 UNEXPECTED=$(git status --short | awk '{print $2}' | rg -v "$ALLOWED" || true)
 test -z "$UNEXPECTED"
@@ -287,15 +289,15 @@ git commit -m "chore(p03-t01): sync and version hygiene contracts"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-14 | reviews/artifact-plan-review-2026-07-14T005458Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                                    |
+| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                           |
+| p02    | code     | pending | -          | -                                                           |
+| p03    | code     | pending | -          | -                                                           |
+| final  | code     | pending | -          | -                                                           |
+| spec   | artifact | pending | -          | -                                                           |
+| design | artifact | pending | -          | -                                                           |
+| plan   | artifact | passed  | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T005458Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

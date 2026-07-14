@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Gate review revisions applied; clean plan re-review required.
+oat_blockers: []
 oat_last_updated: 2026-07-13
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -104,6 +103,24 @@ _No implementation runs yet._
 - M1: `resolve_in_artifact` — required complete ninth-copy contract equivalence assertions in `p02-t01`.
 
 **Next:** Re-run the quick-start plan gate; no implementation tasks were created by this artifact review.
+
+### Review Received: plan (passing gate)
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-14T005458Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Artifact disposition:**
+
+- M1: `resolve_in_artifact` — moved the clean-worktree assertion to the task-start boundary and removed duplicate sync/version operations from the format block.
+
+**Next:** The passing gate review is consumed. Proceed to implementation from `p01-t01`.
 
 ## Deviations from Plan / Design
 
