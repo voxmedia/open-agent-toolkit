@@ -474,11 +474,11 @@ Workflow preference keys live under the `workflow.*` namespace:
 checkpoint choice, but the confirmed selection is stored in `plan.md` as
 `oat_plan_hill_phases`. The plan field has three distinct states:
 
-| `oat_plan_hill_phases` state | Meaning |
-| ---------------------------- | ------- |
-| Field absent | Checkpoint selection is unconfirmed. This is valid before the first implementation run; a resumed run treats it as bookkeeping drift that must be resolved. |
-| `[]` | Checkpoint after every phase boundary. |
-| `["p02", "p04"]` | Checkpoint only after the listed phases complete. |
+| `oat_plan_hill_phases` state | Meaning                                                                                                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Field absent                 | Checkpoint selection is unconfirmed. This is valid before the first implementation run; a resumed run treats it as bookkeeping drift that must be resolved. |
+| `[]`                         | Checkpoint after every phase boundary.                                                                                                                      |
+| `["p02", "p04"]`             | Checkpoint only after the listed phases complete.                                                                                                           |
 
 **Never write `[]` to mean no checkpoints.** It means every phase. To select
 only the final checkpoint, store the final phase ID explicitly:

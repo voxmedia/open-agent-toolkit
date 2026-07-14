@@ -180,11 +180,11 @@ Apply one source order independently to every asset file:
 
 User locations:
 
-| Asset | User source |
-| --- | --- |
-| Skill | `~/.agents/skills/<skill>/` |
-| Template | `~/.oat/templates/<file>` |
-| Script | `~/.oat/scripts/<file>` |
+| Asset    | User source                 |
+| -------- | --------------------------- |
+| Skill    | `~/.agents/skills/<skill>/` |
+| Template | `~/.oat/templates/<file>`   |
+| Script   | `~/.oat/scripts/<file>`     |
 
 Repository locations are `.agents/skills/`, `.oat/templates/`, and
 `.oat/scripts/` within the target repository.

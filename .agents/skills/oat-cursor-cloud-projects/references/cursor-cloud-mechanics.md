@@ -17,14 +17,14 @@ Resolve identity in this order:
 4. Normalize a lowercase copy only for family classification.
 5. Map the normalized value with the ordered rules below.
 
-| Match, in order | Family |
-| --- | --- |
-| contains `claude` or `anthropic` | `claude` |
-| contains `gpt`, `openai`, `codex`, or an OpenAI reasoning-series slug | `openai` |
-| contains `grok` or `xai` | `xai` |
-| contains `composer` | `composer` |
-| contains `glm` | `glm` |
-| no rule matches | `unknown` |
+| Match, in order                                                       | Family     |
+| --------------------------------------------------------------------- | ---------- |
+| contains `claude` or `anthropic`                                      | `claude`   |
+| contains `gpt`, `openai`, `codex`, or an OpenAI reasoning-series slug | `openai`   |
+| contains `grok` or `xai`                                              | `xai`      |
+| contains `composer`                                                   | `composer` |
+| contains `glm`                                                        | `glm`      |
+| no rule matches                                                       | `unknown`  |
 
 Match Grok/xAI before interpreting any generic `cursor-` prefix. For example,
 `cursor-grok-4.5-high` is family `xai`, not family `cursor` or `unknown`.

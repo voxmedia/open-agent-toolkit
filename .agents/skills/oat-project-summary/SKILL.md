@@ -173,19 +173,19 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 
 **Section sources:**
 
-| Section              | Primary Sources                                                        |
-| -------------------- | ---------------------------------------------------------------------- |
-| Overview             | discovery.md initial request, spec.md problem statement                |
-| What Was Implemented | implementation.md task outcomes, plan.md phase structure               |
-| Key Decisions        | design.md decisions, implementation.md notes/decisions                 |
-| Design Deltas        | implementation.md deviations table; review-received design drift notes |
-| Notable Challenges   | implementation.md issues/blockers in task notes                        |
-| Tradeoffs Made       | implementation.md decisions, design.md tradeoff sections               |
-| Integration Notes    | implementation.md notes about cross-cutting concerns                   |
-| Revision History     | plan.md p-revN phases, implementation.md revision notes                |
-| Follow-up Items      | implementation.md deferred findings, plan.md deferred items            |
-| Associated Issues    | state.md `associated_issues` field                                     |
-| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                    |
+| Section                        | Primary Sources                                                        |
+| ------------------------------ | ---------------------------------------------------------------------- |
+| Overview                       | discovery.md initial request, spec.md problem statement                |
+| What Was Implemented           | implementation.md task outcomes, plan.md phase structure               |
+| Key Decisions                  | design.md decisions, implementation.md notes/decisions                 |
+| Design Deltas                  | implementation.md deviations table; review-received design drift notes |
+| Notable Challenges             | implementation.md issues/blockers in task notes                        |
+| Tradeoffs Made                 | implementation.md decisions, design.md tradeoff sections               |
+| Integration Notes              | implementation.md notes about cross-cutting concerns                   |
+| Revision History               | plan.md p-revN phases, implementation.md revision notes                |
+| Follow-up Items                | implementation.md deferred findings, plan.md deferred items            |
+| Associated Issues              | state.md `associated_issues` field                                     |
+| Autonomous Execution Learnings | oat-execution-learnings.md dated entries                               |
 
 **Autonomous Execution Learnings (conditional):**
 
