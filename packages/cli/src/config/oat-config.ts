@@ -660,6 +660,7 @@ export interface UserConfig {
   version: number;
   activeIdea?: string | null;
   knownStrays?: string[];
+  updateNotifications?: boolean;
   workflow?: OatWorkflowConfig;
 }
 
@@ -1165,6 +1166,10 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
   const knownStrays = normalizeKnownStrays(parsed.knownStrays);
   if (knownStrays) {
     next.knownStrays = knownStrays;
+  }
+
+  if (typeof parsed.updateNotifications === 'boolean') {
+    next.updateNotifications = parsed.updateNotifications;
   }
 
   const workflow = normalizeWorkflowConfig(parsed.workflow);

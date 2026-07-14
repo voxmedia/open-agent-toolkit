@@ -4,6 +4,11 @@
 
 ## Curated Overview
 
+- CLI update awareness is shipped at `0.1.62`: eligible ordinary commands use
+  passive cached npm `latest` metadata, while `init`, `tools install`, and
+  `tools update` guard against installing older bundled tool versions from an
+  outdated CLI. Automation-safe suppression and a persistent user opt-out keep
+  non-human workflows silent.
 - Project log (feedback-driven): `BL-260713-root-agent-judgment-logging` is the planned fast-follow to the active `orchestration-run-log` project — after v1 ships the `oat project log` append helper and core structural appends, root-agent role guidance takes over judgment-entry logging (subagents report, root logs).
 - Build reliability: concurrent CLI invocations race on in-place `packages/cli/assets` regeneration (five incidents on 2026-07-12, including one silent bundle corruption). `BL-260712-serialize-cli-asset-bundling` — Serialize CLI asset bundling with atomic staging — tracks atomic staging plus a portable lock; increasingly urgent as multi-agent workflows make concurrent invocations in one worktree routine.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.

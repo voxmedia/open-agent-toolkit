@@ -611,6 +611,30 @@ describe('oat-config', () => {
       expect(config.activeIdea).toBe('.oat/ideas/test');
     });
 
+    it('normalizes and round-trips the user update notification preference', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+
+      await writeUserConfig(userConfigDir, {
+        version: 1,
+        updateNotifications: false,
+      });
+
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+        updateNotifications: false,
+      });
+
+      await writeFile(
+        join(userConfigDir, 'config.json'),
+        JSON.stringify({ version: 1, updateNotifications: 'false' }),
+        'utf8',
+      );
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+      });
+    });
+
     it('setActiveIdea writes to local config', async () => {
       const repoRoot = await createRepoRoot();
 
