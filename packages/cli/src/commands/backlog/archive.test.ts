@@ -100,6 +100,26 @@ describe('archiveBacklogItem', () => {
     expect(index).not.toContain(id);
   });
 
+  it('trims a padded summary before writing the completed entry', async () => {
+    const backlogRoot = await freshBacklog();
+    const id = 'BL-260705-padded-summary';
+    await seedItem(backlogRoot, id);
+
+    await archiveBacklogItem(backlogRoot, id, {
+      summary: '  Shipped it  ',
+      now: FIXED_NOW,
+    });
+
+    const completed = await readFile(join(backlogRoot, 'completed.md'), 'utf8');
+    const completedEntry = completed
+      .split('\n')
+      .find((line) => line.includes(id));
+    expect(completedEntry).toBe(
+      `- 2026-07-05 — ${id} — Demo Item — Shipped it`,
+    );
+    expect(completed).not.toContain('  Shipped it  ');
+  });
+
   it('preserves a "#"-bearing title verbatim in the completed entry', async () => {
     const backlogRoot = await freshBacklog();
     const id = 'BL-260705-hash';
