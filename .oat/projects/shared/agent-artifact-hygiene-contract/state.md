@@ -29,6 +29,15 @@ oat_dispatch_policy:
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_post_implement_sequence:
+  status: pre_approval
+  final_phase: p03
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
@@ -36,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:27.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T02:34:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T02:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -48,7 +57,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review
+Implementation closeout - Final review passed; running configured pre-approval sequence
 
 ## Artifacts
 
@@ -70,7 +79,8 @@ Implementation - Tasks complete; awaiting final review
 - ✓ Parallel implementation group p01/p02 passed and merged
 - ✓ p03 provider projection and release validation passed
 - ✓ Implementation tasks complete
-- ⧗ Awaiting final review
+- ✓ Final review passed
+- ⧗ Pre-approval closeout: summary, documentation, PR
 
 ## Blockers
 
@@ -78,4 +88,4 @@ None
 
 ## Next Milestone
 
-Complete final implementation review
+Generate project summary
