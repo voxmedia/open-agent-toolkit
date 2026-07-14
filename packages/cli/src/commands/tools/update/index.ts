@@ -289,9 +289,7 @@ export function formatUpdatedToolMessage(
   return `${dryRun ? 'Would update' : 'Updated'}: ${tool.name} (${tool.version} -> ${tool.bundledVersion ?? '?'})`;
 }
 
-type TargetResolution =
-  | { target: UpdateTarget; error?: never }
-  | { target?: never; error: string };
+type TargetResolution = { target: UpdateTarget } | { error: string };
 
 function resolveTarget(
   name: string | undefined,
