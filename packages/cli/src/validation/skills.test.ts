@@ -1434,7 +1434,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.2'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.2.1'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.2.2'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -1956,6 +1956,44 @@ describe('validateOatSkills', () => {
     expect(shared).toMatch(
       /never[\s\S]{0,160}(?:provider|model)[\s\S]{0,160}--target|must not[\s\S]{0,160}--target/i,
     );
+  });
+
+  it('requires unambiguous cross-runtime phase gate review prompts', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const sharedChoice = shared.slice(
+      shared.indexOf('### 3. Offer the canonical choice'),
+      shared.indexOf('### 4. Handle non-interactive planning'),
+    );
+
+    expect(sharedChoice).toMatch(/cross-runtime phase gate review/i);
+    expect(sharedChoice).toMatch(
+      /built-in per-phase root reviews[\s\S]{0,180}final review[\s\S]{0,180}run regardless/i,
+    );
+    expect(sharedChoice).not.toMatch(/^\d+\..*\(Recommended\)/im);
+
+    for (const [skillName, nextHeading] of [
+      ['oat-project-plan', '### Step 12.5:'],
+      ['oat-project-quick-start', '### Step 3.6:'],
+    ] as const) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const promptContract = content.slice(
+        content.indexOf('Phase Gate Review Setup'),
+        content.indexOf(nextHeading),
+      );
+      expect(promptContract, `${skillName} mechanism name`).toMatch(
+        /cross-runtime phase gate review/i,
+      );
+      expect(promptContract, `${skillName} invariant reviews`).toMatch(
+        /built-in per-phase root reviews[\s\S]{0,180}final review[\s\S]{0,180}run regardless/i,
+      );
+      expect(promptContract, `${skillName} no bare recommendation`).not.toMatch(
+        /^\d+\..*\(Recommended\)/im,
+      );
+    }
   });
 
   it('keeps Phase gate review disabled when setup cannot make an interactive choice', async () => {
@@ -2647,8 +2685,8 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.14'],
-      ['oat-project-plan', '1.3.14'],
-      ['oat-project-quick-start', '2.2.1'],
+      ['oat-project-plan', '1.3.15'],
+      ['oat-project-quick-start', '2.2.2'],
       ['oat-project-import-plan', '1.4.6'],
       ['oat-project-review-provide', '1.3.17'],
     ] as const;
@@ -2959,7 +2997,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.2');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

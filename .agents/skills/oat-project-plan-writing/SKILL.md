@@ -265,11 +265,22 @@ Do not invent enablement in either branch.
 ### 3. Offer the canonical choice
 
 When at least one target qualifies and an interactive user-response channel is
-available, offer exactly these outcomes:
+available, the calling skill must ask:
+
+```text
+Should an additional cross-runtime phase gate review run after implementation
+phases? Built-in per-phase root reviews and the final review run regardless of
+this choice.
+```
+
+Then offer exactly these outcomes:
 
 1. **All phases** - enable the independent Phase gate review after every implementation phase.
 2. **Selected phases** - enable the independent Phase gate review only after chosen stable phase IDs.
 3. **Disabled** - leave Phase gate review disabled.
+
+Do not attach a bare `(Recommended)` label to any option. If the caller offers
+a recommendation, it must state the cost/coverage tradeoff explicitly.
 
 Phase gate review is non-pausing when it passes and is distinct from both HiLL
 approval and final artifact review.
