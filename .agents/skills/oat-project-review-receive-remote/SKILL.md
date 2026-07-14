@@ -117,9 +117,20 @@ npx agent-reviews --json --unresolved --pr <N>
 
 If no unresolved comments:
 
-- Report clean status.
-- Update `plan.md` review row for scoped entry to `passed` when applicable.
-- Stop.
+1. Create a UTC timestamp and event-distinct filename:
+   `reviews/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`.
+2. Write that artifact with the PR number, fetch timestamp, remote scope/type,
+   and a zero-unresolved-findings result.
+3. Record the clean result as a `passed` Reviews event whose event identity
+   combines `Scope`, `Type`, and artifact filename:
+   - Claim only an unbound `pending` placeholder with matching Scope + Type and
+     Artifact `-`; otherwise append a distinct row.
+   - Set Date and Artifact to this clean event. Advance only this event and
+     never mutate another row by scope alone.
+4. Commit `plan.md` and the clean review artifact atomically with
+   `chore(oat): record clean remote review (pr-#<N>)`. Do not stop with
+   uncommitted bookkeeping.
+5. Report clean status and stop.
 
 ### Step 3: Classify and Normalize Findings
 

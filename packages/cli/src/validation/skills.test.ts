@@ -1938,6 +1938,29 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('records clean remote receives as atomic event-distinct artifacts', async () => {
+    const remoteReceive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+    );
+    const cleanPath = remoteReceive.slice(
+      remoteReceive.indexOf('If no unresolved comments:'),
+      remoteReceive.indexOf('### Step 3:'),
+    );
+
+    expect(cleanPath).toMatch(/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ\.md/i);
+    expect(cleanPath).toMatch(
+      /event identity[\s\S]{0,100}`Scope`[\s\S]{0,60}`Type`[\s\S]{0,60}artifact filename/i,
+    );
+    expect(cleanPath).toMatch(/unbound `pending` placeholder/i);
+    expect(cleanPath).toMatch(/otherwise append/i);
+    expect(cleanPath).toMatch(
+      /commit[\s\S]{0,240}(?:artifact|review event)[\s\S]{0,240}atomically/i,
+    );
+    expect(cleanPath).not.toMatch(
+      /update `plan\.md` review row for scoped entry/i,
+    );
+  });
+
   it('defines canonical Phase gate review choices and stable phase serialization', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
