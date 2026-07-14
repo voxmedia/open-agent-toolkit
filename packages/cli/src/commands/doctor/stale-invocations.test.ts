@@ -104,6 +104,45 @@ describe('checkStaleInvocations', () => {
     expect(check.status).toBe('pass');
   });
 
+  it('excludes nested worktrees, project artifacts, and generated provider views', async () => {
+    const root = await createRepo();
+    const primaryScript = join(root, 'scripts', 'bootstrap.sh');
+    await mkdir(join(root, 'scripts'), { recursive: true });
+    await writeFile(primaryScript, 'oat sync --scope all\n', 'utf8');
+
+    const nestedExcludedFiles = [
+      '.worktrees/demo/p06/.oat/projects/shared/demo/plan.md',
+      '.worktrees/demo/p06/.cursor/rules/generated.mdc',
+      'fixtures/nested-repo/.oat/projects/shared/demo/discovery.md',
+      'fixtures/nested-repo/.oat/sync/manifest.json',
+      'fixtures/nested-repo/.claude/skills/generated/SKILL.md',
+      'fixtures/nested-repo/.codex/agents/generated.toml',
+      'fixtures/nested-repo/.cursor/rules/generated.mdc',
+      'fixtures/nested-repo/.gemini/commands/generated.toml',
+      'fixtures/nested-repo/.github/agents/generated.md',
+      'fixtures/nested-repo/.github/instructions/generated.instructions.md',
+      'fixtures/nested-repo/.github/prompts/generated.md',
+      'fixtures/nested-repo/.github/skills/generated/SKILL.md',
+      'fixtures/nested-repo/.github/copilot-instructions.md',
+    ];
+    await Promise.all(
+      nestedExcludedFiles.map(async (relativePath) => {
+        const absolutePath = join(root, relativePath);
+        await mkdir(join(absolutePath, '..'), { recursive: true });
+        await writeFile(absolutePath, `${STALE_SCOPE_SYNC}\n`, 'utf8');
+      }),
+    );
+
+    const check = await checkStaleInvocations(root);
+
+    expect(check).toMatchObject({
+      status: 'pass',
+      message: expect.stringContaining('No known-stale CLI invocations found'),
+    });
+    expect(check.message).not.toContain('.worktrees');
+    expect(check.message).not.toContain('nested-repo');
+  });
+
   it('allows an intentional migration example marked on the same line', async () => {
     const root = await createRepo();
     await mkdir(join(root, 'docs'), { recursive: true });

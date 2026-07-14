@@ -63,6 +63,7 @@ const GENERATED_PROVIDER_ROOTS = new Set([
 const GENERATED_GITHUB_DIRECTORIES = new Set([
   'agents',
   'instructions',
+  'prompts',
   'skills',
 ]);
 const ALLOW_MARKER = 'oat-doctor: allow-stale-invocation';
@@ -75,28 +76,26 @@ function isExcludedDirectory(parts: readonly string[]): boolean {
   if (!name || EXCLUDED_DIRECTORY_NAMES.has(name)) {
     return true;
   }
-  if (parts.length === 1 && GENERATED_PROVIDER_ROOTS.has(name)) {
+  if (parts.length === 1 && name === '.worktrees') {
     return true;
   }
-  if (parts[0] === '.oat' && (parts[1] === 'projects' || parts[1] === 'sync')) {
+  if (GENERATED_PROVIDER_ROOTS.has(name)) {
     return true;
   }
-  return (
-    parts[0] === '.github' &&
-    parts.length === 2 &&
-    GENERATED_GITHUB_DIRECTORIES.has(name)
-  );
+  const parent = parts.at(-2);
+  if (parent === '.oat' && (name === 'projects' || name === 'sync')) {
+    return true;
+  }
+  return parent === '.github' && GENERATED_GITHUB_DIRECTORIES.has(name);
 }
 
 function isScannableFile(relativePath: string): boolean {
-  const fileName = relativePath.split('/').at(-1) ?? '';
+  const parts = relativePath.split('/');
+  const fileName = parts.at(-1) ?? '';
   if (/\.(?:test|spec)\.[^.]+$/.test(fileName)) {
     return false;
   }
-  if (
-    relativePath === '.github/copilot-instructions.md' ||
-    relativePath.startsWith('.github/prompts/')
-  ) {
+  if (fileName === 'copilot-instructions.md' && parts.at(-2) === '.github') {
     return false;
   }
   return SCANNED_EXTENSIONS.has(extname(fileName).toLowerCase());
