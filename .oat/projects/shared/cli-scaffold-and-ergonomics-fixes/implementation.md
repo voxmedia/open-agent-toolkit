@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
@@ -525,28 +525,54 @@ Track test execution during implementation.
 | p06   | doctor/create-program/release-guidance/gate tests; CLI type-check                                 | 186 + type-check  | 0      | Focused  |
 | p07   | CLI tests; lint; format; type-check; build; docs build; release validation; skill bump validation | 2,853 + all gates | 0      | Full     |
 
+## Deferred Findings (Medium)
+
+- **p03-M1 — No-argument remediation appears on unrelated target-validation errors.** The p03 review passed at the configured zero-Critical/Important threshold, but `oat tools update` currently appends the `--all` suggestion for invalid packs and mutually exclusive targets as well as for the intended no-argument path. Deferred to final-scope disposition because the behavior remains non-mutating and safely errors, while a fix requires narrowing the shared failure branch and strengthening exact-message tests.
+
+## Deferred Findings
+
+- **p04-m1 — Successful summary trimming lacks a direct padded-input regression.** The implementation trims correctly and all archive behavior tests pass; the deferred hardening is a focused success test proving the completed ledger receives the normalized value.
+
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Reliable project scaffolding that renders whitespace-padded OAT tokens, validates real templates, and rejects unresolved placeholders.
+- Clear plan-template guidance that keeps stable task IDs, per-task verification, and atomic commits invariant while treating RED/GREEN/Refactor as a default.
+- Safer CLI ergonomics for tool updates, backlog archiving, complete decision creation, atomic backlog-item creation, stale invocation detection, and noninteractive review gates.
+- Canonical skill updates for complete decision promotion and single-command backlog creation, including required patch version bumps.
+- Lockstep release preparation for all five public packages at version `0.1.63`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `oat tools update` without a target exits safely and suggests `oat tools update --all`.
+- Closing a backlog item requires a non-empty `--summary`; `wont_do` behavior remains unchanged.
+- `oat decision new` accepts `--decision` and `--consequences`.
+- `oat backlog new <title>` validates inputs before mutation, scaffolds from canonical templates, prevents collisions, and regenerates the managed index atomically.
+- `oat doctor --scope project` reports known stale global `--scope` invocation forms while excluding lifecycle artifacts, generated views, and nested worktrees.
+- Noninteractive gate targets receive closed stdin while preserving captured output, liveness, timeout, and diagnostics.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/new/scaffold.ts` - tolerant placeholder rendering and unresolved-token rejection.
+- `packages/cli/src/commands/backlog/new.ts` - atomic backlog-item creation.
+- `packages/cli/src/commands/backlog/regenerate-index.ts` - safe managed-table encoding and exact marker bounds.
+- `packages/cli/src/commands/decision/new.ts` - complete decision-section rendering.
+- `packages/cli/src/commands/doctor/stale-invocations.ts` - bounded stale-grammar scan.
+- `packages/cli/src/commands/gate/index.ts` - noninteractive stdin policy.
+- `.agents/skills/oat-project-summary/SKILL.md` and `.agents/skills/oat-pjm-add-backlog-item/SKILL.md` - canonical workflow migrations.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 2,853 CLI tests passed across 245 files.
+- Workspace lint, formatting, type checking, package build, and production docs build passed.
+- `pnpm release:validate` packed and validated all five public packages at `0.1.63`.
+- Canonical skill validation and base-relative skill-version-bump validation passed.
+- Every phase passed an independent root-owned review; configured p01 and p06 external gates passed.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No design artifact exists for this quick-mode project. The p05 review fix hardened the shared backlog index renderer because the creation path exposed user-controlled Markdown cell and marker injection at that owning boundary.
 
 ## References
 
