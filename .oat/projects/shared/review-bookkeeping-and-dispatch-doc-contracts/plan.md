@@ -50,7 +50,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Implement:**
 
-1. Add RED tests proving duplicate-scope rows parse/validate and the latest `final` event controls routing.
+1. Add characterization tests proving duplicate-scope rows parse/validate, plus a RED test proving the latest `final` event controls routing.
 2. Define append-ordered event rows in plan-writing; claim only an unbound placeholder, otherwise append distinct artifacts, match later mutations by artifact filename, and forbid status regression.
 3. Apply the contract to provide, local and remote receive, implementation fix bookkeeping, and final-row readers; change the control-plane router to the last matching row. For remote receive, record an event-distinct review artifact rather than identifying the ledger entry only by scope and `github-pr #<N>`.
 4. Bump each changed skill once: plan-writing `1.2.14`, review-provide `1.3.17`, review-receive `1.5.8`, review-receive-remote `1.4.1`, implement `2.1.1`, pr-final `1.5.2`, complete `1.5.1`, next `1.0.8`; update pinned tests.
