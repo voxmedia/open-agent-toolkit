@@ -55,7 +55,7 @@ Source material (operator's packet, `~/Downloads/Orchestration Feedback/`):
 10. **Synthesis enforcement:** `oat project log check` reports log existence, pending-synthesis state, and entry counts. `oat-project-complete` calls it before archive and surfaces a **warning** (not a hard block) when synthesis is pending. Summary uses the same check to know there's something to roll up.
 11. **Size bounds:** structural entries are one-liners referencing artifacts by path; judgment entries 1–3 sentences; no hard caps in v1 (`check` may warn on inlined blocks).
 12. **Ledger dedup:** by entry date + area at roll-up; revisit if cross-project volume demands more.
-13. **Formatting:** every appender path runs the repo's format command on the log (inherits the `agent-artifact-hygiene-contract` project's contract; the helper can do this mechanically).
+13. **Formatting (refined at design, 2026-07-13):** the helper produces deterministically formatted, format-stable output by construction (verified by an append-twice + `oxfmt --check` idempotence test), so per-append repo-format invocations are unnecessary; repo-format enforcement at commit time stays with the agent hygiene contract (`agent-artifact-hygiene-contract` project). This supersedes the earlier "every appender runs the repo format command" phrasing — the intent (the log never trips a repo format gate) is preserved, the mechanism moved into the helper. Design approved with this refinement.
 
 ## Constraints
 
