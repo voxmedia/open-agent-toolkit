@@ -208,3 +208,12 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+## Gate Feedback (plan artifact gate — attempts exhausted, escalated 2026-07-13)
+
+Two cross-runtime gate runs (codex-5-6-sol-max) on the completed plan, `onFailure: block`, `maxAttempts: 2`:
+
+- Run 1 (`reviews/artifact-plan-review-2026-07-14T005456Z.md`): 1 Important + 4 Medium. All remediated in commit 0f50fe3c (added p03-t05 end-to-end lifecycle test; gate false-with-artifact case; docs nav/Contents requirements; append boundary-validation tests; corrections-never-strike-through contract).
+- Run 2 (`reviews/artifact-plan-review-2026-07-14T010828Z.md`): 1 Important (residual): p03-t05 as written bypasses the enforcement path — the roll-up-before-archive ordering is owned by markdown lifecycle skills that vitest cannot execute, so the test would simulate the writes without proving the completion path refuses to archive on roll-up failure. Reviewer fix shapes: (a) introduce an executable roll-up/seal orchestration helper the skills call and the test can exercise, or (b) a bounded runnable acceptance task invoking the real lifecycle skills against a disposable project.
+
+Escalation: choosing between (a) CLI-owned `oat project log rollup` helper (design change: roll-up mechanics move from summary-skill prose into the command group; testable, consistent with the single-writer philosophy; +1 subcommand) and (b) live-skill acceptance task (no design change; heavier, host-dependent test harness). Human decision required before implementation starts.
