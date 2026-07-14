@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.12
+version: 1.2.13
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -38,6 +38,26 @@ reference from `.agents/skills/oat-dispatch-subagents/references/`
 (`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
 merge provider mechanics.
 
+## Planning-Time Artifact Formatting Contract
+
+Resolve artifact formatting once while authoring the plan. Read the applicable
+repository instructions (`AGENTS.md`/`CLAUDE.md`) and relevant package
+manifests, then select the repository's documented write/fix formatting
+command. Distinguish write/fix commands from check-only commands, prefer the
+write/fix command, and never infer or hardcode a formatter executable. When the
+documented command supports paths, use a file-scoped invocation covering only
+the files that the task will create or edit.
+
+Bake the concrete repository command into the `Format` step of every task that
+creates or edits artifacts. Downstream agents execute that supplied command
+without repeating discovery. Runtime discovery is fallback-only when the
+supplied command is absent or unusable.
+
+If no documented write/fix command can be discovered, put this exact
+warn-once/no-op instruction into every artifact-writing task:
+Warn once with `no format command discovered in repo instructions; skipping`,
+then continue without formatting.
+
 ## Managed Dispatch Readiness and Review Contract
 
 All plan-producing workflows and their artifact reviews use this contract:
@@ -54,9 +74,18 @@ before each artifact review dispatch.
 
 ### Complete Dispatch Ladder Adoption Contract
 
-Before any plan becomes implementation-ready, inspect the effective
-`workflow.dispatchCeiling.providers` value and compare its ordered candidate
-ladders with the bundled
+Before any plan becomes implementation-ready, query the merged effective
+configuration exactly once:
+
+```bash
+oat config list --json
+```
+
+Treat that output as the effective-config boundary across shared repository,
+repo-local, user, and bundled-default precedence. Do not inspect or merge raw
+config surfaces. Validate the resolved
+`workflow.dispatchCeiling.providers` provider/tier cells and compare their
+ordered candidate ladders with the bundled
 `packages/cli/config/dispatch-matrix-recommendation.json` source (or the
 installed bundle's `config/dispatch-matrix-recommendation.json` asset). A
 complete custom ladder is allowed, but every supported provider must have valid
@@ -64,8 +93,15 @@ ordered `candidates` cells through the named project ceiling. A legacy scalar,
 single fallback route, missing tier, empty candidates array, or malformed
 ordering is not a complete ladder.
 
-When the effective ladder is missing or incomplete, show the complete bundled
-recommendation before asking to write anything:
+Keep effective ladder completeness separate from project-ceiling resolution.
+When `dispatch-ceiling resolve` returns `matrix: null`, that can mean only that
+the project policy or named ceiling is unresolved; it is not evidence that the
+effective candidate ladders are absent. When every effective provider/tier cell
+is complete, skip adoption and proceed directly to the separate project-ceiling
+choice.
+
+Only when effective provider/tier cells are missing or incomplete, show the
+complete bundled recommendation before asking to write anything:
 
 | Provider        | Economy                                                        | Balanced                                                                                                       | High                                                        | Frontier                               |
 | --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |
@@ -89,12 +125,12 @@ project's named ceiling is a separate project-state constraint. A
 project-specific active policy or ceiling must not be written to user
 `~/.oat/config.json`.
 
-Adoption preserves explicit cells. Re-run the resolver and re-check the full
-ladder after adoption. If preserved legacy or partial cells still leave the
-ladder incomplete or missing, identify those cells and block; do not overwrite,
-infer, or mark the plan implementation-ready. In non-interactive mode, an
-incomplete or missing ladder blocks readiness without choosing an ownership
-scope.
+Adoption preserves explicit cells. After adoption, repeat the merged
+effective-config query and re-check the full ladder before you re-run the
+resolver. If preserved legacy or partial cells still leave effective cells
+incomplete or missing, identify those cells and block; do not overwrite, infer,
+or mark the plan implementation-ready. In non-interactive mode, incomplete or
+missing effective cells block readiness without choosing an ownership scope.
 
 ### Reviewer Ceiling Contract
 
