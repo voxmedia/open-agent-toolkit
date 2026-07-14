@@ -168,10 +168,19 @@ pass through (Codex: `variant` name; Claude: `model` string; Cursor: opaque
 `model` string). `selection` carries `role`, `selectedValue`, `capped`,
 `selectionMode`, and policy fields; `selection.target` and an optional
 `providers.<provider>.target` carry route data. For implementer/fix dispatch,
-pass `--preferred <preferred-effort>` and use `selection.selectedValue` as the
-selected axis value when it is present. Never re-derive these from the policy
-label or a ceiling-only variant — the resolver is the single compilation/join
-point.
+use exactly one of two mutually exclusive selection paths:
+
+1. **Preferred-selection branch:** pass `--preferred <preferred-value>` when
+   asking the resolver to choose from a preference under an uncapped or other
+   preference-driven policy. Do not include `--candidate-model` or
+   `--candidate-effort`.
+2. **Exact-candidate branch:** pass `--candidate-model` and, when applicable,
+   `--candidate-effort` after selecting a concrete configured candidate for a
+   managed-capped route. This branch must not include `--preferred`.
+
+Use `selection.selectedValue` as the selected axis value when it is present.
+Never re-derive these controls from the policy label or a ceiling-only variant
+— the resolver is the single compilation/join point.
 
 Print before phase work:
 
@@ -338,7 +347,8 @@ requested; never silently downgrade to it.
 4. For managed `Uncapped` implementer/fix work, selected effort is the preferred effort with no cap.
 5. For inherit/default mode, the resolver returns no selected dispatch args. Use the base/unpinned Codex role, log `Selected effort: provider-default`, display provider default effort when known, and do not describe this as managed uncapped behavior.
 6. For managed capped phase-implementer/fix dispatch, choose an exact
-   configured candidate. For implementation, call
+   configured candidate and use the exact-candidate branch, not the
+   preferred-selection branch. For implementation, call
    `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
    For a bounded fix, use the same phase target with
    `--report-scope <phase-or-fix-scope> --report-action fix`. Read
@@ -363,10 +373,15 @@ requested; never silently downgrade to it.
 Claude rules:
 
 - Claude policy selection is model-based: `haiku < sonnet < opus < fable`.
-- Implementer/fix dispatch: classify the preferred model (`haiku`, `sonnet`, `opus`, or `fable`) and pass it to the resolver as `--preferred <preferred-model>`.
-  - Capped managed policy: the resolver selects `min(preferred, resolved_cap)`.
-  - Managed `Uncapped`: the resolver selects the preferred model with no cap.
-  - Inherit/default: the resolver returns no selected model; omit `model` so Claude Code inherits host/default behavior.
+- Implementer/fix dispatch chooses one selection branch:
+  - Managed `Uncapped`: use the preferred-selection branch with
+    `--preferred <preferred-model>` so the resolver selects the classified
+    model with no cap.
+  - Capped managed policy: use the exact-candidate branch below. The
+    `--candidate-model` call replaces the preferred-selection call and must not
+    include `--preferred`.
+  - Inherit/default: use neither selection branch; the resolver returns no
+    selected model, so omit `model` and inherit host/default behavior.
 - Review dispatch:
   - Capped managed policy: target the configured policy cap directly.
   - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.

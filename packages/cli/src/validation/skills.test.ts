@@ -1804,6 +1804,37 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps preferred and exact-candidate resolver selection mutually exclusive', async () => {
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(dispatch).toMatch(/two mutually exclusive selection paths/i);
+    expect(dispatch).toMatch(
+      /preferred-selection branch[\s\S]{0,500}`--preferred[\s\S]{0,400}exact-candidate branch/i,
+    );
+    expect(dispatch).toMatch(
+      /exact-candidate branch[\s\S]{0,500}`--candidate-model`[\s\S]{0,300}must not include `--preferred`/i,
+    );
+
+    const exactCandidateCommands = [
+      ...dispatch.matchAll(
+        /`(oat project dispatch-ceiling resolve[^`\n]*--candidate-(?:model|effort)[^`\n]*)`/g,
+      ),
+    ].map((match) => match[1] ?? '');
+    expect(exactCandidateCommands.length).toBeGreaterThan(0);
+    for (const command of exactCandidateCommands) {
+      expect(command).not.toContain('--preferred');
+    }
+
+    for (const line of dispatch
+      .split('\n')
+      .filter((candidate) => candidate.includes('--preferred'))) {
+      expect(line).toMatch(/preferred/i);
+      expect(line).not.toMatch(/candidate-(?:model|effort)/);
+    }
+  });
+
   it('defines the canonical shared Phase gate review setup after stable phase IDs', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
