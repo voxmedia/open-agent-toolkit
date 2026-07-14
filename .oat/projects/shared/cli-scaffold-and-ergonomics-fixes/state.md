@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 709fe8a3e243e7670d9604e1584e945d8b388233
+oat_last_commit: b7f5ac9e9840028d85a7b972164cbdcbd208de7c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -31,10 +31,10 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   final_phase: p07
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -47,7 +47,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/149' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T16:47:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T16:50:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,7 +59,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open, awaiting human review.
+Closeout — PR open, awaiting final HiLL approval.
 
 ## Artifacts
 
@@ -119,7 +119,8 @@ Implementation — PR open, awaiting human review.
 - ✓ Documentation and PJM reference sync completed
 - ✓ PR created
 - ⧗ Awaiting human review
-- ⧗ Final HiLL approval pending after pre-approval sequence
+- ✓ Pre-approval sequence complete: summary → document → PR
+- ⧗ Final HiLL approval pending
 
 ## Blockers
 
@@ -127,7 +128,7 @@ None
 
 ## Next Milestone
 
-PR is open for review.
+Final HiLL approval for the completed project and open PR.
 
-- To incorporate feedback: run `oat-project-revise`
-- When approved: run `oat-project-complete`
+- Approve to mark p07 and the closeout sequence complete.
+- Request changes to route back through `oat-project-revise`.
