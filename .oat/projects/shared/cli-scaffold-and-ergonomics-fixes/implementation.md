@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-14
-oat_current_task_id: p07-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 1     | 1/1       |
-| p02   | completed   | 1     | 1/1       |
-| p03   | completed   | 1     | 1/1       |
-| p04   | completed   | 1     | 1/1       |
-| p05   | completed   | 2     | 2/2       |
-| p06   | completed   | 2     | 2/2       |
-| p07   | in_progress | 4     | 3/4       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 1     | 1/1       |
+| p02   | completed | 1     | 1/1       |
+| p03   | completed | 1     | 1/1       |
+| p04   | completed | 1     | 1/1       |
+| p05   | completed | 2     | 2/2       |
+| p06   | completed | 2     | 2/2       |
+| p07   | completed | 4     | 4/4       |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -122,7 +122,7 @@ oat_generated: false
 
 ## Phase 7: Prepare and validate the release
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-14
 
 ### Task p07-t01: Bump lockstep packages and run completion gates
@@ -143,8 +143,8 @@ oat_generated: false
 
 ### Task p07-t04: (review) Re-bump the release after upstream reconciliation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d87a10113004c13af5a2b0051cc3d51392993b63`
 
 ---
 
@@ -567,6 +567,16 @@ Chronological log of implementation progress.
 
 **Next:** Bump the PR #147 `0.1.64` baseline to `0.1.65` in `p07-t04`, rerun final workspace verification, and run final review round 3.
 
+### Final Review Round 2 Fixes Complete
+
+**Continuation:** `impl-p07-20260714T0220Z-bbda7083` / `review-final-r2-20260714T032359Z`
+
+- `p07-t04` landed in `d87a10113004c13af5a2b0051cc3d51392993b63`.
+- All five public packages and the bundled version manifest are lockstep at `0.1.65`; `pnpm-lock.yaml` did not change.
+- `pnpm release:validate`, skill-version validation, type-check, lint, and format passed.
+- The eight paths previously reported as formatter churn have no diff from current `origin/main`.
+- All 12 planned tasks are complete; final workspace verification and review round 3 remain.
+
 ---
 
 ## Deviations from Plan / Design
@@ -605,7 +615,7 @@ Track test execution during implementation.
 - Clear plan-template guidance that keeps stable task IDs, per-task verification, and atomic commits invariant while treating RED/GREEN/Refactor as a default.
 - Safer CLI ergonomics for tool updates, backlog archiving, complete decision creation, atomic backlog-item creation, stale invocation detection, and noninteractive review gates.
 - Canonical skill updates for complete decision promotion and single-command backlog creation, including required patch version bumps.
-- Lockstep release preparation for all five public packages at version `0.1.63`.
+- Lockstep release preparation for all five public packages at version `0.1.65`.
 
 **Behavioral changes (user-facing):**
 
@@ -630,7 +640,7 @@ Track test execution during implementation.
 
 - 2,874 CLI tests passed across 246 files.
 - Workspace lint, formatting, type checking, package build, and production docs build passed.
-- `pnpm release:validate` packed and validated all five public packages at `0.1.63`.
+- `pnpm release:validate` packed and validated all five public packages at `0.1.65`.
 - Canonical skill validation and base-relative skill-version-bump validation passed.
 - Every phase passed an independent root-owned review; configured p01 and p06 external gates passed.
 

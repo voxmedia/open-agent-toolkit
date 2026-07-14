@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t04
-oat_last_commit: 631f6223a7592133556a6896419c8358e3375f45
+oat_current_task: null
+oat_last_commit: d87a10113004c13af5a2b0051cc3d51392993b63
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.180Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T15:54:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T16:01:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - final review round 2 fixes queued
+Implementation - round 2 fixes complete; awaiting final verification
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - final review round 2 fixes queued
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode; operator selected straight to plan)
 - **Plan:** `plan.md` (complete; wave-2 scope revision review passed)
-- **Implementation:** `implementation.md` (11/12 tasks complete; next task `p07-t04`)
+- **Implementation:** `implementation.md` (12/12 tasks complete; final verification pending)
 
 ## Progress
 
@@ -102,7 +102,9 @@ Implementation - final review round 2 fixes queued
 - ⧗ Final review round 2 blocked by upstream release-version collision
 - ✓ PR #147 formatting/release baseline merged without conflicts
 - ✓ Previously unrelated formatter deltas are now owned by `origin/main`
-- ⧗ p07-t04 queued to re-bump packages from `0.1.64` to `0.1.65`
+- ✓ p07-t04 bumped all five public packages to `0.1.65`
+- ✓ Release, skill-version, type-check, lint, and format gates passed
+- ⧗ Final workspace verification and review round 3 pending
 
 ## Blockers
 
@@ -110,4 +112,4 @@ None
 
 ## Next Milestone
 
-Execute p07-t04, rerun final verification, then re-review
+Run final workspace verification, then final review round 3
