@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers:
   - "p03-t02: @open-agent-toolkit/cli 0.1.61 is not yet published"
   - "p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending"
-oat_last_updated: 2026-07-13
+oat_last_updated: 2026-07-14
 oat_current_task_id: p03-t02
 oat_generated: false
 ---
@@ -12,7 +12,7 @@ oat_generated: false
 # Implementation: cursor-cloud-autonomous-projects
 
 **Started:** 2026-07-13
-**Last Updated:** 2026-07-13
+**Last Updated:** 2026-07-14
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -29,13 +29,13 @@ oat_generated: false
 | Phase                                                          | Status      | Tasks | Completed |
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
-| Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 8     | 8/8       |
+| Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 9     | 9/9       |
 | Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 3/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
 
-**Total:** 18/27 executable tasks (29 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
+**Total:** 19/28 executable tasks (30 planned; p05 descoped 2026-07-13 to external org-skills repo — handoff at `references/internal-docs-mcp-handoff.md`)
 
 **HiLL checkpoints:** `["p04", "p06"]` (confirmed 2026-07-13; auto-review enabled from `workflow.autoReviewAtHillCheckpoints`)
 
@@ -114,11 +114,11 @@ Defined the session-scoped autonomy contract and exhaustive lifecycle gate inven
 
 **Status:** completed
 **Started:** 2026-07-13
-**Completed:** 2026-07-13
+**Completed:** 2026-07-14
 
 ### Phase Summary
 
-Retired the user-scope discovery risk with an explicit absolute-path contingency; added and bundled the autonomous orchestration and Cursor Cloud orientation skills; made the workflows pack's complete asset set installable, updateable, and removable at user scope without home-level project scaffolding; added user-first project template resolution and Grok/xAI gate-family participation; and advanced all five public packages to 0.1.61.
+Retired the user-scope discovery risk with an explicit absolute-path contingency; added and bundled the autonomous orchestration and Cursor Cloud orientation skills; made the workflows pack's complete asset set installable, updateable, and removable at user scope without home-level project scaffolding; added user-first project template resolution and Grok/xAI gate-family participation; advanced all five public packages to 0.1.61; and added CI-enforced, line-number-independent gate-inventory drift detection.
 
 ### Task p02-t01: Verify user-scope skill loading in cloud
 
@@ -175,6 +175,16 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 **Commit:** `5037d151`
 **Outcome:** Added deterministic `xai` classification for Grok/xAI provider IDs and model slugs, making the configured Grok tertiary eligible for different-family gate selection.
 **Verification:** Passed — 15 family tests and 151 gate tests cover both OpenAI and Claude producers selecting Grok after higher-priority same-family candidates are ineligible/unavailable; CLI type-check/lint, formatting, and five-package release validation passed.
+
+### Task p02-t09: CLI — gate-inventory drift enforcement
+
+> **Amendment (2026-07-14):** Added post-phase during the p03-t02 operator wait by plan amendment `8d12c486` to enforce the autonomy contract at repository HEAD.
+
+**Status:** completed
+**Commit:** `cda122ce`
+**Outcome:** Added a TDD contract suite that derives all fifteen skill roots from the gate inventory, runs the broadened recursive Markdown prompt scan, and validates stable file + semantic-site mappings against known gate IDs without relying on line numbers. Added same-commit maintenance guidance, refreshed 43 post-baseline prompt matches into the HEAD coverage table, and bumped `create-oat-skill` from 1.3.0 to 1.4.0 with matching author guidance. No new gate row was needed because every drifted site mapped to an existing gate or `NG`.
+**RED/GREEN:** RED proved the synthetic unmapped prompt was detected and HEAD failed before stable coverage existed; GREEN passed all three focused tests after the HEAD table was populated.
+**Verification:** Passed — validation suite 3 files / 101 tests; `pnpm oat:validate-skills` validated 58 skills; shared contract suite 11 files / 78 tests; root `pnpm format`; provider views reported fully in sync.
 
 ### Phase Review Fix Round 1
 
@@ -296,6 +306,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 - [x] p02 phase verification: root `pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm release:validate` completed with zero failures; smoke suite passed 123/123 and all five 0.1.61 public tarballs validated.
 - [x] p02 review fix round 1: all seven cross-family findings resolved (`56364e83`, `77abc935`, `7559ec0c`); full CLI suite passed 2,717/2,717, 58 skills validated, five release tarballs validated, provider views remained in sync, and the temp-HOME dry-run reproduction made zero template/script writes.
 - [x] p02 round-2 review: passed; folded m4 follow-up resolved in p03-t01 by refreshing the sync manifest stamp to source CLI version 0.1.61 (`1cc0ba0b`).
+- [x] p02-t09 amendment: gate-inventory drift enforcement committed (`cda122ce`); synthetic RED detected an unmapped prompt, HEAD coverage refreshed 43 post-baseline sites without new gate rows, and 101 validation plus 78 shared-contract tests, skill validation, provider sync, and formatting passed.
 - [x] p03-t01: full release-readiness gate passed — lint 10/10, type-check 10/10, package tests 2,804 plus smoke 123/123, build 5/5, and release validation 5/5; branch pushed through p02, PR creation delegated to root.
 - [x] p04-t01: image provisioning for OAT and Cursor Agent committed in `cloud-agent-env-node` (`8180572`); official installer path and legacy `cursor-agent` symlink verified from current Cursor docs/script, while Docker build and fresh-VM version probes remain environment-limited pending daemon access, OAT 0.1.61 publish, and environment rebuild.
 - [x] p04-t02: user-scope pack refresh, exact reviewed config seed with monotonic marker, and runtime-only Cursor auth wiring committed in `cloud-agent-env-node` (`dd85638`); syntax/reference/config-source checks and two-run temp-HOME harness passed, while live published-package and authenticated-agent checks remain environment-limited.
@@ -327,7 +338,7 @@ _Orchestration runs from `oat-project-implement` are appended here._
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | Prompt inventory scan; skill validation; smoke fixture suite; gate-section checks; conditional-template review; provider sync status; docs build and nav check (p01-t01..t06) | 131 | 0 | Inventory verification, four skill-validation runs, 123 smoke tests, discover/design section check, quick-start validation, lifecycle-tail/template review, six-package docs build, and navigation/index verification; provider views in sync |
-| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t08 + fix round) | 653 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
+| 2     | Probe; skills; workflows lifecycle; provider sync; release; templates; Grok gates; gate-inventory drift; full root suite; review-fix full CLI suite and dry-run reproduction (p02-t01..t09 + fix round) | 832 focused + full root suite + 2,717 CLI tests | 0 | All task gates passed; p02-t09 added 101 validation and 78 shared-contract passes with all 43 post-baseline sites mapped; review fixes validated across 58 skills and five public 0.1.61 tarballs; temp-HOME dry run made zero template/script writes |
 | 3     | Full local gate: lint, type-check, package tests + smoke, build, release validation (p03-t01) | 2,804 package + 123 smoke tests; 10 lint; 10 type-check; 5 build; 5 release packages | 0 | Round-2 review passed; source CLI manifest stamp corrected to 0.1.61; branch pushed through p02 and PR creation delegated to root |
 | 4     | Dockerfile static verification; exact seed/config checks; committed two-run temp-HOME harness; degraded/strict matrix; corrupted-marker and old-OAT continuation; three-repo shared-config audit | All available checks passed; recursive second-run diff empty; no repo mutation; both I1 triggers reached fixture repo setup then NOT READY; 12 dispatch cells, 6 target/catalog matches, and OpenAI/Claude cross-family routes passed under stubs | 0 harness failures after review fixes | `bash -n` green; shellcheck green with intentional SC2016 literal-reference exclusion; current-VM live probe remains environment-limited pending 0.1.61 publish, rebuild, Cursor Agent, and secret |
 
