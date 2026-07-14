@@ -1382,6 +1382,37 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('resolves artifact formatting once during plan authoring', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
+    expect(shared).toMatch(
+      /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
+    );
+    expect(shared).toMatch(
+      /distinguish write\/fix commands from check-only commands/i,
+    );
+    expect(shared).toMatch(
+      /file-scoped invocation[\s\S]{0,140}only[\s\S]{0,100}(?:create|edit)/i,
+    );
+    expect(shared).toMatch(
+      /bake the concrete repository command[\s\S]{0,140}`Format`[\s\S]{0,180}every task[\s\S]{0,120}(?:creates|edits) artifacts/i,
+    );
+    expect(shared).toMatch(
+      /runtime discovery is fallback-only[\s\S]{0,120}(?:absent|unusable)/i,
+    );
+    expect(shared).toContain(
+      'no format command discovered in repo instructions; skipping',
+    );
+    expect(shared).toMatch(
+      /warn once[\s\S]{0,120}no format command discovered in repo instructions; skipping[\s\S]{0,120}continue without formatting/i,
+    );
+    expect(shared).toMatch(/never infer or hardcode a formatter executable/i);
+  });
+
   it('requires complete dispatch-ladder adoption in an explicit ownership scope', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
@@ -2422,7 +2453,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.12'],
+      ['oat-project-plan-writing', '1.2.13'],
       ['oat-project-plan', '1.3.14'],
       ['oat-project-quick-start', '2.1.15'],
       ['oat-project-import-plan', '1.4.6'],

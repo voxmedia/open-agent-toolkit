@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.12
+version: 1.2.13
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -37,6 +37,26 @@ After resolving the review provider, read exactly one active-provider
 reference from `.agents/skills/oat-dispatch-subagents/references/`
 (`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
 merge provider mechanics.
+
+## Planning-Time Artifact Formatting Contract
+
+Resolve artifact formatting once while authoring the plan. Read the applicable
+repository instructions (`AGENTS.md`/`CLAUDE.md`) and relevant package
+manifests, then select the repository's documented write/fix formatting
+command. Distinguish write/fix commands from check-only commands, prefer the
+write/fix command, and never infer or hardcode a formatter executable. When the
+documented command supports paths, use a file-scoped invocation covering only
+the files that the task will create or edit.
+
+Bake the concrete repository command into the `Format` step of every task that
+creates or edits artifacts. Downstream agents execute that supplied command
+without repeating discovery. Runtime discovery is fallback-only when the
+supplied command is absent or unusable.
+
+If no documented write/fix command can be discovered, put this exact
+warn-once/no-op instruction into every artifact-writing task:
+Warn once with `no format command discovered in repo instructions; skipping`,
+then continue without formatting.
 
 ## Managed Dispatch Readiness and Review Contract
 
