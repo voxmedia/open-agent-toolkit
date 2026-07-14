@@ -219,13 +219,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Review artifacts:**
 
-- `reviews/code-p02-review-2026-07-14T014241Z.md`
-- `reviews/code-p03-review-2026-07-14T014251Z.md`
-- `reviews/code-p04-review-2026-07-14T014255Z.md`
-- `reviews/code-p05-review-2026-07-14T014634Z.md`
-- `reviews/code-p05-review-2026-07-14T015626Z.md`
-- `reviews/code-p06-review-2026-07-14T014731Z.md`
-- `reviews/code-p06-review-2026-07-14T015952Z.md`
+- `reviews/archived/code-p02-review-2026-07-14T014241Z.md`
+- `reviews/archived/code-p03-review-2026-07-14T014251Z.md`
+- `reviews/archived/code-p04-review-2026-07-14T014255Z.md`
+- `reviews/archived/code-p05-review-2026-07-14T014634Z.md`
+- `reviews/archived/code-p05-review-2026-07-14T015626Z.md`
+- `reviews/archived/code-p06-review-2026-07-14T014731Z.md`
+- `reviews/archived/code-p06-review-2026-07-14T015952Z.md`
 - `reviews/archived/p06-review-2026-07-14T021025Z.md`
 
 **Fix iterations:**
@@ -259,7 +259,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - `Dispatch: scope=p07 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - The reviewer transport closed after writing a complete, valid artifact; the accepted-launch artifact was validated without replacement dispatch.
 
-**Review artifact:** `reviews/code-p07-review-2026-07-14T023300Z.md`
+**Review artifact:** `reviews/archived/code-p07-review-2026-07-14T023300Z.md`
 
 **Fix iterations:** 0.
 
@@ -510,7 +510,7 @@ Chronological log of implementation progress.
 
 ### Phase p07 Root Review Passed
 
-**Review artifact:** `reviews/code-p07-review-2026-07-14T023300Z.md`
+**Review artifact:** `reviews/archived/code-p07-review-2026-07-14T023300Z.md`
 **Validated range:** `bbda708332f1f2a233a4fc7064d948c791a381fb..c6f3da150d051f375a0b5984e93fe515e75c6de3`
 **Findings:** Critical 0, Important 0, Medium 0, Minor 0.
 **Disposition:** Phase p07 passed. All nine plan tasks and all phase reviews are complete.
@@ -556,7 +556,7 @@ Chronological log of implementation progress.
 ### Final Re-review Round 2 Blocked — Release Re-bump Added
 
 **Review request:** `review-final-r2-20260714T032359Z`
-**Artifact:** `reviews/final-review-2026-07-14T032359Z.md`
+**Artifact:** `reviews/archived/final-review-2026-07-14T032359Z.md`
 **Validated range:** `508aa013e211570c689b0bc48c23dfc2adfad0b0..ab120df254070c481042f950352cb5b44747451d`
 
 - Findings: Critical 0, Important 1, Medium 1, Minor 1; verdict `BLOCKED`.
@@ -581,7 +581,7 @@ Chronological log of implementation progress.
 ### Final Review Round 3 Passed
 
 **Review request:** `review-final-r3-20260714T160654Z`
-**Artifact:** `reviews/final-review-2026-07-14T160654Z.md`
+**Artifact:** `reviews/archived/final-review-2026-07-14T160654Z.md`
 **Validated range:** `f07202f48a8d4980fd46fb746f04dcac46915a28..aa84f81b1e60b52624ae267234d2f0c7959a77dc`
 
 - Findings: Critical 0, Important 0, Medium 0, Minor 0.
