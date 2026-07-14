@@ -82,7 +82,7 @@ Expected: No errors
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config/
+git add packages/cli/src/config/ packages/cli/src/commands/config/
 git commit -m "feat(p01-t01): add workflow.projectLog config keys"
 ```
 
@@ -169,6 +169,7 @@ git commit -m "feat(p01-t03): add oat project log append command"
 
 - Create: `packages/cli/src/commands/project/log/check.ts`
 - Create: `packages/cli/src/commands/project/log/check.test.ts`
+- Modify: `packages/cli/src/commands/project/log/index.ts` (register the `check` subcommand; tests invoke through the registered command group)
 
 **Step 1: Write test (RED)**
 
@@ -206,6 +207,7 @@ git commit -m "feat(p01-t04): add oat project log check command"
 
 - Create: `packages/cli/src/commands/project/log/synthesize.ts`
 - Create: `packages/cli/src/commands/project/log/synthesize.test.ts`
+- Modify: `packages/cli/src/commands/project/log/index.ts` (register the `synthesize` subcommand; tests invoke through the registered command group)
 
 **Step 1: Write test (RED)**
 
@@ -254,14 +256,14 @@ git commit -m "feat(p01-t05): add oat project log synthesize command"
 
 **Step 1: Write test (RED)**
 
-Cases: `--with-project-log` creates the log from the template regardless of config; `--no-project-log` suppresses creation regardless of config; config `true` creates by default; config `auto` (default) and `false` create nothing at scaffold time. Tests must scaffold **from the real repo template** (read `.oat/templates/project-log.md`, not a fixture copy) — the divergent-fixture masking lesson.
+Cases: `--with-project-log` creates the log from the template regardless of config; `--no-project-log` suppresses creation regardless of config; config `true` creates by default; config `auto` (default) and `false` create nothing at scaffold time; flag registration and forwarding from the command surface (`index.test.ts`: both flags appear in `--help`, both forward to scaffold). Tests must scaffold **from the real repo template** (read `.oat/templates/project-log.md`, not a fixture copy) — the divergent-fixture masking lesson.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
 Expected: New tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/new/scaffold.test.ts src/commands/project/new/index.test.ts`
 Expected: Tests pass (GREEN)
 
 **Step 3: Refactor**
@@ -291,7 +293,7 @@ git commit -m "feat(p02-t01): add project-log scaffold flags to oat project new"
 
 **Step 1: Write test (RED)**
 
-The gate has multiple terminal return paths (successful verdict, blocking verdict, child failure, timeout, targeting-correlation failure, artifact-validation failure). Cases: **exactly one structural entry is appended per gate run for each terminal outcome** (producer `oat gate review`, ref = review scope, one-liner with target, threshold, findings counts when available, exit code, status, artifact path when produced — path referenced, not inlined) — test success, blocking verdict, child failure, timeout, and validation failure explicitly; config `false` produces no append; **append failure is swallowed to a warning and does not change the gate's exit code, envelope status, or handoff fields**; under `auto` with no prior log, the run creates the log (create-on-first-append via the shared routine).
+The gate has multiple terminal return paths (successful verdict, blocking verdict, child failure, timeout, targeting-correlation failure, artifact-validation failure). Cases: **exactly one structural entry is appended per gate run for each terminal outcome** (producer `oat gate review`, ref = review scope, one-liner with target, threshold, findings counts when available, exit code, status, artifact path when produced — path referenced, not inlined) — test success, blocking verdict, child failure, timeout, targeting-correlation failure, and validation failure explicitly (all six); config `false` produces no append; **append failure is swallowed to a warning and does not change the gate's exit code, envelope status, or handoff fields**; under `auto` with no prior log, the run creates the log (create-on-first-append via the shared routine).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'project log'`
 Expected: Tests fail (RED)
@@ -335,15 +337,19 @@ git commit -m "feat(p02-t02): append gate review structural entries to project l
 
 Add one-line append instructions at: each subagent dispatch (structural stamp referencing the implementation.md run record by path+anchor — never mirroring it), STOP/park events (triggering condition), phase outcomes (verdict + fix-loop count), parallel-group merge results. Each instruction defers entry format to `oat project log append --help`. Instructions must note the helper no-ops when the feature is off (skills never pre-check config). Bump the skill's frontmatter `version:`.
 
+**Files (additional):**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (targeted contract assertions)
+
 **Step 2: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm format`
-Expected: Skill validates; format passes. Additionally add targeted assertions to the existing skill-contract test surface (where present) pinning that each named append point references `oat project log append`.
+Run: `pnpm oat:validate-skills && pnpm format && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: Skill validates; format passes; contract assertions pin that each named append point references `oat project log append`.
 
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement/
+git add .agents/skills/oat-project-implement/ packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t01): add project-log append points to oat-project-implement"
 ```
 
@@ -359,15 +365,19 @@ git commit -m "feat(p03-t01): add project-log append points to oat-project-imple
 
 Add a roll-up step per design: run `oat project log check --json`; when entries exist, write `## Workflow Observations` into summary.md (grouped by type; `general` entries flagged), append `general`/graduated entries to the ledger at `workflow.projectLogLedgerPath` (dedup by date+area; warn-and-skip when the reference layer is absent and the key unset), and offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. Bump the skill version.
 
+**Files (additional):**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (targeted contract assertions)
+
 **Step 2: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm format`
-Expected: Skill validates; format passes. Additionally add targeted assertions to the existing skill-contract test surface (where present) pinning the roll-up step's presence and its ledger warn-and-skip rule.
+Run: `pnpm oat:validate-skills && pnpm format && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: Skill validates; format passes; contract assertions pin the roll-up step's presence and its ledger warn-and-skip rule.
 
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/oat-project-summary/
+git add .agents/skills/oat-project-summary/ packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t02): add project-log roll-up to oat-project-summary"
 ```
 
@@ -381,17 +391,21 @@ git commit -m "feat(p03-t02): add project-log roll-up to oat-project-summary"
 
 **Step 1: Implement**
 
-Before archive: run `oat project log check --json`. On `synthesis_pending`, surface a completion **warning** (not a block) prompting the orchestrator to complete the synthesis via `oat project log synthesize`. **Roll-up is a hard ordering gate, not a verification:** when entries exist and the roll-up (summary `## Workflow Observations` + ledger append) has not already happened, completion runs it itself; if roll-up fails or cannot be confirmed, completion must NOT seal/archive — the archive is gitignored, so an un-rolled-up log is permanently lost. This gate must override the skill's existing tolerance for missing/skipped summary generation whenever a project log with entries exists. Append the seal entry (completion timestamp, roll-up performed) as the final structural append before archiving. Bump the skill version.
+Before archive: run `oat project log check --json`. On `synthesis_pending`, surface a completion **warning** (not a block) prompting the orchestrator to complete the synthesis via `oat project log synthesize`. **Roll-up is a hard ordering gate, not a verification:** when entries exist and the roll-up has not already happened, completion runs it itself; if roll-up fails or cannot be confirmed, completion must NOT seal/archive — the archive is gitignored, so an un-rolled-up log is permanently lost. **Successful roll-up is defined as:** the summary `## Workflow Observations` section written, PLUS a ledger outcome that is any of appended / deduplicated / the explicitly permitted warn-and-skip (reference layer absent and `workflow.projectLogLedgerPath` unset). Only unexpected roll-up failures block archival — the permitted ledger skip does not. This gate overrides the skill's existing tolerance for missing/skipped summary generation whenever a project log with entries exists. Append the seal entry (completion timestamp, roll-up performed) as the final structural append before archiving. Bump the skill version.
+
+**Files (additional):**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` (targeted contract assertions)
 
 **Step 2: Verify**
 
-Run: `pnpm oat:validate-skills && pnpm format`
-Expected: Skill validates; format passes. Additionally add targeted assertions to the existing skill-contract test surface (where present) pinning: the check command is named, roll-up-before-seal ordering is stated, synthesis is warn-only, and roll-up failure blocks archive.
+Run: `pnpm oat:validate-skills && pnpm format && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: Skill validates; format passes; contract assertions pin: the check command is named, roll-up-before-seal ordering is stated, synthesis is warn-only, and unexpected roll-up failure blocks archive.
 
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/oat-project-complete/
+git add .agents/skills/oat-project-complete/ packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t03): add project-log synthesis check and seal to oat-project-complete"
 ```
 
@@ -411,8 +425,8 @@ Author the command-group docs (append/synthesize/check flags, config keys, entry
 
 **Step 2: Verify**
 
-Run: `pnpm release:validate && pnpm build:docs && git status --porcelain`
-Expected: Release validation passes (version bumps + skill version bumps recognized); docs build green; working tree clean after staging (no unstaged regenerated assets)
+Run: `pnpm release:validate && pnpm build:docs && git diff --quiet`
+Expected: Release validation passes (version bumps + skill version bumps recognized); docs build green; `git diff --quiet` exits 0 (no UNSTAGED changes — regenerated assets are all staged; staged-but-uncommitted changes are expected until Step 3 commits)
 
 **Step 3: Commit**
 
