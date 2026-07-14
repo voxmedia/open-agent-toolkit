@@ -10,10 +10,19 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260714-base-relative-lockstep-release | 2026-07-14 | accepted | Base-relative lockstep release bump                                     | -      |
+| DR-260714-cli-owned-pjm-record-creation  | 2026-07-14 | accepted | CLI-owned PJM record creation                                           | -      |
+| DR-260714-closed-stdin                   | 2026-07-14 | accepted | Closed stdin for noninteractive gates                                   | -      |
 | DR-260714-effective-ladders-precede      | 2026-07-14 | accepted | Effective ladders precede project ceilings                              | -      |
+| DR-260714-fail-closed-scaffold-rendering | 2026-07-14 | accepted | Fail-closed scaffold rendering                                          | -      |
+| DR-260714-flexible-plan-task-bodies      | 2026-07-14 | accepted | Flexible plan task bodies                                               | -      |
 | DR-260714-graceful-missing-formatter     | 2026-07-14 | accepted | Graceful missing-formatter behavior                                     | -      |
+| DR-260714-mandatory-closed-item-outcomes | 2026-07-14 | accepted | Mandatory closed-item outcomes                                          | -      |
+| DR-260714-migration-diagnostics-without  | 2026-07-14 | accepted | Migration diagnostics without a scope shim                              | -      |
+| DR-260714-nonmutating-targetless-updates | 2026-07-14 | accepted | Nonmutating targetless updates                                          | -      |
 | DR-260714-planner-first-formatter        | 2026-07-14 | accepted | Planner-first formatter resolution                                      | -      |
 | DR-260714-self-contained-contracts-at    | 2026-07-14 | accepted | Self-contained contracts at writing boundaries                          | -      |
+| DR-260714-shared-managed-index-hardening | 2026-07-14 | accepted | Shared managed-index hardening                                          | -      |
 | DR-260714-tracked-artifacts-remain       | 2026-07-14 | accepted | Tracked artifacts remain formatted                                      | -      |
 | DR-260713-automation-safe-update         | 2026-07-13 | accepted | Automation-safe update eligibility                                      | -      |
 | DR-260713-best-effort-cross-process      | 2026-07-13 | accepted | Best-effort cross-process update cadence                                | -      |
