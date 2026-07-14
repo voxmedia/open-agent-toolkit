@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.5.0
+version: 1.5.1
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -79,6 +79,15 @@ Use the same `state.md` read you already perform for `oat_pr_status`/`oat_pr_url
 
 Some questions can be answered automatically from workflow preferences. Read each preference before deciding whether to include its question in the batched prompt:
 
+Both lifecycle orderings are supported:
+
+- **Complete before merge:** run this skill while the PR is open, then merge.
+- **Merge before completion:** merge first, then run this skill.
+
+An open PR is not a blocker. When completion archives project artifacts, the
+existing archive-aware flow regenerates and syncs the open PR body so its links
+remain valid.
+
 ```bash
 ARCHIVE_PREF=$(oat config get workflow.archiveOnComplete 2>/dev/null || true)
 PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
@@ -149,7 +158,7 @@ Run all gate checks and collect warnings. These are informational — they don't
 PLAN_FILE="${PROJECT_PATH}/plan.md"
 
 if [[ -f "$PLAN_FILE" ]]; then
-  final_row=$(grep -E "^\|\s*final\s*\|" "$PLAN_FILE" | head -1 || true)
+  final_row=$(grep -E "^\|\s*final\s*\|\s*code\s*\|" "$PLAN_FILE" | tail -1 || true)
   if [[ -z "$final_row" ]]; then
     echo "Warning: No final review row found in plan.md."
   elif ! echo "$final_row" | grep -qE "\|\s*passed\s*\|"; then
@@ -160,6 +169,9 @@ else
   echo "Warning: plan.md not found, unable to verify final review status."
 fi
 ```
+
+`final_row` is the latest appended event whose Scope is `final` and Type is
+`code`; earlier events remain history.
 
 #### 3.2: Deferred Medium Findings
 

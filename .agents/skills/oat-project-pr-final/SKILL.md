@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.5.1
+version: 1.5.2
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -169,9 +169,13 @@ If `WORKFLOW_MODE` is `quick` or `import`, proceed without spec/design and inclu
 Preferred source of truth (v1): `plan.md` `## Reviews` table.
 
 ```bash
-FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | head -1)
+FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|\\s*code\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | tail -1)
 echo "$FINAL_ROW"
 ```
+
+Use the latest appended event whose Scope is `final` and Type is `code`.
+Earlier final-review events remain history and do not determine the current
+gate.
 
 If `FINAL_ROW` is missing or does not contain `passed`:
 
@@ -403,7 +407,7 @@ After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.
 **Content updates:**
 
 - In `## Current Phase`, set:
-  - `Implementation — PR open, awaiting human review.`
+  - `Implementation — PR open; completion may run before or after merge.`
 - In `## Progress`, add:
   - `- ✓ PR created`
   - `- ⧗ Awaiting human review`
@@ -413,8 +417,13 @@ After writing the PR artifact and creating the PR, update `"$PROJECT_PATH/state.
   PR is open for review.
 
   - To incorporate feedback: run `oat-project-revise`
-  - When approved: run `oat-project-complete`
+  - Complete before merge: run `oat-project-complete` now, then merge the PR.
+  - Merge before completion: merge the PR, then run `oat-project-complete`.
   ```
+
+Both orderings are supported. An open PR is not a blocker for
+`oat-project-complete`; when completion archives project artifacts, it
+regenerates and syncs the open PR body.
 
 If `state.md` is missing, skip with a warning.
 
@@ -425,4 +434,4 @@ If `state.md` is missing, skip with a warning.
 - Final review status checked and referenced
 - User has clear next step to open PR (manual or gh)
 - Project `state.md` shows `oat_phase_status: pr_open`
-- Next milestone references both `oat-project-revise` (for feedback) and `oat-project-complete` (when approved)
+- Next milestone references both `oat-project-revise` (for feedback) and both supported `oat-project-complete` orderings

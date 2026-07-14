@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.14
+version: 1.3.15
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -422,6 +422,11 @@ Iterate until user confirms.
 After the confirmed plan has stable phase IDs and before Step 12.5 starts the
 plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
 `oat-project-plan-writing`.
+
+When that contract offers a choice, render its required question verbatim:
+"Should an additional cross-runtime phase gate review run after implementation
+phases? Built-in per-phase root reviews and the final review run regardless of
+this choice." Do not add a bare `(Recommended)` option label.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
 through the shared contract without probing, prompting, or mutation. Otherwise

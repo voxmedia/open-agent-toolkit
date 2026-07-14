@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.7
+version: 1.5.8
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -382,7 +382,8 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 
 **Review-fix bookkeeping (required):**
 - When you add review-generated fix tasks:
-  - Update the relevant Reviews table row status to `fixes_added` (work queued) and set the Date + Artifact.
+  - Update the Reviews event matching the selected review's Scope, Type, and artifact filename to `fixes_added` (work queued), and set the Date + archived Artifact path.
+  - Never select a row by scope alone or move an event status backward. If the exact bound event is missing, stop and reconcile the ledger instead of mutating another event.
   - Update `## Implementation Complete` totals (phase counts + total task count) so downstream PR/review summaries don’t go stale.
   - If the plan includes any phase rollups that reference task counts, update those too.
 
@@ -399,7 +400,9 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 **Update Reviews section:**
 ```markdown
 ## Reviews
-- Update or add a row for `{scope}` in the Reviews table:
+- Find the existing event by `{scope}`, review Type, and `{filename}` (the
+  artifact filename is stable across the archive move), then update only that
+  row:
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
   - Artifact: `reviews/archived/{filename}.md`
@@ -410,6 +413,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and all final-scope gates satisfied: deferred-medium + minor disposition)
+- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type.
 
 ### Step 7: Update Implementation.md
 
@@ -438,7 +442,7 @@ Add a note to implementation.md:
 
 After the fix tasks are complete:
 
-- Update the review row status to `fixes_completed`
+- Update this same artifact-identified review event to `fixes_completed`
 - Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
 ```
 

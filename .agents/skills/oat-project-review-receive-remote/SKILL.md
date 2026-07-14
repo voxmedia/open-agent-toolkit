@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.4.0
+version: 1.4.1
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -117,9 +117,20 @@ npx agent-reviews --json --unresolved --pr <N>
 
 If no unresolved comments:
 
-- Report clean status.
-- Update `plan.md` review row for scoped entry to `passed` when applicable.
-- Stop.
+1. Create a UTC timestamp and event-distinct filename:
+   `reviews/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`.
+2. Write that artifact with the PR number, fetch timestamp, remote scope/type,
+   and a zero-unresolved-findings result.
+3. Record the clean result as a `passed` Reviews event whose event identity
+   combines `Scope`, `Type`, and artifact filename:
+   - Claim only an unbound `pending` placeholder with matching Scope + Type and
+     Artifact `-`; otherwise append a distinct row.
+   - Set Date and Artifact to this clean event. Advance only this event and
+     never mutate another row by scope alone.
+4. Commit `plan.md` and the clean review artifact atomically with
+   `chore(oat): record clean remote review (pr-#<N>)`. Do not stop with
+   uncommitted bookkeeping.
+5. Report clean status and stop.
 
 ### Step 3: Classify and Normalize Findings
 
@@ -162,14 +173,30 @@ For each converted finding:
 
 ### Step 6: Update Project Artifacts
 
+Before changing the ledger, write an event-distinct review artifact containing
+the PR number, fetch timestamp, normalized findings, and dispositions:
+`reviews/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`. Each fetch/triage cycle
+gets a new timestamped artifact filename, even when the PR and lifecycle scope
+are unchanged.
+
+```bash
+REMOTE_REVIEW_TIMESTAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
+REMOTE_REVIEW_FILENAME="remote-pr-${PR_NUMBER}-review-${REMOTE_REVIEW_TIMESTAMP}.md"
+```
+
 Update `plan.md`:
 
 - Append inserted review-fix task sections in correct phase order.
-- Update `## Reviews` row for remote scope:
+- Record an append-ordered `## Reviews` event for the remote scope:
   - status `fixes_added` when tasks were added
   - status `passed` when no actionable findings remain
   - date set to today
-  - artifact `github-pr #<N>`
+  - artifact `reviews/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`
+- Claim an unbound `pending` placeholder only when its Scope + Type matches and
+  its Artifact is `-`; otherwise append the event. Later mutations select it by
+  Scope + Type + artifact filename, never by scope or `github-pr #<N>` alone.
+- Never move an event status backward or overwrite an earlier event from the
+  same PR.
 - Update `## Implementation Complete` totals.
 
 Update `implementation.md`:
@@ -192,12 +219,12 @@ Update `state.md`:
 
 ### Step 6.5: Commit Review Bookkeeping (Required)
 
-**CRITICAL — DO NOT SKIP.** This skill modifies `plan.md`, `implementation.md`, and `state.md` when processing GitHub PR comments. When it runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. The commit below is the safety net.
+**CRITICAL — DO NOT SKIP.** This skill modifies the event-distinct review artifact, `plan.md`, `implementation.md`, and `state.md` when processing GitHub PR comments. When it runs in a separate agent session (subagent, fresh session, or different conversation), uncommitted bookkeeping updates cause state drift for the original agent. The commit below is the safety net.
 
 Commit all modified OAT tracking files atomically:
 
 ```bash
-git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md"
+git add "$PROJECT_PATH/plan.md" "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/reviews/$REMOTE_REVIEW_FILENAME"
 git diff --cached --quiet || git commit -m "chore(oat): record remote review findings and add fix tasks (pr-#$PR_NUMBER)"
 ```
 

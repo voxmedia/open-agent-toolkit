@@ -12,6 +12,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createCleanupProjectCommand, runCleanupProject } from './project';
+import { projectPlanMarksComplete } from './project.utils';
 
 async function createRepoRoot(): Promise<string> {
   const root = await mkdtemp(join(tmpdir(), 'oat-cleanup-project-'));
@@ -103,6 +104,34 @@ async function runProjectCommand(
     from: 'user',
   });
 }
+
+describe('projectPlanMarksComplete', () => {
+  it('is incomplete when a received final event follows a passed event', () => {
+    const planContent = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status   | Date       | Artifact                    |',
+      '| ----- | ---- | -------- | ---------- | --------------------------- |',
+      '| final | code | passed   | 2026-07-13 | reviews/final-root.md       |',
+      '| final | code | received | 2026-07-14 | reviews/final-gate-v2.md    |',
+    ].join('\n');
+
+    expect(projectPlanMarksComplete(planContent)).toBe(false);
+  });
+
+  it('is complete when the latest final event is passed', () => {
+    const planContent = [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status   | Date       | Artifact                    |',
+      '| ----- | ---- | -------- | ---------- | --------------------------- |',
+      '| final | code | received | 2026-07-13 | reviews/final-root.md       |',
+      '| final | code | passed   | 2026-07-14 | reviews/final-gate-v2.md    |',
+    ].join('\n');
+
+    expect(projectPlanMarksComplete(planContent)).toBe(true);
+  });
+});
 
 describe('cleanup project drift scanning', () => {
   const tempDirs: string[] = [];

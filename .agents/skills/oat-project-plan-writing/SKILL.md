@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.13
+version: 1.2.14
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -265,11 +265,22 @@ Do not invent enablement in either branch.
 ### 3. Offer the canonical choice
 
 When at least one target qualifies and an interactive user-response channel is
-available, offer exactly these outcomes:
+available, the calling skill must ask:
+
+```text
+Should an additional cross-runtime phase gate review run after implementation
+phases? Built-in per-phase root reviews and the final review run regardless of
+this choice.
+```
+
+Then offer exactly these outcomes:
 
 1. **All phases** - enable the independent Phase gate review after every implementation phase.
 2. **Selected phases** - enable the independent Phase gate review only after chosen stable phase IDs.
 3. **Disabled** - leave Phase gate review disabled.
+
+Do not attach a bare `(Recommended)` label to any option. If the caller offers
+a recommendation, it must state the cost/coverage tradeoff explicitly.
 
 Phase gate review is non-pausing when it passes and is distinct from both HiLL
 approval and final artifact review.
@@ -446,10 +457,16 @@ If any required section is missing when a skill edits `plan.md`, it must be rest
 ### Review Table Preservation Rules
 
 - The `## Reviews` table includes both **code** rows (`p01`, `p02`, …, `final`) and **artifact** rows (`spec`, `design`, `plan`).
+- Rows are append-ordered review events. Duplicate `Scope` + `Type` rows are valid; readers use the latest appended matching event when they need current lifecycle state.
+- `Scope` + `Type` + `Artifact` filename form the event identity:
+  - The first event for a scope/type may claim an unbound `pending` placeholder whose Artifact is `-`.
+  - When a new review has a distinct artifact filename and no unbound placeholder remains, append a new row. Never overwrite a bound row merely because its scope/type matches.
+  - Later mutations, including archive-path rewrites, must select the event by scope/type and artifact filename. A path move from `reviews/` to `reviews/archived/` keeps the same event identity.
 - Skills must **never delete** existing review rows.
 - New rows may be appended (e.g., `p03` for a newly added phase).
 - Status semantics: `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`.
   - `received`: review artifact exists but findings have not yet been converted into fix tasks.
+  - An event status must never move backward in this ladder. A later event may start at `received` without changing an earlier event that already reached `passed`.
 
 ### Implementation Complete Section
 

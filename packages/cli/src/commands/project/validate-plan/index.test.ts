@@ -100,9 +100,43 @@ describe('oat project validate-plan', () => {
     return dir;
   }
 
+  async function writePlanWithDistinctReviewEvents(): Promise<string> {
+    const dir = await mkdtemp(join(tmpdir(), 'oat-vplan-'));
+    tempDirs.push(dir);
+    await writeFile(
+      join(dir, 'plan.md'),
+      [
+        '---',
+        'oat_plan_parallel_groups: []',
+        '---',
+        '',
+        '### Task p01-t01: Do something',
+        '',
+        '## Reviews',
+        '',
+        '| Scope | Type | Status   | Date       | Artifact                        |',
+        '| ----- | ---- | -------- | ---------- | ------------------------------- |',
+        '| final | code | passed   | 2026-04-09 | reviews/final-root-review.md    |',
+        '| final | code | received | 2026-04-10 | reviews/final-gate-review-v2.md |',
+      ].join('\n'),
+      'utf8',
+    );
+    return dir;
+  }
+
   describe('--json mode', () => {
     it('emits { valid: true } when the plan is valid', async () => {
       const dir = await writeValidPlan();
+      const { command, capture } = createHarness({ json: true });
+
+      await runCommand(command, ['--project-path', dir], ['--json']);
+
+      expect(capture.jsonPayloads[0]).toEqual({ valid: true });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('accepts duplicate-scope Reviews rows for distinct artifacts', async () => {
+      const dir = await writePlanWithDistinctReviewEvents();
       const { command, capture } = createHarness({ json: true });
 
       await runCommand(command, ['--project-path', dir], ['--json']);

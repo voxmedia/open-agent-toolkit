@@ -168,9 +168,9 @@ function getPostImplementationRecommendation(
     };
   }
 
-  const finalReview = state.reviews.find(
-    (review) => review.scope === 'final' && review.type === 'code',
-  );
+  const finalReview = [...state.reviews]
+    .reverse()
+    .find((review) => review.scope === 'final' && review.type === 'code');
 
   if (!finalReview || finalReview.status === 'pending') {
     return {

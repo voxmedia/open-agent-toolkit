@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.2.1
+version: 2.2.2
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -598,6 +598,11 @@ non-interactive unresolved state are not implementation-ready.
 After the generated quick plan has stable phase IDs and before Step 3.6 starts
 the plan artifact review, invoke the `Shared Phase Gate Review Setup Contract` from
 `oat-project-plan-writing`.
+
+When that contract offers a choice, render its required question verbatim:
+"Should an additional cross-runtime phase gate review run after implementation
+phases? Built-in per-phase root reviews and the final review run regardless of
+this choice." Do not add a bare `(Recommended)` option label.
 
 If `plan.md` already contains an explicit `oat_phase_review_gate`, preserve it
 through the shared contract without probing, prompting, or mutation. Otherwise
