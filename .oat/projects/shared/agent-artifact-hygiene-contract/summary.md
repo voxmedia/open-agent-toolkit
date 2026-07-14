@@ -21,7 +21,7 @@ OAT artifact writers repeatedly produced tracked Markdown that failed consuming 
 - Added one equivalent, greppable `Artifact hygiene contract:` to the phase implementer, reviewer, six lifecycle writing skills, and CLI gate-review context. Runtime writers execute supplied commands first, fall back to repository-owned instructions only when needed, avoid unrelated rewrites, and warn once rather than fail when no formatter is documented.
 - Hardened dispatch preflight to inspect merged effective configuration through `oat config list --json`, distinguish ladder completeness from project-ceiling selection, and avoid false ladder-adoption prompts when a resolver returns `matrix: null`.
 - Added regression coverage for complete contract equivalence, role-specific definition-of-done behavior, assembled gate-review prompts, skill versions, and effective dispatch configuration.
-- Regenerated provider projections with the repository-source CLI and released the bundled changes through lockstep public package version `0.1.61`, including synchronized generated package-version metadata.
+- Regenerated provider projections with the repository-source CLI and released the bundled changes through lockstep public package version `0.1.64`, including synchronized generated package-version metadata.
 
 All five implementation tasks completed. Independent p01, p02, p03, and final reviews passed with zero findings; final verification covered skill validation, 216 focused contract/prompt tests, provider-sync drift, workspace format/lint/type-check/test/build gates, and release validation for all five public packages.
 
@@ -37,6 +37,7 @@ All five implementation tasks completed. Independent p01, p02, p03, and final re
 
 - Provider projection initially used a PATH-installed OAT `0.1.51`, which emitted stale provenance and content. The accepted implementation regenerated projections with the repository-source `0.1.61` CLI and recorded that source as authoritative.
 - Phase p03 added `packages/cli/assets/public-package-versions.json` to its owned files after release verification showed that this tracked generated asset must match the lockstep package manifests. The plan was aligned before p03 review, and the final review accepted both corrections as bounded.
+- The configured documentation closeout added shipped docs content after the initial final review. Current main advanced to public package `0.1.63` before approval, so the published branch merged main and finalized the lockstep package set at `0.1.64`.
 
 ## Notable Challenges
 

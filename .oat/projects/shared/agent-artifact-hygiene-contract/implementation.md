@@ -133,6 +133,8 @@ oat_generated: false
 - Added the generated bundled public-package version asset to p03 ownership after verification proved it must match the five manifests.
 - Completed p03 after independent zero-finding review; all five implementation tasks are complete.
 - Completed final independent review with no findings; entered configured pre-approval closeout.
+- Synchronized project documentation, then bumped public packages for the shipped docs delta.
+- Merged current `origin/main` after PR creation, preserving both upstream autonomy work and this project's contracts; rebased changed skill versions and public packages to `0.1.64`.
 
 ### Review Received: p03
 
@@ -202,10 +204,11 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented                                      | Actual / Accepted                                                  | Reason                                                                          | Source of Truth                   | Follow-up                      |
-| ------------- | --------------- | --------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- | --------------------------------- | ------------------------------ |
-| p03-t01       | plan.md         | Provider views, sync manifest, and five package manifests | Also regenerate `packages/cli/assets/public-package-versions.json` | Release tooling requires the tracked generated asset to match package manifests | Package manifests + bundle script | Plan aligned before p03 review |
-| p03-t01       | plan.md         | PATH `oat` sync and one task commit                       | Repository-source CLI sync plus two bounded correction commits     | PATH `oat` was 0.1.51 and generated stale projection provenance/content         | Repository CLI 0.1.61             | Plan aligned before p03 review |
+| Task / Review | Source Artifact | Planned / Documented                                          | Actual / Accepted                                                         | Reason                                                                          | Source of Truth                        | Follow-up                      |
+| ------------- | --------------- | ------------------------------------------------------------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------- | ------------------------------ |
+| p03-t01       | plan.md         | Provider views, sync manifest, and five package manifests     | Also regenerate `packages/cli/assets/public-package-versions.json`        | Release tooling requires the tracked generated asset to match package manifests | Package manifests + bundle script      | Plan aligned before p03 review |
+| p03-t01       | plan.md         | PATH `oat` sync and one task commit                           | Repository-source CLI sync plus two bounded correction commits            | PATH `oat` was 0.1.51 and generated stale projection provenance/content         | Repository CLI 0.1.61                  | Plan aligned before p03 review |
+| closeout      | state/config    | Pre-approval summary, docs, and PR from the reviewed endpoint | Docs delta plus current-main merge; public packages finalized at `0.1.64` | Docs are shipped assets and main advanced to `0.1.63` during execution          | Current `origin/main` + release policy | Final review rerun after merge |
 
 ## Test Results
 
@@ -222,7 +225,7 @@ oat_generated: false
 - A self-contained, greppable artifact hygiene contract across canonical implementer/reviewer roles, six lifecycle skills, and gate-review prompt injection.
 - Planner-first formatter discovery with explicit write/fix preference, file-scoped execution, and runtime fallback behavior.
 - Effective dispatch-ladder preflight that distinguishes unresolved project policy from missing effective ladder cells.
-- Synchronized provider projections and a lockstep `0.1.61` public-package release, including generated bundled version metadata.
+- Synchronized provider projections and a lockstep `0.1.64` public-package release, including generated bundled version metadata.
 
 **Verification performed:**
 
