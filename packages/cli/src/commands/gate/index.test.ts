@@ -67,6 +67,9 @@ type ProcessCallInput = ProcessCall & {
 
 let lastExecutePrompt = '';
 
+const EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT =
+  "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.";
+
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
   command: Command;
@@ -3149,6 +3152,7 @@ describe('oat gate', () => {
       baseArgs: ['exec'],
       promptSnippets: [
         'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+        EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT,
         `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
         'Project resolution source: active-project.',
         'Review type: artifact.',
@@ -3405,6 +3409,7 @@ describe('oat gate', () => {
         baseArgs,
         promptSnippets: [
           'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+          EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT,
           `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
           'Review type: artifact.',
           'Review scope: plan.',
