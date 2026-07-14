@@ -11,6 +11,8 @@ oat_phase_review_gate:
   phases: [p01, p06]
   review_type: code
   exit_nonzero_on: important
+oat_plan_hill_phases: ['p07']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null

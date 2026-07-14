@@ -154,6 +154,14 @@ Chronological log of implementation progress.
 
 ### 2026-07-13
 
+**Implementation start (2026-07-14T00:49:53Z):**
+
+- Tier 1 subagent execution selected for Cursor.
+- Dispatch policy: managed `high`; resolved model `gpt-5.6-sol-high`.
+- Confirmed HiLL checkpoint: p07 only.
+- Auto-review at HiLL checkpoints: enabled.
+- Reconciled current task pointer to p01-t01.
+
 **Planning handoff:**
 
 - [ ] p01-t01: Render and validate real scaffold templates
