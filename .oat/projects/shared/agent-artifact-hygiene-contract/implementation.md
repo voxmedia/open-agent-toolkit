@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-13
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -16,13 +16,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status      | Tasks | Completed |
-| -------------------------------------- | ----------- | ----- | --------- |
-| p01 Canonical contracts                | complete    | 3     | 3/3       |
-| p02 Gate-review prompt                 | complete    | 1     | 1/1       |
-| p03 Provider projection/public release | in_progress | 1     | 0/1       |
+| Phase                                  | Status   | Tasks | Completed |
+| -------------------------------------- | -------- | ----- | --------- |
+| p01 Canonical contracts                | complete | 3     | 3/3       |
+| p02 Gate-review prompt                 | complete | 1     | 1/1       |
+| p03 Provider projection/public release | complete | 1     | 1/1       |
 
-**Total:** 4/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ## Phase 1: Canonical Planning and Runtime Contracts
 
@@ -56,13 +56,13 @@ oat_generated: false
 
 ## Phase 3: Provider Projection and Public Release
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-14
 
 ### Task p03-t01: Sync canonical assets and validate the release
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `5926b512d8d973fce75e9fa12b6bddc49f48cabc` (corrections: `8718c3f3`, `38b5c203`)
 
 ## Orchestration Runs
 
@@ -92,6 +92,27 @@ oat_generated: false
 - Both worktrees were clean, merged in plan order, integration-verified, and removed.
 - Outstanding items: none.
 
+### Run 2 — Phase p03
+
+**Base:** `4239a32493276774c8f483813e673c30e378f44e`
+**Tier:** Tier 1 (Cursor native subagents)
+**Policy:** High
+
+| Phase | Outcome | Task Commits                       | Review                                                           |
+| ----- | ------- | ---------------------------------- | ---------------------------------------------------------------- |
+| p03   | passed  | `5926b512`, `8718c3f3`, `38b5c203` | 0 findings (`reviews/archived/p03-review-2026-07-14T022938Z.md`) |
+
+**Dispatch:**
+
+- p03 implementation: `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+- p03 review: `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
+
+**Notes:**
+
+- Source-CLI projection regeneration corrected stale PATH-CLI provenance.
+- Bundled public-package versions were regenerated from the lockstep manifests.
+- Independent review passed with no findings.
+
 <!-- orchestration-runs-end -->
 
 ## Implementation Log
@@ -110,6 +131,21 @@ oat_generated: false
 - Started p03 provider projection and lockstep `0.1.61` release validation.
 - Corrected p03 projection provenance after discovering PATH `oat` was 0.1.51; regenerated with the repository 0.1.61 CLI.
 - Added the generated bundled public-package version asset to p03 ownership after verification proved it must match the five manifests.
+- Completed p03 after independent zero-finding review; all five implementation tasks are complete.
+
+### Review Received: p03
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/p03-review-2026-07-14T022938Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Disposition:** Passed with no fixes required.
 
 ### Review Received: plan
 
@@ -158,25 +194,32 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                        | Result |
-| ----- | ---------------------------------------------------------------- | ------ |
-| p01   | skill validation, 86 focused tests, 10-file format check         | passed |
-| p02   | 130 focused tests, CLI lint, CLI type-check, 2-file format check | passed |
-| p03   | -                                                                | -      |
+| Phase | Tests Run                                                                                             | Result |
+| ----- | ----------------------------------------------------------------------------------------------------- | ------ |
+| p01   | skill validation, 86 focused tests, 10-file format check                                              | passed |
+| p02   | 130 focused tests, CLI lint, CLI type-check, 2-file format check                                      | passed |
+| p03   | source-CLI sync dry run, 237 focused tests, format, lint, type-check, test, build, release validation | passed |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- _Pending implementation._
+- A self-contained, greppable artifact hygiene contract across canonical implementer/reviewer roles, six lifecycle skills, and gate-review prompt injection.
+- Planner-first formatter discovery with explicit write/fix preference, file-scoped execution, and runtime fallback behavior.
+- Effective dispatch-ladder preflight that distinguishes unresolved project policy from missing effective ladder cells.
+- Synchronized provider projections and a lockstep `0.1.61` public-package release, including generated bundled version metadata.
 
 **Verification performed:**
 
-- _Pending implementation._
+- Canonical skill validation and focused skill, gate-prompt, and public-package release tests.
+- Repository-wide format, lint, type-check, test, and build gates.
+- Source-CLI projection dry run and `pnpm release:validate` for all five public packages.
+- Independent zero-finding reviews for p01, p02, and p03.
 
 **Design deltas:**
 
-- _Pending implementation._
+- p03 used the repository source CLI after the PATH-installed CLI emitted stale `0.1.51` projection provenance.
+- The generated `packages/cli/assets/public-package-versions.json` asset was added to p03 ownership because release tooling requires it to match package manifests.
 
 ## References
 
