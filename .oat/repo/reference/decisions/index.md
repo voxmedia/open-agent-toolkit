@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260714-effective-ladders-precede      | 2026-07-14 | accepted | Effective ladders precede project ceilings                              | -      |
+| DR-260714-graceful-missing-formatter     | 2026-07-14 | accepted | Graceful missing-formatter behavior                                     | -      |
+| DR-260714-planner-first-formatter        | 2026-07-14 | accepted | Planner-first formatter resolution                                      | -      |
+| DR-260714-self-contained-contracts-at    | 2026-07-14 | accepted | Self-contained contracts at writing boundaries                          | -      |
+| DR-260714-tracked-artifacts-remain       | 2026-07-14 | accepted | Tracked artifacts remain formatted                                      | -      |
 | DR-260712-accepted-launches-are-not      | 2026-07-12 | accepted | Accepted launches are not silently replaced                             | -      |
 | DR-260712-generic-dispatch-remains       | 2026-07-12 | accepted | Generic dispatch remains separate from project lifecycle policy         | -      |
 | DR-260712-provider-mechanics-remain-load | 2026-07-12 | accepted | Provider mechanics remain load-one-only references                      | -      |
