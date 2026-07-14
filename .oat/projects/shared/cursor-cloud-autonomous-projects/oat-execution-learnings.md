@@ -66,3 +66,24 @@ is a task requirement.
 revision and recopy it into the environment repository. Add an authoring
 instruction or validation rule requiring literal matching for opaque provider
 model identifiers.
+
+## 2026-07-14T01:58:00Z - code-follow-up - Gate-inventory drift enforcement
+
+**Observation:** `.agents/docs/autonomy-contract.md`'s exhaustiveness claim is
+protected only by a recorded scan-baseline SHA and reviewer diligence. The p01
+review cycle already observed within-phase drift (37 new phrase-match lines
+after inventory authorship). No CI test asserts inventory coverage at HEAD, and
+no authoring guidance requires an inventory row when a lifecycle prompt
+changes.
+
+**Impact:** A future skill change adding an interactive prompt passes all
+existing checks while silently breaking the inventory's exhaustiveness — the
+lookup table autonomous runs depend on for prompt resolution.
+
+**Recommendation:** (1) Add a CLI contract test automating the p01-t01 scan:
+run the broadened-phrase rg scan across the 15 skill roots, parse the inventory
+table, fail on any unmapped prompt site (match file + gate ID, not line
+numbers). Precedent: existing prose-contract suites in
+`packages/cli/src/validation/skills.test.ts`. (2) Add authoring guidance to
+`create-oat-skill` and the contract doc: prompt changes require a same-commit
+inventory row change.
