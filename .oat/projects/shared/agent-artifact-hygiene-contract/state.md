@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 38b5c203111ac410802ce28decc4006e0169fa79
+oat_last_commit: e0d8fcfecafb4eca2a6612714ebc9db24db542e6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -33,7 +33,7 @@ oat_post_implement_sequence:
   status: pre_approval
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   post_approval: []
   post_approval_completed: []
@@ -45,7 +45,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:27.886Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-14T02:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-14T02:47:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -80,7 +80,8 @@ Implementation closeout - Final review passed; running configured pre-approval s
 - ✓ p03 provider projection and release validation passed
 - ✓ Implementation tasks complete
 - ✓ Final review passed
-- ⧗ Pre-approval closeout: summary, documentation, PR
+- ✓ Project summary generated
+- ⧗ Pre-approval closeout: documentation, PR
 
 ## Blockers
 
@@ -88,4 +89,4 @@ None
 
 ## Next Milestone
 
-Generate project summary
+Sync project documentation
