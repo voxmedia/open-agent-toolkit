@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Quick-start lifecycle gate timed out twice against codex-5-6-sol-max.
+  - Gate review revisions applied; clean plan re-review required.
 oat_last_updated: 2026-07-13
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -19,11 +19,11 @@ oat_generated: false
 
 | Phase                                  | Status  | Tasks | Completed |
 | -------------------------------------- | ------- | ----- | --------- |
-| p01 Canonical contracts                | pending | 2     | 0/2       |
+| p01 Canonical contracts                | pending | 3     | 0/3       |
 | p02 Gate-review prompt                 | pending | 1     | 0/1       |
 | p03 Provider projection/public release | pending | 1     | 0/1       |
 
-**Total:** 0/4 tasks completed
+**Total:** 0/5 tasks completed
 
 ## Phase 1: Canonical Planning and Runtime Contracts
 
@@ -36,6 +36,11 @@ oat_generated: false
 **Commit:** -
 
 ### Task p01-t02: Add the runtime artifact hygiene contract
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Harden effective dispatch-ladder preflight
 
 **Status:** pending
 **Commit:** -
@@ -78,6 +83,27 @@ _No implementation runs yet._
 - Project dispatch policy: High.
 - Phase gate review: disabled by operator.
 - Quick-start lifecycle gate blocked after two 900-second `review_failed` timeouts against `codex-5-6-sol-max` (run IDs `2157923e-4430-4fd6-844b-ace61cd38990` and `11832394-1aa6-4df9-a82f-3d73e50ef105`). Neither run produced findings, an artifact, or a receive-eligible handoff.
+- Operator-authorized `< /dev/null` recovery completed the gate and produced a corroborated blocking artifact review.
+
+### Review Received: plan
+
+**Date:** 2026-07-14
+**Review artifact:** `reviews/archived/artifact-plan-review-2026-07-14T002235Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
+
+**Artifact dispositions:**
+
+- I1: `resolve_in_artifact` — recorded the operator-approved scope expansion in discovery and split dispatch-ladder hardening into atomic task `p01-t03`.
+- I2: `resolve_in_artifact` — added a clean-baseline guard, unexpected-path rejection, and task-owned format/stage lists to `p03-t01`.
+- M1: `resolve_in_artifact` — required complete ninth-copy contract equivalence assertions in `p02-t01`.
+
+**Next:** Re-run the quick-start plan gate; no implementation tasks were created by this artifact review.
 
 ## Deviations from Plan / Design
 

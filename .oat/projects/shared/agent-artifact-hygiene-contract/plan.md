@@ -1,17 +1,18 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_status: in_progress
+oat_ready_for: null
+oat_blockers:
+  - Gate review revisions applied; clean re-review required.
 oat_last_updated: 2026-07-13
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p01', 'p02']]
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: false
+oat_template: true
 ---
 
 # Implementation Plan: agent-artifact-hygiene-contract
@@ -53,8 +54,7 @@ Phases `p01` and `p02` are one parallel group because their write sets are disjo
 1. Bump `oat-project-plan-writing` from `1.2.12` to `1.2.13`.
 2. Add the planner-first format-command procedure: use applicable repository instructions and relevant manifests, prefer fix/write over check-only, choose file-scoped invocation when supported, and bake the concrete command into every artifact-writing task.
 3. Keep runtime discovery explicitly fallback-only when a supplied command is absent or unusable; bake the exact warn-once/no-op text when planning cannot discover a command.
-4. Harden dispatch-ladder preflight to run `oat config list --json` once, validate effective provider/tier cells across config precedence, and never treat resolver `matrix: null` as ladder absence.
-5. Update the planning skill version assertion and add contract assertions for effective-config ladder checking and planner-first formatting.
+4. Update the planning skill version assertion and add contract assertions for planner-first formatting.
 
 **Format:**
 
@@ -72,7 +72,7 @@ Run:
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 ```
 
-Expected: skill contract/version tests pass, including the complete-user-ladder/no-project-policy regression.
+Expected: planner-first format-command contract and version tests pass.
 
 **Commit:**
 
@@ -135,6 +135,47 @@ git add .agents/agents/oat-phase-implementer.md .agents/agents/oat-reviewer.md .
 git commit -m "feat(p01-t02): require hygiene for artifact writers"
 ```
 
+---
+
+### Task p01-t03: Harden effective dispatch-ladder preflight
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Steps:**
+
+1. Run `oat config list --json` once and validate the effective provider/tier cells returned across shared, repo-local, user, and default precedence.
+2. Never infer ladder absence from `dispatch-ceiling resolve` returning `matrix: null`; that result can mean only that the project policy is unresolved.
+3. Offer adoption only when effective ladder cells are missing or incomplete. When ladders are complete, proceed directly to the separate project-ceiling choice.
+4. Add the complete-user-ladder/no-project-policy regression assertions to the skill contract test.
+
+**Format:**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write .agents/skills/oat-project-plan-writing/SKILL.md packages/cli/src/validation/skills.test.ts
+```
+
+**Verify:**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
+```
+
+Expected: effective user-level ladders skip adoption even when no project ceiling has been selected.
+
+**Commit:**
+
+```bash
+git add .agents/skills/oat-project-plan-writing/SKILL.md packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p01-t03): resolve effective dispatch ladders before adoption"
+```
+
 ## Phase 2: Gate-Review Prompt Enforcement
 
 ### Task p02-t01: Inject and test the gate-review hygiene contract
@@ -147,7 +188,7 @@ git commit -m "feat(p01-t02): require hygiene for artifact writers"
 **Steps:**
 
 1. Append the approved verbatim runtime contract to `REVIEW_GATE_CONTEXT_NOTE` without weakening its existing provenance and heading requirements.
-2. Extend representative gate-review prompt assertions to require both `Artifact hygiene contract:` and the exact fallback warning text.
+2. Extend representative gate-review prompt assertions to require the complete approved runtime block, using the same expected text as the eight canonical role/skill surface assertions.
 3. Keep the prompt repository-agnostic; do not name a formatter.
 
 **Format:**
@@ -168,7 +209,7 @@ pnpm --filter @open-agent-toolkit/cli lint
 pnpm --filter @open-agent-toolkit/cli type-check
 ```
 
-Expected: prompt assembly assertions, CLI lint, and CLI type-check pass.
+Expected: the ninth contract copy is fully equivalent to the canonical runtime block; prompt assembly assertions, CLI lint, and CLI type-check pass.
 
 **Commit:**
 
@@ -193,17 +234,28 @@ git commit -m "feat(p02-t01): enforce hygiene in gate review prompts"
 
 **Steps:**
 
-1. Run `oat sync --scope all`; do not hand-edit provider views.
-2. Bump all five public packages in lockstep from `0.1.60` to `0.1.61`. If a sibling project lands first, rebase and bump once from the new common version instead.
-3. Audit `Artifact hygiene contract:` across canonical and generated surfaces and confirm provider projections match canonical sources.
-4. Format only files changed by this task, then run focused and repository-wide validation.
+1. Require a clean worktree at task start; stop instead of absorbing inherited changes.
+2. Run `oat sync --scope all`; do not hand-edit provider views.
+3. Bump all five public packages in lockstep from `0.1.60` to `0.1.61`. If a sibling project lands first, rebase and bump once from the new common version instead.
+4. Build a task-owned path list from only sync-emitted provider files, the sync manifest when changed, and the five package manifests. Reject any changed path outside that allowlist before formatting or staging.
+5. Audit `Artifact hygiene contract:` across canonical and generated surfaces and confirm provider projections match canonical sources.
+6. Format and stage only the captured task-owned paths, then run focused and repository-wide validation.
 
 **Format:**
 
 Run after sync and version edits:
 
 ```bash
-git diff --name-only -z --diff-filter=ACM | xargs -0 pnpm exec oxfmt --write
+test -z "$(git status --porcelain)"
+oat sync --scope all
+# Apply the five lockstep package version edits, then:
+ALLOWED='^(\.claude/|\.cursor/|\.codex/|\.oat/sync/manifest\.json$|packages/(cli|control-plane|docs-config|docs-theme|docs-transforms)/package\.json$)'
+UNEXPECTED=$(git status --short | awk '{print $2}' | rg -v "$ALLOWED" || true)
+test -z "$UNEXPECTED"
+git diff --name-only --diff-filter=ACM -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-format-files
+git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-format-files
+sort -u -o /tmp/oat-p03-format-files /tmp/oat-p03-format-files
+test ! -s /tmp/oat-p03-format-files || xargs pnpm exec oxfmt --write < /tmp/oat-p03-format-files
 ```
 
 **Verify:**
@@ -226,21 +278,24 @@ Expected: canonical/provider contract coverage is complete, all workspace gates 
 **Commit:**
 
 ```bash
-git add .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git diff --name-only --diff-filter=ACMD -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json > /tmp/oat-p03-owned-files
+git ls-files --others --exclude-standard -- .claude .cursor .codex .oat/sync/manifest.json packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json >> /tmp/oat-p03-owned-files
+sort -u -o /tmp/oat-p03-owned-files /tmp/oat-p03-owned-files
+test ! -s /tmp/oat-p03-owned-files || xargs git add -- < /tmp/oat-p03-owned-files
 git commit -m "chore(p03-t01): sync and version hygiene contracts"
 ```
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T002235Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-14 | reviews/archived/artifact-plan-review-2026-07-14T002235Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -248,11 +303,11 @@ git commit -m "chore(p03-t01): sync and version hygiene contracts"
 
 **Summary:**
 
-- Phase 1: 2 tasks — planner-first resolution and self-contained canonical runtime contracts
+- Phase 1: 3 tasks — planner-first resolution, self-contained runtime contracts, and effective dispatch-ladder preflight
 - Phase 2: 1 task — CLI gate-review prompt enforcement and tests
 - Phase 3: 1 task — provider sync, lockstep release bump, and full validation
 
-**Total: 4 tasks**
+**Total: 5 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 

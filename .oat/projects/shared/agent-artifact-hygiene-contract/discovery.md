@@ -51,6 +51,7 @@ A grep of the whole `.agents/` tree for `pnpm format|oxfmt|format:fix` returns o
 1. **Contract over per-run briefs:** hygiene lives in role definitions and skill steps so it applies to every run without orchestrator intervention. (Operator evidence: the per-brief workaround worked but had to be re-added manually per dispatch.)
 2. **Repo-agnostic discovery:** the contract instructs discovering the format command, not naming one. Rationale: OAT ships to arbitrary repos.
 3. **Ignore-patterns rejected as a substitute (operator answer, 2026-07-13):** artifacts must actually be formatted. Project artifacts under `.oat/projects/shared/` are tracked, PR-reviewed content — carving them out creates a permanent unformatted zone inside the diff; and the reviews directory is only one instance of the class (summary/document/pr-final/receive also write tracked markdown outside `.oat/projects/`, where an ignore-pattern can't follow). Consuming repos may add ignore-patterns as local belt-and-suspenders, but the upstream fix is the role contract.
+4. **Post-discovery scope expansion (operator answer, 2026-07-13):** also harden the shared plan-writing dispatch preflight so it queries `oat config list --json` as the effective shared/local/user config boundary before offering dispatch-ladder adoption. A resolver result with `matrix: null` is not evidence that ladders are absent. This is implemented as a separate atomic plan task from artifact-format command resolution.
 
 ## Constraints
 
