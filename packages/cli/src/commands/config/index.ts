@@ -24,6 +24,9 @@ import {
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
+  MAX_GATE_TIMEOUT_MS,
+  MIN_GATE_TIMEOUT_MS,
+  isValidGateTimeoutMs,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -123,6 +126,8 @@ type ConfigKey =
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
   | WorkflowDispatchProviderConfigKey
+  | 'workflow.gateTimeouts.code'
+  | 'workflow.gateTimeouts.artifact'
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
@@ -225,6 +230,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.dispatchCeiling.preset',
   'workflow.dispatchCeiling.providers.codex',
   'workflow.dispatchCeiling.providers.claude',
+  'workflow.gateTimeouts.code',
+  'workflow.gateTimeouts.artifact',
   'worktrees.root',
 ];
 
@@ -1004,7 +1011,7 @@ function parseBooleanValue(key: ConfigKey, rawValue: string): boolean {
 function parseWorkflowValue(
   key: ConfigKey,
   rawValue: string,
-): boolean | string | WorkflowPostImplementSequence {
+): boolean | number | string | WorkflowPostImplementSequence {
   if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
     return parseBooleanValue(key, rawValue);
   }
@@ -1028,6 +1035,19 @@ function parseWorkflowValue(
       }
       return sequence;
     }
+  }
+
+  if (
+    key === 'workflow.gateTimeouts.code' ||
+    key === 'workflow.gateTimeouts.artifact'
+  ) {
+    const value = Number(rawValue);
+    if (!isValidGateTimeoutMs(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected an integer between ${MIN_GATE_TIMEOUT_MS} and ${MAX_GATE_TIMEOUT_MS}`,
+      );
+    }
+    return value;
   }
 
   const allowed =
@@ -1208,7 +1228,7 @@ function toAvailabilityRef(
 function applyWorkflowValue(
   workflow: OatWorkflowConfig,
   key: ConfigKey,
-  value: boolean | string | WorkflowPostImplementSequence,
+  value: boolean | number | string | WorkflowPostImplementSequence,
 ): OatWorkflowConfig {
   const subKey = key.slice('workflow.'.length);
 
@@ -1216,6 +1236,19 @@ function applyWorkflowValue(
     return {
       ...workflow,
       postImplementSequence: value as WorkflowPostImplementSequence,
+    };
+  }
+
+  if (subKey.startsWith('gateTimeouts.')) {
+    const timeoutKey = subKey.slice('gateTimeouts.'.length) as
+      | 'code'
+      | 'artifact';
+    return {
+      ...workflow,
+      gateTimeouts: {
+        ...workflow.gateTimeouts,
+        [timeoutKey]: value as number,
+      },
     };
   }
 

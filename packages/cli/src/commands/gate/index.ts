@@ -17,6 +17,9 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   BUILTIN_EXEC_TARGETS,
+  MAX_GATE_TIMEOUT_MS,
+  MIN_GATE_TIMEOUT_MS,
+  isValidGateTimeoutMs,
   readOatConfig,
   readOatLocalConfig,
   readUserConfig,
@@ -118,6 +121,7 @@ interface TargetSetOptions {
   invocationModel?: string;
   invocationReasoningEffort?: string;
   priority?: string;
+  timeoutMs?: string;
   disable?: boolean;
   layer?: string;
 }
@@ -700,6 +704,16 @@ function parseNumericFlag(
   return parsed;
 }
 
+function parseGateTimeoutFlag(value: string, flag: string): number {
+  const parsed = Number(value);
+  if (!isValidGateTimeoutMs(parsed)) {
+    throw new Error(
+      `${flag} must be an integer between ${MIN_GATE_TIMEOUT_MS} and ${MAX_GATE_TIMEOUT_MS}.`,
+    );
+  }
+  return parsed;
+}
+
 function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
   const rawValue = env.OAT_GATE_EXEC_TIMEOUT_MS?.trim();
   if (!rawValue) {
@@ -805,6 +819,9 @@ function parseExecTargetConfig(
     baseCommand: parseArgvJson(baseCommandJson, '--base-command-json'),
     ...(options.priority !== undefined
       ? { priority: parseNumericFlag(options.priority, '--priority', 0) }
+      : {}),
+    ...(options.timeoutMs !== undefined
+      ? { timeoutMs: parseGateTimeoutFlag(options.timeoutMs, '--timeout-ms') }
       : {}),
     ...(options.invocationModel !== undefined ||
     options.invocationReasoningEffort !== undefined
@@ -3106,6 +3123,10 @@ export function createGateCommand(
       'Configured reasoning effort or provider-default',
     )
     .option('--priority <number>', 'Target priority, higher wins')
+    .option(
+      '--timeout-ms <milliseconds>',
+      `Target gate timeout in milliseconds (${MIN_GATE_TIMEOUT_MS}-${MAX_GATE_TIMEOUT_MS})`,
+    )
     .option('--disable', 'Disable this exec target in the selected layer')
     .option('--layer <layer>', 'Config layer to write: shared, local, or user')
     .action(

@@ -95,6 +95,17 @@ export type WorkflowManagedDispatchPolicy =
   | 'uncapped';
 export type GateOnFailure = 'block' | 'prompt' | 'warn';
 export type GateAvoid = 'same-family' | 'same-runtime' | 'none';
+export const MIN_GATE_TIMEOUT_MS = 1_000;
+export const MAX_GATE_TIMEOUT_MS = 14_400_000;
+
+export function isValidGateTimeoutMs(value: unknown): value is number {
+  return (
+    typeof value === 'number' &&
+    Number.isInteger(value) &&
+    value >= MIN_GATE_TIMEOUT_MS &&
+    value <= MAX_GATE_TIMEOUT_MS
+  );
+}
 
 export interface WorkflowDispatchCeiling {
   preset?: WorkflowDispatchCeilingPreset;
@@ -132,6 +143,7 @@ export interface ExecTarget {
   hostDetectionCommand?: string[];
   availabilityCommand?: string[];
   priority: number;
+  timeoutMs?: number;
 }
 
 export type ExecTargetConfig = Partial<ExecTarget>;
@@ -139,6 +151,11 @@ export type ExecTargetConfig = Partial<ExecTarget>;
 export interface WorkflowGatesConfig {
   execTargets?: Record<string, ExecTargetConfig | null>;
   skills?: Record<string, GateConfig | null>;
+}
+
+export interface WorkflowGateTimeouts {
+  code?: number;
+  artifact?: number;
 }
 
 export interface OatWorkflowConfig {
@@ -153,6 +170,7 @@ export interface OatWorkflowConfig {
   designMode?: WorkflowDesignMode;
   dispatchPolicy?: WorkflowDispatchPolicy;
   dispatchCeiling?: WorkflowDispatchCeiling;
+  gateTimeouts?: WorkflowGateTimeouts;
   gates?: WorkflowGatesConfig;
 }
 
@@ -423,6 +441,9 @@ function normalizeExecTarget(
       target.priority = value.priority;
     }
   }
+  if (isValidGateTimeoutMs(value.timeoutMs)) {
+    target.timeoutMs = value.timeoutMs;
+  }
 
   const hostDetectionCommand = normalizeArgv(value.hostDetectionCommand);
   if (hostDetectionCommand !== undefined) {
@@ -595,6 +616,19 @@ function normalizeWorkflowConfig(
 
     if (Object.keys(dispatchCeiling).length > 0) {
       next.dispatchCeiling = dispatchCeiling;
+    }
+  }
+
+  if (isRecord(parsed.gateTimeouts)) {
+    const gateTimeouts: WorkflowGateTimeouts = {};
+    if (isValidGateTimeoutMs(parsed.gateTimeouts.code)) {
+      gateTimeouts.code = parsed.gateTimeouts.code;
+    }
+    if (isValidGateTimeoutMs(parsed.gateTimeouts.artifact)) {
+      gateTimeouts.artifact = parsed.gateTimeouts.artifact;
+    }
+    if (Object.keys(gateTimeouts).length > 0) {
+      next.gateTimeouts = gateTimeouts;
     }
   }
 

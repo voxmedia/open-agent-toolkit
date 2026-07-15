@@ -881,6 +881,8 @@ describe('oat gate', () => {
       'provider-default',
       '--priority',
       '50',
+      '--timeout-ms',
+      '120000',
     ]);
     await runGateCommand(root, home, [
       'target',
@@ -912,6 +914,7 @@ describe('oat gate', () => {
         reasoningEffort: 'provider-default',
       },
       priority: 50,
+      timeoutMs: 120_000,
     });
     expect(targets['cursor-composer']?.baseCommand).toEqual([
       'cursor-agent',
@@ -928,6 +931,30 @@ describe('oat gate', () => {
       'high',
     ]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects out-of-bounds and fractional target timeout values', async () => {
+    const { root, home } = await setup();
+    for (const value of ['999', '14400001', '1000.5']) {
+      const capture = await runGateCommand(root, home, [
+        'target',
+        'set',
+        'invalid-timeout',
+        '--runtime',
+        'custom',
+        '--base-command-json',
+        '["custom"]',
+        '--timeout-ms',
+        value,
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining(
+          '--timeout-ms must be an integer between 1000 and 14400000',
+        ),
+      });
+      expect(process.exitCode).toBe(1);
+    }
   });
 
   it('preserves existing priority and invocation fields when target set omits flags', async () => {

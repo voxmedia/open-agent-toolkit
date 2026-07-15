@@ -1167,6 +1167,40 @@ describe('oat config', () => {
       });
     });
 
+    it('sets and gets bounded workflow gate timeout keys', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const setHarness = createHarness({ cwd: root, home });
+      await runCommand(setHarness.command, [
+        'set',
+        'workflow.gateTimeouts.code',
+        '1800000',
+        '--shared',
+      ]);
+
+      const getHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        getHarness.command,
+        ['get', 'workflow.gateTimeouts.code'],
+        ['--json'],
+      );
+      expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: '1800000',
+        source: 'shared',
+      });
+
+      const invalidHarness = createHarness({ cwd: root, home });
+      await runCommand(invalidHarness.command, [
+        'set',
+        'workflow.gateTimeouts.artifact',
+        '999',
+      ]);
+      expect(invalidHarness.capture.error[0]).toContain(
+        'integer between 1000 and 14400000',
+      );
+    });
+
     it('sets workflow.dispatchCeiling.providers.codex at shared level (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const home = await createHome();

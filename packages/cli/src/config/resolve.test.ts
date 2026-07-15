@@ -1340,6 +1340,39 @@ describe('resolveGate', () => {
 });
 
 describe('resolveExecTargets', () => {
+  it('merges timeoutMs through exec target layers', () => {
+    const effective = createResolvedConfig({
+      user: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 60_000 } },
+          },
+        },
+      },
+      shared: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 120_000 } },
+          },
+        },
+      },
+      local: {
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 180_000 } },
+          },
+        },
+      },
+    });
+
+    expect(resolveExecTargets(effective)['codex-default'].timeoutMs).toBe(
+      180_000,
+    );
+  });
+
   it('includes built-in exec targets by default', () => {
     expect(resolveExecTargets(createResolvedConfig())).toEqual(
       BUILTIN_EXEC_TARGETS,
