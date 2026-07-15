@@ -44,13 +44,18 @@ export async function scanUnprocessedReviews(
 }
 
 function extractReviewsSection(planContent: string): string | null {
-  const startIndex = planContent.indexOf(REVIEWS_HEADING);
-  if (startIndex === -1) {
+  const reviewsHeading = new RegExp(
+    `^${REVIEWS_HEADING}[ \\t]*\\r?$`,
+    'm',
+  ).exec(planContent);
+  if (!reviewsHeading) {
     return null;
   }
 
-  const remaining = planContent.slice(startIndex + REVIEWS_HEADING.length);
-  const nextHeadingIndex = remaining.search(/\n## /);
+  const remaining = planContent.slice(
+    reviewsHeading.index + reviewsHeading[0].length,
+  );
+  const nextHeadingIndex = remaining.search(/^##(?!#)[ \t]+\S.*\r?$/m);
   if (nextHeadingIndex === -1) {
     return remaining.trim();
   }

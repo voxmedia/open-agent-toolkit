@@ -17,15 +17,15 @@ export function projectNeedsStateFile(fileNames: Iterable<string>): boolean {
 }
 
 export function projectPlanMarksComplete(planContent: string): boolean {
-  const reviewsHeadingIndex = planContent.indexOf('## Reviews');
-  if (reviewsHeadingIndex === -1) {
+  const reviewsHeading = /^## Reviews[ \t]*\r?$/m.exec(planContent);
+  if (!reviewsHeading) {
     return false;
   }
 
   const afterHeading = planContent.slice(
-    reviewsHeadingIndex + '## Reviews'.length,
+    reviewsHeading.index + reviewsHeading[0].length,
   );
-  const nextSectionIndex = afterHeading.search(/\n## /);
+  const nextSectionIndex = afterHeading.search(/^##(?!#)[ \t]+\S.*\r?$/m);
   const reviewsSection =
     nextSectionIndex === -1
       ? afterHeading

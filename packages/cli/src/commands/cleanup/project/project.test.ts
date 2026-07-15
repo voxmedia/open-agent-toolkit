@@ -106,6 +106,27 @@ async function runProjectCommand(
 }
 
 describe('projectPlanMarksComplete', () => {
+  it('ignores inline and code-formatted Reviews references before the ledger', () => {
+    const planContent = [
+      '## Phase 1: Example',
+      '',
+      'Reader guidance mentions `## Reviews` inline.',
+      '',
+      '## Reviews',
+      '',
+      '| Scope | Type | Status   | Date       | Artifact                    |',
+      '| ----- | ---- | -------- | ---------- | --------------------------- |',
+      '| final | code | received | 2026-07-13 | reviews/final-root.md       |',
+      '| final | code | passed   | 2026-07-14 | reviews/final-gate-v2.md    |',
+      '',
+      '## Implementation Complete',
+      '',
+      '| final | code | received | 2026-07-15 | reviews/not-the-ledger.md   |',
+    ].join('\n');
+
+    expect(projectPlanMarksComplete(planContent)).toBe(true);
+  });
+
   it('is incomplete when a received final event follows a passed event', () => {
     const planContent = [
       '## Reviews',

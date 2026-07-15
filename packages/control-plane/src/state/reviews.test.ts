@@ -85,6 +85,36 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('parses only the exact Reviews heading through the next level-two section', () => {
+    const planContent = [
+      '## Phase 1: Example',
+      '',
+      'Reader guidance mentions `## Reviews` inline.',
+      '',
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date       | Artifact                  |',
+      '| ----- | ---- | ------ | ---------- | ------------------------- |',
+      '| p01   | code | passed | 2026-07-13 | reviews/p01-review.md     |',
+      '| final | code | passed | 2026-07-14 | reviews/final-review.md   |',
+      '',
+      '## Implementation Complete',
+      '',
+      '| final | code | received | 2026-07-15 | reviews/not-ledger.md |',
+    ].join('\n');
+
+    const reviews = parseReviewTable(planContent);
+
+    expect(reviews).toHaveLength(2);
+    expect(reviews.at(-1)).toEqual({
+      scope: 'final',
+      type: 'code',
+      status: 'passed',
+      date: '2026-07-14',
+      artifact: 'reviews/final-review.md',
+    });
+  });
+
   it('returns an empty array when the plan has no reviews section', () => {
     expect(parseReviewTable('# Plan\n\n## Phase 1: Example\n')).toEqual([]);
   });
