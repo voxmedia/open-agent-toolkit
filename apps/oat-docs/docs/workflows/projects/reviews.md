@@ -89,6 +89,23 @@ Status progression in `plan.md` Reviews table:
 - `fixes_completed`
 - `passed`
 
+Each row is an append-ordered review event. Duplicate scope and type rows are
+valid because separate reviews can cover the same subject. Scope, type, and the
+artifact filename identify an event:
+
+- The first event for a scope and type may claim an unbound `pending` row whose
+  artifact is `-`.
+- A review with a distinct artifact filename appends a new row instead of
+  overwriting an earlier bound event.
+- Later bookkeeping updates match the event by scope, type, and artifact
+  filename. Moving an artifact into `reviews/archived/` preserves that identity.
+- An event advances through the status progression monotonically and never
+  moves backward. A later event can begin at `received` without changing an
+  earlier event that already reached `passed`.
+
+Readers that need current lifecycle state use the latest appended event matching
+the relevant scope and type.
+
 ## Current policy
 
 - Critical/Important: address before pass.
