@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.8
+version: 1.0.9
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -282,22 +282,34 @@ Run the Review Safety Check (Step 4 above). If unprocessed reviews exist:
 
 **5.3: Final code review not passed**
 
-Parse the plan.md Reviews table and select the latest appended event with
-`Scope="final"` and `Type="code"`:
+Extract only the exact level-two `## Reviews` ledger, stopping before the next
+level-two heading, then select its latest appended event with `Scope="final"`
+and `Type="code"`:
 
-- If no such row exists, OR row exists with `Status="pending"`:
+```bash
+REVIEWS_SECTION=$(awk '
+  /^## Reviews[[:space:]]*$/ { in_reviews = 1; next }
+  in_reviews && /^##[[:space:]]/ { exit }
+  in_reviews { print }
+' "$PROJECT_PATH/plan.md" 2>/dev/null)
+FINAL_ROW=$(printf '%s\n' "$REVIEWS_SECTION" | grep -E "^\\|\\s*final\\s*\\|\\s*code\\s*\\|" | tail -1 || true)
+```
+
+Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
+
+- If `FINAL_ROW` is empty, OR it has `Status="pending"`:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Implementation complete — triggering final code review"
 
-- If row exists with `Status="fixes_completed"`:
+- If `FINAL_ROW` has `Status="fixes_completed"`:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Review fixes implemented — triggering re-review"
 
-- If row exists with other non-passed status (e.g., `"received"`, `"fixes_added"`) and Step 5.2 did not find an active top-level review artifact:
+- If `FINAL_ROW` has another non-passed status (e.g., `"received"`, `"fixes_added"`) and Step 5.2 did not find an active top-level review artifact:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Final review is not passed and no active review artifact exists — rerunning final review"
 
-- If row exists with `Status="passed"`:
+- If `FINAL_ROW` has `Status="passed"`:
   → Continue to 5.4
 
 **5.4: Summary not done**

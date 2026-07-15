@@ -1986,9 +1986,9 @@ describe('validateOatSkills', () => {
       ['oat-project-review-receive-remote', '1.4.2'],
       ['oat-project-implement', '2.1.2'],
       ['oat-project-pr-final', '1.5.3'],
-      ['oat-project-pr-progress', '1.2.2'],
+      ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.2'],
-      ['oat-project-next', '1.0.8'],
+      ['oat-project-next', '1.0.9'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2105,6 +2105,7 @@ describe('validateOatSkills', () => {
       ['completion', '.agents/skills/oat-project-complete/SKILL.md'],
       ['final PR', '.agents/skills/oat-project-pr-final/SKILL.md'],
       ['implementation closeout', implementSkillPath],
+      ['next-step routing', '.agents/skills/oat-project-next/SKILL.md'],
     ] as const) {
       const content = await readRepoFile(path);
       expect(content, `${name} Reviews start`).toContain(
@@ -2117,6 +2118,19 @@ describe('validateOatSkills', () => {
         /reviews_section[\s\S]{0,500}final[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
       );
     }
+
+    const progressPr = await readRepoFile(
+      '.agents/skills/oat-project-pr-progress/SKILL.md',
+    );
+    expect(progressPr, 'progress PR Reviews start').toContain(
+      '/^## Reviews[[:space:]]*$/',
+    );
+    expect(progressPr, 'progress PR next level-two stop').toContain(
+      'in_reviews && /^##[[:space:]]/ { exit }',
+    );
+    expect(progressPr, 'progress PR latest ledger event').toMatch(
+      /reviews_section[\s\S]{0,500}phase[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
+    );
   });
 
   it('resolves collision-free archive identity before receive mutations', async () => {
@@ -2862,7 +2876,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.8');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
