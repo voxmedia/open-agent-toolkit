@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-14
+oat_last_updated: 2026-07-15
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [['p01', 'p02']]
@@ -166,6 +166,76 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Commit:** `chore(p03-t01): validate release assets and versions`
 
+## Phase 4: Final Review Fixes
+
+### Task p04-t01: (review) Keep active project reviews actionable
+
+**Files:** `packages/cli/src/commands/review/latest.ts`, `packages/cli/src/commands/review/__tests__/latest.test.ts`, `.agents/skills/oat-project-review-receive/SKILL.md`, `packages/cli/src/validation/skills.test.ts`
+
+**Implement:**
+
+1. Add regression coverage with an older active project artifact and a newer archived artifact while preserving the existing all-history latest-review behavior for other callers.
+2. Add an explicit active/actionable project-review resolution path and make local project review-receive use it before rejecting historical results.
+3. Keep exact-candidate receive handoffs and ad-hoc review discovery unchanged.
+4. Bump `oat-project-review-receive` once for all p04 changes in this PR.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/review/latest.ts packages/cli/src/commands/review/__tests__/latest.test.ts .agents/skills/oat-project-review-receive/SKILL.md packages/cli/src/validation/skills.test.ts`
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/__tests__/latest.test.ts src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli type-check`
+
+**Commit:** `fix(p04-t01): keep active project reviews actionable`
+
+### Task p04-t02: (review) Scope final-state readers to the Reviews ledger
+
+**Files:** `.agents/skills/oat-project-complete/SKILL.md`, `.agents/skills/oat-project-pr-final/SKILL.md`, `.agents/skills/oat-project-implement/references/completion-and-closeout.md`, `packages/cli/src/validation/skills.test.ts`
+
+**Implement:**
+
+1. Add fixtures where a later non-ledger `final | code` example conflicts with the latest event in `## Reviews`.
+2. Make completion, final-PR, and implementation-closeout readers extract `## Reviews` through the next level-two heading before selecting the last final code event.
+3. Assert all three readers honor the ledger event and preserve append-ordered status semantics.
+4. Bump each changed canonical skill once for this PR.
+
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-pr-final/SKILL.md .agents/skills/oat-project-implement/references/completion-and-closeout.md packages/cli/src/validation/skills.test.ts`
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+**Commit:** `fix(p04-t02): confine final status reads to reviews`
+
+### Task p04-t03: (review) Resolve archive identity before writing references
+
+**Files:** `.agents/skills/oat-project-review-receive/SKILL.md`, `packages/cli/src/validation/skills.test.ts`
+
+**Implement:**
+
+1. Add a validation fixture for an already-occupied archive destination.
+2. Resolve the collision-free destination and final basename before mutating plan, implementation, or review-event references.
+3. Use that same basename for event identity, written references, the archive move, and the final summary in both code- and artifact-review paths.
+4. Reuse the single PR-scoped `oat-project-review-receive` version bump from p04-t01.
+
+**Format:** `pnpm exec oxfmt --write .agents/skills/oat-project-review-receive/SKILL.md packages/cli/src/validation/skills.test.ts`
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills`
+
+**Commit:** `fix(p04-t03): preserve archive event identity`
+
+### Task p04-t04: (review) Synchronize and validate review-fix release assets
+
+**Files:** five public `packages/*/package.json` manifests; `packages/cli/assets/public-package-versions.json`; sync-managed provider views and `.oat/sync/manifest.json`
+
+**Implement:**
+
+1. Bump the five lockstep public packages together for the shipped CLI and bundled skill changes.
+2. Regenerate bundled public-package metadata and run `pnpm run cli -- sync --scope all`.
+3. Verify canonical skill versions, provider views, and release metadata include all p04 changes.
+4. Run the publishable-package release validation required by repository policy.
+
+**Format:** `pnpm format:fix`
+
+**Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate`
+
+**Commit:** `chore(p04-t04): validate review-fix release assets`
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
@@ -181,7 +251,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 | p01    | code     | passed          | 2026-07-14 | reviews/archived/p01-review-2026-07-14T230713Z.md           |
 | p02    | code     | passed          | 2026-07-14 | reviews/archived/p02-review-2026-07-14T231735Z.md           |
 | final  | code     | received        | 2026-07-15 | reviews/final-review-2026-07-15T004643Z.md                  |
-| final  | code     | received        | 2026-07-15 | reviews/final-review-2026-07-15T010249Z.md                  |
+| final  | code     | fixes_added     | 2026-07-15 | reviews/archived/final-review-2026-07-15T010249Z.md         |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -190,8 +260,9 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 - Phase 1: 4 tasks — lifecycle and skill contracts
 - Phase 2: 2 tasks — gate recovery and docs
 - Phase 3: 1 task — sync and release validation
+- Phase 4: 4 tasks — final gate review fixes and release validation
 
-**Total: 7 tasks**
+**Total: 11 tasks**
 
 ## References
 

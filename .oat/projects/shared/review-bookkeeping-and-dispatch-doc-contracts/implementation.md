@@ -1,16 +1,16 @@
 ---
-oat_status: complete
-oat_ready_for: null
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-14
-oat_current_task_id: null
+oat_last_updated: 2026-07-15
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
 # Implementation: review-bookkeeping-and-dispatch-doc-contracts
 
 **Started:** 2026-07-13
-**Last Updated:** 2026-07-14
+**Last Updated:** 2026-07-15
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,13 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 4     | 4/4       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 1     | 1/1       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 4     | 4/4       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | completed   | 1     | 1/1       |
+| Phase 4 | in_progress | 4     | 0/4       |
 
-**Total:** 7/7 tasks completed
+**Total:** 7/11 tasks completed
 
 ---
 
@@ -102,6 +103,33 @@ oat_generated: false
 
 ---
 
+## Phase 4: Final Review Fixes
+
+**Status:** in_progress
+**Started:** 2026-07-15
+
+### Task p04-t01: (review) Keep active project reviews actionable
+
+**Status:** pending
+
+### Task p04-t02: (review) Scope final-state readers to the Reviews ledger
+
+**Status:** pending
+
+### Task p04-t03: (review) Resolve archive identity before writing references
+
+**Status:** pending
+
+### Task p04-t04: (review) Synchronize and validate review-fix release assets
+
+**Status:** pending
+
+**Phase outcome:** Pending.
+
+**Verification:** Pending.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -160,7 +188,7 @@ Chronological log of implementation progress.
 - [x] Closeout PR — `dfe6a87b`, `3b0ec5c8`; opened https://github.com/voxmedia/open-agent-toolkit/pull/151
 - [x] Final p03 HiLL approval — approved by the user after passing final review and pre-approval closeout
 - [x] Configured closeout sequence — summary, documentation, and PR completed; no post-approval steps
-- [ ] Terminal implementation gate — first attempt produced a clean gate artifact but timed out under global OAT `0.1.65` before a structured handoff; artifact not received, bounded retry pending with branch OAT `0.1.66`
+- [ ] Terminal implementation gate — blocking retry artifact received; four bounded review-fix tasks queued from gate run `1e691726-06a4-4258-a5a8-6560e427a087`
 
 **Decisions:**
 
@@ -199,6 +227,31 @@ Chronological log of implementation progress.
 
 **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor  
 **Disposition:** Passed; proceed to final HiLL closeout.
+
+### Review Received: final gate `1e691726-06a4-4258-a5a8-6560e427a087`
+
+**Date:** 2026-07-15
+**Review artifact:** `reviews/archived/final-review-2026-07-15T010249Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p04-t01`, `p04-t02`, `p04-t03`, `p04-t04`
+
+**Finding disposition map:**
+
+- `I1` → `p04-t01`: add active/actionable project review resolution while preserving all-history latest behavior.
+- `I2` → `p04-t02`: restrict final-state selection to the `## Reviews` ledger.
+- `M1` → `p04-t03`: resolve collision-free archive identity before writing references.
+- `p04-t04`: shared sync and release validation required by the shipped CLI and skill changes.
+
+**Design drift / artifact alignment notes:** None; all findings require implementation or contract fixes.
+
+**Next:** Execute review-fix tasks via `oat-project-implement`, starting with `p04-t01`. After completion, update this artifact-identified review event to `fixes_completed`, then re-run final review and receive it to reach `passed`.
 
 ---
 
