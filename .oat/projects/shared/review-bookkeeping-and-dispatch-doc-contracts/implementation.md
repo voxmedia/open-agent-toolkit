@@ -191,7 +191,7 @@ Chronological log of implementation progress.
 ### Review Received: final
 
 **Date:** 2026-07-15  
-**Review artifact:** `reviews/final-review-2026-07-15T000317Z.md`
+**Review artifact:** `reviews/archived/final-review-2026-07-15T000317Z.md`
 
 **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor  
 **Disposition:** Passed; proceed to final HiLL closeout.
