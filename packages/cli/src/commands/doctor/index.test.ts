@@ -27,6 +27,7 @@ interface HarnessOptions {
   scope?: Scope;
   pathExists?: Record<string, boolean>;
   fileContents?: Record<string, string>;
+  staleInvocationCheck?: DoctorCheck;
   loadManifestThrows?: boolean;
   symlinkSupported?: boolean;
   resolveAssetsRootThrows?: boolean;
@@ -87,6 +88,7 @@ function createHarness(options: HarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   checkSkillVersions: ReturnType<typeof vi.fn>;
+  checkStaleInvocations: ReturnType<typeof vi.fn>;
   runPjmDoctorChecks: ReturnType<typeof vi.fn>;
   validateMatrixCell: ReturnType<typeof vi.fn>;
 } {
@@ -127,6 +129,16 @@ function createHarness(options: HarnessOptions = {}): {
     },
   );
   const runPjmDoctorChecks = vi.fn(async () => options.pjmChecks ?? []);
+  const checkStaleInvocations = vi.fn(async () => {
+    return (
+      options.staleInvocationCheck ?? {
+        name: 'project:stale_invocations',
+        description: 'Known-stale CLI invocation grammar',
+        status: 'pass',
+        message: 'No known-stale CLI invocations found.',
+      }
+    );
+  });
   const validateMatrixCell = vi.fn(
     options.validateMatrixCell ??
       (async () => 'valid' satisfies MatrixCellAvailability),
@@ -221,6 +233,7 @@ function createHarness(options: HarnessOptions = {}): {
     }),
     checkSkillVersions,
     runPjmDoctorChecks,
+    checkStaleInvocations,
     validateMatrixCell,
     processEnv: {},
     ...validationOverrides,
@@ -230,6 +243,7 @@ function createHarness(options: HarnessOptions = {}): {
     capture,
     command,
     checkSkillVersions,
+    checkStaleInvocations,
     runPjmDoctorChecks,
     validateMatrixCell,
   };
@@ -312,6 +326,34 @@ describe('createDoctorCommand', () => {
 
     expect(capture.info[0]).toContain('providers');
     expect(capture.info[0]).toContain('claude@2.0.0');
+  });
+
+  it('warns with file and line evidence for stale project invocations', async () => {
+    const { command, capture } = createHarness({
+      staleInvocationCheck: {
+        name: 'project:stale_invocations',
+        description: 'Known-stale CLI invocation grammar',
+        status: 'warn',
+        message:
+          'Known-stale CLI invocation found at scripts/bootstrap.sh:7: oat --scope all sync',
+        fix: 'Replace it with `oat sync --scope all`.',
+      },
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('project:stale_invocations');
+    expect(capture.info[0]).toContain('scripts/bootstrap.sh:7');
+    expect(capture.info[0]).toContain('oat sync --scope all');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('does not run the project stale-invocation scan for user scope', async () => {
+    const { command, checkStaleInvocations } = createHarness({ scope: 'user' });
+
+    await runDoctor(command, { scope: 'user' });
+
+    expect(checkStaleInvocations).not.toHaveBeenCalled();
   });
 
   it('warns when outdated installed skills are detected', async () => {

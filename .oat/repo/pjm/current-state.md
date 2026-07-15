@@ -34,6 +34,13 @@ copying their content here. -->
   updates the exact CLI version and requires a shell-aware rerun. Daily
   best-effort checks and three-day same-version notice cadence are cached under
   `~/.oat`; automation and opted-out invocations remain silent.
+- CLI `0.1.65` hardens project scaffolding against unresolved OAT placeholders,
+  permits non-TDD plan task bodies when lifecycle invariants remain intact, and
+  improves operational workflows: targetless tool updates suggest the explicit
+  all-tools command, closed backlog items require real outcomes, decision
+  creation accepts every substantive section, `oat backlog new` owns atomic
+  item creation, project doctor detects known-stale command grammar, and
+  noninteractive gate targets start with closed stdin.
 - Gate reviews now declare and corroborate their project, bind an immutable
   configured invocation record to the review artifact, and fail closed on
   correlation or provenance mismatch.
@@ -61,6 +68,14 @@ copying their content here. -->
 - Config adoption and doctor share pass-scoped Cursor validation: each distinct
   candidate receives one Task probe and broad catalog retrieval is memoized for
   the command pass without treating catalog presence as eligibility evidence.
+- Artifact writers now share a self-contained hygiene contract: planning embeds
+  a repository-documented, file-scoped write/fix command when available, while
+  runtime roles, lifecycle skills, and gate-review prompts use bounded fallback
+  discovery and warn once without failing when no command can be found.
+- Plan authoring now checks merged effective dispatch ladders before offering
+  adoption and treats project ceiling selection as a separate decision; an
+  unresolved project matrix no longer implies that ladder configuration is
+  missing.
 - Cursor GPT-5.6 verification now has a strict structured evidence schema,
   exact Task correlation, control-gated candidate execution, and private-only
   raw identifiers. The current headless client exposed no Task events, so the

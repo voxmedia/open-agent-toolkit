@@ -84,13 +84,31 @@ function compareItems(a: BacklogIndexItem, b: BacklogIndexItem): number {
   return 0;
 }
 
+function encodeMarkdownTableCell(value: string): string {
+  return value
+    .replaceAll('&', '&amp;')
+    .replaceAll('\\', '\\\\')
+    .replaceAll('|', '\\|')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('\r', ' ')
+    .replaceAll('\n', ' ');
+}
+
 function renderManagedSection(items: BacklogIndexItem[]): string {
   const rows =
     items.length > 0
-      ? items.map(
-          (item) =>
-            `| ${item.id} | ${item.title} | ${item.status} | ${item.priority} | ${item.scope} | ${item.scopeEstimate} |`,
-        )
+      ? items.map((item) => {
+          const cells = [
+            item.id,
+            item.title,
+            item.status,
+            item.priority,
+            item.scope,
+            item.scopeEstimate,
+          ].map(encodeMarkdownTableCell);
+          return `| ${cells.join(' | ')} |`;
+        })
       : ['| _No backlog items yet_ | - | - | - | - | - |'];
 
   return [
@@ -100,6 +118,28 @@ function renderManagedSection(items: BacklogIndexItem[]): string {
     ...rows,
     INDEX_END,
   ].join('\n');
+}
+
+function findStandaloneMarker(
+  content: string,
+  marker: string,
+  fromIndex = 0,
+): number {
+  let lineStart = 0;
+  while (lineStart <= content.length) {
+    const lineEnd = content.indexOf('\n', lineStart);
+    const contentEnd = lineEnd === -1 ? content.length : lineEnd;
+    const rawLine = content.slice(lineStart, contentEnd);
+    const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine;
+    if (lineStart >= fromIndex && line === marker) {
+      return lineStart;
+    }
+    if (lineEnd === -1) {
+      break;
+    }
+    lineStart = lineEnd + 1;
+  }
+  return -1;
 }
 
 export interface RegenerateBacklogIndexResult {
@@ -139,8 +179,15 @@ export async function regenerateBacklogIndex(
   items.sort(compareItems);
 
   const content = await readFile(indexPath, 'utf8');
-  const startIndex = content.indexOf(INDEX_START);
-  const endIndex = content.indexOf(INDEX_END);
+  const startIndex = findStandaloneMarker(content, INDEX_START);
+  const endIndex =
+    startIndex === -1
+      ? -1
+      : findStandaloneMarker(
+          content,
+          INDEX_END,
+          startIndex + INDEX_START.length,
+        );
   if (startIndex === -1 || endIndex === -1) {
     throw new Error(
       `Managed backlog index markers missing in ${indexPath}. Expected the exact marker pair:\n${INDEX_START}\n${INDEX_END}\nRun \`oat backlog init\` if the backlog scaffold is missing, or restore those exact markers in \`backlog/index.md\` before rerunning \`oat backlog regenerate-index\`.`,

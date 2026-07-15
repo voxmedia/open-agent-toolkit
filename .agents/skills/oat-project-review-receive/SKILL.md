@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.6
+version: 1.5.7
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -69,6 +69,14 @@ When executing this skill, provide lightweight progress feedback so the user can
 - Updating implementation.md
 - Routing to oat-project-implement
 - For `artifact` reviews: updating reviewed artifact files directly after user confirmation
+
+## Artifact Hygiene
+
+Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+After formatting, run only repository checks relevant to the files changed;
+writing prose artifacts or review bookkeeping does not imply unrelated full
+test suites.
 
 ## Process
 

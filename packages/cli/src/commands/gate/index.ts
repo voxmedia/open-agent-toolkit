@@ -146,6 +146,7 @@ interface ProcessRunOptions {
   livenessIntervalMs?: number;
   onLiveness?: (snapshot: GateLivenessSnapshot) => void;
   purpose: 'host-detection' | 'availability' | 'execute';
+  stdin: 'ignore' | 'inherit';
   stdio: 'ignore' | 'inherit' | 'pipe';
   timeoutMs: number;
 }
@@ -318,8 +319,10 @@ const VALID_IDENTITY_PROVENANCES: readonly IdentityProvenance[] = [
   'inferred',
   'unknown',
 ];
-const REVIEW_GATE_CONTEXT_NOTE =
-  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.';
+const REVIEW_GATE_CONTEXT_NOTE = [
+  'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact. Write a canonical review artifact with `### Critical`, `### Important`, `### Medium`, and `### Minor` headings in that order, using `None` for empty sections.',
+  "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.",
+].join('\n\n');
 const GATE_CHECK_TIMEOUT_MS = 5_000;
 const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 const GATE_LIVENESS_INTERVAL_MS = 30_000;
@@ -508,7 +511,9 @@ async function runChildProcess(
       cwd: options.cwd,
       env: options.env,
       stdio:
-        options.stdio === 'pipe' ? ['inherit', 'pipe', 'pipe'] : options.stdio,
+        options.stdio === 'pipe'
+          ? [options.stdin, 'pipe', 'pipe']
+          : options.stdio,
     });
     const recordActivity = (): void => {
       lastActivityAt = Date.now();
@@ -1387,6 +1392,7 @@ async function checkArgv(
       cwd: context.cwd,
       env: dependencies.processEnv,
       purpose,
+      stdin: 'ignore',
       stdio: 'ignore',
       timeoutMs: GATE_CHECK_TIMEOUT_MS,
     });
@@ -1553,6 +1559,7 @@ async function executeTarget(
           }
         },
         purpose: 'execute',
+        stdin: 'ignore',
         stdio: 'pipe',
         timeoutMs,
       },

@@ -67,7 +67,7 @@ Autonomous run: (1) user invokes `oat-project-autonomous` with a goal or existin
 - **Responsibilities:** Define the activation signal (session-scoped); maintain the gate inventory — a table mapping every interactive prompt across lifecycle skills to `auto-resolve: <behavior>` or `boundary: <stop condition>`; specify provenance recording (what each auto-resolved gate writes into artifacts).
 - **Interface:** A documented contract section in OAT workflow docs plus per-skill prose amendments of the form "if autonomy is active → {behavior}". Activation via `OAT_AUTONOMOUS=1` (see API Design).
 - **Dependencies:** Existing `OAT_NON_INTERACTIVE` handling, `workflow.hillCheckpointDefault`, gate config (`workflow.gates.skills`).
-- **Design decisions:** Autonomy *implies* non-interactive but is stronger (adds chaining + boundary semantics); the policy layer therefore *sets* `OAT_NON_INTERACTIVE=1` and adds its own signal on top, so all existing non-interactive plumbing works unmodified. Gates the inventory classifies as boundaries (e.g., unresolved Critical findings) stop the run with a reported blocker rather than resolving silently.
+- **Design decisions:** Autonomy _implies_ non-interactive but is stronger (adds chaining + boundary semantics); the policy layer therefore _sets_ `OAT_NON_INTERACTIVE=1` and adds its own signal on top, so all existing non-interactive plumbing works unmodified. Gates the inventory classifies as boundaries (e.g., unresolved Critical findings) stop the run with a reported blocker rather than resolving silently.
 
 ### C2 — `oat-project-autonomous` (new OAT skill)
 
@@ -80,7 +80,7 @@ Autonomous run: (1) user invokes `oat-project-autonomous` with a goal or existin
 ### C3 — `oat-cursor-cloud-projects` (new OAT skill, harness layer)
 
 - **Purpose:** Orient any OAT work in Cursor Cloud environments.
-- **Responsibilities:** Deterministic cloud detection (env markers + `cursor-cloud` MCP); project-home resolution for multi-repo/single-repo workspaces; asset-precedence rule — user scope always wins for all asset classes (user tier is boot-time `@latest`; repo copies are never customized, only stale), with per-skill frontmatter semver comparison as verification rather than arbitration: user ≥ repo is the expected invariant, and a higher repo copy is an environment anomaly — the user copy remains the execution source; log the anomaly and flag the user tier for refresh before continuing when freshness is safety-critical (the comparison never switches the source); CLI availability check + install path; supply the **cloud-specific** review-dispatch context that C1/C2 reference abstractly — deterministic family identity from run metadata (`run-info` → `originalModelName`) and the **per-surface catalog rule** (each dispatch surface — Cursor Cloud native Task, IDE native, CLI subagent enum, CLI full model list — carries its own curated, differently-named subset; verified 2026-07-13: cloud native has `sol-xhigh` but not `sol-max`, the CLI subagent enum the reverse. Never assume cross-surface availability; snapshot the current surface's catalog at dispatch time, and note that CLI provisioning adds a differently-shaped surface so both routes together reach the union) — while deferring dispatch *mechanics* to `oat-dispatch-subagents/references/provider-cursor.md` rather than restating them; surface awareness of `oat-project-autonomous` and org-layer context skills.
+- **Responsibilities:** Deterministic cloud detection (env markers + `cursor-cloud` MCP); project-home resolution for multi-repo/single-repo workspaces; asset-precedence rule — user scope always wins for all asset classes (user tier is boot-time `@latest`; repo copies are never customized, only stale), with per-skill frontmatter semver comparison as verification rather than arbitration: user ≥ repo is the expected invariant, and a higher repo copy is an environment anomaly — the user copy remains the execution source; log the anomaly and flag the user tier for refresh before continuing when freshness is safety-critical (the comparison never switches the source); CLI availability check + install path; supply the **cloud-specific** review-dispatch context that C1/C2 reference abstractly — deterministic family identity from run metadata (`run-info` → `originalModelName`) and the **per-surface catalog rule** (each dispatch surface — Cursor Cloud native Task, IDE native, CLI subagent enum, CLI full model list — carries its own curated, differently-named subset; verified 2026-07-13: cloud native has `sol-xhigh` but not `sol-max`, the CLI subagent enum the reverse. Never assume cross-surface availability; snapshot the current surface's catalog at dispatch time, and note that CLI provisioning adds a differently-shaped surface so both routes together reach the union) — while deferring dispatch _mechanics_ to `oat-dispatch-subagents/references/provider-cursor.md` rather than restating them; surface awareness of `oat-project-autonomous` and org-layer context skills.
 - **Interface:** Auto-surfaced via description triggers ("OAT" + cloud context); also explicitly invocable.
 - **Dependencies:** `cursor-cloud` MCP (graceful without); env markers; installed user-scope skills.
 - **Design decisions:** Cursor-specific content is honest and contained here (NFR1 keeps it org-clean, not harness-clean); name is unique across all repos (collision-bug immunity).
@@ -133,7 +133,7 @@ Environment-variable pair: the policy sets `OAT_NON_INTERACTIVE=1` (existing sem
 
 ### Gate inventory entry (reference doc in `oat-project-autonomous`)
 
-`skill | prompt/gate | interactive behavior | autonomous resolution | classification (auto-resolve | boundary) | provenance note`. This table *is* FR1's acceptance surface.
+`skill | prompt/gate | interactive behavior | autonomous resolution | classification (auto-resolve | boundary) | provenance note`. This table _is_ FR1's acceptance surface.
 
 ### Plan frontmatter (existing keys, no schema change)
 
@@ -189,7 +189,7 @@ All credentials are Cloud Agents secrets injected as env vars: `CURSOR_API_KEY` 
 
 ### Authorization
 
-Autonomy widens *workflow* authority, not *destructive* authority: the FR1 inventory classifies destructive-change risks (data deletion, canonical generated sources, active API surfaces, force-push/history rewrites) as boundaries, never auto-resolves. Repository-policy approvals (protected branches/scopes) always stop the run. Commits and PRs follow existing branch-policy conventions; the orchestrator never merges.
+Autonomy widens _workflow_ authority, not _destructive_ authority: the FR1 inventory classifies destructive-change risks (data deletion, canonical generated sources, active API surfaces, force-push/history rewrites) as boundaries, never auto-resolves. Repository-policy approvals (protected branches/scopes) always stop the run. Commits and PRs follow existing branch-policy conventions; the orchestrator never merges.
 
 ### Data Protection
 
@@ -225,7 +225,7 @@ Autonomous runs multiply subagent dispatches (reviews per artifact phase, implem
 
 1. **Boundary stops (expected, clean).** Missing credentials without offline equivalent, product-judgment ambiguity, destructive-change risk, unresolved Critical review findings, repo-policy approvals. The orchestrator stops with a structured blocker report — what stopped, why it's a boundary, exact operator action — and leaves the project resumable (state committed and pushed).
 2. **Degradations (recorded, run continues).** Degradation is a **pre-launch route selection**, never a post-accept fallback: review dispatch selects the best available route from catalog evidence (gate CLI route → policy-resolved cross-family subagent → explicitly selected same-family route with recorded achieved independence level); external research (org tooling → checked-out sources, gap logged); gate execution (missing harness → next `availabilityCommand`-passing target). Accepted launches are terminal — post-accept failures follow the dispatch engine's recovery (bounded identical-payload retry, then blocked). Every degraded selection produces a dispatch-record entry plus a categorized learnings-log entry — degradations are visible, never silent.
-3. **Hard failures (abort with report).** The final blocking code review being unrunnable by *any* tier; `oat` CLI installation failure (never approximate artifacts manually — the anti-Bruno rule); unrecoverable git state.
+3. **Hard failures (abort with report).** The final blocking code review being unrunnable by _any_ tier; `oat` CLI installation failure (never approximate artifacts manually — the anti-Bruno rule); unrecoverable git state.
 4. **Stalls (defects, NFR3).** Any wait-on-input without a reported blocker is a bug in the FR1 inventory, not acceptable behavior; when detected (e.g., an unmapped prompt fires), the run treats it as a boundary stop and logs the inventory gap as a `candidate-skill-content` learning.
 
 ### Retry Logic
@@ -242,27 +242,27 @@ Skills route through their normal progress output; the learnings log is the dura
 
 ### Requirement-to-Test Mapping
 
-| ID | Verification | Key Scenarios |
-|---|---|---|
-| FR1 | manual | Gate-inventory walkthrough: every interactive prompt in every lifecycle skill has a row; autonomous dry run hits no unmapped prompt |
-| FR2 | e2e | Goal-to-PR run on a real repo; resume-and-run from a locally approved plan; boundary stop produces structured blocker report; restart resumes correctly |
-| FR3 | integration + manual | Each ladder tier exercised: gate CLI present, gate absent → cross-family subagent (family from run metadata), single family → logged degraded; provenance recorded per phase |
-| FR4 | manual | Configured gate fires at discover/design exit with block/prompt/warn honored; unconfigured → unchanged behavior |
-| FR5 | manual | Quick project's exit gate prompt demonstrably covers discovery + lightweight design + plan; legacy plan-only config still passes |
-| FR6 | manual | Autonomous run writes explicit `["<final-id>"]` + auto-review; same plan resumed interactively pauses at that checkpoint |
-| FR7 | e2e | Fresh multi-repo session: orientation surfaces on OAT mention, resolves project home, applies precedence rule; single-repo session ditto |
-| FR8 | e2e | Fresh-VM readiness check passes (CLI, packs, config resolution, harness auth); re-run idempotence |
-| FR9 | manual | Evidence-gathering with org layer present (uses it) and absent (logs gap, proceeds) |
-| FR10 | manual | Coverage check precedes reliance; unattached/unreachable/no-coverage fallbacks behave as specified |
-| FR11 | manual | Log exists post-run with dated, categorized entries incl. degradations and environment-limited checks |
-| FR12 | manual | Default run yields one PR; stack-requested plan carries Stacked PR Strategy; parallel groups list base-readiness |
-| FR13 | manual | Mode-choice rationale recorded framed as review density |
-| FR14 | integration | Summary generation with learnings file (section present, categorized) and without (inert); both summary entry paths |
-| NFR1 | manual | Bundle audit greps shipped assets for org identifiers — zero hits |
-| NFR2 | manual | Post-autonomous artifact inspection: no mode flags; local resume behaves interactively |
-| NFR3 | e2e | Autonomous runs monitored: zero input-waits without blocker reports |
-| NFR4 | integration | Simulated missing CLI/MCP/secret: documented fallback + log entry each |
-| NFR5 | e2e | Full validation pass in a single-repo cloud environment |
+| ID   | Verification         | Key Scenarios                                                                                                                                                                |
+| ---- | -------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| FR1  | manual               | Gate-inventory walkthrough: every interactive prompt in every lifecycle skill has a row; autonomous dry run hits no unmapped prompt                                          |
+| FR2  | e2e                  | Goal-to-PR run on a real repo; resume-and-run from a locally approved plan; boundary stop produces structured blocker report; restart resumes correctly                      |
+| FR3  | integration + manual | Each ladder tier exercised: gate CLI present, gate absent → cross-family subagent (family from run metadata), single family → logged degraded; provenance recorded per phase |
+| FR4  | manual               | Configured gate fires at discover/design exit with block/prompt/warn honored; unconfigured → unchanged behavior                                                              |
+| FR5  | manual               | Quick project's exit gate prompt demonstrably covers discovery + lightweight design + plan; legacy plan-only config still passes                                             |
+| FR6  | manual               | Autonomous run writes explicit `["<final-id>"]` + auto-review; same plan resumed interactively pauses at that checkpoint                                                     |
+| FR7  | e2e                  | Fresh multi-repo session: orientation surfaces on OAT mention, resolves project home, applies precedence rule; single-repo session ditto                                     |
+| FR8  | e2e                  | Fresh-VM readiness check passes (CLI, packs, config resolution, harness auth); re-run idempotence                                                                            |
+| FR9  | manual               | Evidence-gathering with org layer present (uses it) and absent (logs gap, proceeds)                                                                                          |
+| FR10 | manual               | Coverage check precedes reliance; unattached/unreachable/no-coverage fallbacks behave as specified                                                                           |
+| FR11 | manual               | Log exists post-run with dated, categorized entries incl. degradations and environment-limited checks                                                                        |
+| FR12 | manual               | Default run yields one PR; stack-requested plan carries Stacked PR Strategy; parallel groups list base-readiness                                                             |
+| FR13 | manual               | Mode-choice rationale recorded framed as review density                                                                                                                      |
+| FR14 | integration          | Summary generation with learnings file (section present, categorized) and without (inert); both summary entry paths                                                          |
+| NFR1 | manual               | Bundle audit greps shipped assets for org identifiers — zero hits                                                                                                            |
+| NFR2 | manual               | Post-autonomous artifact inspection: no mode flags; local resume behaves interactively                                                                                       |
+| NFR3 | e2e                  | Autonomous runs monitored: zero input-waits without blocker reports                                                                                                          |
+| NFR4 | integration          | Simulated missing CLI/MCP/secret: documented fallback + log entry each                                                                                                       |
+| NFR5 | e2e                  | Full validation pass in a single-repo cloud environment                                                                                                                      |
 
 ### Unit Tests
 
@@ -317,16 +317,16 @@ Phase boundaries each end committed and pushed; Phases 4–5 are cross-repo work
 
 ## Risks and Mitigation
 
-| Risk | Prob. | Impact | Mitigation | Contingency |
-|---|---|---|---|---|
-| Direct cloud auto-surfacing of user-scope skills (`~/.agents/skills/`) remains unverified after the 2026-07-13 probe | Medium | High | Probe confirmed OAT CLI discovery, but this run could not refresh or verify model auto-surfacing; absolute-path-primary loading was activated for dependent work | Continue canonical absolute-path reads; re-probe on a fresh Phase 4 VM and retain plugin distribution as a fallback channel |
-| Autonomy contract gap → unmapped prompt stalls an unattended run | Medium | High | FR1 exhaustive inventory; stall-as-defect handling logs the gap and stops cleanly | Inventory patch + rerun; learnings entry prevents recurrence |
-| Same-name skill collisions / drifted repo copies mislead agents | Med-High | Medium | Unique names for new skills; instruction-level precedence; path-based reads | Operator freshness automation (out of scope) shrinks drift over time |
-| Cross-family review unavailable (single family / no harness auth) | Low-Med | Medium | Layered ladder with explicit degraded logging; availability probes | Final review still blocking; provenance shows degradation for later re-review |
-| Regressions to interactive behavior from policy amendments across many skills | Medium | Medium | Strictly additive prose (inert without `OAT_AUTONOMOUS`); skill validation; interactive-path spot checks in Phase 1 verification | Per-skill revert is cheap (prose changes, semver-tracked) |
-| Model-spend overrun on long goal-to-PR runs | Medium | Low-Med | Existing dispatch ceiling/policy caps; provenance doubles as spend audit | Lower project `oat_dispatch_policy`; boundary-stop and resume under adjusted policy |
-| Undocumented platform behaviors we rely on change (team-MCP attachment, plugin skill loading, subagent model slugs) | Low-Med | Medium | Each dependency has a verified-today note + fallback in design; readiness check catches env-level breakage early | Re-verify on failure; escalate to Cursor; fall back per ladder |
-| Operator-dependency stalls (secrets, S3 grant, indexing, marketplace) | Medium | Low-Med | Operator Action Items checklist in discovery; phases sequenced so agent work never hard-blocks on them | Affected verification marked environment-limited; completed when operator items land |
+| Risk                                                                                                                 | Prob.    | Impact  | Mitigation                                                                                                                                                       | Contingency                                                                                                                 |
+| -------------------------------------------------------------------------------------------------------------------- | -------- | ------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- |
+| Direct cloud auto-surfacing of user-scope skills (`~/.agents/skills/`) remains unverified after the 2026-07-13 probe | Medium   | High    | Probe confirmed OAT CLI discovery, but this run could not refresh or verify model auto-surfacing; absolute-path-primary loading was activated for dependent work | Continue canonical absolute-path reads; re-probe on a fresh Phase 4 VM and retain plugin distribution as a fallback channel |
+| Autonomy contract gap → unmapped prompt stalls an unattended run                                                     | Medium   | High    | FR1 exhaustive inventory; stall-as-defect handling logs the gap and stops cleanly                                                                                | Inventory patch + rerun; learnings entry prevents recurrence                                                                |
+| Same-name skill collisions / drifted repo copies mislead agents                                                      | Med-High | Medium  | Unique names for new skills; instruction-level precedence; path-based reads                                                                                      | Operator freshness automation (out of scope) shrinks drift over time                                                        |
+| Cross-family review unavailable (single family / no harness auth)                                                    | Low-Med  | Medium  | Layered ladder with explicit degraded logging; availability probes                                                                                               | Final review still blocking; provenance shows degradation for later re-review                                               |
+| Regressions to interactive behavior from policy amendments across many skills                                        | Medium   | Medium  | Strictly additive prose (inert without `OAT_AUTONOMOUS`); skill validation; interactive-path spot checks in Phase 1 verification                                 | Per-skill revert is cheap (prose changes, semver-tracked)                                                                   |
+| Model-spend overrun on long goal-to-PR runs                                                                          | Medium   | Low-Med | Existing dispatch ceiling/policy caps; provenance doubles as spend audit                                                                                         | Lower project `oat_dispatch_policy`; boundary-stop and resume under adjusted policy                                         |
+| Undocumented platform behaviors we rely on change (team-MCP attachment, plugin skill loading, subagent model slugs)  | Low-Med  | Medium  | Each dependency has a verified-today note + fallback in design; readiness check catches env-level breakage early                                                 | Re-verify on failure; escalate to Cursor; fall back per ladder                                                              |
+| Operator-dependency stalls (secrets, S3 grant, indexing, marketplace)                                                | Medium   | Low-Med | Operator Action Items checklist in discovery; phases sequenced so agent work never hard-blocks on them                                                           | Affected verification marked environment-limited; completed when operator items land                                        |
 
 ## References
 

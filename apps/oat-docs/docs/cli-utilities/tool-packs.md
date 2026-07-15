@@ -171,6 +171,7 @@ Purpose:
 Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
+- With no target, exits without mutation and suggests the explicit bulk command `oat tools update --all`; invalid packs and conflicting targets keep their own targeted diagnostics
 - Compares installed versions against bundled versions and copies updated assets
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
 - Pack-targeted updates intentionally rewrite bundled template and script companions in place, even when the pack's installed skills are already current

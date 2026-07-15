@@ -451,7 +451,9 @@ By default the dispatcher:
 5. Applies `--avoid same-family`.
 6. Checks candidate availability in descending priority order, with target id as
    the tie-breaker.
-7. Runs the chosen `baseCommand` with the selected model and prompt appended.
+7. Runs the chosen `baseCommand` with the selected model and prompt appended. The
+   prompt is carried in argv, stdin is closed, and stdout/stderr remain captured
+   for diagnostics and liveness tracking.
 8. Exits with the child process status.
 
 Use `--target <id>` to pin one target and skip detection/avoidance:

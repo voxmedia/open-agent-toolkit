@@ -42,11 +42,11 @@ oat backlog archive BL-260705-example --wont-do --summary "superseded by BL-2607
 A single `oat backlog archive` run performs the whole close-out so its parts cannot drift apart:
 
 1. Sets the terminal `status` (`closed` by default, `wont_do` with `--wont-do`) and stamps `updated`.
-2. Appends a canonical newest-first entry to `completed.md`. `closed` items always get an entry (with a visible `TODO: summarize outcome` placeholder when `--summary` is omitted, so the gap stays visible); `wont_do` items get one only when you pass `--summary`.
+2. Validates and trims a nonblank `--summary` before mutating a `closed` item, then appends its canonical newest-first `completed.md` entry. `wont_do` items may omit the summary and get an entry only when one is provided.
 3. Moves `items/<id>.md` into `archived/` — with `git mv` inside a work tree, or a plain rename outside git.
 4. Regenerates the managed backlog index.
 
-The command is safe to re-run: an item already in `archived/` produces a no-op warning with no writes. An out-of-enum current status (for example a hand-set `done`) is a hard error that names the file, lists the valid statuses, and tells you how to recover. See the [command reference](config-and-local-state.md#oat-backlog-archive) for exit codes and the `--json` payload.
+The command is safe to re-run: an item already in `archived/` produces a no-op warning with no writes. A missing closed-item summary or an out-of-enum current status (for example a hand-set `done`) is a hard error before mutation and includes recovery guidance. See the [command reference](config-and-local-state.md#oat-backlog-archive) for exit codes and the `--json` payload.
 
 ## Catching lifecycle drift
 

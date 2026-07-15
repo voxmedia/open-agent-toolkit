@@ -35,6 +35,7 @@ interface HarnessOptions {
 interface ProcessCall {
   command: string;
   args: string[];
+  stdin: 'ignore' | 'inherit';
   livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit' | 'pipe';
@@ -56,6 +57,7 @@ type ProcessRunner = (
     livenessIntervalMs?: number;
     onLiveness?: (snapshot: LivenessSnapshot) => void;
     purpose: ProcessCall['purpose'];
+    stdin: ProcessCall['stdin'];
     stdio: ProcessCall['stdio'];
     timeoutMs: number;
   },
@@ -66,6 +68,9 @@ type ProcessCallInput = ProcessCall & {
 };
 
 let lastExecutePrompt = '';
+
+const EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT =
+  "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.";
 
 function createHarness(options: HarnessOptions): {
   capture: LoggerCapture;
@@ -184,6 +189,7 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      stdin: runOptions.stdin,
       livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
       stdio: runOptions.stdio,
@@ -226,6 +232,7 @@ function createProcessRunner(
         command,
         args: [...args],
         purpose: runOptions.purpose,
+        stdin: runOptions.stdin,
         stdio: runOptions.stdio,
         cwd: runOptions.cwd,
       });
@@ -1080,6 +1087,7 @@ describe('oat gate', () => {
       calls.push({
         command,
         args: [...args],
+        stdin: options.stdin,
         purpose: options.purpose,
         stdio: options.stdio,
         timeoutMs: options.timeoutMs,
@@ -1401,6 +1409,34 @@ describe('oat gate', () => {
       command: 'codex',
       args: ['exec', 'Run', 'review'],
       purpose: 'execute',
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('closes stdin while capturing target stdout and stderr', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        { elapsedMs: 30_000, hardBudgetMs: 900_000, idleMs: 2_000 },
+      ],
+    });
+
+    await runCrossProviderExec({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'same-family', 'Review', 'the', 'change'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'codex',
+      args: ['exec', 'Review', 'the', 'change'],
+      purpose: 'execute',
+      stdin: 'ignore',
+      stdio: 'pipe',
+      timeoutMs: 900_000,
+      livenessIntervalMs: 30_000,
     });
     expect(process.exitCode).toBe(0);
   });
@@ -3216,6 +3252,7 @@ describe('oat gate', () => {
       baseArgs: ['exec'],
       promptSnippets: [
         'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+        EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT,
         `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
         'Project resolution source: active-project.',
         'Review type: artifact.',
@@ -3472,6 +3509,7 @@ describe('oat gate', () => {
         baseArgs,
         promptSnippets: [
           'This review is gate-originated. If you run `oat-project-review-provide`, set `oat_review_invocation: gate` in the review artifact.',
+          EXPECTED_RUNTIME_ARTIFACT_HYGIENE_CONTRACT,
           `Resolved OAT project path: ${projectPath}. Run the review for this project path.`,
           'Review type: artifact.',
           'Review scope: plan.',

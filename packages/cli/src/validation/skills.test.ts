@@ -129,6 +129,18 @@ function getFrontmatterForTest(content: string): string {
   return content.match(/^---\n([\s\S]*?)\n---/)?.[1] ?? '';
 }
 
+const artifactHygieneContract =
+  "Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.";
+
+function extractArtifactHygieneContract(content: string): string {
+  const start = content.indexOf('Artifact hygiene contract:');
+  const end = content.indexOf('\n\n', start);
+  return content
+    .slice(start, end === -1 ? undefined : end)
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
 describe('validateOatSkills', () => {
   const tempDirs: string[] = [];
 
@@ -878,7 +890,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.0',
+        version: '2.3.1',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1376,7 +1388,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.15');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.16');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1465,7 +1477,7 @@ describe('validateOatSkills', () => {
 
     expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
     expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
-    expect(shared).toMatch(/re-run the resolver/i);
+    expect(shared).toMatch(/re-run the\s+resolver/i);
     expect(shared).toMatch(
       /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
     );
@@ -1493,6 +1505,81 @@ describe('validateOatSkills', () => {
         /--role reviewer.*--preflight.*--json/,
       );
       expect(content, `${skillName} rerun`).toMatch(/re-run the resolver/i);
+    }
+  });
+
+  it('resolves artifact formatting once during plan authoring', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
+    expect(shared).toMatch(
+      /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
+    );
+    expect(shared).toMatch(
+      /distinguish write\/fix commands from check-only commands/i,
+    );
+    expect(shared).toMatch(
+      /file-scoped invocation[\s\S]{0,140}only[\s\S]{0,100}(?:create|edit)/i,
+    );
+    expect(shared).toMatch(
+      /bake the concrete repository command[\s\S]{0,140}`Format`[\s\S]{0,180}every task[\s\S]{0,120}(?:creates|edits) artifacts/i,
+    );
+    expect(shared).toMatch(
+      /runtime discovery is fallback-only[\s\S]{0,120}(?:absent|unusable)/i,
+    );
+    expect(shared).toContain(
+      'no format command discovered in repo instructions; skipping',
+    );
+    expect(shared).toMatch(
+      /warn once[\s\S]{0,120}no format command discovered in repo instructions; skipping[\s\S]{0,120}continue without formatting/i,
+    );
+    expect(shared).toMatch(/never infer or hardcode a formatter executable/i);
+  });
+
+  it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
+    const runtimeSurfaces = [
+      ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
+      ['.agents/agents/oat-reviewer.md', '1.1.7'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.16'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.7'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.1'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.1'],
+    ] as const;
+
+    for (const [path, expectedVersion] of runtimeSurfaces) {
+      const content = await readRepoFile(path);
+      expect(content, `${path} diagnostic lead-in`).toContain(
+        'Artifact hygiene contract:',
+      );
+      expect(
+        extractArtifactHygieneContract(content),
+        `${path} complete hygiene block`,
+      ).toBe(artifactHygieneContract);
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), path).toBe(
+        expectedVersion,
+      );
+    }
+
+    const phaseImplementer = await readRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    expect(phaseImplementer).toMatch(
+      /applicable gate set[\s\S]{0,120}produced\s+diff[\s\S]{0,120}including artifact writes/i,
+    );
+
+    for (const path of runtimeSurfaces.slice(1).map(([path]) => path)) {
+      const content = await readRepoFile(path);
+      expect(content, `${path} relevant changed-file checks`).toMatch(
+        /only repository checks relevant to the files\s+changed/i,
+      );
+      expect(content, `${path} no unrelated full suites`).toMatch(
+        /does not imply unrelated full\s+test suites/i,
+      );
     }
   });
 
@@ -1532,11 +1619,39 @@ describe('validateOatSkills', () => {
       /adoption preserves explicit[\s\S]{0,260}re-run[\s\S]{0,260}(?:incomplete|missing)[\s\S]{0,180}(?:block|not implementation-ready)/i,
     );
     expect(shared).toMatch(
-      /non-interactive[\s\S]{0,300}(?:incomplete|missing) ladder[\s\S]{0,220}(?:block|not implementation-ready)/i,
+      /non-interactive[\s\S]{0,300}(?:incomplete|missing) (?:ladder|effective cells)[\s\S]{0,220}(?:block|not implementation-ready)/i,
     );
     expect(shared).toMatch(
       /project-specific[\s\S]{0,120}(?:active )?(?:policy|ceiling)[\s\S]{0,220}(?:must not|do not|never)[\s\S]{0,120}(?:user|~\/\.oat)/i,
     );
+  });
+
+  it('uses the merged effective config before offering dispatch-ladder adoption', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const adoptionContract = shared.slice(
+      shared.indexOf('### Complete Dispatch Ladder Adoption Contract'),
+      shared.indexOf('### Reviewer Ceiling Contract'),
+    );
+
+    expect(adoptionContract.match(/oat config list --json/g)).toHaveLength(1);
+    expect(adoptionContract).toMatch(
+      /effective-config boundary[\s\S]{0,180}shared repository[\s\S]{0,120}repo-local[\s\S]{0,120}user[\s\S]{0,120}bundled-default precedence/i,
+    );
+    expect(adoptionContract).toMatch(
+      /do not inspect or merge raw\s+config surfaces/i,
+    );
+    expect(adoptionContract).toMatch(
+      /`matrix: null`[\s\S]{0,220}(?:project policy|named ceiling)[\s\S]{0,220}not evidence[\s\S]{0,160}effective candidate ladders are absent/i,
+    );
+    expect(adoptionContract).toMatch(
+      /every effective provider\/tier cell[\s\S]{0,160}complete[\s\S]{0,120}skip adoption[\s\S]{0,180}separate project-ceiling\s+choice/i,
+    );
+    expect(adoptionContract).toMatch(
+      /only when effective provider\/tier cells are missing or incomplete[\s\S]{0,200}bundled recommendation/i,
+    );
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -1676,7 +1791,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.7');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.8');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -2536,11 +2651,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.12'],
+      ['oat-project-plan-writing', '1.2.13'],
       ['oat-project-plan', '1.4.0'],
-      ['oat-project-quick-start', '2.3.0'],
+      ['oat-project-quick-start', '2.3.1'],
       ['oat-project-import-plan', '1.4.6'],
-      ['oat-project-review-provide', '1.3.15'],
+      ['oat-project-review-provide', '1.3.16'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2556,7 +2671,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.1.0'],
-      ['oat-project-review-provide', '1.3.15'],
+      ['oat-project-review-provide', '1.3.16'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
@@ -2849,7 +2964,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -3278,5 +3393,36 @@ describe('validateOatSkills', () => {
       validatedSkillCount: 1,
       findings: [],
     });
+  });
+
+  it('requires project-summary decision promotion to pass every record section', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+    const stepSix = content.match(
+      /### Step 6: Promote Key Decisions[\s\S]*?(?=### Step 7:)/,
+    )?.[0];
+
+    expect(stepSix).toBeDefined();
+    expect(stepSix).toMatch(
+      /oat decision new "<title>"[\s\S]*--context "<context>"[\s\S]*--decision "<decision>"[\s\S]*--consequences "<consequences>"/,
+    );
+    expect(stepSix).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
+  });
+
+  it('requires backlog capture to use atomic CLI creation with the confirmed estimate', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-pjm-add-backlog-item/SKILL.md',
+    );
+
+    expect(content).toMatch(
+      /oat backlog new "\{title\}"[\s\S]*--scope-estimate "<confirmed-scope-estimate>"/,
+    );
+    expect(content).toMatch(
+      /oat backlog new[\s\S]*Acceptance Criteria[\s\S]*Curated Overview/,
+    );
+    expect(content).not.toContain('oat backlog generate-id');
+    expect(content).not.toContain('oat backlog regenerate-index');
+    expect(content).not.toContain('ITEM_PATH=');
   });
 });

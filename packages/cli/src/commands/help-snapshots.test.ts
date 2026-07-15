@@ -236,6 +236,7 @@ describe('help output snapshots', () => {
 
       Commands:
         init [options]                         Scaffold the canonical backlog directory structure and starter files
+        new [options] <title>                  Create a new file-backed backlog item
         regenerate-index [options]             Regenerate the managed backlog index table
         archive [options] <id>                 Close out a backlog item: set a terminal status, record it in completed.md, move it to archived/, and regenerate the index
         generate-id [options] <title-or-slug>  Generate a backlog item identifier (\`BL-YYMMDD-slug\`) from a title or slug
@@ -292,6 +293,8 @@ describe('help output snapshots', () => {
                                   .oat/repo/reference/decisions)
         --status <status>         Decision status (default: "proposed")
         --context <text>          Initial context body text
+        --decision <text>         Initial decision body text
+        --consequences <text>     Initial consequences body text
         --created-at <timestamp>  Creation timestamp seed for reproducible ID
                                   generation
         -h, --help                display help for command
@@ -326,6 +329,39 @@ describe('help output snapshots', () => {
         --json                 Output a single JSON document
         --verbose              Enable verbose debug output
         --cwd <path>           Override working directory
+      "
+    `);
+  });
+
+  it('backlog new --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'backlog',
+      'new',
+    ]).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat backlog new [options] <title>
+
+      Create a new file-backed backlog item
+
+      Arguments:
+        title                    Backlog item title
+
+      Options:
+        --priority <priority>    Item priority (default: "medium")
+        --scope <scope>          Item scope (default: "task")
+        --scope-estimate <size>  Optional scope estimate (XS|S|M|L|XL|XXL)
+        --labels <labels>        Comma-delimited labels
+        --description <text>     Initial description body text
+        --backlog-root <path>    Backlog root directory (defaults to
+                                 .oat/repo/pjm/backlog)
+        -h, --help               display help for command
+
+      Global Options:
+        -V, --version            output the version number
+        --json                   Output a single JSON document
+        --verbose                Enable verbose debug output
+        --cwd <path>             Override working directory
       "
     `);
   });

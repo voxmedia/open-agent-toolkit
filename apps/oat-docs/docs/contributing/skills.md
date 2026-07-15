@@ -56,6 +56,28 @@ Skill behavior is defined by frontmatter plus the process contract in each `SKIL
 - Keep `AGENTS.md` skills table synchronized with `.agents/skills`.
 - Require explicit user approval for destructive or state-advancing transitions.
 
+### Artifact-writing hygiene
+
+Every role or skill that creates or edits tracked output must include the
+artifact hygiene contract at its writing boundary. The writer uses a concrete
+write/fix formatting command supplied by its plan, task, or brief. If none is
+usable, it discovers the repository's documented command from applicable
+`AGENTS.md` / `CLAUDE.md` instructions and relevant package manifests.
+
+Contracts must distinguish write/fix commands from check-only commands, prefer
+a file-scoped invocation when supported, avoid unrelated whole-tree rewrites,
+and never infer or hardcode a formatter. If no command can be discovered, the
+writer warns once with
+`no format command discovered in repo instructions; skipping` and continues.
+Run only verification relevant to the changed files unless the role's
+definition of done requires broader gates.
+
+For planned implementation, plan-producing skills resolve this command once and
+place it in every artifact-writing task. Runtime discovery remains the fallback
+for direct lifecycle writers and incomplete or stale plans. When the same
+contract crosses dispatch boundaries, keep each copy self-contained and protect
+equivalence with contract tests.
+
 ## Recommended Starting Points
 
 - Use `create-oat-skill` when the new skill belongs to an OAT lifecycle or maintenance flow.

@@ -1,6 +1,6 @@
 ---
 name: oat-project-quick-start
-version: 2.3.0
+version: 2.3.1
 description: Use when a task is small enough for quick mode or rapid iteration is preferred. Scaffolds a lightweight OAT project from discovery directly to a runnable plan, with optional brainstorming and lightweight design.
 argument-hint: '<project-name> ["project description"]'
 oat_gateable: true
@@ -82,6 +82,13 @@ When executing this skill, provide lightweight progress feedback so the user can
 - If the skill is about to pause for user input or stop after mutating artifacts, commit the changed artifacts before waiting. Do not leave discovery/design updates only in the working tree.
 - Quick-start handoff is not complete until the changed project artifacts have been committed. Refresh `.oat/state.md` when available, but do not stage it; the repo dashboard is generated and normally gitignored.
 - This applies to downstream lifecycle boundaries too: implementation, review, revise, and PR skills must inherit a committed artifact baseline, not an untracked project tree.
+
+## Artifact Hygiene
+
+Artifact hygiene contract: Before finishing or committing, format every file you created or edited. Use the concrete write/fix formatting command supplied by the governing plan, task, or brief. If none is usable, discover the repository's documented write/fix command from applicable `AGENTS.md`/`CLAUDE.md` instructions and relevant package manifests; do not infer or hardcode a formatter. Prefer a file-scoped invocation when supported, and avoid rewriting unrelated files. If no command is discoverable, warn once with `no format command discovered in repo instructions; skipping`, then continue.
+
+After formatting, run only repository checks relevant to the files changed;
+writing lifecycle artifacts does not imply unrelated full test suites.
 
 ## Process
 

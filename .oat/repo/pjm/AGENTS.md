@@ -26,13 +26,16 @@ Invariant: `backlog/items/` holds only active work (`status: open` or
 The agent or person shipping the work owns the close-out, in the same
 commit/PR as the work whenever practical.
 
-**Close-out (primary path).** Run `oat backlog archive <id>` — add `--wont-do`
-for abandoned work and `--summary "<text>"` to record the outcome. The command
-performs the whole close-out atomically: it flips `status` to the terminal
-value and bumps `updated`, appends the canonical `backlog/completed.md` entry
-(always for `closed`; for `wont_do` only when `--summary` is given), moves the
-item file from `backlog/items/` to `backlog/archived/`, and regenerates
-`backlog/index.md`. Stage the resulting changes with the shipping commit/PR.
+**Close-out (primary path).** Run
+`oat backlog archive <id> --summary "<outcome>"` for completed work; the
+nonblank summary is required before the default `closed` path mutates
+anything. Add `--wont-do` for abandoned work; that path may omit the summary
+and completed-ledger entry. The command performs the whole close-out
+atomically: it flips `status` to the terminal value and bumps `updated`,
+appends the canonical `backlog/completed.md` entry (always for `closed`; for
+`wont_do` only when `--summary` is given), moves the item file from
+`backlog/items/` to `backlog/archived/`, and regenerates `backlog/index.md`.
+Stage the resulting changes with the shipping commit/PR.
 
 **Manual fallback.** These are the steps the command automates — follow them, in
 order, only when closing out by hand:

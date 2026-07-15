@@ -64,6 +64,19 @@ existing cells. Planning shows the complete recommendation before asking which
 scope should own it. If the resulting ladder is still missing or incomplete,
 planning remains blocked rather than replacing the user's explicit values.
 
+Before offering adoption, planning runs `oat config list --json` once and treats
+its output as the effective boundary across shared, repo-local, user, and
+bundled-default precedence. A complete effective ladder skips adoption even
+when the current project has not selected a policy or named ceiling. Adoption
+is offered only when the resolved provider/tier cells are actually missing,
+empty, malformed, or incomplete.
+
+Ladder completeness and project-ceiling selection are separate checks. In
+particular, `oat project dispatch-ceiling resolve` returning `matrix: null` can
+mean that the project policy or ceiling is unresolved; it does not prove that
+the effective reusable ladders are absent. When ladders are complete, planning
+proceeds directly to the project-specific policy choice.
+
 The ownership boundary is deliberate:
 
 | Source                                     | Config location                | Codex materialization output          |

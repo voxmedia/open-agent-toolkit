@@ -114,12 +114,13 @@ export function createToolsUpdateCommand(
       const context = buildCommandContext(globalOptions);
       const { logger } = context;
 
-      const target = resolveTarget(name, opts.pack, opts.all);
-      if (!target) {
-        logger.error('Specify a tool name, --pack <pack>, or --all.');
+      const targetResolution = resolveTarget(name, opts.pack, opts.all);
+      if ('error' in targetResolution) {
+        logger.error(targetResolution.error);
         process.exitCode = 1;
         return;
       }
+      const target = targetResolution.target;
 
       const scopes = resolveConcreteScopes(context.scope);
       const dryRun = opts.dryRun ?? false;
@@ -298,21 +299,37 @@ export function formatUpdatedToolMessage(
   return `${dryRun ? 'Would update' : 'Updated'}: ${tool.name} (${tool.version} -> ${tool.bundledVersion ?? '?'})`;
 }
 
+type TargetResolution = { target: UpdateTarget } | { error: string };
+
 function resolveTarget(
   name: string | undefined,
   pack: string | undefined,
   all: boolean | undefined,
-): UpdateTarget | null {
+): TargetResolution {
   const specified = [name, pack, all].filter(Boolean).length;
-  if (specified !== 1) return null;
-
-  if (name) return { kind: 'name', name };
-  if (pack) {
-    if (!VALID_PACKS.includes(pack as PackName)) return null;
-    return { kind: 'pack', pack: pack as PackName };
+  if (specified === 0) {
+    return {
+      error:
+        'Specify a tool name, --pack <pack>, or --all. To update all tools, run: oat tools update --all',
+    };
   }
-  if (all) return { kind: 'all' };
-  return null;
+  if (specified > 1) {
+    return {
+      error:
+        'Specify exactly one update target: a tool name, --pack <pack>, or --all.',
+    };
+  }
+
+  if (name) return { target: { kind: 'name', name } };
+  if (pack) {
+    if (!VALID_PACKS.includes(pack as PackName)) {
+      return {
+        error: `Invalid pack '${pack}'. Expected one of: ${VALID_PACKS.join(', ')}.`,
+      };
+    }
+    return { target: { kind: 'pack', pack: pack as PackName } };
+  }
+  return { target: { kind: 'all' } };
 }
 
 function describeTarget(target: UpdateTarget): string {
