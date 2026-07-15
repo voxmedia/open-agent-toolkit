@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-15
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | completed | 2     | 2/2       |
 | Phase 3 | completed | 1     | 1/1       |
 | Phase 4 | completed | 4     | 4/4       |
-| Phase 5 | pending   | 5     | 0/5       |
+| Phase 5 | completed | 5     | 5/5       |
 
-**Total:** 11/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -137,27 +137,37 @@ oat_generated: false
 
 ## Phase 5: Terminal Gate Regression Fixes
 
-**Status:** pending
+**Status:** completed
+**Started:** 2026-07-15
 
 ### Task p05-t01: (review) Match the exact Reviews heading
 
-**Status:** pending
+**Status:** completed
+**Commit:** 1602a8b1
 
 ### Task p05-t02: (review) Exclude consumed reviews from actionable routing
 
-**Status:** pending
+**Status:** completed
+**Commit:** 645dd9f1
 
 ### Task p05-t03: (review) Preserve timeout correlation failures
 
-**Status:** pending
+**Status:** completed
+**Commit:** 9415e06e
 
 ### Task p05-t04: (review) Synchronize and validate the terminal-fix release
 
-**Status:** pending
+**Status:** completed
+**Commit:** 034f28d1
 
 ### Task p05-t05: (review) Refresh final closeout artifacts
 
-**Status:** pending
+**Status:** completed
+**Commit:** e56f8503
+
+**Phase outcome:** Exact Reviews-heading extraction, ledger-correlated review actionability, and timeout-correlation error precedence are implemented. Remote receive archives consumed artifacts, the stale p04 artifact is in history, PR #151 closeout content is current, and all five public packages are synchronized at `0.1.68`.
+
+**Verification:** 2,896 CLI tests across 246 files, 51 control-plane tests across 9 files, formatting, canonical skill validation, lint, type-check, docs build, provider sync, and five-package release validation passed.
 
 ---
 
@@ -189,6 +199,23 @@ _- Outstanding Items_
 **Worktrees:** `.worktrees/review-bookkeeping-p01`, `.worktrees/review-bookkeeping-p02`; both merged in plan order after passing review.
 
 **Outstanding:** final verification and final review.
+
+### Run 2 — 2026-07-15T02:19:00Z
+
+- Branch: `review-bookkeeping-and-dispatch-doc-contracts`
+- Tier: 1 (subagent)
+- Dispatch policy: managed `high` from project state
+- Recovery: one operator-authorized fresh same-target launch after the original accepted worker was interrupted before edits
+
+| Phase | Status      | Tasks | Implementation commits | Root review |
+| ----- | ----------- | ----- | ---------------------- | ----------- |
+| p05   | implemented | 5/5   | `1602a8b1..e56f8503`   | pending     |
+
+**Dispatch:** resolver-selected Cursor model `gpt-5.6-sol-high`, `model_axis=selected:gpt-5.6-sol-high`, `effort_axis=not-applicable`, policy `high`.
+
+**Worktree:** root checkout; clean at handoff.
+
+**Outstanding:** independent p05 review and terminal gate re-review.
 
 <!-- orchestration-runs-end -->
 
@@ -226,6 +253,11 @@ Chronological log of implementation progress.
 - [x] p04-t04: Validate review-fix release assets — `253e65aa`
 - [x] p04 root review — `32b2a6c6`; passed at the Important threshold, Medium final-summary drift corrected before final re-review
 - [ ] Terminal implementation gate re-review — blocked with two Important and one Medium finding from gate run `c3dd6954-8c5a-499b-8008-b5a985b95ff0`; p05 fixes queued
+- [x] p05-t01: Match the exact Reviews heading — `1602a8b1`
+- [x] p05-t02: Exclude consumed reviews from actionable routing — `645dd9f1`
+- [x] p05-t03: Preserve timeout correlation failures — `9415e06e`
+- [x] p05-t04: Synchronize and validate the terminal-fix release — `034f28d1`
+- [x] p05-t05: Refresh final closeout artifacts — `e56f8503`
 
 **Decisions:**
 
@@ -302,18 +334,18 @@ Chronological log of implementation progress.
 - Medium: 1
 - Minor: 0
 
-**New tasks added:** `p05-t01`, `p05-t02`, `p05-t03`, `p05-t04`
+**New tasks added:** `p05-t01`, `p05-t02`, `p05-t04`, `p05-t05`
 
 **Finding disposition map:**
 
 - `I1` → `p05-t01`: require exact level-two Reviews-heading extraction in both production readers.
 - `I2` → `p05-t02`: correlate actionability with the artifact-identified ledger event and align consumed-artifact handling.
-- `M1` → `p05-t03`: update generated summary and PR closeout facts through the final fix phase.
+- `M1` → `p05-t05`: update generated summary and PR closeout facts through the final fix phase.
 - `p05-t04`: shared sync and release validation required by shipped reader, router, and skill changes.
 
 **Design drift / artifact alignment notes:**
 
-- `M1`: the implementation record is authoritative; generated `summary.md` and any derived PR text remained at p03/0.1.66. `p05-t03` aligns those closeout artifacts to the shipped implementation.
+- `M1`: the implementation record is authoritative; generated `summary.md` and any derived PR text remained at p03/0.1.66. `p05-t05` aligns those closeout artifacts to the shipped implementation.
 
 **Next:** Execute review-fix tasks via `oat-project-implement`, starting with `p05-t01`. After completion, update this artifact-identified review event to `fixes_completed`, then re-run and receive the final gate.
 
@@ -350,6 +382,7 @@ Track test execution during implementation.
 | Fan-in | Combined targeted tests and build checks                        | 273 tests plus checks | 0      | p01/p02 integration               |
 | 3      | Full CLI suite, release validation, formatting, build checks    | 2,888 tests + checks  | 0      | Release and inventory integration |
 | 4      | Full CLI suite, release validation, formatting, build checks    | 2,892 tests + checks  | 0      | Final review fixes and 0.1.67     |
+| 5      | Full CLI/control-plane suites and release validation            | 2,947 tests + checks  | 0      | Terminal regressions and 0.1.68   |
 | Final  | Workspace tests, lint, type-check, and build                    | 2,977 tests + checks  | 0      | Full repository implementation    |
 
 ## Final Summary (for PR/docs)
@@ -357,16 +390,16 @@ Track test execution during implementation.
 **What shipped:**
 
 - Review bookkeeping now preserves distinct append-ordered review events, advances each artifact monotonically, and routes from the latest matching event.
-- Active project reviews remain actionable behind newer archived history; archive collisions preserve one stable event identity.
+- Project review actionability now correlates exact ledger identity and status; consumed artifacts no longer route back to receive.
 - Dispatch, phase-gate prompt, and PR-completion guidance now describe mutually exclusive resolver branches and both supported completion orderings.
-- Gate timeouts now recover validated run-correlated late artifacts and expose additive late-completion and zero-output telemetry.
-- All five public packages and bundled release metadata are synchronized at `0.1.67`.
+- Gate timeouts recover validated run-correlated late artifacts, preserve correlation-specific failures, and expose additive late-completion and zero-output telemetry.
+- All five public packages and bundled release metadata are synchronized at `0.1.68`.
 
 **Behavioral changes (user-facing):**
 
 - Local and remote review flows no longer overwrite or route from stale same-scope review rows.
 - Final lifecycle readers select status only from the append-ordered `## Reviews` ledger.
-- A timed-out gate can return a corroborated artifact with `lateCompletion: true`; unrecovered timeouts report `noOutputProduced`.
+- A timed-out gate can return a corroborated artifact with `lateCompletion: true`; genuine unrecovered timeouts report `noOutputProduced`, while duplicate or mismatched evidence reports `targeting_correlation_failed`.
 - Project progress and closeout guidance explicitly support completing before or after PR merge.
 
 **Key files / modules:**
@@ -380,13 +413,13 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Targeted control-plane, CLI gate, validation, and autonomy-inventory tests.
-- Full CLI suite after p04: 246 files and 2,892 tests passed.
+- Full CLI suite after p05: 246 files and 2,896 tests passed; full control-plane suite: 9 files and 51 tests passed.
 - Repository formatting, canonical skill validation, lint, type checks, project build, docs build, provider sync, and bundled-version assertion.
-- Five-package `pnpm release:validate` at `0.1.67`.
+- Five-package `pnpm release:validate` at `0.1.68`.
 
 **Design deltas (if any):**
 
-- No design artifact exists in quick mode. Final fan-in and terminal-gate review added required autonomy inventory mappings plus bounded active-review, ledger-scoping, and archive-identity fixes before the 0.1.67 release validation.
+- No design artifact exists in quick mode. Final fan-in, terminal-gate review, and PR feedback added bounded ledger parsing, review actionability, archive identity, and timeout-correlation fixes before the 0.1.68 release validation.
 
 ## References
 
