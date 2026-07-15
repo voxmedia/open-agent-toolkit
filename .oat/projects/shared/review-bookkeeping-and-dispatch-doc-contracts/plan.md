@@ -239,6 +239,76 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Commit:** `chore(p04-t04): validate review-fix release assets`
 
+## Phase 5: Terminal Gate Regression Fixes
+
+**Goal:** Repair exact Reviews-ledger extraction, prevent consumed artifacts from remaining actionable, align closeout artifacts, and validate the final release.
+
+### Task p05-t01: (review) Match the exact Reviews heading
+
+**Files:** `packages/cli/src/commands/cleanup/project/project.utils.ts`, `packages/cli/src/commands/cleanup/project/project.test.ts`, `packages/control-plane/src/state/reviews.ts`, `packages/control-plane/src/state/reviews.test.ts`
+
+**Implement:**
+
+1. Add regression fixtures containing inline or code-formatted `## Reviews` text before the real level-two heading.
+2. Locate the exact `## Reviews` heading line and slice only through the next level-two heading in both production readers.
+3. Assert the authoritative project plan yields every ledger row, the latest final event, and a complete project result.
+
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/cleanup/project/project.utils.ts packages/cli/src/commands/cleanup/project/project.test.ts packages/control-plane/src/state/reviews.ts packages/control-plane/src/state/reviews.test.ts`
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/cleanup/project/project.test.ts && pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts`
+
+**Commit:** `fix(p05-t01): match exact reviews heading`
+
+### Task p05-t02: (review) Exclude consumed reviews from actionable routing
+
+**Files:** `packages/cli/src/commands/review/latest.ts`, `packages/cli/src/commands/review/__tests__/latest.test.ts`, `packages/control-plane/src/recommender/router.ts`, `packages/control-plane/src/recommender/router.test.ts`, `.agents/skills/oat-project-review-receive-remote/SKILL.md`, `packages/cli/src/validation/skills.test.ts`; active project review artifacts and their exact plan rows
+
+**Implement:**
+
+1. Add fixtures where top-level artifacts are bound to `passed` or `fixes_added` ledger events alongside a genuinely `received` event.
+2. Correlate project review artifacts by scope, type, and artifact filename so only receive-eligible ledger states are actionable in CLI and control-plane routing.
+3. Align remote receive archival behavior with the consumed-artifact contract and bump the changed canonical skill once for this PR.
+4. Move the already-passed p04 review artifact to history and update only its artifact-identified plan event.
+
+**Format:** `pnpm format:fix`
+
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/__tests__/latest.test.ts src/validation/skills.test.ts && pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/recommender/router.test.ts && pnpm oat:validate-skills`
+
+**Commit:** `fix(p05-t02): exclude consumed reviews from routing`
+
+### Task p05-t03: (review) Refresh final closeout artifacts
+
+**Files:** `.oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`; PR #151 body when derived closeout content is stale
+
+**Implement:**
+
+1. Update the project summary metadata and prose for p04/p05, the final package version, and current verification results.
+2. Preserve the implemented decisions while adding the terminal-gate regression fixes.
+3. Refresh the open PR body if its generated summary facts are stale.
+
+**Format:** `pnpm exec oxfmt --write .oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`
+
+**Verify:** Inspect the summary and PR body for matching phase, release, and verification facts.
+
+**Commit:** `docs(p05-t03): refresh final closeout summary`
+
+### Task p05-t04: (review) Synchronize and validate the terminal-fix release
+
+**Files:** five public `packages/*/package.json` manifests; `packages/cli/assets/public-package-versions.json`; sync-managed provider views and `.oat/sync/manifest.json`; compatibility fixtures exposed by full validation
+
+**Implement:**
+
+1. Bump all five lockstep public packages together for the shipped reader and routing fixes.
+2. Regenerate bundled public-package metadata and run `pnpm run cli -- sync --scope all`.
+3. Repair only compatibility fixtures directly exposed by the complete validation run.
+4. Run formatting, skill validation, full CLI and control-plane tests, lint, type-check, docs build, and release validation.
+
+**Format:** `pnpm format:fix`
+
+**Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/control-plane test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate`
+
+**Commit:** `chore(p05-t04): validate terminal review fixes`
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
@@ -256,7 +326,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 | final  | code     | received        | 2026-07-15 | reviews/final-review-2026-07-15T004643Z.md                  |
 | final  | code     | fixes_completed | 2026-07-15 | reviews/archived/final-review-2026-07-15T010249Z.md         |
 | p04    | code     | passed          | 2026-07-15 | reviews/code-p04-review-2026-07-15T014808Z.md               |
-| final  | code     | received        | 2026-07-15 | reviews/final-review-2026-07-15T015430Z.md                  |
+| final  | code     | fixes_added     | 2026-07-15 | reviews/archived/final-review-2026-07-15T015430Z.md         |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -266,8 +336,9 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 - Phase 2: 2 tasks — gate recovery and docs
 - Phase 3: 1 task — sync and release validation
 - Phase 4: 4 tasks — final gate review fixes and release validation
+- Phase 5: 4 tasks — terminal gate regression fixes and release validation
 
-**Total: 11 tasks**
+**Total: 15 tasks**
 
 ## References
 

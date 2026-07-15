@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-15
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -30,8 +30,9 @@ oat_generated: false
 | Phase 2 | completed | 2     | 2/2       |
 | Phase 3 | completed | 1     | 1/1       |
 | Phase 4 | completed | 4     | 4/4       |
+| Phase 5 | pending   | 4     | 0/4       |
 
-**Total:** 11/11 tasks completed
+**Total:** 11/15 tasks completed
 
 ---
 
@@ -105,7 +106,7 @@ oat_generated: false
 
 ## Phase 4: Final Review Fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-15
 
 ### Task p04-t01: (review) Keep active project reviews actionable
@@ -131,6 +132,28 @@ oat_generated: false
 **Phase outcome:** Active-only review resolution, Reviews-ledger-bounded final-state reads, and collision-stable archive identity are implemented. Compatibility fixtures, autonomy inventory, provider views, bundled release metadata, and all five public packages are synchronized at `0.1.67`.
 
 **Verification:** 2,892 CLI tests across 246 files, canonical skill validation, formatting, lint, type-check, docs build, provider sync, version-bump validation, bundled-version assertion, and five-package release validation passed.
+
+---
+
+## Phase 5: Terminal Gate Regression Fixes
+
+**Status:** pending
+
+### Task p05-t01: (review) Match the exact Reviews heading
+
+**Status:** pending
+
+### Task p05-t02: (review) Exclude consumed reviews from actionable routing
+
+**Status:** pending
+
+### Task p05-t03: (review) Refresh final closeout artifacts
+
+**Status:** pending
+
+### Task p05-t04: (review) Synchronize and validate the terminal-fix release
+
+**Status:** pending
 
 ---
 
@@ -198,6 +221,7 @@ Chronological log of implementation progress.
 - [x] p04-t03: Resolve archive identity before writing references — `d0508ff9`
 - [x] p04-t04: Validate review-fix release assets — `253e65aa`
 - [x] p04 root review — `32b2a6c6`; passed at the Important threshold, Medium final-summary drift corrected before final re-review
+- [ ] Terminal implementation gate re-review — blocked with two Important and one Medium finding from gate run `c3dd6954-8c5a-499b-8008-b5a985b95ff0`; p05 fixes queued
 
 **Decisions:**
 
@@ -261,6 +285,33 @@ Chronological log of implementation progress.
 **Design drift / artifact alignment notes:** None; all findings require implementation or contract fixes.
 
 **Next:** Execute review-fix tasks via `oat-project-implement`, starting with `p04-t01`. After completion, update this artifact-identified review event to `fixes_completed`, then re-run final review and receive it to reach `passed`.
+
+### Review Received: final gate `c3dd6954-8c5a-499b-8008-b5a985b95ff0`
+
+**Date:** 2026-07-15
+**Review artifact:** `reviews/archived/final-review-2026-07-15T015430Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p05-t01`, `p05-t02`, `p05-t03`, `p05-t04`
+
+**Finding disposition map:**
+
+- `I1` → `p05-t01`: require exact level-two Reviews-heading extraction in both production readers.
+- `I2` → `p05-t02`: correlate actionability with the artifact-identified ledger event and align consumed-artifact handling.
+- `M1` → `p05-t03`: update generated summary and PR closeout facts through the final fix phase.
+- `p05-t04`: shared sync and release validation required by shipped reader, router, and skill changes.
+
+**Design drift / artifact alignment notes:**
+
+- `M1`: the implementation record is authoritative; generated `summary.md` and any derived PR text remained at p03/0.1.66. `p05-t03` aligns those closeout artifacts to the shipped implementation.
+
+**Next:** Execute review-fix tasks via `oat-project-implement`, starting with `p05-t01`. After completion, update this artifact-identified review event to `fixes_completed`, then re-run and receive the final gate.
 
 ---
 
