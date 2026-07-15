@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { isMissingFileError } from '../shared/utils/errors';
+import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { ReviewStatus } from '../types';
 
 const REVIEWS_HEADING = '## Reviews';
@@ -41,6 +42,22 @@ export async function scanUnprocessedReviews(
 
     throw error;
   }
+}
+
+export function parseReviewArtifactIdentity(
+  content: string,
+): { scope: string; type: string } | null {
+  const frontmatter = parseFrontmatterRecord(content);
+  const scope =
+    typeof frontmatter.oat_review_scope === 'string'
+      ? frontmatter.oat_review_scope.trim()
+      : '';
+  const type =
+    typeof frontmatter.oat_review_type === 'string'
+      ? frontmatter.oat_review_type.trim()
+      : '';
+
+  return scope && type ? { scope, type } : null;
 }
 
 function extractReviewsSection(planContent: string): string | null {

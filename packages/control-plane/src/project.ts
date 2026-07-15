@@ -4,7 +4,11 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { recommendSkill } from './recommender/router';
 import { scanArtifacts } from './state/artifacts';
 import { parseStateFrontmatter } from './state/parser';
-import { parseReviewTable, scanUnprocessedReviews } from './state/reviews';
+import {
+  parseReviewArtifactIdentity,
+  parseReviewTable,
+  scanUnprocessedReviews,
+} from './state/reviews';
 import { parseTaskProgress } from './state/tasks';
 import type {
   ProjectState,
@@ -32,14 +36,13 @@ export async function getProjectState(
   ]);
 
   const parsedState = parseStateFrontmatter(stateContent);
-  const activeReviewArtifacts = toActiveReviewArtifacts(
+  const tableReviews = parseReviewTable(planContent);
+  const activeReviewArtifacts = await toActiveReviewArtifacts(
     reviewFiles,
     projectPath,
+    tableReviews,
   );
-  const reviews = mergeReviews(
-    parseReviewTable(planContent),
-    activeReviewArtifacts,
-  );
+  const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
   const progress = parseTaskProgress(planContent, implementationContent);
 
   const projectStateWithoutRecommendation: Omit<
@@ -107,14 +110,13 @@ export async function listProjects(
           scanUnprocessedReviews(projectDir),
         ]);
       const parsedState = parseStateFrontmatter(stateContent);
-      const activeReviewArtifacts = toActiveReviewArtifacts(
+      const tableReviews = parseReviewTable(planContent);
+      const activeReviewArtifacts = await toActiveReviewArtifacts(
         reviewFiles,
         projectDir,
+        tableReviews,
       );
-      const reviews = mergeReviews(
-        parseReviewTable(planContent),
-        activeReviewArtifacts,
-      );
+      const reviews = mergeReviews(tableReviews, activeReviewArtifacts);
       const progress = parseTaskProgress(planContent, implementationContent);
 
       const stateWithoutRecommendation: Omit<ProjectState, 'recommendation'> = {
@@ -266,13 +268,32 @@ function mergeReviews(
   return merged;
 }
 
-function toActiveReviewArtifacts(
+async function toActiveReviewArtifacts(
   reviewFiles: string[],
   projectPath: string,
-): ReviewArtifactStatus[] {
-  return reviewFiles.map((reviewFile) => ({
-    path: relative(projectPath, reviewFile).replace(/\\/g, '/'),
-    archived: false,
-    actionable: true,
-  }));
+  tableReviews: ReviewStatus[],
+): Promise<ReviewArtifactStatus[]> {
+  return Promise.all(
+    reviewFiles.map(async (reviewFile) => {
+      const path = relative(projectPath, reviewFile).replace(/\\/g, '/');
+      const identity = parseReviewArtifactIdentity(
+        await readOptionalFile(reviewFile),
+      );
+      const actionable =
+        identity !== null &&
+        tableReviews.some(
+          (review) =>
+            review.scope.toLowerCase() === identity.scope.toLowerCase() &&
+            review.type.toLowerCase() === identity.type.toLowerCase() &&
+            review.artifact === path &&
+            review.status.toLowerCase() === 'received',
+        );
+
+      return {
+        path,
+        archived: false,
+        actionable,
+      };
+    }),
+  );
 }

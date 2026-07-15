@@ -208,7 +208,13 @@ oat_template: false
     await mkdir(join(projectDir, 'reviews'), { recursive: true });
     await writeFile(
       join(projectDir, 'reviews', 'p01-review.md'),
-      '# Active review\n',
+      `---
+oat_review_scope: p01
+oat_review_type: code
+---
+
+# Active review
+`,
       'utf8',
     );
 
@@ -225,6 +231,53 @@ oat_template: false
       skill: 'oat-project-review-receive',
       reason: 'Unprocessed review feedback exists',
     });
+  });
+
+  it('rejects a received row whose scope and type do not match the artifact identity', async () => {
+    const repoRoot = await createDir('oat-control-plane-mismatch-review-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+
+    await createReviewRoutingProject(projectDir, 'pr_open');
+    await mkdir(join(projectDir, 'reviews'), { recursive: true });
+    await writeFile(
+      join(projectDir, 'reviews', 'p01-review.md'),
+      `---
+oat_review_scope: p01
+oat_review_type: code
+---
+
+# Consumed review
+`,
+      'utf8',
+    );
+    await writeFile(
+      join(projectDir, 'plan.md'),
+      `---
+oat_status: complete
+oat_template: false
+---
+
+## Reviews
+
+| Scope | Type | Status | Date | Artifact |
+| ----- | ---- | ------ | ---- | -------- |
+| p01 | code | passed | 2026-06-12 | reviews/p01-review.md |
+| p02 | artifact | received | 2026-06-13 | reviews/p01-review.md |
+| final | code | passed | 2026-06-14 | reviews/final-review.md |
+`,
+      'utf8',
+    );
+
+    const projectState = await getProjectState(projectDir);
+
+    expect(projectState.activeReviewArtifacts).toEqual([
+      {
+        path: 'reviews/p01-review.md',
+        archived: false,
+        actionable: false,
+      },
+    ]);
+    expect(projectState.recommendation.skill).toBe('oat-project-complete');
   });
 
   it('does not recommend review-receive for archived review history when review rows passed and the PR is open', async () => {

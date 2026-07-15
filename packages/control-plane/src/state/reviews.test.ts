@@ -4,7 +4,11 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseReviewTable, scanUnprocessedReviews } from './reviews';
+import {
+  parseReviewArtifactIdentity,
+  parseReviewTable,
+  scanUnprocessedReviews,
+} from './reviews';
 
 describe('parseReviewTable', () => {
   it('parses rows from the plan reviews table', () => {
@@ -164,5 +168,26 @@ describe('scanUnprocessedReviews', () => {
     const projectDir = await createProjectDir();
 
     await expect(scanUnprocessedReviews(projectDir)).resolves.toEqual([]);
+  });
+});
+
+describe('parseReviewArtifactIdentity', () => {
+  it('reads scope and type from review artifact frontmatter', () => {
+    expect(
+      parseReviewArtifactIdentity(`---
+oat_review_scope: p05
+oat_review_type: code
+---
+`),
+    ).toEqual({ scope: 'p05', type: 'code' });
+  });
+
+  it('returns null when either identity field is missing', () => {
+    expect(
+      parseReviewArtifactIdentity(`---
+oat_review_scope: p05
+---
+`),
+    ).toBeNull();
   });
 });
