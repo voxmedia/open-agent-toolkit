@@ -219,3 +219,30 @@ refresh.
 audit channel: verify each report against the canonical source, fix it there,
 record the external provenance, and regenerate provider or vendored views.
 Avoid patching only the downstream copy when the canonical file is defective.
+
+## 2026-07-15T00:35:00Z - decision - Org orchestration rule resolves selection-philosophy layering
+
+**Observation:** Operator shared the org-level `alwaysApply` "Agent
+orchestration" rule (internal-skills repo). Its taxonomy aligns with OAT's
+dispatch substrate: task shapes = OAT baseline role classes verbatim; relative
+tiers = OAT dispatch-policy tiers (naming nit: rule "economical" vs OAT config
+"economy"); its five required dispatch fields are a subset of OAT's caller
+request contract.
+
+**Impact:** Two previously-logged open items resolve. (1) The Cursor
+per-task tier-classification gap (2026-07-14 entry) narrows to mechanics only:
+the org rule owns "lowest reliable tier" selection philosophy; OAT's Cursor
+provider rules need only the mechanical mapping (classified tier → configured
+ladder cell → resolver `--candidate-model`). Do not duplicate selection
+philosophy into OAT docs. (2) The family-coherence question closes: the org
+rule is deliberately model-agnostic and the operator accepts cross-family
+execution; multi-family ladder cells stand; family enforcement remains where
+it lives — gate/review diversity via stamped executor identity.
+
+**Recommendation:** Remaining OAT-side follow-ups: add the mechanical
+tier→cell→resolver hook to the Cursor provider rules (docs); consider one
+paragraph in `oat-dispatch-subagents` selection guidance adopting the org
+rule's stricter catalog-gap behavior ("a missing lower tier does not justify
+an equivalent frontier child; prefer retain-in-root when output is not
+mechanically verifiable") — currently OAT biases to nearest-available-tier
+dispatch. Align "economical"/"economy" naming on one side.
