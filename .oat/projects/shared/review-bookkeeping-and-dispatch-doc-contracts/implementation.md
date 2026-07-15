@@ -163,6 +163,7 @@ Chronological log of implementation progress.
 - HiLL checkpoint is the final phase only; automatic HiLL review is enabled.
 - p02 link-check failures were verified as pre-existing and did not block the phase.
 - The final CLI suite exposed two descriptive p01 dispatch lines absent from the autonomy prompt-site inventory. Root mapped both to `NG`, bumped `oat-project-autonomous` to `1.0.2`, re-synced providers, and re-ran release validation.
+- Configured final closeout snapshot: pre-approval `summary → document → pr`, no post-approval steps, final checkpoint `p03`.
 
 ### Review Received: p01 phase gate
 
