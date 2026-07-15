@@ -27,6 +27,16 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.1.66` preserves append-ordered, artifact-identified review events
+  across local and remote lifecycle flows, routes from the latest matching
+  event, and documents mutually exclusive preferred versus exact-candidate
+  resolver selection. Cross-runtime phase-gate prompts distinguish additional
+  gate reviews from built-in reviews, and project completion supports both
+  pre-merge and post-merge ordering.
+- Gate timeout handling re-scans for a unique run-correlated review artifact
+  before failing. Recovered ordinary envelopes add `lateCompletion`, while
+  unrecovered timeouts report `noOutputProduced`; existing status, handoff,
+  threshold, attempt-accounting, and target-selection semantics remain intact.
 - The CLI passively reports newer stable npm releases during eligible ordinary
   commands. Before `init`, `tools install`, or `tools update` mutates bundled
   tools, a known newer CLI triggers a default-no freshness guard explaining

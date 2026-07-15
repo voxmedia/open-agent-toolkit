@@ -61,7 +61,12 @@ type ProcessRunner = (
     stdio: ProcessCall['stdio'];
     timeoutMs: number;
   },
-) => Promise<{ exitCode: number; timedOut?: boolean }>;
+) => Promise<{
+  exitCode: number;
+  timedOut?: boolean;
+  stdoutBytes: number;
+  stderrBytes: number;
+}>;
 
 type ProcessCallInput = ProcessCall & {
   cwd: string;
@@ -157,6 +162,8 @@ function createProcessRunner(
   options: {
     availableTargets?: Iterable<string>;
     executeExitCode?: number;
+    executeStderrBytes?: number;
+    executeStdoutBytes?: number;
     executeTimedOut?: boolean;
     livenessSnapshots?: LivenessSnapshot[];
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
@@ -199,7 +206,11 @@ function createProcessRunner(
     if (runOptions.purpose === 'host-detection') {
       const script = args[1] ?? '';
       if (script.includes('CLAUDECODE')) {
-        return { exitCode: runOptions.env.CLAUDECODE ? 0 : 1 };
+        return {
+          exitCode: runOptions.env.CLAUDECODE ? 0 : 1,
+          stderrBytes: 0,
+          stdoutBytes: 0,
+        };
       }
       if (
         script.includes('CODEX_THREAD_ID') ||
@@ -210,17 +221,27 @@ function createProcessRunner(
             runOptions.env.CODEX_THREAD_ID || runOptions.env.CODEX_SESSION_ID
               ? 0
               : 1,
+          stderrBytes: 0,
+          stdoutBytes: 0,
         };
       }
       if (script.includes('CURSOR_AGENT')) {
-        return { exitCode: runOptions.env.CURSOR_AGENT ? 0 : 1 };
+        return {
+          exitCode: runOptions.env.CURSOR_AGENT ? 0 : 1,
+          stderrBytes: 0,
+          stdoutBytes: 0,
+        };
       }
-      return { exitCode: 1 };
+      return { exitCode: 1, stderrBytes: 0, stdoutBytes: 0 };
     }
 
     if (runOptions.purpose === 'availability') {
       const targetId = commandToTarget.get(processKey(command, args));
-      return { exitCode: targetId && availableTargets.has(targetId) ? 0 : 1 };
+      return {
+        exitCode: targetId && availableTargets.has(targetId) ? 0 : 1,
+        stderrBytes: 0,
+        stdoutBytes: 0,
+      };
     }
 
     if (runOptions.purpose === 'execute') {
@@ -240,6 +261,8 @@ function createProcessRunner(
 
     return {
       exitCode: options.executeTimedOut ? 124 : (options.executeExitCode ?? 0),
+      stderrBytes: options.executeStderrBytes ?? 0,
+      stdoutBytes: options.executeStdoutBytes ?? 0,
       ...(options.executeTimedOut ? { timedOut: true } : {}),
     };
   };
@@ -1106,6 +1129,8 @@ describe('oat gate', () => {
           options.purpose === 'availability' && command === 'available-reviewer'
             ? 0
             : 1,
+        stdoutBytes: 0,
+        stderrBytes: 0,
       };
     };
     const { command, capture } = createHarness({
@@ -4431,7 +4456,57 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('reports review target timeouts with structured failure metadata', async () => {
+  it.each([
+    {
+      finding: 'clean' as const,
+      expectedExitCode: 0,
+      expectedOutcome: 'review_completed_gate_passed',
+      expectedStatus: 'ok',
+    },
+    {
+      finding: 'important' as const,
+      expectedExitCode: 1,
+      expectedOutcome: 'review_completed_blocking_findings',
+      expectedStatus: 'blocked',
+    },
+  ])(
+    'recovers a late $finding run-correlated review artifact after timeout',
+    async ({ finding, expectedExitCode, expectedOutcome, expectedStatus }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        executeTimedOut: true,
+        onExecute: async () => {
+          await writeReviewArtifact({ root, projectPath, finding });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: expectedStatus,
+        outcome: expectedOutcome,
+        lateCompletion: true,
+        receiveEligible: true,
+        artifactPath: `${projectPath}/reviews/p01-review.md`,
+        corroboration: {
+          run: 'matched',
+          project: 'ambient',
+          invocation: 'matched',
+        },
+        handoff: expect.stringContaining('oat-project-review-receive'),
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('noOutputProduced');
+      expect(process.exitCode).toBe(expectedExitCode);
+    },
+  );
+
+  it('reports zero-output review target timeouts with structured failure metadata', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -4456,6 +4531,7 @@ describe('oat gate', () => {
       exitCode: 124,
       timedOut: true,
       timeoutMs: 1234,
+      noOutputProduced: true,
       message: expect.stringContaining('timed out after 1234ms'),
       gateInvocation: {
         runId: expect.any(String),
@@ -4466,7 +4542,119 @@ describe('oat gate', () => {
         source: expect.any(String),
       },
     });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('lateCompletion');
     expect(process.exitCode).toBe(124);
+  });
+
+  it('reports nonzero-output review target timeouts without classifying them as zero-output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeTimedOut: true,
+      executeStdoutBytes: 17,
+      executeStderrBytes: 9,
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 124,
+      timedOut: true,
+      noOutputProduced: false,
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('lateCompletion');
+    expect(process.exitCode).toBe(124);
+  });
+
+  it('preserves duplicate run-id correlation failures after timeout', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeTimedOut: true,
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'first-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          fileName: 'second-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      corroboration: {
+        run: 'mismatched',
+        actual: {
+          matchingArtifactPaths: [
+            `${projectPath}/reviews/first-review.md`,
+            `${siblingProject}/reviews/second-review.md`,
+          ].sort(),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves mismatched changed-artifact correlation failures after timeout', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeTimedOut: true,
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_gate_run_id: 'different-run-id',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      artifactPath: `${projectPath}/reviews/p01-review.md`,
+      corroboration: {
+        run: 'mismatched',
+        actual: { matchingArtifactPaths: [] },
+      },
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('emits elapsed, idle, and hard-budget gate liveness telemetry', async () => {

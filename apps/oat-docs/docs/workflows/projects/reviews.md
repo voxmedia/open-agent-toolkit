@@ -26,9 +26,12 @@ Use `oat review latest` when a skill or operator needs to resolve "the most rece
 ```bash
 oat review latest --json
 oat review latest --project .oat/projects/shared/example --json
+oat review latest --project .oat/projects/shared/example --actionable-project --json
 ```
 
-The resolver orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope). The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. Archived project reviews remain discoverable as history but return `actionable: false`; active top-level project reviews return `actionable: true`. If no review exists, those fields are `null`.
+The default resolver is an all-history lookup. It orders candidates by `oat_generated_at` frontmatter, not filesystem mtime. With an active or explicit project, it scans the project's `reviews/` directory first, then `reviews/archived/`, then ad-hoc review locations (`.oat/repo/reviews/` and `.oat/projects/local/orphan-reviews/`). When candidates share the same generated time, active project reviews outrank archived and ad-hoc reviews, then lifecycle recency breaks remaining ties (`final` > higher phase/task scope > lower phase/task scope).
+
+Use `--actionable-project` when project review-receive needs work waiting for disposition. A top-level artifact is actionable only when its scope, type, and artifact path identify a `received` event in the plan's Reviews ledger. Top-level placement alone is insufficient: passed, `fixes_added`, `fixes_completed`, mismatched, and archived events return `actionable: false`. The JSON response contains `path`, `scope`, `generatedAt`, `kind` (`project` or `adhoc`), `archived`, and `actionable`. If no matching review exists, those fields are `null`.
 
 `oat-project-review-receive` uses this resolver when it is invoked from natural language and needs to offer the latest project review, or route an ad-hoc result to `oat-review-receive`.
 
@@ -88,6 +91,23 @@ Status progression in `plan.md` Reviews table:
 - `fixes_added`
 - `fixes_completed`
 - `passed`
+
+Each row is an append-ordered review event. Duplicate scope and type rows are
+valid because separate reviews can cover the same subject. Scope, type, and the
+artifact filename identify an event:
+
+- The first event for a scope and type may claim an unbound `pending` row whose
+  artifact is `-`.
+- A review with a distinct artifact filename appends a new row instead of
+  overwriting an earlier bound event.
+- Later bookkeeping updates match the event by scope, type, and artifact
+  filename. Moving an artifact into `reviews/archived/` preserves that identity.
+- An event advances through the status progression monotonically and never
+  moves backward. A later event can begin at `received` without changing an
+  earlier event that already reached `passed`.
+
+Readers that need current lifecycle state use the latest appended event matching
+the relevant scope and type.
 
 ## Current policy
 

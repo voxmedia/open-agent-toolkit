@@ -46,7 +46,18 @@ After `oat-project-pr-final` creates the PR, `state.md` transitions to `oat_phas
 From `pr_open`:
 
 - **Feedback received:** run `oat-project-revise` to create revision tasks and re-enter implementation
-- **Approved:** run `oat-project-complete` to finalize and archive the project. If `oat_pr_status: open` is already tracked, completion skips asking whether to open a PR again and can show the tracked `oat_pr_url` in its summary.
+- **Ready for completion:** run `oat-project-complete` to finalize and archive the project. If `oat_pr_status: open` is already tracked, completion skips asking whether to open a PR again and can show the tracked `oat_pr_url` in its summary.
+
+Both completion orderings are supported:
+
+- **Complete before merge:** run `oat-project-complete` while the PR is open,
+  then merge.
+- **Merge before completion:** merge the PR first, then run
+  `oat-project-complete`.
+
+An open PR is not a completion blocker. When completion archives project
+artifacts, the archive-aware flow regenerates and synchronizes the open PR body
+so its artifact links remain valid.
 
 ## Reference artifacts
 

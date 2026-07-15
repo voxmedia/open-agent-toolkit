@@ -92,7 +92,7 @@ describe('review skill contracts', () => {
         descriptionTriggers: ['"receive review"', '"process review"'],
         bodyContracts: [
           '## Model Invocation Gate',
-          'oat review latest --project "$PROJECT_PATH" --json',
+          'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
           'kind: "adhoc"',
           'Fallback when the CLI is unavailable',
           'ask before updating artifacts',

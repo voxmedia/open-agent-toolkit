@@ -2,6 +2,7 @@ import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { isMissingFileError } from '../shared/utils/errors';
+import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { ReviewStatus } from '../types';
 
 const REVIEWS_HEADING = '## Reviews';
@@ -43,14 +44,35 @@ export async function scanUnprocessedReviews(
   }
 }
 
+export function parseReviewArtifactIdentity(
+  content: string,
+): { scope: string; type: string } | null {
+  const frontmatter = parseFrontmatterRecord(content);
+  const scope =
+    typeof frontmatter.oat_review_scope === 'string'
+      ? frontmatter.oat_review_scope.trim()
+      : '';
+  const type =
+    typeof frontmatter.oat_review_type === 'string'
+      ? frontmatter.oat_review_type.trim()
+      : '';
+
+  return scope && type ? { scope, type } : null;
+}
+
 function extractReviewsSection(planContent: string): string | null {
-  const startIndex = planContent.indexOf(REVIEWS_HEADING);
-  if (startIndex === -1) {
+  const reviewsHeading = new RegExp(
+    `^${REVIEWS_HEADING}[ \\t]*\\r?$`,
+    'm',
+  ).exec(planContent);
+  if (!reviewsHeading) {
     return null;
   }
 
-  const remaining = planContent.slice(startIndex + REVIEWS_HEADING.length);
-  const nextHeadingIndex = remaining.search(/\n## /);
+  const remaining = planContent.slice(
+    reviewsHeading.index + reviewsHeading[0].length,
+  );
+  const nextHeadingIndex = remaining.search(/^##(?!#)[ \t]+\S.*\r?$/m);
   if (nextHeadingIndex === -1) {
     return remaining.trim();
   }

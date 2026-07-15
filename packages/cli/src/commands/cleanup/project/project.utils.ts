@@ -17,7 +17,35 @@ export function projectNeedsStateFile(fileNames: Iterable<string>): boolean {
 }
 
 export function projectPlanMarksComplete(planContent: string): boolean {
-  return /\|\s*final\s*\|\s*code\s*\|\s*passed\s*\|/i.test(planContent);
+  const reviewsHeading = /^## Reviews[ \t]*\r?$/m.exec(planContent);
+  if (!reviewsHeading) {
+    return false;
+  }
+
+  const afterHeading = planContent.slice(
+    reviewsHeading.index + reviewsHeading[0].length,
+  );
+  const nextSectionIndex = afterHeading.search(/^##(?!#)[ \t]+\S.*\r?$/m);
+  const reviewsSection =
+    nextSectionIndex === -1
+      ? afterHeading
+      : afterHeading.slice(0, nextSectionIndex);
+  const finalCodeEvents = reviewsSection
+    .split('\n')
+    .filter((line) => line.trim().startsWith('|'))
+    .map((line) =>
+      line
+        .split('|')
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .filter(
+      ([scope, type]) =>
+        scope?.toLowerCase() === 'final' && type?.toLowerCase() === 'code',
+    );
+  const latestFinalCodeEvent = finalCodeEvents[finalCodeEvents.length - 1];
+
+  return latestFinalCodeEvent?.[2]?.toLowerCase() === 'passed';
 }
 
 export function stateLifecycleIsComplete(stateContent: string): boolean {

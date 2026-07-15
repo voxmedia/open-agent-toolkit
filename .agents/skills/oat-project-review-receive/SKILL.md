@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.7
+version: 1.5.9
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -102,7 +102,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ```bash
 if [ -n "${PROJECT_PATH:-}" ] && [ -d "$PROJECT_PATH" ]; then
-  oat review latest --project "$PROJECT_PATH" --json
+  oat review latest --project "$PROJECT_PATH" --actionable-project --json
 else
   oat review latest --json
 fi
@@ -110,11 +110,13 @@ fi
 
 Selection rules:
 
-- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
+- With a valid project, use the `--actionable-project` path first. It resolves only an active/actionable project review from the top-level `reviews/` directory, so newer historical artifacts in `reviews/archived/` cannot strand an older active event.
+- If the actionable-project result has `path: null`, run `oat review latest --json` without `--actionable-project` to discover the latest ad-hoc target or report project history. The default resolver intentionally preserves all-history ordering across project (`reviews/` and `reviews/archived/`) and ad-hoc locations.
+- Both resolver paths order candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
 - Read the JSON result:
   - `path: null` means no review target was found.
   - `kind: "project"` and `actionable: true` means this skill can process the target when the path is an active top-level project review.
-  - `archived: true` or `actionable: false` means the target is historical/non-actionable for project review-receive.
+  - An `archived: true` or `actionable: false` result from the all-history fallback means no active project review was resolved and the selected result is historical/non-actionable for project review-receive.
   - `kind: "adhoc"` means route to `oat-review-receive` after offering that handoff to the user.
 - Only process active project review artifacts in the top level of `"$PROJECT_PATH/reviews/"`.
 - Treat archived project artifacts as history only; do not receive them automatically. If `oat review latest` returns an archived project review, tell the user no active project review is waiting and offer to run `oat-project-review-provide`.
@@ -140,10 +142,31 @@ Use this fallback only for active project reviews. It cannot discover ad-hoc rev
 Derive archive bookkeeping before making lifecycle edits:
 
 ```bash
-REVIEW_FILENAME=$(basename "$REVIEW_PATH")
+SOURCE_REVIEW_FILENAME=$(basename "$REVIEW_PATH")
+REVIEW_FILENAME="$SOURCE_REVIEW_FILENAME"
 ARCHIVED_REVIEW_DIR="$PROJECT_PATH/reviews/archived"
 ARCHIVED_REVIEW_PATH="$ARCHIVED_REVIEW_DIR/$REVIEW_FILENAME"
+
+if [[ -e "$ARCHIVED_REVIEW_PATH" ]]; then
+  REVIEW_STEM="${SOURCE_REVIEW_FILENAME%.md}"
+  ARCHIVE_TIMESTAMP=$(date -u +%Y-%m-%dT%H%M%SZ)
+  REVIEW_FILENAME="${REVIEW_STEM}-${ARCHIVE_TIMESTAMP}.md"
+  ARCHIVED_REVIEW_PATH="$ARCHIVED_REVIEW_DIR/$REVIEW_FILENAME"
+  ARCHIVE_COLLISION_INDEX=2
+
+  while [[ -e "$ARCHIVED_REVIEW_PATH" ]]; do
+    REVIEW_FILENAME="${REVIEW_STEM}-${ARCHIVE_TIMESTAMP}-${ARCHIVE_COLLISION_INDEX}.md"
+    ARCHIVED_REVIEW_PATH="$ARCHIVED_REVIEW_DIR/$REVIEW_FILENAME"
+    ARCHIVE_COLLISION_INDEX=$((ARCHIVE_COLLISION_INDEX + 1))
+  done
+fi
 ```
+
+`SOURCE_REVIEW_FILENAME` identifies the selected active event before archival.
+`REVIEW_FILENAME` and `ARCHIVED_REVIEW_PATH` are the collision-free final
+identity and destination. Resolve them here, before writing plan,
+implementation, or artifact-review references. Never choose a different
+basename later in either receive path.
 
 ### Step 2: Parse Findings into Buckets
 
@@ -382,7 +405,9 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 
 **Review-fix bookkeeping (required):**
 - When you add review-generated fix tasks:
-  - Update the relevant Reviews table row status to `fixes_added` (work queued) and set the Date + Artifact.
+  - Locate the Reviews event matching the selected review's Scope, Type, and `SOURCE_REVIEW_FILENAME`, then update it to `fixes_added` (work queued), set the Date, and replace its Artifact with `reviews/archived/$REVIEW_FILENAME`.
+  - The written `REVIEW_FILENAME` becomes the event's artifact filename and identity for every later mutation; use the already-resolved final basename in every plan and implementation reference.
+  - Never select a row by scope alone or move an event status backward. If the exact bound event is missing, stop and reconcile the ledger instead of mutating another event.
   - Update `## Implementation Complete` totals (phase counts + total task count) so downstream PR/review summaries don’t go stale.
   - If the plan includes any phase rollups that reference task counts, update those too.
 
@@ -399,10 +424,11 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 **Update Reviews section:**
 ```markdown
 ## Reviews
-- Update or add a row for `{scope}` in the Reviews table:
+- Find the existing event by `{scope}`, review Type, and
+  `$SOURCE_REVIEW_FILENAME`, then update only that row:
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
-  - Artifact: `reviews/archived/{filename}.md`
+  - Artifact: `reviews/archived/$REVIEW_FILENAME`
 ````
 
 **Status semantics (v1):**
@@ -410,6 +436,7 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 - `fixes_added`: fix tasks were created and added to the plan
 - `fixes_completed`: fix tasks implemented, awaiting re-review
 - `passed`: re-review completed and recorded as passing (no unresolved Critical/Important/Medium, and all final-scope gates satisfied: deferred-medium + minor disposition)
+- Status changes are monotonic. Never move an event status backward, replace an earlier event, or update a different event that happens to share the same scope/type.
 
 ### Step 7: Update Implementation.md
 
@@ -419,7 +446,7 @@ Add a note to implementation.md:
 ### Review Received: {scope}
 
 **Date:** {today}
-**Review artifact:** reviews/archived/{filename}.md
+**Review artifact:** reviews/archived/$REVIEW_FILENAME
 
 **Findings:**
 
@@ -438,7 +465,7 @@ Add a note to implementation.md:
 
 After the fix tasks are complete:
 
-- Update the review row status to `fixes_completed`
+- Update this same artifact-identified review event to `fixes_completed`
 - Re-run `oat-project-review-provide {type} {scope}` then `oat-project-review-receive` to reach `passed`
 ```
 
@@ -468,8 +495,8 @@ mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
 
 Rules:
 
-- Perform the move only after all written references have been updated to `reviews/archived/{filename}.md`.
-- If `"$ARCHIVED_REVIEW_PATH"` already exists, append a timestamp suffix before moving so history is preserved.
+- Perform the move only after all written references and event identity have been updated to `reviews/archived/$REVIEW_FILENAME`.
+- Use the `REVIEW_FILENAME` and `ARCHIVED_REVIEW_PATH` resolved in Step 1. Do not rename or re-resolve the destination here.
 - Report the archived location in the final summary.
 
 ### Step 7.6: Commit Review Bookkeeping (Required)
@@ -647,8 +674,9 @@ mkdir -p "$ARCHIVED_REVIEW_DIR"
 mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
 ```
 
-- Perform the move only after all artifact edits are applied and any written references point to `reviews/archived/{filename}.md`.
-- If `"$ARCHIVED_REVIEW_PATH"` already exists, append a timestamp suffix before moving so history is preserved.
+- Before the move, use the Step 1 `REVIEW_FILENAME` for every artifact-review reference or event identity written by the approved edits.
+- Perform the move only after all artifact edits are applied and every written reference points to `reviews/archived/$REVIEW_FILENAME`.
+- Use the Step 1 `ARCHIVED_REVIEW_PATH` unchanged. Do not rename or re-resolve the destination here.
 
 **Then route:**
 
@@ -662,14 +690,14 @@ mv "$REVIEW_PATH" "$ARCHIVED_REVIEW_PATH"
 ```
 Review received for {project-name}.
 
-Review: {review_filename}
+Review: $REVIEW_FILENAME
 Scope: {scope}
 Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Actions taken:
 - Added {N} fix tasks to plan.md ({task_ids})
 - Updated implementation.md with review notes
-- Archived review artifact to `reviews/archived/{filename}.md`
+- Archived review artifact to `reviews/archived/$REVIEW_FILENAME`
 - Deferred/accepted Medium findings: {N}
 - Minor findings dispositioned: {N} converted (default), {N} deferred-with-rationale (explicit user decision required for final scope)
 - Finding disposition map: {ID -> converted|deferred|accepted + rationale summary}
@@ -684,13 +712,13 @@ For `artifact` reviews, summarize instead:
 ```
 Review received for {project-name}.
 
-Review: {review_filename}
+Review: $REVIEW_FILENAME
 Scope: {scope}
 Findings: {N} critical, {N} important, {N} medium, {N} minor
 
 Actions taken:
 - Applied {N} artifact edits
-- Archived review artifact to `reviews/archived/{filename}.md`
+- Archived review artifact to `reviews/archived/$REVIEW_FILENAME`
 - No plan tasks created
 - Finding disposition map: {ID -> resolve_in_artifact|rejected_with_rationale|needs_user_direction}
 

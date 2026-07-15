@@ -168,9 +168,9 @@ function getPostImplementationRecommendation(
     };
   }
 
-  const finalReview = state.reviews.find(
-    (review) => review.scope === 'final' && review.type === 'code',
-  );
+  const finalReview = [...state.reviews]
+    .reverse()
+    .find((review) => review.scope === 'final' && review.type === 'code');
 
   if (!finalReview || finalReview.status === 'pending') {
     return {
@@ -231,7 +231,14 @@ function hasActionableReviewArtifacts(
   state: Omit<ProjectState, 'recommendation'>,
 ): boolean {
   return state.activeReviewArtifacts.some(
-    (reviewArtifact) => reviewArtifact.actionable && !reviewArtifact.archived,
+    (reviewArtifact) =>
+      reviewArtifact.actionable &&
+      !reviewArtifact.archived &&
+      state.reviews.some(
+        (review) =>
+          review.artifact === reviewArtifact.path &&
+          review.status.toLowerCase() === 'received',
+      ),
   );
 }
 

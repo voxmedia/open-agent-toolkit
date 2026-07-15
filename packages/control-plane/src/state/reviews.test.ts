@@ -4,7 +4,11 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { parseReviewTable, scanUnprocessedReviews } from './reviews';
+import {
+  parseReviewArtifactIdentity,
+  parseReviewTable,
+  scanUnprocessedReviews,
+} from './reviews';
 
 describe('parseReviewTable', () => {
   it('parses rows from the plan reviews table', () => {
@@ -58,6 +62,63 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('preserves duplicate-scope rows as distinct review events', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact                         |
+| ----- | ---- | -------- | ---------- | -------------------------------- |
+| final | code | passed   | 2026-04-09 | reviews/final-root-review.md     |
+| final | code | received | 2026-04-10 | reviews/final-gate-review-v2.md  |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'final',
+        type: 'code',
+        status: 'passed',
+        date: '2026-04-09',
+        artifact: 'reviews/final-root-review.md',
+      },
+      {
+        scope: 'final',
+        type: 'code',
+        status: 'received',
+        date: '2026-04-10',
+        artifact: 'reviews/final-gate-review-v2.md',
+      },
+    ]);
+  });
+
+  it('parses only the exact Reviews heading through the next level-two section', () => {
+    const planContent = [
+      '## Phase 1: Example',
+      '',
+      'Reader guidance mentions `## Reviews` inline.',
+      '',
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date       | Artifact                  |',
+      '| ----- | ---- | ------ | ---------- | ------------------------- |',
+      '| p01   | code | passed | 2026-07-13 | reviews/p01-review.md     |',
+      '| final | code | passed | 2026-07-14 | reviews/final-review.md   |',
+      '',
+      '## Implementation Complete',
+      '',
+      '| final | code | received | 2026-07-15 | reviews/not-ledger.md |',
+    ].join('\n');
+
+    const reviews = parseReviewTable(planContent);
+
+    expect(reviews).toHaveLength(2);
+    expect(reviews.at(-1)).toEqual({
+      scope: 'final',
+      type: 'code',
+      status: 'passed',
+      date: '2026-07-14',
+      artifact: 'reviews/final-review.md',
+    });
+  });
+
   it('returns an empty array when the plan has no reviews section', () => {
     expect(parseReviewTable('# Plan\n\n## Phase 1: Example\n')).toEqual([]);
   });
@@ -107,5 +168,26 @@ describe('scanUnprocessedReviews', () => {
     const projectDir = await createProjectDir();
 
     await expect(scanUnprocessedReviews(projectDir)).resolves.toEqual([]);
+  });
+});
+
+describe('parseReviewArtifactIdentity', () => {
+  it('reads scope and type from review artifact frontmatter', () => {
+    expect(
+      parseReviewArtifactIdentity(`---
+oat_review_scope: p05
+oat_review_type: code
+---
+`),
+    ).toEqual({ scope: 'p05', type: 'code' });
+  });
+
+  it('returns null when either identity field is missing', () => {
+    expect(
+      parseReviewArtifactIdentity(`---
+oat_review_scope: p05
+---
+`),
+    ).toBeNull();
   });
 });

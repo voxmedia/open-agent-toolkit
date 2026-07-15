@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -8,10 +9,13 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
+
+const execFileAsync = promisify(execFile);
 
 async function createSkillFile(
   root: string,
@@ -882,7 +886,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.0',
+        version: '1.4.1',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -890,7 +894,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.1',
+        version: '2.3.2',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1152,7 +1156,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1369,7 +1373,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.0');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1388,7 +1392,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.16');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.17');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1513,7 +1517,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -1543,12 +1547,12 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.16'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.7'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.17'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.1'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.1'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.2'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -1651,7 +1655,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /only when effective provider\/tier cells are missing or incomplete[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.13');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -1796,7 +1800,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.0');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -1918,6 +1922,37 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps preferred and exact-candidate resolver selection mutually exclusive', async () => {
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(dispatch).toMatch(/two mutually exclusive selection paths/i);
+    expect(dispatch).toMatch(
+      /preferred-selection branch[\s\S]{0,500}`--preferred[\s\S]{0,400}exact-candidate branch/i,
+    );
+    expect(dispatch).toMatch(
+      /exact-candidate branch[\s\S]{0,500}`--candidate-model`[\s\S]{0,300}must not include `--preferred`/i,
+    );
+
+    const exactCandidateCommands = [
+      ...dispatch.matchAll(
+        /`(oat project dispatch-ceiling resolve[^`\n]*--candidate-(?:model|effort)[^`\n]*)`/g,
+      ),
+    ].map((match) => match[1] ?? '');
+    expect(exactCandidateCommands.length).toBeGreaterThan(0);
+    for (const command of exactCandidateCommands) {
+      expect(command).not.toContain('--preferred');
+    }
+
+    for (const line of dispatch
+      .split('\n')
+      .filter((candidate) => candidate.includes('--preferred'))) {
+      expect(line).toMatch(/preferred/i);
+      expect(line).not.toMatch(/candidate-(?:model|effort)/);
+    }
+  });
+
   it('defines the canonical shared Phase gate review setup after stable phase IDs', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
@@ -1943,6 +1978,272 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('defines append-ordered monotonic review events across lifecycle skills', async () => {
+    const expectedVersions = [
+      ['oat-project-plan-writing', '1.2.14'],
+      ['oat-project-review-provide', '1.3.17'],
+      ['oat-project-review-receive', '1.5.9'],
+      ['oat-project-review-receive-remote', '1.4.2'],
+      ['oat-project-implement', '2.1.2'],
+      ['oat-project-pr-final', '1.5.3'],
+      ['oat-project-pr-progress', '1.2.3'],
+      ['oat-project-complete', '1.5.2'],
+      ['oat-project-next', '1.0.9'],
+    ] as const;
+
+    for (const [skillName, expectedVersion] of expectedVersions) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        expectedVersion,
+      );
+    }
+
+    const planWriting = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    expect(planWriting).toMatch(/append-ordered review events/i);
+    expect(planWriting).toMatch(/Scope.*Type.*Artifact.*event identity/is);
+    expect(planWriting).toMatch(/unbound `pending` placeholder/i);
+    expect(planWriting).toMatch(/must never move backward/i);
+
+    const reviewProvide = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    expect(reviewProvide).toMatch(
+      /claim[\s\S]{0,120}unbound `pending`[\s\S]{0,120}placeholder[\s\S]{0,300}append/i,
+    );
+
+    for (const skillName of [
+      'oat-project-review-receive',
+      'oat-project-review-receive-remote',
+      'oat-project-implement',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} artifact identity`).toMatch(
+        /artifact filename|artifact path/i,
+      );
+      expect(content, `${skillName} monotonic status`).toMatch(
+        /(?:never|must not|do not) (?:move|regress|replace)[\s\S]{0,100}(?:backward|earlier|lower)/i,
+      );
+    }
+
+    for (const skillName of [
+      'oat-project-pr-final',
+      'oat-project-complete',
+      'oat-project-next',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} latest final event`).toMatch(
+        /latest appended[\s\S]{0,120}Scope.*final.*Type.*code/is,
+      );
+    }
+
+    const progressPr = await readRepoFile(
+      '.agents/skills/oat-project-pr-progress/SKILL.md',
+    );
+    const statusCheck = progressPr.slice(
+      progressPr.indexOf('### Step 3: Check Review Status'),
+      progressPr.indexOf('### Step 4: Collect Scope Data'),
+    );
+    expect(statusCheck).toMatch(
+      /latest appended[\s\S]{0,160}Scope.*pNN.*Type.*code/is,
+    );
+  });
+
+  it('resolves active project reviews before considering historical results', async () => {
+    const receive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const resolver = receive.slice(
+      receive.indexOf('### Step 1: Locate Latest Review Artifact'),
+      receive.indexOf('### Step 2: Parse Findings into Buckets'),
+    );
+
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.9');
+    expect(resolver).toContain(
+      'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
+    );
+    expect(resolver).toMatch(
+      /active\/actionable project review[\s\S]{0,300}historical/i,
+    );
+    expect(resolver).toContain('oat review latest --json');
+    expect(resolver).toMatch(/kind: "adhoc"[\s\S]{0,200}oat-review-receive/i);
+  });
+
+  it('confines final review status reads to the Reviews ledger', async () => {
+    const fixture = [
+      '# Plan',
+      '',
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '| --- | --- | --- | --- | --- |',
+      '| final | code | received | 2026-07-14 | reviews/first.md |',
+      '| final | code | passed | 2026-07-15 | reviews/latest.md |',
+      '',
+      '## References',
+      '',
+      '| final | code | fixes_added | 2026-07-16 | example.md |',
+    ].join('\n');
+    const reviewsStart = fixture.indexOf('## Reviews');
+    const reviewsEnd = fixture.indexOf('\n## ', reviewsStart + 1);
+    const reviewsSection = fixture.slice(reviewsStart, reviewsEnd);
+    const finalRows = reviewsSection
+      .split('\n')
+      .filter((line) => /^\|\s*final\s*\|\s*code\s*\|/.test(line));
+
+    expect(finalRows.at(-1)).toContain('| passed |');
+    expect(fixture.trimEnd().split('\n').at(-1)).toContain('| fixes_added |');
+
+    for (const [name, path] of [
+      ['completion', '.agents/skills/oat-project-complete/SKILL.md'],
+      ['final PR', '.agents/skills/oat-project-pr-final/SKILL.md'],
+      ['implementation closeout', implementSkillPath],
+      ['next-step routing', '.agents/skills/oat-project-next/SKILL.md'],
+    ] as const) {
+      const content = await readRepoFile(path);
+      expect(content, `${name} Reviews start`).toContain(
+        '/^## Reviews[[:space:]]*$/',
+      );
+      expect(content, `${name} next level-two stop`).toContain(
+        'in_reviews && /^##[[:space:]]/ { exit }',
+      );
+      expect(content, `${name} latest ledger event`).toMatch(
+        /reviews_section[\s\S]{0,500}final[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
+      );
+    }
+
+    const progressPr = await readRepoFile(
+      '.agents/skills/oat-project-pr-progress/SKILL.md',
+    );
+    expect(progressPr, 'progress PR Reviews start').toContain(
+      '/^## Reviews[[:space:]]*$/',
+    );
+    expect(progressPr, 'progress PR next level-two stop').toContain(
+      'in_reviews && /^##[[:space:]]/ { exit }',
+    );
+    expect(progressPr, 'progress PR latest ledger event').toMatch(
+      /reviews_section[\s\S]{0,500}phase[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
+    );
+  });
+
+  it('resolves collision-free archive identity before receive mutations', async () => {
+    const receive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const marker = 'SOURCE_REVIEW_FILENAME=$(basename "$REVIEW_PATH")';
+    const markerIndex = receive.indexOf(marker);
+    if (markerIndex === -1) {
+      throw new Error('archive identity setup marker is missing');
+    }
+    const scriptStart =
+      receive.lastIndexOf('```bash', markerIndex) + '```bash\n'.length;
+    const scriptEnd = receive.indexOf('\n```', markerIndex);
+    const archiveSetup = receive.slice(scriptStart, scriptEnd);
+
+    const root = await mkdtemp(join(tmpdir(), 'oat-review-archive-'));
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    const reviewPath = join(projectPath, 'reviews', 'final-review.md');
+    const occupiedPath = join(
+      projectPath,
+      'reviews',
+      'archived',
+      'final-review.md',
+    );
+    await mkdir(join(projectPath, 'reviews', 'archived'), { recursive: true });
+    await writeFile(reviewPath, '# active review\n', 'utf8');
+    await writeFile(occupiedPath, '# occupied archive\n', 'utf8');
+
+    const { stdout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${archiveSetup}\nprintf '%s\\n%s\\n' "$REVIEW_FILENAME" "$ARCHIVED_REVIEW_PATH"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PROJECT_PATH: projectPath,
+          REVIEW_PATH: reviewPath,
+        },
+      },
+    );
+    const [finalBasename, finalPath] = stdout.trim().split('\n');
+
+    expect(finalBasename).not.toBe('final-review.md');
+    expect(finalPath).toBe(
+      join(projectPath, 'reviews', 'archived', finalBasename ?? ''),
+    );
+
+    const codePath = receive.slice(
+      receive.indexOf('### Step 6: Update Plan.md'),
+      receive.indexOf('### Step 8: Check Review Cycle Count'),
+    );
+    const artifactPath = receive.slice(
+      receive.indexOf(
+        '### Step 10A: Route to Next Action for Artifact Reviews',
+      ),
+      receive.indexOf('### Step 11: Output Summary'),
+    );
+    const summary = receive.slice(
+      receive.indexOf('### Step 11: Output Summary'),
+      receive.indexOf('## Re-Review Scoping'),
+    );
+
+    for (const [name, section] of [
+      ['code review', codePath],
+      ['artifact review', artifactPath],
+    ] as const) {
+      expect(section, `${name} final basename`).toContain('REVIEW_FILENAME');
+      expect(section, `${name} resolved destination`).toContain(
+        'ARCHIVED_REVIEW_PATH',
+      );
+      expect(section, `${name} no late rename`).not.toMatch(
+        /append a timestamp suffix before moving/i,
+      );
+    }
+    expect(summary).toContain('REVIEW_FILENAME');
+  });
+
+  it('records clean remote receives as atomic event-distinct artifacts', async () => {
+    const remoteReceive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+    );
+    const cleanPath = remoteReceive.slice(
+      remoteReceive.indexOf('If no unresolved comments:'),
+      remoteReceive.indexOf('### Step 3:'),
+    );
+
+    expect(cleanPath).toMatch(/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ\.md/i);
+    expect(cleanPath).toMatch(
+      /event identity[\s\S]{0,100}`Scope`[\s\S]{0,60}`Type`[\s\S]{0,60}artifact filename/i,
+    );
+    expect(cleanPath).toMatch(/unbound `pending` placeholder/i);
+    expect(cleanPath).toMatch(/otherwise append/i);
+    expect(cleanPath).toMatch(
+      /commit[\s\S]{0,240}(?:artifact|review event)[\s\S]{0,240}atomically/i,
+    );
+    expect(cleanPath).not.toMatch(
+      /update `plan\.md` review row for scoped entry/i,
+    );
+    expect(cleanPath).toMatch(/reviews\/archived/);
+    expect(cleanPath).toMatch(/consumed/i);
+
+    const artifactPath = remoteReceive.slice(
+      remoteReceive.indexOf('### Step 6: Update Project Artifacts'),
+      remoteReceive.indexOf('### Step 7: Enforce Review Cycle Limit'),
+    );
+    expect(artifactPath).toMatch(/reviews\/archived/);
+    expect(artifactPath).toMatch(/passed.*fixes_added|fixes_added.*passed/is);
+  });
+
   it('defines canonical Phase gate review choices and stable phase serialization', async () => {
     const shared = await readRepoFile(
       '.agents/skills/oat-project-plan-writing/SKILL.md',
@@ -1961,6 +2262,44 @@ describe('validateOatSkills', () => {
     expect(shared).toMatch(
       /never[\s\S]{0,160}(?:provider|model)[\s\S]{0,160}--target|must not[\s\S]{0,160}--target/i,
     );
+  });
+
+  it('requires unambiguous cross-runtime phase gate review prompts', async () => {
+    const shared = await readRepoFile(
+      '.agents/skills/oat-project-plan-writing/SKILL.md',
+    );
+    const sharedChoice = shared.slice(
+      shared.indexOf('### 3. Offer the canonical choice'),
+      shared.indexOf('### 4. Handle non-interactive planning'),
+    );
+
+    expect(sharedChoice).toMatch(/cross-runtime phase gate review/i);
+    expect(sharedChoice).toMatch(
+      /built-in per-phase root reviews[\s\S]{0,180}final review[\s\S]{0,180}run regardless/i,
+    );
+    expect(sharedChoice).not.toMatch(/^\d+\..*\(Recommended\)/im);
+
+    for (const [skillName, nextHeading] of [
+      ['oat-project-plan', '### Step 12.5:'],
+      ['oat-project-quick-start', '### Step 3.6:'],
+    ] as const) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const promptContract = content.slice(
+        content.indexOf('Phase Gate Review Setup'),
+        content.indexOf(nextHeading),
+      );
+      expect(promptContract, `${skillName} mechanism name`).toMatch(
+        /cross-runtime phase gate review/i,
+      );
+      expect(promptContract, `${skillName} invariant reviews`).toMatch(
+        /built-in per-phase root reviews[\s\S]{0,180}final review[\s\S]{0,180}run regardless/i,
+      );
+      expect(promptContract, `${skillName} no bare recommendation`).not.toMatch(
+        /^\d+\..*\(Recommended\)/im,
+      );
+    }
   });
 
   it('keeps Phase gate review disabled when setup cannot make an interactive choice', async () => {
@@ -2537,7 +2876,61 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.7');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
+  });
+
+  it('supports project completion before or after PR merge in every mode', async () => {
+    const progress = await readRepoFile(
+      '.agents/skills/oat-project-progress/SKILL.md',
+    );
+    expect(progress.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.6');
+
+    const modeSections = [
+      [
+        'spec-driven',
+        progress.slice(
+          progress.indexOf('**Spec-Driven mode'),
+          progress.indexOf('**Quick mode'),
+        ),
+      ],
+      [
+        'quick',
+        progress.slice(
+          progress.indexOf('**Quick mode'),
+          progress.indexOf('**Import mode'),
+        ),
+      ],
+      ['import', progress.slice(progress.indexOf('**Import mode'))],
+    ] as const;
+
+    for (const [mode, section] of modeSections) {
+      expect(section, `${mode} pr_open route`).toMatch(
+        /\|\s*implement\s*\|\s*pr_open\s*\|\s*`oat-project-complete`/i,
+      );
+    }
+
+    for (const skillName of ['oat-project-pr-final', 'oat-project-complete']) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content, `${skillName} completion-before-merge`).toMatch(
+        /complete before merge/i,
+      );
+      expect(content, `${skillName} merge-before-completion`).toMatch(
+        /merge before complet/i,
+      );
+      expect(content, `${skillName} open PR permissive`).toMatch(
+        /open PR is not a blocker/i,
+      );
+      expect(content, `${skillName} no ordering config`).not.toContain(
+        'completeBeforeMerge',
+      );
+    }
+
+    const complete = await readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    expect(complete).toMatch(/sync[\s\S]{0,120}open PR body/i);
   });
 
   it('documents phase-review setup across project workflow references', async () => {
@@ -2651,11 +3044,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.13'],
-      ['oat-project-plan', '1.4.0'],
-      ['oat-project-quick-start', '2.3.1'],
+      ['oat-project-plan-writing', '1.2.14'],
+      ['oat-project-plan', '1.4.1'],
+      ['oat-project-quick-start', '2.3.2'],
       ['oat-project-import-plan', '1.4.6'],
-      ['oat-project-review-provide', '1.3.16'],
+      ['oat-project-review-provide', '1.3.17'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -2670,8 +3063,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.0'],
-      ['oat-project-review-provide', '1.3.16'],
+      ['oat-project-implement', '2.1.2'],
+      ['oat-project-review-provide', '1.3.17'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
@@ -2964,7 +3357,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.2');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {

@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-progress
-version: 1.2.1
+version: 1.2.3
 description: Use when an active OAT project needs a mid-project PR for a completed phase (pNN). Generates a phase-scoped progress PR description from OAT artifacts and commit history, with optional PR creation.
 disable-model-invocation: true
 user-invocable: true
@@ -178,10 +178,25 @@ If `WORKFLOW_MODE != spec-driven` and spec/design are missing:
 
 ### Step 3: Check Review Status (Recommended)
 
-If scope is `pNN`, check `plan.md` `## Reviews` table row:
+If scope is `pNN`, extract only the exact level-two `## Reviews` ledger,
+stopping before the next level-two heading, then select its latest appended
+event whose Scope is `pNN` and Type is `code`:
 
-- If `| pNN | code | passed | ...` exists: good
+```bash
+REVIEWS_SECTION=$(awk '
+  /^## Reviews[[:space:]]*$/ { in_reviews = 1; next }
+  in_reviews && /^##[[:space:]]/ { exit }
+  in_reviews { print }
+' "$PROJECT_PATH/plan.md" 2>/dev/null)
+PHASE_ROW=$(printf '%s\n' "$REVIEWS_SECTION" | grep -E "^\\|\\s*${PHASE}\\s*\\|\\s*code\\s*\\|" | tail -1 || true)
+```
+
+Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
+
+- If `PHASE_ROW` is `| pNN | code | passed | ...`: good
 - Otherwise: warn that review has not been marked `passed` for this phase (e.g., it may be `received`, `fixes_added`, or `fixes_completed` pending re-review)
+
+Do not let an earlier passed event hide a later event for the same phase.
 
 Do not block PR generation; this is a progress PR.
 

@@ -400,7 +400,6 @@ Run these to verify the implementation:
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
-
 ````
 
 ```
