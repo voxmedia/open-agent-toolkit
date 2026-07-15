@@ -507,6 +507,7 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-15 | reviews/archived/artifact-design-review-2026-07-15T212105Z.md |
 | plan   | artifact | passed          | 2026-07-15 | structured (in-session oat-reviewer, 3 rounds)                |
+| plan   | artifact | received        | 2026-07-15 | reviews/artifact-plan-review-2026-07-15T215828Z.md            |
 
 **Plan review disposition (2026-07-15):** structured-mode artifact review, 3 rounds within the retry bound. Round 1: 1 Critical / 4 Important / 5 Medium (headless refusal exit portability; executable identity routing; whole-ladder completeness; size-axis evidence; matrix/routing separation; formatting, verification, diagnostics, marker-lifecycle, and file-scope hygiene) — all fixed, including two architectural additions (`oat gate route` helper as new task p02-t04; `ladderCompleteness` in the resolver envelope). Round 2: 1 Important / 3 Medium / 1 minor — all fixed. Round 3 (final): explicitly **clean, no blocking findings**; one optional cosmetic minor (stale marker-path labels in design summary surfaces) fixed inline immediately after the round.
 
