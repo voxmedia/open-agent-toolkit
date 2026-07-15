@@ -4573,6 +4573,159 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(124);
   });
 
+  it('resolves review timeout precedence and reports its source', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gateTimeouts: { code: 1_200_000 },
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 1_300_000 } },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({ executeTimedOut: true });
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        '--timeout-ms',
+        '1400000',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_400_000 });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      timeoutMs: 1_400_000,
+      timeoutSource: 'cli',
+    });
+  });
+
+  it.each([
+    ['final', 1_800_000],
+    ['p01', 1_800_000],
+    ['p01-p03', 1_800_000],
+    ['p01-t02', 900_000],
+  ])('uses the code scope default for %s', async (scope, expected) => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        scope,
+        'Review',
+      ],
+    });
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: expected });
+  });
+
+  it('uses config before env and env before scope defaults', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: { gateTimeouts: { code: 1_250_000 } },
+      })}\n`,
+      'utf8',
+    );
+    const configRunner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1150000' },
+      runProcess: configRunner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+    expect(configRunner.calls.at(-1)).toMatchObject({ timeoutMs: 1_250_000 });
+
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1 })}\n`,
+      'utf8',
+    );
+    const envRunner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1150000' },
+      runProcess: envRunner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+    expect(envRunner.calls.at(-1)).toMatchObject({ timeoutMs: 1_150_000 });
+  });
+
+  it('warns once for an invalid env timeout and reports the startup source', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: 'invalid' },
+      runProcess: runner.runProcess,
+      globalArgs: [],
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'artifact',
+        '--review-scope',
+        'design',
+        'Review',
+      ],
+    });
+    expect(capture.warn).toEqual([
+      expect.stringContaining('OAT_GATE_EXEC_TIMEOUT_MS'),
+    ]);
+    expect(capture.info).toContain(
+      'Running gate target codex-default (codex); timeout=900000ms (source=scope-default).',
+    );
+  });
+
   it('reports nonzero-output review target timeouts without classifying them as zero-output', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);

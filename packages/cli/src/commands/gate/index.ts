@@ -135,6 +135,7 @@ interface CrossProviderExecOptions {
   avoid?: string;
   currentRuntime?: string;
   producerIdentity?: string;
+  timeoutMs?: string;
 }
 
 interface ReviewGateOptions extends CrossProviderExecOptions {
@@ -166,6 +167,19 @@ interface GateLivenessSnapshot {
   elapsedMs: number;
   hardBudgetMs: number;
   idleMs: number;
+}
+
+type GateTimeoutSource =
+  | 'cli'
+  | 'target'
+  | 'config'
+  | 'env'
+  | 'scope-default'
+  | 'default';
+
+interface GateTimeoutResolution {
+  timeoutMs: number;
+  source: GateTimeoutSource;
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
@@ -714,18 +728,74 @@ function parseGateTimeoutFlag(value: string, flag: string): number {
   return parsed;
 }
 
-function resolveGateExecTimeoutMs(env: NodeJS.ProcessEnv): number {
-  const rawValue = env.OAT_GATE_EXEC_TIMEOUT_MS?.trim();
-  if (!rawValue) {
-    return GATE_EXEC_TIMEOUT_MS;
+function resolveGateExecTimeout(input: {
+  cliTimeoutMs?: string;
+  target: ExecTarget;
+  effective: ResolvedConfig;
+  reviewType?: string;
+  reviewScope?: string;
+  env: NodeJS.ProcessEnv;
+  warn: (message: string) => void;
+}): GateTimeoutResolution {
+  if (input.cliTimeoutMs !== undefined) {
+    return {
+      timeoutMs: parseGateTimeoutFlag(input.cliTimeoutMs, '--timeout-ms'),
+      source: 'cli',
+    };
   }
 
-  const parsed = Number(rawValue);
-  if (!Number.isInteger(parsed) || parsed < 1) {
-    return GATE_EXEC_TIMEOUT_MS;
+  if (input.target.timeoutMs !== undefined) {
+    if (isValidGateTimeoutMs(input.target.timeoutMs)) {
+      return { timeoutMs: input.target.timeoutMs, source: 'target' };
+    }
+    input.warn(
+      'Ignoring invalid target.timeoutMs; using the next timeout source.',
+    );
   }
 
-  return parsed;
+  const reviewType = input.reviewType?.trim().toLowerCase();
+  if (reviewType === 'code' || reviewType === 'artifact') {
+    const key = `workflow.gateTimeouts.${reviewType}`;
+    const entry = input.effective.resolved[key];
+    if (entry?.value !== null && entry?.value !== undefined) {
+      if (isValidGateTimeoutMs(entry.value)) {
+        return { timeoutMs: entry.value, source: 'config' };
+      }
+      input.warn(
+        `Ignoring invalid ${key} from ${entry.source}; using the next timeout source.`,
+      );
+    }
+  }
+
+  const envValue = input.env.OAT_GATE_EXEC_TIMEOUT_MS?.trim();
+  if (envValue) {
+    const parsed = Number(envValue);
+    if (isValidGateTimeoutMs(parsed)) {
+      return { timeoutMs: parsed, source: 'env' };
+    }
+    input.warn(
+      'Ignoring invalid OAT_GATE_EXEC_TIMEOUT_MS; using the next timeout source.',
+    );
+  }
+
+  const scope = input.reviewScope?.trim().toLowerCase() ?? '';
+  if (reviewType === 'artifact') {
+    return { timeoutMs: 900_000, source: 'scope-default' };
+  }
+  if (reviewType === 'code') {
+    if (/^p\d+-t\d+$/.test(scope)) {
+      return { timeoutMs: 900_000, source: 'scope-default' };
+    }
+    if (
+      scope === 'final' ||
+      /^p\d+$/.test(scope) ||
+      /^p\d+-p\d+$/.test(scope)
+    ) {
+      return { timeoutMs: 1_800_000, source: 'scope-default' };
+    }
+  }
+
+  return { timeoutMs: GATE_EXEC_TIMEOUT_MS, source: 'default' };
 }
 
 function resolveGateLivenessIntervalMs(env: NodeJS.ProcessEnv): number {
@@ -1538,6 +1608,7 @@ async function executeTarget(
   prompt: string[],
   context: CommandContext,
   dependencies: GateCommandDependencies,
+  timeout: GateTimeoutResolution,
 ): Promise<ProcessRunResult> {
   const [command, baseArgs] = argvHead(selected.target.baseCommand);
   if (!command) {
@@ -1548,14 +1619,13 @@ async function executeTarget(
     selected.model && !findPinnedModelArg(selected.target.baseCommand)
       ? ['--model', selected.model]
       : [];
-  const timeoutMs = resolveGateExecTimeoutMs(dependencies.processEnv);
   const livenessIntervalMs = resolveGateLivenessIntervalMs(
     dependencies.processEnv,
   );
 
   if (!context.json) {
     context.logger.info(
-      `Running gate target ${selected.id} (${selected.target.runtime}); timeout=${timeoutMs}ms.`,
+      `Running gate target ${selected.id} (${selected.target.runtime}); timeout=${timeout.timeoutMs}ms (source=${timeout.source}).`,
     );
   }
 
@@ -1586,7 +1656,7 @@ async function executeTarget(
         purpose: 'execute',
         stdin: 'ignore',
         stdio: 'pipe',
-        timeoutMs,
+        timeoutMs: timeout.timeoutMs,
       },
     );
   } catch (error) {
@@ -2234,6 +2304,7 @@ function writeReviewGateExecutionFailure(
     exitCode: number;
     timedOut?: boolean;
     timeoutMs?: number;
+    timeoutSource?: GateTimeoutSource;
     noOutputProduced?: boolean;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
@@ -2260,6 +2331,9 @@ function writeReviewGateExecutionFailure(
       timedOut: payload.timedOut ?? false,
       ...(payload.timeoutMs !== undefined
         ? { timeoutMs: payload.timeoutMs }
+        : {}),
+      ...(payload.timeoutSource !== undefined
+        ? { timeoutSource: payload.timeoutSource }
         : {}),
       ...(payload.noOutputProduced !== undefined
         ? { noOutputProduced: payload.noOutputProduced }
@@ -2615,7 +2689,20 @@ async function runCrossProviderExec(
     );
 
     logGateDiversity(selected, context);
-    const result = await executeTarget(selected, prompt, context, dependencies);
+    const timeout = resolveGateExecTimeout({
+      cliTimeoutMs: options.timeoutMs,
+      target: selected.target,
+      effective,
+      env: dependencies.processEnv,
+      warn: context.logger.warn,
+    });
+    const result = await executeTarget(
+      selected,
+      prompt,
+      context,
+      dependencies,
+      timeout,
+    );
     process.exitCode = result.exitCode;
   } catch (error) {
     writeError(context, error);
@@ -2667,6 +2754,15 @@ async function runReviewGate(
       dependencies,
     );
     const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const timeout = resolveGateExecTimeout({
+      cliTimeoutMs: options.timeoutMs,
+      target: selected.target,
+      effective,
+      reviewType: options.reviewType,
+      reviewScope: options.reviewScope,
+      env: dependencies.processEnv,
+      warn: context.logger.warn,
+    });
     const dispatchReport = buildGateDispatchReport(
       gateInvocation,
       options.reviewScope?.trim() || 'gate-review',
@@ -2701,6 +2797,7 @@ async function runReviewGate(
       [reviewPrompt],
       context,
       dependencies,
+      timeout,
     );
     const childExitCode = childResult.exitCode;
 
@@ -2712,7 +2809,8 @@ async function runReviewGate(
         projectResolutionSource: reviewProject.source,
         exitCode: childExitCode,
         timedOut: childResult.timedOut ?? false,
-        timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
+        timeoutMs: timeout.timeoutMs,
+        timeoutSource: timeout.source,
         gateInvocation,
         dispatchReport,
       });
@@ -2742,7 +2840,8 @@ async function runReviewGate(
         projectResolutionSource: reviewProject.source,
         exitCode: childExitCode,
         timedOut: true,
-        timeoutMs: resolveGateExecTimeoutMs(dependencies.processEnv),
+        timeoutMs: timeout.timeoutMs,
+        timeoutSource: timeout.source,
         noOutputProduced:
           childResult.stdoutBytes + childResult.stderrBytes === 0,
         gateInvocation,
@@ -3025,6 +3124,7 @@ export function createGateCommand(
 
   cmd
     .command('cross-provider-exec')
+    .alias('exec')
     .description('Run a prompt through an alternate configured runtime target')
     .option('--target <id>', 'Run this exact exec target')
     .option(
@@ -3038,6 +3138,10 @@ export function createGateCommand(
     .option(
       '--producer-identity <identity>',
       'Producer identity as <value>:<declared|observed|inferred|unknown>',
+    )
+    .option(
+      '--timeout-ms <milliseconds>',
+      `Gate timeout in milliseconds (${MIN_GATE_TIMEOUT_MS}-${MAX_GATE_TIMEOUT_MS})`,
     )
     .argument('<prompt...>', 'Prompt arguments appended to the target command')
     .action(
@@ -3068,6 +3172,10 @@ export function createGateCommand(
     .option(
       '--producer-identity <identity>',
       'Producer identity as <value>:<declared|observed|inferred|unknown>',
+    )
+    .option(
+      '--timeout-ms <milliseconds>',
+      `Gate timeout in milliseconds (${MIN_GATE_TIMEOUT_MS}-${MAX_GATE_TIMEOUT_MS})`,
     )
     .option(
       '--project <path-or-name>',
