@@ -180,6 +180,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 | p01    | code     | passed          | 2026-07-14 | reviews/archived/code-p01-fix-review-2026-07-14T225418Z.md  |
 | p01    | code     | passed          | 2026-07-14 | reviews/archived/p01-review-2026-07-14T230713Z.md           |
 | p02    | code     | passed          | 2026-07-14 | reviews/archived/p02-review-2026-07-14T231735Z.md           |
+| final  | code     | received        | 2026-07-15 | reviews/final-review-2026-07-15T004643Z.md                  |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
