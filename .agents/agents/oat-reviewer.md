@@ -1,6 +1,6 @@
 ---
 name: oat-reviewer
-version: 1.1.6
+version: 1.1.7
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
 tools: Read, Bash, Grep, Glob, Write
 color: yellow
@@ -297,7 +297,7 @@ Use a seconds-precision **UTC** timestamp token (`YYYY-MM-DDTHHMMSSZ`, from `dat
 - Task review: `{project}/reviews/pNN-tNN-review-YYYY-MM-DDTHHMMSSZ.md`
 - Range review: `{project}/reviews/range-review-YYYY-MM-DDTHHMMSSZ.md`
 
-The timestamp token must match the `oat_generated_at` frontmatter for the same run. In the unlikely event a file with that exact second already exists, append `-v2`, `-v3`, etc.
+The timestamp token and `oat_generated_at` frontmatter must represent the same instant from the same `date -u` capture. The filename uses the colon-free form (`YYYY-MM-DDTHHMMSSZ`) of the frontmatter value (`YYYY-MM-DDTHH:MM:SSZ`) because colons are not filename-safe. In the unlikely event a file with that exact second already exists, append `-v2`, `-v3`, etc.
 
 **Review artifact template:**
 
@@ -389,11 +389,12 @@ Run these to verify the implementation:
 {command 1}
 {command 2}
 ```
-````
 
 ## Recommended Next Step
 
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
+
+````
 
 ```
 
