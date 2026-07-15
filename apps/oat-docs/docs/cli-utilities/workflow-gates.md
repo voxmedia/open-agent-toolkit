@@ -533,11 +533,17 @@ threshold, and handoff checks. If those checks produce `status: ok` or
 additive recovery telemetry, not a new status: route review-receive from
 `status`, `receiveEligible`, and `handoff` as usual.
 
-When no run-correlated artifact can be recovered, JSON output reports
-`status: review_failed`, `outcome: review_did_not_complete`, `timedOut: true`,
-the timeout value, and `noOutputProduced`. That field is `true` only when the
-timed-out child emitted zero stdout and stderr bytes; it is `false` when the
-child emitted any captured output.
+When timeout recovery finds no matching run-ID path and no changed diagnostic
+artifact, JSON output reports `status: review_failed`, `outcome:
+review_did_not_complete`, `timedOut: true`, the timeout value, and
+`noOutputProduced`. That field is `true` only when the timed-out child emitted
+zero stdout and stderr bytes; it is `false` when the child emitted any captured
+output.
+
+Correlation anomalies keep their more specific failure. Multiple artifacts
+carrying the run ID, or a changed artifact carrying a mismatched run ID, return
+`targeting_correlation_failed` with `receiveEligible: false`. Do not receive
+those artifacts; correct the project/run correlation and start a new gate run.
 
 ## Current limits
 

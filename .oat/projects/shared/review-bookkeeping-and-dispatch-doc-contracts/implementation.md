@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-15
 oat_current_task_id: null
@@ -262,6 +262,8 @@ Chronological log of implementation progress.
 - [x] p05 review fix I2: Archive failed gate artifact — `ff48b652`
 - [x] p05 review fix M1: Refresh PR #151 final event status — external update, no local commit
 - [x] p05 re-review — passed with no findings; `reviews/code-p05-fix-review-2026-07-15T025926Z.md`
+- [x] Terminal implementation gate — passed at the Important threshold; run `34dbd582-cfe5-44e4-93fb-e76196edbb40`
+- [x] Passing-gate judgment sweep — addressed two documentation alignments and one state note; lockstep release synchronized at `0.1.69`
 
 **Decisions:**
 
@@ -391,6 +393,21 @@ Chronological log of implementation progress.
 
 **Disposition:** Passed. The prior blocking p05 artifact is preserved in history; proceed to the terminal final gate.
 
+### Review Received: final gate `34dbd582-cfe5-44e4-93fb-e76196edbb40`
+
+**Date:** 2026-07-15
+**Review artifact:** `reviews/archived/final-review-2026-07-15T030445Z.md`
+
+**Findings:** 0 Critical, 0 Important, 2 Medium, 1 Minor
+
+**Passing-gate judgment sweep:**
+
+- `M1` addressed now: documented `--actionable-project`, ledger-correlated `received` actionability, and default all-history behavior.
+- `M2` addressed now: documented bare-timeout versus duplicate/mismatched correlation outcomes in workflow-gates and CLI-reference docs.
+- `m1` addressed now: aligned the project artifact summary with the passed p05 re-review and terminal gate.
+
+**Disposition:** Passed at the Important threshold. All sub-threshold findings were resolved; no deferred findings remain.
+
 ---
 
 ## Deviations from Plan / Design
@@ -413,6 +430,7 @@ Track test execution during implementation.
 | 3      | Full CLI suite, release validation, formatting, build checks    | 2,888 tests + checks  | 0      | Release and inventory integration |
 | 4      | Full CLI suite, release validation, formatting, build checks    | 2,892 tests + checks  | 0      | Final review fixes and 0.1.67     |
 | 5      | Full CLI/control-plane suites and release validation            | 2,947 tests + checks  | 0      | Terminal regressions and 0.1.68   |
+| Gate   | Final gate verification and judgment-sweep validation           | 2,950 tests + checks  | 0      | Final contracts and 0.1.69        |
 | Final  | Workspace tests, lint, type-check, and build                    | 2,977 tests + checks  | 0      | Full repository implementation    |
 
 ## Final Summary (for PR/docs)
@@ -423,7 +441,7 @@ Track test execution during implementation.
 - Project review actionability now correlates exact ledger identity and status; consumed artifacts no longer route back to receive.
 - Dispatch, phase-gate prompt, and PR-completion guidance now describe mutually exclusive resolver branches and both supported completion orderings.
 - Gate timeouts recover validated run-correlated late artifacts, preserve correlation-specific failures, and expose additive late-completion and zero-output telemetry.
-- All five public packages and bundled release metadata are synchronized at `0.1.68`.
+- All five public packages and bundled release metadata are synchronized at `0.1.69`.
 
 **Behavioral changes (user-facing):**
 
@@ -445,11 +463,12 @@ Track test execution during implementation.
 - Targeted control-plane, CLI gate, validation, and autonomy-inventory tests.
 - Full CLI suite after p05: 246 files and 2,896 tests passed; full control-plane suite: 9 files and 51 tests passed.
 - Repository formatting, canonical skill validation, lint, type checks, project build, docs build, provider sync, and bundled-version assertion.
-- Five-package `pnpm release:validate` at `0.1.68`.
+- Final gate verification: 2,950 CLI/control-plane tests plus plan validation passed.
+- Five-package `pnpm release:validate` at `0.1.69`.
 
 **Design deltas (if any):**
 
-- No design artifact exists in quick mode. Final fan-in, terminal-gate review, and PR feedback added bounded ledger parsing, review actionability, archive identity, and timeout-correlation fixes before the 0.1.68 release validation.
+- No design artifact exists in quick mode. Final fan-in, terminal-gate review, and PR feedback added bounded ledger parsing, review actionability, archive identity, timeout-correlation, and public-contract documentation fixes before the 0.1.69 release validation.
 
 ## References
 

@@ -26,7 +26,7 @@ This project resolved lifecycle contract inconsistencies found during downstream
 - CLI and control-plane routing correlate top-level project artifacts with their scope, type, artifact filename, and receive-eligible ledger state. Consumed `fixes_added` and `passed` artifacts no longer route back to receive, and remote receive stores dispositioned artifacts in history.
 - Timeout handling reports duplicate run-ID matches and changed artifacts with mismatched run IDs through `targeting_correlation_failed`; only a timeout with no matching path and no diagnostic artifact returns the unrecoverable timeout envelope.
 - Gate documentation now describes `OAT_GATE_EXEC_TIMEOUT_MS`, its 900,000 ms default, and the additive timeout fields.
-- All five public packages, bundled release metadata, canonical skills, and provider views were synchronized and validated at `0.1.68`.
+- All five public packages, bundled release metadata, canonical skills, and provider views were synchronized and validated at `0.1.69`.
 
 ## Key Decisions
 
@@ -68,4 +68,4 @@ Quick mode produced no design artifact. During final fan-in, the full CLI suite 
 - Full CLI suite: 246 files and 2,896 tests passed.
 - Full control-plane suite: 9 files and 51 tests passed.
 - Repository formatting, canonical validation for 58 skills, lint, type checks, and docs production build passed.
-- Provider synchronization, bundled `0.1.68` metadata assertion, and five-package `pnpm release:validate` passed.
+- Provider synchronization, bundled `0.1.69` metadata assertion, and five-package `pnpm release:validate` passed.

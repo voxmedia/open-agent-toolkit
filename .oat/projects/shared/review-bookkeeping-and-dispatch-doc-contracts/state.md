@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: ff48b652
+oat_last_commit: 7dd77c1d
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -49,19 +49,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/151' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-15T03:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-15T03:16:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-bookkeeping-and-dispatch-doc-contracts
 
-**Status:** Implementation In Progress — Review Fixes; PR Open
+**Status:** Implementation Complete — PR Open
 **Started:** 2026-07-13
 **Last Updated:** 2026-07-15
 
 ## Current Phase
 
-Phase 5 review fixes and independent re-review passed; terminal final gate is pending.
+Implementation, independent reviews, terminal gate, and passing-gate dispositions are complete. PR #151 remains open.
 
 ## Artifacts
 
@@ -69,7 +69,7 @@ Phase 5 review fixes and independent re-review passed; terminal final gate is pe
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (16/16 tasks complete; p05 review pending)
+- **Implementation:** `implementation.md` (16/16 tasks complete; all reviews and terminal gate passed)
 
 ## Progress
 
@@ -95,7 +95,9 @@ Phase 5 review fixes and independent re-review passed; terminal final gate is pe
 - ! Independent p05 review found two Important and one Medium finding
 - ✓ Bounded p05 review fixes completed
 - ✓ Independent p05 re-review passed with no findings
-- ◌ Terminal final gate re-review
+- ✓ Terminal final gate passed
+- ✓ Passing-gate findings resolved
+- ✓ Lockstep release validation passed at 0.1.69
 
 ## Blockers
 
@@ -103,4 +105,4 @@ None.
 
 ## Next Milestone
 
-Run the terminal final gate re-review.
+Merge PR #151 when ready, then run `oat-project-complete`; completion before merge is also supported.
