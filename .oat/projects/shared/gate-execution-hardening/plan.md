@@ -209,7 +209,7 @@ git commit -m "feat(p02-t01): inject headless invocation context into gate child
 
 **Step 1: Write test (RED)**
 
-Marker `{project}/reviews/.pending-gate-<runId>.json` written before spawn with `{ runId, targetId, runtime, reviewType, reviewScope, startedAt, budgetMs, budgetSource }`; deleted on every terminal path (completed, timeout, child failure, validation failure); marker I/O failures are warn-and-continue in both directions and never alter the envelope; marker is never read by validation/correlation (assert correlation results identical with marker present/absent/corrupted).
+Marker written before spawn to `{os.tmpdir()}/oat-gate-runs/<runId>.json` (system temp, outside the repo tree — design-review I1) with `{ runId, targetId, runtime, reviewType, reviewScope, project, startedAt, budgetMs, budgetSource }`; marker path printed in the startup diagnostic; deleted on every terminal path (completed, timeout, child failure, validation failure); marker I/O failures are warn-and-continue in both directions and never alter the envelope; marker is never read by validation/correlation (assert correlation results identical with marker present/absent/corrupted); **regression: no marker path is ever inside the repository tree, and an orphaned marker never appears in `git status` for the project** (subprocess fixture kills the gate process mid-run and asserts a clean tree).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'run marker'`
 Expected: Tests fail (RED)
@@ -314,7 +314,7 @@ git commit -m "feat(p02-t04): add headless dispatch and pre-plan inherit rules t
 
 **Step 1: Write test (RED)**
 
-Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/`. Probe semantics: absent directory → `null`; newest mtime under the dir; evidence newer than `spawnedAt` counts as activity; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` (mtime/size metadata only — assert no file contents are read, e.g. via unreadable-file fixtures).
+Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/`. Probe semantics: absent directory → `null`; newest mtime under the dir; evidence newer than `spawnedAt` counts as activity; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` (mtime/size metadata only — assert no file contents are read, e.g. via unreadable-file fixtures). **Attribution scoping (design-review M1):** claude/cursor evidence carries `scope: 'project-dir'`; codex carries `scope: 'ambient-runtime'` — pinned per runtime.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/activity-probes.test.ts`
 Expected: Tests fail (RED)
@@ -351,7 +351,7 @@ git commit -m "feat(p03-t01): add per-runtime transcript activity probes"
 
 **Step 1: Write test (RED)**
 
-Snapshot carries `processAlive` and `lastActivityEvidence`; a silent-but-writing child (stub probe returns advancing evidence) shows `idleMs == elapsedMs` with recent `lastActivityEvidence` — the incident signature, now distinguishable; probe returning `null` degrades to exactly today's snapshot semantics (regression); timeout and failure envelopes include the latest evidence; evidence never alters exit codes, budgets, or receive eligibility (assert envelopes differ only by the new fields).
+Snapshot carries `processAlive` and `lastActivityEvidence`; a silent-but-writing child (stub probe returns advancing evidence) shows `idleMs == elapsedMs` with recent `lastActivityEvidence` — the incident signature, now distinguishable; probe returning `null` degrades to exactly today's snapshot semantics (regression); timeout and failure envelopes include the latest evidence **with its `scope` field, and human-readable diagnostics render `ambient-runtime` evidence as "ambient runtime activity (not attributable to this gate child)" (design-review M1)**; evidence never alters exit codes, budgets, or receive eligibility (assert envelopes differ only by the new fields).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'liveness'`
 Expected: Tests fail (RED)
@@ -460,15 +460,15 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                             |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                    |
-| p02    | code     | pending  | -          | -                                                    |
-| p03    | code     | pending  | -          | -                                                    |
-| final  | code     | pending  | -          | -                                                    |
-| spec   | artifact | pending  | -          | -                                                    |
-| design | artifact | received | 2026-07-15 | reviews/artifact-design-review-2026-07-15T212105Z.md |
-| plan   | artifact | pending  | -          | -                                                    |
+| Scope  | Type     | Status          | Date       | Artifact                                             |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                    |
+| p02    | code     | pending         | -          | -                                                    |
+| p03    | code     | pending         | -          | -                                                    |
+| final  | code     | pending         | -          | -                                                    |
+| spec   | artifact | pending         | -          | -                                                    |
+| design | artifact | fixes_completed | 2026-07-15 | reviews/artifact-design-review-2026-07-15T212105Z.md |
+| plan   | artifact | pending         | -          | -                                                    |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-15
@@ -133,6 +133,7 @@ function resolveGateExecTimeoutMs(input: {
 export interface GateActivityEvidence {
   source: 'transcript-dir';
   runtime: string;
+  scope: 'project-dir' | 'ambient-runtime'; // attribution confidence (design-review M1)
   observedPath: string; // the directory probed (not individual session files)
   lastChangeAt: number | null; // epoch ms of newest mtime under the dir, null if dir absent
   observedAt: number;
@@ -158,6 +159,8 @@ export interface GateActivityProbe {
 | cursor  | `~/.cursor/projects/<encoded-project>/agent-transcripts/`                                  |
 
 **Responsibilities & constraints:** stat/readdir + mtime comparison only — never open or parse file content; evidence newer than `spawnedAt` counts as activity; directory-level fidelity is deliberate v1 scope (session-precise correlation recorded as a future upgrade path, not built); every error path returns `null` and logs at debug level (fail soft to stdout-only liveness); output is labeled "observable activity evidence" and must never be used to extend budgets or alter pass/fail — reporting only.
+
+**Attribution scoping (design-review M1):** Claude and Cursor probe _project-scoped_ directories (`scope: 'project-dir'`) — activity there is attributable to work in this cwd, though still not session-precise. Codex's daily sessions directory is _global_, so an unrelated Codex session produces evidence; Codex evidence is therefore labeled `scope: 'ambient-runtime'`, envelopes carry the scope field, and human-readable diagnostics render ambient evidence as "ambient runtime activity (not attributable to this gate child)". Ambient evidence is still worth reporting (it distinguishes "machine doing Codex work" from "nothing happening") but must never be presented as gate-child progress.
 
 ### Liveness snapshot and envelope extensions
 
@@ -187,7 +190,7 @@ Prose changes only, in the gate-mode section: detect `oat_gate_headless` (prompt
 
 ### Run marker
 
-Written before spawn to `{project}/reviews/.pending-gate-<runId>.json`: `{ runId, targetId, runtime, reviewType, reviewScope, startedAt, budgetMs, budgetSource }`. Deleted on every terminal path. Dotfile-prefixed and transient — never committed, never read by validation, never affects pass/fail; its only consumers are humans and post-mortem tooling ("a marker with no matching envelope ⇒ the gate process itself died"). Marker I/O failures are warn-and-continue.
+Written before spawn to a **system temp location outside the repository tree**: `{os.tmpdir()}/oat-gate-runs/<runId>.json` with `{ runId, targetId, runtime, reviewType, reviewScope, project, startedAt, budgetMs, budgetSource }`. The marker path is printed in the gate startup diagnostic so post-mortem tooling can find it. Deleted on every terminal path; an orphaned marker ⇒ the gate process itself died. Never read by validation, never affects pass/fail; marker I/O failures are warn-and-continue. **Location rationale (design-review I1):** an in-repo marker (even dot-prefixed under `reviews/`) is visible to Git and can be swept into directory-scoped review bookkeeping commits if a crash orphans it; the system temp dir eliminates the entire ignore/staging-exclusion contract. Regression test: no marker path is ever inside the repository tree, and an orphaned marker cannot appear in `git status` output for the project.
 
 ## Error Handling
 
@@ -198,6 +201,18 @@ Written before spawn to `{project}/reviews/.pending-gate-<runId>.json`: `{ runId
 - **Identity check inconclusive (child side):** treat as "does not hold reviewer identity" → awaited delegation or refusal; never guess inline.
 
 ## Testing Strategy
+
+### Requirement-to-Test Mapping (design-review M2)
+
+| Requirement (discovery)                 | Verification                      | Named checks                                                                                                                                |
+| --------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Headless completion safety           | fixture + skill-contract + manual | matrix #1 (inline pass), #2 (refusal fail-closed); `review-skill-contracts` headless pins; manual Claude headless run                       |
+| 2. Configurable budgets                 | unit + fixture                    | budget precedence suite (all six levels, bounds, source reporting); matrix #3 (type-default budget)                                         |
+| 3. Liveness evidence                    | unit + fixture + manual           | probe suite (paths, mtime, fail-soft, scope attribution); snapshot/envelope suite; matrix #4 (silent-but-active timeout); manual Cursor run |
+| 4a. Run marker (secondary, adopted)     | unit + subprocess                 | marker lifecycle suite; orphan-survives-crash subprocess fixture; no-repo-tree-write regression                                             |
+| 4b. Fixture matrix (secondary, adopted) | integration                       | matrix #1–#7 named tests incl. #5 (`noOutputProduced` regression), #6 (provenance mismatch pin), #7 (receive eligibility)                   |
+| A. Resolver envelope distinction        | unit                              | `unresolvedReason` suite (three gap combinations; ladder fields accurate under missing policy — the 2026-07-15 conflation regression)       |
+| B. Pre-plan inherit rule                | skill-contract                    | inherit-rule pins (rule present, all three guards stated)                                                                                   |
 
 ### Deterministic fake runtime
 
