@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-15
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p03'] # workflow.hillCheckpointDefault=final → pause after last phase
 oat_plan_parallel_groups: [] # sequential; see ## Parallelism
 oat_plan_source: quick
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: gate-execution-hardening
@@ -506,7 +506,9 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-15 | reviews/archived/artifact-design-review-2026-07-15T212105Z.md |
-| plan   | artifact | pending         | -          | -                                                             |
+| plan   | artifact | passed          | 2026-07-15 | structured (in-session oat-reviewer, 3 rounds)                |
+
+**Plan review disposition (2026-07-15):** structured-mode artifact review, 3 rounds within the retry bound. Round 1: 1 Critical / 4 Important / 5 Medium (headless refusal exit portability; executable identity routing; whole-ladder completeness; size-axis evidence; matrix/routing separation; formatting, verification, diagnostics, marker-lifecycle, and file-scope hygiene) — all fixed, including two architectural additions (`oat gate route` helper as new task p02-t04; `ladderCompleteness` in the resolver envelope). Round 2: 1 Important / 3 Medium / 1 minor — all fixed. Round 3 (final): explicitly **clean, no blocking findings**; one optional cosmetic minor (stale marker-path labels in design summary surfaces) fixed inline immediately after the round.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

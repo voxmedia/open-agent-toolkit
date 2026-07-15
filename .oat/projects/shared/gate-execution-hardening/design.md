@@ -33,7 +33,7 @@ Everything lands in the existing gate execution pipeline (`packages/cli/src/comm
 - **Resolver envelope distinction** (`packages/cli/src/commands/project/dispatch-ceiling/`): `unresolvedReason` field separating missing-policy from missing-ladder.
 - **Budget resolver** (gate CLI + `packages/cli/src/config/oat-config.ts` + `config/resolve.ts`): replaces the single `resolveGateExecTimeoutMs` with a precedence chain; new `ExecTarget.timeoutMs` field, `--timeout-ms` flag, `workflow.gateTimeouts` config key.
 - **Activity probe registry** (new module `packages/cli/src/commands/gate/activity-probes.ts`): per-runtime transcript-directory probes behind one capability interface.
-- **Run marker** (gate CLI): transient `.pending-gate-<runId>.json` in the project `reviews/` directory.
+- **Run marker** (gate CLI): transient `{os.tmpdir()}/oat-gate-runs/<runId>.json` in system temp.
 
 ### Component Diagram
 
@@ -45,7 +45,7 @@ Everything lands in the existing gate execution pipeline (`packages/cli/src/comm
         │                                   │  env += OAT_GATE_HEADLESS=1,
         ▼                                   │         OAT_NON_INTERACTIVE=1,
  write run marker                           │         OAT_GATE_RUN_ID=<uuid>
- (reviews/.pending-gate-<id>.json)          ▼
+ (tmpdir/oat-gate-runs/<id>.json)          ▼
                                     monitor loop (interval)
                                     ├─ stdout/stderr bytes → idleMs (existing)
                                     ├─ process alive check
