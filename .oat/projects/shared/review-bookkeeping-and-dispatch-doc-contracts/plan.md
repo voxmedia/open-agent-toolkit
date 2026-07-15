@@ -344,7 +344,8 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 | final  | code     | fixes_completed | 2026-07-15 | reviews/archived/final-review-2026-07-15T010249Z.md         |
 | p04    | code     | passed          | 2026-07-15 | reviews/archived/code-p04-review-2026-07-15T014808Z.md      |
 | final  | code     | fixes_completed | 2026-07-15 | reviews/archived/final-review-2026-07-15T015430Z.md         |
-| p05    | code     | fixes_completed | 2026-07-15 | reviews/code-p05-review-2026-07-15T024654Z.md               |
+| p05    | code     | fixes_completed | 2026-07-15 | reviews/archived/code-p05-review-2026-07-15T024654Z.md      |
+| p05    | code     | passed          | 2026-07-15 | reviews/code-p05-fix-review-2026-07-15T025926Z.md           |
 
 **Status:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

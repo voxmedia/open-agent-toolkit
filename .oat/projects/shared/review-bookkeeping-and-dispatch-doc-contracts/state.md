@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/151' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-15T02:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-15T03:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 5 review fixes are complete and verified; independent p05 re-review is pending.
+Phase 5 review fixes and independent re-review passed; terminal final gate is pending.
 
 ## Artifacts
 
@@ -94,7 +94,8 @@ Phase 5 review fixes are complete and verified; independent p05 re-review is pen
 - ✓ Phase 5 terminal gate and PR-review regression fixes
 - ! Independent p05 review found two Important and one Medium finding
 - ✓ Bounded p05 review fixes completed
-- ◌ Independent p05 re-review
+- ✓ Independent p05 re-review passed with no findings
+- ◌ Terminal final gate re-review
 
 ## Blockers
 
@@ -102,4 +103,4 @@ None.
 
 ## Next Milestone
 
-Re-review the bounded p05 fixes.
+Run the terminal final gate re-review.

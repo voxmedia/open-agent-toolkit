@@ -207,15 +207,15 @@ _- Outstanding Items_
 - Dispatch policy: managed `high` from project state
 - Recovery: one operator-authorized fresh same-target launch after the original accepted worker was interrupted before edits
 
-| Phase | Status      | Tasks | Implementation commits | Root review |
-| ----- | ----------- | ----- | ---------------------- | ----------- |
-| p05   | implemented | 5/5   | `1602a8b1..e56f8503`   | pending     |
+| Phase | Status | Tasks | Implementation commits                             | Root review                |
+| ----- | ------ | ----- | -------------------------------------------------- | -------------------------- |
+| p05   | passed | 5/5   | `1602a8b1..e56f8503`; fixes `3504d886`, `ff48b652` | passed after one fix round |
 
 **Dispatch:** resolver-selected Cursor model `gpt-5.6-sol-high`, `model_axis=selected:gpt-5.6-sol-high`, `effort_axis=not-applicable`, policy `high`.
 
 **Worktree:** root checkout; clean at handoff.
 
-**Outstanding:** independent p05 review and terminal gate re-review.
+**Outstanding:** terminal gate re-review.
 
 <!-- orchestration-runs-end -->
 
@@ -261,6 +261,7 @@ Chronological log of implementation progress.
 - [x] p05 review fix I1: Correlate full control-plane review identity — `3504d886`
 - [x] p05 review fix I2: Archive failed gate artifact — `ff48b652`
 - [x] p05 review fix M1: Refresh PR #151 final event status — external update, no local commit
+- [x] p05 re-review — passed with no findings; `reviews/code-p05-fix-review-2026-07-15T025926Z.md`
 
 **Decisions:**
 
@@ -379,7 +380,16 @@ Chronological log of implementation progress.
 
 **Verification:** Focused identity/actionability tests, full control-plane tests, CLI/control-plane type checks, formatting, skill validation, release validation, and a `pr_open` routing simulation passed.
 
-**Next:** Re-review the p05 fix range, then re-run the terminal final gate.
+**Next:** Re-run the terminal final gate.
+
+### Review Received: p05 fix round
+
+**Date:** 2026-07-15
+**Review artifact:** `reviews/code-p05-fix-review-2026-07-15T025926Z.md`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
+
+**Disposition:** Passed. The prior blocking p05 artifact is preserved in history; proceed to the terminal final gate.
 
 ---
 
