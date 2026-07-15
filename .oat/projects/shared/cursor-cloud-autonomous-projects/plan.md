@@ -484,6 +484,8 @@ Expected: both on PATH with expected versions. Until a rebuild happens, record e
 
 ### Task p04-t02: Install script — user-scope packs + seeded config + auth wiring
 
+> **Amendment (2026-07-14, user direction):** the seed ships a **cursor-only** dispatch ladder — codex/claude provider cells removed as unreachable dead config (only the cursor harness exists in Cursor Cloud; cross-family review diversity comes from cursor-catalog fable/grok slugs via the family classifier). Availability probes use literal matching (`grep -Fq --`). No seed-version bump: nothing had shipped, so no deployed HOME required reconciliation. Env commit `1af64dc`; reference updated in lockstep.
+
 **Files:**
 
 - Modify: `cloud-agent-env-node:.cursor/install-repos.sh`

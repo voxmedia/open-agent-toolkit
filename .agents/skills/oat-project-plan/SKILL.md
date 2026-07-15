@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.3.14
+version: 1.4.0
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -417,6 +417,25 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
+### Step 12.1: Propose Parallel Groups (Optional)
+
+After all phases are drafted, evaluate whether any phases have non-overlapping file boundaries:
+
+1. For each pair of adjacent phases in the plan, check the `Files:` section of all tasks in each phase.
+2. If no file appears in both phases' task files sections, they are candidates for a parallel group.
+3. Propose to the user:
+
+   ```
+   I noticed phases p02 and p03 have disjoint file boundaries (no overlap).
+   Declare them as a parallel group? This lets oat-project-implement run them
+   concurrently in worktrees, cutting wall-clock time.
+   ```
+
+4. If the user confirms, update `oat_plan_parallel_groups` in the plan frontmatter.
+5. If no phases are obviously independent, skip this step silently — do not invent parallelism.
+
+Never silently infer parallelism without explicit user confirmation.
+
 ### Step 12.25: Configure Optional Phase Gate Review
 
 After the confirmed plan has stable phase IDs and before Step 12.5 starts the
@@ -481,7 +500,51 @@ Apply the shared loop exactly:
 - Re-dispatch after rewrites until clean or the retry bound is exhausted.
 - Update the `plan` artifact row in the `## Reviews` table to `passed` when clean. If residual findings remain, preserve the row and surface the residual findings before downstream handoff.
 
+### Gate Execution
+
+After the plan artifact is finalized and reviewed, run the configured gate as
+the last check before the completion boundary:
+
+1. Resolve the gate for this skill:
+
+   ```bash
+   oat gate resolve <this-skill> --json
+   ```
+
+   If the command returns JSON `null`, no gate is configured; proceed directly to the completion steps in Step 13 below.
+
+2. Export the resolved project path into the command shell:
+
+   ```bash
+   export PROJECT_PATH
+   ```
+
+   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
+
+3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
+
+4. Review-artifact handoff:
+   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
+   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
+   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
+   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
+   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
+
+5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
+   - `prompt`: surface the gate failure and ask the human how to proceed.
+   - `warn`: record the gate failure and continue.
+
+6. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
+
+A gate that ends in `block` after attempts are exhausted, or at an unresolved
+`prompt` boundary, means the completion steps below MUST NOT run; the phase
+stays `in_progress` and resumable.
+
 ### Step 13: Mark Plan Complete
+
+Reach this completion boundary only after the configured gate passes or resolves
+according to its `onFailure` policy.
 
 Before setting `oat_status: complete`, verify:
 - `## Planning Checklist` exists
@@ -498,25 +561,6 @@ oat_blockers: []
 oat_last_updated: {today}
 ---
 ````
-
-### Step 14.5: Propose Parallel Groups (Optional)
-
-After all phases are drafted, evaluate whether any phases have non-overlapping file boundaries:
-
-1. For each pair of adjacent phases in the plan, check the `Files:` section of all tasks in each phase.
-2. If no file appears in both phases' task files sections, they are candidates for a parallel group.
-3. Propose to the user:
-
-   ```
-   I noticed phases p02 and p03 have disjoint file boundaries (no overlap).
-   Declare them as a parallel group? This lets oat-project-implement run them
-   concurrently in worktrees, cutting wall-clock time.
-   ```
-
-4. If the user confirms, update `oat_plan_parallel_groups` in the plan frontmatter.
-5. If no phases are obviously independent, skip this step silently — do not invent parallelism.
-
-Never silently infer parallelism without explicit user confirmation.
 
 ### Step 14: Update Project State
 
@@ -578,42 +622,6 @@ Total: {N} tasks
 
 Next: Run oat-project-implement to begin execution.
 ```
-
-### Gate Execution
-
-Before reporting this skill as complete, run the configured gate as the final step:
-
-1. Resolve the gate for this skill:
-
-   ```bash
-   oat gate resolve <this-skill> --json
-   ```
-
-   If the command returns JSON `null`, no gate is configured; the skill is complete.
-
-2. Export the resolved project path into the command shell:
-
-   ```bash
-   export PROJECT_PATH
-   ```
-
-   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
-
-3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
-
-4. Review-artifact handoff:
-   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
-   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
-   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
-   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
-   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
-
-5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
-   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
-   - `prompt`: surface the gate failure and ask the human how to proceed.
-   - `warn`: record the gate failure and continue.
-
-6. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
 
 ## Success Criteria
 

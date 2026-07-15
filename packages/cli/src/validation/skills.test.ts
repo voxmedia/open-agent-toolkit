@@ -852,6 +852,120 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('runs lifecycle exit gates before their completion boundaries', async () => {
+    for (const {
+      skillName,
+      version,
+      finalizedHeading,
+      gateHeading,
+      completionHeading,
+      noGateNextStep,
+    } of [
+      {
+        skillName: 'oat-project-discover',
+        version: '2.2.0',
+        finalizedHeading:
+          '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
+        gateHeading: '### Step 12: Gate Execution',
+        completionHeading: '### Step 13: Mark Discovery Complete',
+        noGateNextStep: 'Step 13',
+      },
+      {
+        skillName: 'oat-project-design',
+        version: '2.3.0',
+        finalizedHeading:
+          '### Step 6: User-Review Gate (commit-first ordering)',
+        gateHeading: '### Step 7: Gate Execution',
+        completionHeading:
+          '### Step 8: Approval — Mark Design Complete and Update HiLL State',
+        noGateNextStep: 'Step 8',
+      },
+      {
+        skillName: 'oat-project-plan',
+        version: '1.4.0',
+        finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
+        gateHeading: '### Gate Execution',
+        completionHeading: '### Step 13: Mark Plan Complete',
+        noGateNextStep: 'Step 13',
+      },
+      {
+        skillName: 'oat-project-quick-start',
+        version: '2.3.1',
+        finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
+        gateHeading: '### Gate Execution',
+        completionHeading:
+          '### Step 3.7: Record Review Disposition and Mark Plan Complete',
+        noGateNextStep: 'Step 3.7',
+      },
+    ] as const) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const finalizedIndex = content.indexOf(finalizedHeading);
+      const gateIndex = content.indexOf(gateHeading);
+      const completionIndex = content.indexOf(completionHeading);
+
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        version,
+      );
+      expect(
+        gateIndex,
+        `${skillName} gate follows artifact finalization`,
+      ).toBeGreaterThan(finalizedIndex);
+      expect(
+        completionIndex,
+        `${skillName} completion follows the configured gate`,
+      ).toBeGreaterThan(gateIndex);
+      expect(
+        content.slice(completionIndex),
+        `${skillName} completion requires a resolved gate`,
+      ).toMatch(/only after the configured gate passes or resolves/i);
+      expect(
+        content.slice(gateIndex, completionIndex),
+        `${skillName} blocked gates preserve resumable in-progress state`,
+      ).toMatch(
+        /ends in `block` after attempts are exhausted[\s\S]*unresolved\s+`prompt` boundary[\s\S]*completion steps below MUST NOT run[\s\S]*stays `in_progress` and resumable/,
+      );
+      expect(
+        content.slice(gateIndex, completionIndex),
+        `${skillName} no-gate path continues into completion`,
+      ).toMatch(
+        new RegExp(
+          `no gate is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
+        ),
+      );
+      expect(
+        content.slice(gateIndex, completionIndex),
+        `${skillName} gate section must not short-circuit completion`,
+      ).not.toContain('the skill is complete');
+    }
+
+    const discover = await readRepoFile(
+      '.agents/skills/oat-project-discover/SKILL.md',
+    );
+    expect(discover).toMatch(
+      /Unresolved Critical review findings always stop\s+autonomous discovery progression,[\s\S]*record the blocker and leave the project resumable\./,
+    );
+
+    const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const parallelIndex = plan.indexOf(
+      '### Step 12.1: Propose Parallel Groups (Optional)',
+    );
+    const artifactReviewIndex = plan.indexOf(
+      '### Step 12.5: Run Plan Artifact Review Loop',
+    );
+    const gateIndex = plan.indexOf('### Gate Execution');
+    expect(
+      parallelIndex,
+      'plan topology is finalized before review',
+    ).toBeLessThan(artifactReviewIndex);
+    expect(
+      artifactReviewIndex,
+      'plan artifact review precedes exit gate',
+    ).toBeLessThan(gateIndex);
+    expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
+  });
+
   it('routes lifecycle gate handoff only for receive-eligible corroborated results', async () => {
     for (const skillName of [
       'oat-project-plan',
@@ -1434,7 +1548,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.1'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.2.1'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.1'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2538,8 +2652,8 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.13'],
-      ['oat-project-plan', '1.3.14'],
-      ['oat-project-quick-start', '2.2.1'],
+      ['oat-project-plan', '1.4.0'],
+      ['oat-project-quick-start', '2.3.1'],
       ['oat-project-import-plan', '1.4.6'],
       ['oat-project-review-provide', '1.3.16'],
     ] as const;
@@ -2850,7 +2964,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.1');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
@@ -2903,7 +3017,7 @@ describe('validateOatSkills', () => {
     expect(
       skillContent,
       'oat-project-design selective-mode contract version must stay explicit',
-    ).toMatch(/^version:\s*2\.2\.0$/m);
+    ).toMatch(/^version:\s*2\.3\.0$/m);
     expect(
       skillContent,
       'Step 4a heading must remain present for selective review-pass flow',

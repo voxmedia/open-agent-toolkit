@@ -1,6 +1,6 @@
 ---
 name: oat-project-discover
-version: 2.1.0
+version: 2.2.0
 description: Use when the user explicitly asks to continue discovery for an active spec-driven OAT project — e.g. "continue discovery", "run discovery", or confirms a previously offered discovery step. Do NOT auto-invoke for new ideas or quick-mode projects. Gathers requirements and context before spec/design.
 disable-model-invocation: false
 user-invocable: true
@@ -424,66 +424,10 @@ If `"discovery"` is in `oat_hill_checkpoints`, require explicit user approval be
 
 If discovery is not configured as a HiLL checkpoint, or user explicitly approves, continue to Step 12.
 
-### Step 12: Mark Discovery Complete
+### Step 12: Gate Execution
 
-Use the CLI completion boundary so split-created child discoveries cannot
-complete until inherited context has been revalidated:
-
-```bash
-oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
-```
-
-### Step 13: Update Project State
-
-Update `"$PROJECT_PATH/state.md"`:
-
-**Frontmatter updates:**
-
-- `oat_phase: discovery`
-- `oat_phase_status: complete`
-- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-- **If** `"discovery"` is in `oat_hill_checkpoints`: append `"discovery"` to `oat_hill_completed` array
-
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate. This keeps `oat_hill_completed` meaning "HiLL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
-
-**Content updates:**
-
-- Set **Last Updated:** to today
-- Update **Artifacts** section: Discovery status to "complete"
-- Update **Progress** section
-
-### Step 14: Commit Discovery
-
-**Note:** This shows what users will do when USING oat-project-discover.
-During implementation of OAT itself, use standard commit format.
-
-```bash
-git add "$PROJECT_PATH/"
-git commit -m "docs: complete discovery for {project-name}
-
-Key decisions:
-- {Decision 1}
-- {Decision 2}
-
-Ready for design phase"
-```
-
-### Step 15: Output Summary
-
-```
-Discovery phase complete for {project-name}.
-
-Next: Create design with the oat-project-design skill (which will confirm
-requirements automatically and produce both spec.md and design.md).
-
-If you'd rather formalize requirements without designing yet, run
-`oat-project-spec` as a standalone step.
-```
-
-### Gate Execution
-
-Before reporting this skill as complete, run the configured gate as the final
-step:
+After artifact finalization and any configured HiLL approval, run the configured
+gate as the last check before the completion boundary:
 
 1. Resolve the gate for this skill:
 
@@ -491,8 +435,8 @@ step:
    oat gate resolve <this-skill> --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; the skill is
-   complete.
+   If the command returns JSON `null`, no gate is configured; proceed directly
+   to the completion steps in Step 13 below.
 
 2. Export the resolved project path into the command shell:
 
@@ -552,5 +496,80 @@ step:
 When `OAT_AUTONOMOUS=1`, perform eligible review receive immediately and apply
 the autonomy contract's `onFailure` semantics without prompting: `warn`
 continues with provenance, `block` stops after bounded attempts, and `prompt`
-is a reported boundary. When autonomy is inactive, the interactive behavior
-above is unchanged.
+is a reported boundary. Unresolved Critical review findings always stop
+autonomous discovery progression, regardless of a less restrictive gate
+failure setting; record the blocker and leave the project resumable. Important
+findings follow the configured gate policy. When autonomy is inactive, the
+interactive behavior above is unchanged.
+
+A gate that ends in `block` after attempts are exhausted, or at an unresolved
+`prompt` boundary, means the completion steps below MUST NOT run; the phase
+stays `in_progress` and resumable.
+
+### Step 13: Mark Discovery Complete
+
+Reach this completion boundary only after the configured gate passes or resolves
+according to its `onFailure` policy.
+
+Use the CLI completion boundary so split-created child discoveries cannot
+complete until inherited context has been revalidated:
+
+```bash
+oat project complete-discovery "$PROJECT_PATH" --ready-for oat-project-design
+```
+
+### Step 14: Update Project State
+
+Reach this state transition only after the configured gate passes or resolves
+according to its `onFailure` policy.
+
+Update `"$PROJECT_PATH/state.md"`:
+
+**Frontmatter updates:**
+
+- `oat_phase: discovery`
+- `oat_phase_status: complete`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- **If** `"discovery"` is in `oat_hill_checkpoints`: append `"discovery"` to `oat_hill_completed` array
+
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate. This keeps `oat_hill_completed` meaning "HiLL gates passed" rather than "phases completed" (which is tracked by `oat_phase` and `oat_phase_status`).
+
+**Content updates:**
+
+- Set **Last Updated:** to today
+- Update **Artifacts** section: Discovery status to "complete"
+- Update **Progress** section
+
+### Step 15: Commit Discovery
+
+Reach this commit step only after the configured gate passes or resolves
+according to its `onFailure` policy.
+
+**Note:** This shows what users will do when USING oat-project-discover.
+During implementation of OAT itself, use standard commit format.
+
+```bash
+git add "$PROJECT_PATH/"
+git commit -m "docs: complete discovery for {project-name}
+
+Key decisions:
+- {Decision 1}
+- {Decision 2}
+
+Ready for design phase"
+```
+
+### Step 16: Output Summary
+
+Report completion only after the configured gate passes or resolves according to
+its `onFailure` policy.
+
+```
+Discovery phase complete for {project-name}.
+
+Next: Create design with the oat-project-design skill (which will confirm
+requirements automatically and produce both spec.md and design.md).
+
+If you'd rather formalize requirements without designing yet, run
+`oat-project-spec` as a standalone step.
+```
