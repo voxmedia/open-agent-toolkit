@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: dfe6a87b
+oat_last_commit: 3b0ec5c8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -18,11 +18,11 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/151' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-15T00:35:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-15T00:38:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR open; final p03 HiLL approval pending.
 
 ## Artifacts
 
@@ -86,8 +86,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Final verification passed
 - ✓ Final review passed with no findings
 - ✓ PR created
-- ⧗ Awaiting human review
-- ⧗ Final HiLL closeout
+- ⧗ Final p03 HiLL approval
 
 ## Blockers
 
@@ -95,8 +94,4 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Approve, defer, or decline the final p03 HiLL closeout.

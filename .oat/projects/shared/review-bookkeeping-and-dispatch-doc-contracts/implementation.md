@@ -157,6 +157,7 @@ Chronological log of implementation progress.
 - [x] Final review — `ec65e4c5`; passed with no findings
 - [x] Closeout summary — `c5e75cd8`; generated summary and four decision records
 - [x] Closeout documentation — `d0ec6bce`, `c2d008fb`, `d22b4361`; docs and repository references updated
+- [x] Closeout PR — `dfe6a87b`, `3b0ec5c8`; opened https://github.com/voxmedia/open-agent-toolkit/pull/151
 
 **Decisions:**
 
