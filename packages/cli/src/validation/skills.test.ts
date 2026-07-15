@@ -1,3 +1,4 @@
+import { execFile } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -8,10 +9,13 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateChangedSkillVersionBumps, validateOatSkills } from './skills';
+
+const execFileAsync = promisify(execFile);
 
 async function createSkillFile(
   root: string,
@@ -1999,6 +2003,85 @@ describe('validateOatSkills', () => {
         /reviews_section[\s\S]{0,500}final[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
       );
     }
+  });
+
+  it('resolves collision-free archive identity before receive mutations', async () => {
+    const receive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const marker = 'SOURCE_REVIEW_FILENAME=$(basename "$REVIEW_PATH")';
+    const markerIndex = receive.indexOf(marker);
+    if (markerIndex === -1) {
+      throw new Error('archive identity setup marker is missing');
+    }
+    const scriptStart =
+      receive.lastIndexOf('```bash', markerIndex) + '```bash\n'.length;
+    const scriptEnd = receive.indexOf('\n```', markerIndex);
+    const archiveSetup = receive.slice(scriptStart, scriptEnd);
+
+    const root = await mkdtemp(join(tmpdir(), 'oat-review-archive-'));
+    tempDirs.push(root);
+    const projectPath = join(root, '.oat', 'projects', 'shared', 'demo');
+    const reviewPath = join(projectPath, 'reviews', 'final-review.md');
+    const occupiedPath = join(
+      projectPath,
+      'reviews',
+      'archived',
+      'final-review.md',
+    );
+    await mkdir(join(projectPath, 'reviews', 'archived'), { recursive: true });
+    await writeFile(reviewPath, '# active review\n', 'utf8');
+    await writeFile(occupiedPath, '# occupied archive\n', 'utf8');
+
+    const { stdout } = await execFileAsync(
+      '/bin/bash',
+      [
+        '-c',
+        `${archiveSetup}\nprintf '%s\\n%s\\n' "$REVIEW_FILENAME" "$ARCHIVED_REVIEW_PATH"`,
+      ],
+      {
+        env: {
+          ...process.env,
+          PROJECT_PATH: projectPath,
+          REVIEW_PATH: reviewPath,
+        },
+      },
+    );
+    const [finalBasename, finalPath] = stdout.trim().split('\n');
+
+    expect(finalBasename).not.toBe('final-review.md');
+    expect(finalPath).toBe(
+      join(projectPath, 'reviews', 'archived', finalBasename ?? ''),
+    );
+
+    const codePath = receive.slice(
+      receive.indexOf('### Step 6: Update Plan.md'),
+      receive.indexOf('### Step 8: Check Review Cycle Count'),
+    );
+    const artifactPath = receive.slice(
+      receive.indexOf(
+        '### Step 10A: Route to Next Action for Artifact Reviews',
+      ),
+      receive.indexOf('### Step 11: Output Summary'),
+    );
+    const summary = receive.slice(
+      receive.indexOf('### Step 11: Output Summary'),
+      receive.indexOf('## Re-Review Scoping'),
+    );
+
+    for (const [name, section] of [
+      ['code review', codePath],
+      ['artifact review', artifactPath],
+    ] as const) {
+      expect(section, `${name} final basename`).toContain('REVIEW_FILENAME');
+      expect(section, `${name} resolved destination`).toContain(
+        'ARCHIVED_REVIEW_PATH',
+      );
+      expect(section, `${name} no late rename`).not.toMatch(
+        /append a timestamp suffix before moving/i,
+      );
+    }
+    expect(summary).toContain('REVIEW_FILENAME');
   });
 
   it('records clean remote receives as atomic event-distinct artifacts', async () => {
