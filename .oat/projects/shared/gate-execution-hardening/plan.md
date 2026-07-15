@@ -341,6 +341,32 @@ git commit -m "feat(p02-t05): add headless dispatch and pre-plan inherit rules t
 
 ---
 
+### Task p02-t06: Dispatch-mode guidance in `oat-dispatch-subagents`
+
+**Files:**
+
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md` (universal dispatch-mode norm; version bump)
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md` (foreground-interruption hazard + background preference)
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-claude.md` (print-mode background-ceiling hazard, cross-referencing the headless gate contract)
+
+**Step 1: Implement**
+
+Scope addition (operator, 2026-07-15 — recurring interactive-session incidents: multi-minute foreground subagents cancelled by user messages; silent background children with no liveness signal). Universal norm in SKILL.md: dispatch mode is chosen deliberately by expected duration and interaction model — multi-minute dispatches (implementers, fix loops, reviewers) must survive session interaction and run background where the host supports it; foreground is reserved for short checks; fire-and-forget background dispatch remains forbidden in headless gate contexts (this project's contract — the hazards point in opposite directions per context, which is why the norm names both). Monitoring note: a silent background child's provider transcript fs-metadata (mtime/size at the documented per-runtime paths) is observable liveness evidence; never treat it as a health verdict. Provider notes per the file split above. Bump the skill version.
+
+**Step 2: Format + Verify**
+
+Run: `pnpm format:fix && pnpm oat:validate-skills`
+Expected: Skill validates; format passes
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-dispatch-subagents/
+git commit -m "feat(p02-t06): add dispatch-mode guidance to oat-dispatch-subagents"
+```
+
+---
+
 ## Phase 3: Liveness probes, envelopes, fixture matrix, docs
 
 ### Task p03-t01: Activity probe registry
@@ -563,10 +589,10 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 **Summary:**
 
 - Phase 1: 3 tasks - Budget config/precedence + resolver envelope distinction + ladder completeness/inspection
-- Phase 2: 5 tasks - Headless context injection, run marker, refusal detection, `oat gate route` helper, review-provide dispatch + inherit rules
+- Phase 2: 6 tasks - Headless context injection, run marker, refusal detection, `oat gate route` helper, review-provide dispatch + inherit rules, dispatch-mode guidance
 - Phase 3: 4 tasks - Activity probes, liveness/envelope extensions, fake-runtime fixture matrix, docs + version bumps
 
-**Total: 12 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge.
 
