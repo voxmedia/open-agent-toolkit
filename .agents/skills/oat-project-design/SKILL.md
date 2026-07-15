@@ -1,6 +1,6 @@
 ---
 name: oat-project-design
-version: 2.2.0
+version: 2.3.0
 description: Use when discovery is complete and implementation-ready decisions are needed. Runs a collaborative, selective collaborative, or draft-and-review design flow, confirms requirements and produces both `spec.md` and `design.md`, and commits artifacts before the user-review gate.
 disable-model-invocation: true
 user-invocable: true
@@ -619,79 +619,10 @@ Wait for user response:
   stop and report: "Design draft committed; awaiting HiLL approval."
 ```
 
-### Step 7: Approval — Mark Design Complete and Update HiLL State
+### Step 7: Gate Execution
 
-On approval (either explicit user approval when HiLL gate fired, or automatic when no HiLL gate is configured):
-
-**Step 7a: Mark design.md complete**
-
-Update `design.md` frontmatter:
-
-```yaml
----
-oat_status: complete
-oat_ready_for: oat-project-plan
-oat_blockers: []
-oat_last_updated: { today }
----
-```
-
-**Step 7b: Update project state.md**
-
-Update `"$PROJECT_PATH/state.md"`:
-
-**Frontmatter updates:**
-
-- `oat_current_task: null`
-- `oat_last_commit: {commit_sha_from_step_6a_or_revision}`
-- `oat_blockers: []`
-- `oat_phase: design`
-- `oat_phase_status: complete`
-- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-- **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array.
-- **If** `"spec"` is in `oat_hill_checkpoints` and not previously completed via the standalone spec skill: append `"spec"` too (folded HiLL — a single approval covers both).
-
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
-
-Update content:
-
-```markdown
-## Current Phase
-
-Design - Ready for implementation planning
-
-## Progress
-
-- ✓ Discovery complete
-- ✓ Specification complete (folded into design)
-- ✓ Design complete
-- ⧗ Awaiting implementation plan
-```
-
-**Step 7c: Commit the approval-side metadata**
-
-```bash
-git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
-git diff --cached --quiet || git commit -m "chore(oat): mark design complete for {project-name}"
-```
-
-### Step 8: Output Summary
-
-```
-Design phase complete for {project-name}.
-
-Architecture:
-- {N} components defined
-- {N} data models specified
-- {N} API endpoints designed
-
-Next: Create implementation plan with the oat-project-plan skill
-```
-
-### Gate Execution
-
-Before reporting this skill as complete, run the configured gate as the final
-step:
+After artifact finalization and any configured HiLL approval, run the configured
+gate as the last check before the completion boundary:
 
 1. Resolve the gate for this skill:
 
@@ -699,8 +630,8 @@ step:
    oat gate resolve <this-skill> --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; the skill is
-   complete.
+   If the command returns JSON `null`, no gate is configured; proceed directly
+   to the completion steps in Step 8 below.
 
 2. Export the resolved project path into the command shell:
 
@@ -765,6 +696,88 @@ autonomous design progression, regardless of a less restrictive gate failure
 setting; record the blocker and leave the project resumable. Important findings
 follow the configured gate policy. When autonomy is inactive, the interactive
 behavior above is unchanged.
+
+A gate that ends in `block` after attempts are exhausted, or at an unresolved
+`prompt` boundary, means the completion steps below MUST NOT run; the phase
+stays `in_progress` and resumable.
+
+### Step 8: Approval — Mark Design Complete and Update HiLL State
+
+Reach this completion boundary only after the configured gate passes or resolves
+according to its `onFailure` policy.
+
+On approval (either explicit user approval when HiLL gate fired, or automatic when no HiLL gate is configured):
+
+**Step 8a: Mark design.md complete**
+
+Update `design.md` frontmatter:
+
+```yaml
+---
+oat_status: complete
+oat_ready_for: oat-project-plan
+oat_blockers: []
+oat_last_updated: { today }
+---
+```
+
+**Step 8b: Update project state.md**
+
+Update `"$PROJECT_PATH/state.md"`:
+
+**Frontmatter updates:**
+
+- `oat_current_task: null`
+- `oat_last_commit: {commit_sha_from_step_6a_or_revision}`
+- `oat_blockers: []`
+- `oat_phase: design`
+- `oat_phase_status: complete`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- **If** `"design"` is in `oat_hill_checkpoints`: append `"design"` to `oat_hill_completed` array.
+- **If** `"spec"` is in `oat_hill_checkpoints` and not previously completed via the standalone spec skill: append `"spec"` too (folded HiLL — a single approval covers both).
+
+**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
+
+Update content:
+
+```markdown
+## Current Phase
+
+Design - Ready for implementation planning
+
+## Progress
+
+- ✓ Discovery complete
+- ✓ Specification complete (folded into design)
+- ✓ Design complete
+- ⧗ Awaiting implementation plan
+```
+
+**Step 8c: Commit the approval-side metadata**
+
+Reach this commit step only after the configured gate passes or resolves
+according to its `onFailure` policy.
+
+```bash
+git add "$PROJECT_PATH/design.md" "$PROJECT_PATH/state.md"
+git diff --cached --quiet || git commit -m "chore(oat): mark design complete for {project-name}"
+```
+
+### Step 9: Output Summary
+
+Report completion only after the configured gate passes or resolves according to
+its `onFailure` policy.
+
+```
+Design phase complete for {project-name}.
+
+Architecture:
+- {N} components defined
+- {N} data models specified
+- {N} API endpoints designed
+
+Next: Create implementation plan with the oat-project-plan skill
+```
 
 ## Success Criteria
 

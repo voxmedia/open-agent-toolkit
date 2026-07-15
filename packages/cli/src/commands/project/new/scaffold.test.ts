@@ -6,7 +6,11 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
-import { scaffoldProject } from './scaffold';
+import {
+  scaffoldProject as scaffoldProjectImpl,
+  type ScaffoldProjectOptions,
+  type ScaffoldProjectResult,
+} from './scaffold';
 
 const REPO_ROOT = join(process.cwd(), '..', '..');
 const PROJECT_TEMPLATE_NAMES = [
@@ -18,6 +22,15 @@ const PROJECT_TEMPLATE_NAMES = [
   'implementation.md',
 ] as const;
 const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
+
+function scaffoldProject(
+  options: ScaffoldProjectOptions,
+): Promise<ScaffoldProjectResult> {
+  return scaffoldProjectImpl({
+    home: join(options.repoRoot, '.test-home'),
+    ...options,
+  });
+}
 
 function initGitRepo(root: string): void {
   execFileSync('git', ['init', '-q'], { cwd: root });

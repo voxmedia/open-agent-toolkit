@@ -56,6 +56,23 @@ function expectValidReportContext(command: string): void {
 }
 
 describe('review skill contracts', () => {
+  it('keeps reviewer timestamps aligned and next-step guidance inside the artifact template', () => {
+    const content = readRepoFile('.agents/agents/oat-reviewer.md');
+    const templateStart = content.indexOf('````markdown\n---');
+    const templateEnd = content.indexOf('````', templateStart + 4);
+    const nextStep = content.indexOf('## Recommended Next Step');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.7');
+    expect(content).toContain(
+      'must represent the same instant from the same `date -u` capture',
+    );
+    expect(content).toContain(
+      'The filename uses the colon-free form (`YYYY-MM-DDTHHMMSSZ`) of the frontmatter value (`YYYY-MM-DDTHH:MM:SSZ`)',
+    );
+    expect(nextStep).toBeGreaterThan(templateStart);
+    expect(nextStep).toBeLessThan(templateEnd);
+  });
+
   it('keeps the model-invokable project workflow skills gated by explicit asks', () => {
     const skills = [
       {

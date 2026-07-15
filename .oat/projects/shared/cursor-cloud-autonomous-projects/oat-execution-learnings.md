@@ -67,6 +67,11 @@ revision and recopy it into the environment repository. Add an authoring
 instruction or validation rule requiring literal matching for opaque provider
 model identifiers.
 
+**Disposition (2026-07-14):** Resolved in the approved pre-ship seed revision.
+All six canonical probes now use `grep -Fq --`, and the environment seed is
+byte-identical to the revised reference. No numeric seed-version bump is needed:
+env PR #5 has not shipped, so there is no deployed HOME to migrate.
+
 ## 2026-07-14T01:58:00Z - code-follow-up - Gate-inventory drift enforcement
 
 **Observation:** `.agents/docs/autonomy-contract.md`'s exhaustiveness claim is
@@ -118,3 +123,126 @@ class) with FR14 as a filtered consumer, decided on production evidence; (4)
 feed two suggestions upstream to their project: a secret-redaction entry
 contract, and the Observation/Impact/Recommendation body shape for high-value
 judgment entries. Full comparison recorded in the project log 2026-07-14.
+
+## 2026-07-14T03:40:00Z - gotcha - Live install-repos.sh verification stripped VM git credentials
+
+**Observation:** During the seed-revision verification, running provisioning
+logic against the live environment stripped the platform-injected git
+credentials and `[user]` identity from `/agent/repos/*/.git/config` (the boot
+script's repo-config loop rewrites remotes to canonical tokenless URLs,
+expecting the platform to re-inject tokens at VM start). Subsequent pushes
+failed with "could not read Username"; `gh` auth was also absent. Recovered by
+restoring the committed identity from git history and authenticating pushes
+via the `GITHUB_PACKAGES_TOKEN` secret through a one-shot credential helper.
+
+**Impact:** Mid-session credential loss; ~10 minutes recovery. Would strand
+pushes entirely in an environment without a repo-scoped fallback secret.
+
+**Recommendation:** (1) Harness/verification runs of `install-repos.sh` must
+never execute the repo-config loop against `/agent/repos` — the committed
+harness already isolates via fixtures; add an explicit guard to the script
+itself (skip or warn when a target repo's remote already carries injected
+credentials, or gate the loop behind a boot-context marker). (2) Add this
+failure mode to the cloud-env README troubleshooting section.
+
+## 2026-07-14T12:50:00Z - documentation-gap - Cursor rules lack per-task tier classification; one-family convention implicit
+
+**Observation:** Operator's dispatch model: one family of agents per project;
+the orchestrator classifies each task to the appropriate model within that
+family (ceiling = cap, not mandate); reviews always run at the configured
+ceiling; cross-model independence comes from configured gates. Checked against
+`oat-project-implement/references/dispatch-and-dry-run.md`: reviews-at-ceiling
+and gates-as-configured are stated verbatim, and Codex/Claude rules carry
+explicit preferred-effort/model scope-classification tables — but the Cursor
+provider rules have no per-task classification step (opaque strings +
+resolver call only), and the one-family-per-project convention is stated
+nowhere; it is emergent from single-harness providers and breaks on Cursor's
+multi-family catalog. Observed consequence in this run: every phase
+implementer was pinned to the frontier resolution instead of classifying
+docs/config work to lower tiers (operator corrected 2026-07-14).
+
+**Impact:** Cursor-run projects over-dispatch execution work at ceiling and
+have no instruction-level guardrail keeping execution within the selected
+family; the seeded cursor ladder's deliberately multi-family cells (availability
+resilience) can hand a cross-family implementer to a single-family project,
+conflating the execution ladder with the gate layer's cross-family role.
+
+**Recommendation:** (1) Add a per-task tier-classification step to the Cursor
+rules mirroring the Codex scope table, mapped to ladder tiers (economy/
+balanced/high/frontier), with ceiling-as-cap semantics restated. (2) State the
+family-coherence convention explicitly in the dispatch references: execution
+stays within the project's selected family; cross-family is the province of
+gates and explicitly configured review routes. (3) Revisit the cloud seed's
+cursor ladder cells: consider single-family (Sol) execution cells with
+Fable/Grok confined to gate execTargets — discuss before changing; the
+multi-family cells were a deliberate availability-resilience choice.
+
+## 2026-07-14T13:00:00Z - candidate-skill-content - Gate diversity keys on stamped executor; unknown-producer degrades softly
+
+**Observation:** Verified in `packages/cli/src/commands/gate/index.ts`:
+`oat gate review` resolves producer identity from implementation.md dispatch
+stamps filtered to implementer/fix roles (exact scope → latest stamp; range/
+final scopes → aggregated family union), never from the orchestrator's
+selected model. Fable-orchestrator + Sol-implementer projects therefore select
+the Fable gate correctly, and mixed-family execution histories aggregate to
+avoid every producing family (Grok tertiary covers the two-family case). But
+when stamps carry `producer=unknown`, avoidance degrades to same-runtime, and
+in an all-cursor registry falls through to the top-priority target with
+`achieved=unknown-producer` + warning — potentially same-family as the actual
+producer, with no hard stop.
+
+**Impact:** The FR3 cross-family guarantee rests on stamp bookkeeping quality;
+in autonomous runs a silent diversity loss would go unnoticed until summary.
+
+**Recommendation:** Hardening candidate: under `OAT_AUTONOMOUS=1`, a code-scope
+gate review resolving `unknown-producer` should fail closed (boundary stop)
+instead of warn-and-proceed, or at minimum require the explicit
+`--producer-identity` override. Also a docs candidate: state in the dispatch
+references that gate diversity is executor-derived (stamps), orchestrator
+identity is invisible to gate selection.
+
+## 2026-07-15T00:12:51Z - workflow-improvement - Downstream vendored-copy reviews are a free canonical audit channel
+
+**Observation:** Cursor Bugbot reviewed a downstream repository that vendors
+canonical OAT lifecycle skills and agent instructions, then reported five
+findings that all reproduced in the canonical sources. The downstream context
+surfaced completion-ordering, timestamp-format, template-fence, and
+cross-step-artifact contract defects without requiring a separate canonical
+review dispatch.
+
+**Impact:** Vendored-copy review creates useful independent coverage at no
+additional canonical review cost. Ignoring those reports because they originate
+downstream would leave defects in the source of truth and every future vendor
+refresh.
+
+**Recommendation:** Treat downstream vendored-copy findings as a free canonical
+audit channel: verify each report against the canonical source, fix it there,
+record the external provenance, and regenerate provider or vendored views.
+Avoid patching only the downstream copy when the canonical file is defective.
+
+## 2026-07-15T00:35:00Z - decision - Org orchestration rule resolves selection-philosophy layering
+
+**Observation:** Operator shared the org-level `alwaysApply` "Agent
+orchestration" rule (internal-skills repo). Its taxonomy aligns with OAT's
+dispatch substrate: task shapes = OAT baseline role classes verbatim; relative
+tiers = OAT dispatch-policy tiers (naming nit: rule "economical" vs OAT config
+"economy"); its five required dispatch fields are a subset of OAT's caller
+request contract.
+
+**Impact:** Two previously-logged open items resolve. (1) The Cursor
+per-task tier-classification gap (2026-07-14 entry) narrows to mechanics only:
+the org rule owns "lowest reliable tier" selection philosophy; OAT's Cursor
+provider rules need only the mechanical mapping (classified tier → configured
+ladder cell → resolver `--candidate-model`). Do not duplicate selection
+philosophy into OAT docs. (2) The family-coherence question closes: the org
+rule is deliberately model-agnostic and the operator accepts cross-family
+execution; multi-family ladder cells stand; family enforcement remains where
+it lives — gate/review diversity via stamped executor identity.
+
+**Recommendation:** Remaining OAT-side follow-ups: add the mechanical
+tier→cell→resolver hook to the Cursor provider rules (docs); consider one
+paragraph in `oat-dispatch-subagents` selection guidance adopting the org
+rule's stricter catalog-gap behavior ("a missing lower tier does not justify
+an equivalent frontier child; prefer retain-in-root when output is not
+mechanically verifiable") — currently OAT biases to nearest-available-tier
+dispatch. Align "economical"/"economy" naming on one side.

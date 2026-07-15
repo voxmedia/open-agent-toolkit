@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.11.0
+version: 1.11.1
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -405,7 +405,8 @@ PACKS_DIR="${BUNDLE_DIR}/packs"
 mkdir -p "$PACKS_DIR"
 ```
 
-Fill in all template sections with findings from Steps 2-7.
+Fill in all template sections with findings from Steps 2–7, including Step
+3.5's existing-rule validation.
 
 Write the human-readable markdown artifact to `$ARTIFACT_PATH`.
 

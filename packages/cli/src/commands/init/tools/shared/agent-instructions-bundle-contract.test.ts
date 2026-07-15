@@ -14,6 +14,20 @@ function repoFilePath(relativePath: string): string {
 }
 
 describe('agent instructions bundle contract', () => {
+  it('requires analysis artifact fill to include existing-rule validation', () => {
+    const analyzeSkill = readFileSync(
+      repoFilePath('.agents/skills/oat-agent-instructions-analyze/SKILL.md'),
+      'utf8',
+    );
+
+    expect(analyzeSkill.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe(
+      '1.11.1',
+    );
+    expect(analyzeSkill).toContain(
+      "Fill in all template sections with findings from Steps 2–7, including Step\n3.5's existing-rule validation.",
+    );
+  });
+
   it('requires recommendation packs to preserve behavioral and workflow guidance', () => {
     const packTemplate = readFileSync(
       repoFilePath(
