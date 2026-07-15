@@ -230,6 +230,45 @@ describe('oat review latest', () => {
     });
   });
 
+  it('resolves an older active project review without changing all-history latest behavior', async () => {
+    const root = await createRepoRoot();
+    const projectPath = '.oat/projects/shared/demo';
+    const activePath = `${projectPath}/reviews/active.md`;
+    const archivedPath = `${projectPath}/reviews/archived/archived.md`;
+
+    await writeReview(root, activePath, {
+      generatedAt: '2026-06-02',
+      scope: 'p01',
+      project: projectPath,
+    });
+    await writeReview(root, archivedPath, {
+      generatedAt: '2026-06-03',
+      scope: 'final',
+      project: projectPath,
+    });
+
+    const allHistoryResult = await findLatestReview({
+      repoRoot: root,
+      projectPath,
+    });
+    const actionableProjectResult = await findLatestReview({
+      repoRoot: root,
+      projectPath,
+      actionableProjectOnly: true,
+    });
+
+    expect(allHistoryResult?.path).toBe(archivedPath);
+    expect(allHistoryResult?.actionable).toBe(false);
+    expect(actionableProjectResult).toEqual({
+      path: activePath,
+      scope: 'p01',
+      generatedAt: '2026-06-02',
+      kind: 'project',
+      archived: false,
+      actionable: true,
+    });
+  });
+
   it('prefers final review scope when active project reviews share a generated time', async () => {
     const root = await createRepoRoot();
     const projectPath = '.oat/projects/shared/demo';

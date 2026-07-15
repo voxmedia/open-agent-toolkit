@@ -36,6 +36,7 @@ interface ReviewCandidate extends LatestReview {
 export interface FindLatestReviewOptions {
   repoRoot: string;
   projectPath?: string | null;
+  actionableProjectOnly?: boolean;
 }
 
 interface ReviewLatestDependencies {
@@ -192,40 +193,42 @@ export async function findLatestReview(
   }> = [];
 
   if (projectPath) {
-    scanTargets.push(
-      {
-        dir: `${projectPath}/reviews`,
-        kind: 'project',
-        priority: 0,
-        archived: false,
-        actionable: true,
-      },
-      {
+    scanTargets.push({
+      dir: `${projectPath}/reviews`,
+      kind: 'project',
+      priority: 0,
+      archived: false,
+      actionable: true,
+    });
+    if (!options.actionableProjectOnly) {
+      scanTargets.push({
         dir: `${projectPath}/reviews/archived`,
         kind: 'project',
         priority: 1,
         archived: true,
         actionable: false,
+      });
+    }
+  }
+
+  if (!options.actionableProjectOnly) {
+    scanTargets.push(
+      {
+        dir: '.oat/repo/reviews',
+        kind: 'adhoc',
+        priority: 2,
+        archived: false,
+        actionable: true,
+      },
+      {
+        dir: '.oat/projects/local/orphan-reviews',
+        kind: 'adhoc',
+        priority: 3,
+        archived: false,
+        actionable: true,
       },
     );
   }
-
-  scanTargets.push(
-    {
-      dir: '.oat/repo/reviews',
-      kind: 'adhoc',
-      priority: 2,
-      archived: false,
-      actionable: true,
-    },
-    {
-      dir: '.oat/projects/local/orphan-reviews',
-      kind: 'adhoc',
-      priority: 3,
-      archived: false,
-      actionable: true,
-    },
-  );
 
   const candidates = (
     await Promise.all(
@@ -280,7 +283,7 @@ async function resolveProjectPath(
 
 async function runReviewLatest(
   context: CommandContext,
-  options: { project?: string },
+  options: { project?: string; actionableProject?: boolean },
   dependencies: ReviewLatestDependencies,
 ): Promise<void> {
   try {
@@ -290,7 +293,11 @@ async function runReviewLatest(
       options.project,
       dependencies,
     );
-    const result = await findLatestReview({ repoRoot, projectPath });
+    const result = await findLatestReview({
+      repoRoot,
+      projectPath,
+      actionableProjectOnly: options.actionableProject,
+    });
 
     if (context.json) {
       context.logger.json(result ?? EMPTY_RESULT);
@@ -324,10 +331,19 @@ export function createReviewLatestCommand(
       '--project <path>',
       'Project path to scan in addition to ad-hoc review locations',
     )
-    .action(async (options: { project?: string }, command: Command) => {
-      const context = dependencies.buildCommandContext(
-        readGlobalOptions(command),
-      );
-      await runReviewLatest(context, options, dependencies);
-    });
+    .option(
+      '--actionable-project',
+      'Scan only active project reviews, excluding archived and ad-hoc history',
+    )
+    .action(
+      async (
+        options: { project?: string; actionableProject?: boolean },
+        command: Command,
+      ) => {
+        const context = dependencies.buildCommandContext(
+          readGlobalOptions(command),
+        );
+        await runReviewLatest(context, options, dependencies);
+      },
+    );
 }

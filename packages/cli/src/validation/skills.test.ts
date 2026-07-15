@@ -1430,7 +1430,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.17'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.8'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.2'],
@@ -1864,7 +1864,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.14'],
       ['oat-project-review-provide', '1.3.17'],
-      ['oat-project-review-receive', '1.5.8'],
+      ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.1'],
       ['oat-project-implement', '2.1.1'],
       ['oat-project-pr-final', '1.5.2'],
@@ -1936,6 +1936,26 @@ describe('validateOatSkills', () => {
     expect(statusCheck).toMatch(
       /latest appended[\s\S]{0,160}Scope.*pNN.*Type.*code/is,
     );
+  });
+
+  it('resolves active project reviews before considering historical results', async () => {
+    const receive = await readRepoFile(
+      '.agents/skills/oat-project-review-receive/SKILL.md',
+    );
+    const resolver = receive.slice(
+      receive.indexOf('### Step 1: Locate Latest Review Artifact'),
+      receive.indexOf('### Step 2: Parse Findings into Buckets'),
+    );
+
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.9');
+    expect(resolver).toContain(
+      'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
+    );
+    expect(resolver).toMatch(
+      /active\/actionable project review[\s\S]{0,300}historical/i,
+    );
+    expect(resolver).toContain('oat review latest --json');
+    expect(resolver).toMatch(/kind: "adhoc"[\s\S]{0,200}oat-review-receive/i);
   });
 
   it('records clean remote receives as atomic event-distinct artifacts', async () => {

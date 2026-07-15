@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.8
+version: 1.5.9
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -102,7 +102,7 @@ PROJECTS_ROOT="${PROJECTS_ROOT%/}"
 
 ```bash
 if [ -n "${PROJECT_PATH:-}" ] && [ -d "$PROJECT_PATH" ]; then
-  oat review latest --project "$PROJECT_PATH" --json
+  oat review latest --project "$PROJECT_PATH" --actionable-project --json
 else
   oat review latest --json
 fi
@@ -110,11 +110,13 @@ fi
 
 Selection rules:
 
-- Use `oat review latest` as the first-choice resolver. It scans project reviews (`reviews/` and `reviews/archived/`) plus ad-hoc review locations and orders candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
+- With a valid project, use the `--actionable-project` path first. It resolves only an active/actionable project review from the top-level `reviews/` directory, so newer historical artifacts in `reviews/archived/` cannot strand an older active event.
+- If the actionable-project result has `path: null`, run `oat review latest --json` without `--actionable-project` to discover the latest ad-hoc target or report project history. The default resolver intentionally preserves all-history ordering across project (`reviews/` and `reviews/archived/`) and ad-hoc locations.
+- Both resolver paths order candidates by `oat_generated_at` frontmatter rather than filesystem mtime. Review artifacts carry a seconds-precision `oat_generated_at` and a matching timestamped filename, so same-scope same-day re-gates order deterministically and the newest round wins — never assume the plain `<scope>-review-<date>.md` name is current.
 - Read the JSON result:
   - `path: null` means no review target was found.
   - `kind: "project"` and `actionable: true` means this skill can process the target when the path is an active top-level project review.
-  - `archived: true` or `actionable: false` means the target is historical/non-actionable for project review-receive.
+  - An `archived: true` or `actionable: false` result from the all-history fallback means no active project review was resolved and the selected result is historical/non-actionable for project review-receive.
   - `kind: "adhoc"` means route to `oat-review-receive` after offering that handoff to the user.
 - Only process active project review artifacts in the top level of `"$PROJECT_PATH/reviews/"`.
 - Treat archived project artifacts as history only; do not receive them automatically. If `oat review latest` returns an archived project review, tell the user no active project review is waiting and offer to run `oat-project-review-provide`.
