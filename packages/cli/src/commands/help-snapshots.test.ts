@@ -648,14 +648,17 @@ describe('help output snapshots', () => {
       Find the most recent OAT review artifact
 
       Options:
-        --project <path>  Project path to scan in addition to ad-hoc review locations
-        -h, --help        display help for command
+        --project <path>      Project path to scan in addition to ad-hoc review
+                              locations
+        --actionable-project  Scan only active project reviews, excluding archived
+                              and ad-hoc history
+        -h, --help            display help for command
 
       Global Options:
-        -V, --version     output the version number
-        --json            Output a single JSON document
-        --verbose         Enable verbose debug output
-        --cwd <path>      Override working directory
+        -V, --version         output the version number
+        --json                Output a single JSON document
+        --verbose             Enable verbose debug output
+        --cwd <path>          Override working directory
       "
     `);
   });
