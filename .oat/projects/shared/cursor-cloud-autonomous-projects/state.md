@@ -37,15 +37,15 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — p01–p04 complete and review-passed (Fable cross-family, 2 rounds each); paused at p04 HiLL checkpoint. Awaiting operator: PR #133 merge → 0.1.61 publish; env rebuild; `CURSOR_API_KEY`; org-skills repo (p05 handoff). p06 blocked on publish
+Implementation — p01–p04 complete and review-passed; p03-t02 publish boundary cleared (0.1.63 live 2026-07-14; follow-up PR #150 targets 0.1.66); paused at p04 HiLL checkpoint. Awaiting operator: PR #150 merge; env PR #5 merge → rebuild; `CURSOR_API_KEY`; org-skills marketplace publication. Next: p06-t01 in a fresh session post-rebuild
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete — requirements confirmed collaboratively; Requirement Index task-mapped)
 - **Design:** `design.md` (complete — all 12 sections approved collaboratively)
-- **Plan:** `plan.md` (complete — 27 tasks / 6 phases; artifact review passed via cross-family `gpt-5.6-sol-xhigh` subagent, 3 rounds)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete — 30 planned tasks / 6 phases after amendments; 28 executable, p05 descoped; artifact review passed via cross-family subagent, 3 rounds)
+- **Implementation:** `implementation.md` (in progress — p01–p04 complete incl. p02-t09 and external-review fix batches; p06 pending)
 
 ## Progress
 

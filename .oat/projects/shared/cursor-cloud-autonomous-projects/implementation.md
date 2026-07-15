@@ -2,10 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - 'p03-t02: @open-agent-toolkit/cli 0.1.61 is not yet published'
-  - 'p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending'
+  - 'p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending (operator: merge OAT PR #150 → publish 0.1.66; merge env PR #5 → rebuild; add secret)'
 oat_last_updated: 2026-07-15
-oat_current_task_id: p03-t02
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,7 +29,7 @@ oat_generated: false
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 9     | 9/9       |
-| Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
+| Phase 3 (p03): OAT release (publish boundary)                  | completed   | 2     | 2/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 3/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
