@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers:
   - 'p03-t02: @open-agent-toolkit/cli 0.1.61 is not yet published'
   - 'p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending'
-oat_last_updated: 2026-07-14
+oat_last_updated: 2026-07-15
 oat_current_task_id: p03-t02
 oat_generated: false
 ---
@@ -12,7 +12,7 @@ oat_generated: false
 # Implementation: cursor-cloud-autonomous-projects
 
 **Started:** 2026-07-13
-**Last Updated:** 2026-07-14
+**Last Updated:** 2026-07-15
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -237,6 +237,7 @@ before plan artifact review and exit-gate execution.
 p04 end-state validation and p06 e2e are now **unblocked on the publish axis**; remaining operator dependencies: env PR #5 merge + environment rebuild, `CURSOR_API_KEY` secret, org-skills repo.
 **Poll evidence (2026-07-13):** `npm view @open-agent-toolkit/cli version` → `0.1.60` (target 0.1.61; not yet published). PR #133 title/body updated with the release description and publish-boundary note. Per the plan's blocking rule, p04 code tasks proceed now; p04-t04 strict end-state validation and p06 e2e remain blocked until the three publish checks pass.
 **Merge update (2026-07-14):** `origin/main` merged into the branch (main had released 0.1.62 via PRs #143–#145). Version conflicts resolved by re-bumping all five public packages 0.1.61 → **0.1.63** (new publish target); `public-package-versions.json` and sync-manifest stamp refreshed via source CLI. Full gate re-run green post-merge: lint, type-check, full test (incl. smoke), build, `release:validate` (5 tarballs at 0.1.63). The env repo's readiness threshold (`>= 0.1.61`) remains satisfied by 0.1.63 — no env-repo change needed.
+**Second merge update (2026-07-15):** `origin/main` merged again after PRs #147 and #149 released 0.1.65. The conflict was PR-born when those changes landed after this branch diverged; GitHub could not construct the conflicted merge ref, so CI never triggered on that head. Both the artifact-hygiene and CLI-scaffolding deltas were retained alongside this branch's lifecycle gate fixes, all five public packages and the sync manifest were re-bumped to **0.1.66**, and quick-start advanced to 2.3.1. The cursor-only seed remains byte-identical to the env repo's `.cursor/oat-user-config.json`; no env-repo change was made. The merged #149 scaffold tests now use isolated fixture homes so installed user templates cannot shadow repo fixtures. Autonomy inventory drift passed with zero unmapped/stale sites, and the full post-merge gate passed: lint, type-check, full tests including 123 smoke tests, build, five-package 0.1.66 release validation, and formatting.
 
 ## Phase 4: Environment provisioning (cloud-agent-env-node repo)
 
