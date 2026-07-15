@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.5.1
+version: 1.5.2
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -158,7 +158,12 @@ Run all gate checks and collect warnings. These are informational — they don't
 PLAN_FILE="${PROJECT_PATH}/plan.md"
 
 if [[ -f "$PLAN_FILE" ]]; then
-  final_row=$(grep -E "^\|\s*final\s*\|\s*code\s*\|" "$PLAN_FILE" | tail -1 || true)
+  reviews_section=$(awk '
+    /^## Reviews[[:space:]]*$/ { in_reviews = 1; next }
+    in_reviews && /^##[[:space:]]/ { exit }
+    in_reviews { print }
+  ' "$PLAN_FILE")
+  final_row=$(printf '%s\n' "$reviews_section" | grep -E "^\|\s*final\s*\|\s*code\s*\|" | tail -1 || true)
   if [[ -z "$final_row" ]]; then
     echo "Warning: No final review row found in plan.md."
   elif ! echo "$final_row" | grep -qE "\|\s*passed\s*\|"; then
@@ -170,8 +175,9 @@ else
 fi
 ```
 
-`final_row` is the latest appended event whose Scope is `final` and Type is
-`code`; earlier events remain history.
+`reviews_section` is strictly the `## Reviews` section through the next
+level-two heading. Within that ledger, `final_row` is the latest appended event
+whose Scope is `final` and Type is `code`; earlier events remain history.
 
 #### 3.2: Deferred Medium Findings
 

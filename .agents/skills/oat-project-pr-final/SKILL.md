@@ -1,6 +1,6 @@
 ---
 name: oat-project-pr-final
-version: 1.5.2
+version: 1.5.3
 description: Use when the user requests or confirms opening the final PR for an active OAT project — e.g. "open the final PR", "ship it", "run oat-project-pr-final", or confirms a previously offered final-PR step. Do NOT auto-invoke when phases are marked complete. Generates the final lifecycle PR description from artifacts and creates the PR.
 disable-model-invocation: false
 user-invocable: true
@@ -169,13 +169,19 @@ If `WORKFLOW_MODE` is `quick` or `import`, proceed without spec/design and inclu
 Preferred source of truth (v1): `plan.md` `## Reviews` table.
 
 ```bash
-FINAL_ROW=$(grep -E "^\\|\\s*final\\s*\\|\\s*code\\s*\\|" "$PROJECT_PATH/plan.md" 2>/dev/null | tail -1)
+REVIEWS_SECTION=$(awk '
+  /^## Reviews[[:space:]]*$/ { in_reviews = 1; next }
+  in_reviews && /^##[[:space:]]/ { exit }
+  in_reviews { print }
+' "$PROJECT_PATH/plan.md" 2>/dev/null)
+FINAL_ROW=$(printf '%s\n' "$REVIEWS_SECTION" | grep -E "^\\|\\s*final\\s*\\|\\s*code\\s*\\|" | tail -1)
 echo "$FINAL_ROW"
 ```
 
-Use the latest appended event whose Scope is `final` and Type is `code`.
-Earlier final-review events remain history and do not determine the current
-gate.
+`REVIEWS_SECTION` is strictly the `## Reviews` section through the next
+level-two heading. Use the latest appended event in that ledger whose Scope is
+`final` and Type is `code`. Earlier final-review events remain history and do
+not determine the current gate.
 
 If `FINAL_ROW` is missing or does not contain `passed`:
 

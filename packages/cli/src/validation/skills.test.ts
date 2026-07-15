@@ -1038,7 +1038,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1255,7 +1255,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1433,7 +1433,7 @@ describe('validateOatSkills', () => {
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
-      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.2'],
+      ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.2.2'],
     ] as const;
 
@@ -1682,7 +1682,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.1');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.2');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -1866,10 +1866,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.3.17'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.1'],
-      ['oat-project-implement', '2.1.1'],
-      ['oat-project-pr-final', '1.5.2'],
+      ['oat-project-implement', '2.1.2'],
+      ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.2'],
-      ['oat-project-complete', '1.5.1'],
+      ['oat-project-complete', '1.5.2'],
       ['oat-project-next', '1.0.8'],
     ] as const;
 
@@ -1956,6 +1956,49 @@ describe('validateOatSkills', () => {
     );
     expect(resolver).toContain('oat review latest --json');
     expect(resolver).toMatch(/kind: "adhoc"[\s\S]{0,200}oat-review-receive/i);
+  });
+
+  it('confines final review status reads to the Reviews ledger', async () => {
+    const fixture = [
+      '# Plan',
+      '',
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '| --- | --- | --- | --- | --- |',
+      '| final | code | received | 2026-07-14 | reviews/first.md |',
+      '| final | code | passed | 2026-07-15 | reviews/latest.md |',
+      '',
+      '## References',
+      '',
+      '| final | code | fixes_added | 2026-07-16 | example.md |',
+    ].join('\n');
+    const reviewsStart = fixture.indexOf('## Reviews');
+    const reviewsEnd = fixture.indexOf('\n## ', reviewsStart + 1);
+    const reviewsSection = fixture.slice(reviewsStart, reviewsEnd);
+    const finalRows = reviewsSection
+      .split('\n')
+      .filter((line) => /^\|\s*final\s*\|\s*code\s*\|/.test(line));
+
+    expect(finalRows.at(-1)).toContain('| passed |');
+    expect(fixture.trimEnd().split('\n').at(-1)).toContain('| fixes_added |');
+
+    for (const [name, path] of [
+      ['completion', '.agents/skills/oat-project-complete/SKILL.md'],
+      ['final PR', '.agents/skills/oat-project-pr-final/SKILL.md'],
+      ['implementation closeout', implementSkillPath],
+    ] as const) {
+      const content = await readRepoFile(path);
+      expect(content, `${name} Reviews start`).toContain(
+        '/^## Reviews[[:space:]]*$/',
+      );
+      expect(content, `${name} next level-two stop`).toContain(
+        'in_reviews && /^##[[:space:]]/ { exit }',
+      );
+      expect(content, `${name} latest ledger event`).toMatch(
+        /reviews_section[\s\S]{0,500}final[\s\S]{0,100}code[\s\S]{0,180}tail -1/i,
+      );
+    }
   });
 
   it('records clean remote receives as atomic event-distinct artifacts', async () => {
@@ -2800,7 +2843,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.1'],
+      ['oat-project-implement', '2.1.2'],
       ['oat-project-review-provide', '1.3.17'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
