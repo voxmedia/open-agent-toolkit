@@ -39,6 +39,8 @@ oat_template: true
 
 ## Parallelism
 
+> **Task-ID disposition note (re-review M3):** p02-t04 (route helper) and p02-t05 (skill rules) were reordered pre-execution on 2026-07-15, before any commits, reviews, or implementation records bound to the old numbering — the first plan-review round's findings referenced "p02-t04" as the skill task. No further renumbering will occur.
+
 Sequential (`oat_plan_parallel_groups: []`). All three phases modify `packages/cli/src/commands/gate/index.ts` (p01: budget resolution call site; p02: spawn-time injection, marker, refusal detection; p03: monitor loop and envelope extensions) — the same file, often adjacent regions. p02 and p03 additionally share the failure-envelope builder. Worktree parallelism here buys merge conflicts on the project's single hottest file for no schedule gain; sequential is the analysis result, not a default.
 
 ---
@@ -74,7 +76,7 @@ None expected; keep the envelope shape change additive.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check && pnpm oat:validate-skills`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check && pnpm oat:validate-skills`
 Expected: No errors
 
 **Step 5: Commit**
@@ -98,7 +100,7 @@ git commit -m "feat(p01-t01): distinguish unresolved policy from missing ladder 
 
 **Step 1: Write test (RED)**
 
-`ExecTarget.timeoutMs` accepts integers in `[1_000, 14_400_000]`, rejects out-of-bounds/non-integer at write/parse time; `gate target set --timeout-ms` round-trips (Commander option registered, help text present, parse/persist through `parseExecTargetConfig`, bounds rejection at the CLI); `workflow.gateTimeouts.{code,artifact}` validated to the same bounds, layered local > shared > user, registered for `oat config get/set`. **Malformed-value diagnostics (plan-review M3):** config normalization (`normalizeExecTarget`) silently drops invalid fields and has no logger — so validation-with-warning happens at **resolve time in the gate command** (which has `CommandContext` logging): a malformed persisted `timeoutMs`/`gateTimeouts` value warns once through the command logger, then falls to the next precedence level. Test each malformed source warns exactly once.
+`ExecTarget.timeoutMs` accepts integers in `[1_000, 14_400_000]`, rejects out-of-bounds/non-integer at write/parse time; `gate target set --timeout-ms` round-trips (Commander option registered, help text present, parse/persist through `parseExecTargetConfig`, bounds rejection at the CLI); `workflow.gateTimeouts.{code,artifact}` validated to the same bounds, layered local > shared > user, registered for `oat config get/set`. **This task delivers schema/write/parse-time validation only** — resolve-time behavior for malformed persisted values (warn-once-per-source through the gate command's `CommandContext` logger, then fall to the next precedence level; needed because `normalizeExecTarget` silently drops invalid fields with no logger) is owned by p01-t03, where the precedence chain those values feed actually exists (re-review M2 sequencing fix).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/ src/commands/gate/index.test.ts`
 Expected: New tests fail (RED)
@@ -135,7 +137,7 @@ git commit -m "feat(p01-t02): add gate timeout config surfaces"
 
 **Step 1: Write test (RED)**
 
-Precedence, each level shadowing the next: CLI `--timeout-ms` → `target.timeoutMs` → `workflow.gateTimeouts[reviewType]` → `OAT_GATE_EXEC_TIMEOUT_MS` → built-in type default (code `1_800_000`, artifact `900_000`) → legacy `GATE_EXEC_TIMEOUT_MS` when review type is unknown (`gate exec` and untyped runs). Resolved `{ timeoutMs, source }` appears in the startup diagnostic (`timeout=…ms (source=…)`) and in timeout envelopes. Env var above type defaults is deliberate (existing explicit user action outranks new built-ins) — pin it. Invalid CLI value rejected at parse; invalid config value skipped-with-warning to the next level.
+Precedence, each level shadowing the next: CLI `--timeout-ms` → `target.timeoutMs` → `workflow.gateTimeouts[reviewType]` → `OAT_GATE_EXEC_TIMEOUT_MS` → built-in type default (code `1_800_000`, artifact `900_000`) → legacy `GATE_EXEC_TIMEOUT_MS` when review type is unknown (`gate exec` and untyped runs). Resolved `{ timeoutMs, source }` appears in the startup diagnostic (`timeout=…ms (source=…)`) and in timeout envelopes. Env var above type defaults is deliberate (existing explicit user action outranks new built-ins) — pin it. Invalid CLI value rejected at parse. **Resolve-time malformed-value diagnostics (owned here per re-review M2):** each malformed persisted source (`target.timeoutMs`, `workflow.gateTimeouts.*`, env var) warns exactly once through the command logger, then falls to the next precedence level — test warn-once per source.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'timeout'`
 Expected: New tests fail (RED)
@@ -472,9 +474,9 @@ git commit -m "test(p03-t03): add fake-runtime gate hardening fixture matrix"
 
 Author docs (including the migration/example configuration the incident report requires: example `workflow.gateTimeouts`, per-target `timeoutMs`, `--timeout-ms`, and the failure→regression-test mapping table). Sync provider views. Bump all five public packages.
 
-**Step 2: Verify**
+**Step 2: Format + Verify**
 
-Run: `oat docs nav sync && oat docs generate-index && pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
+Run: `pnpm format:fix && oat docs nav sync && oat docs generate-index && pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
 Expected: Nav/index clean; release validation passes (package + skill version bumps recognized); docs build green; no unstaged regenerated assets
 
 **Step 3: Manual verification (recorded in implementation.md)**

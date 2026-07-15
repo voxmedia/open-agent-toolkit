@@ -182,7 +182,7 @@ Timeout/failure envelopes (`writeReviewGateExecutionFailure`) gain `activityEvid
 
 ### Headless dispatch rule (`oat-project-review-provide`)
 
-Prose changes only, in the gate-mode section: detect `oat_gate_headless` (prompt) or `OAT_GATE_HEADLESS=1` (env); apply the child-side state machine above; the Tier-1 "run in background if supported" guidance is explicitly overridden in this mode ("headless gate mode NEVER uses fire-and-forget background dispatch"); completion verification for the awaited-delegation route re-states the existing artifact/runId check before return. Skill version bump; `review-skill-contracts.test.ts` pins updated in the same commit.
+Prose changes only, in the gate-mode section: detect `oat_gate_headless` (prompt) or `OAT_GATE_HEADLESS=1` (env); **the skill does not make the identity judgment itself — it calls `oat gate route --json` and follows the returned route** (the child-side state machine above is implemented by the helper); the Tier-1 "run in background if supported" guidance is explicitly overridden in this mode ("headless gate mode NEVER uses fire-and-forget background dispatch"); completion verification for the awaited-delegation route re-states the existing artifact/runId check before return. Skill version bump; `review-skill-contracts.test.ts` pins updated in the same commit.
 
 ### Reviewer-resolution fixes (scope addition, 2026-07-15)
 
@@ -201,7 +201,7 @@ Written before spawn to a **system temp location outside the repository tree**: 
 ## Error Handling
 
 - **Probe failures:** always fail soft (`null` evidence, debug log); liveness degrades to current behavior.
-- **Refusal detection:** substring scan of captured output for the `OAT_GATE_REFUSAL:` prefix on nonzero exits only; absence changes nothing.
+- **Refusal detection:** strict line-start scan (`^OAT_GATE_REFUSAL: `) of captured output on every terminal outcome, exit-code independent; a validated run-correlated artifact wins over any refusal text; absence changes nothing.
 - **Invalid budget config:** reject at write/parse time; ignore-with-warning at resolve time (use next level). Never fail a gate run because of a bad timeout value.
 - **Marker I/O:** warn-and-continue in both directions (write and delete).
 - **Identity check inconclusive (child side):** treat as "does not hold reviewer identity" → awaited delegation or refusal; never guess inline.
@@ -210,15 +210,15 @@ Written before spawn to a **system temp location outside the repository tree**: 
 
 ### Requirement-to-Test Mapping (design-review M2)
 
-| Requirement (discovery)                 | Verification                      | Named checks                                                                                                                                |
-| --------------------------------------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| 1. Headless completion safety           | fixture + skill-contract + manual | matrix #1 (inline pass), #2 (refusal fail-closed); `review-skill-contracts` headless pins; manual Claude headless run                       |
-| 2. Configurable budgets                 | unit + fixture                    | budget precedence suite (all six levels, bounds, source reporting); matrix #3 (type-default budget)                                         |
-| 3. Liveness evidence                    | unit + fixture + manual           | probe suite (paths, mtime, fail-soft, scope attribution); snapshot/envelope suite; matrix #4 (silent-but-active timeout); manual Cursor run |
-| 4a. Run marker (secondary, adopted)     | unit + subprocess                 | marker lifecycle suite; orphan-survives-crash subprocess fixture; no-repo-tree-write regression                                             |
-| 4b. Fixture matrix (secondary, adopted) | integration                       | matrix #1–#7 named tests incl. #5 (`noOutputProduced` regression), #6 (provenance mismatch pin), #7 (receive eligibility)                   |
-| A. Resolver envelope distinction        | unit                              | `unresolvedReason` suite (three gap combinations; ladder fields accurate under missing policy — the 2026-07-15 conflation regression)       |
-| B. Pre-plan inherit rule                | skill-contract                    | inherit-rule pins (rule present, all three guards stated)                                                                                   |
+| Requirement (discovery)                 | Verification                             | Named checks                                                                                                                                                                                                               |
+| --------------------------------------- | ---------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1. Headless completion safety           | unit + fixture + skill-contract + manual | `route.test.ts` unit suite (match/mismatch/inconclusive/no-route — primary child-side verification); matrix #1 (inline pass), #2 (refusal fail-closed); `review-skill-contracts` headless pins; manual Claude headless run |
+| 2. Configurable budgets                 | unit + fixture                           | budget precedence suite (all six levels, bounds, source reporting); matrix #3 (type-default budget)                                                                                                                        |
+| 3. Liveness evidence                    | unit + fixture + manual                  | probe suite (paths, mtime, fail-soft, scope attribution); snapshot/envelope suite; matrix #4 (silent-but-active timeout); manual Cursor run                                                                                |
+| 4a. Run marker (secondary, adopted)     | unit + subprocess                        | marker lifecycle suite; orphan-survives-crash subprocess fixture; no-repo-tree-write regression                                                                                                                            |
+| 4b. Fixture matrix (secondary, adopted) | integration                              | matrix #1–#7 named tests incl. #5 (`noOutputProduced` regression), #6 (provenance mismatch pin), #7 (receive eligibility)                                                                                                  |
+| A. Resolver envelope distinction        | unit                                     | `unresolvedReason` suite (three gap combinations; ladder fields accurate under missing policy — the 2026-07-15 conflation regression)                                                                                      |
+| B. Pre-plan inherit rule                | skill-contract                           | inherit-rule pins (rule present, all three guards stated)                                                                                                                                                                  |
 
 ### Deterministic fake runtime
 
@@ -239,7 +239,8 @@ A fixture exec target whose `baseCommand` is a bundled Node script (`packages/cl
 ### Unit tests
 
 - Budget precedence: all six levels, each shadowing the next; bounds rejection at parse/write; ignore-with-warning at resolve; `source` reporting.
-- Probes: per-runtime path derivation (incl. encoded-cwd cases ported from prior art tests), absent-dir → null, mtime advance detection, error → null.
+- Probes: per-runtime path derivation (incl. encoded-cwd cases ported from prior art tests), absent-dir → null, mtime advance detection, size-only growth, truncation (size decrease counts as change), unchanged metadata → no change, error → null.
+- Route helper: `oat gate route` decision suite — runtime marker match/mismatch, model evidence equal/contradicting/unknowable, ambiguous markers never inline, `--can-await` gating delegate vs refuse, `reason` output shape.
 - Snapshot/envelope: new fields present and correctly populated; existing #151 fields untouched (regression).
 - Marker: write/delete lifecycle on every terminal path; orphan survives gate-process kill (subprocess fixture).
 - Skill contract (`review-skill-contracts.test.ts`): headless-mode section present, background-dispatch override stated, refusal format pinned; pre-plan inherit rule present with its guards (explicit policy honored, code reviews still require resolution).
