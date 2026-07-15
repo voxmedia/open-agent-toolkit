@@ -460,15 +460,15 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                             |
+| ------ | -------- | -------- | ---------- | ---------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                    |
+| p02    | code     | pending  | -          | -                                                    |
+| p03    | code     | pending  | -          | -                                                    |
+| final  | code     | pending  | -          | -                                                    |
+| spec   | artifact | pending  | -          | -                                                    |
+| design | artifact | received | 2026-07-15 | reviews/artifact-design-review-2026-07-15T212105Z.md |
+| plan   | artifact | pending  | -          | -                                                    |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
