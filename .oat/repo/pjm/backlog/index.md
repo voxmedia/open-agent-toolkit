@@ -12,6 +12,11 @@
 - Project log (feedback-driven): `BL-260713-root-agent-judgment-logging` is the planned fast-follow to the active `orchestration-run-log` project — after v1 ships the `oat project log` append helper and core structural appends, root-agent role guidance takes over judgment-entry logging (subagents report, root logs).
 - Build reliability: concurrent CLI invocations race on in-place `packages/cli/assets` regeneration (five incidents on 2026-07-12, including one silent bundle corruption). `BL-260712-serialize-cli-asset-bundling` — Serialize CLI asset bundling with atomic staging — tracks atomic staging plus a portable lock; increasingly urgent as multi-agent workflows make concurrent invocations in one worktree routine.
 - Gate review provenance, declared project corroboration, final/range producer aggregation, and opt-in phase review setup are complete. Their current user-facing contracts live in the workflow-gate, project-review, and project-artifact documentation.
+- Review lifecycle bookkeeping now preserves distinct append-ordered events,
+  advances them monotonically by artifact identity, and routes from the latest
+  matching event. Resolver selection guidance separates preferred and
+  exact-candidate branches, and gate timeout envelopes expose additive
+  late-completion and zero-output diagnostics.
 - Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
 - The live workflow smoke fixture is complete: deterministic root verification, an opt-in authenticated runner, root-owned phase-agent topology, safe recovery/cleanup, public runbooks, and a canonical Codex packet passing 10/10 assertions.
 - Reusable dispatch contracts are split between a provider-neutral utility engine and a project lifecycle adapter. Analytical callers can use bounded reconnaissance without importing project phase/task/gate policy; a separate root-owned exact-launch broker remains optional backlog work for specialized nesting.
@@ -19,7 +24,7 @@
 - High-priority review throughput work now tracks `oat-reviewer` orchestration of cheaper/faster reconnaissance subagents while preserving primary-reviewer judgment for synthesis, severity, and final findings.
 - The `codex-family-subagents` dispatch UX split is complete: human-facing guidance and the reusable Dispatch Report V1 schema/formatter shipped through `dispatch-schema-matrix-infrastructure`.
 - Structured post-implementation sequencing is shipped, allowing summary, documentation, and PR preparation to run before or after final approval according to configuration.
-- High-priority reliability work tracks activity-aware gate timeouts; medium-priority workflow maintenance tracks project-scoped gate overrides and trimming common-path implementation context.
+- High-priority reliability work tracks activity-aware gate timeouts; medium-priority workflow maintenance tracks project-scoped gate overrides.
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
 
 <!-- OAT BACKLOG-INDEX -->
