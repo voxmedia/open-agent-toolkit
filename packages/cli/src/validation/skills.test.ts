@@ -1869,7 +1869,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan-writing', '1.2.14'],
       ['oat-project-review-provide', '1.3.17'],
       ['oat-project-review-receive', '1.5.9'],
-      ['oat-project-review-receive-remote', '1.4.1'],
+      ['oat-project-review-receive-remote', '1.4.2'],
       ['oat-project-implement', '2.1.2'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.2'],
@@ -2105,6 +2105,15 @@ describe('validateOatSkills', () => {
     expect(cleanPath).not.toMatch(
       /update `plan\.md` review row for scoped entry/i,
     );
+    expect(cleanPath).toMatch(/reviews\/archived/);
+    expect(cleanPath).toMatch(/consumed/i);
+
+    const artifactPath = remoteReceive.slice(
+      remoteReceive.indexOf('### Step 6: Update Project Artifacts'),
+      remoteReceive.indexOf('### Step 7: Enforce Review Cycle Limit'),
+    );
+    expect(artifactPath).toMatch(/reviews\/archived/);
+    expect(artifactPath).toMatch(/passed.*fixes_added|fixes_added.*passed/is);
   });
 
   it('defines canonical Phase gate review choices and stable phase serialization', async () => {

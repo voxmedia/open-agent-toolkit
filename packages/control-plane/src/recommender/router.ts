@@ -231,7 +231,14 @@ function hasActionableReviewArtifacts(
   state: Omit<ProjectState, 'recommendation'>,
 ): boolean {
   return state.activeReviewArtifacts.some(
-    (reviewArtifact) => reviewArtifact.actionable && !reviewArtifact.archived,
+    (reviewArtifact) =>
+      reviewArtifact.actionable &&
+      !reviewArtifact.archived &&
+      state.reviews.some(
+        (review) =>
+          review.artifact === reviewArtifact.path &&
+          review.status.toLowerCase() === 'received',
+      ),
   );
 }
 

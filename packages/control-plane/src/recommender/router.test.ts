@@ -223,7 +223,13 @@ describe('recommendSkill', () => {
     const state = makeState({
       phase: 'implement',
       phaseStatus: 'complete',
-      reviews: [makeReview({ scope: 'p01', status: 'passed' })],
+      reviews: [
+        makeReview({
+          scope: 'p01',
+          status: 'received',
+          artifact: 'reviews/p01-review.md',
+        }),
+      ],
       activeReviewArtifacts: [
         {
           path: 'reviews/p01-review.md',
@@ -234,6 +240,82 @@ describe('recommendSkill', () => {
     });
 
     expect(recommendSkill(state).skill).toBe('oat-project-review-receive');
+  });
+
+  it('ignores consumed top-level artifacts when a received event remains actionable', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      reviews: [
+        makeReview({
+          scope: 'p01',
+          status: 'received',
+          artifact: 'reviews/p01-review.md',
+        }),
+        makeReview({
+          scope: 'p02',
+          status: 'fixes_added',
+          artifact: 'reviews/p02-review.md',
+        }),
+        makeReview({
+          scope: 'final',
+          status: 'passed',
+          artifact: 'reviews/final-review.md',
+        }),
+      ],
+      activeReviewArtifacts: [
+        {
+          path: 'reviews/p01-review.md',
+          archived: false,
+          actionable: true,
+        },
+        {
+          path: 'reviews/p02-review.md',
+          archived: false,
+          actionable: true,
+        },
+        {
+          path: 'reviews/final-review.md',
+          archived: false,
+          actionable: true,
+        },
+      ],
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-review-receive');
+  });
+
+  it('does not route consumed top-level artifacts to review-receive', () => {
+    const state = makeState({
+      phase: 'implement',
+      phaseStatus: 'complete',
+      reviews: [
+        makeReview({
+          scope: 'p02',
+          status: 'fixes_added',
+          artifact: 'reviews/p02-review.md',
+        }),
+        makeReview({
+          scope: 'final',
+          status: 'passed',
+          artifact: 'reviews/final-review.md',
+        }),
+      ],
+      activeReviewArtifacts: [
+        {
+          path: 'reviews/p02-review.md',
+          archived: false,
+          actionable: true,
+        },
+        {
+          path: 'reviews/final-review.md',
+          archived: false,
+          actionable: true,
+        },
+      ],
+    });
+
+    expect(recommendSkill(state).skill).toBe('oat-project-summary');
   });
 
   it('does not route stale review rows to review-receive without an active artifact', () => {

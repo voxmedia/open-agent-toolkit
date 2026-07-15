@@ -28,6 +28,7 @@ export interface LatestReview {
 }
 
 interface ReviewCandidate extends LatestReview {
+  reviewType: string;
   generatedTime: number;
   lifecycleRank: number;
   priority: number;
@@ -147,10 +148,13 @@ async function readReviewCandidate(
   }
 
   const scope = getFrontmatterField(frontmatter, 'oat_review_scope') ?? '';
+  const reviewType =
+    getFrontmatterField(frontmatter, 'oat_review_type') ?? 'code';
 
   return {
     path: relativePath,
     scope,
+    reviewType,
     generatedAt,
     kind,
     archived,
@@ -159,6 +163,93 @@ async function readReviewCandidate(
     lifecycleRank: reviewLifecycleRank(scope),
     priority,
   };
+}
+
+interface ReviewLedgerEvent {
+  scope: string;
+  type: string;
+  status: string;
+  artifact: string;
+}
+
+function parseReviewLedgerEvents(planContent: string): ReviewLedgerEvent[] {
+  const heading = /^## Reviews[ \t]*\r?$/m.exec(planContent);
+  if (!heading) {
+    return [];
+  }
+
+  const remaining = planContent.slice(heading.index + heading[0].length);
+  const nextHeadingIndex = remaining.search(/^##(?!#)[ \t]+\S.*\r?$/m);
+  const section =
+    nextHeadingIndex === -1 ? remaining : remaining.slice(0, nextHeadingIndex);
+
+  return section
+    .split('\n')
+    .filter((line) => line.trim().startsWith('|'))
+    .slice(2)
+    .map((line) =>
+      line
+        .split('|')
+        .slice(1, -1)
+        .map((cell) => cell.trim()),
+    )
+    .filter((cells) => cells.length === 5)
+    .map(([scope = '', type = '', status = '', , artifact = '']) => ({
+      scope,
+      type,
+      status,
+      artifact,
+    }));
+}
+
+async function correlateProjectActionability(
+  repoRoot: string,
+  projectPath: string,
+  candidates: ReviewCandidate[],
+): Promise<ReviewCandidate[]> {
+  let planContent: string;
+  try {
+    planContent = await readFile(
+      join(repoRoot, projectPath, 'plan.md'),
+      'utf8',
+    );
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return candidates;
+    }
+    throw error;
+  }
+
+  const events = parseReviewLedgerEvents(planContent);
+  if (events.length === 0) {
+    return candidates;
+  }
+
+  return candidates.map((candidate) => {
+    if (candidate.kind !== 'project' || candidate.archived) {
+      return candidate;
+    }
+
+    const artifact = normalizeToPosixPath(
+      relative(projectPath, candidate.path),
+    );
+    const matchingEvent = events.find(
+      (event) =>
+        event.scope.toLowerCase() === candidate.scope.toLowerCase() &&
+        event.type.toLowerCase() === candidate.reviewType.toLowerCase() &&
+        normalizeToPosixPath(event.artifact) === artifact,
+    );
+
+    return {
+      ...candidate,
+      actionable: matchingEvent?.status.toLowerCase() === 'received',
+    };
+  });
 }
 
 function sortReviewCandidates(a: ReviewCandidate, b: ReviewCandidate): number {
@@ -230,7 +321,7 @@ export async function findLatestReview(
     );
   }
 
-  const candidates = (
+  let candidates = (
     await Promise.all(
       scanTargets.map(async (target) => {
         const files = await listMarkdownFiles(options.repoRoot, target.dir);
@@ -250,8 +341,19 @@ export async function findLatestReview(
     )
   )
     .flat()
-    .filter((candidate): candidate is ReviewCandidate => candidate !== null)
-    .sort(sortReviewCandidates);
+    .filter((candidate): candidate is ReviewCandidate => candidate !== null);
+
+  if (projectPath) {
+    candidates = await correlateProjectActionability(
+      options.repoRoot,
+      projectPath,
+      candidates,
+    );
+  }
+  if (options.actionableProjectOnly) {
+    candidates = candidates.filter((candidate) => candidate.actionable);
+  }
+  candidates.sort(sortReviewCandidates);
 
   const latest = candidates[0];
   if (!latest) {

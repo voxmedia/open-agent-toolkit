@@ -91,6 +91,24 @@ async function writeReview(
   );
 }
 
+async function writePlan(
+  root: string,
+  projectPath: string,
+  rows: string[],
+): Promise<void> {
+  await writeFile(
+    join(root, projectPath, 'plan.md'),
+    [
+      '## Reviews',
+      '',
+      '| Scope | Type | Status | Date | Artifact |',
+      '| --- | --- | --- | --- | --- |',
+      ...rows,
+    ].join('\n'),
+    'utf8',
+  );
+}
+
 describe('oat review latest', () => {
   const tempDirs: string[] = [];
   let originalExitCode: number | undefined;
@@ -263,6 +281,58 @@ describe('oat review latest', () => {
       path: activePath,
       scope: 'p01',
       generatedAt: '2026-06-02',
+      kind: 'project',
+      archived: false,
+      actionable: true,
+    });
+  });
+
+  it('returns only artifact-correlated received events as actionable', async () => {
+    const root = await createRepoRoot();
+    const projectPath = '.oat/projects/shared/demo';
+    const receivedPath = `${projectPath}/reviews/received.md`;
+    const fixesAddedPath = `${projectPath}/reviews/fixes-added.md`;
+    const passedPath = `${projectPath}/reviews/passed.md`;
+    const mismatchedTypePath = `${projectPath}/reviews/mismatched-type.md`;
+
+    await writeReview(root, receivedPath, {
+      generatedAt: '2026-06-01',
+      scope: 'p01',
+      project: projectPath,
+    });
+    await writeReview(root, fixesAddedPath, {
+      generatedAt: '2026-06-02',
+      scope: 'p02',
+      project: projectPath,
+    });
+    await writeReview(root, passedPath, {
+      generatedAt: '2026-06-03',
+      scope: 'final',
+      project: projectPath,
+    });
+    await writeReview(root, mismatchedTypePath, {
+      generatedAt: '2026-06-04',
+      scope: 'p03',
+      type: 'code',
+      project: projectPath,
+    });
+    await writePlan(root, projectPath, [
+      '| p01 | code | received | 2026-06-01 | reviews/received.md |',
+      '| p02 | code | fixes_added | 2026-06-02 | reviews/fixes-added.md |',
+      '| final | code | passed | 2026-06-03 | reviews/passed.md |',
+      '| p03 | artifact | received | 2026-06-04 | reviews/mismatched-type.md |',
+    ]);
+
+    const result = await findLatestReview({
+      repoRoot: root,
+      projectPath,
+      actionableProjectOnly: true,
+    });
+
+    expect(result).toEqual({
+      path: receivedPath,
+      scope: 'p01',
+      generatedAt: '2026-06-01',
       kind: 'project',
       archived: false,
       actionable: true,
