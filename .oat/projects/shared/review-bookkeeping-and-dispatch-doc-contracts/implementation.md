@@ -258,6 +258,9 @@ Chronological log of implementation progress.
 - [x] p05-t03: Preserve timeout correlation failures — `9415e06e`
 - [x] p05-t04: Synchronize and validate the terminal-fix release — `034f28d1`
 - [x] p05-t05: Refresh final closeout artifacts — `e56f8503`
+- [x] p05 review fix I1: Correlate full control-plane review identity — `3504d886`
+- [x] p05 review fix I2: Archive failed gate artifact — `ff48b652`
+- [x] p05 review fix M1: Refresh PR #151 final event status — external update, no local commit
 
 **Decisions:**
 
@@ -360,6 +363,23 @@ Chronological log of implementation progress.
 - `PR2` (valid) → root final bookkeeping: while implementation remains active, `oat_phase_status: in_progress` is correct; once implementation passes with PR #151 still open, set `oat_phase_status: pr_open`, never `complete`.
 
 **Scope note:** Defensive recommender fallback to `oat_pr_status`/`oat_pr_url` is an optional enhancement and is not required for this project.
+
+### Review Received: p05
+
+**Date:** 2026-07-15
+**Review artifact:** `reviews/code-p05-review-2026-07-15T024654Z.md`
+
+**Findings:** 0 Critical, 2 Important, 1 Medium, 0 Minor
+
+**Disposition:**
+
+- `I1` fixed in `3504d886`: project-state review artifacts now carry and correlate scope, type, artifact path, and `received` status.
+- `I2` fixed in `ff48b652`: the non-receive-eligible `004643Z` gate artifact was preserved in history and its exact ledger path updated.
+- `M1` fixed externally: PR #151 now reports the latest final event as `fixes_completed`.
+
+**Verification:** Focused identity/actionability tests, full control-plane tests, CLI/control-plane type checks, formatting, skill validation, release validation, and a `pr_open` routing simulation passed.
+
+**Next:** Re-review the p05 fix range, then re-run the terminal final gate.
 
 ---
 
