@@ -117,7 +117,9 @@ type ConfigKey =
   | 'workflow.designMode'
   | 'workflow.dispatchPolicy.mode'
   | 'workflow.dispatchPolicy.policy'
+  | 'workflow.dispatchCeiling'
   | 'workflow.dispatchCeiling.preset'
+  | 'workflow.dispatchCeiling.providers'
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
   | WorkflowDispatchProviderConfigKey
@@ -786,6 +788,8 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
 function isConfigKey(value: string): value is ConfigKey {
   return (
     KEY_ORDER.includes(value as ConfigKey) ||
+    value === 'workflow.dispatchCeiling' ||
+    value === 'workflow.dispatchCeiling.providers' ||
     isDispatchCeilingProviderKey(value)
   );
 }
@@ -1358,6 +1362,10 @@ async function getConfigValue(
 
   const entry = resolved.resolved[key];
   if (!entry) {
+    const aggregate = buildResolvedConfigAggregate(resolved, key);
+    if (aggregate) {
+      return { key, ...aggregate };
+    }
     return { key, value: null, source: 'default' };
   }
 
@@ -1369,6 +1377,52 @@ async function getConfigValue(
         : formatResolvedValue(entry.value),
     source: entry.source,
   };
+}
+
+function buildResolvedConfigAggregate(
+  resolved: ResolvedConfig,
+  key: ConfigKey,
+): { value: unknown; source: ResolvedConfigSource } | null {
+  const prefix = `${key}.`;
+  const entries = Object.entries(resolved.resolved).filter(([entryKey]) =>
+    entryKey.startsWith(prefix),
+  );
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const value: Record<string, unknown> = {};
+  let source: ResolvedConfigSource = 'default';
+  const sourceRank: Record<ResolvedConfigSource, number> = {
+    default: 0,
+    user: 1,
+    shared: 2,
+    local: 3,
+    env: 4,
+  };
+  for (const [entryKey, entry] of entries) {
+    if (sourceRank[entry.source] > sourceRank[source]) {
+      source = entry.source;
+    }
+    const parts = entryKey.slice(prefix.length).split('.');
+    let cursor = value;
+    for (const [index, part] of parts.entries()) {
+      if (index === parts.length - 1) {
+        cursor[part] = entry.value;
+      } else {
+        const nested = cursor[part];
+        if (
+          typeof nested !== 'object' ||
+          nested === null ||
+          Array.isArray(nested)
+        ) {
+          cursor[part] = {};
+        }
+        cursor = cursor[part] as Record<string, unknown>;
+      }
+    }
+  }
+  return { value, source };
 }
 
 async function listConfigKeys(

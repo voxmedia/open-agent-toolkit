@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.14
+version: 1.2.15
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -74,34 +74,23 @@ before each artifact review dispatch.
 
 ### Complete Dispatch Ladder Adoption Contract
 
-Before any plan becomes implementation-ready, query the merged effective
-configuration exactly once:
+Before any plan becomes implementation-ready, use the reviewer resolver
+envelope from the preflight command above as the effective configuration and
+resolution boundary. Do not inspect or merge raw config surfaces.
 
-```bash
-oat config list --json
-```
+Route from the resolver fields, not from hand-inspected config keys:
 
-Treat that output as the effective-config boundary across shared repository,
-repo-local, user, and bundled-default precedence. Do not inspect or merge raw
-config surfaces. Validate the resolved
-`workflow.dispatchCeiling.providers` provider/tier cells and compare their
-ordered candidate ladders with the bundled
-`packages/cli/config/dispatch-matrix-recommendation.json` source (or the
-installed bundle's `config/dispatch-matrix-recommendation.json` asset). A
-complete custom ladder is allowed, but every supported provider must have valid
-ordered `candidates` cells through the named project ceiling. A legacy scalar,
-single fallback route, missing tier, empty candidates array, or malformed
-ordering is not a complete ladder.
+- Prompt for ladder adoption when `unresolvedReason` is `ladder` or `both`, or
+  when `ladderCompleteness.complete` is `false`.
+- Show `ladderCompleteness.missingCells` so the operator sees exactly which
+  provider/tier cells adoption would fill.
+- When `unresolvedReason` is `policy`, keep ladder adoption separate: set the
+  project policy at plan time or select Inherit Host Defaults.
+- A resolved envelope has no `unresolvedReason`. When
+  `ladderCompleteness.complete` is `true`, skip adoption.
 
-Keep effective ladder completeness separate from project-ceiling resolution.
-When `dispatch-ceiling resolve` returns `matrix: null`, that can mean only that
-the project policy or named ceiling is unresolved; it is not evidence that the
-effective candidate ladders are absent. When every effective provider/tier cell
-is complete, skip adoption and proceed directly to the separate project-ceiling
-choice.
-
-Only when effective provider/tier cells are missing or incomplete, show the
-complete bundled recommendation before asking to write anything:
+When adoption is required, show the complete bundled recommendation before
+asking to write anything:
 
 | Provider        | Economy                                                        | Balanced                                                                                                       | High                                                        | Frontier                               |
 | --------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | -------------------------------------- |

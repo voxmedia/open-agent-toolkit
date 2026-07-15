@@ -1202,6 +1202,87 @@ describe('oat config', () => {
       });
     });
 
+    it('gets effective dispatch ladder aggregates and reports absent ladders clearly', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  high: { candidates: ['shared-high'] },
+                  frontier: { candidates: ['shared-frontier'] },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: { high: { candidates: ['local-high'] } },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+
+      const providersHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        providersHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers'],
+        ['--json'],
+      );
+      expect(providersHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchCeiling.providers',
+        value: {
+          cursor: {
+            high: { candidates: ['local-high'] },
+            frontier: { candidates: ['shared-frontier'] },
+          },
+        },
+        source: 'local',
+      });
+
+      const providerHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        providerHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers.cursor'],
+        ['--json'],
+      );
+      expect(providerHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: {
+          high: { candidates: ['local-high'] },
+          frontier: { candidates: ['shared-frontier'] },
+        },
+        source: 'local',
+      });
+
+      const absentHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        absentHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers.claude'],
+        ['--json'],
+      );
+      expect(absentHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: null,
+        source: 'default',
+      });
+    });
+
     it('sets workflow.dispatchCeiling.providers.claude at local level by default (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const { command } = createHarness({ cwd: root });
