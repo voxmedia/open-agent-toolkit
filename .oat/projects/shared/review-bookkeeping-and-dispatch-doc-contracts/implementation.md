@@ -197,6 +197,7 @@ Chronological log of implementation progress.
 - [x] p04-t02: Scope final-state readers to the Reviews ledger — `16fed3e1`
 - [x] p04-t03: Resolve archive identity before writing references — `d0508ff9`
 - [x] p04-t04: Validate review-fix release assets — `253e65aa`
+- [x] p04 root review — `32b2a6c6`; passed at the Important threshold, Medium final-summary drift corrected before final re-review
 
 **Decisions:**
 
@@ -281,6 +282,7 @@ Track test execution during implementation.
 | 2      | Gate tests, types, lint, docs build, formatting                 | 136 tests plus checks | 0      | Timeout recovery and telemetry    |
 | Fan-in | Combined targeted tests and build checks                        | 273 tests plus checks | 0      | p01/p02 integration               |
 | 3      | Full CLI suite, release validation, formatting, build checks    | 2,888 tests + checks  | 0      | Release and inventory integration |
+| 4      | Full CLI suite, release validation, formatting, build checks    | 2,892 tests + checks  | 0      | Final review fixes and 0.1.67     |
 | Final  | Workspace tests, lint, type-check, and build                    | 2,977 tests + checks  | 0      | Full repository implementation    |
 
 ## Final Summary (for PR/docs)
@@ -288,19 +290,22 @@ Track test execution during implementation.
 **What shipped:**
 
 - Review bookkeeping now preserves distinct append-ordered review events, advances each artifact monotonically, and routes from the latest matching event.
+- Active project reviews remain actionable behind newer archived history; archive collisions preserve one stable event identity.
 - Dispatch, phase-gate prompt, and PR-completion guidance now describe mutually exclusive resolver branches and both supported completion orderings.
 - Gate timeouts now recover validated run-correlated late artifacts and expose additive late-completion and zero-output telemetry.
-- All five public packages and bundled release metadata are synchronized at `0.1.66`.
+- All five public packages and bundled release metadata are synchronized at `0.1.67`.
 
 **Behavioral changes (user-facing):**
 
 - Local and remote review flows no longer overwrite or route from stale same-scope review rows.
+- Final lifecycle readers select status only from the append-ordered `## Reviews` ledger.
 - A timed-out gate can return a corroborated artifact with `lateCompletion: true`; unrecovered timeouts report `noOutputProduced`.
 - Project progress and closeout guidance explicitly support completing before or after PR merge.
 
 **Key files / modules:**
 
 - `packages/control-plane/src/state/reviews.ts` and `packages/control-plane/src/recommender/router.ts` - review-event parsing and latest-event routing.
+- `packages/cli/src/commands/review/latest.ts` - active-only project review resolution without changing all-history callers.
 - `packages/cli/src/commands/gate/index.ts` - timeout artifact recovery and process-output telemetry.
 - `.agents/skills/oat-project-*/` - canonical review, dispatch, phase-gate, and completion contracts.
 - `apps/oat-docs/docs/cli-utilities/workflow-gates.md` and `apps/oat-docs/docs/reference/cli-reference.md` - timeout configuration and envelope documentation.
@@ -308,13 +313,13 @@ Track test execution during implementation.
 **Verification performed:**
 
 - Targeted control-plane, CLI gate, validation, and autonomy-inventory tests.
-- Full CLI suite: 246 files and 2,888 tests passed.
+- Full CLI suite after p04: 246 files and 2,892 tests passed.
 - Repository formatting, canonical skill validation, lint, type checks, project build, docs build, provider sync, and bundled-version assertion.
-- Five-package `pnpm release:validate` at `0.1.66`.
+- Five-package `pnpm release:validate` at `0.1.67`.
 
 **Design deltas (if any):**
 
-- No design artifact exists in quick mode. Final fan-in added the required autonomy inventory mappings and `oat-project-autonomous` version bump after the full CLI suite exposed two newly scanned descriptive dispatch lines.
+- No design artifact exists in quick mode. Final fan-in and terminal-gate review added required autonomy inventory mappings plus bounded active-review, ledger-scoping, and archive-identity fixes before the 0.1.67 release validation.
 
 ## References
 
