@@ -33,7 +33,7 @@ oat_template: false
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
-- [ ] Phase gate review: pending Step 3.55 user choice
+- [x] Phase gate review: **disabled** (user-selected 2026-07-15 via the shared setup contract after a qualifying-target probe found `cursor-gpt-5-6-sol-max` and `codex-5-6-sol-max`; the `oat_phase_review_gate` key is deliberately absent — the preflight contract treats a missing key as disabled)
 
 ---
 
@@ -137,7 +137,7 @@ git commit -m "feat(p01-t02): add gate timeout config surfaces"
 
 **Step 1: Write test (RED)**
 
-Precedence, each level shadowing the next: CLI `--timeout-ms` → `target.timeoutMs` → `workflow.gateTimeouts[reviewType]` → `OAT_GATE_EXEC_TIMEOUT_MS` → built-in type default (code `1_800_000`, artifact `900_000`) → legacy `GATE_EXEC_TIMEOUT_MS` when review type is unknown (`gate exec` and untyped runs). Resolved `{ timeoutMs, source }` appears in the startup diagnostic (`timeout=…ms (source=…)`) and in timeout envelopes. Env var above type defaults is deliberate (existing explicit user action outranks new built-ins) — pin it. Invalid CLI value rejected at parse. **Resolve-time malformed-value diagnostics (owned here per re-review M2):** each malformed persisted source (`target.timeoutMs`, `workflow.gateTimeouts.*`, env var) warns exactly once through the command logger, then falls to the next precedence level — test warn-once per source.
+Precedence, each level shadowing the next: CLI `--timeout-ms` → `target.timeoutMs` → `workflow.gateTimeouts[reviewType]` → `OAT_GATE_EXEC_TIMEOUT_MS` → built-in **type-and-scope** defaults (gate-review remediation — `reviewScope` is a resolver input): code + `final`/`pNN`/`pNN-pMM` → `1_800_000`; code + `pNN-tNN` (bounded task) → `900_000`; artifact (any scope) → `900_000` → legacy `GATE_EXEC_TIMEOUT_MS` when type/scope is unknown (`gate exec` and untyped runs). Test each scope bucket explicitly, including scope-default vs env precedence interaction. Resolved `{ timeoutMs, source }` appears in the startup diagnostic (`timeout=…ms (source=…)`) and in timeout envelopes. Env var above scope defaults is deliberate (existing explicit user action outranks new built-ins) — pin it. Invalid CLI value rejected at parse. **Resolve-time malformed-value diagnostics (owned here per re-review M2):** each malformed persisted source (`target.timeoutMs`, `workflow.gateTimeouts.*`, env var) warns exactly once through the command logger, then falls to the next precedence level — test warn-once per source.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'timeout'`
 Expected: New tests fail (RED)
@@ -352,7 +352,7 @@ git commit -m "feat(p02-t05): add headless dispatch and pre-plan inherit rules t
 
 **Step 1: Write test (RED)**
 
-Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/`. Probe semantics: absent directory → `null`; **baseline snapshot at spawn (newest mtime + total size), `changedSinceBaseline` computed from EITHER axis (plan-review I3)** — test mtime-only advance, size-only growth (same-second append), truncation (size decrease counts as change), and unchanged metadata → `changedSinceBaseline: false`; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` including `totalSizeBytes` (metadata only — assert no file contents are read, e.g. via unreadable-file fixtures). **Attribution scoping (design-review M1):** claude/cursor evidence carries `scope: 'project-dir'`; codex carries `scope: 'ambient-runtime'` — pinned per runtime.
+Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/` — **with bounded recursive traversal (gate-review remediation): Cursor's real layout nests one level deeper (`<session-id>/<session-id>.jsonl`), so the probe traverses to a bounded depth (2 levels suffices for all three runtimes) and a Cursor-realistic fixture appends to an existing nested `<session-id>/<session-id>.jsonl` (parent dir entry unchanged) and asserts `changedSinceBaseline: true`; traversal errors fail soft**. Probe semantics: absent directory → `null`; **baseline snapshot at spawn (newest mtime + total size across the bounded traversal), `changedSinceBaseline` computed from EITHER axis (plan-review I3)** — test mtime-only advance, size-only growth (same-second append), truncation (size decrease counts as change), and unchanged metadata → `changedSinceBaseline: false`; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` including `totalSizeBytes` (metadata only — assert no file contents are read, e.g. via unreadable-file fixtures). **Attribution scoping (design-review M1):** claude/cursor evidence carries `scope: 'project-dir'`; codex carries `scope: 'ambient-runtime'` — pinned per runtime.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/activity-probes.test.ts`
 Expected: Tests fail (RED)
@@ -468,20 +468,37 @@ git commit -m "test(p03-t03): add fake-runtime gate hardening fixture matrix"
 
 - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (budget precedence, headless contract + `oat gate route`, liveness/envelope fields, refusal, run marker), `apps/oat-docs/docs/cli-utilities/configuration.md` + `apps/oat-docs/docs/reference/cli-reference.md` (new keys/flags), linked from `apps/oat-docs/docs/cli-utilities/index.md` `## Contents` with `.md`-suffixed links (plan-review M5 — exact pages named); run `oat docs nav sync` + `oat docs generate-index`
 - Modify: `packages/*/package.json` × 5 (lockstep bump)
-- Modify: provider views via `oat sync --scope all`; regenerate bundled assets once after canonical sources are final; stage `packages/cli/assets/`
+- Modify: provider views via `oat sync --scope all`; regenerate bundled assets after canonical sources are final; stage `packages/cli/assets/`
 
 **Step 1: Implement**
 
-Author docs (including the migration/example configuration the incident report requires: example `workflow.gateTimeouts`, per-target `timeoutMs`, `--timeout-ms`, and the failure→regression-test mapping table). Sync provider views. Bump all five public packages.
+Author docs (including the migration/example configuration the incident report requires: example `workflow.gateTimeouts`, per-target `timeoutMs`, `--timeout-ms`, and the failure→regression-test mapping table). Sync provider views. Bump all five public packages. **Asset regeneration ordering (gate-review remediation — regenerating after canonical edits necessarily dirties `packages/cli/assets/`, so a pre-staging quiet check would always fail):** (1) regenerate (`bash packages/cli/scripts/bundle-assets.sh`), (2) stage the intended asset changes (`git add packages/cli/assets/`), (3) regenerate again, (4) only then run the assets-scoped quiet check as an idempotence assertion. Use the repo-source CLI (`pnpm run cli -- docs nav sync`, `pnpm run cli -- docs generate-index`) so branch-local behavior is exercised, not the installed binary.
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix && oat docs nav sync && oat docs generate-index && pnpm release:validate && pnpm build:docs && git diff --quiet -- packages/cli/assets/`
-Expected: Nav/index clean; release validation passes (package + skill version bumps recognized); docs build green; no unstaged regenerated assets
+Run: `pnpm format:fix && pnpm run cli -- docs nav sync && pnpm run cli -- docs generate-index && bash packages/cli/scripts/bundle-assets.sh && git add packages/cli/assets/ && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- packages/cli/assets/ && pnpm release:validate && pnpm build:docs`
+Expected: Nav/index clean; regeneration idempotent after staging (quiet check exits 0); release validation passes (package + skill version bumps recognized); docs build green
 
-**Step 3: Manual verification (recorded in implementation.md)**
+**Step 3: End-to-end completion-safety verification (recorded in implementation.md — gate-review remediation: the matrix's fake runtime cannot exercise the real review-provide lifecycle)**
 
-One real headless Claude run and one real Cursor run against a small fixture project: inline completion, budget source reporting, liveness evidence present.
+Create a disposable fixture project (`oat project new gate-hardening-smoke --mode quick --no-set-active --no-commit` in a temp checkout, seeded with a trivial discovery), then for EACH of the two real runtimes:
+
+```bash
+# Claude lane (and again with the cursor target)
+oat gate review --json --project "$FIXTURE_PROJECT" \
+  --review-type artifact --review-scope discovery \
+  --target claude-fable-skip-permissions \
+  "Use oat-project-review-provide artifact discovery to review the fixture discovery. Return blocking findings clearly, or say no blocking findings."
+```
+
+Assertions per lane (all four required, recorded with output excerpts in implementation.md):
+
+1. Terminal envelope `status: ok|blocked` with `receiveEligible: true` — the headless parent completed without prompt-level inline pinning (the contract did the work).
+2. Artifact frontmatter `oat_gate_run_id` equals the envelope `runId` (run-correlated artifact).
+3. The fixture project's Reviews table row was updated AND the bookkeeping commit exists in the fixture checkout **before the parent exited** (`git -C "$FIXTURE" log --oneline -1` shows the review commit).
+4. Startup diagnostic shows the resolved budget with `source`, and at least one liveness tick carries `processAlive`/activity-evidence fields.
+
+Explicit target pinning is acceptable here (manual/debug exception in the gate contract). If a lane cannot complete for environmental reasons, record the exact failure and do not mark this step complete.
 
 **Step 4: Commit**
 

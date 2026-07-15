@@ -16,7 +16,7 @@ This project hardens `oat gate review` for headless orchestration along the thre
 
 **Headless completion-safety** becomes a mechanical contract with two coordinated halves. The gate declares headless mode on every child it spawns through both channels at once: injected environment (`OAT_NON_INTERACTIVE=1` plus gate-specific `OAT_GATE_HEADLESS=1` and `OAT_GATE_RUN_ID`, reusing the autonomy contract's names where they exist) and a new `oat_gate_headless: true` field in the gate prompt's frontmatter context. Env covers machine detection; frontmatter covers skill-prose detection by runtimes that read the prompt but scrub env. `oat-project-review-provide` gains a headless-mode dispatch rule that overrides its Tier-1 background preference: when the current runtime holds the configured reviewer identity, review **inline**; otherwise delegate only through a synchronous/awaited route with verified completion; if neither route exists, fail closed with a structured refusal the gate can classify. We deliberately do **not** set `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` as a backstop — background dispatch is forbidden in headless gate mode, and raising the ceiling would mask contract violations rather than surface them.
 
-**Budgets** get a six-level precedence chain, first match wins: CLI `--timeout-ms` → per-exec-target `timeoutMs` → `workflow.gateTimeouts.{code,artifact}` config → `OAT_GATE_EXEC_TIMEOUT_MS` env (existing, unchanged position above built-in defaults) → built-in review-type default (code 30 min, artifact 15 min) → legacy 15-minute constant when the review type is unknown. Bounds validated; no migration required — the only behavior change without explicit configuration is the code-review default doubling, which is the incident's direct fix.
+**Budgets** get a six-level precedence chain, first match wins: CLI `--timeout-ms` → per-exec-target `timeoutMs` → `workflow.gateTimeouts.{code,artifact}` config → `OAT_GATE_EXEC_TIMEOUT_MS` env (existing, unchanged position above built-in defaults) → built-in **type-and-scope** defaults (code reviews at implementation/final/phase/range scope 30 min; bounded task-scoped code reviews 15 min; artifact reviews 15 min) → legacy 15-minute constant when type/scope is unknown. Bounds validated; no migration required — the only behavior change without explicit configuration is the implementation/final code-review default doubling, which is the incident's direct fix.
 
 **Liveness** gains a bounded per-runtime activity probe: does the runtime's project-scoped transcript directory show filesystem-metadata changes since spawn — directory-level for v1, deliberately not session-precise, because liveness answers "is something progressing," not "which session." Probes read mtime/size only, never content; they fail soft to today's stdout-only behavior. Snapshots distinguish stdout-idle / process-alive / transcript-active, and timeout/failure envelopes carry the latest observed evidence as "observable activity," never a health verdict. A correlated run-marker file written at spawn (adopted secondary item) improves post-mortem diagnostics without affecting pass/fail.
 
@@ -117,12 +117,20 @@ function resolveGateExecTimeoutMs(input: {
   cliTimeoutMs?: number;
   target: ExecTargetView;
   reviewType?: 'code' | 'artifact';
+  reviewScope?: string; // 'final' | 'pNN' | 'pNN-pMM' | 'pNN-tNN' | artifact scopes
   workflowGateTimeouts?: { code?: number; artifact?: number };
   env: NodeJS.ProcessEnv;
 }): {
   timeoutMs: number;
-  source: 'cli' | 'target' | 'config' | 'env' | 'type-default' | 'default';
+  source: 'cli' | 'target' | 'config' | 'env' | 'scope-default' | 'default';
 };
+
+// Built-in type-and-scope defaults (gate-review remediation — discovery requires
+// scope-aware defaults, not type-only):
+//   code + final / pNN / pNN-pMM (implementation, phase, range) → 1_800_000 (30 min)
+//   code + pNN-tNN (bounded task scope)                          → 900_000 (15 min)
+//   artifact (any scope — bounded reads)                         → 900_000 (15 min)
+//   unknown type/scope (gate exec, untyped runs)                 → 900_000 legacy constant
 ```
 
 **Design decisions:** the resolved `source` is reported in the startup diagnostic (`Running gate target …; timeout=…ms (source=target)`) and in timeout envelopes — operators debugging budget issues see where the number came from. `gate target set` gains `--timeout-ms`; `gate review`/`gate exec` gain `--timeout-ms`. Out-of-bounds values are rejected at config-write and CLI-parse time, and ignored-with-warning when found in existing config (fail soft, use next precedence level).
