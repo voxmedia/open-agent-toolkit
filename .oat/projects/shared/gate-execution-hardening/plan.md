@@ -56,14 +56,14 @@ Sequential (`oat_plan_parallel_groups: []`). All three phases modify `packages/c
 
 **Step 1: Write test (RED)**
 
-Pin the three gap combinations against a fixture config: policy missing + ladder resolved → `unresolvedReason: 'policy'` AND ladder/matrix fields report their actual resolved values (regression for the 2026-07-15 conflation, where `matrix: null` masked a healthy user-config ladder); policy resolved + ladder missing/incomplete → `unresolvedReason: 'ladder'`; both missing → `'both'`. Resolved envelopes carry no `unresolvedReason`. `--preflight` human-readable output names the actual gap with the actual fix (policy: "set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults"; ladder: "adopt a dispatch matrix"). **Ladder inspection (second-incident regression):** `oat config get workflow.dispatchCeiling.providers` (and per-provider children) returns effective layered values instead of `Unknown config key` when configured, and a clear absent indication when not.
+Pin the three gap combinations against a fixture config: policy missing + ladder resolved → `unresolvedReason: 'policy'` AND ladder/matrix fields report their actual resolved values (regression for the 2026-07-15 conflation, where `matrix: null` masked a healthy user-config ladder); policy resolved + ladder missing/incomplete → `unresolvedReason: 'ladder'`; both missing → `'both'`. Resolved envelopes carry no `unresolvedReason`. **Whole-ladder completeness (plan-review I2):** the envelope carries `ladderCompleteness: { complete, missingCells }` evaluated across ALL supported providers and tiers (not just the active provider's cell) — partial-ladder fixtures pin: one provider missing a tier → `complete: false` with that cell named even when the active provider resolves; fully complete ladder → `complete: true`. `--preflight` human-readable output names the actual gap with the actual fix (policy: "set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults"; ladder: "adopt a dispatch matrix", listing `missingCells`). **Ladder inspection (second-incident regression):** `oat config get workflow.dispatchCeiling.providers` (and per-provider children) returns effective layered values instead of `Unknown config key` when configured, and a clear absent indication when not.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
 Expected: New tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-The resolver already computes both facts independently; this task surfaces them without changing resolution behavior. Update the plan-writing adoption contract prose to route on `unresolvedReason` (adoption prompt fires only on `'ladder' | 'both'`) and bump that skill's version.
+The resolver already computes the policy/cell facts independently; this task surfaces them plus the whole-ladder completeness sweep. Update the plan-writing adoption contract prose to route on the resolver envelope (adoption prompt fires on `unresolvedReason: 'ladder' | 'both'` OR `ladderCompleteness.complete === false`, showing `missingCells`) and bump that skill's version.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/ src/commands/config/`
 Expected: Tests pass (GREEN), existing resolution tests unchanged
@@ -98,14 +98,14 @@ git commit -m "feat(p01-t01): distinguish unresolved policy from missing ladder 
 
 **Step 1: Write test (RED)**
 
-`ExecTarget.timeoutMs` accepts integers in `[1_000, 14_400_000]`, rejects out-of-bounds/non-integer at write/parse time; `gate target set --timeout-ms` round-trips; `workflow.gateTimeouts.{code,artifact}` validated to the same bounds, layered local > shared > user, registered for `oat config get/set`; malformed persisted values are ignored-with-warning at read time (fail soft).
+`ExecTarget.timeoutMs` accepts integers in `[1_000, 14_400_000]`, rejects out-of-bounds/non-integer at write/parse time; `gate target set --timeout-ms` round-trips (Commander option registered, help text present, parse/persist through `parseExecTargetConfig`, bounds rejection at the CLI); `workflow.gateTimeouts.{code,artifact}` validated to the same bounds, layered local > shared > user, registered for `oat config get/set`. **Malformed-value diagnostics (plan-review M3):** config normalization (`normalizeExecTarget`) silently drops invalid fields and has no logger — so validation-with-warning happens at **resolve time in the gate command** (which has `CommandContext` logging): a malformed persisted `timeoutMs`/`gateTimeouts` value warns once through the command logger, then falls to the next precedence level. Test each malformed source warns exactly once.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/ src/commands/gate/index.test.ts`
 Expected: New tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/ src/commands/config/`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/ src/commands/config/ src/commands/gate/index.test.ts`
 Expected: Tests pass (GREEN)
 
 **Step 3: Refactor**
@@ -114,7 +114,7 @@ Share the bounds validator between the target field and the workflow keys.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -151,7 +151,7 @@ None expected.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -190,7 +190,7 @@ None expected.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -211,7 +211,7 @@ git commit -m "feat(p02-t01): inject headless invocation context into gate child
 
 **Step 1: Write test (RED)**
 
-Marker written before spawn to `{os.tmpdir()}/oat-gate-runs/<runId>.json` (system temp, outside the repo tree — design-review I1) with `{ runId, targetId, runtime, reviewType, reviewScope, project, startedAt, budgetMs, budgetSource }`; marker path printed in the startup diagnostic; deleted on every terminal path (completed, timeout, child failure, validation failure); marker I/O failures are warn-and-continue in both directions and never alter the envelope; marker is never read by validation/correlation (assert correlation results identical with marker present/absent/corrupted); **regression: no marker path is ever inside the repository tree, and an orphaned marker never appears in `git status` for the project** (subprocess fixture kills the gate process mid-run and asserts a clean tree).
+Marker written before spawn to `{os.tmpdir()}/oat-gate-runs/<runId>.json` (system temp, outside the repo tree — design-review I1) with `{ runId, targetId, runtime, reviewType, reviewScope, project, startedAt, budgetMs, budgetSource }`; marker path printed in the startup diagnostic; **deleted through a single `try/finally` boundary wrapping the gate run — not per-return cleanup calls (plan-review M4)**: test every early-return/terminal path (completed, timeout, child failure, targeting failure, validation failure, AND a thrown launch error) deletes exactly once; marker I/O failures are warn-and-continue in both directions and never alter the envelope; marker is never read by validation/correlation (assert correlation results identical with marker present/absent/corrupted); **regression: no marker path is ever inside the repository tree, and an orphaned marker never appears in `git status` for the project** (subprocess fixture kills the gate process mid-run and asserts a clean tree). The `finally` boundary stays independent of the parked run-log project's future structural-append finalizer (documented in the task body to keep the collision region cohesive).
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'run marker'`
 Expected: Tests fail (RED)
@@ -227,7 +227,7 @@ None expected.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -239,16 +239,16 @@ git commit -m "feat(p02-t02): write transient gate run markers for post-mortem d
 
 ---
 
-### Task p02-t03: Structured refusal detection
+### Task p02-t03: Structured refusal detection (exit-code independent)
 
 **Files:**
 
-- Modify: `packages/cli/src/commands/gate/index.ts` (scan captured output for the `OAT_GATE_REFUSAL:` prefix on nonzero exits; `refusal` field in failure envelopes)
+- Modify: `packages/cli/src/commands/gate/index.ts` (scan captured output for the strict line-start pattern `^OAT_GATE_REFUSAL: ` on every terminal outcome; `refusal` field; precedence rules)
 - Modify: `packages/cli/src/commands/gate/index.test.ts`
 
 **Step 1: Write test (RED)**
 
-Nonzero exit + refusal line → envelope `refusal: '<reason text>'` alongside existing failure fields; zero exit with a refusal line → ignored (success path unchanged); nonzero without the line → no `refusal` field; multiple lines → first wins; refusal never flips fail-closed semantics (still `review_failed`, still not receive-eligible).
+Precedence, per design (plan-review C1 — skill prose cannot force a provider CLI to exit nonzero): (1) validated run-correlated artifact present → refusal text ignored, review outcome stands (artifact-wins); (2) no correlated artifact + refusal line → classified refusal failure (`status: review_failed`, `refusal: '<reason>'`, never receive-eligible) **for both zero-exit and nonzero-exit children** — test both explicitly; (3) no artifact, no refusal → existing failure paths unchanged. Strict matching: mid-line occurrences of the token do not match (line-start only); multiple refusal lines → first wins; refusal never flips fail-closed semantics.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts -t 'refusal'`
 Expected: Tests fail (RED)
@@ -264,7 +264,7 @@ None expected.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -276,7 +276,41 @@ git commit -m "feat(p02-t03): classify structured reviewer refusals in gate fail
 
 ---
 
-### Task p02-t04: `oat-project-review-provide` headless dispatch rule + pre-plan inherit rule
+### Task p02-t04: `oat gate route` decision helper
+
+**Files:**
+
+- Create: `packages/cli/src/commands/gate/route.ts`
+- Create: `packages/cli/src/commands/gate/route.test.ts`
+- Modify: `packages/cli/src/commands/gate/index.ts` (register subcommand)
+
+**Step 1: Write test (RED)**
+
+The executable inline/delegate/refuse decision (plan-review I1/I4 — the identity check must be testable code, not prose). Inputs: `--expect-runtime`, `--expect-model`, `--can-await true|false`, process env. Cases: exactly one provider marker (`CLAUDECODE` / `CURSOR_AGENT` / `CODEX_THREAD_ID`) matching `--expect-runtime` + model evidence matching or unknowable → `route: 'inline'`; runtime marker mismatch → `'delegate-sync'` when `--can-await true`, `'refuse'` when false; zero or multiple provider markers (ambiguous parent-vs-child inheritance) → never inline — delegate or refuse per `--can-await`; model evidence present and contradicting `--expect-model` → never inline; every output carries `reason` text suitable for the refusal line verbatim; `--json` envelope shape pinned.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/route.test.ts`
+Expected: Tests fail (RED)
+
+**Step 2: Implement (GREEN)**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/`
+Expected: Tests pass (GREEN)
+
+**Step 3: Format + Verify**
+
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
+Expected: No errors
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/
+git commit -m "feat(p02-t04): add oat gate route headless decision helper"
+```
+
+---
+
+### Task p02-t05: `oat-project-review-provide` headless dispatch rule + pre-plan inherit rule
 
 **Files:**
 
@@ -285,22 +319,22 @@ git commit -m "feat(p02-t03): classify structured reviewer refusals in gate fail
 
 **Step 1: Implement**
 
-Headless rule (per design's child-side state machine): on `oat_gate_headless`/`OAT_GATE_HEADLESS=1` — identity check via existing host-detection/runtime-identity machinery; match → review inline; no match → synchronous/awaited delegation only, with completion verified (artifact + matching `oat_gate_run_id`) before returning; neither → print `OAT_GATE_REFUSAL: no headless-safe review route (<reason>)` and exit nonzero. Tier-1 "run in background if supported" is explicitly overridden in this mode. Inconclusive identity = no match (never guess inline).
+Headless rule: on `oat_gate_headless`/`OAT_GATE_HEADLESS=1`, the skill calls `oat gate route --json` with the expected runtime/model copied from the injected gate frontmatter and `--can-await` per the host's awaited-child capability, then follows the returned route: `inline` → run the oat-reviewer role contract in the current context; `delegate-sync` → awaited dispatch with completion verified (artifact + matching `oat_gate_run_id`) before returning; `refuse` → print `OAT_GATE_REFUSAL: <reason from route output>` on its own line and exit nonzero where the host permits (the gate detects the line regardless of exit code). Tier-1 "run in background if supported" is explicitly overridden in this mode; the skill never makes the identity judgment itself.
 
 Pre-plan inherit rule: when the resolver returns `unresolvedReason: 'policy'` AND the review is `type: artifact` with scope in `{discovery, design, spec}` — do not block, do not prompt; review by deliberate inheritance in the current context; record `selection_reason: inherit (pre-plan; no project policy)`. Guards stated explicitly: an explicitly set project policy is always honored; `type: code` and plan-scope artifact reviews still hard-require resolution; gate exec-target selection unaffected.
 
 Bump the skill's frontmatter version.
 
-**Step 2: Verify**
+**Step 2: Format + Verify**
 
-Run: `pnpm oat:validate-skills && pnpm format && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
-Expected: Skill validates; format passes; contract pins assert: headless section present, background-dispatch override stated, refusal line format pinned, inherit rule present with all three guards.
+Run: `pnpm format:fix && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: Skill validates; format passes; contract pins assert: headless section present, `oat gate route` invocation named, background-dispatch override stated, refusal line format pinned, inherit rule present with all three guards.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/oat-project-review-provide/ packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
-git commit -m "feat(p02-t04): add headless dispatch and pre-plan inherit rules to review-provide"
+git commit -m "feat(p02-t05): add headless dispatch and pre-plan inherit rules to review-provide"
 ```
 
 ---
@@ -316,7 +350,7 @@ git commit -m "feat(p02-t04): add headless dispatch and pre-plan inherit rules t
 
 **Step 1: Write test (RED)**
 
-Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/`. Probe semantics: absent directory → `null`; newest mtime under the dir; evidence newer than `spawnedAt` counts as activity; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` (mtime/size metadata only — assert no file contents are read, e.g. via unreadable-file fixtures). **Attribution scoping (design-review M1):** claude/cursor evidence carries `scope: 'project-dir'`; codex carries `scope: 'ambient-runtime'` — pinned per runtime.
+Per-runtime path derivation: claude `~/.claude/projects/<encoded-cwd>/` (encoding cases ported from the session-observer prior art, including special characters in cwd), codex `~/.codex/sessions/YYYY/MM/DD/` (spawn date; midnight rollover probes both days), cursor `~/.cursor/projects/<encoded-project>/agent-transcripts/`. Probe semantics: absent directory → `null`; **baseline snapshot at spawn (newest mtime + total size), `changedSinceBaseline` computed from EITHER axis (plan-review I3)** — test mtime-only advance, size-only growth (same-second append), truncation (size decrease counts as change), and unchanged metadata → `changedSinceBaseline: false`; stat/readdir errors → `null` (never throws); unknown runtime → no probe. Evidence shape matches `GateActivityEvidence` including `totalSizeBytes` (metadata only — assert no file contents are read, e.g. via unreadable-file fixtures). **Attribution scoping (design-review M1):** claude/cursor evidence carries `scope: 'project-dir'`; codex carries `scope: 'ambient-runtime'` — pinned per runtime.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/activity-probes.test.ts`
 Expected: Tests fail (RED)
@@ -332,7 +366,7 @@ Keep path-encoding helpers exported for reuse and independently testable.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -369,7 +403,7 @@ None expected.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 5: Commit**
@@ -407,14 +441,14 @@ Expected: Tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-Fixture-only task plus whatever composition defects the matrix surfaces.
+Fixture-only task — file scope is constrained to the two created files (plan-review M5). If the matrix surfaces production defects, fix trivial ones inside the already-modified gate files with an explicit note in the task commit body; anything larger becomes a follow-up `(review)`-style task appended to this phase rather than silent scope growth. Note (plan-review I4): the matrix exercises the **gate side** of every terminal outcome; the child-side inline/delegate/refuse decision is exercised at the unit level via `oat gate route` (p02-t04) — case 2 here verifies the gate classifies an emitted refusal, not that the skill chose to refuse.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/`
 Expected: Full gate suite green
 
 **Step 3: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm format:fix && pnpm lint && pnpm type-check`
 Expected: No errors
 
 **Step 4: Commit**
@@ -430,7 +464,7 @@ git commit -m "test(p03-t03): add fake-runtime gate hardening fixture matrix"
 
 **Files:**
 
-- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (budget precedence, headless contract, liveness/envelope fields, refusal, run marker) and the config/CLI reference pages for the new keys/flags; link from the nearest authored `## Contents` map with `.md`-suffixed links; run `oat docs nav sync` + `oat docs generate-index`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md` (budget precedence, headless contract + `oat gate route`, liveness/envelope fields, refusal, run marker), `apps/oat-docs/docs/cli-utilities/configuration.md` + `apps/oat-docs/docs/reference/cli-reference.md` (new keys/flags), linked from `apps/oat-docs/docs/cli-utilities/index.md` `## Contents` with `.md`-suffixed links (plan-review M5 — exact pages named); run `oat docs nav sync` + `oat docs generate-index`
 - Modify: `packages/*/package.json` × 5 (lockstep bump)
 - Modify: provider views via `oat sync --scope all`; regenerate bundled assets once after canonical sources are final; stage `packages/cli/assets/`
 
@@ -487,11 +521,11 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 
 **Summary:**
 
-- Phase 1: 3 tasks - Budget config/precedence + resolver envelope distinction
-- Phase 2: 4 tasks - Headless context injection, run marker, refusal detection, review-provide dispatch + inherit rules
+- Phase 1: 3 tasks - Budget config/precedence + resolver envelope distinction + ladder completeness/inspection
+- Phase 2: 5 tasks - Headless context injection, run marker, refusal detection, `oat gate route` helper, review-provide dispatch + inherit rules
 - Phase 3: 4 tasks - Activity probes, liveness/envelope extensions, fake-runtime fixture matrix, docs + version bumps
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
 Ready for code review and merge.
 
