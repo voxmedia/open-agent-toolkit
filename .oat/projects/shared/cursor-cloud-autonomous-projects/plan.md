@@ -45,7 +45,7 @@ Fully sequential (`oat_plan_parallel_groups: []`). p02 consumes p01's contract d
 
 ## Phase-Boundary Review Note
 
-Per-phase code reviews during implementation route through the dispatch substrate (`oat-project-dispatch-subagents`) as **pre-launch-selected, cross-family pinned subagent dispatches** (project policy: managed/frontier; the user-scope ladder's Cursor frontier cell is explicitly `["gpt-5.6-sol-xhigh"]`, so the resolver returns `gpt-5.6-sol-xhigh` as the reviewer target — natively dispatchable in this host and cross-family against the Claude-family orchestrator). Route selection happens before launch from catalog evidence; accepted launches are terminal (bounded identical-payload retry, then blocked — never a downgrade). This is the FR3 policy-resolved route, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance is recorded per the dispatch record schema and referenced from the Reviews table and implementation log.
+Per-phase code reviews during implementation route through the dispatch substrate (`oat-project-dispatch-subagents`) as **pre-launch-selected, cross-family pinned subagent dispatches** (project policy: managed/frontier). _Historical note (superseded 2026-07-15):_ this note originally cited this VM's single-candidate frontier cell `["gpt-5.6-sol-xhigh"]`; candidate cells are **ascending preference** — the resolver pins `candidates.at(-1)` as the tier ceiling — and the actual review routing for this run was set by user direction 2026-07-13/14 (Fable for phase reviews, Sol for bounded delta reviews; see implementation.md Deviations). Route selection happens before launch from catalog evidence; accepted launches are terminal (bounded identical-payload retry, then blocked — never a downgrade). This is the FR3 policy-resolved route, applied at every phase boundary per user direction (2026-07-11). The external `oat_phase_review_gate` frontmatter is intentionally unset: no qualifying configured gate CLI target exists in this environment, and the setup contract forbids inventing enablement. Review provenance is recorded per the dispatch record schema and referenced from the Reviews table and implementation log.
 
 ---
 
@@ -493,7 +493,7 @@ Expected: both on PATH with expected versions. Until a rebuild happens, record e
 
 **Steps:**
 
-- Idempotent step: install/refresh OAT packs at user scope (requires p02-t04; includes workflows pack); seed `~/.oat/config.json` from the seed file: dispatch ladder for cursor/codex/claude tiers (full ordered candidate cells — e.g., frontier `[gpt-5.6-sol-xhigh, gpt-5.6-sol-max]` — so per-surface catalog divergence resolves via first-dispatchable selection), `workflow.hillCheckpointDefault: final`, and a **priority-ordered, multi-family gate execTargets ladder** with `availabilityCommand` probes: comparable-capability alternatives from each family (e.g., cursor `gpt-5.6-sol-max` → `gpt-5.6-sol-xhigh`; cursor `claude-fable-5-xhigh` → `claude-fable-5-thinking-high`; `cursor-grok-4.5-high` as third-family tertiary) so cross-family review always has a different-family option regardless of a given environment's catalog. Gate exec targets run through the CLI main-agent catalog (the broadest surface); priority order absorbs residual availability drift.
+- Idempotent step: install/refresh OAT packs at user scope (requires p02-t04; includes workflows pack); seed `~/.oat/config.json` from the seed file: cursor-only dispatch ladder (amendment 2026-07-14) with **ascending-preference candidate cells** — the resolver pins `candidates.at(-1)` as each tier's ceiling (ordering corrected 2026-07-15; e.g., frontier ends `..., gpt-5.6-sol-xhigh, gpt-5.6-sol-max` so sol-max is the pin and earlier entries remain eligible beneath it), `workflow.hillCheckpointDefault: final`, and a **priority-ordered, multi-family gate execTargets ladder** with `availabilityCommand` probes: comparable-capability alternatives from each family (e.g., cursor `gpt-5.6-sol-max` → `gpt-5.6-sol-xhigh`; cursor `claude-fable-5-xhigh` → `claude-fable-5-thinking-high`; `cursor-grok-4.5-high` as third-family tertiary) so cross-family review always has a different-family option regardless of a given environment's catalog. Gate exec targets run through the CLI main-agent catalog (the broadest surface); priority order absorbs residual availability drift.
 - `CURSOR_API_KEY` wiring per the `GITHUB_PACKAGES_TOKEN` reference pattern (env reference only). **Degraded vs acceptance:** absent secret → warn-and-continue with a logged "gate tier-1 unavailable" note (NFR4 degraded path); FR8 _acceptance_ requires the authenticated check to pass — tracked in p04-t04 strict mode.
 
 **Verify:**
@@ -741,13 +741,13 @@ Expected: all green; worktree validation passes post-commit.
 **Summary:**
 
 - Phase 1: 6 tasks — autonomy contract + lifecycle amendments (OAT repo)
-- Phase 2: 8 tasks — risk retirement, new skills, user-scope installability, template resolution, grok family classification, bundle, versions (OAT repo)
+- Phase 2: 9 tasks — risk retirement, new skills, user-scope installability, template resolution, grok family classification, bundle, versions, drift enforcement (OAT repo; p02-t09 added by amendment 2026-07-14)
 - Phase 3: 2 tasks — release readiness + publish boundary
 - Phase 4: 4 tasks — environment provisioning (env repo)
 - Phase 5: 2 tasks — DESCOPED 2026-07-13 to external org-skills repo (operator handoff)
 - Phase 6: 7 tasks — scenario matrix, e2e validation, audits, closure
 
-**Total: 29 planned tasks (27 executable; p05 descoped)**
+**Total: 30 planned tasks (28 executable; p05 descoped; p02-t09 added 2026-07-14)**
 
 Ready for implementation after plan review.
 
