@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: ec65e4c5
+oat_last_commit: c5e75cd8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -22,7 +22,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: []
+  pre_approval_completed: [summary]
   approval: pending
   approval_source: null
   post_approval: []
@@ -49,7 +49,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-15T00:09:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-15T00:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

@@ -155,6 +155,7 @@ Chronological log of implementation progress.
 - [x] p03 root review — `449ff592`; passed with no findings
 - [x] Final verification — 2,977 workspace tests, lint, type-check, and build passed
 - [x] Final review — `ec65e4c5`; passed with no findings
+- [x] Closeout summary — `c5e75cd8`; generated summary and four decision records
 
 **Decisions:**
 
