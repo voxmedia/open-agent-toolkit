@@ -29,7 +29,8 @@ Everything lands in the existing gate execution pipeline (`packages/cli/src/comm
 **Key Components:**
 
 - **Headless invocation context** (gate CLI + prompt assembly): env injection at spawn; `oat_gate_headless` in `gateInvocationPromptContext`.
-- **Headless dispatch rule** (`.agents/skills/oat-project-review-provide/SKILL.md`): the child-side half of the contract.
+- **Headless dispatch rule + pre-plan inherit rule** (`.agents/skills/oat-project-review-provide/SKILL.md`): the child-side half of the headless contract, plus the artifact-review inherit rule for pre-plan scopes.
+- **Resolver envelope distinction** (`packages/cli/src/commands/project/dispatch-ceiling/`): `unresolvedReason` field separating missing-policy from missing-ladder.
 - **Budget resolver** (gate CLI + `packages/cli/src/config/oat-config.ts` + `config/resolve.ts`): replaces the single `resolveGateExecTimeoutMs` with a precedence chain; new `ExecTarget.timeoutMs` field, `--timeout-ms` flag, `workflow.gateTimeouts` config key.
 - **Activity probe registry** (new module `packages/cli/src/commands/gate/activity-probes.ts`): per-runtime transcript-directory probes behind one capability interface.
 - **Run marker** (gate CLI): transient `.pending-gate-<runId>.json` in the project `reviews/` directory.
@@ -176,6 +177,14 @@ Timeout/failure envelopes (`writeReviewGateExecutionFailure`) gain `activityEvid
 
 Prose changes only, in the gate-mode section: detect `oat_gate_headless` (prompt) or `OAT_GATE_HEADLESS=1` (env); apply the child-side state machine above; the Tier-1 "run in background if supported" guidance is explicitly overridden in this mode ("headless gate mode NEVER uses fire-and-forget background dispatch"); completion verification for the awaited-delegation route re-states the existing artifact/runId check before return. Skill version bump; `review-skill-contracts.test.ts` pins updated in the same commit.
 
+### Reviewer-resolution fixes (scope addition, 2026-07-15)
+
+**Resolver envelope distinction (`oat project dispatch-ceiling resolve`):** the unresolved envelope gains an `unresolvedReason: 'policy' | 'ladder' | 'both'` field, computed from facts the resolver already holds (did the effective ladder resolve; did a policy resolve). When only the policy is missing, `matrix`/ladder fields report their actual resolved values instead of `null`, so consumers can no longer conflate the two gaps. `--preflight` output and any human-readable rendering name the actual gap: "project has no dispatch policy — set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults" vs. "no candidate ladder configured — adopt a dispatch matrix."
+
+**Pre-plan inherit rule (`oat-project-review-provide` prose):** in the Managed Dispatch Readiness preflight, when the resolver returns `unresolvedReason: 'policy'` AND the review is `type: artifact` with scope in `{discovery, design, spec}`: do not block and do not prompt — review by deliberate inheritance in the current context (the existing inherit route), recording `selection_reason: inherit (pre-plan; no project policy)` in the dispatch audit. Guards: an explicitly set project policy is always honored (even pre-plan); `type: code` reviews and plan-scope artifact reviews continue to hard-require resolution; gate exec-target selection is untouched (gates resolve their targets independently of this preflight).
+
+**Design decision:** inheritance is the degenerate case of the existing "inherit unless the parent is below the resolved ceiling" contract — with no ceiling, the comparison is undefined and inheritance is the only coherent default. The policy remains a plan-time, complexity-informed decision; pre-plan reviews are early cursory reads that cost what the session already costs (operator rationale, 2026-07-15).
+
 ### Run marker
 
 Written before spawn to `{project}/reviews/.pending-gate-<runId>.json`: `{ runId, targetId, runtime, reviewType, reviewScope, startedAt, budgetMs, budgetSource }`. Deleted on every terminal path. Dotfile-prefixed and transient — never committed, never read by validation, never affects pass/fail; its only consumers are humans and post-mortem tooling ("a marker with no matching envelope ⇒ the gate process itself died"). Marker I/O failures are warn-and-continue.
@@ -212,7 +221,8 @@ A fixture exec target whose `baseCommand` is a bundled Node script (`packages/cl
 - Probes: per-runtime path derivation (incl. encoded-cwd cases ported from prior art tests), absent-dir → null, mtime advance detection, error → null.
 - Snapshot/envelope: new fields present and correctly populated; existing #151 fields untouched (regression).
 - Marker: write/delete lifecycle on every terminal path; orphan survives gate-process kill (subprocess fixture).
-- Skill contract (`review-skill-contracts.test.ts`): headless-mode section present, background-dispatch override stated, refusal format pinned.
+- Skill contract (`review-skill-contracts.test.ts`): headless-mode section present, background-dispatch override stated, refusal format pinned; pre-plan inherit rule present with its guards (explicit policy honored, code reviews still require resolution).
+- Resolver envelope: `unresolvedReason` correct for all three gap combinations; ladder fields report resolved values when only the policy is missing (regression: the 2026-07-15 conflation).
 
 ### Manual verification
 
@@ -224,15 +234,15 @@ One real headless Claude run and one real Cursor run against a small fixture pro
 
 ## Implementation Phases
 
-### Phase 1: Budget resolver + config/CLI surface
+### Phase 1: Budget resolver + reviewer-resolution fixes (config/CLI surface)
 
-**Goal:** precedence chain, `ExecTarget.timeoutMs`, `workflow.gateTimeouts`, `--timeout-ms` flags, `source` reporting — fully tested.
-**Verification:** budget unit suite; `pnpm release:validate`.
+**Goal:** timeout precedence chain, `ExecTarget.timeoutMs`, `workflow.gateTimeouts`, `--timeout-ms` flags, `source` reporting; resolver `unresolvedReason` envelope distinction with accurate ladder reporting — fully tested.
+**Verification:** budget + resolver unit suites; `pnpm release:validate`.
 
-### Phase 2: Headless contract
+### Phase 2: Headless contract + pre-plan inherit rule
 
-**Goal:** env/frontmatter injection, refusal detection, review-provide dispatch rule + contract tests, run marker.
-**Verification:** contract/skill suites; fake-runtime refusal fixture.
+**Goal:** env/frontmatter injection, refusal detection, review-provide dispatch rule (headless) + pre-plan inherit rule + contract tests, run marker.
+**Verification:** contract/skill suites; fake-runtime refusal fixture; resolver-driven inherit-path test.
 
 ### Phase 3: Liveness probes + envelopes + fixture matrix
 

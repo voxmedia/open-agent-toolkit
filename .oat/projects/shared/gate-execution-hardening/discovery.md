@@ -68,6 +68,16 @@ The operator maintains two working implementations of cross-provider transcript 
 
 **Sharpened open question — child-session correlation:** the gate spawns a runtime child (e.g. `claude -p`) but does not know the session ID the child creates, so the adapter must correlate a transcript to _its_ child. Candidate approaches for design: newest-file-created-after-spawn within the cwd-derived provider directory (requires porting each provider's cwd/project encoding rules — see `locate.ts`); runtime-specific session-ID extraction where the child surfaces it; or accepting directory-level activity (any growth in the project-scoped transcript dir since spawn) as sufficient evidence at the fidelity liveness needs. The last is the cheapest and may be enough — liveness needs "something is progressing," not "exactly this session."
 
+## Scope Addition: reviewer-resolution fixes (operator incident, 2026-07-15)
+
+While this project's own design review was being dispatched, a second incident exposed two reviewer-resolution defects. Operator decision: **in scope for this project** (ships in the same release train; co-locates with the existing `oat-project-review-provide` edits) rather than backlog.
+
+**Evidence (reproduced in-session and confirmed by an independent skeptic pass):** `/oat-project-review-provide artifact design` against this very project blocked with "the Cursor reviewer target is unresolved — no candidate ladder or model dispatch argument is configured," while a complete Cursor ladder existed in `~/.oat/config.json`. Actual cause: the project had no `oat_dispatch_policy` (it is set at quick-start Step 3.5, during planning — which had not happened yet). The misleading message sent the operator to matrix adoption, a no-op.
+
+**Item A — resolver envelope conflates missing policy with missing ladder.** `oat project dispatch-ceiling resolve` returns `matrix: null` / `dispatchArgs: null` whenever the policy half is unresolved, even when the ladder half resolves cleanly; consumers render this as "no candidate ladder." Requirement: the unresolved envelope distinguishes `unresolved_policy` from `unresolved_ladder` (the resolver has both facts), and review-provide's blocking message names the actual gap with the actual fix.
+
+**Item B — pre-plan artifact reviews hard-require a ceiling that structurally cannot exist yet.** Review-provide's Managed Dispatch Readiness preflight requires a resolved reviewer ceiling; discovery/design/spec artifact reviews precede the plan-time policy decision, so under managed mode every pre-plan artifact review fails by construction. Requirement (operator-decided): **when no project dispatch policy exists and the review target is a pre-plan artifact scope (discovery, design, spec), review by inheritance — run with the current session's model in the current context**, recording `selection_reason: inherit` with a pre-plan qualifier in the dispatch audit. Rationale: the policy is a complexity-informed decision that correctly belongs at plan time; pre-plan reviews are early, cursory reads. Guards: an explicitly set policy is honored even pre-plan; code reviews always require the resolved policy (they cannot exist pre-plan by construction); gate exec-target selection is unaffected (gates resolve targets independently).
+
 ## Baseline: what already shipped (do NOT re-implement)
 
 - **PR #151 (`review-bookkeeping-and-dispatch-doc-contracts`, merging now):** late artifact recovery by `oat_gate_run_id` on timeout (timeout falls through to correlation instead of failing early), `stdoutBytes`/`stderrBytes` telemetry, `lateCompletion`/`noOutputProduced` envelope fields, `OAT_GATE_EXEC_TIMEOUT_MS` documentation. **This project builds on that restructured timeout path — branch from a base that includes #151.**
@@ -87,6 +97,7 @@ The operator maintains two working implementations of cross-provider transcript 
 2. **Build on #151's gate/index.ts:** its timeout path already falls through to correlation; budgets/liveness/headless layers on top.
 3. **Sequencing inversion (operator-agreed 2026-07-15):** this project runs before `orchestration-run-log` implementation — run-log's own implementation gates will exercise these fixes, and both projects touch the same gate finalization region.
 4. **Fail-closed is invariant** across all three outcomes: incomplete/uncorrelated artifacts never pass; timeout still fails when no validated late artifact exists.
+5. **Reviewer-resolution fixes ride along (operator, 2026-07-15):** resolver envelope distinction + pre-plan inherit rule are in scope (see Scope Addition) — plan is the right place to set the policy; anything earlier inherits.
 
 ## Constraints
 
