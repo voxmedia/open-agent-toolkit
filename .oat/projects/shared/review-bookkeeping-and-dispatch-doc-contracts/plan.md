@@ -241,7 +241,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ## Phase 5: Terminal Gate Regression Fixes
 
-**Goal:** Repair exact Reviews-ledger extraction, prevent consumed artifacts from remaining actionable, align closeout artifacts, and validate the final release.
+**Goal:** Repair exact Reviews-ledger extraction, prevent consumed artifacts from remaining actionable, preserve timeout correlation diagnostics, align closeout artifacts and open-PR routing, and validate the final release.
 
 ### Task p05-t01: (review) Match the exact Reviews heading
 
@@ -276,21 +276,21 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Commit:** `fix(p05-t02): exclude consumed reviews from routing`
 
-### Task p05-t03: (review) Refresh final closeout artifacts
+### Task p05-t03: (review) Preserve timeout correlation failures
 
-**Files:** `.oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`; PR #151 body when derived closeout content is stale
+**Files:** `packages/cli/src/commands/gate/index.ts`, `packages/cli/src/commands/gate/index.test.ts`
 
 **Implement:**
 
-1. Update the project summary metadata and prose for p04/p05, the final package version, and current verification results.
-2. Preserve the implemented decisions while adding the terminal-gate regression fixes.
-3. Refresh the open PR body if its generated summary facts are stale.
+1. Add timeout regressions for duplicate run-ID matches and a changed artifact carrying a mismatched run ID.
+2. Emit an unrecoverable timeout only when no matching paths and no diagnostic artifact exist.
+3. Let correlation anomalies fall through to the existing `targeting_correlation_failed` path while preserving `noOutputProduced` for a genuine zero-output timeout.
 
-**Format:** `pnpm exec oxfmt --write .oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`
+**Format:** `pnpm exec oxfmt --write packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts`
 
-**Verify:** Inspect the summary and PR body for matching phase, release, and verification facts.
+**Verify:** `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
 
-**Commit:** `docs(p05-t03): refresh final closeout summary`
+**Commit:** `fix(p05-t03): preserve timeout correlation failures`
 
 ### Task p05-t04: (review) Synchronize and validate the terminal-fix release
 
@@ -298,7 +298,7 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 **Implement:**
 
-1. Bump all five lockstep public packages together for the shipped reader and routing fixes.
+1. Bump all five lockstep public packages together for the shipped reader, routing, and timeout-correlation fixes.
 2. Regenerate bundled public-package metadata and run `pnpm run cli -- sync --scope all`.
 3. Repair only compatibility fixtures directly exposed by the complete validation run.
 4. Run formatting, skill validation, full CLI and control-plane tests, lint, type-check, docs build, and release validation.
@@ -308,6 +308,23 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 **Verify:** `pnpm format && pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/control-plane test && pnpm lint && pnpm type-check && pnpm build:docs && pnpm release:validate`
 
 **Commit:** `chore(p05-t04): validate terminal review fixes`
+
+### Task p05-t05: (review) Refresh final closeout artifacts
+
+**Files:** `.oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`; PR #151 body when derived closeout content is stale
+
+**Implement:**
+
+1. Update the project summary metadata and prose for p04/p05, the final package version, and current verification results.
+2. Preserve the implemented decisions while adding the terminal-gate and PR-review regression fixes.
+3. Refresh the open PR body if its generated summary facts are stale.
+4. Record for root closeout that an open PR requires `oat_phase_status: pr_open`; `complete` is invalid while `oat_pr_status: open`.
+
+**Format:** `pnpm exec oxfmt --write .oat/projects/shared/review-bookkeeping-and-dispatch-doc-contracts/summary.md`
+
+**Verify:** Inspect the summary and PR body for matching phase, release, and verification facts; root verifies final state uses `pr_open`.
+
+**Commit:** `docs(p05-t05): refresh final closeout summary`
 
 ## Reviews
 
@@ -336,9 +353,9 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 - Phase 2: 2 tasks — gate recovery and docs
 - Phase 3: 1 task — sync and release validation
 - Phase 4: 4 tasks — final gate review fixes and release validation
-- Phase 5: 4 tasks — terminal gate regression fixes and release validation
+- Phase 5: 5 tasks — terminal gate and PR-review regression fixes
 
-**Total: 15 tasks**
+**Total: 16 tasks**
 
 ## References
 

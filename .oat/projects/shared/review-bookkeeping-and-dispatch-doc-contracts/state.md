@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/151' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:29:28.041Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-15T02:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-15T02:19:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -69,7 +69,7 @@ Terminal gate re-review produced blocking regression findings; Phase 5 fixes are
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (11/15 tasks complete; p05-t01 next)
+- **Implementation:** `implementation.md` (11/16 tasks complete; p05-t01 next)
 
 ## Progress
 
@@ -95,7 +95,7 @@ Terminal gate re-review produced blocking regression findings; Phase 5 fixes are
 
 ## Blockers
 
-- Exact Reviews-heading extraction and consumed-artifact actionability must be fixed before the terminal gate can pass.
+- Exact Reviews-heading extraction, consumed-artifact actionability, and timeout-correlation classification must be fixed before the terminal gate can pass.
 
 ## Next Milestone
 

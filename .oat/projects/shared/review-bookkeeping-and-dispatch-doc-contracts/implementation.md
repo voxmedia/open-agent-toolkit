@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | completed | 2     | 2/2       |
 | Phase 3 | completed | 1     | 1/1       |
 | Phase 4 | completed | 4     | 4/4       |
-| Phase 5 | pending   | 4     | 0/4       |
+| Phase 5 | pending   | 5     | 0/5       |
 
-**Total:** 11/15 tasks completed
+**Total:** 11/16 tasks completed
 
 ---
 
@@ -147,11 +147,15 @@ oat_generated: false
 
 **Status:** pending
 
-### Task p05-t03: (review) Refresh final closeout artifacts
+### Task p05-t03: (review) Preserve timeout correlation failures
 
 **Status:** pending
 
 ### Task p05-t04: (review) Synchronize and validate the terminal-fix release
+
+**Status:** pending
+
+### Task p05-t05: (review) Refresh final closeout artifacts
 
 **Status:** pending
 
@@ -312,6 +316,18 @@ Chronological log of implementation progress.
 - `M1`: the implementation record is authoritative; generated `summary.md` and any derived PR text remained at p03/0.1.66. `p05-t03` aligns those closeout artifacts to the shipped implementation.
 
 **Next:** Execute review-fix tasks via `oat-project-implement`, starting with `p05-t01`. After completion, update this artifact-identified review event to `fixes_completed`, then re-run and receive the final gate.
+
+### PR Review Feedback: #151
+
+**Date:** 2026-07-15
+**Source:** Cursor Bugbot inline review comments
+
+**Findings:**
+
+- `PR1` (valid) → `p05-t03`: timeout handling currently claims every null artifact resolution before duplicate or mismatched run-correlation failures can reach `targeting_correlation_failed`.
+- `PR2` (valid) → root final bookkeeping: while implementation remains active, `oat_phase_status: in_progress` is correct; once implementation passes with PR #151 still open, set `oat_phase_status: pr_open`, never `complete`.
+
+**Scope note:** Defensive recommender fallback to `oat_pr_status`/`oat_pr_url` is an optional enhancement and is not required for this project.
 
 ---
 
