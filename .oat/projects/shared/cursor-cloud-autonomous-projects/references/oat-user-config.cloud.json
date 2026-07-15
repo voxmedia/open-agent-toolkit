@@ -11,16 +11,16 @@
         "cursor": {
           "economy": {
             "candidates": [
-              "gpt-5.6-luna-high",
-              "gpt-5.6-luna-xhigh",
+              "composer-2.5",
               "claude-sonnet-5-high",
-              "composer-2.5"
+              "gpt-5.6-luna-high",
+              "gpt-5.6-luna-xhigh"
             ]
           },
           "balanced": {
             "candidates": [
-              "gpt-5.6-terra-high",
-              "cursor-grok-4.5-high"
+              "cursor-grok-4.5-high",
+              "gpt-5.6-terra-high"
             ]
           },
           "high": {
@@ -31,10 +31,10 @@
           },
           "frontier": {
             "candidates": [
-              "gpt-5.6-sol-xhigh",
-              "gpt-5.6-sol-max",
+              "claude-fable-5-thinking-high",
               "claude-fable-5-thinking-xhigh",
-              "claude-fable-5-thinking-high"
+              "gpt-5.6-sol-xhigh",
+              "gpt-5.6-sol-max"
             ]
           }
         }
