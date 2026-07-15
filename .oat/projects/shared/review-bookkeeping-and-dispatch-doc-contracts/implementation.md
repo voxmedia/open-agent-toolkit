@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-15
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed   | 4     | 4/4       |
 | Phase 2 | completed   | 2     | 2/2       |
 | Phase 3 | completed   | 1     | 1/1       |
-| Phase 4 | in_progress | 4     | 0/4       |
+| Phase 4 | in_progress | 4     | 3/4       |
 
-**Total:** 7/11 tasks completed
+**Total:** 10/11 tasks completed
 
 ---
 
@@ -110,15 +110,18 @@ oat_generated: false
 
 ### Task p04-t01: (review) Keep active project reviews actionable
 
-**Status:** pending
+**Status:** completed
+**Commit:** c35a31e6
 
 ### Task p04-t02: (review) Scope final-state readers to the Reviews ledger
 
-**Status:** pending
+**Status:** completed
+**Commit:** 16fed3e1
 
 ### Task p04-t03: (review) Resolve archive identity before writing references
 
-**Status:** pending
+**Status:** completed
+**Commit:** d0508ff9
 
 ### Task p04-t04: (review) Synchronize and validate review-fix release assets
 
@@ -189,6 +192,10 @@ Chronological log of implementation progress.
 - [x] Final p03 HiLL approval — approved by the user after passing final review and pre-approval closeout
 - [x] Configured closeout sequence — summary, documentation, and PR completed; no post-approval steps
 - [ ] Terminal implementation gate — blocking retry artifact received; four bounded review-fix tasks queued from gate run `1e691726-06a4-4258-a5a8-6560e427a087`
+- [x] p04-t01: Keep active project reviews actionable — `c35a31e6`
+- [x] p04-t02: Scope final-state readers to the Reviews ledger — `16fed3e1`
+- [x] p04-t03: Resolve archive identity before writing references — `d0508ff9`
+- [ ] p04-t04: Release validation exposed three fan-in compatibility updates; plan scope expanded before resuming the original implementer
 
 **Decisions:**
 

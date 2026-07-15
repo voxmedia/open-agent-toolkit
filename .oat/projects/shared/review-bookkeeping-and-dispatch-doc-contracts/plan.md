@@ -221,14 +221,17 @@ Phases p01 and p02 are file-disjoint and may run concurrently: p01 owns skills, 
 
 ### Task p04-t04: (review) Synchronize and validate review-fix release assets
 
-**Files:** five public `packages/*/package.json` manifests; `packages/cli/assets/public-package-versions.json`; sync-managed provider views and `.oat/sync/manifest.json`
+**Files:** `packages/cli/src/commands/help-snapshots.test.ts`, `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`, `.agents/docs/autonomy-contract.md`, `.agents/skills/oat-project-autonomous/SKILL.md`; five public `packages/*/package.json` manifests; `packages/cli/assets/public-package-versions.json`; sync-managed provider views and `.oat/sync/manifest.json`
 
 **Implement:**
 
-1. Bump the five lockstep public packages together for the shipped CLI and bundled skill changes.
-2. Regenerate bundled public-package metadata and run `pnpm run cli -- sync --scope all`.
-3. Verify canonical skill versions, provider views, and release metadata include all p04 changes.
-4. Run the publishable-package release validation required by repository policy.
+1. Refresh the `review latest` help snapshot for the explicit actionable-project flag.
+2. Update the bundled review-skill contract to require the new active-only receive command.
+3. Map the new descriptive receive prose in the autonomy prompt-site inventory and bump `oat-project-autonomous` once for this PR.
+4. Bump the five lockstep public packages together for the shipped CLI and bundled skill changes.
+5. Regenerate bundled public-package metadata and run `pnpm run cli -- sync --scope all`.
+6. Verify canonical skill versions, provider views, and release metadata include all p04 changes.
+7. Run the publishable-package release validation required by repository policy.
 
 **Format:** `pnpm format:fix`
 
