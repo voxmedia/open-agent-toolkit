@@ -200,3 +200,22 @@ instead of warn-and-proceed, or at minimum require the explicit
 `--producer-identity` override. Also a docs candidate: state in the dispatch
 references that gate diversity is executor-derived (stamps), orchestrator
 identity is invisible to gate selection.
+
+## 2026-07-15T00:12:51Z - workflow-improvement - Downstream vendored-copy reviews are a free canonical audit channel
+
+**Observation:** Cursor Bugbot reviewed a downstream repository that vendors
+canonical OAT lifecycle skills and agent instructions, then reported five
+findings that all reproduced in the canonical sources. The downstream context
+surfaced completion-ordering, timestamp-format, template-fence, and
+cross-step-artifact contract defects without requiring a separate canonical
+review dispatch.
+
+**Impact:** Vendored-copy review creates useful independent coverage at no
+additional canonical review cost. Ignoring those reports because they originate
+downstream would leave defects in the source of truth and every future vendor
+refresh.
+
+**Recommendation:** Treat downstream vendored-copy findings as a free canonical
+audit channel: verify each report against the canonical source, fix it there,
+record the external provenance, and regenerate provider or vendored views.
+Avoid patching only the downstream copy when the canonical file is defective.

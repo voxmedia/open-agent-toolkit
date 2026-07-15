@@ -194,6 +194,22 @@ Retired the user-scope discovery risk with an explicit absolute-path contingency
 **Outcome:** Made pack-asset dry runs read-only while reporting planned refreshes; restored executable script modes after update; restricted workflow template/script removal to user scope; corrected quick-mode resume routing and model-family rule order with patch skill bumps; and aligned the design risk and tool-pack lifecycle documentation.
 **Verification:** Passed — full CLI suite 240 files / 2,717 tests; 58 skills validated; all five public package tarballs passed release validation; temp-HOME reviewer reproduction reported planned template/script refreshes with `template_writes=0` and `script_writes=0`; project provider views remained in sync.
 
+### Post-Phase External Review Fix Batch (2026-07-15)
+
+**Source:** Cursor Bugbot review in a downstream repository that vendors these
+canonical OAT files; all five reported findings were verified against the
+canonical sources before mutation.
+**Status:** completed
+**Outcome:** Moved discover, design, plan, and quick-start exit gates ahead of
+durable completion; restored discovery's unresolved-Critical autonomous
+boundary; aligned reviewer timestamp and artifact-template guidance; and made
+agent-instructions analysis explicitly carry Step 3.5 validation into its
+artifact.
+**Verification:** Focused lifecycle, inventory, reviewer, and instructions
+contracts passed; provider views were regenerated from canonical sources and
+reported in sync. The full required verification matrix is recorded with this
+batch's commits.
+
 ## Phase 3: OAT release (publish boundary)
 
 **Status:** in_progress
