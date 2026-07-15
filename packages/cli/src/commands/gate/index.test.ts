@@ -4573,6 +4573,90 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(124);
   });
 
+  it('preserves duplicate run-id correlation failures after timeout', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    const siblingProject = await writeProject(
+      root,
+      '.oat/projects/shared/sibling',
+    );
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeTimedOut: true,
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'first-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath: siblingProject,
+          fileName: 'second-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      corroboration: {
+        run: 'mismatched',
+        actual: {
+          matchingArtifactPaths: [
+            `${projectPath}/reviews/first-review.md`,
+            `${siblingProject}/reviews/second-review.md`,
+          ].sort(),
+        },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('preserves mismatched changed-artifact correlation failures after timeout', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeTimedOut: true,
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+          gateInvocationOverrides: {
+            oat_gate_run_id: 'different-run-id',
+          },
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'targeting_correlation_failed',
+      outcome: 'review_completed_targeting_correlation_failed',
+      artifactPath: `${projectPath}/reviews/p01-review.md`,
+      corroboration: {
+        run: 'mismatched',
+        actual: { matchingArtifactPaths: [] },
+      },
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
   it('emits elapsed, idle, and hard-budget gate liveness telemetry', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);

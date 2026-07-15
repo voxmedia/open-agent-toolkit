@@ -2713,7 +2713,11 @@ async function runReviewGate(
       before,
       after,
     });
-    if (childResult.timedOut && !artifactResolution.artifact) {
+    if (
+      childResult.timedOut &&
+      artifactResolution.matchingArtifactPaths.length === 0 &&
+      !artifactResolution.diagnosticArtifact
+    ) {
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
