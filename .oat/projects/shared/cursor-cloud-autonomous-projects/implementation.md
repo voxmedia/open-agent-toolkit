@@ -2,10 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - 'p03-t02: @open-agent-toolkit/cli 0.1.61 is not yet published'
-  - 'p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending'
+  - 'p04-t04 acceptance: fresh environment rebuild and live CURSOR_API_KEY strict probe pending (operator: merge OAT PR #150 → publish 0.1.66; merge env PR #5 → rebuild; add secret)'
 oat_last_updated: 2026-07-15
-oat_current_task_id: p03-t02
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -30,7 +29,7 @@ oat_generated: false
 | -------------------------------------------------------------- | ----------- | ----- | --------- |
 | Phase 1 (p01): Autonomy contract + lifecycle skill amendments  | completed   | 6     | 6/6       |
 | Phase 2 (p02): New OAT skills + user-scope installability      | completed   | 9     | 9/9       |
-| Phase 3 (p03): OAT release (publish boundary)                  | in_progress | 2     | 1/2       |
+| Phase 3 (p03): OAT release (publish boundary)                  | completed   | 2     | 2/2       |
 | Phase 4 (p04): Environment provisioning (cloud-agent-env-node) | in_progress | 4     | 3/4       |
 | Phase 5 (p05): Org layer                                       | descoped    | 2     | —         |
 | Phase 6 (p06): Scenario validation + e2e + closure             | pending     | 7     | 0/7       |
@@ -265,6 +264,9 @@ p04 end-state validation and p06 e2e are now **unblocked on the publish axis**; 
 **Approved pre-ship seed revision (2026-07-14):** Completed in `1af64dc` (`cloud-agent-env-node`) plus this branch's canonical-reference update. Cursor Cloud only provisions `cursor-agent`, and all six gate execTargets already use the cursor runtime, so the unreachable codex and claude dispatch ladders were removed. The four cursor tiers remain unchanged. Cross-family review diversity is unchanged because the cursor catalog's Fable and Grok model slugs are classified as Claude and xAI families by the model-family classifier; it never depended on codex/claude provider ladders. All six availability probes now use `grep -Fq --` literal matching.
 **Revision/no-bump decision:** The environment seed remains byte-identical to the canonical reference, and `OAT_CONFIG_SEED_VERSION` plus both Docker marker literals remain `1`. This revision is pre-ship: env PR #5 is unmerged and no deployed HOME exists to reconcile, so advancing the marker would create a fictitious migration boundary.
 **Revision verification:** Passed JSON validity, exact cross-repo byte identity, `bash -n`, shellcheck, `git diff --check`, and the full hermetic harness. Published `@open-agent-toolkit/cli` 0.1.63 in a fresh temp HOME resolved exactly four user-sourced cursor tier cells and no configured/non-null codex or claude cells; its user-config view contains only the cursor provider (the resolved schema map retains null default placeholders for codex/claude). The config dump retained six `grep -Fq --` probes, and `gate target list --json` retained six explicit cursor targets in addition to the CLI's three built-ins.
+**Candidate-order correction (2026-07-15):** Completed in `d3322ac` (`cloud-agent-env-node`) plus this branch's canonical-reference correction. Candidate ladders are ascending preference because `packages/cli/src/commands/project/dispatch-ceiling/index.ts:648` pins `cell.candidates.at(-1)`. The seed had economy, balanced, and frontier descending, which pinned Composer, Grok, and Fable Thinking High instead of Luna XHigh, Terra High, and Sol Max; high was already ascending. The four cells now end at their intended ceiling targets. Gate execTargets are unchanged because their ordering is priority-field based.
+**Why prior verification missed it:** Readiness asserted non-empty cell shape and exact frontier content but not the selected ceiling outcome; earlier live checks dumped resolved config or exercised single-candidate cells rather than resolving this seed's multi-candidate frontier ladder. Readiness now asserts all four ordered arrays plus balanced/frontier `candidates | last` pins, and the harness proves an inverted ladder returns NOT READY.
+**Ordering-fix verification:** Passed `bash -n`, shellcheck, JSON validation, exact cross-repo byte identity, `git diff --check`, and the full positive/negative harness. With a temp HOME containing the revised seed and a repo-managed frontier policy, source CLI `project dispatch-ceiling resolve` selected `gpt-5.6-sol-max` for both implementer (`selectionMode: capped`) and reviewer (`selectionMode: review-target`); both reported `cellSource: user-config`, `ceilingTarget.model: gpt-5.6-sol-max`, and `selection.selectedValue: gpt-5.6-sol-max`.
 
 ### Task p04-t03: Per-repo shared-config audit + local overrides
 

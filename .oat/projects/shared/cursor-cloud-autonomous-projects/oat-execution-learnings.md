@@ -246,3 +246,20 @@ rule's stricter catalog-gap behavior ("a missing lower tier does not justify
 an equivalent frontier child; prefer retain-in-root when output is not
 mechanically verifiable") — currently OAT biases to nearest-available-tier
 dispatch. Align "economical"/"economy" naming on one side.
+
+## 2026-07-15T21:35:00Z - gotcha - Assert selection outcomes, not configuration shape
+
+**Observation:** Dispatch candidate ladders are ordered by ascending preference;
+the resolver pins the last item with `cell.candidates.at(-1)`. A cloud seed with
+descending multi-candidate cells passed JSON, shape, config-dump, and
+single-candidate checks while selecting the wrong economy, balanced, and
+frontier ceilings.
+
+**Impact:** Structurally valid configuration can invert runtime dispatch intent.
+Exact-array checks detect known ordering drift, but only an end-to-end resolver
+assertion proves that the intended model is actually selected.
+
+**Recommendation:** For every ordered configuration surface, test both structure
+and selection outcome. Include at least one real multi-candidate cell, assert
+the resolver's selected value and ceiling target, and add a negative fixture
+whose inverted ordering must fail readiness.
