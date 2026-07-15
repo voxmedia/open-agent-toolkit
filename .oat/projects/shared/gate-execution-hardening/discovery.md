@@ -43,6 +43,31 @@ Consumer-app dogfood run (`/Users/tstang/Code/consumer-app`, project `consumer-a
 - **Skill dispatch policy:** `oat-project-review-provide` gate mode skips confirmation and sets `oat_review_invocation: gate`, but Tier-1 dispatch still says "Run in background if supported" with post-hoc artifact verification — the direct cause of the Claude failure mode.
 - **Correlation machinery:** `runId` UUID embedded in prompt frontmatter; unique-match correlation + corroboration + `receiveEligible` already exist. No pre-artifact run marker (only an in-memory before-snapshot of review candidates).
 
+## Prior Art: transcript location and observation (operator recon, 2026-07-15)
+
+The operator maintains two working implementations of cross-provider transcript observation plus vault documentation — use as **reference implementations** (OAT must not depend on these repos; port the path knowledge and edge-case handling):
+
+- **Primary format/normalization references:** `/Users/tstang/Code/skills/skills/session-observer/references/transcript-formats.md` (provider paths + JSONL record shapes) and `/Users/tstang/Code/skills/src/transcript/core/runtimes.ts` (session-ID extraction, tolerant record parsing).
+- **CLI/output contract prior art:** `/Users/tstang/Code/orc/docs/session-log.md` and `/Users/tstang/Code/orc/packages/core/src/session-log-types.ts` (transcript-only boundary, offsets, sanitization, versioned envelopes).
+- **Discovery/watching prior art:** `.../session-observer/lib/locate.ts` (provider-specific lookup + fallback), `.../lib/watch.ts` (file-change detection + offsets); provider test suites in both repos cover malformed JSONL and path/lookup cases.
+
+**Known transcript locations (current, per the recon):**
+
+| Runtime | Path pattern                                                                             |
+| ------- | ---------------------------------------------------------------------------------------- |
+| Claude  | `~/.claude/projects/<encoded-cwd>/<session-id>.jsonl`                                    |
+| Codex   | `~/.codex/sessions/YYYY/MM/DD/session-<id>.jsonl`                                        |
+| Cursor  | `~/.cursor/projects/<encoded-project>/agent-transcripts/<session-id>/<session-id>.jsonl` |
+
+**Limitations that directly shape the adapter boundary (from the operator's handoff):**
+
+- Provider timestamps are not normalized; **recency relies on filesystem metadata** — which independently confirms this project's mtime/size-only capability boundary (no content parsing).
+- Malformed/incomplete trailing JSONL records are routine (tolerant handling required if anything ever reads content; the gate adapter should not).
+- Cursor SQLite chat history is out of scope for these readers.
+- **Transcript observation is read-only and must not imply live-agent health or act capability** — adapter output is "observable activity evidence," never a health verdict. Envelope wording must preserve this distinction.
+
+**Sharpened open question — child-session correlation:** the gate spawns a runtime child (e.g. `claude -p`) but does not know the session ID the child creates, so the adapter must correlate a transcript to _its_ child. Candidate approaches for design: newest-file-created-after-spawn within the cwd-derived provider directory (requires porting each provider's cwd/project encoding rules — see `locate.ts`); runtime-specific session-ID extraction where the child surfaces it; or accepting directory-level activity (any growth in the project-scoped transcript dir since spawn) as sufficient evidence at the fidelity liveness needs. The last is the cheapest and may be enough — liveness needs "something is progressing," not "exactly this session."
+
 ## Baseline: what already shipped (do NOT re-implement)
 
 - **PR #151 (`review-bookkeeping-and-dispatch-doc-contracts`, merging now):** late artifact recovery by `oat_gate_run_id` on timeout (timeout falls through to correlation instead of failing early), `stdoutBytes`/`stderrBytes` telemetry, `lateCompletion`/`noOutputProduced` envelope fields, `OAT_GATE_EXEC_TIMEOUT_MS` documentation. **This project builds on that restructured timeout path — branch from a base that includes #151.**
@@ -92,7 +117,7 @@ Consumer-app dogfood run (`/Users/tstang/Code/consumer-app`, project `consumer-a
 - **Headless signal shape:** env injection (`OAT_NON_INTERACTIVE=1` + a gate-specific marker) vs. a frontmatter field in the gate prompt context vs. both; and how the skill detects it portably across runtimes.
 - **"Runtime holds reviewer identity" check:** reuse of the existing host-detection/runtime-identity machinery vs. a simpler declaration.
 - **Budget policy layer:** where review-type/scope defaults live (config schema shape) and their interaction with per-target `timeoutMs`.
-- **Liveness adapter boundary:** per-runtime adapter modules vs. one capability interface with runtime-supplied probes (e.g. transcript path patterns); how adapters learn where transcripts live without schema coupling.
+- **Liveness adapter boundary:** per-runtime adapter modules vs. one capability interface with runtime-supplied probes. _Substantially answered by Prior Art (2026-07-15):_ known per-provider path patterns exist and are documented/tested in the operator's session-observer and orc implementations; fs-metadata-only recency is validated prior art. Remaining sub-question: child-session correlation (see Prior Art section) — session-precise vs. directory-level activity evidence.
 - **Claude belt-and-suspenders:** should the gate set `CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS=0` for claude-runtime children as defense in depth, or is that masking the contract violation?
 - **Run marker mechanics:** file location/name, and how `check`-style tooling distinguishes marker-only (started, not finished) from finalized.
 
