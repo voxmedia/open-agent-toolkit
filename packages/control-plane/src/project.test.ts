@@ -204,7 +204,7 @@ oat_template: false
     const repoRoot = await createDir('oat-control-plane-active-review-');
     const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
 
-    await createReviewRoutingProject(projectDir, 'complete');
+    await createReviewRoutingProject(projectDir, 'complete', 'received');
     await mkdir(join(projectDir, 'reviews'), { recursive: true });
     await writeFile(
       join(projectDir, 'reviews', 'p01-review.md'),
@@ -297,6 +297,7 @@ oat_template: false
 async function createReviewRoutingProject(
   projectDir: string,
   phaseStatus: string,
+  p01ReviewStatus = 'passed',
 ): Promise<void> {
   await mkdir(projectDir, { recursive: true });
   await Promise.all([
@@ -341,7 +342,7 @@ oat_template: false
 
 | Scope | Type | Status | Date | Artifact |
 | ----- | ---- | ------ | ---- | -------- |
-| p01 | code | passed | 2026-06-12 | reviews/p01-review.md |
+| p01 | code | ${p01ReviewStatus} | 2026-06-12 | reviews/p01-review.md |
 | final | code | passed | 2026-06-12 | reviews/final-review.md |
 `,
       'utf8',
