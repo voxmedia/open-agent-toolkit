@@ -45,25 +45,27 @@ Sequential (`oat_plan_parallel_groups: []`). All three phases modify `packages/c
 
 ## Phase 1: Budget resolver + reviewer-resolution fixes (CLI/config surface)
 
-### Task p01-t01: Resolver `unresolvedReason` envelope distinction
+### Task p01-t01: Resolver `unresolvedReason` envelope distinction + ladder inspection fixes
 
 **Files:**
 
 - Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
 - Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts` + its test surface (`oat config get` read support for `workflow.dispatchCeiling` paths)
+- Modify: `.agents/skills/oat-project-plan-writing/SKILL.md` (adoption contract routes on `unresolvedReason`; version bump) + `review-skill-contracts.test.ts` pins if applicable
 
 **Step 1: Write test (RED)**
 
-Pin the three gap combinations against a fixture config: policy missing + ladder resolved → `unresolvedReason: 'policy'` AND ladder/matrix fields report their actual resolved values (regression for the 2026-07-15 conflation, where `matrix: null` masked a healthy user-config ladder); policy resolved + ladder missing/incomplete → `unresolvedReason: 'ladder'`; both missing → `'both'`. Resolved envelopes carry no `unresolvedReason`. `--preflight` human-readable output names the actual gap with the actual fix (policy: "set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults"; ladder: "adopt a dispatch matrix").
+Pin the three gap combinations against a fixture config: policy missing + ladder resolved → `unresolvedReason: 'policy'` AND ladder/matrix fields report their actual resolved values (regression for the 2026-07-15 conflation, where `matrix: null` masked a healthy user-config ladder); policy resolved + ladder missing/incomplete → `unresolvedReason: 'ladder'`; both missing → `'both'`. Resolved envelopes carry no `unresolvedReason`. `--preflight` human-readable output names the actual gap with the actual fix (policy: "set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults"; ladder: "adopt a dispatch matrix"). **Ladder inspection (second-incident regression):** `oat config get workflow.dispatchCeiling.providers` (and per-provider children) returns effective layered values instead of `Unknown config key` when configured, and a clear absent indication when not.
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts`
 Expected: New tests fail (RED)
 
 **Step 2: Implement (GREEN)**
 
-The resolver already computes both facts independently; this task surfaces them without changing resolution behavior.
+The resolver already computes both facts independently; this task surfaces them without changing resolution behavior. Update the plan-writing adoption contract prose to route on `unresolvedReason` (adoption prompt fires only on `'ladder' | 'both'`) and bump that skill's version.
 
-Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/`
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/ src/commands/config/`
 Expected: Tests pass (GREEN), existing resolution tests unchanged
 
 **Step 3: Refactor**
@@ -72,14 +74,14 @@ None expected; keep the envelope shape change additive.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm lint && pnpm type-check && pnpm oat:validate-skills`
 Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/dispatch-ceiling/
-git commit -m "feat(p01-t01): distinguish unresolved policy from missing ladder in resolver envelope"
+git add packages/cli/src/commands/project/dispatch-ceiling/ packages/cli/src/commands/config/ .agents/skills/oat-project-plan-writing/ packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "feat(p01-t01): distinguish unresolved policy from missing ladder and fix ladder inspection"
 ```
 
 ---
