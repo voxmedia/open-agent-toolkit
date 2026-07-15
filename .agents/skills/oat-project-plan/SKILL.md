@@ -417,6 +417,25 @@ Ask: "Does this breakdown make sense? Any tasks missing?"
 
 Iterate until user confirms.
 
+### Step 12.1: Propose Parallel Groups (Optional)
+
+After all phases are drafted, evaluate whether any phases have non-overlapping file boundaries:
+
+1. For each pair of adjacent phases in the plan, check the `Files:` section of all tasks in each phase.
+2. If no file appears in both phases' task files sections, they are candidates for a parallel group.
+3. Propose to the user:
+
+   ```
+   I noticed phases p02 and p03 have disjoint file boundaries (no overlap).
+   Declare them as a parallel group? This lets oat-project-implement run them
+   concurrently in worktrees, cutting wall-clock time.
+   ```
+
+4. If the user confirms, update `oat_plan_parallel_groups` in the plan frontmatter.
+5. If no phases are obviously independent, skip this step silently — do not invent parallelism.
+
+Never silently infer parallelism without explicit user confirmation.
+
 ### Step 12.25: Configure Optional Phase Gate Review
 
 After the confirmed plan has stable phase IDs and before Step 12.5 starts the
@@ -492,7 +511,7 @@ the last check before the completion boundary:
    oat gate resolve <this-skill> --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; the skill is complete.
+   If the command returns JSON `null`, no gate is configured; proceed directly to the completion steps in Step 13 below.
 
 2. Export the resolved project path into the command shell:
 
@@ -542,25 +561,6 @@ oat_blockers: []
 oat_last_updated: {today}
 ---
 ````
-
-### Step 14.5: Propose Parallel Groups (Optional)
-
-After all phases are drafted, evaluate whether any phases have non-overlapping file boundaries:
-
-1. For each pair of adjacent phases in the plan, check the `Files:` section of all tasks in each phase.
-2. If no file appears in both phases' task files sections, they are candidates for a parallel group.
-3. Propose to the user:
-
-   ```
-   I noticed phases p02 and p03 have disjoint file boundaries (no overlap).
-   Declare them as a parallel group? This lets oat-project-implement run them
-   concurrently in worktrees, cutting wall-clock time.
-   ```
-
-4. If the user confirms, update `oat_plan_parallel_groups` in the plan frontmatter.
-5. If no phases are obviously independent, skip this step silently — do not invent parallelism.
-
-Never silently infer parallelism without explicit user confirmation.
 
 ### Step 14: Update Project State
 

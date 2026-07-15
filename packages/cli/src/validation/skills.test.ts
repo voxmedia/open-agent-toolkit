@@ -847,6 +847,7 @@ describe('validateOatSkills', () => {
       finalizedHeading,
       gateHeading,
       completionHeading,
+      noGateNextStep,
     } of [
       {
         skillName: 'oat-project-discover',
@@ -855,6 +856,7 @@ describe('validateOatSkills', () => {
           '### Step 11: Human-in-the-Loop Lifecycle (HiLL) Gate (If Configured)',
         gateHeading: '### Step 12: Gate Execution',
         completionHeading: '### Step 13: Mark Discovery Complete',
+        noGateNextStep: 'Step 13',
       },
       {
         skillName: 'oat-project-design',
@@ -864,6 +866,7 @@ describe('validateOatSkills', () => {
         gateHeading: '### Step 7: Gate Execution',
         completionHeading:
           '### Step 8: Approval — Mark Design Complete and Update HiLL State',
+        noGateNextStep: 'Step 8',
       },
       {
         skillName: 'oat-project-plan',
@@ -871,6 +874,7 @@ describe('validateOatSkills', () => {
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
+        noGateNextStep: 'Step 13',
       },
       {
         skillName: 'oat-project-quick-start',
@@ -879,6 +883,7 @@ describe('validateOatSkills', () => {
         gateHeading: '### Gate Execution',
         completionHeading:
           '### Step 3.7: Record Review Disposition and Mark Plan Complete',
+        noGateNextStep: 'Step 3.7',
       },
     ] as const) {
       const content = await readRepoFile(
@@ -909,6 +914,18 @@ describe('validateOatSkills', () => {
       ).toMatch(
         /ends in `block` after attempts are exhausted[\s\S]*unresolved\s+`prompt` boundary[\s\S]*completion steps below MUST NOT run[\s\S]*stays `in_progress` and resumable/,
       );
+      expect(
+        content.slice(gateIndex, completionIndex),
+        `${skillName} no-gate path continues into completion`,
+      ).toMatch(
+        new RegExp(
+          `no gate is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
+        ),
+      );
+      expect(
+        content.slice(gateIndex, completionIndex),
+        `${skillName} gate section must not short-circuit completion`,
+      ).not.toContain('the skill is complete');
     }
 
     const discover = await readRepoFile(
@@ -917,6 +934,24 @@ describe('validateOatSkills', () => {
     expect(discover).toMatch(
       /Unresolved Critical review findings always stop\s+autonomous discovery progression,[\s\S]*record the blocker and leave the project resumable\./,
     );
+
+    const plan = await readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+    const parallelIndex = plan.indexOf(
+      '### Step 12.1: Propose Parallel Groups (Optional)',
+    );
+    const artifactReviewIndex = plan.indexOf(
+      '### Step 12.5: Run Plan Artifact Review Loop',
+    );
+    const gateIndex = plan.indexOf('### Gate Execution');
+    expect(
+      parallelIndex,
+      'plan topology is finalized before review',
+    ).toBeLessThan(artifactReviewIndex);
+    expect(
+      artifactReviewIndex,
+      'plan artifact review precedes exit gate',
+    ).toBeLessThan(gateIndex);
+    expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
   });
 
   it('routes lifecycle gate handoff only for receive-eligible corroborated results', async () => {

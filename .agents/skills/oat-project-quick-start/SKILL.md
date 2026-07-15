@@ -679,7 +679,7 @@ as the last check before plan and project completion:
    oat gate resolve <this-skill> --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; the skill is complete.
+   If the command returns JSON `null`, no gate is configured; proceed directly to the completion steps in Step 3.7 below.
 
 2. Export the resolved project path into the command shell:
 

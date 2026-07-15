@@ -209,6 +209,10 @@ artifact.
 contracts passed; provider views were regenerated from canonical sources and
 reported in sync. The full required verification matrix is recorded with this
 batch's commits.
+**Review round 2:** Initial FAIL with 2 Important findings; both resolved.
+No-gate results now continue into each skill's actual completion step, and
+spec-driven parallel-group selection now finalizes `oat_plan_parallel_groups`
+before plan artifact review and exit-gate execution.
 
 ## Phase 3: OAT release (publish boundary)
 
