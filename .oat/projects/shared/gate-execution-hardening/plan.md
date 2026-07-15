@@ -428,15 +428,15 @@ git commit -m "feat(p03-t02): report process and transcript activity in gate liv
 
 The fake runtime (bundled Node script as an exec target `baseCommand`, driven by env/args) deterministically: emits/withholds stdout; writes transcript-like files into a probe-observed temp dir; writes (or not) an artifact with a given `oat_gate_run_id`; exits with a given code after a given delay; emits a refusal line. Subprocess-level matrix (scaled-ms budgets), each case a named test mapped to its observed failure:
 
-| #   | Case                                       | Asserts                                                          |
-| --- | ------------------------------------------ | ---------------------------------------------------------------- |
-| 1   | headless → inline reviewer → artifact      | pass; `receiveEligible: true`                                    |
-| 2   | async-ceiling class (refusal emitted)      | `refusal` populated; fail-closed                                 |
-| 3   | large review under new type-default budget | completes; `source: 'type-default'`                              |
-| 4   | timeout with advancing transcript activity | evidence recent while `idleMs == elapsedMs`; envelope carries it |
-| 5   | timeout/failure with no artifact           | fail-closed; `noOutputProduced` (#151 regression)                |
-| 6   | provenance mismatch (wrong runId)          | correlation rejects (regression pin)                             |
-| 7   | pass → receive eligibility                 | `handoff` + `receiveEligible` contract intact                    |
+| #   | Case                                                               | Asserts                                                          |
+| --- | ------------------------------------------------------------------ | ---------------------------------------------------------------- |
+| 1   | headless → inline reviewer → artifact                              | pass; `receiveEligible: true`                                    |
+| 2   | async-ceiling class (refusal emitted)                              | `refusal` populated; fail-closed                                 |
+| 3   | large final/phase-scope code review under new scope-default budget | completes; `source: 'scope-default'`                             |
+| 4   | timeout with advancing transcript activity                         | evidence recent while `idleMs == elapsedMs`; envelope carries it |
+| 5   | timeout/failure with no artifact                                   | fail-closed; `noOutputProduced` (#151 regression)                |
+| 6   | provenance mismatch (wrong runId)                                  | correlation rejects (regression pin)                             |
+| 7   | pass → receive eligibility                                         | `handoff` + `receiveEligible` contract intact                    |
 
 Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/gate-hardening.integration.test.ts`
 Expected: Tests fail (RED)
@@ -481,13 +481,31 @@ Expected: Nav/index clean; regeneration idempotent after staging (quiet check ex
 
 **Step 3: End-to-end completion-safety verification (recorded in implementation.md — gate-review remediation: the matrix's fake runtime cannot exercise the real review-provide lifecycle)**
 
-Create a disposable fixture project (`oat project new gate-hardening-smoke --mode quick --no-set-active --no-commit` in a temp checkout, seeded with a trivial discovery), then for EACH of the two real runtimes:
+Create a disposable fixture project in a temp checkout with **committed** baseline artifacts — review-provide's baseline contract stops before review when core project artifacts are untracked, so the scaffold commit is load-bearing:
 
 ```bash
-# Claude lane (and again with the cursor target)
-oat gate review --json --project "$FIXTURE_PROJECT" \
+FIXTURE_ROOT=$(mktemp -d)/gate-hardening-smoke   # temp git checkout of this branch
+git worktree add "$FIXTURE_ROOT" HEAD
+cd "$FIXTURE_ROOT" && pnpm run worktree:init
+pnpm run cli -- project new gate-hardening-smoke --mode quick --no-set-active
+# (default scaffold commit retained; seed discovery.md with a trivial paragraph, then:)
+git add .oat/projects/shared/gate-hardening-smoke/ && git commit -m "chore: seed smoke fixture"
+FIXTURE_PROJECT=".oat/projects/shared/gate-hardening-smoke"
+```
+
+Then run BOTH lanes with the **repository-source CLI** (`pnpm run cli --`), so the branch-local hardening is what executes — not the installed binary:
+
+```bash
+# Lane 1: Claude
+pnpm run cli -- gate review --json --project "$FIXTURE_PROJECT" \
   --review-type artifact --review-scope discovery \
   --target claude-fable-skip-permissions \
+  "Use oat-project-review-provide artifact discovery to review the fixture discovery. Return blocking findings clearly, or say no blocking findings."
+
+# Lane 2: Cursor
+pnpm run cli -- gate review --json --project "$FIXTURE_PROJECT" \
+  --review-type artifact --review-scope discovery \
+  --target cursor-gpt-5-6-sol-max \
   "Use oat-project-review-provide artifact discovery to review the fixture discovery. Return blocking findings clearly, or say no blocking findings."
 ```
 
@@ -495,7 +513,7 @@ Assertions per lane (all four required, recorded with output excerpts in impleme
 
 1. Terminal envelope `status: ok|blocked` with `receiveEligible: true` — the headless parent completed without prompt-level inline pinning (the contract did the work).
 2. Artifact frontmatter `oat_gate_run_id` equals the envelope `runId` (run-correlated artifact).
-3. The fixture project's Reviews table row was updated AND the bookkeeping commit exists in the fixture checkout **before the parent exited** (`git -C "$FIXTURE" log --oneline -1` shows the review commit).
+3. The fixture project's Reviews table row was updated AND the bookkeeping commit exists in the fixture checkout **before the parent exited** (`git -C "$FIXTURE_ROOT" log --oneline -1` shows the review commit landing after the seed commit).
 4. Startup diagnostic shows the resolved budget with `source`, and at least one liveness tick carries `processAlive`/activity-evidence fields.
 
 Explicit target pinning is acceptable here (manual/debug exception in the gate contract). If a lane cannot complete for environmental reasons, record the exact failure and do not mark this step complete.
