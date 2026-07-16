@@ -168,7 +168,9 @@ interface ProcessRunOptions {
 }
 
 interface ProcessRunResult {
+  capturedOutput?: string;
   exitCode: number;
+  refusal?: string;
   stderrBytes: number;
   stdoutBytes: number;
   timedOut?: boolean;
@@ -593,6 +595,9 @@ async function runChildProcess(
     let killTimeout: NodeJS.Timeout | null = null;
     let stderrBytes = 0;
     let stdoutBytes = 0;
+    let refusal: string | undefined;
+    let stdoutLineBuffer = '';
+    let stderrLineBuffer = '';
     const startedAt = Date.now();
     let lastActivityAt = startedAt;
     const child = spawn(command, args, {
@@ -606,13 +611,29 @@ async function runChildProcess(
     const recordActivity = (): void => {
       lastActivityAt = Date.now();
     };
+    const scanChunk = (buffer: string, chunk: Buffer): string => {
+      const combined = buffer + chunk.toString('utf8');
+      const lines = combined.split('\n');
+      const remainder = lines.pop() ?? '';
+      if (!refusal) {
+        for (const line of lines) {
+          refusal = extractStructuredRefusal(line.replace(/\r$/, ''));
+          if (refusal) {
+            break;
+          }
+        }
+      }
+      return remainder;
+    };
     child.stdout?.on('data', (chunk: Buffer) => {
       stdoutBytes += chunk.byteLength;
+      stdoutLineBuffer = scanChunk(stdoutLineBuffer, chunk);
       recordActivity();
       process.stdout.write(chunk);
     });
     child.stderr?.on('data', (chunk: Buffer) => {
       stderrBytes += chunk.byteLength;
+      stderrLineBuffer = scanChunk(stderrLineBuffer, chunk);
       recordActivity();
       process.stderr.write(chunk);
     });
@@ -656,14 +677,23 @@ async function runChildProcess(
       if (killTimeout) {
         clearTimeout(killTimeout);
       }
+      refusal ??=
+        extractStructuredRefusal(stdoutLineBuffer.replace(/\r$/, '')) ??
+        extractStructuredRefusal(stderrLineBuffer.replace(/\r$/, ''));
       resolve({
         exitCode: timedOut ? 124 : (code ?? 1),
+        ...(refusal ? { refusal } : {}),
         stderrBytes,
         stdoutBytes,
         ...(timedOut ? { timedOut: true } : {}),
       });
     });
   });
+}
+
+function extractStructuredRefusal(output: string): string | undefined {
+  const match = output.match(/^OAT_GATE_REFUSAL: (.*)$/m);
+  return match?.[1]?.replace(/\r$/, '');
 }
 
 function isGateWriteLayer(value: string): value is GateWriteLayer {
@@ -2473,14 +2503,17 @@ function writeReviewGateExecutionFailure(
     timeoutMs?: number;
     timeoutSource?: GateTimeoutSource;
     noOutputProduced?: boolean;
+    refusal?: string;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
   },
 ): void {
-  const message = payload.timedOut
-    ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
-    : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
+  const message = payload.refusal
+    ? `Review did not complete: reviewer refused the headless route (${payload.refusal}).`
+    : payload.timedOut
+      ? `Review did not complete: target ${payload.target} timed out after ${payload.timeoutMs}ms.`
+      : `Review did not complete: target ${payload.target} exited with code ${payload.exitCode}.`;
   if (context.json) {
     context.logger.json({
       status: 'review_failed',
@@ -2505,6 +2538,7 @@ function writeReviewGateExecutionFailure(
       ...(payload.noOutputProduced !== undefined
         ? { noOutputProduced: payload.noOutputProduced }
         : {}),
+      ...(payload.refusal ? { refusal: payload.refusal } : {}),
       message,
     });
     return;
@@ -3020,8 +3054,46 @@ async function runReviewGate(
       timeout,
     );
     const childExitCode = childResult.exitCode;
+    const refusal =
+      childResult.refusal ??
+      extractStructuredRefusal(childResult.capturedOutput ?? '');
 
-    if (childExitCode !== 0 && !childResult.timedOut) {
+    const after = await listReviewGateArtifactCandidates({
+      repoRoot,
+      effective,
+      reviewProject,
+    });
+    const artifactResolution = resolveRunCorrelatedReviewArtifact({
+      runId,
+      before,
+      after,
+    });
+    if (
+      refusal &&
+      artifactResolution.matchingArtifactPaths.length === 0 &&
+      !artifactResolution.artifact
+    ) {
+      writeReviewGateExecutionFailure(context, {
+        runId,
+        target: selected.id,
+        project: projectPath,
+        projectResolutionSource: reviewProject.source,
+        exitCode: childExitCode,
+        timedOut: childResult.timedOut ?? false,
+        timeoutMs: timeout.timeoutMs,
+        timeoutSource: timeout.source,
+        refusal,
+        gateInvocation,
+        dispatchReport,
+      });
+      process.exitCode = 1;
+      return;
+    }
+    if (
+      childExitCode !== 0 &&
+      !childResult.timedOut &&
+      !artifactResolution.artifact
+    ) {
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -3037,17 +3109,6 @@ async function runReviewGate(
       process.exitCode = childExitCode;
       return;
     }
-
-    const after = await listReviewGateArtifactCandidates({
-      repoRoot,
-      effective,
-      reviewProject,
-    });
-    const artifactResolution = resolveRunCorrelatedReviewArtifact({
-      runId,
-      before,
-      after,
-    });
     if (
       childResult.timedOut &&
       artifactResolution.matchingArtifactPaths.length === 0 &&

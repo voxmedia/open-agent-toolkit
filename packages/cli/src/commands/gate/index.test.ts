@@ -77,6 +77,7 @@ type ProcessRunner = (
   timedOut?: boolean;
   stdoutBytes: number;
   stderrBytes: number;
+  capturedOutput?: string;
 }>;
 
 type ProcessCallInput = ProcessCall & {
@@ -181,6 +182,7 @@ function createProcessRunner(
     executeExitCode?: number;
     executeStderrBytes?: number;
     executeStdoutBytes?: number;
+    executeOutput?: string;
     executeTimedOut?: boolean;
     livenessSnapshots?: LivenessSnapshot[];
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
@@ -281,6 +283,9 @@ function createProcessRunner(
       exitCode: options.executeTimedOut ? 124 : (options.executeExitCode ?? 0),
       stderrBytes: options.executeStderrBytes ?? 0,
       stdoutBytes: options.executeStdoutBytes ?? 0,
+      ...(options.executeOutput
+        ? { capturedOutput: options.executeOutput }
+        : {}),
       ...(options.executeTimedOut ? { timedOut: true } : {}),
     };
   };
@@ -4299,6 +4304,85 @@ describe('oat gate', () => {
       expect.stringContaining('Unable to write gate run marker'),
     ]);
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([0, 7])(
+    'classifies a structured refusal independently of child exit code %s',
+    async (exitCode) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        executeExitCode: exitCode,
+        executeOutput: 'diagnostic\nOAT_GATE_REFUSAL: cannot await reviewer\n',
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        refusal: 'cannot await reviewer',
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('uses the first strict line-start refusal and ignores mid-line tokens', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: [
+        'prefix OAT_GATE_REFUSAL: incidental',
+        'OAT_GATE_REFUSAL: first refusal',
+        'OAT_GATE_REFUSAL: second refusal',
+      ].join('\n'),
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      refusal: 'first refusal',
+    });
+  });
+
+  it('lets a validated correlated artifact win over refusal output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeExitCode: 9,
+      executeOutput: 'OAT_GATE_REFUSAL: stale child message\n',
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      receiveEligible: true,
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('refusal');
     expect(process.exitCode).toBe(0);
   });
 
