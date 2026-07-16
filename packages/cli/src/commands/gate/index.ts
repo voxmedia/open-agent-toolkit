@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
-import { readdir, readFile } from 'node:fs/promises';
+import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { basename, isAbsolute, join, relative } from 'node:path';
 
 import {
@@ -98,6 +99,15 @@ interface GateCommandDependencies {
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
   processEnv: NodeJS.ProcessEnv;
+  writeGateRunMarker: (
+    path: string,
+    marker: GateRunMarker,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  removeGateRunMarker: (
+    path: string,
+    warn: (message: string) => void,
+  ) => Promise<void>;
   writeDiagnostic: (message: string) => void;
 }
 
@@ -181,6 +191,18 @@ type GateTimeoutSource =
 interface GateTimeoutResolution {
   timeoutMs: number;
   source: GateTimeoutSource;
+}
+
+interface GateRunMarker {
+  runId: string;
+  targetId: string;
+  runtime: string;
+  reviewType: string | null;
+  reviewScope: string | null;
+  project: string;
+  startedAt: string;
+  budgetMs: number;
+  budgetSource: GateTimeoutSource;
 }
 
 type PersistedTimeoutLayer = 'local' | 'shared' | 'user';
@@ -326,6 +348,8 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   processEnv: process.env,
+  writeGateRunMarker,
+  removeGateRunMarker,
   writeDiagnostic: (message) => process.stderr.write(message),
 };
 
@@ -359,6 +383,34 @@ const REVIEW_GATE_CONTEXT_NOTE = [
 const GATE_CHECK_TIMEOUT_MS = 5_000;
 const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 const GATE_LIVENESS_INTERVAL_MS = 30_000;
+
+async function writeGateRunMarker(
+  path: string,
+  marker: GateRunMarker,
+  warn: (message: string) => void,
+): Promise<boolean> {
+  try {
+    await mkdir(join(tmpdir(), 'oat-gate-runs'), { recursive: true });
+    await writeFile(path, `${JSON.stringify(marker, null, 2)}\n`, 'utf8');
+    return true;
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    warn(`Unable to write gate run marker ${path}: ${detail}`);
+    return false;
+  }
+}
+
+async function removeGateRunMarker(
+  path: string,
+  warn: (message: string) => void,
+): Promise<void> {
+  try {
+    await rm(path);
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    warn(`Unable to remove gate run marker ${path}: ${detail}`);
+  }
+}
 
 function reviewGateProjectContext(project: ResolvedReviewProject): string {
   return [
@@ -2838,6 +2890,8 @@ async function runReviewGate(
   dependencies: GateCommandDependencies,
 ): Promise<void> {
   const runId = randomUUID();
+  let runMarkerPath: string | undefined;
+  let runMarkerWritten = false;
   let postSelectionContext:
     | {
         project: string;
@@ -2921,6 +2975,35 @@ async function runReviewGate(
         : []),
       prompt.join(' '),
     ]);
+    runMarkerPath = join(tmpdir(), 'oat-gate-runs', `${runId}.json`);
+    runMarkerWritten = await dependencies.writeGateRunMarker(
+      runMarkerPath,
+      {
+        runId,
+        targetId: selected.id,
+        runtime: selected.target.runtime,
+        reviewType: options.reviewType?.trim() || null,
+        reviewScope: options.reviewScope?.trim() || null,
+        project: projectPath,
+        startedAt: new Date().toISOString(),
+        budgetMs: timeout.timeoutMs,
+        budgetSource: timeout.source,
+      },
+      (message) => context.logger.warn(message),
+    );
+    if (runMarkerWritten) {
+      if (context.json) {
+        dependencies.writeDiagnostic(
+          `${JSON.stringify({
+            type: 'gate-run-marker',
+            runId,
+            path: runMarkerPath,
+          })}\n`,
+        );
+      } else {
+        context.logger.info(`Gate run marker: ${runMarkerPath}.`);
+      }
+    }
     const childResult = await executeTarget(
       selected,
       [reviewPrompt],
@@ -3195,6 +3278,12 @@ async function runReviewGate(
       process.exitCode = 1;
     } else {
       writeError(context, error);
+    }
+  } finally {
+    if (runMarkerWritten && runMarkerPath) {
+      await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
+        context.logger.warn(message),
+      );
     }
   }
 }

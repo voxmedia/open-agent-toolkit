@@ -1,3 +1,4 @@
+import { execFileSync, spawn as spawnProcess } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -30,6 +31,15 @@ interface HarnessOptions {
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   writeDiagnostic?: (message: string) => void;
+  writeGateRunMarker?: (
+    path: string,
+    marker: Record<string, unknown>,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  removeGateRunMarker?: (
+    path: string,
+    warn: (message: string) => void,
+  ) => Promise<void>;
 }
 
 interface ProcessCall {
@@ -103,6 +113,12 @@ function createHarness(options: HarnessOptions): {
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
+      : {}),
+    ...(options.writeGateRunMarker
+      ? { writeGateRunMarker: options.writeGateRunMarker }
+      : {}),
+    ...(options.removeGateRunMarker
+      ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
   } as Parameters<typeof createGateCommand>[0];
 
@@ -302,6 +318,8 @@ async function runReviewGate(options: {
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   writeDiagnostic?: (message: string) => void;
+  writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
+  removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -313,6 +331,8 @@ async function runReviewGate(options: {
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
     writeDiagnostic: options.writeDiagnostic,
+    writeGateRunMarker: options.writeGateRunMarker,
+    removeGateRunMarker: options.removeGateRunMarker,
   });
   await runCommand(
     command,
@@ -4150,6 +4170,233 @@ describe('oat gate', () => {
         ),
     ).toBe(true);
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { outcome: 'completed', exitCode: 0, writeArtifact: true },
+    { outcome: 'timeout', exitCode: 1, timedOut: true },
+    { outcome: 'child failure', exitCode: 3 },
+    { outcome: 'targeting failure', exitCode: 0 },
+    {
+      outcome: 'validation failure',
+      exitCode: 0,
+      writeArtifact: true,
+      parseFailure: true,
+    },
+    { outcome: 'launch error', exitCode: 1, launchFailure: true },
+  ])(
+    'cleans the system-temp run marker exactly once after $outcome',
+    async ({
+      exitCode,
+      launchFailure,
+      outcome,
+      parseFailure,
+      timedOut,
+      writeArtifact: shouldWriteArtifact,
+    }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      let markerWritten = false;
+      const markerWrites: Array<{
+        path: string;
+        marker: Record<string, unknown>;
+      }> = [];
+      const markerRemovals: string[] = [];
+      const runner = createProcessRunner({
+        executeExitCode: exitCode,
+        executeTimedOut: timedOut,
+        onExecute: async () => {
+          expect(markerWritten).toBe(true);
+          if (shouldWriteArtifact) {
+            await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+          }
+        },
+      });
+      const runProcess: ProcessRunner = launchFailure
+        ? async (_command, _args, options) => {
+            if (options.purpose === 'execute') {
+              expect(markerWritten).toBe(true);
+              throw new Error('launch failed');
+            }
+            return runner.runProcess(_command, _args, options);
+          }
+        : runner.runProcess;
+
+      await runReviewGate({
+        root,
+        home,
+        runProcess,
+        parseReviewGateVerdict: parseFailure
+          ? async () => {
+              throw new Error('invalid artifact');
+            }
+          : undefined,
+        writeGateRunMarker: async (path, marker) => {
+          markerWritten = true;
+          markerWrites.push({ path, marker });
+          return true;
+        },
+        removeGateRunMarker: async (path) => {
+          markerRemovals.push(path);
+        },
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'code',
+          '--review-scope',
+          'p02',
+          'Review',
+        ],
+      });
+
+      expect(markerWrites).toHaveLength(1);
+      expect(markerWrites[0]?.path).toMatch(
+        new RegExp(
+          `^${tmpdir().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/oat-gate-runs/[^/]+\\.json$`,
+        ),
+      );
+      expect(markerWrites[0]?.path.startsWith(root)).toBe(false);
+      expect(markerWrites[0]?.marker).toMatchObject({
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        reviewType: 'code',
+        reviewScope: 'p02',
+        project: projectPath,
+        startedAt: expect.any(String),
+        budgetMs: 1_800_000,
+        budgetSource: 'scope-default',
+      });
+      expect(markerRemovals).toEqual([markerWrites[0]?.path]);
+      expect(outcome).toBeTruthy();
+    },
+  );
+
+  it('warns and continues when run marker writes fail', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeGateRunMarker: async (_path, _marker, warn) => {
+        warn('Unable to write gate run marker: denied');
+        return false;
+      },
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('Unable to write gate run marker'),
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps a killed gate run marker outside the repository status', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              sleeper: {
+                runtime: 'test',
+                baseCommand: [
+                  process.execPath,
+                  '-e',
+                  'setTimeout(() => {}, 60000)',
+                ],
+                invocation: {
+                  model: 'test-model',
+                  reasoningEffort: 'test',
+                },
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    execFileSync('git', ['config', 'user.email', 'gate@example.test'], {
+      cwd: root,
+    });
+    execFileSync('git', ['config', 'user.name', 'Gate Test'], { cwd: root });
+    execFileSync('git', ['add', '.'], { cwd: root });
+    execFileSync('git', ['commit', '-q', '-m', 'fixture'], { cwd: root });
+
+    const repoRoot = join(process.cwd(), '..', '..');
+    const child = spawnProcess(
+      join(repoRoot, 'node_modules', '.bin', 'tsx'),
+      [
+        '--tsconfig',
+        join(repoRoot, 'packages', 'cli', 'tsconfig.json'),
+        join(repoRoot, 'packages', 'cli', 'src', 'index.ts'),
+        '--cwd',
+        root,
+        '--json',
+        'gate',
+        'review',
+        '--target',
+        'sleeper',
+        '--project',
+        projectPath,
+        'Review',
+      ],
+      {
+        cwd: repoRoot,
+        detached: true,
+        env: { ...process.env, HOME: home },
+        stdio: ['ignore', 'ignore', 'pipe'],
+      },
+    );
+    let stderr = '';
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+
+    let markerPath: string | undefined;
+    for (let attempt = 0; attempt < 100 && !markerPath; attempt += 1) {
+      const markerLine = stderr
+        .split('\n')
+        .find((line) => line.includes('"type":"gate-run-marker"'));
+      if (markerLine) {
+        markerPath = (JSON.parse(markerLine) as { path: string }).path;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    expect(markerPath).toBeTruthy();
+    if (child.pid) {
+      process.kill(-child.pid, 'SIGKILL');
+    }
+    await new Promise((resolve) => child.once('close', resolve));
+
+    await expect(readFile(markerPath!, 'utf8')).resolves.toContain(
+      '"targetId": "sleeper"',
+    );
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: root,
+        encoding: 'utf8',
+      }),
+    ).toBe('');
+    await rm(markerPath!, { force: true });
   });
 
   it('normalizes a gate review artifact missing only a zero-count Medium heading', async () => {
