@@ -94,6 +94,39 @@ model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
 
+### Headless completion safety
+
+Every `oat gate review` child receives the same headless contract through two
+channels:
+
+- environment: `OAT_GATE_HEADLESS=1`, `OAT_NON_INTERACTIVE=1`, and
+  `OAT_GATE_RUN_ID=<runId>`
+- prompt frontmatter: `oat_gate_headless: true` plus the target runtime and
+  model
+
+In headless mode, `oat-project-review-provide` calls the executable routing
+helper instead of deciding from prose:
+
+```bash
+oat gate route \
+  --expect-runtime cursor \
+  --expect-model gpt-5.6-sol \
+  --can-await true \
+  --json
+```
+
+The helper returns `inline`, `delegate-sync`, or `refuse`. Inline review is
+allowed only when one unambiguous provider marker matches the expected runtime
+and available model evidence does not contradict the expected model. A
+different or ambiguous runtime delegates only through an awaited child route.
+If no awaited route exists, the reviewer emits
+`OAT_GATE_REFUSAL: <reason>` on its own line and fails closed. Headless review
+never uses fire-and-forget background dispatch.
+
+The gate recognizes refusal lines independently of the child exit code. A
+validated run-correlated artifact still wins; without one, the envelope has
+`status: review_failed`, includes `refusal`, and is not receive-eligible.
+
 ### Gate dispatch report semantics
 
 When gate dispatch is represented in a `DispatchReportV1`, consumers require
@@ -521,9 +554,76 @@ available target. Once a target actually runs, its exit code is the gate result;
 OAT does not try another target after a failed review.
 
 Gate target execution has a child-process timeout. Set
-`OAT_GATE_EXEC_TIMEOUT_MS` to a positive integer number of milliseconds to
-override the 900,000 ms (15-minute) default. An unset, non-integer, or
-non-positive value uses the default.
+the budget at the narrowest useful level. The first valid value wins:
+
+1. command `--timeout-ms`
+2. selected exec target `timeoutMs`
+3. `workflow.gateTimeouts.code` or `workflow.gateTimeouts.artifact`
+4. `OAT_GATE_EXEC_TIMEOUT_MS`
+5. built-in type-and-scope default
+6. legacy `GATE_EXEC_TIMEOUT_MS` behavior for untyped `gate exec` runs
+
+All configured values must be integer milliseconds from `1,000` through
+`14,400,000`. Invalid persisted values are ignored with a warning and
+resolution continues to the next source. Code reviews at `final`, phase
+(`pNN`), or phase-range (`pNN-pMM`) scope default to 1,800,000 ms (30 minutes).
+Task-scoped code reviews (`pNN-tNN`) and artifact reviews default to 900,000 ms
+(15 minutes). Startup output reports both the resolved value and source.
+
+Example migration from the former single environment override:
+
+```json
+{
+  "workflow": {
+    "gateTimeouts": {
+      "code": 2400000,
+      "artifact": 900000
+    },
+    "gates": {
+      "execTargets": {
+        "cursor-large-review": {
+          "runtime": "cursor",
+          "baseCommand": ["cursor-agent", "-p", "--force"],
+          "timeoutMs": 3600000
+        }
+      }
+    }
+  }
+}
+```
+
+Use a one-off override without changing config:
+
+```bash
+oat gate review --timeout-ms 2700000 \
+  --project "$PROJECT_PATH" \
+  --review-type code \
+  --review-scope final \
+  "Use oat-project-review-provide code final for the declared project"
+```
+
+### Liveness and post-mortem evidence
+
+Each liveness tick keeps stdout-idle time and also reports `processAlive` plus
+the latest metadata-only transcript activity as `lastActivityEvidence` when
+available. The probe performs bounded depth-two traversal and compares newest
+mtime plus total size with its spawn baseline. It never reads transcript
+contents, never extends a budget, and never changes pass/fail or receive
+eligibility.
+
+Claude and Cursor evidence has `scope: project-dir`. Codex's date-sharded
+sessions directory is shared across the runtime, so its evidence has
+`scope: ambient-runtime`; human output labels it “ambient runtime activity (not
+attributable to this gate child).” Probe errors fail soft to process and stdout
+telemetry.
+
+Timeout and child-failure envelopes include the latest `activityEvidence`.
+Before spawn, the gate also writes a transient marker under the system temp
+directory at `oat-gate-runs/<runId>.json`; startup diagnostics print its path.
+The marker records target, runtime, project, review type/scope, start time,
+budget, and budget source. It is deleted at terminal completion. An orphaned
+marker indicates the gate parent itself stopped unexpectedly, but markers are
+diagnostic only and are never used for artifact validation.
 
 After a review target times out, OAT re-scans the project reviews for exactly
 one artifact carrying that invocation's `oat_gate_run_id`. A recovered artifact
@@ -544,6 +644,17 @@ Correlation anomalies keep their more specific failure. Multiple artifacts
 carrying the run ID, or a changed artifact carrying a mismatched run ID, return
 `targeting_correlation_failed` with `receiveEligible: false`. Do not receive
 those artifacts; correct the project/run correlation and start a new gate run.
+
+### Incident-to-regression mapping
+
+| Observed failure                                         | Regression coverage                                                              |
+| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
+| Headless reviewer could not complete an async delegation | route unit matrix plus fake-runtime headless inline and structured-refusal cases |
+| Large final review exceeded the old 15-minute budget     | scope-aware resolver tests plus scaled final-scope fake-runtime case             |
+| Silent child looked idle while transcripts grew          | metadata-probe tests plus timeout-with-advancing-transcript fixture              |
+| Timeout or child failure produced no artifact            | fail-closed `noOutputProduced` fixture                                           |
+| Artifact carried the wrong gate run ID                   | provenance-mismatch fixture                                                      |
+| Passing artifact lost receive routing                    | handoff and `receiveEligible` fixture                                            |
 
 ## Current limits
 
