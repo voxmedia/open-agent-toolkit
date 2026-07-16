@@ -29,8 +29,8 @@ dispatch-resolution defects discovered while reviewing the design.
   checkout-local `oat gate route`, strict route receipts, structured refusals,
   transient run markers, and inline or synchronously awaited execution only.
 - Scoped route evidence to the active child runtime. Matching current-provider
-  evidence takes precedence over inherited parent-provider markers, while
-  generic and current-provider contradictions remain fail-closed.
+  evidence takes precedence over inherited parent-provider markers. Generic
+  parent model values are ignored; current-provider contradictions fail closed.
 - Added bounded Claude, Codex, and Cursor transcript-metadata probes. Liveness
   and terminal envelopes now distinguish process state, stdout/stderr idleness,
   transcript activity, budget source, and no-output failures without changing
@@ -43,7 +43,7 @@ dispatch-resolution defects discovered while reviewing the design.
   pre-plan discovery/design/spec reviews can deliberately inherit when policy
   alone is absent.
 - Updated canonical skills, provider views, user documentation, and all five
-  public packages in lockstep to `0.1.71`.
+  public packages in lockstep to `0.1.72`.
 
 ## Key Decisions
 

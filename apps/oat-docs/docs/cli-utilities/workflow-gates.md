@@ -120,10 +120,11 @@ The helper returns `inline`, `delegate-sync`, or `refuse`. Inline review is
 allowed when a provider marker for the expected/current child runtime is
 present and trustworthy model evidence does not contradict the expected model.
 That current-target marker takes precedence over inherited parent-provider
-markers. Generic and current-provider model evidence remain fail-closed;
-inherited model variables belonging to other providers are ignored. A missing
-current-target marker or trustworthy contradiction delegates only through an
-awaited child route. If no awaited route exists, the reviewer emits
+markers. Generic model variables and model variables belonging to other
+providers are ignored because they may be inherited from the parent;
+current-provider model evidence remains fail-closed. A missing current-target
+marker or trustworthy contradiction delegates only through an awaited child
+route. If no awaited route exists, the reviewer emits
 `OAT_GATE_REFUSAL: <reason>` on its own line and fails closed. Headless review
 never uses fire-and-forget background dispatch.
 

@@ -38,8 +38,6 @@ const PROVIDER_MARKERS = [
   { runtime: 'codex', keys: ['CODEX_THREAD_ID', 'CODEX_SESSION_ID'] },
 ] as const;
 
-const GENERIC_MODEL_EVIDENCE_KEYS = ['OAT_CURRENT_MODEL', 'OAT_MODEL'] as const;
-
 const PROVIDER_MODEL_EVIDENCE_KEYS = {
   claude: ['ANTHROPIC_MODEL', 'CLAUDE_MODEL'],
   cursor: ['CURSOR_MODEL'],
@@ -94,10 +92,7 @@ export function resolveGateRoute(input: GateRouteInput): GateRouteDecision {
           expectedRuntime as keyof typeof PROVIDER_MODEL_EVIDENCE_KEYS
         ]
       : [];
-  const modelEvidence = [
-    ...GENERIC_MODEL_EVIDENCE_KEYS,
-    ...providerModelEvidenceKeys,
-  ].flatMap((key) => {
+  const modelEvidence = providerModelEvidenceKeys.flatMap((key) => {
     const value = nonEmptyEnvValue(input.env, key);
     return value ? [{ key, value }] : [];
   });

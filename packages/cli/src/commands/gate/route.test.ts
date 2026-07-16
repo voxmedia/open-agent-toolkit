@@ -126,10 +126,6 @@ describe('oat gate route', () => {
   );
 
   it.each([
-    ['OAT_CURRENT_MODEL', true, 'delegate-sync'],
-    ['OAT_CURRENT_MODEL', false, 'refuse'],
-    ['OAT_MODEL', true, 'delegate-sync'],
-    ['OAT_MODEL', false, 'refuse'],
     ['CURSOR_MODEL', true, 'delegate-sync'],
     ['CURSOR_MODEL', false, 'refuse'],
   ] as const)(
@@ -146,6 +142,25 @@ describe('oat gate route', () => {
           },
         }),
       ).toMatchObject({ route, reason: expect.stringContaining('model') });
+    },
+  );
+
+  it.each(['OAT_CURRENT_MODEL', 'OAT_MODEL'])(
+    'ignores inherited generic model evidence from %s',
+    (modelKey) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'cursor',
+          expectModel: 'child-model',
+          canAwait: false,
+          env: {
+            CLAUDECODE: '1',
+            CURSOR_AGENT: '1',
+            OAT_INVOCATION_MODEL: 'child-model',
+            [modelKey]: 'parent-model',
+          },
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
     },
   );
 

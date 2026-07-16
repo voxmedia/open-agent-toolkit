@@ -47,7 +47,7 @@ never be killed). Replace it with activity-aware semantics:
 ## Partial Progress (2026-07-16)
 
 The `gate-execution-hardening` project shipped the enabling and diagnostic
-layers in CLI `0.1.71`: scope/target-aware configurable hard budgets,
+layers in CLI `0.1.72`: scope/target-aware configurable hard budgets,
 process/stdout/transcript liveness evidence, correlated timeout recovery,
 headless completion-safe routing, and deterministic timeout fixtures. This item
 remains open for the behavior not yet implemented: an adaptive idle-kill timer,

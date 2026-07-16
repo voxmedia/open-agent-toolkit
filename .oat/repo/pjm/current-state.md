@@ -27,7 +27,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.1.71` hardens headless gate execution with scope/target-aware timeout
+- CLI `0.1.72` hardens headless gate execution with scope/target-aware timeout
   precedence, immutable runtime/model route inputs, checkout-local executable
   routing, strict route receipts, and current-child provider/model provenance.
   Gate liveness and terminal envelopes now distinguish process state,

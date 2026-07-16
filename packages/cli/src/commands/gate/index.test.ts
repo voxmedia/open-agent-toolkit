@@ -26,7 +26,7 @@ import type {
   GateActivityProbe,
   GateActivityProbeStatus,
 } from './activity-probes';
-import type { GateRouteReceipt } from './branch-local-cli';
+import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -4216,7 +4216,7 @@ describe('oat gate', () => {
       OAT_GATE_RUNTIME: promptRuntime,
       OAT_INVOCATION_MODEL: promptModel,
       OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
-      OAT_GATE_CLI_ROOT: expect.stringContaining('/gate-execution-hardening'),
+      OAT_GATE_CLI_ROOT: currentGateCliRoot(),
     });
     expect(promptRuntime).toBe('codex');
     expect(promptModel).toBe('provider-default');
