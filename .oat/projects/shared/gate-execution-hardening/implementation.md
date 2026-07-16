@@ -3,14 +3,14 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-16
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: gate-execution-hardening
 
 **Started:** 2026-07-15
-**Last Updated:** 2026-07-15
+**Last Updated:** 2026-07-16
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | completed | 3     | 3/3       |
 | Phase 2 | completed | 6     | 6/6       |
 | Phase 3 | completed | 4     | 4/4       |
-| Phase 4 | pending   | 3     | 0/3       |
+| Phase 4 | completed | 3     | 3/3       |
 
-**Total:** 13/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -229,27 +229,61 @@ oat_generated: false
 
 ## Phase 4: Final review fixes
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-16
+
+### Phase Summary
+
+**Outcome:**
+
+- Bound the canonical checkout-local route command to immutable gate-owned runtime/model inputs and required a strictly validated route receipt.
+- Scoped model evidence to generic plus current-child provider provenance, preserving fail-closed contradictions while ignoring inherited other-provider variables.
+- Aligned lifecycle artifacts and user docs to current-target-marker precedence, synchronized provider/assets/index output, and bumped the five public packages to `0.1.71`.
+
+**Task commits:**
+
+- p04-t01: `c2a23d6b` — immutable canonical route inputs and actual spawned-command regression.
+- p04-t02: `8d70d782` — current-child model evidence provenance and exhaustive cross-provider regressions.
+- p04-t03: this task commit — lifecycle/docs alignment, provider sync, generated assets, and lockstep release bump.
+
+**Verification:**
+
+- Focused route, gate, integration, skill-contract, and skill-validation suites passed with RED/GREEN evidence retained during implementation.
+- Formatting, full workspace tests, lint, type-check, release validation, docs build, provider sync, generated index, and asset idempotence passed.
 
 ### Task p04-t01: Bind canonical headless route inputs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** c2a23d6b
+
+**Outcome:**
+
+- Gate children now receive immutable `OAT_GATE_RUNTIME` and `OAT_INVOCATION_MODEL` values matching prompt metadata.
+- The fake runtime executes the canonical checkout-local route command from the actual spawned environment, fails closed on absent/inconsistent inputs, and produces a strictly validated receipt.
 
 ---
 
 ### Task p04-t02: Scope model evidence to the current child runtime
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8d70d782
+
+**Outcome:**
+
+- Route decisions ignore inherited other-provider model variables while generic and expected/current-provider contradictions still delegate or refuse.
+- Every cross-provider parent-to-child combination and current-child contradiction path is covered.
 
 ---
 
 ### Task p04-t03: Align routing artifacts, docs, and release assets
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** this task commit
+
+**Outcome:**
+
+- Design, original plan language, deviation records, and workflow-gate docs now describe current-target-marker precedence and checkout-local strict receipt validation.
+- Canonical provider views, CLI assets, and the docs index were regenerated at lockstep public package version `0.1.71`.
 
 ---
 
@@ -386,17 +420,18 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review | Source Artifact                            | Planned / Documented                                    | Actual / Accepted                                                                                                                   | Reason                                                                                                  | Source of Truth                     | Follow-up                  |
 | ------------- | ------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------- |
 | p03-t04 / M1  | `plan.md`                                  | Run MkDocs-only `docs nav sync` before index generation | Use authored Fumadocs contents plus branch-local `docs generate-index`                                                              | This docs app is Fumadocs and has no `mkdocs.yml`                                                       | `apps/oat-docs`, CLI docs commands  | Plan aligned in `01e0762d` |
-| final / I2    | `design.md`, `plan.md`, workflow-gate docs | Exactly one provider marker is required to inline       | Matching current-child marker takes precedence over inherited parent markers; checkout-local CLI and validated receipt are required | Preserves valid cross-provider children while remaining fail-closed on trustworthy child contradictions | `route.ts`, route/integration tests | Align in p04-t03           |
+| final / I2    | `design.md`, `plan.md`, workflow-gate docs | Exactly one provider marker is required to inline       | Matching current-child marker takes precedence over inherited parent markers; checkout-local CLI and validated receipt are required | Preserves valid cross-provider children while remaining fail-closed on trustworthy child contradictions | `route.ts`, route/integration tests | Aligned in p04-t03         |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                      | Passed                                  | Failed  | Coverage                                                                |
-| ----- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------- | ----------------------------------------------------------------------- |
-| 1     | Focused resolver/config/gate suites; lint; type-check; skill validation                                        | 515 focused tests                       | 0       | Dispatch ladder and budget precedence                                   |
-| 2     | Phase-wide focused suites; lint; type-check; skill validation; route smoke                                     | 220 focused tests                       | 0       | Headless context, markers, refusals, routing, skill contracts           |
-| 3     | Full workspace and smoke suites; 10x matrix stress; lint; type-check; release/docs checks; real provider lanes | 2,989 CLI + 123 smoke + 70 stress cases | 0 final | Liveness, envelopes, branch-local routing, fixture matrix, release/docs |
+| Phase | Tests Run                                                                                                      | Passed                                  | Failed  | Coverage                                                                   |
+| ----- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------- |
+| 1     | Focused resolver/config/gate suites; lint; type-check; skill validation                                        | 515 focused tests                       | 0       | Dispatch ladder and budget precedence                                      |
+| 2     | Phase-wide focused suites; lint; type-check; skill validation; route smoke                                     | 220 focused tests                       | 0       | Headless context, markers, refusals, routing, skill contracts              |
+| 3     | Full workspace and smoke suites; 10x matrix stress; lint; type-check; release/docs checks; real provider lanes | 2,989 CLI + 123 smoke + 70 stress cases | 0 final | Liveness, envelopes, branch-local routing, fixture matrix, release/docs    |
+| 4     | Focused route/gate/skill suites; full workspace; lint; type-check; release/docs/sync/idempotence checks        | All task and phase checks passed        | 0       | Canonical route inputs, current-child model provenance, artifact alignment |
 
 ## Final Summary (for PR/docs)
 
@@ -405,12 +440,13 @@ Track test execution during implementation.
 - Configurable, source-reported gate execution budgets with malformed-value diagnostics.
 - Headless-safe gate routing, run markers, structured refusal classification, and branch-local completion-safety execution.
 - Provider-attributed liveness evidence and richer machine-readable startup/liveness/terminal envelopes.
-- Deterministic integration coverage, operator docs, synced provider assets, and lockstep public package release `0.1.70`.
+- Deterministic integration coverage, operator docs, synced provider assets, and lockstep public package release `0.1.71`.
 
 **Behavioral changes (user-facing):**
 
 - Gate operators can configure workflow, target, and CLI timeout budgets and see the selected source.
 - Headless review children choose inline, delegated, or refused execution through an executable route contract.
+- Current-target provider markers take precedence over inherited parent markers; only generic and current-child provider model evidence can contradict the selected invocation.
 - Long-running gates report process and transcript activity separately and preserve receive eligibility on blocked terminal outcomes.
 
 **Key files / modules:**
@@ -423,11 +459,12 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Full tests and smoke tests, ten matrix stress repetitions, formatting, lint, type-check, release validation, docs build/index, provider sync/assets idempotence, and real Cursor/Claude lanes.
+- Full tests and smoke tests, ten matrix stress repetitions, focused canonical-route/model-provenance regressions, formatting, lint, type-check, release validation, docs build/index, provider sync/assets idempotence, and real Cursor/Claude lanes.
 
 **Design deltas (if any):**
 
-- Fumadocs index generation replaced the inapplicable MkDocs navigation-sync command; no behavioral design scope changed.
+- Fumadocs index generation replaced the inapplicable MkDocs navigation-sync command.
+- Final-review alignment records the accepted current-target-marker precedence and makes checkout-local CLI selection plus strict route-receipt validation explicit lifecycle requirements.
 
 ## References
 

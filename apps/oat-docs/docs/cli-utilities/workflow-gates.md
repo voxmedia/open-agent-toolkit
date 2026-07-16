@@ -99,8 +99,9 @@ the severity threshold.
 Every `oat gate review` child receives the same headless contract through two
 channels:
 
-- environment: `OAT_GATE_HEADLESS=1`, `OAT_NON_INTERACTIVE=1`, and
-  `OAT_GATE_RUN_ID=<runId>`
+- environment: `OAT_GATE_HEADLESS=1`, `OAT_NON_INTERACTIVE=1`,
+  `OAT_GATE_RUN_ID=<runId>`, immutable `OAT_GATE_RUNTIME` and
+  `OAT_INVOCATION_MODEL` values, and checkout-local CLI/receipt paths
 - prompt frontmatter: `oat_gate_headless: true` plus the target runtime and
   model
 
@@ -108,20 +109,30 @@ In headless mode, `oat-project-review-provide` calls the executable routing
 helper instead of deciding from prose:
 
 ```bash
-oat gate route \
-  --expect-runtime cursor \
-  --expect-model gpt-5.6-sol \
+"$OAT_GATE_CLI_PATH" gate route \
+  --expect-runtime "$OAT_GATE_RUNTIME" \
+  --expect-model "$OAT_INVOCATION_MODEL" \
   --can-await true \
   --json
 ```
 
 The helper returns `inline`, `delegate-sync`, or `refuse`. Inline review is
-allowed only when one unambiguous provider marker matches the expected runtime
-and available model evidence does not contradict the expected model. A
-different or ambiguous runtime delegates only through an awaited child route.
-If no awaited route exists, the reviewer emits
+allowed when a provider marker for the expected/current child runtime is
+present and trustworthy model evidence does not contradict the expected model.
+That current-target marker takes precedence over inherited parent-provider
+markers. Generic and current-provider model evidence remain fail-closed;
+inherited model variables belonging to other providers are ignored. A missing
+current-target marker or trustworthy contradiction delegates only through an
+awaited child route. If no awaited route exists, the reviewer emits
 `OAT_GATE_REFUSAL: <reason>` on its own line and fails closed. Headless review
 never uses fire-and-forget background dispatch.
+
+The route command must use the gate-provided checkout-local CLI; it must not
+retry through bare or installed `oat`. The helper writes
+`OAT_GATE_ROUTE_RECEIPT_PATH`, and the parent accepts it only when the JSON
+decision shape is valid, `cliRoot` equals the checkout that launched the gate,
+and `runtime` equals the selected invocation runtime. Missing, malformed,
+cross-checkout, or runtime-mismatched receipts fail closed.
 
 The gate recognizes refusal lines independently of the child exit code. A
 validated run-correlated artifact still wins; without one, the envelope has
@@ -647,14 +658,14 @@ those artifacts; correct the project/run correlation and start a new gate run.
 
 ### Incident-to-regression mapping
 
-| Observed failure                                         | Regression coverage                                                              |
-| -------------------------------------------------------- | -------------------------------------------------------------------------------- |
-| Headless reviewer could not complete an async delegation | route unit matrix plus fake-runtime headless inline and structured-refusal cases |
-| Large final review exceeded the old 15-minute budget     | scope-aware resolver tests plus scaled final-scope fake-runtime case             |
-| Silent child looked idle while transcripts grew          | metadata-probe tests plus timeout-with-advancing-transcript fixture              |
-| Timeout or child failure produced no artifact            | fail-closed `noOutputProduced` fixture                                           |
-| Artifact carried the wrong gate run ID                   | provenance-mismatch fixture                                                      |
-| Passing artifact lost receive routing                    | handoff and `receiveEligible` fixture                                            |
+| Observed failure                                         | Regression coverage                                                                                                    |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Headless reviewer could not complete an async delegation | route unit matrix plus canonical checkout-local command, strict receipt, headless inline, and structured-refusal cases |
+| Large final review exceeded the old 15-minute budget     | scope-aware resolver tests plus scaled final-scope fake-runtime case                                                   |
+| Silent child looked idle while transcripts grew          | metadata-probe tests plus timeout-with-advancing-transcript fixture                                                    |
+| Timeout or child failure produced no artifact            | fail-closed `noOutputProduced` fixture                                                                                 |
+| Artifact carried the wrong gate run ID                   | provenance-mismatch fixture                                                                                            |
+| Passing artifact lost receive routing                    | handoff and `receiveEligible` fixture                                                                                  |
 
 ## Current limits
 
