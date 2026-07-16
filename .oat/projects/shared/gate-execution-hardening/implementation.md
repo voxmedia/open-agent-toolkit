@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: hill-approval
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-16
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -29,8 +29,9 @@ oat_generated: false
 | Phase 1 | completed | 3     | 3/3       |
 | Phase 2 | completed | 6     | 6/6       |
 | Phase 3 | completed | 4     | 4/4       |
+| Phase 4 | pending   | 3     | 0/3       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/16 tasks completed
 
 ---
 
@@ -226,6 +227,64 @@ oat_generated: false
 
 ---
 
+## Phase 4: Final review fixes
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Bind canonical headless route inputs
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t02: Scope model evidence to the current child runtime
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: Align routing artifacts, docs, and release assets
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Review Received: final
+
+**Date:** 2026-07-16
+**Review artifact:** `reviews/archived/final-review-2026-07-16T061457Z.md`
+
+**Findings:**
+
+- Critical: 1
+- Important: 2
+- Medium: 0
+- Minor: 0
+
+**New tasks added:** p04-t01, p04-t02, p04-t03
+
+**Finding disposition map:**
+
+- C1 → p04-t01 (`code_fix_required`): inject the immutable runtime/model values consumed by the canonical route command and exercise that exact spawned contract.
+- I1 → p04-t02 (`code_fix_required`): scope model evidence to the current child runtime while preserving fail-closed current-child contradictions.
+- I2 → p04-t03 (`artifact_alignment_required`): retain the defensible current-target-marker precedence and align design, plan, implementation, and user docs; implementation plus route regressions remain source of truth.
+
+**Design drift / artifact alignment notes:**
+
+- I2 found stale exactly-one-provider-marker language relative to the accepted cross-provider implementation. The shipped current-target-marker precedence is accepted because it distinguishes inherited parent evidence from the active child; p04-t03 will align lifecycle artifacts and docs and record branch-local CLI/receipt validation.
+
+**Deferred Findings:**
+
+- None.
+
+**Next:** Execute p04-t01 through p04-t03 via `oat-project-implement`, then re-review final scope.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -324,9 +383,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                                    | Actual / Accepted                                                      | Reason                                            | Source of Truth                    | Follow-up                  |
-| ------------- | --------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------- | -------------------------- |
-| p03-t04 / M1  | `plan.md`       | Run MkDocs-only `docs nav sync` before index generation | Use authored Fumadocs contents plus branch-local `docs generate-index` | This docs app is Fumadocs and has no `mkdocs.yml` | `apps/oat-docs`, CLI docs commands | Plan aligned in `01e0762d` |
+| Task / Review | Source Artifact                            | Planned / Documented                                    | Actual / Accepted                                                                                                                   | Reason                                                                                                  | Source of Truth                     | Follow-up                  |
+| ------------- | ------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------- |
+| p03-t04 / M1  | `plan.md`                                  | Run MkDocs-only `docs nav sync` before index generation | Use authored Fumadocs contents plus branch-local `docs generate-index`                                                              | This docs app is Fumadocs and has no `mkdocs.yml`                                                       | `apps/oat-docs`, CLI docs commands  | Plan aligned in `01e0762d` |
+| final / I2    | `design.md`, `plan.md`, workflow-gate docs | Exactly one provider marker is required to inline       | Matching current-child marker takes precedence over inherited parent markers; checkout-local CLI and validated receipt are required | Preserves valid cross-provider children while remaining fail-closed on trustworthy child contradictions | `route.ts`, route/integration tests | Align in p04-t03           |
 
 ## Test Results
 

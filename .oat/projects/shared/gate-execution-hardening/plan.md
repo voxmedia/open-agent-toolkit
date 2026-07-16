@@ -2,10 +2,10 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-15
+oat_last_updated: 2026-07-16
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p03'] # workflow.hillCheckpointDefault=final → pause after last phase
+oat_plan_hill_phases: ['p04'] # workflow.hillCheckpointDefault=final → pause after final review-fix phase
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # sequential; see ## Parallelism
 oat_plan_source: quick
@@ -30,7 +30,7 @@ oat_template: false
 
 ## Planning Checklist
 
-- [x] Confirmed HiLL checkpoints with user (`workflow.hillCheckpointDefault=final` → `oat_plan_hill_phases: ['p03']`)
+- [x] Confirmed HiLL checkpoints with user (`workflow.hillCheckpointDefault=final`; moved from p03 to final review-fix phase p04)
 - [x] Set `oat_plan_hill_phases` in frontmatter
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
@@ -42,7 +42,7 @@ oat_template: false
 
 > **Task-ID disposition note (re-review M3):** p02-t04 (route helper) and p02-t05 (skill rules) were reordered pre-execution on 2026-07-15, before any commits, reviews, or implementation records bound to the old numbering — the first plan-review round's findings referenced "p02-t04" as the skill task. No further renumbering will occur.
 
-Sequential (`oat_plan_parallel_groups: []`). All three phases modify `packages/cli/src/commands/gate/index.ts` (p01: budget resolution call site; p02: spawn-time injection, marker, refusal detection; p03: monitor loop and envelope extensions) — the same file, often adjacent regions. p02 and p03 additionally share the failure-envelope builder. Worktree parallelism here buys merge conflicts on the project's single hottest file for no schedule gain; sequential is the analysis result, not a default.
+Sequential (`oat_plan_parallel_groups: []`). The original three phases modify `packages/cli/src/commands/gate/index.ts` (p01: budget resolution call site; p02: spawn-time injection, marker, refusal detection; p03: monitor loop and envelope extensions) — the same file, often adjacent regions. Final review-fix phase p04 also spans the gate spawn contract, route evidence, fixtures, canonical skill, and lifecycle/docs alignment. Sequential execution keeps those coupled fixes and their release synchronization ordered.
 
 ---
 
@@ -558,6 +558,115 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 
 ---
 
+## Phase 4: Final review fixes
+
+### Task p04-t01: (review) Bind canonical headless route inputs
+
+**Findings:** C1
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+
+**Step 1: Understand the issue**
+
+The canonical review-provide route command consumes `OAT_GATE_RUNTIME` and `OAT_INVOCATION_MODEL`, but the gate spawn environment does not inject them. The fake runtime bypasses the contract by hard-coding runtime/model route arguments.
+
+**Step 2: Implement fix**
+
+- Inject immutable selected values as `OAT_GATE_RUNTIME: gateInvocation.runtime` and `OAT_INVOCATION_MODEL: gateInvocation.model`.
+- Make the fake runtime consume those exact environment values and fail closed when they are absent or inconsistent with the prompt/configured invocation.
+- Add a regression that executes the canonical branch-local route command with the actual spawned environment and validates the receipt.
+- Bump the canonical `oat-project-review-provide` skill version once for this PR.
+
+**Step 3: Verify**
+
+Run: `pnpm format:fix && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts && pnpm lint && pnpm type-check && pnpm oat:validate-skills`
+Expected: Spawned children receive exact immutable route inputs; the canonical command writes a validated correlated receipt; focused contracts and repository checks pass
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts packages/cli/src/commands/gate/__fixtures__/fake-runtime.mjs packages/cli/src/commands/gate/gate-hardening.integration.test.ts .agents/skills/oat-project-review-provide/SKILL.md
+git commit -m "fix(p04-t01): bind canonical headless route inputs"
+```
+
+---
+
+### Task p04-t02: (review) Scope model evidence to the current child runtime
+
+**Findings:** I1
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/route.ts`
+- Modify: `packages/cli/src/commands/gate/route.test.ts`
+
+**Step 1: Understand the issue**
+
+Model evidence currently mixes current-child and inherited other-provider variables. A valid cross-provider child can therefore be delegated or refused because its parent provider's model variable differs.
+
+**Step 2: Implement fix**
+
+- Define trustworthy model evidence using current-runtime provenance.
+- Ignore inherited model variables belonging to other providers while retaining fail-closed behavior for generic or current-provider contradictions.
+- Add every parent-to-child provider combination with conflicting parent model evidence, plus current-child contradiction regressions.
+
+**Step 3: Verify**
+
+Run: `pnpm format:fix && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/route.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts && pnpm lint && pnpm type-check`
+Expected: Valid cross-provider children inline despite inherited parent model markers; trustworthy current-child contradictions still fail closed
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/route.ts packages/cli/src/commands/gate/route.test.ts
+git commit -m "fix(p04-t02): scope route model evidence to child runtime"
+```
+
+---
+
+### Task p04-t03: (review) Align routing artifacts, docs, and release assets
+
+**Findings:** I2
+
+**Files:**
+
+- Modify: `.oat/projects/shared/gate-execution-hardening/design.md`
+- Modify: `.oat/projects/shared/gate-execution-hardening/plan.md`
+- Modify: `.oat/projects/shared/gate-execution-hardening/implementation.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: public package manifests and generated CLI/provider assets required by release policy
+
+**Step 1: Understand the issue**
+
+The shipped helper correctly gives a matching current-target provider marker precedence over inherited parent markers, but design, plan, and docs still describe a superseded exactly-one-provider-marker rule. Lifecycle architecture also omits the load-bearing branch-local CLI and receipt validation.
+
+**Step 2: Implement fix**
+
+- Align the design state machine, original p02-t04 plan language, implementation deviation record, and workflow-gate docs to current-target-marker precedence.
+- Document checkout-local CLI selection and strict route-receipt validation as completion-safety requirements.
+- Sync canonical provider views after all skill edits.
+- Bump all five public packages in lockstep from `0.1.70` to `0.1.71`, regenerate assets, and preserve idempotence.
+
+**Step 3: Verify**
+
+Run: `pnpm format:fix && pnpm run cli:source -- sync --scope all && pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && bash packages/cli/scripts/bundle-assets.sh && git add packages/cli/assets/ && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- packages/cli/assets/ && pnpm test && pnpm lint && pnpm type-check && pnpm release:validate && pnpm build:docs`
+Expected: Routing semantics agree across code, lifecycle artifacts, canonical/provider skills, and docs; generated assets are idempotent; all validation passes at public package version `0.1.71`
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/gate-execution-hardening/design.md .oat/projects/shared/gate-execution-hardening/plan.md .oat/projects/shared/gate-execution-hardening/implementation.md apps/oat-docs/docs/ packages/*/package.json packages/cli/assets/ .claude/ .cursor/ .codex/ .oat/sync/
+git commit -m "docs(p04-t03): align routing contracts and release assets"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -569,7 +678,7 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 | p01    | code     | passed          | 2026-07-16 | reviews/p01-review-2026-07-16T000536Z.md                      |
 | p02    | code     | passed          | 2026-07-16 | reviews/p02-review-2026-07-16T003716Z.md                      |
 | p03    | code     | passed          | auto       | `reviews/p03-review-2026-07-16T023253Z.md`                    |
-| final  | code     | received        | 2026-07-16 | reviews/final-review-2026-07-16T061457Z.md                    |
+| final  | code     | fixes_added     | 2026-07-16 | reviews/archived/final-review-2026-07-16T061457Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-15 | reviews/archived/artifact-design-review-2026-07-15T212105Z.md |
 | plan   | artifact | passed          | 2026-07-15 | structured (in-session oat-reviewer, 3 rounds)                |
@@ -596,10 +705,11 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 - Phase 1: 3 tasks - Budget config/precedence + resolver envelope distinction + ladder completeness/inspection
 - Phase 2: 6 tasks - Headless context injection, run marker, refusal detection, `oat gate route` helper, review-provide dispatch + inherit rules, dispatch-mode guidance
 - Phase 3: 4 tasks - Activity probes, liveness/envelope extensions, fake-runtime fixture matrix, docs + version bumps
+- Phase 4: 3 tasks - Canonical route input binding, current-child model provenance, routing artifact/docs/release alignment
 
-**Total: 13 tasks**
+**Total: 16 tasks**
 
-Ready for code review and merge.
+Ready to resume implementation at p04-t01.
 
 ---
 

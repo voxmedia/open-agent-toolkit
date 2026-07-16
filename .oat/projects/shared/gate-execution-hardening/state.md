@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 51b2487ce0faf3ea4c5e29d2cd94cbcdac25d46c
+oat_current_task: p04-t01
+oat_last_commit: 63987f07
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p04'] # Configured final checkpoint moved to final review-fix phase
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -38,19 +38,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-15T12:52:00.664Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-16T02:33:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-16T11:06:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-execution-hardening
 
-**Status:** Awaiting final HiLL approval
+**Status:** Final review fixes queued
 **Started:** 2026-07-15
 **Last Updated:** 2026-07-15
 
 ## Current Phase
 
-Implementation complete - Phase 3 passed; final HiLL checkpoint reached
+Implementation - Final review-fix Phase 4 queued
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation complete - Phase 3 passed; final HiLL checkpoint reached
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; implementation-ready)
-- **Implementation:** `implementation.md` (complete; awaiting final HiLL approval)
+- **Implementation:** `implementation.md` (in progress)
 
 ## Progress
 
@@ -67,7 +67,7 @@ Implementation complete - Phase 3 passed; final HiLL checkpoint reached
 - ✓ Phase 1 completed and independently reviewed
 - ✓ Phase 2 completed and independently reviewed
 - ✓ Phase 3 completed and independently reviewed
-- ⧗ Awaiting operator decision at the configured p03 HiLL checkpoint
+- ⧗ Final review received: 1 Critical and 2 Important findings converted to p04-t01..p04-t03
 
 ## Blockers
 
@@ -75,4 +75,4 @@ None
 
 ## Next Milestone
 
-Receive the operator's final HiLL decision, then route to project completion or bounded follow-up
+Execute p04-t01 through p04-t03, re-review final scope, then pause at the configured p04 HiLL checkpoint
