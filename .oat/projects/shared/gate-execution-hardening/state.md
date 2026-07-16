@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 5ee110fb
+oat_last_commit: 38c876592fefcc6e3898930d5f054e44fb3c3b5c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,10 +9,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p04'] # Configured final checkpoint moved to final review-fix phase
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p04'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -33,24 +33,24 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-15T12:52:00.664Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-16T18:03:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: '2026-07-16T18:04:00.000Z' # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-07-16T18:04:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-execution-hardening
 
-**Status:** Awaiting final HiLL approval
+**Status:** Implementation complete
 **Started:** 2026-07-15
 **Last Updated:** 2026-07-15
 
 ## Current Phase
 
-Implementation complete - Phase 4 and final re-review passed; final HiLL checkpoint reached
+Implementation complete - final HiLL checkpoint approved
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation complete - Phase 4 and final re-review passed; final HiLL checkpo
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; implementation-ready)
-- **Implementation:** `implementation.md` (complete; awaiting final HiLL approval)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
@@ -68,7 +68,7 @@ Implementation complete - Phase 4 and final re-review passed; final HiLL checkpo
 - ✓ Phase 2 completed and independently reviewed
 - ✓ Phase 3 completed and independently reviewed
 - ✓ Phase 4 completed and final re-review passed with no findings
-- ⧗ Awaiting operator decision at the configured p04 HiLL checkpoint
+- ✓ Operator approved the configured p04 HiLL checkpoint
 
 ## Blockers
 
@@ -76,4 +76,4 @@ None
 
 ## Next Milestone
 
-Receive the operator's final HiLL decision, then route to project completion
+Generate the project summary or open the final PR

@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: hill-approval
+oat_status: complete
+oat_ready_for: oat-project-summary
 oat_blockers: []
 oat_last_updated: 2026-07-16
 oat_current_task_id: null
@@ -317,7 +317,9 @@ oat_generated: false
 
 **Re-review:** Passed with 0 Critical, 0 Important, 0 Medium, and 0 Minor findings. Clean artifact: `reviews/archived/final-review-2026-07-16T180215Z.md`.
 
-**Next:** Final p04 HiLL decision.
+**HiLL disposition:** Approved by the operator on 2026-07-16.
+
+**Next:** Generate the project summary or open the final PR.
 
 ---
 
