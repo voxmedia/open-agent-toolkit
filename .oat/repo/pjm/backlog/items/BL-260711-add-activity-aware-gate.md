@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: '2026-07-11T16:55:00Z'
+updated: '2026-07-16T19:39:00Z'
 associated_issues: []
 ---
 
@@ -43,6 +43,16 @@ never be killed). Replace it with activity-aware semantics:
 4. **Artifact-aware completion:** on any timeout, check for a correlated,
    complete, run-ID-matching review artifact before declaring the work lost
    (carried from codex-subagent-max-depth learnings' potential resolutions).
+
+## Partial Progress (2026-07-16)
+
+The `gate-execution-hardening` project shipped the enabling and diagnostic
+layers in CLI `0.1.72`: scope/target-aware configurable hard budgets,
+process/stdout/transcript liveness evidence, correlated timeout recovery,
+headless completion-safe routing, and deterministic timeout fixtures. This item
+remains open for the behavior not yet implemented: an adaptive idle-kill timer,
+early correlated artifact-template creation, and distinct structured
+idle-kill versus hard-cap outcomes.
 
 ## Acceptance Criteria
 

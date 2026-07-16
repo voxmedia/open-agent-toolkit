@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.1.2
+version: 1.1.3
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -144,6 +144,26 @@ Keep these controls independent in selection and evidence:
 
 A materialized role may package defaults, but its record must preserve each
 configured axis separately.
+
+## Deliberate Dispatch Mode
+
+Choose foreground or background deliberately from expected duration and the
+host interaction model. Multi-minute implementers, fix loops, and reviewers
+must survive ordinary session interaction and therefore run in background when
+the host supports a durable awaited handle. Reserve foreground dispatch for
+short checks whose interruption risk is negligible. Record the selected mode
+and reason with the launch payload.
+
+Background does not mean fire-and-forget. Retain and await the accepted handle,
+apply the Acceptance and Recovery contract below, and surface useful progress.
+In headless gate contexts, fire-and-forget background dispatch is forbidden:
+use the gate's inline or synchronously awaited route contract instead.
+
+For a silent background child, provider transcript filesystem metadata at the
+documented runtime path can provide observable liveness evidence. Check only
+metadata such as mtime and size. This evidence shows observable activity; it
+is never a health verdict and never authorizes replacement, timeout extension,
+or a second launch.
 
 ## Baseline Role Classes
 

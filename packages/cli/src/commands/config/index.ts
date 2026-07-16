@@ -24,6 +24,9 @@ import {
 import {
   VALID_DISPATCH_POLICY_MODES,
   VALID_MANAGED_DISPATCH_POLICIES,
+  MAX_GATE_TIMEOUT_MS,
+  MIN_GATE_TIMEOUT_MS,
+  isValidGateTimeoutMs,
   type OatConfig,
   type OatLocalConfig,
   type OatToolsConfig,
@@ -117,10 +120,14 @@ type ConfigKey =
   | 'workflow.designMode'
   | 'workflow.dispatchPolicy.mode'
   | 'workflow.dispatchPolicy.policy'
+  | 'workflow.dispatchCeiling'
   | 'workflow.dispatchCeiling.preset'
+  | 'workflow.dispatchCeiling.providers'
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
   | WorkflowDispatchProviderConfigKey
+  | 'workflow.gateTimeouts.code'
+  | 'workflow.gateTimeouts.artifact'
   | 'workflow.hillCheckpointDefault'
   | 'workflow.postImplementSequence'
   | 'workflow.reviewExecutionModel'
@@ -223,6 +230,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.dispatchCeiling.preset',
   'workflow.dispatchCeiling.providers.codex',
   'workflow.dispatchCeiling.providers.claude',
+  'workflow.gateTimeouts.code',
+  'workflow.gateTimeouts.artifact',
   'worktrees.root',
 ];
 
@@ -786,6 +795,8 @@ const DEFAULT_DEPENDENCIES: ConfigCommandDependencies = {
 function isConfigKey(value: string): value is ConfigKey {
   return (
     KEY_ORDER.includes(value as ConfigKey) ||
+    value === 'workflow.dispatchCeiling' ||
+    value === 'workflow.dispatchCeiling.providers' ||
     isDispatchCeilingProviderKey(value)
   );
 }
@@ -1000,7 +1011,7 @@ function parseBooleanValue(key: ConfigKey, rawValue: string): boolean {
 function parseWorkflowValue(
   key: ConfigKey,
   rawValue: string,
-): boolean | string | WorkflowPostImplementSequence {
+): boolean | number | string | WorkflowPostImplementSequence {
   if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
     return parseBooleanValue(key, rawValue);
   }
@@ -1024,6 +1035,19 @@ function parseWorkflowValue(
       }
       return sequence;
     }
+  }
+
+  if (
+    key === 'workflow.gateTimeouts.code' ||
+    key === 'workflow.gateTimeouts.artifact'
+  ) {
+    const value = Number(rawValue);
+    if (!isValidGateTimeoutMs(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected an integer between ${MIN_GATE_TIMEOUT_MS} and ${MAX_GATE_TIMEOUT_MS}`,
+      );
+    }
+    return value;
   }
 
   const allowed =
@@ -1204,7 +1228,7 @@ function toAvailabilityRef(
 function applyWorkflowValue(
   workflow: OatWorkflowConfig,
   key: ConfigKey,
-  value: boolean | string | WorkflowPostImplementSequence,
+  value: boolean | number | string | WorkflowPostImplementSequence,
 ): OatWorkflowConfig {
   const subKey = key.slice('workflow.'.length);
 
@@ -1212,6 +1236,19 @@ function applyWorkflowValue(
     return {
       ...workflow,
       postImplementSequence: value as WorkflowPostImplementSequence,
+    };
+  }
+
+  if (subKey.startsWith('gateTimeouts.')) {
+    const timeoutKey = subKey.slice('gateTimeouts.'.length) as
+      | 'code'
+      | 'artifact';
+    return {
+      ...workflow,
+      gateTimeouts: {
+        ...workflow.gateTimeouts,
+        [timeoutKey]: value as number,
+      },
     };
   }
 
@@ -1358,6 +1395,10 @@ async function getConfigValue(
 
   const entry = resolved.resolved[key];
   if (!entry) {
+    const aggregate = buildResolvedConfigAggregate(resolved, key);
+    if (aggregate) {
+      return { key, ...aggregate };
+    }
     return { key, value: null, source: 'default' };
   }
 
@@ -1369,6 +1410,52 @@ async function getConfigValue(
         : formatResolvedValue(entry.value),
     source: entry.source,
   };
+}
+
+function buildResolvedConfigAggregate(
+  resolved: ResolvedConfig,
+  key: ConfigKey,
+): { value: unknown; source: ResolvedConfigSource } | null {
+  const prefix = `${key}.`;
+  const entries = Object.entries(resolved.resolved).filter(([entryKey]) =>
+    entryKey.startsWith(prefix),
+  );
+  if (entries.length === 0) {
+    return null;
+  }
+
+  const value: Record<string, unknown> = {};
+  let source: ResolvedConfigSource = 'default';
+  const sourceRank: Record<ResolvedConfigSource, number> = {
+    default: 0,
+    user: 1,
+    shared: 2,
+    local: 3,
+    env: 4,
+  };
+  for (const [entryKey, entry] of entries) {
+    if (sourceRank[entry.source] > sourceRank[source]) {
+      source = entry.source;
+    }
+    const parts = entryKey.slice(prefix.length).split('.');
+    let cursor = value;
+    for (const [index, part] of parts.entries()) {
+      if (index === parts.length - 1) {
+        cursor[part] = entry.value;
+      } else {
+        const nested = cursor[part];
+        if (
+          typeof nested !== 'object' ||
+          nested === null ||
+          Array.isArray(nested)
+        ) {
+          cursor[part] = {};
+        }
+        cursor = cursor[part] as Record<string, unknown>;
+      }
+    }
+  }
+  return { value, source };
 }
 
 async function listConfigKeys(

@@ -1392,7 +1392,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.17');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.20');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1481,7 +1481,7 @@ describe('validateOatSkills', () => {
 
     expect(shared).toMatch(/Managed Dispatch Readiness and Review Contract/);
     expect(shared).toMatch(/active-provider[\s\S]*unresolved/i);
-    expect(shared).toMatch(/re-run the\s+resolver/i);
+    expect(shared).toMatch(/re-run the[\s\S]{0,40}resolver/i);
     expect(shared).toMatch(
       /complete\s+(?:recommended\s+defaults|bundled\s+recommendation)/i,
     );
@@ -1517,7 +1517,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.15');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -1547,7 +1547,7 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.17'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.20'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
@@ -1593,7 +1593,9 @@ describe('validateOatSkills', () => {
     );
 
     expect(shared).toMatch(/Complete Dispatch Ladder Adoption Contract/);
-    expect(shared).toContain('dispatch-matrix-recommendation.json');
+    expect(shared).toContain('ladderCompleteness.complete');
+    expect(shared).toContain('ladderCompleteness.missingCells');
+    expect(shared).toMatch(/unresolvedReason` is `ladder` or `both`/);
     expect(shared).toMatch(
       /Codex[\s\S]{0,500}Luna\/low[\s\S]{0,120}Luna\/medium[\s\S]{0,120}Luna\/high[\s\S]{0,500}Terra\/xhigh[\s\S]{0,500}Sol\/max/i,
     );
@@ -1639,23 +1641,25 @@ describe('validateOatSkills', () => {
       shared.indexOf('### Reviewer Ceiling Contract'),
     );
 
-    expect(adoptionContract.match(/oat config list --json/g)).toHaveLength(1);
+    expect(shared).toMatch(
+      /dispatch-ceiling resolve --provider "\$ACTIVE_PROVIDER" --role reviewer --preflight --json/,
+    );
     expect(adoptionContract).toMatch(
-      /effective-config boundary[\s\S]{0,180}shared repository[\s\S]{0,120}repo-local[\s\S]{0,120}user[\s\S]{0,120}bundled-default precedence/i,
+      /reviewer resolver\s+envelope[\s\S]{0,180}effective configuration[\s\S]{0,120}resolution boundary/i,
     );
     expect(adoptionContract).toMatch(
       /do not inspect or merge raw\s+config surfaces/i,
     );
     expect(adoptionContract).toMatch(
-      /`matrix: null`[\s\S]{0,220}(?:project policy|named ceiling)[\s\S]{0,220}not evidence[\s\S]{0,160}effective candidate ladders are absent/i,
+      /`unresolvedReason` is `policy`[\s\S]{0,180}ladder adoption separate/i,
     );
     expect(adoptionContract).toMatch(
-      /every effective provider\/tier cell[\s\S]{0,160}complete[\s\S]{0,120}skip adoption[\s\S]{0,180}separate project-ceiling\s+choice/i,
+      /`ladderCompleteness\.complete` is `true`[\s\S]{0,120}skip adoption/i,
     );
     expect(adoptionContract).toMatch(
-      /only when effective provider\/tier cells are missing or incomplete[\s\S]{0,200}bundled recommendation/i,
+      /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.14');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.15');
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -1980,8 +1984,8 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.14'],
-      ['oat-project-review-provide', '1.3.17'],
+      ['oat-project-plan-writing', '1.2.15'],
+      ['oat-project-review-provide', '1.3.20'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
       ['oat-project-implement', '2.1.2'],
@@ -3044,11 +3048,11 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.14'],
+      ['oat-project-plan-writing', '1.2.15'],
       ['oat-project-plan', '1.4.1'],
       ['oat-project-quick-start', '2.3.2'],
       ['oat-project-import-plan', '1.4.6'],
-      ['oat-project-review-provide', '1.3.17'],
+      ['oat-project-review-provide', '1.3.20'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3064,7 +3068,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.1.2'],
-      ['oat-project-review-provide', '1.3.17'],
+      ['oat-project-review-provide', '1.3.20'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 
@@ -3133,7 +3137,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.1\.2$/m);
+    expect(engine).toMatch(/^version:\s*1\.1\.3$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.2$/m);
@@ -3154,6 +3158,12 @@ describe('validateOatSkills', () => {
     );
     expect(engine).toMatch(
       /accepted launch[\s\S]{0,180}(?:terminal|no replacement)/i,
+    );
+    expect(engine).toMatch(
+      /choose foreground or background deliberately[\s\S]{0,240}expected duration/i,
+    );
+    expect(engine).toMatch(
+      /transcript filesystem metadata[\s\S]{0,240}never authorizes replacement/i,
     );
     expect(adapter).toMatch(
       /planning (?:self-)?review[\s\S]{0,180}inherit[\s\S]{0,280}implementation phase review[\s\S]{0,240}(?:named )?ceiling/i,

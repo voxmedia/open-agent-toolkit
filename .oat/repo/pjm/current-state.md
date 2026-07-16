@@ -27,6 +27,13 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.1.72` hardens headless gate execution with scope/target-aware timeout
+  precedence, immutable runtime/model route inputs, checkout-local executable
+  routing, strict route receipts, and current-child provider/model provenance.
+  Gate liveness and terminal envelopes now distinguish process state,
+  stdout/stderr idleness, and bounded provider transcript activity evidence.
+  Deterministic subprocess coverage and real Claude/Cursor lanes verify
+  completion safety without weakening fail-closed artifact correlation.
 - CLI `0.1.66` preserves append-ordered, artifact-identified review events
   across local and remote lifecycle flows, routes from the latest matching
   event, and documents mutually exclusive preferred versus exact-candidate
@@ -115,7 +122,8 @@ section to a short narrative pointer. -->
 
 Run the documented post-ship Claude, Cursor IDE, Cursor CLI, cross-harness, and
 interactive smoke matrix when operator capacity allows. Active backlog work
-also covers activity-aware gate timeouts, a per-project external-gate override,
+also covers adaptive idle-kill and early-artifact semantics beyond the shipped
+gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
 eligibility by 2026-08-08, optional root-owned exact dispatch, reviewer
 reconnaissance, and avoiding redundant bookkeeping-only re-reviews.

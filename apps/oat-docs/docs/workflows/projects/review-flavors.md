@@ -76,6 +76,15 @@ external, configured, producer-independent target. Phase implementation may run
 _below_ the review ceiling for cost reasons, but review must never silently
 inherit the below-ceiling phase agent.
 
+Pre-plan inheritance has a narrow executable guard. When dispatch resolution
+reports `unresolvedReason: policy`, an artifact review of `discovery`, `design`,
+or `spec` deliberately inherits the current planning context and records
+`selection_reason: inherit (pre-plan; no project policy)`. An explicit project
+policy is still honored at those scopes. Missing or incomplete ladders
+(`unresolvedReason: ladder | both`) fail closed, as do plan-scope artifact
+reviews and every code review without a resolved policy. Gate exec-target
+selection is separate and unaffected.
+
 ## Independence and fail-closed semantics
 
 The invariant across all four flavors is that the reviewer runs **at or above

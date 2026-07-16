@@ -337,6 +337,7 @@ function mergeExecTargetLayer(
         availabilityCommand:
           override.availabilityCommand ?? existing.availabilityCommand,
         priority: override.priority ?? existing.priority,
+        timeoutMs: override.timeoutMs ?? existing.timeoutMs,
       });
       continue;
     }
@@ -378,6 +379,9 @@ function cloneExecTarget(target: ExecTarget): ExecTarget {
   if (target.models) {
     next.models = [...target.models];
   }
+  if (target.timeoutMs !== undefined) {
+    next.timeoutMs = target.timeoutMs;
+  }
 
   return next;
 }
@@ -410,6 +414,9 @@ function toCompleteExecTarget(target: Partial<ExecTarget>): ExecTarget | null {
   }
   if (isValidStringList(target.models)) {
     completeTarget.models = target.models.map((model) => model.trim());
+  }
+  if (target.timeoutMs !== undefined) {
+    completeTarget.timeoutMs = target.timeoutMs;
   }
 
   return completeTarget;

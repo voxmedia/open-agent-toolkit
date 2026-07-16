@@ -87,6 +87,7 @@ Common keys in `.oat/config.json`:
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
 - `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
+- `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
 
 Tool-pack state example:
 
@@ -100,6 +101,31 @@ The `tools.*` keys are primarily maintained by `oat tools install`, `oat tools u
 Workflow gate objects are structured config and use their own command group
 instead of the scalar `oat config set` surface. See
 [Workflow Gates](workflow-gates.md) for the full command surface and examples.
+
+Gate budgets resolve per run in this order: CLI `--timeout-ms`, selected
+target `timeoutMs`, `workflow.gateTimeouts` by review type,
+`OAT_GATE_EXEC_TIMEOUT_MS`, then the built-in type-and-scope default. Values
+must be integer milliseconds from `1,000` through `14,400,000`.
+
+```json
+{
+  "workflow": {
+    "gateTimeouts": {
+      "code": 2400000,
+      "artifact": 900000
+    },
+    "gates": {
+      "execTargets": {
+        "cursor-large-review": {
+          "runtime": "cursor",
+          "baseCommand": ["cursor-agent", "-p", "--force"],
+          "timeoutMs": 3600000
+        }
+      }
+    }
+  }
+}
+```
 
 Archive example:
 
@@ -467,6 +493,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.providers.<provider>.<tier>` — one matrix cell for `economy`, `balanced`, `high`, or `frontier`.
 - `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
+- `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — validated default gate-review budgets in milliseconds. Both resolve through `local > shared > user`.
 
 ### HiLL plan-field semantics
 

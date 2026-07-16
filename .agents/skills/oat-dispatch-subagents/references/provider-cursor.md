@@ -29,6 +29,27 @@ Do not infer Cursor IDE behavior from a headless CLI surface. Keep bounded
 recon on economical explicit targets and reserve stronger targets for
 context-heavy or consequential work.
 
+## Dispatch Mode and Liveness
+
+In an interactive Cursor session, a user message can interrupt a foreground
+subagent turn. Run multi-minute implementers, fix loops, and reviewers in
+background when the host provides a durable awaited handle; reserve foreground
+for short checks. This background preference does not apply to headless gate
+children, which must follow the inline/synchronously-awaited gate route
+contract and never fire-and-forget.
+
+The dispatch-returned agent ID directly addresses that background child's
+transcript:
+
+```text
+~/.cursor/projects/<encoded-cwd>/agent-transcripts/<agentId>/<agentId>.jsonl
+```
+
+This is a sibling of the main thread's transcript directory. For silent-child
+liveness, stat that specific file's mtime and size rather than inferring from a
+directory. Metadata change is observable activity evidence, not a health
+verdict.
+
 ## Pre-Start CLI Routes
 
 When the current native intersection is absent or unsatisfactory, a caller may

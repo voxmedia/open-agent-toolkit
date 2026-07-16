@@ -71,11 +71,20 @@ when the current project has not selected a policy or named ceiling. Adoption
 is offered only when the resolved provider/tier cells are actually missing,
 empty, malformed, or incomplete.
 
-Ladder completeness and project-ceiling selection are separate checks. In
-particular, `oat project dispatch-ceiling resolve` returning `matrix: null` can
-mean that the project policy or ceiling is unresolved; it does not prove that
-the effective reusable ladders are absent. When ladders are complete, planning
-proceeds directly to the project-specific policy choice.
+Ladder completeness and project-policy selection are separate checks.
+`oat project dispatch-ceiling resolve --json` reports both:
+
+- `unresolvedReason: policy | ladder | both` identifies which side is missing;
+- `ladderCompleteness.complete` evaluates every supported provider/tier cell;
+  and
+- `ladderCompleteness.missingCells` identifies the exact cells adoption would
+  fill.
+
+The resolver preserves the merged effective `matrix` when only policy is
+missing, so a missing project policy no longer looks like a missing reusable
+ladder. Planning offers matrix adoption only for `ladder` or `both`, or when
+`ladderCompleteness.complete` is false. With a complete ladder and only policy
+unresolved, it proceeds directly to the project-specific policy choice.
 
 The ownership boundary is deliberate:
 

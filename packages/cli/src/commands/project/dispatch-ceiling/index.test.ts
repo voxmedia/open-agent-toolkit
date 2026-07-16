@@ -168,6 +168,141 @@ describe('oat project dispatch-ceiling resolve', () => {
     return repo;
   }
 
+  async function writeCompleteLadder(
+    root: string,
+    omit?: { provider: string; tier: string },
+  ): Promise<void> {
+    const providers = Object.fromEntries(
+      ['codex', 'claude', 'cursor'].map((provider) => [
+        provider,
+        Object.fromEntries(
+          ['economy', 'balanced', 'high', 'frontier']
+            .filter(
+              (tier) => provider !== omit?.provider || tier !== omit?.tier,
+            )
+            .map((tier) => [
+              tier,
+              {
+                candidates:
+                  provider === 'codex'
+                    ? [
+                        {
+                          harness: 'codex',
+                          model: 'gpt-5.6-sol',
+                          effort: 'high',
+                        },
+                      ]
+                    : provider === 'claude'
+                      ? ['sonnet']
+                      : ['model'],
+              },
+            ]),
+        ),
+      ]),
+    );
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers } },
+    });
+  }
+
+  describe('resolution gap envelopes', () => {
+    it('distinguishes a missing policy while preserving a complete ladder', async () => {
+      const { root, home } = await setup();
+      await writeCompleteLadder(root);
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'reviewer',
+        '--preflight',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'unresolved',
+        unresolvedReason: 'policy',
+        ladderCompleteness: { complete: true, missingCells: [] },
+        matrix: { cursor: { high: { candidates: ['model'] } } },
+      });
+    });
+
+    it('distinguishes an incomplete ladder from a resolved policy', async () => {
+      const { root, home } = await setup();
+      await writeCompleteLadder(root, { provider: 'cursor', tier: 'high' });
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+        },
+      });
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'reviewer',
+        '--preflight',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'unresolved',
+        unresolvedReason: 'ladder',
+        ladderCompleteness: {
+          complete: false,
+          missingCells: ['cursor.high'],
+        },
+      });
+    });
+
+    it('reports both gaps and omits unresolvedReason when fully resolved', async () => {
+      const { root, home } = await setup();
+      const unresolvedHarness = createHarness({ cwd: root, home });
+      await runCommand(unresolvedHarness.command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'reviewer',
+        '--preflight',
+        '--json',
+      ]);
+      expect(unresolvedHarness.capture.jsonPayloads[0]).toMatchObject({
+        unresolvedReason: 'both',
+        ladderCompleteness: { complete: false },
+      });
+
+      await writeCompleteLadder(root);
+      await writeJson(join(root, '.oat', 'config.local.json'), {
+        version: 1,
+        activeProject: '.oat/projects/shared/demo',
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy: 'high' },
+        },
+      });
+      const resolvedHarness = createHarness({ cwd: root, home });
+      await runCommand(resolvedHarness.command, [
+        '--provider',
+        'cursor',
+        '--role',
+        'reviewer',
+        '--preflight',
+        '--json',
+      ]);
+      expect(resolvedHarness.capture.jsonPayloads[0]).not.toHaveProperty(
+        'unresolvedReason',
+      );
+      expect(resolvedHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'resolved',
+        ladderCompleteness: { complete: true, missingCells: [] },
+      });
+    });
+  });
+
   it('prints dispatch policy choices as markdown from canonical metadata', async () => {
     const { root, home } = await setup();
     const { command, capture } = createHarness({ cwd: root, home });
@@ -1889,6 +2024,23 @@ describe('oat project dispatch-ceiling resolve', () => {
       projectPath: '<project-path>',
     }).toMatchInlineSnapshot(`
       {
+        "ladderCompleteness": {
+          "complete": false,
+          "missingCells": [
+            "codex.economy",
+            "codex.balanced",
+            "codex.high",
+            "codex.frontier",
+            "claude.economy",
+            "claude.balanced",
+            "claude.high",
+            "claude.frontier",
+            "cursor.economy",
+            "cursor.balanced",
+            "cursor.high",
+            "cursor.frontier",
+          ],
+        },
         "matrix": null,
         "policy": null,
         "policyMode": "inherit",
@@ -3419,7 +3571,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch policy is unresolved',
+      'project dispatch policy and dispatch ladder are unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -3461,7 +3613,7 @@ describe('oat project dispatch-ceiling resolve', () => {
       unresolved: true,
     });
     expect((capture.jsonPayloads[0] as { message?: string }).message).toContain(
-      'BLOCKED: Codex dispatch policy is unresolved',
+      'project dispatch policy and dispatch ladder are unresolved',
     );
     expect(process.exitCode).toBe(1);
   });
@@ -4625,8 +4777,10 @@ describe('oat project dispatch-ceiling resolve', () => {
         status: 'unresolved',
         provider: 'cursor',
         value: null,
-        policyMode: null,
-        policy: null,
+        policyMode: 'managed',
+        policy: 'frontier',
+        source: 'repo-config',
+        unresolvedReason: 'ladder',
         unresolved: true,
         providers: {
           cursor: {

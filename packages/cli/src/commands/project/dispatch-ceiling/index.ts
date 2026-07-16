@@ -148,6 +148,11 @@ interface DispatchCeilingResolution {
   projectPath: string | null;
   providerDefaultEffort: string;
   matrix: ProjectDispatchMatrix | null;
+  ladderCompleteness: {
+    complete: boolean;
+    missingCells: string[];
+  };
+  unresolvedReason?: 'policy' | 'ladder' | 'both';
   providers: Record<string, ProviderResolution>;
   message?: string;
 }
@@ -1991,9 +1996,75 @@ async function resolveCodexProviderDefaultEffort(
   return 'unknown';
 }
 
-function blockMessage(provider: DispatchCeilingProvider): string {
-  const label = providerLabel(provider);
-  return `BLOCKED: ${label} dispatch policy is unresolved in non-interactive mode.\nSet workflow.dispatchPolicy.mode/workflow.dispatchPolicy.policy, workflow.dispatchCeiling.providers.${provider}, oat_dispatch_policy, or legacy oat_dispatch_ceiling.`;
+function mergeEffectiveDispatchMatrix(
+  resolvedConfig: ResolvedConfig,
+): ProjectDispatchMatrix {
+  const merged: ProjectDispatchMatrix = {};
+  const layers = [
+    resolvedConfig.user.workflow?.dispatchCeiling?.providers,
+    resolvedConfig.shared.workflow?.dispatchCeiling?.providers,
+    resolvedConfig.local.workflow?.dispatchCeiling?.providers,
+  ];
+
+  for (const providers of layers) {
+    for (const [provider, value] of Object.entries(providers ?? {})) {
+      const previous = merged[provider];
+      merged[provider] =
+        typeof value === 'object' &&
+        value !== null &&
+        !Array.isArray(value) &&
+        typeof previous === 'object' &&
+        previous !== null &&
+        !Array.isArray(previous)
+          ? { ...previous, ...value }
+          : value;
+    }
+  }
+  return merged;
+}
+
+function inspectLadderCompleteness(matrix: ProjectDispatchMatrix): {
+  complete: boolean;
+  missingCells: string[];
+} {
+  const missingCells: string[] = [];
+  for (const provider of ['codex', 'claude', 'cursor']) {
+    const providerValue = matrix[provider];
+    for (const tier of VALID_DISPATCH_MATRIX_TIERS) {
+      const cell =
+        typeof providerValue === 'object' &&
+        providerValue !== null &&
+        !Array.isArray(providerValue)
+          ? providerValue[tier]
+          : undefined;
+      if (
+        cell === undefined ||
+        !isWorkflowDispatchCandidateLadder(cell) ||
+        cell.candidates.length === 0
+      ) {
+        missingCells.push(`${provider}.${tier}`);
+      }
+    }
+  }
+  return { complete: missingCells.length === 0, missingCells };
+}
+
+function unresolvedMessage(
+  reason: 'policy' | 'ladder' | 'both',
+  missingCells: string[],
+): string {
+  const policyFix =
+    'set `oat_dispatch_policy` in project state (normally at plan time) or select Inherit Host Defaults';
+  const ladderFix = `adopt a dispatch matrix${
+    missingCells.length > 0 ? `; missing cells: ${missingCells.join(', ')}` : ''
+  }`;
+  if (reason === 'policy') {
+    return `BLOCKED: project dispatch policy is unresolved; ${policyFix}.`;
+  }
+  if (reason === 'ladder') {
+    return `BLOCKED: dispatch ladder is unresolved; ${ladderFix}.`;
+  }
+  return `BLOCKED: project dispatch policy and dispatch ladder are unresolved; ${policyFix}; ${ladderFix}.`;
 }
 
 function isNonInteractiveEnv(env: NodeJS.ProcessEnv): boolean {
@@ -2018,6 +2089,10 @@ async function resolveDispatchCeiling(
     ),
     resolveProjectPath(repoRoot, dependencies, options),
   ]);
+  const effectiveMatrix = mergeEffectiveDispatchMatrix(resolvedConfig);
+  const ladderCompleteness = inspectLadderCompleteness(effectiveMatrix);
+  const reportedMatrix =
+    Object.keys(effectiveMatrix).length > 0 ? effectiveMatrix : null;
 
   const providerDefaultEffort =
     provider === 'codex'
@@ -2032,6 +2107,9 @@ async function resolveDispatchCeiling(
   const ceilingTier = normalizeCeilingTier(options.ceilingTier, role);
   const escalationLevel = normalizeEscalationLevel(options.escalationLevel);
 
+  const policyResolution =
+    readResolvedConfigCeiling(provider, resolvedConfig) ??
+    (await resolveProjectStateCeiling(provider, projectPath, dependencies));
   const resolvedValue = await resolveCeilingValue(
     provider,
     resolvedConfig,
@@ -2091,25 +2169,45 @@ async function resolveDispatchCeiling(
           projectPath,
           providerDefaultEffort,
           matrix: resolvedValue.matrix,
+          ladderCompleteness,
           providers,
           message: managedCodexDepthBlockMessage(scope, depth),
         };
       }
     }
 
+    const activeTier = policyTier(resolvedValue.policy);
+    const activeCell = activeTier
+      ? resolveProviderMatrixCellDefinition(
+          provider,
+          activeTier,
+          resolvedConfig,
+          resolvedValue.matrix,
+        )
+      : null;
+    const activeLadderMissing =
+      options.preflight === true &&
+      resolvedValue.mode === 'managed' &&
+      activeTier !== null &&
+      (activeCell === null ||
+        !isWorkflowDispatchCandidateLadder(activeCell.cell) ||
+        activeCell.cell.candidates.length === 0);
     const incompleteManagedPreflight =
       options.preflight === true &&
       resolvedValue.mode === 'managed' &&
-      providerResolution.mode === 'advisory' &&
-      providerResolution.selection.target?.crossHarness !== true &&
-      providerResolution.selection.selectionMode !== 'no-review-target';
+      (activeLadderMissing ||
+        (providerResolution.mode === 'advisory' &&
+          providerResolution.selection.target?.crossHarness !== true &&
+          providerResolution.selection.selectionMode !== 'no-review-target'));
 
     if (incompleteManagedPreflight) {
       const shouldBlock =
         options.nonInteractive === true ||
         isNonInteractiveEnv(dependencies.processEnv) ||
         (!context.interactive && !context.json);
-      const message = shouldBlock ? blockMessage(provider) : undefined;
+      const message = shouldBlock
+        ? unresolvedMessage('ladder', ladderCompleteness.missingCells)
+        : undefined;
       return {
         status: shouldBlock ? 'blocked' : 'unresolved',
         provider,
@@ -2121,7 +2219,12 @@ async function resolveDispatchCeiling(
         unresolved: true,
         projectPath,
         providerDefaultEffort,
-        matrix: resolvedValue.matrixCompatibility ?? resolvedValue.matrix,
+        matrix:
+          resolvedValue.matrixCompatibility ??
+          resolvedValue.matrix ??
+          reportedMatrix,
+        ladderCompleteness,
+        unresolvedReason: 'ladder',
         providers,
         message,
       };
@@ -2138,7 +2241,11 @@ async function resolveDispatchCeiling(
       unresolved: false,
       projectPath,
       providerDefaultEffort,
-      matrix: resolvedValue.matrixCompatibility ?? resolvedValue.matrix,
+      matrix:
+        resolvedValue.matrixCompatibility ??
+        resolvedValue.matrix ??
+        reportedMatrix,
+      ladderCompleteness,
       providers,
     };
   }
@@ -2147,19 +2254,28 @@ async function resolveDispatchCeiling(
     options.nonInteractive === true ||
     isNonInteractiveEnv(dependencies.processEnv) ||
     (options.preflight === true && !context.interactive && !context.json);
-  const message = shouldBlock ? blockMessage(provider) : undefined;
+  const unresolvedReason = policyResolution
+    ? 'ladder'
+    : ladderCompleteness.complete
+      ? 'policy'
+      : 'both';
+  const message = shouldBlock
+    ? unresolvedMessage(unresolvedReason, ladderCompleteness.missingCells)
+    : undefined;
   return {
     status: shouldBlock ? 'blocked' : 'unresolved',
     provider,
-    value: null,
-    policyMode: null,
-    policy: null,
-    source: null,
-    preset: null,
+    value: policyResolution?.value ?? null,
+    policyMode: policyResolution?.mode ?? null,
+    policy: policyResolution?.policy ?? null,
+    source: policyResolution?.source ?? null,
+    preset: policyResolution?.preset ?? null,
     unresolved: true,
     projectPath,
     providerDefaultEffort,
-    matrix: null,
+    matrix: reportedMatrix,
+    ladderCompleteness,
+    unresolvedReason,
     providers,
     message,
   };

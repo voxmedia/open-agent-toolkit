@@ -1,3 +1,4 @@
+import { execFileSync, spawn as spawnProcess } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -20,6 +21,12 @@ import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+  GateActivityEvidence,
+  GateActivityProbe,
+  GateActivityProbeStatus,
+} from './activity-probes';
+import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -27,14 +34,31 @@ interface HarnessOptions {
   cwd: string;
   home: string;
   processEnv?: NodeJS.ProcessEnv;
+  createGateActivityProbe?: () => Promise<GateActivityProbe | null>;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   writeDiagnostic?: (message: string) => void;
+  writeGateRunMarker?: (
+    path: string,
+    marker: Record<string, unknown>,
+    warn: (message: string) => void,
+  ) => Promise<boolean>;
+  removeGateRunMarker?: (
+    path: string,
+    warn: (message: string) => void,
+  ) => Promise<void>;
+  readGateRouteReceipt?: (
+    path: string,
+    expectedCliRoot: string,
+    expectedRuntime: string,
+  ) => Promise<GateRouteReceipt>;
 }
 
 interface ProcessCall {
+  activityProbe?: GateActivityProbe;
   command: string;
   args: string[];
+  env: NodeJS.ProcessEnv;
   stdin: 'ignore' | 'inherit';
   livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
@@ -46,12 +70,16 @@ interface LivenessSnapshot {
   elapsedMs: number;
   hardBudgetMs: number;
   idleMs: number;
+  processAlive: boolean;
+  activityProbeStatus?: GateActivityProbeStatus;
+  lastActivityEvidence?: GateActivityEvidence;
 }
 
 type ProcessRunner = (
   command: string,
   args: string[],
   options: {
+    activityProbe?: GateActivityProbe;
     cwd: string;
     env: NodeJS.ProcessEnv;
     livenessIntervalMs?: number;
@@ -66,6 +94,7 @@ type ProcessRunner = (
   timedOut?: boolean;
   stdoutBytes: number;
   stderrBytes: number;
+  capturedOutput?: string;
 }>;
 
 type ProcessCallInput = ProcessCall & {
@@ -96,12 +125,29 @@ function createHarness(options: HarnessOptions): {
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.processEnv ?? {},
+    ...(options.createGateActivityProbe
+      ? { createGateActivityProbe: options.createGateActivityProbe }
+      : {}),
     ...(options.writeDiagnostic
       ? { writeDiagnostic: options.writeDiagnostic }
       : {}),
+    readGateRouteReceipt:
+      options.readGateRouteReceipt ??
+      (async (_path, expectedCliRoot, expectedRuntime) => ({
+        route: 'inline',
+        reason: 'test route receipt',
+        cliRoot: expectedCliRoot,
+        runtime: expectedRuntime,
+      })),
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
+      : {}),
+    ...(options.writeGateRunMarker
+      ? { writeGateRunMarker: options.writeGateRunMarker }
+      : {}),
+    ...(options.removeGateRunMarker
+      ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
   } as Parameters<typeof createGateCommand>[0];
 
@@ -164,7 +210,9 @@ function createProcessRunner(
     executeExitCode?: number;
     executeStderrBytes?: number;
     executeStdoutBytes?: number;
+    executeOutput?: string;
     executeTimedOut?: boolean;
+    executeActivityEvidence?: GateActivityEvidence;
     livenessSnapshots?: LivenessSnapshot[];
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
   } = {},
@@ -196,6 +244,10 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      ...(runOptions.activityProbe
+        ? { activityProbe: runOptions.activityProbe }
+        : {}),
+      env: { ...runOptions.env },
       stdin: runOptions.stdin,
       livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
@@ -263,7 +315,13 @@ function createProcessRunner(
       exitCode: options.executeTimedOut ? 124 : (options.executeExitCode ?? 0),
       stderrBytes: options.executeStderrBytes ?? 0,
       stdoutBytes: options.executeStdoutBytes ?? 0,
+      ...(options.executeOutput
+        ? { capturedOutput: options.executeOutput }
+        : {}),
       ...(options.executeTimedOut ? { timedOut: true } : {}),
+      ...(options.executeActivityEvidence
+        ? { activityEvidence: options.executeActivityEvidence }
+        : {}),
     };
   };
 
@@ -300,6 +358,10 @@ async function runReviewGate(options: {
   runProcess: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   writeDiagnostic?: (message: string) => void;
+  writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
+  removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
+  readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
+  createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -311,6 +373,10 @@ async function runReviewGate(options: {
     runProcess: options.runProcess,
     parseReviewGateVerdict: options.parseReviewGateVerdict,
     writeDiagnostic: options.writeDiagnostic,
+    writeGateRunMarker: options.writeGateRunMarker,
+    removeGateRunMarker: options.removeGateRunMarker,
+    readGateRouteReceipt: options.readGateRouteReceipt,
+    createGateActivityProbe: options.createGateActivityProbe,
   });
   await runCommand(
     command,
@@ -881,6 +947,8 @@ describe('oat gate', () => {
       'provider-default',
       '--priority',
       '50',
+      '--timeout-ms',
+      '120000',
     ]);
     await runGateCommand(root, home, [
       'target',
@@ -912,6 +980,7 @@ describe('oat gate', () => {
         reasoningEffort: 'provider-default',
       },
       priority: 50,
+      timeoutMs: 120_000,
     });
     expect(targets['cursor-composer']?.baseCommand).toEqual([
       'cursor-agent',
@@ -928,6 +997,30 @@ describe('oat gate', () => {
       'high',
     ]);
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects out-of-bounds and fractional target timeout values', async () => {
+    const { root, home } = await setup();
+    for (const value of ['999', '14400001', '1000.5']) {
+      const capture = await runGateCommand(root, home, [
+        'target',
+        'set',
+        'invalid-timeout',
+        '--runtime',
+        'custom',
+        '--base-command-json',
+        '["custom"]',
+        '--timeout-ms',
+        value,
+      ]);
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining(
+          '--timeout-ms must be an integer between 1000 and 14400000',
+        ),
+      });
+      expect(process.exitCode).toBe(1);
+    }
   });
 
   it('preserves existing priority and invocation fields when target set omits flags', async () => {
@@ -1442,7 +1535,12 @@ describe('oat gate', () => {
     const { root, home } = await setup();
     const runner = createProcessRunner({
       livenessSnapshots: [
-        { elapsedMs: 30_000, hardBudgetMs: 900_000, idleMs: 2_000 },
+        {
+          elapsedMs: 30_000,
+          hardBudgetMs: 900_000,
+          idleMs: 2_000,
+          processAlive: true,
+        },
       ],
     });
 
@@ -4083,6 +4181,493 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('injects headless context only into gate review children', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1', EXISTING_VALUE: 'preserved' },
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    const execute = runner.calls.find((call) => call.purpose === 'execute');
+    const invocationPrompt = execute?.args.at(-1) ?? '';
+    const promptRuntime = invocationPrompt.match(
+      /^oat_gate_runtime: (.+)$/m,
+    )?.[1];
+    const promptModel = invocationPrompt.match(
+      /^oat_invocation_model: (.+)$/m,
+    )?.[1];
+    expect(execute?.env).toMatchObject({
+      CLAUDECODE: '1',
+      EXISTING_VALUE: 'preserved',
+      OAT_GATE_HEADLESS: '1',
+      OAT_NON_INTERACTIVE: '1',
+      OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+      OAT_GATE_RUNTIME: promptRuntime,
+      OAT_INVOCATION_MODEL: promptModel,
+      OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
+      OAT_GATE_CLI_ROOT: currentGateCliRoot(),
+    });
+    expect(promptRuntime).toBe('codex');
+    expect(promptModel).toBe('provider-default');
+    expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
+    expect(
+      runner.calls
+        .filter((call) => call.purpose !== 'execute')
+        .every(
+          (call) =>
+            call.env.OAT_GATE_HEADLESS === undefined &&
+            call.env.OAT_NON_INTERACTIVE === undefined &&
+            call.env.OAT_GATE_RUN_ID === undefined,
+        ),
+    ).toBe(true);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { outcome: 'completed', exitCode: 0, writeArtifact: true },
+    { outcome: 'timeout', exitCode: 1, timedOut: true },
+    { outcome: 'child failure', exitCode: 3 },
+    { outcome: 'targeting failure', exitCode: 0 },
+    {
+      outcome: 'validation failure',
+      exitCode: 0,
+      writeArtifact: true,
+      parseFailure: true,
+    },
+    { outcome: 'launch error', exitCode: 1, launchFailure: true },
+  ])(
+    'cleans the system-temp run marker exactly once after $outcome',
+    async ({
+      exitCode,
+      launchFailure,
+      outcome,
+      parseFailure,
+      timedOut,
+      writeArtifact: shouldWriteArtifact,
+    }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      let markerWritten = false;
+      const markerWrites: Array<{
+        path: string;
+        marker: Record<string, unknown>;
+      }> = [];
+      const markerRemovals: string[] = [];
+      const runner = createProcessRunner({
+        executeExitCode: exitCode,
+        executeTimedOut: timedOut,
+        onExecute: async () => {
+          expect(markerWritten).toBe(true);
+          if (shouldWriteArtifact) {
+            await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+          }
+        },
+      });
+      const runProcess: ProcessRunner = launchFailure
+        ? async (_command, _args, options) => {
+            if (options.purpose === 'execute') {
+              expect(markerWritten).toBe(true);
+              throw new Error('launch failed');
+            }
+            return runner.runProcess(_command, _args, options);
+          }
+        : runner.runProcess;
+
+      await runReviewGate({
+        root,
+        home,
+        runProcess,
+        parseReviewGateVerdict: parseFailure
+          ? async () => {
+              throw new Error('invalid artifact');
+            }
+          : undefined,
+        writeGateRunMarker: async (path, marker) => {
+          markerWritten = true;
+          markerWrites.push({ path, marker });
+          return true;
+        },
+        removeGateRunMarker: async (path) => {
+          markerRemovals.push(path);
+        },
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          'code',
+          '--review-scope',
+          'p02',
+          'Review',
+        ],
+      });
+
+      expect(markerWrites).toHaveLength(1);
+      expect(markerWrites[0]?.path).toMatch(
+        new RegExp(
+          `^${tmpdir().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}/oat-gate-runs/[^/]+\\.json$`,
+        ),
+      );
+      expect(markerWrites[0]?.path.startsWith(root)).toBe(false);
+      expect(markerWrites[0]?.marker).toMatchObject({
+        runId: expect.any(String),
+        targetId: 'codex-default',
+        runtime: 'codex',
+        reviewType: 'code',
+        reviewScope: 'p02',
+        project: projectPath,
+        startedAt: expect.any(String),
+        budgetMs: 1_800_000,
+        budgetSource: 'scope-default',
+      });
+      expect(markerRemovals).toEqual([markerWrites[0]?.path]);
+      expect(outcome).toBeTruthy();
+    },
+  );
+
+  it('warns and continues when run marker writes fail', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeGateRunMarker: async (_path, _marker, warn) => {
+        warn('Unable to write gate run marker: denied');
+        return false;
+      },
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('Unable to write gate run marker'),
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('cleans a partially created run marker after the writer reports failure', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let markerPath = '';
+    const cleanupAttempts: string[] = [];
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeGateRunMarker: async (path, _marker, warn) => {
+        markerPath = path;
+        await mkdir(dirname(path), { recursive: true });
+        await writeFile(path, '{"partial":', 'utf8');
+        warn('Unable to finish gate run marker write');
+        return false;
+      },
+      removeGateRunMarker: async (path) => {
+        cleanupAttempts.push(path);
+        await rm(path);
+      },
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('Unable to finish gate run marker write'),
+    ]);
+    expect(cleanupAttempts).toEqual([markerPath]);
+    await expect(readFile(markerPath, 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it.each([0, 7])(
+    'classifies a structured refusal independently of child exit code %s',
+    async (exitCode) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        executeExitCode: exitCode,
+        executeOutput: 'diagnostic\nOAT_GATE_REFUSAL: cannot await reviewer\n',
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: ['--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        outcome: 'review_did_not_complete',
+        refusal: 'cannot await reviewer',
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('uses the first strict line-start refusal and ignores mid-line tokens', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: [
+        'prefix OAT_GATE_REFUSAL: incidental',
+        'OAT_GATE_REFUSAL: first refusal',
+        'OAT_GATE_REFUSAL: second refusal',
+      ].join('\n'),
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      refusal: 'first refusal',
+    });
+  });
+
+  it('lets a validated correlated artifact win over refusal output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeExitCode: 9,
+      executeOutput: 'OAT_GATE_REFUSAL: stale child message\n',
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      receiveEligible: true,
+    });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('refusal');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('classifies refusal when duplicate correlated artifacts are present', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: 'OAT_GATE_REFUSAL: duplicate review output\n',
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'first-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'second-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      refusal: 'duplicate review output',
+    });
+  });
+
+  it.each(['malformed', 'invocation-mismatched'] as const)(
+    'classifies refusal when the correlated artifact is %s',
+    async (artifactFailure) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        executeOutput: `OAT_GATE_REFUSAL: ${artifactFailure} review output\n`,
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            ...(artifactFailure === 'invocation-mismatched'
+              ? {
+                  gateInvocationOverrides: {
+                    oat_gate_runtime: 'different-runtime',
+                  },
+                }
+              : {}),
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        parseReviewGateVerdict:
+          artifactFailure === 'malformed'
+            ? async () => {
+                throw new Error('malformed verdict');
+              }
+            : undefined,
+        args: ['--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        refusal: `${artifactFailure} review output`,
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    },
+  );
+
+  it('keeps a killed gate run marker outside the repository status', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              sleeper: {
+                runtime: 'test',
+                baseCommand: [
+                  process.execPath,
+                  '-e',
+                  'setTimeout(() => {}, 60000)',
+                ],
+                invocation: {
+                  model: 'test-model',
+                  reasoningEffort: 'test',
+                },
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    execFileSync('git', ['init', '-q'], { cwd: root });
+    execFileSync('git', ['config', 'user.email', 'gate@example.test'], {
+      cwd: root,
+    });
+    execFileSync('git', ['config', 'user.name', 'Gate Test'], { cwd: root });
+    execFileSync('git', ['add', '.'], { cwd: root });
+    execFileSync('git', ['commit', '-q', '-m', 'fixture'], { cwd: root });
+
+    const repoRoot = join(process.cwd(), '..', '..');
+    const child = spawnProcess(
+      join(repoRoot, 'node_modules', '.bin', 'tsx'),
+      [
+        '--tsconfig',
+        join(repoRoot, 'packages', 'cli', 'tsconfig.json'),
+        join(repoRoot, 'packages', 'cli', 'src', 'index.ts'),
+        '--cwd',
+        root,
+        '--json',
+        'gate',
+        'review',
+        '--target',
+        'sleeper',
+        '--project',
+        projectPath,
+        'Review',
+      ],
+      {
+        cwd: repoRoot,
+        detached: true,
+        env: { ...process.env, HOME: home },
+        stdio: ['ignore', 'ignore', 'pipe'],
+      },
+    );
+    let stderr = '';
+    child.stderr.setEncoding('utf8');
+    child.stderr.on('data', (chunk: string) => {
+      stderr += chunk;
+    });
+    let childClosed = false;
+    const closePromise = new Promise<void>((resolve) => {
+      child.once('close', () => {
+        childClosed = true;
+        resolve();
+      });
+    });
+
+    let markerPath: string | undefined;
+    for (let attempt = 0; attempt < 400 && !markerPath; attempt += 1) {
+      if (childClosed) break;
+      const markerLine = stderr
+        .split('\n')
+        .find((line) => line.includes('"type":"gate-run-marker"'));
+      if (markerLine) {
+        markerPath = (JSON.parse(markerLine) as { path: string }).path;
+        break;
+      }
+      await new Promise((resolve) => setTimeout(resolve, 25));
+    }
+    if (child.pid && !childClosed) {
+      process.kill(-child.pid, 'SIGKILL');
+    }
+    await closePromise;
+    expect(markerPath, stderr).toBeTruthy();
+
+    await expect(readFile(markerPath!, 'utf8')).resolves.toContain(
+      '"targetId": "sleeper"',
+    );
+    expect(
+      execFileSync('git', ['status', '--porcelain'], {
+        cwd: root,
+        encoding: 'utf8',
+      }),
+    ).toBe('');
+    await rm(markerPath!, { force: true });
+  });
+
   it('normalizes a gate review artifact missing only a zero-count Medium heading', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -4546,6 +5131,271 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(124);
   });
 
+  it('resolves review timeout precedence and reports its source', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gateTimeouts: { code: 1_200_000 },
+          gates: {
+            execTargets: { 'codex-default': { timeoutMs: 1_300_000 } },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({ executeTimedOut: true });
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1100000' },
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        '--timeout-ms',
+        '1400000',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_400_000 });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      timeoutMs: 1_400_000,
+      timeoutSource: 'cli',
+    });
+  });
+
+  it.each([
+    ['final', 1_800_000],
+    ['p01', 1_800_000],
+    ['p01-p03', 1_800_000],
+    ['p01-t02', 900_000],
+  ])('uses the code scope default for %s', async (scope, expected) => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        scope,
+        'Review',
+      ],
+    });
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: expected });
+  });
+
+  it('uses config before env and env before scope defaults', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: { gateTimeouts: { code: 1_250_000 } },
+      })}\n`,
+      'utf8',
+    );
+    const configRunner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1150000' },
+      runProcess: configRunner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+    expect(configRunner.calls.at(-1)).toMatchObject({ timeoutMs: 1_250_000 });
+
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ version: 1 })}\n`,
+      'utf8',
+    );
+    const envRunner = createProcessRunner();
+    await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: '1150000' },
+      runProcess: envRunner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+    expect(envRunner.calls.at(-1)).toMatchObject({ timeoutMs: 1_150_000 });
+  });
+
+  it('warns once for an invalid env timeout and reports the startup source', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner();
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { OAT_GATE_EXEC_TIMEOUT_MS: 'invalid' },
+      runProcess: runner.runProcess,
+      globalArgs: [],
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'artifact',
+        '--review-scope',
+        'design',
+        'Review',
+      ],
+    });
+    expect(capture.warn).toEqual([
+      expect.stringContaining('OAT_GATE_EXEC_TIMEOUT_MS'),
+    ]);
+    expect(capture.info).toContain(
+      'Running gate target codex-default (codex); timeout=900000ms (source=scope-default).',
+    );
+  });
+
+  it('warns once for malformed persisted target timeout before using workflow config', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gateTimeouts: { code: 1_250_000 },
+          gates: {
+            execTargets: {
+              'codex-default': { timeoutMs: 'not-a-timeout' },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_250_000 });
+    expect(
+      capture.warn.filter((warning) => warning.includes('target.timeoutMs')),
+    ).toEqual([expect.stringContaining('target.timeoutMs from shared config')]);
+  });
+
+  it.each([
+    ['code', 'final', 1_350_000],
+    ['artifact', 'design', 1_450_000],
+  ])(
+    'warns once per reached malformed persisted workflow %s layer',
+    async (reviewType, reviewScope, expectedTimeout) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          activeProject: projectPath,
+          workflow: {
+            gateTimeouts: { [reviewType]: 'invalid-local' },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gateTimeouts:
+              reviewType === 'code'
+                ? { code: 'invalid-shared' }
+                : { artifact: expectedTimeout },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: { gateTimeouts: { [reviewType]: expectedTimeout } },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          reviewType,
+          '--review-scope',
+          reviewScope,
+          'Review',
+        ],
+      });
+
+      expect(runner.calls.at(-1)).toMatchObject({
+        timeoutMs: expectedTimeout,
+      });
+      const warnings = capture.warn.filter((warning) =>
+        warning.includes(`workflow.gateTimeouts.${reviewType}`),
+      );
+      expect(warnings).toHaveLength(reviewType === 'code' ? 2 : 1);
+      expect(warnings[0]).toContain('local config');
+      if (reviewType === 'code') {
+        expect(warnings[1]).toContain('shared config');
+      }
+    },
+  );
+
   it('reports nonzero-output review target timeouts without classifying them as zero-output', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
@@ -4664,8 +5514,18 @@ describe('oat gate', () => {
     const diagnostics: string[] = [];
     const runner = createProcessRunner({
       livenessSnapshots: [
-        { elapsedMs: 1_000, hardBudgetMs: 5_000, idleMs: 250 },
-        { elapsedMs: 2_000, hardBudgetMs: 5_000, idleMs: 1_250 },
+        {
+          elapsedMs: 1_000,
+          hardBudgetMs: 5_000,
+          idleMs: 250,
+          processAlive: true,
+        },
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 1_250,
+          processAlive: true,
+        },
       ],
       onExecute: async () => {
         await writeReviewArtifact({
@@ -4696,9 +5556,17 @@ describe('oat gate', () => {
     expect(diagnostics.map((message) => JSON.parse(message))).toEqual(
       expect.arrayContaining([
         {
+          type: 'gate-start',
+          target: 'codex-default',
+          runtime: 'codex',
+          timeoutMs: 5_000,
+          timeoutSource: 'env',
+        },
+        {
           elapsedMs: 1_000,
           hardBudgetMs: 5_000,
           idleMs: 250,
+          processAlive: true,
           target: 'codex-default',
           type: 'gate-liveness',
         },
@@ -4706,12 +5574,243 @@ describe('oat gate', () => {
           elapsedMs: 2_000,
           hardBudgetMs: 5_000,
           idleMs: 1_250,
+          processAlive: true,
           target: 'codex-default',
           type: 'gate-liveness',
         },
       ]),
     );
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it('distinguishes an absent transcript path from unchanged evidence', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const activityProbeStatus: GateActivityProbeStatus = {
+      status: 'path-absent',
+      runtime: 'claude',
+      scope: 'project-dir',
+      attemptedPath: join(home, '.claude', 'projects', '-fixture'),
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          activityProbeStatus,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics.map((message) => JSON.parse(message))).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-liveness',
+        activityProbeStatus,
+      }),
+    );
+  });
+
+  it('fails closed when the child does not leave a branch-local route receipt', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      readGateRouteReceipt: async () => {
+        throw new Error('Branch-local gate route did not return JSON.');
+      },
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      message: 'Branch-local gate route did not return JSON.',
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('distinguishes a stdout-idle child with advancing transcript activity', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'cursor',
+      scope: 'project-dir',
+      observedPath: join(home, '.cursor', 'projects', 'fixture'),
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          lastActivityEvidence: evidence,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics.map((message) => JSON.parse(message))).toContainEqual({
+      elapsedMs: 2_000,
+      hardBudgetMs: 5_000,
+      idleMs: 2_000,
+      processAlive: true,
+      lastActivityEvidence: evidence,
+      target: 'codex-default',
+      type: 'gate-liveness',
+    });
+  });
+
+  it('carries latest activity evidence in timeout and child-failure envelopes without changing outcomes', async () => {
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'codex',
+      scope: 'ambient-runtime',
+      observedPath: '/home/test/.codex/sessions/2026/07/15',
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+
+    const timedOut = await setup();
+    const timeoutProject = await writeProject(timedOut.root);
+    await writeActiveProject(timedOut.root, timeoutProject);
+    const timeoutCapture = await runReviewGate({
+      ...timedOut,
+      runProcess: createProcessRunner({
+        executeTimedOut: true,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+    });
+    expect(timeoutCapture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 124,
+      timedOut: true,
+      noOutputProduced: true,
+      activityEvidence: evidence,
+    });
+    expect(timeoutCapture.jsonPayloads[0]).not.toHaveProperty(
+      'receiveEligible',
+    );
+
+    const failed = await setup();
+    const failedProject = await writeProject(failed.root);
+    await writeActiveProject(failed.root, failedProject);
+    const failureCapture = await runReviewGate({
+      ...failed,
+      runProcess: createProcessRunner({
+        executeExitCode: 7,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+    });
+    expect(failureCapture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 7,
+      timedOut: false,
+      activityEvidence: evidence,
+    });
+    expect(failureCapture.jsonPayloads[0]).not.toHaveProperty(
+      'receiveEligible',
+    );
+  });
+
+  it('labels ambient Codex activity as non-attributable in human liveness output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'codex',
+      scope: 'ambient-runtime',
+      observedPath: join(home, '.codex', 'sessions', '2026', '07', '15'),
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          lastActivityEvidence: evidence,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      globalArgs: [],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'ambient runtime activity (not attributable to this gate child)',
+    );
   });
 
   it('accepts an explicit project name when no active project is configured', async () => {

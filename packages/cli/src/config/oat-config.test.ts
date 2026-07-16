@@ -1266,6 +1266,58 @@ describe('oat-config', () => {
       );
     });
 
+    it('normalizes bounded gate timeout config surfaces', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            gateTimeouts: {
+              code: 1_000,
+              artifact: 14_400_000,
+              invalid: 2_000,
+            },
+            gates: {
+              execTargets: {
+                valid: {
+                  runtime: 'custom',
+                  baseCommand: ['custom'],
+                  timeoutMs: 45_000,
+                },
+                tooLow: {
+                  runtime: 'custom',
+                  baseCommand: ['custom'],
+                  timeoutMs: 999,
+                },
+                fractional: {
+                  runtime: 'custom',
+                  baseCommand: ['custom'],
+                  timeoutMs: 1_000.5,
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      const config = await readOatConfig(repoRoot);
+      expect(config.workflow?.gateTimeouts).toEqual({
+        code: 1_000,
+        artifact: 14_400_000,
+      });
+      expect(config.workflow?.gates?.execTargets?.valid).toMatchObject({
+        timeoutMs: 45_000,
+      });
+      expect(config.workflow?.gates?.execTargets?.tooLow).not.toHaveProperty(
+        'timeoutMs',
+      );
+      expect(
+        config.workflow?.gates?.execTargets?.fractional,
+      ).not.toHaveProperty('timeoutMs');
+    });
+
     it('accepts workflow.designMode "collaborative"', async () => {
       const repoRoot = await createRepoRoot();
       const configPath = join(repoRoot, '.oat', 'config.json');

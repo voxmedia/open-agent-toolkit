@@ -1,0 +1,233 @@
+import type { CommandContext, GlobalOptions } from '@app/command-context';
+import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { Command } from 'commander';
+import { describe, expect, it } from 'vitest';
+
+import { createGateRouteCommand, resolveGateRoute } from './route';
+
+describe('oat gate route', () => {
+  it.each([
+    ['claude', { CLAUDECODE: '1' }],
+    ['cursor', { CURSOR_AGENT: '1' }],
+    ['codex', { CODEX_THREAD_ID: 'thread-1' }],
+    ['codex', { CODEX_SESSION_ID: 'session-1' }],
+  ])('routes an unambiguous matching %s runtime inline', (runtime, env) => {
+    expect(
+      resolveGateRoute({
+        expectRuntime: runtime,
+        expectModel: 'expected-model',
+        canAwait: false,
+        env,
+      }),
+    ).toMatchObject({ route: 'inline', reason: expect.any(String) });
+  });
+
+  it.each([
+    [{ CLAUDECODE: '1' }, true, 'delegate-sync'],
+    [{ CLAUDECODE: '1' }, false, 'refuse'],
+    [{}, true, 'delegate-sync'],
+    [{}, false, 'refuse'],
+    [{ CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }, true, 'delegate-sync'],
+    [{ CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }, false, 'refuse'],
+  ] as const)(
+    'never routes ambiguous or mismatched evidence inline (%j, canAwait=%s)',
+    (env, canAwait, route) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'cursor',
+          expectModel: 'expected-model',
+          canAwait,
+          env,
+        }),
+      ).toMatchObject({ route, reason: expect.any(String) });
+    },
+  );
+
+  it.each([
+    ['claude', 'cursor', { CLAUDECODE: '1', CURSOR_AGENT: '1' }],
+    ['claude', 'codex', { CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }],
+    ['cursor', 'claude', { CURSOR_AGENT: '1', CLAUDECODE: '1' }],
+    ['cursor', 'codex', { CURSOR_AGENT: '1', CODEX_SESSION_ID: 'session-1' }],
+    ['codex', 'claude', { CODEX_THREAD_ID: 'thread-1', CLAUDECODE: '1' }],
+    ['codex', 'cursor', { CODEX_SESSION_ID: 'session-1', CURSOR_AGENT: '1' }],
+  ])(
+    'routes a %s parent to its marked %s child inline',
+    (_parentRuntime, targetRuntime, env) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: targetRuntime,
+          expectModel: 'expected-model',
+          canAwait: false,
+          env,
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
+    },
+  );
+
+  it.each([
+    [
+      'claude',
+      'cursor',
+      { CLAUDECODE: '1', CLAUDE_MODEL: 'parent-model', CURSOR_AGENT: '1' },
+    ],
+    [
+      'claude',
+      'codex',
+      {
+        CLAUDECODE: '1',
+        CLAUDE_MODEL: 'parent-model',
+        CODEX_THREAD_ID: 'thread-1',
+      },
+    ],
+    [
+      'cursor',
+      'claude',
+      { CURSOR_AGENT: '1', CURSOR_MODEL: 'parent-model', CLAUDECODE: '1' },
+    ],
+    [
+      'cursor',
+      'codex',
+      {
+        CURSOR_AGENT: '1',
+        CURSOR_MODEL: 'parent-model',
+        CODEX_SESSION_ID: 'session-1',
+      },
+    ],
+    [
+      'codex',
+      'claude',
+      {
+        CODEX_THREAD_ID: 'thread-1',
+        CODEX_MODEL: 'parent-model',
+        CLAUDECODE: '1',
+      },
+    ],
+    [
+      'codex',
+      'cursor',
+      {
+        CODEX_SESSION_ID: 'session-1',
+        CODEX_MODEL: 'parent-model',
+        CURSOR_AGENT: '1',
+      },
+    ],
+  ])(
+    'ignores inherited %s model evidence for a marked %s child',
+    (_parentRuntime, targetRuntime, env) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: targetRuntime,
+          expectModel: 'child-model',
+          canAwait: false,
+          env,
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
+    },
+  );
+
+  it.each([
+    ['CURSOR_MODEL', true, 'delegate-sync'],
+    ['CURSOR_MODEL', false, 'refuse'],
+  ] as const)(
+    'never routes contradictory %s evidence inline (canAwait=%s)',
+    (modelKey, canAwait, route) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'cursor',
+          expectModel: 'expected-model',
+          canAwait,
+          env: {
+            CURSOR_AGENT: '1',
+            [modelKey]: 'different-model',
+          },
+        }),
+      ).toMatchObject({ route, reason: expect.stringContaining('model') });
+    },
+  );
+
+  it.each(['OAT_CURRENT_MODEL', 'OAT_MODEL'])(
+    'ignores inherited generic model evidence from %s',
+    (modelKey) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'cursor',
+          expectModel: 'child-model',
+          canAwait: false,
+          env: {
+            CLAUDECODE: '1',
+            CURSOR_AGENT: '1',
+            OAT_INVOCATION_MODEL: 'child-model',
+            [modelKey]: 'parent-model',
+          },
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
+    },
+  );
+
+  it.each(['ANTHROPIC_MODEL', 'CLAUDE_MODEL'])(
+    'treats %s as trustworthy current-child Claude evidence',
+    (modelKey) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'claude',
+          expectModel: 'expected-model',
+          canAwait: false,
+          env: {
+            CLAUDECODE: '1',
+            [modelKey]: 'different-model',
+          },
+        }),
+      ).toMatchObject({
+        route: 'refuse',
+        reason: expect.stringContaining(modelKey),
+      });
+    },
+  );
+
+  it('pins the executable JSON envelope shape', async () => {
+    const capture = createLoggerCapture();
+    const program = new Command().name('oat').option('--json').exitOverride();
+    const gate = new Command('gate');
+    gate.addCommand(
+      createGateRouteCommand({
+        processEnv: { CURSOR_AGENT: '1' },
+        cliRoot: '/checkout',
+        buildCommandContext: (options: GlobalOptions): CommandContext => ({
+          scope: 'project',
+          dryRun: false,
+          verbose: false,
+          json: options.json ?? false,
+          cwd: process.cwd(),
+          home: process.cwd(),
+          interactive: false,
+          logger: capture.logger,
+        }),
+      }),
+    );
+    program.addCommand(gate);
+
+    await program.parseAsync(
+      [
+        'gate',
+        'route',
+        '--json',
+        '--expect-runtime',
+        'cursor',
+        '--expect-model',
+        'expected-model',
+        '--can-await',
+        'false',
+      ],
+      { from: 'user' },
+    );
+
+    expect(capture.jsonPayloads).toEqual([
+      {
+        route: 'inline',
+        reason:
+          'Provider runtime marker matches expected runtime cursor; model evidence is unavailable.',
+        cliRoot: '/checkout',
+      },
+    ]);
+  });
+});

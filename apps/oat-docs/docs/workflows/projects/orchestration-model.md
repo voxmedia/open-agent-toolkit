@@ -127,6 +127,27 @@ phase ownership and task commit authority.
 Do not use nested dispatch merely to mirror task granularity. The smoke fixture
 intentionally proves successful execution with no task workers.
 
+## Dispatch Mode and Liveness
+
+Choose foreground or background mode from expected duration and the host
+interaction model. Short checks may run in foreground when interruption risk is
+negligible. Multi-minute implementers, fix loops, and reviewers should use a
+durable background handle when the host supports one, because ordinary session
+interaction can interrupt a foreground child in Cursor.
+
+Background is never fire-and-forget: retain the accepted handle, monitor useful
+progress, and resume that same handle for bounded fixes. For a silent child,
+provider transcript mtime and size can show observable activity without reading
+transcript content; that evidence is liveness telemetry, not a health or
+completion verdict.
+
+Claude print mode (`claude -p`) has a separate hazard: background children are
+terminated at its background-wait ceiling (600 seconds by default). Interactive
+Claude Code is unaffected. Headless gate children therefore do not follow the
+ordinary background preference; they use the gate's inline or synchronously
+awaited route and fail closed when neither is available. See
+[Workflow Gates](../../cli-utilities/workflow-gates.md#headless-completion-safety).
+
 ## Catalogs and Exact Selection
 
 Native model catalogs are per-dispatch-context snapshots. A root catalog does

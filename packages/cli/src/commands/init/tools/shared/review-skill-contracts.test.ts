@@ -154,6 +154,37 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pins headless routing and pre-plan inheritance in review-provide', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(content).toContain('OAT_GATE_HEADLESS=1');
+    expect(content).toContain('"$OAT_GATE_CLI_PATH" gate route --json');
+    expect(content).toContain(
+      'value.cliRoot !== process.env.OAT_GATE_CLI_ROOT',
+    );
+    expect(content).toContain(
+      'never retry with bare `oat` or another installed CLI',
+    );
+    expect(content).toContain(
+      'Headless gate mode overrides the Tier 1 background-dispatch preference',
+    );
+    expect(content).toContain('OAT_GATE_REFUSAL: <reason from route output>');
+    expect(content).toContain(
+      'selection_reason: inherit (pre-plan; no project policy)',
+    );
+    expect(content).toMatch(
+      /An explicitly set\s+project policy is always honored/,
+    );
+    expect(content).toMatch(
+      /Code\s+reviews and `artifact plan` reviews still hard-require a resolved policy/,
+    );
+    expect(content).toMatch(
+      /Gate exec-target selection is unaffected by this\s+inheritance rule/,
+    );
+  });
+
   it('defines auto-review checkpoint scope from the last passed whole-phase review', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',

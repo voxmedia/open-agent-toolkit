@@ -1167,6 +1167,40 @@ describe('oat config', () => {
       });
     });
 
+    it('sets and gets bounded workflow gate timeout keys', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      const setHarness = createHarness({ cwd: root, home });
+      await runCommand(setHarness.command, [
+        'set',
+        'workflow.gateTimeouts.code',
+        '1800000',
+        '--shared',
+      ]);
+
+      const getHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        getHarness.command,
+        ['get', 'workflow.gateTimeouts.code'],
+        ['--json'],
+      );
+      expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: '1800000',
+        source: 'shared',
+      });
+
+      const invalidHarness = createHarness({ cwd: root, home });
+      await runCommand(invalidHarness.command, [
+        'set',
+        'workflow.gateTimeouts.artifact',
+        '999',
+      ]);
+      expect(invalidHarness.capture.error[0]).toContain(
+        'integer between 1000 and 14400000',
+      );
+    });
+
     it('sets workflow.dispatchCeiling.providers.codex at shared level (legacy key updated)', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -1199,6 +1233,87 @@ describe('oat config', () => {
         key: 'workflow.dispatchCeiling.providers.codex',
         value: 'high',
         source: 'shared',
+      });
+    });
+
+    it('gets effective dispatch ladder aggregates and reports absent ladders clearly', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  high: { candidates: ['shared-high'] },
+                  frontier: { candidates: ['shared-frontier'] },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: { high: { candidates: ['local-high'] } },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+
+      const providersHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        providersHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers'],
+        ['--json'],
+      );
+      expect(providersHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.dispatchCeiling.providers',
+        value: {
+          cursor: {
+            high: { candidates: ['local-high'] },
+            frontier: { candidates: ['shared-frontier'] },
+          },
+        },
+        source: 'local',
+      });
+
+      const providerHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        providerHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers.cursor'],
+        ['--json'],
+      );
+      expect(providerHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: {
+          high: { candidates: ['local-high'] },
+          frontier: { candidates: ['shared-frontier'] },
+        },
+        source: 'local',
+      });
+
+      const absentHarness = createHarness({ cwd: root, home });
+      await runCommand(
+        absentHarness.command,
+        ['get', 'workflow.dispatchCeiling.providers.claude'],
+        ['--json'],
+      );
+      expect(absentHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        value: null,
+        source: 'default',
       });
     });
 
