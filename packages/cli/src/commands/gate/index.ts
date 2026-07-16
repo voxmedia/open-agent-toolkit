@@ -69,6 +69,11 @@ import { Command } from 'commander';
 import YAML from 'yaml';
 
 import {
+  createGateActivityProbe,
+  type GateActivityEvidence,
+  type GateActivityProbe,
+} from './activity-probes';
+import {
   parseReviewGateVerdict,
   severityDisplayName,
   type ReviewArtifactGateInvocation,
@@ -93,6 +98,7 @@ interface GateCommandDependencies {
     userConfigDir: string,
     env: NodeJS.ProcessEnv,
   ) => Promise<ResolvedConfig>;
+  createGateActivityProbe: typeof createGateActivityProbe;
   runProcess: (
     command: string,
     args: string[],
@@ -158,6 +164,7 @@ interface ReviewGateOptions extends CrossProviderExecOptions {
 }
 
 interface ProcessRunOptions {
+  activityProbe?: GateActivityProbe;
   cwd: string;
   env: NodeJS.ProcessEnv;
   livenessIntervalMs?: number;
@@ -169,6 +176,7 @@ interface ProcessRunOptions {
 }
 
 interface ProcessRunResult {
+  activityEvidence?: GateActivityEvidence;
   capturedOutput?: string;
   exitCode: number;
   refusal?: string;
@@ -181,6 +189,8 @@ interface GateLivenessSnapshot {
   elapsedMs: number;
   hardBudgetMs: number;
   idleMs: number;
+  processAlive: boolean;
+  lastActivityEvidence?: GateActivityEvidence;
 }
 
 type GateTimeoutSource =
@@ -348,6 +358,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readUserConfig,
   writeUserConfig,
   resolveEffectiveConfig,
+  createGateActivityProbe,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   processEnv: process.env,
@@ -607,6 +618,8 @@ async function runChildProcess(
     let refusal: string | undefined;
     let stdoutLineBuffer = '';
     let stderrLineBuffer = '';
+    let latestActivityEvidence: GateActivityEvidence | undefined;
+    let livenessProbePending = false;
     const startedAt = Date.now();
     let lastActivityAt = startedAt;
     const child = spawn(command, args, {
@@ -646,14 +659,37 @@ async function runChildProcess(
       recordActivity();
       process.stderr.write(chunk);
     });
+    const processAlive = (): boolean => {
+      if (child.pid === undefined) return false;
+      try {
+        process.kill(child.pid, 0);
+        return true;
+      } catch {
+        return false;
+      }
+    };
     const livenessInterval =
       options.onLiveness && options.livenessIntervalMs
         ? setInterval(() => {
+            if (livenessProbePending) return;
+            livenessProbePending = true;
             const now = Date.now();
-            options.onLiveness?.({
-              elapsedMs: now - startedAt,
-              hardBudgetMs: options.timeoutMs,
-              idleMs: now - lastActivityAt,
+            void (async () => {
+              const evidence = await options.activityProbe
+                ?.probe(now)
+                .catch(() => null);
+              if (evidence) latestActivityEvidence = evidence;
+              options.onLiveness?.({
+                elapsedMs: now - startedAt,
+                hardBudgetMs: options.timeoutMs,
+                idleMs: now - lastActivityAt,
+                processAlive: processAlive(),
+                ...(latestActivityEvidence
+                  ? { lastActivityEvidence: latestActivityEvidence }
+                  : {}),
+              });
+            })().finally(() => {
+              livenessProbePending = false;
             });
           }, options.livenessIntervalMs)
         : null;
@@ -690,6 +726,9 @@ async function runChildProcess(
         extractStructuredRefusal(stdoutLineBuffer.replace(/\r$/, '')) ??
         extractStructuredRefusal(stderrLineBuffer.replace(/\r$/, ''));
       resolve({
+        ...(latestActivityEvidence
+          ? { activityEvidence: latestActivityEvidence }
+          : {}),
         exitCode: timedOut ? 124 : (code ?? 1),
         ...(refusal ? { refusal } : {}),
         stderrBytes,
@@ -1828,6 +1867,12 @@ async function executeTarget(
   const livenessIntervalMs = resolveGateLivenessIntervalMs(
     dependencies.processEnv,
   );
+  const activityProbe = await dependencies.createGateActivityProbe({
+    runtime: selected.target.runtime,
+    cwd: context.cwd,
+    home: context.home,
+    spawnedAt: Date.now(),
+  });
 
   if (!context.json) {
     context.logger.info(
@@ -1842,20 +1887,34 @@ async function executeTarget(
       {
         cwd: context.cwd,
         env: dependencies.processEnv,
+        ...(activityProbe ? { activityProbe } : {}),
         livenessIntervalMs,
-        onLiveness: ({ elapsedMs, hardBudgetMs, idleMs }) => {
+        onLiveness: ({
+          elapsedMs,
+          hardBudgetMs,
+          idleMs,
+          processAlive,
+          lastActivityEvidence,
+        }) => {
           const telemetry = {
             elapsedMs,
             hardBudgetMs,
             idleMs,
+            processAlive,
+            ...(lastActivityEvidence ? { lastActivityEvidence } : {}),
             target: selected.id,
             type: 'gate-liveness',
           };
           if (context.json) {
             dependencies.writeDiagnostic(`${JSON.stringify(telemetry)}\n`);
           } else {
+            const activityDescription = lastActivityEvidence
+              ? lastActivityEvidence.scope === 'ambient-runtime'
+                ? 'ambient runtime activity (not attributable to this gate child)'
+                : 'project-directory activity'
+              : 'unavailable';
             context.logger.info(
-              `Gate liveness: target=${selected.id} elapsed_ms=${elapsedMs} idle_ms=${idleMs} hard_budget_ms=${hardBudgetMs}.`,
+              `Gate liveness: target=${selected.id} elapsed_ms=${elapsedMs} idle_ms=${idleMs} hard_budget_ms=${hardBudgetMs} process_alive=${processAlive} activity_evidence=${activityDescription}.`,
             );
           }
         },
@@ -2513,6 +2572,7 @@ function writeReviewGateExecutionFailure(
     timeoutSource?: GateTimeoutSource;
     noOutputProduced?: boolean;
     refusal?: string;
+    activityEvidence?: GateActivityEvidence;
     gateInvocation: GateInvocationMetadata;
     dispatchReport: DispatchReportV1;
     corroboration?: GateInvocationCorroboration;
@@ -2548,6 +2608,9 @@ function writeReviewGateExecutionFailure(
         ? { noOutputProduced: payload.noOutputProduced }
         : {}),
       ...(payload.refusal ? { refusal: payload.refusal } : {}),
+      ...(payload.activityEvidence
+        ? { activityEvidence: payload.activityEvidence }
+        : {}),
       message,
     });
     return;
@@ -3080,6 +3143,9 @@ async function runReviewGate(
         timeoutMs: timeout.timeoutMs,
         timeoutSource: timeout.source,
         refusal,
+        ...(childResult.activityEvidence
+          ? { activityEvidence: childResult.activityEvidence }
+          : {}),
         gateInvocation,
         dispatchReport,
       });
@@ -3114,6 +3180,9 @@ async function runReviewGate(
         timedOut: childResult.timedOut ?? false,
         timeoutMs: timeout.timeoutMs,
         timeoutSource: timeout.source,
+        ...(childResult.activityEvidence
+          ? { activityEvidence: childResult.activityEvidence }
+          : {}),
         gateInvocation,
         dispatchReport,
       });
@@ -3136,6 +3205,9 @@ async function runReviewGate(
         timeoutSource: timeout.source,
         noOutputProduced:
           childResult.stdoutBytes + childResult.stderrBytes === 0,
+        ...(childResult.activityEvidence
+          ? { activityEvidence: childResult.activityEvidence }
+          : {}),
         gateInvocation,
         dispatchReport,
       });

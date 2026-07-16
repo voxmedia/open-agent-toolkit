@@ -21,6 +21,10 @@ import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+import type {
+  GateActivityEvidence,
+  GateActivityProbe,
+} from './activity-probes';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -28,6 +32,7 @@ interface HarnessOptions {
   cwd: string;
   home: string;
   processEnv?: NodeJS.ProcessEnv;
+  createGateActivityProbe?: () => Promise<GateActivityProbe | null>;
   runProcess?: ProcessRunner;
   parseReviewGateVerdict?: typeof parseReviewGateVerdictFromDisk;
   writeDiagnostic?: (message: string) => void;
@@ -43,6 +48,7 @@ interface HarnessOptions {
 }
 
 interface ProcessCall {
+  activityProbe?: GateActivityProbe;
   command: string;
   args: string[];
   env: NodeJS.ProcessEnv;
@@ -57,12 +63,15 @@ interface LivenessSnapshot {
   elapsedMs: number;
   hardBudgetMs: number;
   idleMs: number;
+  processAlive: boolean;
+  lastActivityEvidence?: GateActivityEvidence;
 }
 
 type ProcessRunner = (
   command: string,
   args: string[],
   options: {
+    activityProbe?: GateActivityProbe;
     cwd: string;
     env: NodeJS.ProcessEnv;
     livenessIntervalMs?: number;
@@ -108,6 +117,9 @@ function createHarness(options: HarnessOptions): {
     }),
     resolveProjectRoot: vi.fn(async () => options.cwd),
     processEnv: options.processEnv ?? {},
+    ...(options.createGateActivityProbe
+      ? { createGateActivityProbe: options.createGateActivityProbe }
+      : {}),
     ...(options.writeDiagnostic
       ? { writeDiagnostic: options.writeDiagnostic }
       : {}),
@@ -184,6 +196,7 @@ function createProcessRunner(
     executeStdoutBytes?: number;
     executeOutput?: string;
     executeTimedOut?: boolean;
+    executeActivityEvidence?: GateActivityEvidence;
     livenessSnapshots?: LivenessSnapshot[];
     onExecute?: (call: ProcessCallInput) => Promise<void> | void;
   } = {},
@@ -215,6 +228,9 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      ...(runOptions.activityProbe
+        ? { activityProbe: runOptions.activityProbe }
+        : {}),
       env: { ...runOptions.env },
       stdin: runOptions.stdin,
       livenessIntervalMs: runOptions.livenessIntervalMs,
@@ -287,6 +303,9 @@ function createProcessRunner(
         ? { capturedOutput: options.executeOutput }
         : {}),
       ...(options.executeTimedOut ? { timedOut: true } : {}),
+      ...(options.executeActivityEvidence
+        ? { activityEvidence: options.executeActivityEvidence }
+        : {}),
     };
   };
 
@@ -325,6 +344,7 @@ async function runReviewGate(options: {
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
+  createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -338,6 +358,7 @@ async function runReviewGate(options: {
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
+    createGateActivityProbe: options.createGateActivityProbe,
   });
   await runCommand(
     command,
@@ -1496,7 +1517,12 @@ describe('oat gate', () => {
     const { root, home } = await setup();
     const runner = createProcessRunner({
       livenessSnapshots: [
-        { elapsedMs: 30_000, hardBudgetMs: 900_000, idleMs: 2_000 },
+        {
+          elapsedMs: 30_000,
+          hardBudgetMs: 900_000,
+          idleMs: 2_000,
+          processAlive: true,
+        },
       ],
     });
 
@@ -5449,8 +5475,18 @@ describe('oat gate', () => {
     const diagnostics: string[] = [];
     const runner = createProcessRunner({
       livenessSnapshots: [
-        { elapsedMs: 1_000, hardBudgetMs: 5_000, idleMs: 250 },
-        { elapsedMs: 2_000, hardBudgetMs: 5_000, idleMs: 1_250 },
+        {
+          elapsedMs: 1_000,
+          hardBudgetMs: 5_000,
+          idleMs: 250,
+          processAlive: true,
+        },
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 1_250,
+          processAlive: true,
+        },
       ],
       onExecute: async () => {
         await writeReviewArtifact({
@@ -5484,6 +5520,7 @@ describe('oat gate', () => {
           elapsedMs: 1_000,
           hardBudgetMs: 5_000,
           idleMs: 250,
+          processAlive: true,
           target: 'codex-default',
           type: 'gate-liveness',
         },
@@ -5491,12 +5528,166 @@ describe('oat gate', () => {
           elapsedMs: 2_000,
           hardBudgetMs: 5_000,
           idleMs: 1_250,
+          processAlive: true,
           target: 'codex-default',
           type: 'gate-liveness',
         },
       ]),
     );
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it('distinguishes a stdout-idle child with advancing transcript activity', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'cursor',
+      scope: 'project-dir',
+      observedPath: join(home, '.cursor', 'projects', 'fixture'),
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          lastActivityEvidence: evidence,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics.map((message) => JSON.parse(message))).toContainEqual({
+      elapsedMs: 2_000,
+      hardBudgetMs: 5_000,
+      idleMs: 2_000,
+      processAlive: true,
+      lastActivityEvidence: evidence,
+      target: 'codex-default',
+      type: 'gate-liveness',
+    });
+  });
+
+  it('carries latest activity evidence in timeout and child-failure envelopes without changing outcomes', async () => {
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'codex',
+      scope: 'ambient-runtime',
+      observedPath: '/home/test/.codex/sessions/2026/07/15',
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+
+    const timedOut = await setup();
+    const timeoutProject = await writeProject(timedOut.root);
+    await writeActiveProject(timedOut.root, timeoutProject);
+    const timeoutCapture = await runReviewGate({
+      ...timedOut,
+      runProcess: createProcessRunner({
+        executeTimedOut: true,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+    });
+    expect(timeoutCapture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 124,
+      timedOut: true,
+      noOutputProduced: true,
+      activityEvidence: evidence,
+    });
+    expect(timeoutCapture.jsonPayloads[0]).not.toHaveProperty(
+      'receiveEligible',
+    );
+
+    const failed = await setup();
+    const failedProject = await writeProject(failed.root);
+    await writeActiveProject(failed.root, failedProject);
+    const failureCapture = await runReviewGate({
+      ...failed,
+      runProcess: createProcessRunner({
+        executeExitCode: 7,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+    });
+    expect(failureCapture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'review_did_not_complete',
+      exitCode: 7,
+      timedOut: false,
+      activityEvidence: evidence,
+    });
+    expect(failureCapture.jsonPayloads[0]).not.toHaveProperty(
+      'receiveEligible',
+    );
+  });
+
+  it('labels ambient Codex activity as non-attributable in human liveness output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'codex',
+      scope: 'ambient-runtime',
+      observedPath: join(home, '.codex', 'sessions', '2026', '07', '15'),
+      lastChangeAt: 2_000,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          lastActivityEvidence: evidence,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      globalArgs: [],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'ambient runtime activity (not attributable to this gate child)',
+    );
   });
 
   it('accepts an explicit project name when no active project is configured', async () => {
