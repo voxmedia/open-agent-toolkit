@@ -151,12 +151,15 @@ describe('help output snapshots', () => {
     `);
   });
 
-  it('gate --help lists the review subcommand', () => {
+  it('gate --help lists the review and route subcommands', () => {
     const program = createRegisteredProgram();
     const help = getCommandByPath(program, ['gate']).helpInformation();
 
-    expect(help).toContain(
-      'review [options] <prompt...>               Run a review gate and map review findings to exit status',
+    expect(help).toMatch(
+      /review \[options\] <prompt\.\.\.>\s+Run a review gate and map review findings to exit status/,
+    );
+    expect(help).toMatch(
+      /route \[options\]\s+Choose a headless-safe reviewer execution route/,
     );
   });
 

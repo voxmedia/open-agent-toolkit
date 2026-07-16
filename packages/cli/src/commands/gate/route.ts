@@ -1,6 +1,10 @@
+import { writeFileSync } from 'node:fs';
+
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import { Command } from 'commander';
+
+import { currentGateCliRoot } from './branch-local-cli';
 
 export type GateRoute = 'inline' | 'delegate-sync' | 'refuse';
 
@@ -19,6 +23,7 @@ interface GateRouteInput {
 interface GateRouteCommandDependencies {
   processEnv: NodeJS.ProcessEnv;
   buildCommandContext: (options: GlobalOptions) => CommandContext;
+  cliRoot?: string;
 }
 
 interface GateRouteOptions {
@@ -149,17 +154,30 @@ export function createGateRouteCommand(
       const context = dependencies.buildCommandContext(
         readGlobalOptions(command),
       );
+      const expectedRuntime = parseRequiredOption(
+        options.expectRuntime,
+        '--expect-runtime',
+      );
       const decision = resolveGateRoute({
-        expectRuntime: parseRequiredOption(
-          options.expectRuntime,
-          '--expect-runtime',
-        ),
+        expectRuntime: expectedRuntime,
         expectModel: parseRequiredOption(options.expectModel, '--expect-model'),
         canAwait: parseCanAwait(options.canAwait),
         env: dependencies.processEnv,
       });
       if (context.json) {
-        context.logger.json(decision);
+        const envelope = {
+          ...decision,
+          cliRoot: dependencies.cliRoot ?? currentGateCliRoot(),
+        };
+        const receiptPath = dependencies.processEnv.OAT_GATE_ROUTE_RECEIPT_PATH;
+        if (receiptPath) {
+          writeFileSync(
+            receiptPath,
+            `${JSON.stringify({ ...envelope, runtime: expectedRuntime })}\n`,
+            { mode: 0o600 },
+          );
+        }
+        context.logger.json(envelope);
       } else {
         context.logger.info(`${decision.route}: ${decision.reason}`);
       }

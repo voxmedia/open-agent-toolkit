@@ -72,7 +72,15 @@ import {
   createGateActivityProbe,
   type GateActivityEvidence,
   type GateActivityProbe,
+  type GateActivityProbeStatus,
 } from './activity-probes';
+import {
+  createBranchLocalGateCli,
+  currentGateCliLaunch,
+  readGateRouteReceipt,
+  removeBranchLocalGateCli,
+  type BranchLocalGateCli,
+} from './branch-local-cli';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -99,6 +107,10 @@ interface GateCommandDependencies {
     env: NodeJS.ProcessEnv,
   ) => Promise<ResolvedConfig>;
   createGateActivityProbe: typeof createGateActivityProbe;
+  createBranchLocalGateCli: typeof createBranchLocalGateCli;
+  currentGateCliLaunch: typeof currentGateCliLaunch;
+  removeBranchLocalGateCli: typeof removeBranchLocalGateCli;
+  readGateRouteReceipt: typeof readGateRouteReceipt;
   runProcess: (
     command: string,
     args: string[],
@@ -177,6 +189,7 @@ interface ProcessRunOptions {
 
 interface ProcessRunResult {
   activityEvidence?: GateActivityEvidence;
+  activityProbeStatus?: GateActivityProbeStatus;
   capturedOutput?: string;
   exitCode: number;
   refusal?: string;
@@ -190,6 +203,7 @@ interface GateLivenessSnapshot {
   hardBudgetMs: number;
   idleMs: number;
   processAlive: boolean;
+  activityProbeStatus?: GateActivityProbeStatus;
   lastActivityEvidence?: GateActivityEvidence;
 }
 
@@ -359,6 +373,10 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   writeUserConfig,
   resolveEffectiveConfig,
   createGateActivityProbe,
+  createBranchLocalGateCli,
+  currentGateCliLaunch,
+  removeBranchLocalGateCli,
+  readGateRouteReceipt,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
   processEnv: process.env,
@@ -619,6 +637,7 @@ async function runChildProcess(
     let stdoutLineBuffer = '';
     let stderrLineBuffer = '';
     let latestActivityEvidence: GateActivityEvidence | undefined;
+    let latestActivityProbeStatus: GateActivityProbeStatus | undefined;
     let livenessProbePending = false;
     const startedAt = Date.now();
     let lastActivityAt = startedAt;
@@ -675,15 +694,21 @@ async function runChildProcess(
             livenessProbePending = true;
             const now = Date.now();
             void (async () => {
-              const evidence = await options.activityProbe
-                ?.probe(now)
-                .catch(() => null);
+              const activityProbeStatus =
+                await options.activityProbe?.observe(now);
+              const evidence = activityProbeStatus?.evidence;
+              if (activityProbeStatus) {
+                latestActivityProbeStatus = activityProbeStatus;
+              }
               if (evidence) latestActivityEvidence = evidence;
               options.onLiveness?.({
                 elapsedMs: now - startedAt,
                 hardBudgetMs: options.timeoutMs,
                 idleMs: now - lastActivityAt,
                 processAlive: processAlive(),
+                ...(latestActivityProbeStatus
+                  ? { activityProbeStatus: latestActivityProbeStatus }
+                  : {}),
                 ...(latestActivityEvidence
                   ? { lastActivityEvidence: latestActivityEvidence }
                   : {}),
@@ -728,6 +753,9 @@ async function runChildProcess(
       resolve({
         ...(latestActivityEvidence
           ? { activityEvidence: latestActivityEvidence }
+          : {}),
+        ...(latestActivityProbeStatus
+          ? { activityProbeStatus: latestActivityProbeStatus }
           : {}),
         exitCode: timedOut ? 124 : (code ?? 1),
         ...(refusal ? { refusal } : {}),
@@ -1874,7 +1902,17 @@ async function executeTarget(
     spawnedAt: Date.now(),
   });
 
-  if (!context.json) {
+  if (context.json) {
+    dependencies.writeDiagnostic(
+      `${JSON.stringify({
+        type: 'gate-start',
+        target: selected.id,
+        runtime: selected.target.runtime,
+        timeoutMs: timeout.timeoutMs,
+        timeoutSource: timeout.source,
+      })}\n`,
+    );
+  } else {
     context.logger.info(
       `Running gate target ${selected.id} (${selected.target.runtime}); timeout=${timeout.timeoutMs}ms (source=${timeout.source}).`,
     );
@@ -1894,6 +1932,7 @@ async function executeTarget(
           hardBudgetMs,
           idleMs,
           processAlive,
+          activityProbeStatus,
           lastActivityEvidence,
         }) => {
           const telemetry = {
@@ -1901,6 +1940,7 @@ async function executeTarget(
             hardBudgetMs,
             idleMs,
             processAlive,
+            ...(activityProbeStatus ? { activityProbeStatus } : {}),
             ...(lastActivityEvidence ? { lastActivityEvidence } : {}),
             target: selected.id,
             type: 'gate-liveness',
@@ -1912,7 +1952,7 @@ async function executeTarget(
               ? lastActivityEvidence.scope === 'ambient-runtime'
                 ? 'ambient runtime activity (not attributable to this gate child)'
                 : 'project-directory activity'
-              : 'unavailable';
+              : `${activityProbeStatus?.status ?? 'unavailable'} (${activityProbeStatus?.attemptedPath ?? 'no path'})`;
             context.logger.info(
               `Gate liveness: target=${selected.id} elapsed_ms=${elapsedMs} idle_ms=${idleMs} hard_budget_ms=${hardBudgetMs} process_alive=${processAlive} activity_evidence=${activityDescription}.`,
             );
@@ -2998,6 +3038,7 @@ async function runReviewGate(
   const runId = randomUUID();
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
+  let branchLocalGateCli: BranchLocalGateCli | undefined;
   let postSelectionContext:
     | {
         project: string;
@@ -3110,6 +3151,10 @@ async function runReviewGate(
         context.logger.info(`Gate run marker: ${runMarkerPath}.`);
       }
     }
+    branchLocalGateCli = await dependencies.createBranchLocalGateCli({
+      runId,
+      launch: dependencies.currentGateCliLaunch(),
+    });
     const childResult = await executeTarget(
       selected,
       [reviewPrompt],
@@ -3121,9 +3166,24 @@ async function runReviewGate(
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,
+          OAT_GATE_CLI_PATH: branchLocalGateCli.cliPath,
+          OAT_GATE_CLI_ROOT: branchLocalGateCli.cliRoot,
+          OAT_GATE_ROUTE_RECEIPT_PATH: branchLocalGateCli.routeReceiptPath,
         },
       },
       timeout,
+    );
+    const routeReceipt = await dependencies.readGateRouteReceipt(
+      branchLocalGateCli.routeReceiptPath,
+      branchLocalGateCli.cliRoot,
+      selected.target.runtime,
+    );
+    dependencies.writeDiagnostic(
+      `${JSON.stringify({
+        type: 'gate-route',
+        target: selected.id,
+        ...routeReceipt,
+      })}\n`,
     );
     const childExitCode = childResult.exitCode;
     const refusal =
@@ -3439,6 +3499,9 @@ async function runReviewGate(
       writeError(context, error);
     }
   } finally {
+    if (branchLocalGateCli) {
+      await dependencies.removeBranchLocalGateCli(branchLocalGateCli);
+    }
     if (runMarkerPath) {
       await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
         context.logger.warn(message),

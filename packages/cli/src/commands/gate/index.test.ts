@@ -24,7 +24,9 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import type {
   GateActivityEvidence,
   GateActivityProbe,
+  GateActivityProbeStatus,
 } from './activity-probes';
+import type { GateRouteReceipt } from './branch-local-cli';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -45,6 +47,11 @@ interface HarnessOptions {
     path: string,
     warn: (message: string) => void,
   ) => Promise<void>;
+  readGateRouteReceipt?: (
+    path: string,
+    expectedCliRoot: string,
+    expectedRuntime: string,
+  ) => Promise<GateRouteReceipt>;
 }
 
 interface ProcessCall {
@@ -64,6 +71,7 @@ interface LivenessSnapshot {
   hardBudgetMs: number;
   idleMs: number;
   processAlive: boolean;
+  activityProbeStatus?: GateActivityProbeStatus;
   lastActivityEvidence?: GateActivityEvidence;
 }
 
@@ -123,6 +131,14 @@ function createHarness(options: HarnessOptions): {
     ...(options.writeDiagnostic
       ? { writeDiagnostic: options.writeDiagnostic }
       : {}),
+    readGateRouteReceipt:
+      options.readGateRouteReceipt ??
+      (async (_path, expectedCliRoot, expectedRuntime) => ({
+        route: 'inline',
+        reason: 'test route receipt',
+        cliRoot: expectedCliRoot,
+        runtime: expectedRuntime,
+      })),
     ...(options.runProcess ? { runProcess: options.runProcess } : {}),
     ...(options.parseReviewGateVerdict
       ? { parseReviewGateVerdict: options.parseReviewGateVerdict }
@@ -344,6 +360,7 @@ async function runReviewGate(options: {
   writeDiagnostic?: (message: string) => void;
   writeGateRunMarker?: HarnessOptions['writeGateRunMarker'];
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
+  readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
   args?: string[];
   globalArgs?: string[];
@@ -358,6 +375,7 @@ async function runReviewGate(options: {
     writeDiagnostic: options.writeDiagnostic,
     writeGateRunMarker: options.writeGateRunMarker,
     removeGateRunMarker: options.removeGateRunMarker,
+    readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
   });
   await runCommand(
@@ -4188,6 +4206,8 @@ describe('oat gate', () => {
       OAT_GATE_HEADLESS: '1',
       OAT_NON_INTERACTIVE: '1',
       OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+      OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
+      OAT_GATE_CLI_ROOT: expect.stringContaining('/gate-execution-hardening'),
     });
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
     expect(
@@ -4599,9 +4619,17 @@ describe('oat gate', () => {
     child.stderr.on('data', (chunk: string) => {
       stderr += chunk;
     });
+    let childClosed = false;
+    const closePromise = new Promise<void>((resolve) => {
+      child.once('close', () => {
+        childClosed = true;
+        resolve();
+      });
+    });
 
     let markerPath: string | undefined;
-    for (let attempt = 0; attempt < 100 && !markerPath; attempt += 1) {
+    for (let attempt = 0; attempt < 400 && !markerPath; attempt += 1) {
+      if (childClosed) break;
       const markerLine = stderr
         .split('\n')
         .find((line) => line.includes('"type":"gate-run-marker"'));
@@ -4611,11 +4639,11 @@ describe('oat gate', () => {
       }
       await new Promise((resolve) => setTimeout(resolve, 25));
     }
-    expect(markerPath).toBeTruthy();
-    if (child.pid) {
+    if (child.pid && !childClosed) {
       process.kill(-child.pid, 'SIGKILL');
     }
-    await new Promise((resolve) => child.once('close', resolve));
+    await closePromise;
+    expect(markerPath, stderr).toBeTruthy();
 
     await expect(readFile(markerPath!, 'utf8')).resolves.toContain(
       '"targetId": "sleeper"',
@@ -5517,6 +5545,13 @@ describe('oat gate', () => {
     expect(diagnostics.map((message) => JSON.parse(message))).toEqual(
       expect.arrayContaining([
         {
+          type: 'gate-start',
+          target: 'codex-default',
+          runtime: 'codex',
+          timeoutMs: 5_000,
+          timeoutSource: 'env',
+        },
+        {
           elapsedMs: 1_000,
           hardBudgetMs: 5_000,
           idleMs: 250,
@@ -5535,6 +5570,83 @@ describe('oat gate', () => {
       ]),
     );
     expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
+  it('distinguishes an absent transcript path from unchanged evidence', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const diagnostics: string[] = [];
+    const activityProbeStatus: GateActivityProbeStatus = {
+      status: 'path-absent',
+      runtime: 'claude',
+      scope: 'project-dir',
+      attemptedPath: join(home, '.claude', 'projects', '-fixture'),
+      observedAt: 2_000,
+    };
+    const runner = createProcessRunner({
+      livenessSnapshots: [
+        {
+          elapsedMs: 2_000,
+          hardBudgetMs: 5_000,
+          idleMs: 2_000,
+          processAlive: true,
+          activityProbeStatus,
+        },
+      ],
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+    });
+
+    expect(diagnostics.map((message) => JSON.parse(message))).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-liveness',
+        activityProbeStatus,
+      }),
+    );
+  });
+
+  it('fails closed when the child does not leave a branch-local route receipt', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      readGateRouteReceipt: async () => {
+        throw new Error('Branch-local gate route did not return JSON.');
+      },
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      outcome: 'unexpected_post_selection_failure',
+      message: 'Branch-local gate route did not return JSON.',
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('distinguishes a stdout-idle child with advancing transcript activity', async () => {

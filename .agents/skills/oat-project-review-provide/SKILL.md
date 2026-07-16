@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.18
+version: 1.3.19
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -625,18 +625,35 @@ fallback.
 When either prompt frontmatter has `oat_gate_headless: true` or the environment
 has `OAT_GATE_HEADLESS=1`, copy the expected runtime and model from
 `oat_gate_runtime` and `oat_invocation_model`, determine whether this host has
-an awaited-child capability, and run:
+an awaited-child capability, and use the gate-provided branch-local CLI path.
+Fail closed with `OAT_GATE_REFUSAL` if `OAT_GATE_CLI_PATH` is absent or not
+executable. Run the route command and validate its JSON before using it:
 
 ```bash
-oat gate route --json \
+ROUTE_JSON="$("$OAT_GATE_CLI_PATH" gate route --json \
   --expect-runtime "$OAT_GATE_RUNTIME" \
   --expect-model "$OAT_INVOCATION_MODEL" \
-  --can-await true
+  --can-await true)"
+
+OAT_GATE_ROUTE_JSON="$ROUTE_JSON" node -e '
+const value = JSON.parse(process.env.OAT_GATE_ROUTE_JSON);
+if (!["inline", "delegate-sync", "refuse"].includes(value.route) ||
+    typeof value.reason !== "string") process.exit(1);
+if (value.cliRoot !== process.env.OAT_GATE_CLI_ROOT) process.exit(1);
+process.stdout.write(JSON.stringify(value));
+'
 ```
 
 Pass `--can-await false` when this host cannot synchronously await delegated
-review completion. Do not make a separate runtime/model identity judgment in
-skill prose; follow the helper's returned route:
+review completion. An absent command, command failure, help/non-JSON output,
+invalid envelope, or `cliRoot` different from `OAT_GATE_CLI_ROOT` is a
+structured refusal; never retry with bare `oat` or another installed CLI. Do
+not make a separate runtime/model identity judgment in skill prose; follow the
+validated helper route:
+
+In the terminal headless response, report
+`Gate route: <route> (runtime=<expected-runtime>, cliRoot=<validated-cliRoot>)`
+so the parent can retain branch-local route evidence.
 
 - `inline`: execute the complete `oat-reviewer` role contract in the current
   context, write the artifact, and finish bookkeeping before returning.

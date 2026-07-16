@@ -160,7 +160,13 @@ describe('review skill contracts', () => {
     );
 
     expect(content).toContain('OAT_GATE_HEADLESS=1');
-    expect(content).toContain('oat gate route --json');
+    expect(content).toContain('"$OAT_GATE_CLI_PATH" gate route --json');
+    expect(content).toContain(
+      'value.cliRoot !== process.env.OAT_GATE_CLI_ROOT',
+    );
+    expect(content).toContain(
+      'never retry with bare `oat` or another installed CLI',
+    );
     expect(content).toContain(
       'Headless gate mode overrides the Tier 1 background-dispatch preference',
     );

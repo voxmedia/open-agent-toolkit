@@ -1,5 +1,7 @@
 #!/usr/bin/env node
 
+import { spawnSync } from 'node:child_process';
+import { writeSync } from 'node:fs';
 import { appendFile, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -102,6 +104,78 @@ if (process.env.FAKE_GATE_REQUIRE_HEADLESS === '1') {
       'OAT_GATE_REFUSAL: fake runtime did not receive headless context\n',
     );
     process.exit(9);
+  }
+}
+
+if (
+  process.env.FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME &&
+  !process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME
+) {
+  await writeFile(
+    process.env.OAT_GATE_ROUTE_RECEIPT_PATH,
+    JSON.stringify({
+      route: 'inline',
+      reason: 'deterministic fake route receipt',
+      cliRoot: process.env.OAT_GATE_CLI_ROOT,
+      runtime: process.env.FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME,
+    }),
+  );
+}
+
+if (process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME) {
+  const cliPath = process.env.OAT_GATE_CLI_PATH;
+  const cliRoot = process.env.OAT_GATE_CLI_ROOT;
+  const runtime = process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME;
+  const marker =
+    runtime === 'claude'
+      ? { CLAUDECODE: '1' }
+      : runtime === 'cursor'
+        ? { CURSOR_AGENT: '1' }
+        : { CODEX_SESSION_ID: 'fake-session' };
+  const result = cliPath
+    ? spawnSync(
+        cliPath,
+        [
+          'gate',
+          'route',
+          '--json',
+          '--expect-runtime',
+          runtime,
+          '--expect-model',
+          'provider-default',
+          '--can-await',
+          'false',
+        ],
+        {
+          encoding: 'utf8',
+          env: { ...process.env, ...marker },
+        },
+      )
+    : undefined;
+  let route;
+  try {
+    route = result?.status === 0 ? JSON.parse(result.stdout) : undefined;
+  } catch {
+    route = undefined;
+  }
+  if (
+    route?.route !== 'inline' ||
+    route?.cliRoot !== cliRoot ||
+    typeof route?.reason !== 'string'
+  ) {
+    writeSync(
+      1,
+      `FAKE_GATE_ROUTE_ERROR:${result?.status ?? 'absent'}:${JSON.stringify(result?.stdout ?? '')}:${JSON.stringify(result?.stderr ?? '')}:${String(route?.cliRoot)}:${String(cliRoot)}\n`,
+    );
+    process.stdout.write(
+      'OAT_GATE_REFUSAL: branch-local gate route was unavailable or invalid\n',
+    );
+    process.exit(10);
+  }
+  if (process.env.FAKE_GATE_REPORT_ROUTE === '1') {
+    process.stdout.write(
+      `FAKE_GATE_ROUTE:${route.route}:${route.cliRoot}:${runtime}\n`,
+    );
   }
 }
 

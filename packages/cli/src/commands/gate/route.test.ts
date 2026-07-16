@@ -3,11 +3,7 @@ import { createLoggerCapture } from '@commands/__tests__/helpers';
 import { Command } from 'commander';
 import { describe, expect, it } from 'vitest';
 
-import {
-  createGateRouteCommand,
-  resolveGateRoute,
-  type GateRouteDecision,
-} from './route';
+import { createGateRouteCommand, resolveGateRoute } from './route';
 
 describe('oat gate route', () => {
   it.each([
@@ -95,6 +91,7 @@ describe('oat gate route', () => {
     gate.addCommand(
       createGateRouteCommand({
         processEnv: { CURSOR_AGENT: '1' },
+        cliRoot: '/checkout',
         buildCommandContext: (options: GlobalOptions): CommandContext => ({
           scope: 'project',
           dryRun: false,
@@ -124,11 +121,12 @@ describe('oat gate route', () => {
       { from: 'user' },
     );
 
-    expect(capture.jsonPayloads).toEqual<GateRouteDecision[]>([
+    expect(capture.jsonPayloads).toEqual([
       {
         route: 'inline',
         reason:
           'Provider runtime marker matches expected runtime cursor; model evidence is unavailable.',
+        cliRoot: '/checkout',
       },
     ]);
   });

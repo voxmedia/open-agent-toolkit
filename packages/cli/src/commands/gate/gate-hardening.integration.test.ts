@@ -6,6 +6,8 @@ import { fileURLToPath } from 'node:url';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { encodeCursorProjectPath } from './activity-probes';
+
 const gateDir = dirname(fileURLToPath(import.meta.url));
 const repoRoot = resolve(gateDir, '../../../../../');
 const cliSource = join(repoRoot, 'packages/cli/src/index.ts');
@@ -13,7 +15,7 @@ const fakeRuntime = join(gateDir, '__fixtures__', 'fake-runtime.mjs');
 const tempRoots: string[] = [];
 
 function cursorTranscriptDir(fixture: { root: string; home: string }): string {
-  const encodedCwd = fixture.root.split(/[/.]/u).filter(Boolean).join('-');
+  const encodedCwd = encodeCursorProjectPath(fixture.root);
   return join(
     fixture.home,
     '.cursor',
@@ -110,6 +112,7 @@ async function runGate(
         HOME: fixture.home,
         NO_UPDATE_NOTIFIER: '1',
         OAT_GATE_LIVENESS_INTERVAL_MS: '100',
+        FAKE_GATE_WRITE_ROUTE_RECEIPT_RUNTIME: 'cursor',
         ...options.env,
       },
       stdio: ['ignore', 'pipe', 'pipe'],
@@ -153,8 +156,8 @@ async function runGate(
         payload:
           finalPayload ??
           jsonLines.findLast((entry) => typeof entry.status === 'string'),
-        diagnostics: jsonLines.filter(
-          (entry) => entry.type === 'gate-liveness',
+        diagnostics: jsonLines.filter((entry) =>
+          ['gate-start', 'gate-liveness'].includes(String(entry.type)),
         ),
       });
     });
@@ -176,15 +179,19 @@ describe('gate hardening fake-runtime matrix', () => {
       env: {
         FAKE_GATE_ARTIFACT: 'correlated',
         FAKE_GATE_REQUIRE_HEADLESS: '1',
+        FAKE_GATE_REQUIRE_ROUTE_RUNTIME: 'cursor',
+        FAKE_GATE_REPORT_ROUTE: '1',
       },
     });
 
-    expect(result.exitCode).toBe(0);
+    expect(result.exitCode, `${result.stdout}\n${result.stderr}`).toBe(0);
     expect(result.payload).toMatchObject({
       status: 'ok',
       receiveEligible: true,
       corroboration: { run: 'matched', invocation: 'matched' },
     });
+    expect(result.stdout).toContain('FAKE_GATE_ROUTE:inline:');
+    expect(result.stdout).toContain(':cursor');
   });
 
   it('case 2: async-ceiling class refusal fails closed', async () => {
@@ -208,21 +215,26 @@ describe('gate hardening fake-runtime matrix', () => {
   it('case 3: large final code review uses the new scope-default budget', async () => {
     const fixture = await setupFixture();
     const result = await runGate(fixture, {
-      json: false,
       env: { FAKE_GATE_ARTIFACT: 'correlated', FAKE_GATE_DELAY_MS: '50' },
     });
 
     expect(result.exitCode).toBe(0);
-    expect(result.stdout).toContain('timeout=1800000ms (source=scope-default)');
-    expect(result.stdout).toContain('Review completed and gate passed.');
+    expect(result.diagnostics).toContainEqual({
+      type: 'gate-start',
+      target: 'fake-runtime',
+      runtime: 'cursor',
+      timeoutMs: 1_800_000,
+      timeoutSource: 'scope-default',
+    });
+    expect(result.payload).toMatchObject({ status: 'ok' });
   });
 
   it('case 4: timeout reports advancing transcript activity while stdout-idle', async () => {
     const fixture = await setupFixture();
     const result = await runGate(fixture, {
-      timeoutMs: 1_000,
+      timeoutMs: 1_500,
       env: {
-        FAKE_GATE_DELAY_MS: '1500',
+        FAKE_GATE_DELAY_MS: '2000',
         FAKE_GATE_TRANSCRIPT_INTERVAL_MS: '100',
         FAKE_GATE_TRANSCRIPT_DIR: cursorTranscriptDir(fixture),
       },

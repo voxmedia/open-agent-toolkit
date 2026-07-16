@@ -3,6 +3,7 @@ import {
   mkdir,
   mkdtemp,
   rm,
+  symlink,
   truncate,
   utimes,
   writeFile,
@@ -40,6 +41,12 @@ describe('activity probe path derivation', () => {
     );
     expect(encodeCursorProjectPath('/Users/thomas.stang/.oat kit')).toBe(
       'Users-thomas-stang-oat kit',
+    );
+    expect(encodeClaudeProjectPath('/private/var/rnl_fixture')).toBe(
+      '-private-var-rnl-fixture',
+    );
+    expect(encodeCursorProjectPath('/private/var/rnl_fixture')).toBe(
+      'private-var-rnl-fixture',
     );
   });
 
@@ -178,6 +185,12 @@ describe('activity probe metadata snapshots', () => {
     };
     const probe = await createGateActivityProbe(context);
     await expect(probe?.probe()).resolves.toBeNull();
+    await expect(probe?.observe()).resolves.toMatchObject({
+      status: 'path-absent',
+      attemptedPath: expect.stringContaining(
+        '.claude/projects/-repo',
+      ) as string,
+    });
     const [observedPath] = resolveGateActivityPaths(context);
     await mkdir(observedPath!, { recursive: true });
     await writeFile(join(observedPath!, 'session.jsonl'), 'new');
@@ -198,11 +211,55 @@ describe('activity probe metadata snapshots', () => {
         expect(evidence).not.toBeUndefined();
       } else {
         expect(evidence).toBeNull();
+        await expect(probe?.observe()).resolves.toMatchObject({
+          status: 'error',
+          attemptedPath: observedPath,
+        });
       }
     } finally {
       await chmod(inaccessible, 0o700);
     }
   });
+
+  it.each(['claude', 'cursor'] as const)(
+    'follows a provider-realistic canonical cwd for %s transcript lookup',
+    async (runtime) => {
+      const root = await tempRoot();
+      const home = await tempRoot();
+      const realCwd = join(root, 'private', 'fixture');
+      const linkedCwd = join(root, 'fixture-link');
+      await mkdir(realCwd, { recursive: true });
+      await symlink(realCwd, linkedCwd);
+      const context = {
+        runtime,
+        cwd: linkedCwd,
+        home,
+        spawnedAt: Date.now(),
+      };
+      const [observedPath] = resolveGateActivityPaths({
+        ...context,
+        realCwd,
+      });
+      await mkdir(observedPath!, { recursive: true });
+      const transcript =
+        runtime === 'cursor'
+          ? join(observedPath!, 'session', 'session.jsonl')
+          : join(observedPath!, 'session.jsonl');
+      await mkdir(join(transcript, '..'), { recursive: true });
+      await writeFile(transcript, 'provider transcript');
+
+      const probe = await createGateActivityProbe(context);
+
+      await expect(probe?.observe()).resolves.toMatchObject({
+        status: 'available',
+        attemptedPath: expect.stringContaining(observedPath!) as string,
+        evidence: {
+          changedSinceBaseline: false,
+          observedPath: expect.stringContaining(observedPath!) as string,
+        },
+      });
+    },
+  );
 
   it('uses metadata only and succeeds for an unreadable transcript file', async () => {
     const { context, transcript } = await fixture('claude');

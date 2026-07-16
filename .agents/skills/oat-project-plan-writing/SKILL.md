@@ -114,12 +114,13 @@ project's named ceiling is a separate project-state constraint. A
 project-specific active policy or ceiling must not be written to user
 `~/.oat/config.json`.
 
-Adoption preserves explicit cells. After adoption, repeat the merged
-effective-config query and re-check the full ladder before you re-run the
-resolver. If preserved legacy or partial cells still leave effective cells
-incomplete or missing, identify those cells and block; do not overwrite, infer,
-or mark the plan implementation-ready. In non-interactive mode, incomplete or
-missing effective cells block readiness without choosing an ownership scope.
+Adoption preserves explicit cells. After adoption, re-run the reviewer
+preflight resolver and re-check `ladderCompleteness.complete` and
+`ladderCompleteness.missingCells`. If preserved legacy or partial cells still
+leave effective cells incomplete or missing, identify those cells and block;
+do not overwrite, infer, or mark the plan implementation-ready. In
+non-interactive mode, incomplete or missing effective cells block readiness
+without choosing an ownership scope.
 
 ### Reviewer Ceiling Contract
 
