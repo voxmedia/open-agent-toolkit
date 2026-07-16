@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p04'] # Configured final checkpoint moved to final revie
 oat_hill_completed: ['p04'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -34,23 +34,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/154' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-15T12:52:00.664Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-16T18:04:00.000Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-16T19:39:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-16T21:20:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: gate-execution-hardening
 
-**Status:** Implementation complete
+**Status:** PR open
 **Started:** 2026-07-15
 **Last Updated:** 2026-07-15
 
 ## Current Phase
 
-Implementation complete - final HiLL checkpoint approved
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -69,6 +69,8 @@ Implementation complete - final HiLL checkpoint approved
 - ✓ Phase 3 completed and independently reviewed
 - ✓ Phase 4 completed and final re-review passed with no findings
 - ✓ Operator approved the configured p04 HiLL checkpoint
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -76,4 +78,8 @@ None
 
 ## Next Milestone
 
-Generate the project summary or open the final PR
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
