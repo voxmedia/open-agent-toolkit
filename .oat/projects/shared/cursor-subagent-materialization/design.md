@@ -129,7 +129,7 @@ interface SupportedCursorRoleTarget extends CursorModelPinMapping {
 }
 ```
 
-`ladderModelId` is the exact candidate string used by dispatch configuration. `frontmatterModel` is an explicit documented base-ID-plus-brackets value. There is no parser that strips suffixes and no fallback that writes `ladderModelId` into frontmatter.
+`ladderModelId` is the exact candidate string used by dispatch configuration. `frontmatterModel` is an explicit documented base-ID-plus-brackets value, and every entry must contain a bracket segment (an empty `[]` is valid). Composer mappings are always explicit: standard mode is `composer-2.5[]` and fast mode is `composer-2.5[fast=true]`, because bare `composer-2.5` may default to fast. There is no parser that strips suffixes and no fallback that writes `ladderModelId` into frontmatter.
 
 The mapping registry may contain materializable entries beyond the bundled supported catalogue so user/project configuration can retain `user-config` or `project-config` ownership. A config target absent from the registry is rejected with an actionable mapping error; this is required to preserve the documented-syntax invariant. Catalogue tests require unique ladder IDs, unique generated variant names, valid bracket syntax, and a mapping for every shipped target.
 
@@ -141,6 +141,7 @@ The mapping registry may contain materializable entries beyond the bundled suppo
 
 - Start from the parsed canonical Markdown agent.
 - Set an explicit normalized `name`, preserve `description`, and add only the mapped `model` field required by the variant.
+- Project canonical frontmatter into Cursor's documented schema: canonical-only `version`, `tools`, and `color` fields are not emitted.
 - Encode `oat-managed`, role, and owner as YAML comments inside the existing frontmatter block, not as unsupported schema fields.
 - Preserve the canonical body byte-for-byte.
 - Parse markers before update/removal and refuse unmanaged or differently owned files.
@@ -157,9 +158,15 @@ Supported targets seed project sync as `supported-catalogue`. User-scope sync co
 
 Status and init use the same computed plan, marker parser, and collision checks as sync. Doctor additionally compares each materialized ladder ID with the existing Cursor model catalogue probe. Catalogue availability is diagnostic; it does not transform IDs or elevate launcher-owned configuration into runtime verification.
 
+### Bundled Dispatch Recommendation
+
+Update the Cursor cells in `packages/cli/config/dispatch-matrix-recommendation.json` and its bundled `packages/cli/assets/config/` copy from the current GPT-only ladder to the proven multi-family placement from discovery, and advance the recommendation version marker. The recommendation includes GPT, Claude, Composer, and Grok candidates, with Grok in Balanced as required. The catalogue remains broader than this reusable selection policy; operator-specific ladders may remain narrower.
+
 ### Resolver, Dispatch Guidance, and Provenance
 
 The Cursor ceiling adapter changes from `model-arg` to `pinned-variant` and compiles the selected flat candidate to the deterministic reviewer/implementer variant name. Resolver output uses `dispatchArgs.variant`; managed launch guidance selects that native agent type first. Cursor has no model-argument fallback after an accepted launch. A fallback route is allowed only for a recorded pre-start native role-selection rejection and must not claim equivalent pin enforcement unless the replacement can express the same definition-level pin.
+
+The skill-validation contract in `packages/cli/src/validation/skills.test.ts` currently requires Cursor guidance to reference `providers.cursor.dispatchArgs.model`. Update those assertions in the same change as the resolver and canonical dispatch-skill prose so validation enforces `providers.cursor.dispatchArgs.variant` and native-variant-first launch semantics instead.
 
 Dispatch reports describe the variant/model as **configured** by the launcher. `CURSOR_CONVERSATION_ID` is session-correlation evidence only; runtime model/effort remain `not-reported`. Skill and provider-reference edits must land after, or be carefully rebased over, `gate-execution-hardening` commit `c57bdc9d` because that project edits the same dispatch guidance.
 
@@ -171,7 +178,7 @@ This live lane is separate from `cursor-agent --list-models`: catalogue presence
 
 ## Data Models
 
-The mapping table is the only new durable data model. It is checked-in TypeScript data, not user configuration and not generated from CLI output. Ownership remains metadata on generated files; reusable ladder policy remains in the bundled/config JSON surfaces.
+The mapping table is the only new durable data model. It lives in `packages/cli/src/providers/cursor/codec/catalog.ts`, with managed-marker helpers in the sibling `shared.ts`. It is checked-in TypeScript data, not user configuration and not generated from CLI output. Ownership remains metadata on generated files; reusable ladder policy remains in the bundled/config JSON surfaces.
 
 No new config field is introduced for frontmatter syntax in this project. Supporting a new Cursor flat ID therefore requires adding and live-verifying an explicit mapping entry before it can materialize. This keeps malformed or undocumented pin strings out of generated assets.
 
@@ -188,7 +195,7 @@ No new config field is introduced for frontmatter syntax in this project. Suppor
 
 ### Unit Tests
 
-- Mapping table: exact flat-to-bracket pairs, syntax-family assignment, no flat suffixed value in `frontmatterModel`, uniqueness, and catalogue coverage.
+- Mapping table: exact flat-to-bracket pairs, syntax-family assignment, a bracket segment in every `frontmatterModel`, explicit `composer-2.5[]`/`composer-2.5[fast=true]` behavior, no flat suffixed value in `frontmatterModel`, uniqueness, and catalogue coverage.
 - Cursor codec: explicit five-field-compatible frontmatter, comment markers, canonical body identity, deterministic names, and conversation-ID instruction inherited from canonical roles.
 - Owner parsing/cleanup: supported, user, and project ownership; legacy/unmanaged preservation; stale-owner boundaries.
 - Resolver: each managed Cursor candidate compiles to the expected `dispatchArgs.variant`, never `dispatchArgs.model`.
@@ -199,7 +206,8 @@ No new config field is introduced for frontmatter syntax in this project. Suppor
 - Sync dry-run/apply/idempotence for project and user scopes, including partial sync and config-owned targets.
 - Combined Codex and Cursor extension execution proves the provider-neutral registry preserves existing Codex output and summaries.
 - Status/init/stray flows use the same desired-state plan and detect cross-directory name conflicts.
-- Bundled recommendation tests assert the intended multi-family tier placement and that every Cursor candidate is materializable.
+- Bundled recommendation tests assert the discovery-defined multi-family tier placement (including Grok in Balanced), marker-version advancement, asset-copy parity, and that every Cursor candidate is materializable.
+- Skill-validation tests require `providers.cursor.dispatchArgs.variant` and reject stale Cursor model-argument guidance.
 - Canonical role version bumps plus `oat sync --scope all` produce current provider views without hand-edited generated files.
 
 ### Live Verification

@@ -73,7 +73,7 @@ Operator (2026-07-15): the Cursor team confirmed that while the _native_ subagen
 
 ## Success Criteria
 
-- `.cursor/agents/` contains generated pinned variants for both roles across the catalogue, byte-identical to canonical instructions apart from frontmatter additions and managed markers.
+- `.cursor/agents/` contains generated pinned variants for both roles across the catalogue; each body is byte-identical to canonical instructions, while frontmatter is projected to Cursor's documented fields plus managed comments and the mapped model pin.
 - Managed Cursor dispatch resolves a ladder cell to a named materialized variant and launches it as the native subagent type; the dispatch audit records launcher-owned `configured` provenance.
 - The bundled recommendation's Cursor cells are multi-family; `oat sync`/doctor/strays handle Cursor variants as they do Codex ones.
 - Verification lane results recorded: every shipped mapping entry's pin confirmed live (or the entry excluded with a note).
