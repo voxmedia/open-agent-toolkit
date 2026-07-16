@@ -173,7 +173,7 @@ git commit -m "feat(p01-t02): {description}"
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
-| design | artifact | received        | 2026-07-16 | reviews/artifact-design-review-2026-07-16T194141Z.md          |
+| design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
