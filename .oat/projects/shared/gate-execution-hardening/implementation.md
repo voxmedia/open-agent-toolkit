@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-15
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 3     | 3/3       |
-| Phase 2 | pending   | 6     | 0/6       |
+| Phase 2 | completed | 6     | 6/6       |
 | Phase 3 | pending   | 4     | 0/4       |
 
-**Total:** 3/13 tasks completed
+**Total:** 9/13 tasks completed
 
 ---
 
@@ -117,10 +117,41 @@ oat_generated: false
 
 ## Phase 2: Headless contract + pre-plan inherit rule
 
+**Status:** completed
+**Started:** 2026-07-15
+
+### Phase Summary
+
+**Outcome:**
+
+- Gate children receive mechanical headless env/frontmatter context and a transient system-temp run marker with single-boundary cleanup.
+- Structured refusals are classified independently of child exit code and lose only to a uniquely validated correlated artifact.
+- `oat gate route` provides executable inline/delegate/refuse decisions across provider/model evidence.
+- Review-provide gained headless-safe routing and pre-plan inheritance; dispatch-subagents gained duration/context-aware dispatch and transcript-liveness guidance.
+
+**Task commits:**
+
+- p02-t01: `7f315f6d` — headless invocation context.
+- p02-t02: `b50e5445` — run marker lifecycle.
+- p02-t03: `8df6628d` — refusal detection.
+- p02-t04: `6a32f1f5` — route helper.
+- p02-t05: `af590ed5` — review-provide contracts.
+- p02-t06: `c57bdc9d` — dispatch-mode guidance.
+- Review fix: `6f897877` — cross-provider routing, validated-artifact refusal precedence, and partial-write marker cleanup.
+
+**Verification:**
+
+- Phase-wide formatting, 220 tests, lint, type-check, skill validation, route smoke test, and diff checks passed.
+- Clean re-review: `reviews/p02-review-2026-07-16T003716Z.md`.
+
+---
+
+## Phase 3: Liveness probes, envelopes, fixture matrix, docs
+
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: Headless invocation context injection
+### Task p03-t01: Activity probe registry
 
 **Status:** pending
 **Commit:** -
@@ -150,6 +181,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Dispatch stamp:** `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - **Continuation:** original handle was resumed for fix round 1; its response stream closed after the fix commit landed, so the root verified the committed result directly. No replacement implementer was launched.
 - **Review artifacts:** `reviews/p01-review-2026-07-15T235811Z.md`, `reviews/p01-review-2026-07-16T000536Z.md`
+- **Outstanding items:** None.
+
+### Run 2 — Phase p02
+
+- **Tier / policy:** Tier 1; managed High
+- **Implementer request:** `gate-execution-hardening-p02-20260715-01`
+- **Target:** `gpt-5.6-sol-high`
+- **Base / range:** `70ddbf30..6f897877`
+- **Tasks:** 6 passed
+- **Review:** initial review found 2 Important and 1 Medium; all were fixed in `6f897877`; re-review passed with no findings.
+- **Dispatch stamp:** `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- **Continuation:** original background handle resumed successfully for the bounded fix.
+- **Review artifacts:** `reviews/p02-review-2026-07-16T002741Z.md`, `reviews/p02-review-2026-07-16T003716Z.md`
 - **Outstanding items:** None.
 
 <!-- orchestration-runs-end -->

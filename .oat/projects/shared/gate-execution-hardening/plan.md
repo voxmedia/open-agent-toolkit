@@ -567,7 +567,7 @@ git commit -m "feat(p03-t04): document gate hardening and bump release versions"
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
 | p01    | code     | passed          | 2026-07-16 | reviews/p01-review-2026-07-16T000536Z.md                      |
-| p02    | code     | pending         | -          | -                                                             |
+| p02    | code     | passed          | 2026-07-16 | reviews/p02-review-2026-07-16T003716Z.md                      |
 | p03    | code     | pending         | -          | -                                                             |
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
