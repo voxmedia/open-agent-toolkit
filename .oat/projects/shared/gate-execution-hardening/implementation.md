@@ -425,17 +425,19 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | ------------- | ------------------------------------------ | ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------- |
 | p03-t04 / M1  | `plan.md`                                  | Run MkDocs-only `docs nav sync` before index generation | Use authored Fumadocs contents plus branch-local `docs generate-index`                                                              | This docs app is Fumadocs and has no `mkdocs.yml`                                                       | `apps/oat-docs`, CLI docs commands  | Plan aligned in `01e0762d` |
 | final / I2    | `design.md`, `plan.md`, workflow-gate docs | Exactly one provider marker is required to inline       | Matching current-child marker takes precedence over inherited parent markers; checkout-local CLI and validated receipt are required | Preserves valid cross-provider children while remaining fail-closed on trustworthy child contradictions | `route.ts`, route/integration tests | Aligned in p04-t03         |
+| PR / Bugbot   | `design.md`, workflow-gate docs            | Generic model variables are trustworthy child evidence  | Generic model variables are ignored; only expected-provider model variables can contradict the gate-owned invocation model          | Generic variables are inherited from the parent and cannot identify the child model                     | `route.ts`, route tests             | Aligned in `0cc77938`      |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                                                                      | Passed                                  | Failed  | Coverage                                                                   |
-| ----- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------- | -------------------------------------------------------------------------- |
-| 1     | Focused resolver/config/gate suites; lint; type-check; skill validation                                        | 515 focused tests                       | 0       | Dispatch ladder and budget precedence                                      |
-| 2     | Phase-wide focused suites; lint; type-check; skill validation; route smoke                                     | 220 focused tests                       | 0       | Headless context, markers, refusals, routing, skill contracts              |
-| 3     | Full workspace and smoke suites; 10x matrix stress; lint; type-check; release/docs checks; real provider lanes | 2,989 CLI + 123 smoke + 70 stress cases | 0 final | Liveness, envelopes, branch-local routing, fixture matrix, release/docs    |
-| 4     | Focused route/gate/skill suites; full workspace; lint; type-check; release/docs/sync/idempotence checks        | All task and phase checks passed        | 0       | Canonical route inputs, current-child model provenance, artifact alignment |
+| Phase | Tests Run                                                                                                      | Passed                                   | Failed  | Coverage                                                                     |
+| ----- | -------------------------------------------------------------------------------------------------------------- | ---------------------------------------- | ------- | ---------------------------------------------------------------------------- |
+| 1     | Focused resolver/config/gate suites; lint; type-check; skill validation                                        | 515 focused tests                        | 0       | Dispatch ladder and budget precedence                                        |
+| 2     | Phase-wide focused suites; lint; type-check; skill validation; route smoke                                     | 220 focused tests                        | 0       | Headless context, markers, refusals, routing, skill contracts                |
+| 3     | Full workspace and smoke suites; 10x matrix stress; lint; type-check; release/docs checks; real provider lanes | 2,989 CLI + 123 smoke + 70 stress cases  | 0 final | Liveness, envelopes, branch-local routing, fixture matrix, release/docs      |
+| 4     | Focused route/gate/skill suites; full workspace; lint; type-check; release/docs/sync/idempotence checks        | All task and phase checks passed         | 0       | Canonical route inputs, current-child model provenance, artifact alignment   |
+| PR    | Gate route/index regressions; full workspace; lint; type-check; format; release validation                     | 2,999 CLI + 95 package + 123 smoke tests | 0       | Checkout-independent CLI-root assertion and inherited generic model evidence |
 
 ## Final Summary (for PR/docs)
 
@@ -444,13 +446,13 @@ Track test execution during implementation.
 - Configurable, source-reported gate execution budgets with malformed-value diagnostics.
 - Headless-safe gate routing, run markers, structured refusal classification, and branch-local completion-safety execution.
 - Provider-attributed liveness evidence and richer machine-readable startup/liveness/terminal envelopes.
-- Deterministic integration coverage, operator docs, synced provider assets, and lockstep public package release `0.1.71`.
+- Deterministic integration coverage, operator docs, synced provider assets, and lockstep public package release `0.1.72`.
 
 **Behavioral changes (user-facing):**
 
 - Gate operators can configure workflow, target, and CLI timeout budgets and see the selected source.
 - Headless review children choose inline, delegated, or refused execution through an executable route contract.
-- Current-target provider markers take precedence over inherited parent markers; only generic and current-child provider model evidence can contradict the selected invocation.
+- Current-target provider markers take precedence over inherited parent markers; only current-child provider model evidence can contradict the selected invocation.
 - Long-running gates report process and transcript activity separately and preserve receive eligibility on blocked terminal outcomes.
 
 **Key files / modules:**
