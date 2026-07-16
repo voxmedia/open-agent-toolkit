@@ -42,3 +42,24 @@ satisfy a universal catalog rule.
 
 Verify current `claude --help` before using a CLI route. Preserve the caller's
 authority and construct a self-contained bounded prompt.
+
+## Dispatch Mode and Liveness
+
+The background-wait ceiling hazard applies only to Claude print mode
+(`claude -p`). Print-mode background children are terminated after
+`CLAUDE_CODE_PRINT_BG_WAIT_CEILING_MS` (600 seconds by default). Interactive
+Claude Code sessions are unaffected. Print mode is reachable in autonomous
+and headless invocations outside gates as well as through gate exec targets, so
+do not choose an unawaitable background route there. In gate contexts, defer to
+the headless inline/synchronously-awaited route contract rather than
+duplicating its decision.
+
+Nested Claude subagent transcripts live below the parent session:
+
+```text
+~/.claude/projects/<encoded-cwd>/<parent-session-id>/subagents/agent-<id>.jsonl
+```
+
+For a silent awaited child, use that specific file's mtime and size as
+observable activity evidence only. Metadata change is not a health verdict and
+does not alter acceptance or recovery policy.

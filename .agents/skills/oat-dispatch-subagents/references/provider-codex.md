@@ -49,6 +49,22 @@ Only an actual role-selection rejection before child start permits another
 recorded route. Timeout, interruption, `BLOCKED`, or task failure after
 acceptance does not.
 
+## Child Transcript Liveness
+
+Each native Codex subagent gets a separate rollout:
+
+```text
+~/.codex/sessions/<YYYY>/<MM>/<DD>/rollout-<start-timestamp>-<child-thread-id>.jsonl
+```
+
+The child's `session_meta` carries `parent_thread_id`; the root rollout carries
+the corresponding dispatch, steering, and result records. Because the
+dispatcher knows the child thread ID at launch, resolve the child's own rollout
+and inspect only its filesystem mtime and size for observable liveness
+evidence. Rollouts shard by session start date: a fresh child of a long-lived
+root can be in a different date directory, so resolve from the child's spawn
+date, never the parent's. Metadata change is not a health verdict.
+
 ## CLI Route
 
 When native dispatch cannot express the complete target and the route is
