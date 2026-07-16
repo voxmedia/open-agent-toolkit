@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: hill-approval
 oat_blockers: []
-oat_last_updated: 2026-07-15
-oat_current_task_id: p03-t01
+oat_last_updated: 2026-07-16
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 3     | 3/3       |
 | Phase 2 | completed | 6     | 6/6       |
-| Phase 3 | pending   | 4     | 0/4       |
+| Phase 3 | completed | 4     | 4/4       |
 
-**Total:** 9/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
@@ -148,13 +148,81 @@ oat_generated: false
 
 ## Phase 3: Liveness probes, envelopes, fixture matrix, docs
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-15
+
+### Phase Summary
+
+**Outcome:**
+
+- Added attributed Claude, Codex, and Cursor transcript-activity probes with canonical path handling and explicit availability states.
+- Extended JSON startup, liveness, and terminal envelopes with budget source, process state, transcript activity, and output-production evidence.
+- Added an executable checkout-local route shim and deterministic seven-case subprocess matrix covering success, refusal, timeout, and no-output behavior.
+- Documented gate budgets and failure-to-regression mappings, synced provider assets, and bumped the five public packages to `0.1.70`.
+
+**Task commits:**
+
+- p03-t01: `8486444a` — activity probe registry.
+- p03-t02: `54859551` — liveness and envelope extensions.
+- p03-t03: `9d4a6841` — fake runtime and seven-case matrix.
+- p03-t04: `c9f61a8f` — docs, provider sync, and lockstep release bumps.
+- Review fixes: `ce4f0ee5` — branch-local routes, real liveness, JSON startup, and branch-wide validation; `51b2487c` — bounded matrix timeout headroom.
+
+**Verification:**
+
+- Full workspace tests passed: CLI 2,989 tests plus 123 smoke tests.
+- Matrix stress passed 10/10 independent runs (70/70 cases).
+- Formatting, lint, type-check, release validation, docs build, provider sync, generated assets, and Fumadocs index checks passed.
+- Both real Cursor and Claude lanes produced validated branch-local inline receipts, correlated artifacts, growing transcript evidence, and receive-eligible blocked envelopes.
+
+**Notes / Decisions:**
+
+- Fumadocs does not use the MkDocs-only `docs nav sync` command; the plan was aligned to authored contents plus branch-local `docs generate-index`.
+- The subprocess matrix uses 15-second test-runner headroom while retaining the short production gate budgets in timeout cases.
 
 ### Task p03-t01: Activity probe registry
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 8486444a
+
+**Outcome:**
+
+- Added provider-specific transcript evidence discovery, baseline snapshots, change detection, attribution scoping, canonical cwd handling, and explicit probe statuses.
+
+---
+
+### Task p03-t02: Liveness snapshot + envelope extensions
+
+**Status:** completed
+**Commit:** 54859551
+
+**Outcome:**
+
+- Added startup budget telemetry and process/transcript/output evidence to liveness and terminal envelopes without changing receive eligibility semantics.
+
+---
+
+### Task p03-t03: Deterministic fake runtime + seven-case fixture matrix
+
+**Status:** completed
+**Commit:** 9d4a6841
+**Review fix:** 51b2487c
+
+**Outcome:**
+
+- Added deterministic subprocess fixtures and seven integration cases, with explicit bounded test timeout headroom validated under repeated stress.
+
+---
+
+### Task p03-t04: Docs, provider sync, lockstep version bumps
+
+**Status:** completed
+**Commit:** c9f61a8f
+**Review fix:** ce4f0ee5
+
+**Outcome:**
+
+- Added operator documentation, synced canonical provider views/assets, bumped all five public packages to `0.1.70`, and proved real Cursor and Claude completion-safety lanes.
 
 ---
 
@@ -195,6 +263,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Continuation:** original background handle resumed successfully for the bounded fix.
 - **Review artifacts:** `reviews/p02-review-2026-07-16T002741Z.md`, `reviews/p02-review-2026-07-16T003716Z.md`
 - **Outstanding items:** None.
+
+### Run 3 — Phase p03
+
+- **Tier / policy:** Tier 1; managed High
+- **Implementer request:** `gate-execution-hardening-p03-20260715-01`
+- **Target:** `gpt-5.6-sol-high`
+- **Base / range:** `c02fc8f4..51b2487c`
+- **Tasks:** 4 passed
+- **Review:** initial review found 1 Critical, 3 Important, and 1 Medium; fix round 1 resolved all substantive findings. Re-review found 1 residual Medium test-timeout reliability issue; fix round 2 added bounded headroom. Final re-review passed with no findings.
+- **Dispatch stamp:** `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- **Continuation:** original background handle resumed for both bounded fix rounds.
+- **Review artifacts:** `reviews/p03-review-2026-07-16T011943Z.md`, `reviews/p03-review-2026-07-16T022243Z.md`, `reviews/p03-review-2026-07-16T023253Z.md`
+- **Outstanding items:** Final p03 HiLL decision.
 
 <!-- orchestration-runs-end -->
 
@@ -243,41 +324,50 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                    | Actual / Accepted                                                      | Reason                                            | Source of Truth                    | Follow-up                  |
+| ------------- | --------------- | ------------------------------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------- | ---------------------------------- | -------------------------- |
+| p03-t04 / M1  | `plan.md`       | Run MkDocs-only `docs nav sync` before index generation | Use authored Fumadocs contents plus branch-local `docs generate-index` | This docs app is Fumadocs and has no `mkdocs.yml` | `apps/oat-docs`, CLI docs commands | Plan aligned in `01e0762d` |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run                                                                                                      | Passed                                  | Failed  | Coverage                                                                |
+| ----- | -------------------------------------------------------------------------------------------------------------- | --------------------------------------- | ------- | ----------------------------------------------------------------------- |
+| 1     | Focused resolver/config/gate suites; lint; type-check; skill validation                                        | 515 focused tests                       | 0       | Dispatch ladder and budget precedence                                   |
+| 2     | Phase-wide focused suites; lint; type-check; skill validation; route smoke                                     | 220 focused tests                       | 0       | Headless context, markers, refusals, routing, skill contracts           |
+| 3     | Full workspace and smoke suites; 10x matrix stress; lint; type-check; release/docs checks; real provider lanes | 2,989 CLI + 123 smoke + 70 stress cases | 0 final | Liveness, envelopes, branch-local routing, fixture matrix, release/docs |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Configurable, source-reported gate execution budgets with malformed-value diagnostics.
+- Headless-safe gate routing, run markers, structured refusal classification, and branch-local completion-safety execution.
+- Provider-attributed liveness evidence and richer machine-readable startup/liveness/terminal envelopes.
+- Deterministic integration coverage, operator docs, synced provider assets, and lockstep public package release `0.1.70`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Gate operators can configure workflow, target, and CLI timeout budgets and see the selected source.
+- Headless review children choose inline, delegated, or refused execution through an executable route contract.
+- Long-running gates report process and transcript activity separately and preserve receive eligibility on blocked terminal outcomes.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/gate/` - budgets, routing, marker lifecycle, liveness probes, envelopes, and integration fixtures.
+- `packages/cli/src/commands/project/dispatch-ceiling/` - policy/ladder completeness reporting.
+- `.agents/skills/oat-project-review-provide/` - headless review routing and completion verification.
+- `.agents/skills/oat-dispatch-subagents/` - duration/context-aware dispatch and provider liveness guidance.
+- `apps/oat-docs/docs/` - gate budget and failure-regression documentation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Full tests and smoke tests, ten matrix stress repetitions, formatting, lint, type-check, release validation, docs build/index, provider sync/assets idempotence, and real Cursor/Claude lanes.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Fumadocs index generation replaced the inapplicable MkDocs navigation-sync command; no behavioral design scope changed.
 
 ## References
 
