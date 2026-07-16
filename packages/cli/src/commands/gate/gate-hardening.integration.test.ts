@@ -159,7 +159,9 @@ async function runGate(
           finalPayload ??
           jsonLines.findLast((entry) => typeof entry.status === 'string'),
         diagnostics: jsonLines.filter((entry) =>
-          ['gate-start', 'gate-liveness'].includes(String(entry.type)),
+          ['gate-start', 'gate-liveness', 'gate-route'].includes(
+            String(entry.type),
+          ),
         ),
       });
     });
@@ -195,8 +197,17 @@ describe(
         receiveEligible: true,
         corroboration: { run: 'matched', invocation: 'matched' },
       });
-      expect(result.stdout).toContain('FAKE_GATE_ROUTE:inline:');
-      expect(result.stdout).toContain(':cursor');
+      expect(result.stdout).toContain(
+        'FAKE_GATE_ROUTE:inline:cursor:fake-model:',
+      );
+      expect(result.diagnostics).toContainEqual({
+        type: 'gate-route',
+        target: 'fake-runtime',
+        route: 'inline',
+        reason: expect.any(String),
+        cliRoot: repoRoot,
+        runtime: 'cursor',
+      });
     });
 
     it('case 2: async-ceiling class refusal fails closed', async () => {

@@ -125,7 +125,27 @@ if (
 if (process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME) {
   const cliPath = process.env.OAT_GATE_CLI_PATH;
   const cliRoot = process.env.OAT_GATE_CLI_ROOT;
-  const runtime = process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME;
+  const configuredRuntime = process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME;
+  const runtime = process.env.OAT_GATE_RUNTIME;
+  const model = process.env.OAT_INVOCATION_MODEL;
+  const promptRuntime = promptValue('oat_gate_runtime');
+  const promptModel = promptValue('oat_invocation_model');
+  if (
+    !runtime ||
+    !model ||
+    runtime !== configuredRuntime ||
+    runtime !== promptRuntime ||
+    model !== promptModel
+  ) {
+    writeSync(
+      1,
+      `FAKE_GATE_ROUTE_INPUT_ERROR:${String(runtime)}:${String(model)}:${configuredRuntime}:${promptRuntime}:${promptModel}\n`,
+    );
+    process.stdout.write(
+      'OAT_GATE_REFUSAL: canonical gate route inputs were absent or inconsistent\n',
+    );
+    process.exit(10);
+  }
   const marker =
     runtime === 'claude'
       ? { CLAUDECODE: '1' }
@@ -142,7 +162,7 @@ if (process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME) {
           '--expect-runtime',
           runtime,
           '--expect-model',
-          'provider-default',
+          model,
           '--can-await',
           'false',
         ],
@@ -174,7 +194,7 @@ if (process.env.FAKE_GATE_REQUIRE_ROUTE_RUNTIME) {
   }
   if (process.env.FAKE_GATE_REPORT_ROUTE === '1') {
     process.stdout.write(
-      `FAKE_GATE_ROUTE:${route.route}:${route.cliRoot}:${runtime}\n`,
+      `FAKE_GATE_ROUTE:${route.route}:${runtime}:${model}:${route.cliRoot}\n`,
     );
   }
 }

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.19
+version: 1.3.20
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true

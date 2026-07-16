@@ -3166,6 +3166,8 @@ async function runReviewGate(
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,
+          OAT_GATE_RUNTIME: gateInvocation.runtime,
+          OAT_INVOCATION_MODEL: gateInvocation.model,
           OAT_GATE_CLI_PATH: branchLocalGateCli.cliPath,
           OAT_GATE_CLI_ROOT: branchLocalGateCli.cliRoot,
           OAT_GATE_ROUTE_RECEIPT_PATH: branchLocalGateCli.routeReceiptPath,

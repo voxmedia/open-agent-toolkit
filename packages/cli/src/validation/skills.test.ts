@@ -1392,7 +1392,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.19');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.20');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1547,7 +1547,7 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.19'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.20'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
@@ -1985,7 +1985,7 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.15'],
-      ['oat-project-review-provide', '1.3.19'],
+      ['oat-project-review-provide', '1.3.20'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
       ['oat-project-implement', '2.1.2'],
@@ -3052,7 +3052,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.1'],
       ['oat-project-quick-start', '2.3.2'],
       ['oat-project-import-plan', '1.4.6'],
-      ['oat-project-review-provide', '1.3.19'],
+      ['oat-project-review-provide', '1.3.20'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3068,7 +3068,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.1.2'],
-      ['oat-project-review-provide', '1.3.19'],
+      ['oat-project-review-provide', '1.3.20'],
       ['oat-project-review-provide-remote', '1.0.3'],
     ] as const;
 

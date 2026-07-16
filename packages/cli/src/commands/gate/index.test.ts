@@ -4196,19 +4196,30 @@ describe('oat gate', () => {
       home,
       processEnv: { CLAUDECODE: '1', EXISTING_VALUE: 'preserved' },
       runProcess: runner.runProcess,
-      args: ['--avoid', 'same-runtime', 'Review'],
+      args: ['--target', 'codex-default', 'Review'],
     });
 
     const execute = runner.calls.find((call) => call.purpose === 'execute');
+    const invocationPrompt = execute?.args.at(-1) ?? '';
+    const promptRuntime = invocationPrompt.match(
+      /^oat_gate_runtime: (.+)$/m,
+    )?.[1];
+    const promptModel = invocationPrompt.match(
+      /^oat_invocation_model: (.+)$/m,
+    )?.[1];
     expect(execute?.env).toMatchObject({
       CLAUDECODE: '1',
       EXISTING_VALUE: 'preserved',
       OAT_GATE_HEADLESS: '1',
       OAT_NON_INTERACTIVE: '1',
       OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+      OAT_GATE_RUNTIME: promptRuntime,
+      OAT_INVOCATION_MODEL: promptModel,
       OAT_GATE_CLI_PATH: expect.stringContaining('/oat-gate-runs/'),
       OAT_GATE_CLI_ROOT: expect.stringContaining('/gate-execution-hardening'),
     });
+    expect(promptRuntime).toBe('codex');
+    expect(promptModel).toBe('provider-default');
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
     expect(
       runner.calls
