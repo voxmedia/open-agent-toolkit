@@ -35,6 +35,7 @@ interface HarnessOptions {
 interface ProcessCall {
   command: string;
   args: string[];
+  env: NodeJS.ProcessEnv;
   stdin: 'ignore' | 'inherit';
   livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
@@ -196,6 +197,7 @@ function createProcessRunner(
     calls.push({
       command,
       args: [...args],
+      env: { ...runOptions.env },
       stdin: runOptions.stdin,
       livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
@@ -4107,6 +4109,46 @@ describe('oat gate', () => {
     // The completion envelope carries a non-empty run id and the produced
     // artifact's oat_generated_at so callers can correlate result to artifact.
     expect(capture.jsonPayloads[0]?.runId).toMatch(/[0-9a-f-]{8,}/i);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('injects headless context only into gate review children', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: { CLAUDECODE: '1', EXISTING_VALUE: 'preserved' },
+      runProcess: runner.runProcess,
+      args: ['--avoid', 'same-runtime', 'Review'],
+    });
+
+    const execute = runner.calls.find((call) => call.purpose === 'execute');
+    expect(execute?.env).toMatchObject({
+      CLAUDECODE: '1',
+      EXISTING_VALUE: 'preserved',
+      OAT_GATE_HEADLESS: '1',
+      OAT_NON_INTERACTIVE: '1',
+      OAT_GATE_RUN_ID: capture.jsonPayloads[0]?.runId,
+    });
+    expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
+    expect(
+      runner.calls
+        .filter((call) => call.purpose !== 'execute')
+        .every(
+          (call) =>
+            call.env.OAT_GATE_HEADLESS === undefined &&
+            call.env.OAT_NON_INTERACTIVE === undefined &&
+            call.env.OAT_GATE_RUN_ID === undefined,
+        ),
+    ).toBe(true);
     expect(process.exitCode).toBe(0);
   });
 

@@ -480,6 +480,7 @@ function gateInvocationPromptContext(
   invocation: GateInvocationMetadata,
 ): string {
   const frontmatter = YAML.stringify({
+    oat_gate_headless: true,
     oat_gate_run_id: invocation.runId,
     oat_gate_target: invocation.targetId,
     oat_gate_runtime: invocation.runtime,
@@ -2924,7 +2925,15 @@ async function runReviewGate(
       selected,
       [reviewPrompt],
       context,
-      dependencies,
+      {
+        ...dependencies,
+        processEnv: {
+          ...dependencies.processEnv,
+          OAT_GATE_HEADLESS: '1',
+          OAT_NON_INTERACTIVE: '1',
+          OAT_GATE_RUN_ID: runId,
+        },
+      },
       timeout,
     );
     const childExitCode = childResult.exitCode;
