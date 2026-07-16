@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-15
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,84 +24,103 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 3     | 3/3       |
+| Phase 2 | pending   | 6     | 0/6       |
+| Phase 3 | pending   | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 3/13 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Budget resolver + reviewer-resolution fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-15
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Dispatch resolution now distinguishes missing policy, missing ladder, and both, while reporting whole-ladder completeness.
+- `oat config get` supports effective dispatch-ceiling ladder paths.
+- Gate timeouts now support target and workflow configuration, CLI overrides, scope-aware defaults, source reporting, and malformed persisted-value warnings.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/project/dispatch-ceiling/` - resolver envelope and completeness.
+- `packages/cli/src/commands/config/` - effective ladder and timeout config reads/writes.
+- `packages/cli/src/config/` - timeout schema, validation, and layered resolution.
+- `packages/cli/src/commands/gate/` - target timeout surface and precedence resolver.
+- `.agents/skills/oat-project-plan-writing/SKILL.md` - resolver-driven ladder adoption contract.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused p01 Vitest suites, CLI lint, CLI type-check, and `pnpm oat:validate-skills`.
+- Result: pass; 515 focused tests passed after the review fix.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The initial implementation safely fell through malformed persisted timeout values but could not warn because normalization removed them. Review fix `05d325dd` added raw config-layer inspection and filesystem-backed regressions.
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Resolver envelope distinction + ladder inspection
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** 0a6aded916ec87884cfc22749f837b54de0854f4
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Resolver output distinguishes policy and ladder gaps, reports whole-ladder completeness, and effective ladder paths are readable through `oat config get`.
 
 **Files changed:**
 
-- `{path}` - {why}
+- Dispatch-ceiling resolver/tests, config command/tests, and the canonical plan-writing skill.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: task-declared resolver/config tests plus format, lint, type-check, and skill validation.
+- Result: pass.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Additive envelope changes preserve resolved behavior while exposing healthy ladder data when policy alone is missing.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- None.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Budget config surfaces
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 29cd1e55
 
-**Notes:**
+**Outcome:**
 
-- {Notes will be added during implementation}
+- Added validated `ExecTarget.timeoutMs`, `workflow.gateTimeouts`, layered resolution, config keys, and target CLI persistence.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Budget precedence and source reporting
+
+**Status:** completed
+**Commit:** 45b52e92
+**Review fix:** 05d325dd
+
+**Outcome:**
+
+- Added the six-level timeout precedence chain, scope-aware defaults, CLI flags, diagnostics/envelope source reporting, and warn-once malformed persisted-value fallback.
+
+---
+
+## Phase 2: Headless contract + pre-plan inherit rule
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Headless invocation context injection
 
 **Status:** pending
 **Commit:** -
@@ -119,6 +138,19 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 1 — Phase p01
+
+- **Tier / policy:** Tier 1; managed High
+- **Implementer request:** `gate-execution-hardening-p01-20260715-01`
+- **Target:** `gpt-5.6-sol-high`
+- **Base / range:** `06347870..05d325dd`
+- **Tasks:** 3 passed
+- **Review:** initial review found 1 Important; bounded fix committed as `05d325dd`; re-review passed with no findings.
+- **Dispatch stamp:** `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
+- **Continuation:** original handle was resumed for fix round 1; its response stream closed after the fix commit landed, so the root verified the committed result directly. No replacement implementer was launched.
+- **Review artifacts:** `reviews/p01-review-2026-07-15T235811Z.md`, `reviews/p01-review-2026-07-16T000536Z.md`
+- **Outstanding items:** None.
 
 <!-- orchestration-runs-end -->
 
