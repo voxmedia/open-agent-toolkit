@@ -15,6 +15,7 @@ import {
   parseGeneratedTime,
 } from '@commands/shared/frontmatter';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
+import { parseJsonConfig } from '@config/json';
 import {
   BUILTIN_EXEC_TARGETS,
   MAX_GATE_TIMEOUT_MS,
@@ -180,6 +181,18 @@ type GateTimeoutSource =
 interface GateTimeoutResolution {
   timeoutMs: number;
   source: GateTimeoutSource;
+}
+
+type PersistedTimeoutLayer = 'local' | 'shared' | 'user';
+
+interface RawGateTimeoutConfig {
+  layer: PersistedTimeoutLayer;
+  value: unknown;
+}
+
+interface RawGateTimeoutLayers {
+  target: RawGateTimeoutConfig[];
+  workflow: RawGateTimeoutConfig[];
 }
 
 type CrossProviderAvoid = 'same-family' | 'same-runtime' | 'none';
@@ -736,6 +749,7 @@ function resolveGateExecTimeout(input: {
   reviewScope?: string;
   env: NodeJS.ProcessEnv;
   warn: (message: string) => void;
+  rawPersisted?: RawGateTimeoutLayers;
 }): GateTimeoutResolution {
   if (input.cliTimeoutMs !== undefined) {
     return {
@@ -744,7 +758,28 @@ function resolveGateExecTimeout(input: {
     };
   }
 
-  if (input.target.timeoutMs !== undefined) {
+  const warned = new Set<string>();
+  const warnOnce = (key: string, message: string): void => {
+    if (!warned.has(key)) {
+      warned.add(key);
+      input.warn(message);
+    }
+  };
+
+  for (const persisted of input.rawPersisted?.target ?? []) {
+    if (isValidGateTimeoutMs(persisted.value)) {
+      return { timeoutMs: persisted.value, source: 'target' };
+    }
+    warnOnce(
+      `target:${persisted.layer}`,
+      `Ignoring invalid target.timeoutMs from ${persisted.layer} config; using the next timeout source.`,
+    );
+  }
+
+  if (
+    (input.rawPersisted?.target.length ?? 0) === 0 &&
+    input.target.timeoutMs !== undefined
+  ) {
     if (isValidGateTimeoutMs(input.target.timeoutMs)) {
       return { timeoutMs: input.target.timeoutMs, source: 'target' };
     }
@@ -756,12 +791,26 @@ function resolveGateExecTimeout(input: {
   const reviewType = input.reviewType?.trim().toLowerCase();
   if (reviewType === 'code' || reviewType === 'artifact') {
     const key = `workflow.gateTimeouts.${reviewType}`;
+    for (const persisted of input.rawPersisted?.workflow ?? []) {
+      if (isValidGateTimeoutMs(persisted.value)) {
+        return { timeoutMs: persisted.value, source: 'config' };
+      }
+      warnOnce(
+        `${key}:${persisted.layer}`,
+        `Ignoring invalid ${key} from ${persisted.layer} config; using the next timeout source.`,
+      );
+    }
     const entry = input.effective.resolved[key];
-    if (entry?.value !== null && entry?.value !== undefined) {
+    if (
+      (input.rawPersisted?.workflow.length ?? 0) === 0 &&
+      entry?.value !== null &&
+      entry?.value !== undefined
+    ) {
       if (isValidGateTimeoutMs(entry.value)) {
         return { timeoutMs: entry.value, source: 'config' };
       }
-      input.warn(
+      warnOnce(
+        `${key}:${entry.source}`,
         `Ignoring invalid ${key} from ${entry.source}; using the next timeout source.`,
       );
     }
@@ -773,7 +822,8 @@ function resolveGateExecTimeout(input: {
     if (isValidGateTimeoutMs(parsed)) {
       return { timeoutMs: parsed, source: 'env' };
     }
-    input.warn(
+    warnOnce(
+      'env',
       'Ignoring invalid OAT_GATE_EXEC_TIMEOUT_MS; using the next timeout source.',
     );
   }
@@ -796,6 +846,70 @@ function resolveGateExecTimeout(input: {
   }
 
   return { timeoutMs: GATE_EXEC_TIMEOUT_MS, source: 'default' };
+}
+
+function rawRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+async function readRawConfig(path: string): Promise<Record<string, unknown>> {
+  try {
+    return rawRecord(parseJsonConfig(await readFile(path, 'utf8'), path)) ?? {};
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return {};
+    }
+    throw error;
+  }
+}
+
+async function readRawGateTimeoutLayers(input: {
+  repoRoot: string;
+  userConfigDir: string;
+  targetId: string;
+  reviewType?: string;
+}): Promise<RawGateTimeoutLayers> {
+  const configs = await Promise.all([
+    readRawConfig(join(input.repoRoot, '.oat', 'config.local.json')),
+    readRawConfig(join(input.repoRoot, '.oat', 'config.json')),
+    readRawConfig(join(input.userConfigDir, 'config.json')),
+  ]);
+  const layers = ['local', 'shared', 'user'] as const;
+  const target: RawGateTimeoutConfig[] = [];
+  const workflow: RawGateTimeoutConfig[] = [];
+  const reviewType = input.reviewType?.trim().toLowerCase();
+
+  for (const [index, config] of configs.entries()) {
+    const layer = layers[index]!;
+    const workflowConfig = rawRecord(config.workflow);
+    const gates = rawRecord(workflowConfig?.gates);
+    const execTargets = rawRecord(gates?.execTargets);
+    const rawTarget = rawRecord(execTargets?.[input.targetId]);
+    if (
+      rawTarget &&
+      Object.prototype.hasOwnProperty.call(rawTarget, 'timeoutMs')
+    ) {
+      target.push({ layer, value: rawTarget.timeoutMs });
+    }
+
+    const gateTimeouts = rawRecord(workflowConfig?.gateTimeouts);
+    if (
+      (reviewType === 'code' || reviewType === 'artifact') &&
+      gateTimeouts &&
+      Object.prototype.hasOwnProperty.call(gateTimeouts, reviewType)
+    ) {
+      workflow.push({ layer, value: gateTimeouts[reviewType] });
+    }
+  }
+
+  return { target, workflow };
 }
 
 function resolveGateLivenessIntervalMs(env: NodeJS.ProcessEnv): number {
@@ -2689,12 +2803,19 @@ async function runCrossProviderExec(
     );
 
     logGateDiversity(selected, context);
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    const rawPersisted = await readRawGateTimeoutLayers({
+      repoRoot,
+      userConfigDir: join(context.home, '.oat'),
+      targetId: selected.id,
+    });
     const timeout = resolveGateExecTimeout({
       cliTimeoutMs: options.timeoutMs,
       target: selected.target,
       effective,
       env: dependencies.processEnv,
       warn: context.logger.warn,
+      rawPersisted,
     });
     const result = await executeTarget(
       selected,
@@ -2754,6 +2875,12 @@ async function runReviewGate(
       dependencies,
     );
     const gateInvocation = createGateInvocationMetadata(runId, selected);
+    const rawPersisted = await readRawGateTimeoutLayers({
+      repoRoot,
+      userConfigDir,
+      targetId: selected.id,
+      reviewType: options.reviewType,
+    });
     const timeout = resolveGateExecTimeout({
       cliTimeoutMs: options.timeoutMs,
       target: selected.target,
@@ -2762,6 +2889,7 @@ async function runReviewGate(
       reviewScope: options.reviewScope,
       env: dependencies.processEnv,
       warn: context.logger.warn,
+      rawPersisted,
     });
     const dispatchReport = buildGateDispatchReport(
       gateInvocation,

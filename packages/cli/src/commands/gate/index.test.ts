@@ -4726,6 +4726,118 @@ describe('oat gate', () => {
     );
   });
 
+  it('warns once for malformed persisted target timeout before using workflow config', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gateTimeouts: { code: 1_250_000 },
+          gates: {
+            execTargets: {
+              'codex-default': { timeoutMs: 'not-a-timeout' },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner();
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: [
+        '--target',
+        'codex-default',
+        '--review-type',
+        'code',
+        '--review-scope',
+        'final',
+        'Review',
+      ],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({ timeoutMs: 1_250_000 });
+    expect(
+      capture.warn.filter((warning) => warning.includes('target.timeoutMs')),
+    ).toEqual([expect.stringContaining('target.timeoutMs from shared config')]);
+  });
+
+  it.each([
+    ['code', 'final', 1_350_000],
+    ['artifact', 'design', 1_450_000],
+  ])(
+    'warns once per reached malformed persisted workflow %s layer',
+    async (reviewType, reviewScope, expectedTimeout) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          activeProject: projectPath,
+          workflow: {
+            gateTimeouts: { [reviewType]: 'invalid-local' },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            gateTimeouts:
+              reviewType === 'code'
+                ? { code: 'invalid-shared' }
+                : { artifact: expectedTimeout },
+          },
+        })}\n`,
+        'utf8',
+      );
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: { gateTimeouts: { [reviewType]: expectedTimeout } },
+        })}\n`,
+        'utf8',
+      );
+      const runner = createProcessRunner();
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        args: [
+          '--target',
+          'codex-default',
+          '--review-type',
+          reviewType,
+          '--review-scope',
+          reviewScope,
+          'Review',
+        ],
+      });
+
+      expect(runner.calls.at(-1)).toMatchObject({
+        timeoutMs: expectedTimeout,
+      });
+      const warnings = capture.warn.filter((warning) =>
+        warning.includes(`workflow.gateTimeouts.${reviewType}`),
+      );
+      expect(warnings).toHaveLength(reviewType === 'code' ? 2 : 1);
+      expect(warnings[0]).toContain('local config');
+      if (reviewType === 'code') {
+        expect(warnings[1]).toContain('shared config');
+      }
+    },
+  );
+
   it('reports nonzero-output review target timeouts without classifying them as zero-output', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
