@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260716-mechanical-headless-routing    | 2026-07-16 | accepted | Mechanical headless routing                                             | -      |
+| DR-260716-resolver-owned-policy          | 2026-07-16 | accepted | Resolver-owned policy and ladder diagnosis                              | -      |
+| DR-260716-scope-aware-hard-budgets       | 2026-07-16 | accepted | Scope-aware hard budgets                                                | -      |
+| DR-260716-strict-fail-closed-receipt     | 2026-07-16 | accepted | Strict fail-closed receipt validation                                   | -      |
+| DR-260716-transcript-metadata-is         | 2026-07-16 | accepted | Transcript metadata is observability                                    | -      |
 | DR-260714-additive-timeout-recovery      | 2026-07-14 | accepted | Additive timeout recovery envelopes                                     | -      |
 | DR-260714-append-ordered-review-event    | 2026-07-14 | accepted | Append-ordered review event identity                                    | -      |
 | DR-260714-base-relative-lockstep-release | 2026-07-14 | accepted | Base-relative lockstep release bump                                     | -      |
