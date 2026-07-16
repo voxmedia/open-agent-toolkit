@@ -28,9 +28,9 @@ interface GateRouteOptions {
 }
 
 const PROVIDER_MARKERS = [
-  ['CLAUDECODE', 'claude'],
-  ['CURSOR_AGENT', 'cursor'],
-  ['CODEX_THREAD_ID', 'codex'],
+  { runtime: 'claude', keys: ['CLAUDECODE'] },
+  { runtime: 'cursor', keys: ['CURSOR_AGENT'] },
+  { runtime: 'codex', keys: ['CODEX_THREAD_ID', 'CODEX_SESSION_ID'] },
 ] as const;
 
 const MODEL_EVIDENCE_KEYS = [
@@ -59,21 +59,25 @@ function fallbackRoute(canAwait: boolean, reason: string): GateRouteDecision {
 export function resolveGateRoute(input: GateRouteInput): GateRouteDecision {
   const expectedRuntime = input.expectRuntime.trim().toLowerCase();
   const expectedModel = input.expectModel.trim();
-  const activeMarkers = PROVIDER_MARKERS.flatMap(([key, runtime]) =>
-    nonEmptyEnvValue(input.env, key) ? [{ key, runtime }] : [],
+  const activeMarkers = PROVIDER_MARKERS.flatMap(({ keys, runtime }) => {
+    const activeKeys = keys.filter((key) => nonEmptyEnvValue(input.env, key));
+    return activeKeys.length > 0 ? [{ keys: activeKeys, runtime }] : [];
+  });
+  const expectedRuntimeMarker = activeMarkers.find(
+    ({ runtime }) => runtime === expectedRuntime,
   );
 
-  if (activeMarkers.length !== 1) {
+  if (!expectedRuntimeMarker && activeMarkers.length !== 1) {
     return fallbackRoute(
       input.canAwait,
       activeMarkers.length === 0
         ? 'No provider runtime marker is available; inline reviewer identity is ambiguous.'
-        : `Multiple provider runtime markers are present (${activeMarkers.map(({ key }) => key).join(', ')}); inline reviewer identity is ambiguous.`,
+        : `Multiple provider runtime markers are present (${activeMarkers.flatMap(({ keys }) => keys).join(', ')}), but none identifies expected runtime ${expectedRuntime}.`,
     );
   }
 
-  const activeRuntime = activeMarkers[0]!.runtime;
-  if (activeRuntime !== expectedRuntime) {
+  if (!expectedRuntimeMarker) {
+    const activeRuntime = activeMarkers[0]!.runtime;
     return fallbackRoute(
       input.canAwait,
       `Provider runtime marker identifies ${activeRuntime}, not expected runtime ${expectedRuntime}.`,
@@ -100,8 +104,8 @@ export function resolveGateRoute(input: GateRouteInput): GateRouteDecision {
     route: 'inline',
     reason:
       modelEvidence.length > 0
-        ? `Exactly one provider runtime marker matches ${expectedRuntime}; available model evidence matches ${expectedModel}.`
-        : `Exactly one provider runtime marker matches ${expectedRuntime}; model evidence is unavailable.`,
+        ? `Provider runtime marker matches expected runtime ${expectedRuntime}; available model evidence matches ${expectedModel}.`
+        : `Provider runtime marker matches expected runtime ${expectedRuntime}; model evidence is unavailable.`,
   };
 }
 

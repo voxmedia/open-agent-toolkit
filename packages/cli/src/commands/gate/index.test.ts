@@ -4307,6 +4307,46 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('cleans a partially created run marker after the writer reports failure', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    let markerPath = '';
+    const cleanupAttempts: string[] = [];
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeGateRunMarker: async (path, _marker, warn) => {
+        markerPath = path;
+        await mkdir(dirname(path), { recursive: true });
+        await writeFile(path, '{"partial":', 'utf8');
+        warn('Unable to finish gate run marker write');
+        return false;
+      },
+      removeGateRunMarker: async (path) => {
+        cleanupAttempts.push(path);
+        await rm(path);
+      },
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('Unable to finish gate run marker write'),
+    ]);
+    expect(cleanupAttempts).toEqual([markerPath]);
+    await expect(readFile(markerPath, 'utf8')).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'ok' });
+  });
+
   it.each([0, 7])(
     'classifies a structured refusal independently of child exit code %s',
     async (exitCode) => {
@@ -4385,6 +4425,86 @@ describe('oat gate', () => {
     expect(capture.jsonPayloads[0]).not.toHaveProperty('refusal');
     expect(process.exitCode).toBe(0);
   });
+
+  it('classifies refusal when duplicate correlated artifacts are present', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      executeOutput: 'OAT_GATE_REFUSAL: duplicate review output\n',
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'first-review.md',
+          finding: 'clean',
+        });
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          fileName: 'second-review.md',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'review_failed',
+      refusal: 'duplicate review output',
+    });
+  });
+
+  it.each(['malformed', 'invocation-mismatched'] as const)(
+    'classifies refusal when the correlated artifact is %s',
+    async (artifactFailure) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        executeOutput: `OAT_GATE_REFUSAL: ${artifactFailure} review output\n`,
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            finding: 'clean',
+            ...(artifactFailure === 'invocation-mismatched'
+              ? {
+                  gateInvocationOverrides: {
+                    oat_gate_runtime: 'different-runtime',
+                  },
+                }
+              : {}),
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        parseReviewGateVerdict:
+          artifactFailure === 'malformed'
+            ? async () => {
+                throw new Error('malformed verdict');
+              }
+            : undefined,
+        args: ['--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'review_failed',
+        refusal: `${artifactFailure} review output`,
+      });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('receiveEligible');
+    },
+  );
 
   it('keeps a killed gate run marker outside the repository status', async () => {
     const { root, home } = await setup();

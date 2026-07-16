@@ -410,6 +410,14 @@ async function removeGateRunMarker(
   try {
     await rm(path);
   } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return;
+    }
     const detail = error instanceof Error ? error.message : String(error);
     warn(`Unable to remove gate run marker ${path}: ${detail}`);
   }
@@ -3058,22 +3066,10 @@ async function runReviewGate(
     const refusal =
       childResult.refusal ??
       extractStructuredRefusal(childResult.capturedOutput ?? '');
-
-    const after = await listReviewGateArtifactCandidates({
-      repoRoot,
-      effective,
-      reviewProject,
-    });
-    const artifactResolution = resolveRunCorrelatedReviewArtifact({
-      runId,
-      before,
-      after,
-    });
-    if (
-      refusal &&
-      artifactResolution.matchingArtifactPaths.length === 0 &&
-      !artifactResolution.artifact
-    ) {
+    const writeRefusalFailure = (): boolean => {
+      if (!refusal) {
+        return false;
+      }
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -3088,6 +3084,20 @@ async function runReviewGate(
         dispatchReport,
       });
       process.exitCode = 1;
+      return true;
+    };
+
+    const after = await listReviewGateArtifactCandidates({
+      repoRoot,
+      effective,
+      reviewProject,
+    });
+    const artifactResolution = resolveRunCorrelatedReviewArtifact({
+      runId,
+      before,
+      after,
+    });
+    if (!artifactResolution.artifact && writeRefusalFailure()) {
       return;
     }
     if (
@@ -3170,6 +3180,9 @@ async function runReviewGate(
       (reviewProject.source === 'declared' &&
         initialTargetCorroboration.project !== 'matched')
     ) {
+      if (writeRefusalFailure()) {
+        return;
+      }
       writeReviewGateTargetingFailure(context, {
         runId,
         target: selected.id,
@@ -3195,6 +3208,9 @@ async function runReviewGate(
       !producedArtifact.generatedAt ||
       !Number.isFinite(producedArtifact.generatedTime)
     ) {
+      if (writeRefusalFailure()) {
+        return;
+      }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
         target: selected.id,
@@ -3230,6 +3246,9 @@ async function runReviewGate(
         },
       );
     } catch (error) {
+      if (writeRefusalFailure()) {
+        return;
+      }
       const detail = error instanceof Error ? error.message : String(error);
       writeReviewGateArtifactValidationFailure(context, {
         runId,
@@ -3261,6 +3280,9 @@ async function runReviewGate(
       corroboration.run !== 'matched' ||
       corroboration.invocation !== 'matched'
     ) {
+      if (writeRefusalFailure()) {
+        return;
+      }
       const missing =
         corroboration.run === 'missing' ||
         corroboration.invocation === 'missing';
@@ -3283,6 +3305,9 @@ async function runReviewGate(
       return;
     }
     if (verdict.invocation !== 'gate') {
+      if (writeRefusalFailure()) {
+        return;
+      }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
         target: selected.id,
@@ -3342,7 +3367,7 @@ async function runReviewGate(
       writeError(context, error);
     }
   } finally {
-    if (runMarkerWritten && runMarkerPath) {
+    if (runMarkerPath) {
       await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
         context.logger.warn(message),
       );

@@ -14,6 +14,7 @@ describe('oat gate route', () => {
     ['claude', { CLAUDECODE: '1' }],
     ['cursor', { CURSOR_AGENT: '1' }],
     ['codex', { CODEX_THREAD_ID: 'thread-1' }],
+    ['codex', { CODEX_SESSION_ID: 'session-1' }],
   ])('routes an unambiguous matching %s runtime inline', (runtime, env) => {
     expect(
       resolveGateRoute({
@@ -30,8 +31,8 @@ describe('oat gate route', () => {
     [{ CLAUDECODE: '1' }, false, 'refuse'],
     [{}, true, 'delegate-sync'],
     [{}, false, 'refuse'],
-    [{ CLAUDECODE: '1', CURSOR_AGENT: '1' }, true, 'delegate-sync'],
-    [{ CLAUDECODE: '1', CURSOR_AGENT: '1' }, false, 'refuse'],
+    [{ CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }, true, 'delegate-sync'],
+    [{ CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }, false, 'refuse'],
   ] as const)(
     'never routes ambiguous or mismatched evidence inline (%j, canAwait=%s)',
     (env, canAwait, route) => {
@@ -43,6 +44,27 @@ describe('oat gate route', () => {
           env,
         }),
       ).toMatchObject({ route, reason: expect.any(String) });
+    },
+  );
+
+  it.each([
+    ['claude', 'cursor', { CLAUDECODE: '1', CURSOR_AGENT: '1' }],
+    ['claude', 'codex', { CLAUDECODE: '1', CODEX_THREAD_ID: 'thread-1' }],
+    ['cursor', 'claude', { CURSOR_AGENT: '1', CLAUDECODE: '1' }],
+    ['cursor', 'codex', { CURSOR_AGENT: '1', CODEX_SESSION_ID: 'session-1' }],
+    ['codex', 'claude', { CODEX_THREAD_ID: 'thread-1', CLAUDECODE: '1' }],
+    ['codex', 'cursor', { CODEX_SESSION_ID: 'session-1', CURSOR_AGENT: '1' }],
+  ])(
+    'routes a %s parent to its marked %s child inline',
+    (_parentRuntime, targetRuntime, env) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: targetRuntime,
+          expectModel: 'expected-model',
+          canAwait: false,
+          env,
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
     },
   );
 
@@ -106,7 +128,7 @@ describe('oat gate route', () => {
       {
         route: 'inline',
         reason:
-          'Exactly one provider runtime marker matches cursor; model evidence is unavailable.',
+          'Provider runtime marker matches expected runtime cursor; model evidence is unavailable.',
       },
     ]);
   });
