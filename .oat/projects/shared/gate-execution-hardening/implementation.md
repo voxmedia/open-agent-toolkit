@@ -143,7 +143,7 @@ oat_generated: false
 **Verification:**
 
 - Phase-wide formatting, 220 tests, lint, type-check, skill validation, route smoke test, and diff checks passed.
-- Clean re-review: `reviews/p02-review-2026-07-16T003716Z.md`.
+- Clean re-review: `reviews/archived/p02-review-2026-07-16T003716Z.md`.
 
 ---
 
@@ -345,7 +345,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Review:** initial review found 1 Important; bounded fix committed as `05d325dd`; re-review passed with no findings.
 - **Dispatch stamp:** `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - **Continuation:** original handle was resumed for fix round 1; its response stream closed after the fix commit landed, so the root verified the committed result directly. No replacement implementer was launched.
-- **Review artifacts:** `reviews/p01-review-2026-07-15T235811Z.md`, `reviews/p01-review-2026-07-16T000536Z.md`
+- **Review artifacts:** `reviews/archived/p01-review-2026-07-15T235811Z.md`, `reviews/archived/p01-review-2026-07-16T000536Z.md`
 - **Outstanding items:** None.
 
 ### Run 2 — Phase p02
@@ -358,7 +358,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Review:** initial review found 2 Important and 1 Medium; all were fixed in `6f897877`; re-review passed with no findings.
 - **Dispatch stamp:** `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - **Continuation:** original background handle resumed successfully for the bounded fix.
-- **Review artifacts:** `reviews/p02-review-2026-07-16T002741Z.md`, `reviews/p02-review-2026-07-16T003716Z.md`
+- **Review artifacts:** `reviews/archived/p02-review-2026-07-16T002741Z.md`, `reviews/archived/p02-review-2026-07-16T003716Z.md`
 - **Outstanding items:** None.
 
 ### Run 3 — Phase p03
@@ -371,7 +371,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Review:** initial review found 1 Critical, 3 Important, and 1 Medium; fix round 1 resolved all substantive findings. Re-review found 1 residual Medium test-timeout reliability issue; fix round 2 added bounded headroom. Final re-review passed with no findings.
 - **Dispatch stamp:** `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=gpt-5.6-sol-high`
 - **Continuation:** original background handle resumed for both bounded fix rounds.
-- **Review artifacts:** `reviews/p03-review-2026-07-16T011943Z.md`, `reviews/p03-review-2026-07-16T022243Z.md`, `reviews/p03-review-2026-07-16T023253Z.md`
+- **Review artifacts:** `reviews/archived/p03-review-2026-07-16T011943Z.md`, `reviews/archived/p03-review-2026-07-16T022243Z.md`, `reviews/archived/p03-review-2026-07-16T023253Z.md`
 - **Outstanding items:** Final p03 HiLL decision.
 
 <!-- orchestration-runs-end -->

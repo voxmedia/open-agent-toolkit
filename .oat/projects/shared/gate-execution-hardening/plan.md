@@ -675,9 +675,9 @@ git commit -m "docs(p04-t03): align routing contracts and release assets"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-16 | reviews/p01-review-2026-07-16T000536Z.md                      |
-| p02    | code     | passed          | 2026-07-16 | reviews/p02-review-2026-07-16T003716Z.md                      |
-| p03    | code     | passed          | auto       | `reviews/p03-review-2026-07-16T023253Z.md`                    |
+| p01    | code     | passed          | 2026-07-16 | reviews/archived/p01-review-2026-07-16T000536Z.md             |
+| p02    | code     | passed          | 2026-07-16 | reviews/archived/p02-review-2026-07-16T003716Z.md             |
+| p03    | code     | passed          | auto       | `reviews/archived/p03-review-2026-07-16T023253Z.md`           |
 | final  | code     | passed          | 2026-07-16 | reviews/archived/final-review-2026-07-16T180215Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-15 | reviews/archived/artifact-design-review-2026-07-15T212105Z.md |
