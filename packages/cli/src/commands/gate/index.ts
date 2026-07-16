@@ -74,6 +74,7 @@ import {
   type ReviewArtifactGateInvocation,
   type ReviewGateVerdict,
 } from './review-verdict';
+import { createGateRouteCommand } from './route';
 
 interface GateCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
@@ -3359,6 +3360,13 @@ export function createGateCommand(
 
   const cmd = new Command('gate').description(
     'Resolve and manage workflow gate configuration',
+  );
+
+  cmd.addCommand(
+    createGateRouteCommand({
+      buildCommandContext: dependencies.buildCommandContext,
+      processEnv: dependencies.processEnv,
+    }),
   );
 
   cmd
