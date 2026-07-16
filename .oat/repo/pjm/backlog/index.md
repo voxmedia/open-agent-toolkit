@@ -24,7 +24,11 @@
 - High-priority review throughput work now tracks `oat-reviewer` orchestration of cheaper/faster reconnaissance subagents while preserving primary-reviewer judgment for synthesis, severity, and final findings.
 - The `codex-family-subagents` dispatch UX split is complete: human-facing guidance and the reusable Dispatch Report V1 schema/formatter shipped through `dispatch-schema-matrix-infrastructure`.
 - Structured post-implementation sequencing is shipped, allowing summary, documentation, and PR preparation to run before or after final approval according to configuration.
-- High-priority reliability work tracks activity-aware gate timeouts; medium-priority workflow maintenance tracks project-scoped gate overrides.
+- High-priority gate reliability has shipped scope-aware hard budgets,
+  transcript liveness evidence, and correlated timeout recovery; the remaining
+  activity-aware backlog scope is adaptive idle-kill, early artifact-template
+  creation, and distinct idle-kill versus hard-cap outcomes. Medium-priority
+  workflow maintenance tracks project-scoped gate overrides.
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
 
 <!-- OAT BACKLOG-INDEX -->

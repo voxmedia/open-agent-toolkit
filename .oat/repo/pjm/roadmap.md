@@ -13,7 +13,7 @@ bullet lines over rewriting whole sections, and reference backlog records by ID
 
 - **BL-260708-verify-cursor-gpt-5-6-subagent: Verify Cursor GPT-5.6 subagent model slugs** — Re-run structured controls after a Cursor client rollout exposes Task in headless mode or support confirms the private requests; review by 2026-08-08. Current recommended candidates remain configured but unvalidated.
 - **BL-260711-add-root-owned-dispatch-broker: Add root-owned dispatch broker for exact OAT subagent launches** — Preserve phase coordination and exact target provenance without nested provider initialization or broad coordinator permissions.
-- **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts** — Distinguish healthy long-running reviews from silent hangs and preserve correlated artifacts on timeout.
+- **BL-260711-add-activity-aware-gate: Add activity-aware gate timeouts** — Build adaptive idle-kill and early-artifact semantics on the shipped scope-aware hard budgets, transcript liveness evidence, and correlated timeout recovery.
 
 ## Next (Planned)
 
