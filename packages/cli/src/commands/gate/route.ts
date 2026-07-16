@@ -38,14 +38,13 @@ const PROVIDER_MARKERS = [
   { runtime: 'codex', keys: ['CODEX_THREAD_ID', 'CODEX_SESSION_ID'] },
 ] as const;
 
-const MODEL_EVIDENCE_KEYS = [
-  'OAT_CURRENT_MODEL',
-  'OAT_MODEL',
-  'ANTHROPIC_MODEL',
-  'CLAUDE_MODEL',
-  'CURSOR_MODEL',
-  'CODEX_MODEL',
-] as const;
+const GENERIC_MODEL_EVIDENCE_KEYS = ['OAT_CURRENT_MODEL', 'OAT_MODEL'] as const;
+
+const PROVIDER_MODEL_EVIDENCE_KEYS = {
+  claude: ['ANTHROPIC_MODEL', 'CLAUDE_MODEL'],
+  cursor: ['CURSOR_MODEL'],
+  codex: ['CODEX_MODEL'],
+} as const;
 
 function nonEmptyEnvValue(
   env: NodeJS.ProcessEnv,
@@ -89,7 +88,16 @@ export function resolveGateRoute(input: GateRouteInput): GateRouteDecision {
     );
   }
 
-  const modelEvidence = MODEL_EVIDENCE_KEYS.flatMap((key) => {
+  const providerModelEvidenceKeys =
+    expectedRuntime in PROVIDER_MODEL_EVIDENCE_KEYS
+      ? PROVIDER_MODEL_EVIDENCE_KEYS[
+          expectedRuntime as keyof typeof PROVIDER_MODEL_EVIDENCE_KEYS
+        ]
+      : [];
+  const modelEvidence = [
+    ...GENERIC_MODEL_EVIDENCE_KEYS,
+    ...providerModelEvidenceKeys,
+  ].flatMap((key) => {
     const value = nonEmptyEnvValue(input.env, key);
     return value ? [{ key, value }] : [];
   });

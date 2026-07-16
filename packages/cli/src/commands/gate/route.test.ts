@@ -65,11 +65,76 @@ describe('oat gate route', () => {
   );
 
   it.each([
-    [true, 'delegate-sync'],
-    [false, 'refuse'],
+    [
+      'claude',
+      'cursor',
+      { CLAUDECODE: '1', CLAUDE_MODEL: 'parent-model', CURSOR_AGENT: '1' },
+    ],
+    [
+      'claude',
+      'codex',
+      {
+        CLAUDECODE: '1',
+        CLAUDE_MODEL: 'parent-model',
+        CODEX_THREAD_ID: 'thread-1',
+      },
+    ],
+    [
+      'cursor',
+      'claude',
+      { CURSOR_AGENT: '1', CURSOR_MODEL: 'parent-model', CLAUDECODE: '1' },
+    ],
+    [
+      'cursor',
+      'codex',
+      {
+        CURSOR_AGENT: '1',
+        CURSOR_MODEL: 'parent-model',
+        CODEX_SESSION_ID: 'session-1',
+      },
+    ],
+    [
+      'codex',
+      'claude',
+      {
+        CODEX_THREAD_ID: 'thread-1',
+        CODEX_MODEL: 'parent-model',
+        CLAUDECODE: '1',
+      },
+    ],
+    [
+      'codex',
+      'cursor',
+      {
+        CODEX_SESSION_ID: 'session-1',
+        CODEX_MODEL: 'parent-model',
+        CURSOR_AGENT: '1',
+      },
+    ],
+  ])(
+    'ignores inherited %s model evidence for a marked %s child',
+    (_parentRuntime, targetRuntime, env) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: targetRuntime,
+          expectModel: 'child-model',
+          canAwait: false,
+          env,
+        }),
+      ).toMatchObject({ route: 'inline', reason: expect.any(String) });
+    },
+  );
+
+  it.each([
+    ['OAT_CURRENT_MODEL', true, 'delegate-sync'],
+    ['OAT_CURRENT_MODEL', false, 'refuse'],
+    ['OAT_MODEL', true, 'delegate-sync'],
+    ['OAT_MODEL', false, 'refuse'],
+    ['CURSOR_MODEL', true, 'delegate-sync'],
+    ['CURSOR_MODEL', false, 'refuse'],
   ] as const)(
-    'never routes contradictory model evidence inline (canAwait=%s)',
-    (canAwait, route) => {
+    'never routes contradictory %s evidence inline (canAwait=%s)',
+    (modelKey, canAwait, route) => {
       expect(
         resolveGateRoute({
           expectRuntime: 'cursor',
@@ -77,10 +142,30 @@ describe('oat gate route', () => {
           canAwait,
           env: {
             CURSOR_AGENT: '1',
-            OAT_CURRENT_MODEL: 'different-model',
+            [modelKey]: 'different-model',
           },
         }),
       ).toMatchObject({ route, reason: expect.stringContaining('model') });
+    },
+  );
+
+  it.each(['ANTHROPIC_MODEL', 'CLAUDE_MODEL'])(
+    'treats %s as trustworthy current-child Claude evidence',
+    (modelKey) => {
+      expect(
+        resolveGateRoute({
+          expectRuntime: 'claude',
+          expectModel: 'expected-model',
+          canAwait: false,
+          env: {
+            CLAUDECODE: '1',
+            [modelKey]: 'different-model',
+          },
+        }),
+      ).toMatchObject({
+        route: 'refuse',
+        reason: expect.stringContaining(modelKey),
+      });
     },
   );
 
