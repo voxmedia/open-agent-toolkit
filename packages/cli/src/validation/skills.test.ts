@@ -732,6 +732,17 @@ describe('validateOatSkills', () => {
     expect(invalidVersions).toEqual([]);
   });
 
+  it('starts the explainer skill family at version 1.0.0', async () => {
+    for (const skillName of ['explainer-kit', 'oat-explainer-kit']) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        '1.0.0',
+      );
+    }
+  });
+
   it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',

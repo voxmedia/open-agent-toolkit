@@ -163,6 +163,7 @@ describe('bundle-assets.sh consistency', () => {
     .sort();
 
   it('bundles every workflow skill', () => {
+    expect(WORKFLOW_SKILLS).toContain('oat-explainer-kit');
     const missing = WORKFLOW_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
     );
@@ -193,6 +194,7 @@ describe('bundle-assets.sh consistency', () => {
   });
 
   it('bundles every utility skill', () => {
+    expect(UTILITY_SKILLS).toContain('explainer-kit');
     const missing = UTILITY_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
     );
