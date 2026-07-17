@@ -54,7 +54,7 @@ Gate g01 is operator-assisted and outside implementation phase ownership: it com
 
 **Step 1: Build the verification matrix**
 
-List every proposed ladder ID, exact bracket-form frontmatter value, syntax family, and intended catalogue/recommendation use. Start from discovery; do not derive mappings by suffix parsing.
+List every proposed ladder ID and exact bracket-form frontmatter value that may enter the shipped mapping registry. Record syntax family and use classifications (`supported-catalogue`, `recommendation`, and/or `configuration-only`) as metadata, not as evidence boundaries. Start from discovery; do not derive mappings by suffix parsing.
 
 **Step 2: Persist the restart handoff**
 
@@ -78,7 +78,7 @@ Subagent self-report, catalogue presence, successful completion, or `cursor-agen
 
 **Step 4: Gate every entry**
 
-Require one mapping-specific approved evidence row for every proposed shipped catalogue/recommendation entry. Exclude any entry without an exact launch. Record the optional flat-ID experiment separately; never use it to authorize generated frontmatter.
+Require one mapping-specific approved evidence row for every entry that may be added to the shipped mapping registry, including configuration-only entries outside the catalogue and recommendation. Exclude any entry without an exact launch. Record the optional flat-ID experiment separately; never use it to authorize generated frontmatter.
 
 **Step 5: Clean temporary files**
 
@@ -164,6 +164,7 @@ git commit -m "refactor(p02-t01): extract materialization extension lifecycle"
 Require:
 
 - explicit `ladderModelId` → `frontmatterModel` entries only;
+- an approved mapping-specific gate g01 evidence row for every registry entry, regardless of catalogue/recommendation/configuration-only classification;
 - a bracket segment in every emitted model (`[]` allowed);
 - exact Composer standard/fast forms;
 - no unapproved Fable/Grok entry;
@@ -210,11 +211,11 @@ git commit -m "feat(p02-t02): add cursor materialization codec"
 
 **Step 1: Write failing target and cleanup tests**
 
-Cover supported-catalogue seeding, user effective config, shared/local/project-state candidates, project ownership precedence, mapped entries outside the supported catalogue, unknown-mapping diagnostics with source, full-sync owner cleanup, partial-sync no-cleanup, symlink-aware collision scans, and disabled-provider stale-state behavior.
+Cover supported-catalogue seeding, user effective config, shared/local/project-state candidates, project ownership precedence, approved configuration-only mappings outside the supported catalogue, rejection of registry entries without mapping-specific gate g01 approval, unknown-mapping diagnostics with source, full-sync owner cleanup, partial-sync no-cleanup, symlink-aware collision scans, and disabled-provider stale-state behavior.
 
 **Step 2: Implement target collection and plans**
 
-Resolve layered configuration through the existing effective-config boundary. Unknown config IDs fail closed; they never become raw frontmatter. Only recognized managed files with the applicable owner are updated or removed.
+Resolve layered configuration through the existing effective-config boundary. Unknown config IDs and mapped IDs without an approved mapping-specific evidence row fail closed; they never become raw frontmatter. Only recognized managed files with the applicable owner are updated or removed.
 
 **Step 3: Format and verify**
 
@@ -451,7 +452,11 @@ git commit -m "feat(p04-t01): report cursor conversation correlation"
 
 - Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
 - Modify: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
 - Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
@@ -466,22 +471,22 @@ Confirm current HEAD contains gate-execution-hardening commit `69d5fe0c` (equiva
 
 **Step 2: Update canonical dispatch prose**
 
-Replace concrete managed Cursor `dispatchArgs.model` rules with `dispatchArgs.variant`, exact native-agent-type-first launch, and pre-start native role-selection rejection as the only replacement boundary. Keep Cursor model strings opaque inside the mapping/resolver; never normalize them in skills.
+Replace concrete managed Cursor `dispatchArgs.model` rules with `dispatchArgs.variant`, exact native-agent-type-first launch, and pre-start native role-selection rejection as the only replacement boundary across plan, quick-start, import-plan, local review, remote review, and implementation workflows. The remote workflow must invoke the exact resolver-selected native reviewer variant instead of the base `/oat-reviewer`; its TypeScript structured-findings wrapper remains provider-neutral because the skill owns dispatcher selection. Keep Cursor model strings opaque inside the mapping/resolver; never normalize them in skills.
 
 **Step 3: Bump changed skill versions**
 
-Increase each changed canonical `SKILL.md` version once for the final PR diff. This includes `oat-dispatch-subagents` when its provider reference changes and `oat-project-implement` when its reference files change.
+Increase each changed canonical `SKILL.md` version once for the final PR diff. This includes `oat-dispatch-subagents` when its provider reference changes, `oat-project-implement` when its reference files change, and all newly covered plan/quick-start/import/remote-review consumers.
 
 **Step 4: Update validation contracts**
 
-Require variant-first guidance and reject stale concrete Cursor model-argument language in canonical skill assertions while preserving Claude model-argument behavior. Restrict this task's `packages/cli/src/validation/skills.test.ts` edits to canonical-skill contracts; defer assertions over rendered docs pages to p04-t04 so each commit remains independently green.
+Require variant-first guidance in every listed canonical consumer and reject stale concrete Cursor model-argument or base-reviewer launch language while preserving Claude model-argument behavior. Add explicit remote-review assertions for exact resolver-selected native variants and the pre-start rejection boundary. Restrict this task's `packages/cli/src/validation/skills.test.ts` edits to canonical-skill contracts; defer assertions over rendered docs pages to p04-t04 so each commit remains independently green.
 
 **Step 5: Format and verify**
 
 Run:
 
 ```bash
-pnpm exec oxfmt --write .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+pnpm exec oxfmt --write .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-provide-remote/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 pnpm run cli:source -- internal validate-oat-skills
 pnpm run cli:source -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
@@ -493,7 +498,7 @@ Expected: canonical skills and version bumps validate, generated assets remain u
 **Step 6: Commit**
 
 ```bash
-git add .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-review-provide-remote/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "docs(p04-t02): dispatch cursor native variants"
 ```
 
@@ -776,7 +781,7 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
 | plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T142637Z.md   |
-| plan   | artifact | received        | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T160504Z.md            |
+| plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T160504Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
