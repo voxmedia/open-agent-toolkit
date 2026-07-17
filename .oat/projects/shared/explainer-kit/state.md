@@ -1,6 +1,6 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: fb1068eb
+oat_last_commit: b12486d5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T22:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T23:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 fixes complete; re-review pending
+Implementation - Phase 1 passed; Phase 2 starting at `p02-t01`
 
 ## Artifacts
 
@@ -75,7 +75,8 @@ Implementation - Phase 1 fixes complete; re-review pending
 - ✓ Phase 1 verification passed after append-only fix `e7742119`
 - ✓ Phase 1 review fix commit `fb1068eb` resolves all four findings
 - ✓ Full post-fix matrix passed (491 tests plus type-check, lint, and format)
-- ⧗ Phase 1 reviewer re-review pending
+- ✓ Phase 1 reviewer re-review passed with zero findings
+- ⧗ Phase 2 begins at `p02-t01`
 
 ## Blockers
 
@@ -83,4 +84,4 @@ None
 
 ## Next Milestone
 
-Run the Phase 1 reviewer re-review before starting Phase 2.
+Complete Phase 2 tasks `p02-t01` through `p02-t10` with per-task bookkeeping.

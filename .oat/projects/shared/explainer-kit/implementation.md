@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 6/6       |
-| Phase 2 | pending     | 10    | 0/10      |
-| Phase 3 | pending     | 9     | 0/9       |
-| Phase 4 | pending     | 9     | 0/9       |
-| Phase 5 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | pending  | 10    | 0/10      |
+| Phase 3 | pending  | 9     | 0/9       |
+| Phase 4 | pending  | 9     | 0/9       |
+| Phase 5 | pending  | 4     | 0/4       |
 
 **Total:** 6/38 tasks completed
 
@@ -38,10 +38,10 @@ oat_generated: false
 
 ## Phase 1: Contracts, configuration, and packaged skeleton
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-16
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
@@ -253,7 +253,8 @@ Chronological log of implementation progress.
 **Disposition:** All four findings were resolved in append-only commit
 `fb1068eb`. The implementer reported 491 focused tests passing, both affected
 packages passing type-check and lint, scoped formatting passing, and no
-remaining blocker. Reviewer re-review is pending.
+remaining blocker. Re-review passed with zero findings; canonical artifact:
+`reviews/p01-review-2026-07-17T230548Z.md`.
 
 ### 2026-07-16
 
