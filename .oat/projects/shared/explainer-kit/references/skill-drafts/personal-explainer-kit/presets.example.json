@@ -14,7 +14,7 @@
       "artifactsRoot": "",
       "s3Bucket": "tkstang-open-agent-toolkit",
       "s3Prefix": "explainers",
-      "publicBaseUrl": "https://PLACEHOLDER.cloudfront.net",
+      "publicBaseUrl": "https://dy4vzrzaexuy5.cloudfront.net",
       "auth": "profile",
       "lanes": [],
       "gdocsAccount": ""

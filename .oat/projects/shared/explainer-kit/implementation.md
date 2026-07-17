@@ -256,6 +256,15 @@ packages passing type-check and lint, scoped formatting passing, and no
 remaining blocker. Re-review passed with zero findings; canonical artifact:
 `reviews/p01-review-2026-07-17T230548Z.md`.
 
+### Operator Input — Personal Publish Root
+
+- Confirmed `personal-oat` public root:
+  `https://dy4vzrzaexuy5.cloudfront.net`.
+- Filled the supplied private-wrapper `presets.example.json` placeholder.
+- Added an explicit p04-t03 handoff to reuse the same root in the eventual
+  private Stoa configuration example without introducing it into neutral public
+  core fixtures.
+
 ### 2026-07-16
 
 **Session Start:** {time}

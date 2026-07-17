@@ -1201,6 +1201,10 @@ Expected: Compatibility fixture/runbook are missing.
 
 Evolve the supplied migration draft into the frozen public extension contract,
 RC sequence, rollback path, and operator-owned real-wrapper gate.
+Carry the confirmed `personal-oat` public root
+`https://dy4vzrzaexuy5.cloudfront.net` into the private wrapper's
+`presets.example.json` and eventual Stoa configuration example; keep the
+destination out of neutral public core fixtures.
 
 **Step 3: Format**
 
