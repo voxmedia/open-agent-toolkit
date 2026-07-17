@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  DECK SHELL — Voxops Explainer Set.
+  One slide per viewport, keyboard nav (←/→/space), same :root palette as house-style.html.
+  Use this for SLIDE DECKS (the house-style single-column + sticky-TOC layout fights a deck).
+  Self-contained: inline CSS + JS, NO external/CDN deps. Replace the <section class="slide"> blocks.
+  Accessibility: real <h2> per slide (no forced <br> that screen-readers mis-read); one idea per slide.
+-->
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>&lt;Deck title&gt; — &lt;Initiative&gt;</title>
+<style>
+  :root{ /* identical executive-light palette to house-style.html */
+    --bg:#f4f6f9; --surface:#ffffff; --surface-2:#eef1f5; --border:#dde2ea;
+    --text:#16202e; --text-dim:#4b5563; --text-muted:#8a94a3;
+    --accent:#1b4f8a; --accent-bright:#2f6fce; --warn:#b45309;
+    --c-a:#2563eb; --c-b:#b7791f; --c-c:#0e7490; --c-neutral:#5b6573; --c-meta:#6d5bc0;
+    --serif:"Source Serif Pro",Georgia,"Iowan Old Style",serif;
+    --sans:-apple-system,BlinkMacSystemFont,"Inter","Segoe UI",Roboto,sans-serif;
+    --mono:"JetBrains Mono","SF Mono",Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box} html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--text);font-family:var(--sans);scroll-snap-type:y mandatory;overflow-y:scroll}
+  .slide{height:100vh;scroll-snap-align:start;display:flex;flex-direction:column;justify-content:center;padding:6vh 9vw;border-bottom:1px solid var(--border)}
+  .slide .eyebrow{color:var(--accent);font-family:var(--mono);font-size:.72rem;letter-spacing:.18em;text-transform:uppercase;margin-bottom:1rem}
+  .slide h2{font-family:var(--serif);font-weight:600;font-size:2.6rem;line-height:1.15;letter-spacing:-.02em;margin:0 0 1rem;max-width:22ch}
+  .slide p{color:var(--text-dim);font-size:1.25rem;max-width:46ch;margin:.4rem 0}
+  .slide.title{align-items:flex-start} .slide.title h2{font-size:3.4rem;max-width:18ch}
+  ul.big{list-style:none;padding:0;margin:1rem 0;font-size:1.25rem}
+  ul.big li{padding:.4rem 0 .4rem 1.5rem;position:relative;color:var(--text)}
+  ul.big li::before{content:"▸";position:absolute;left:0;color:var(--accent)}
+  .pill{font-family:var(--mono);font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;padding:.15rem .55rem;border-radius:5px;border:1px solid var(--border);color:var(--text-dim)}
+  .pill.done{color:#0e7490;border-color:rgba(14,116,144,.4)} .pill.blocked{color:var(--warn);border-color:rgba(180,83,9,.45)}
+  .counter{position:fixed;bottom:1.2rem;right:1.4rem;font-family:var(--mono);font-size:.72rem;color:var(--text-muted);background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:.2rem .55rem}
+  .hint{position:fixed;bottom:1.2rem;left:1.4rem;font-family:var(--mono);font-size:.66rem;color:var(--text-muted)}
+  @media print{body{scroll-snap-type:none} .slide{height:auto;page-break-after:always;border:none} .counter,.hint{display:none}}
+</style>
+</head>
+<body>
+  <section class="slide title">
+    <div class="eyebrow">&lt;Initiative&gt;</div>
+    <h2>&lt;The one-line takeaway of the whole deck&gt;</h2>
+    <p>&lt;Who this is for and what they'll walk away knowing. No jargon.&gt;</p>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">Where we are</div>
+    <h2>&lt;Slide headline — one idea&gt;</h2>
+    <ul class="big"><li>Point one</li><li>Point two</li><li>Point three</li></ul>
+  </section>
+
+  <section class="slide">
+    <div class="eyebrow">What's next</div>
+    <h2>&lt;Slide headline&gt;</h2>
+    <p>&lt;Lead with the visual or the single point. <span class="pill done">on track</span> <span class="pill blocked">blocked</span>&gt;</p>
+  </section>
+
+  <div class="counter" id="counter">1 / 3</div>
+  <div class="hint">← → / space to navigate</div>
+
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  const counter = document.getElementById('counter');
+  let i = 0;
+  const set = n => { i = Math.max(0, Math.min(slides.length - 1, n)); counter.textContent = (i + 1) + ' / ' + slides.length; };
+  const go = n => { set(n); slides[i].scrollIntoView({ behavior: 'smooth' }); };
+  addEventListener('keydown', e => {
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) { e.preventDefault(); go(i + 1); }
+    if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) { e.preventDefault(); go(i - 1); }
+  });
+  // keep the counter in sync with manual scroll
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) set(slides.indexOf(e.target)); }), { threshold: .6 });
+  slides.forEach(s => io.observe(s));
+</script>
+</body>
+</html>
