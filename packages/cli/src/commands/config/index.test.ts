@@ -652,6 +652,106 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('lists and describes all ten explainer configuration keys', async () => {
+    const root = await createRepoRoot();
+    const expectedKeys = [
+      'explainers.defaults.palette',
+      'explainers.defaults.visualProfile',
+      'explainers.defaults.themeBundlePath',
+      'explainers.publish.provider',
+      'explainers.publish.s3Uri',
+      'explainers.publish.publicBaseUrl',
+      'explainers.publish.awsRegion',
+      'explainers.publish.awsProfile',
+      'workflow.explainers.projectExplainer',
+      'workflow.explainers.projectRecap',
+    ];
+
+    const listHarness = createHarness({ cwd: root });
+    await runCommand(listHarness.command, ['list']);
+    for (const key of expectedKeys) {
+      expect(listHarness.capture.info[0], key).toContain(key);
+    }
+
+    for (const key of expectedKeys) {
+      const describeHarness = createHarness({ cwd: root });
+      await runCommand(describeHarness.command, ['describe', key], ['--json']);
+      expect(describeHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key,
+        entries: [expect.objectContaining({ key })],
+      });
+    }
+  });
+
+  it('sets typed explainer values on their allowed surfaces', async () => {
+    const root = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+    tempDirs.push(home);
+    const cases = [
+      ['explainers.defaults.palette', 'ocean', '--user'],
+      ['explainers.defaults.visualProfile', 'technical', '--local'],
+      ['explainers.defaults.themeBundlePath', 'themes/shared.json', '--shared'],
+      ['explainers.publish.provider', 's3-static', '--shared'],
+      ['explainers.publish.s3Uri', 's3://bucket/explainers/', '--shared'],
+      [
+        'explainers.publish.publicBaseUrl',
+        'https://docs.example.com/explainers/',
+        '--shared',
+      ],
+      ['explainers.publish.awsRegion', 'us-east-1', '--shared'],
+      ['explainers.publish.awsProfile', 'work-sso', '--user'],
+      ['workflow.explainers.projectExplainer', 'always', '--local'],
+      ['workflow.explainers.projectRecap', 'never', '--shared'],
+    ] as const;
+
+    for (const [key, value, scope] of cases) {
+      const harness = createHarness({ cwd: root, home });
+      await runCommand(harness.command, ['set', key, value, scope]);
+      expect(harness.capture.error, key).toEqual([]);
+      expect(process.exitCode, key).toBe(0);
+    }
+
+    const shared = JSON.parse(
+      await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+    );
+    expect(shared).toMatchObject({
+      explainers: {
+        defaults: { themeBundlePath: 'themes/shared.json' },
+        publish: {
+          provider: 's3-static',
+          s3Uri: 's3://bucket/explainers',
+          publicBaseUrl: 'https://docs.example.com/explainers',
+          awsRegion: 'us-east-1',
+        },
+      },
+      workflow: { explainers: { projectRecap: 'never' } },
+    });
+  });
+
+  it.each([
+    ['explainers.defaults.themeBundlePath', '/absolute/theme.json', '--shared'],
+    ['explainers.defaults.themeBundlePath', 'themes/user.json', '--user'],
+    ['explainers.publish.provider', 's3-static', '--local'],
+    ['explainers.publish.s3Uri', 'https://not-s3.example.com', '--shared'],
+    [
+      'explainers.publish.publicBaseUrl',
+      'http://insecure.example.com',
+      '--shared',
+    ],
+    ['explainers.publish.awsProfile', 'shared-profile', '--shared'],
+    ['workflow.explainers.projectExplainer', 'sometimes', '--local'],
+  ] as const)(
+    'rejects invalid explainer key value or surface: %s %s %s',
+    async (key, value, scope) => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+      await runCommand(command, ['set', key, value, scope]);
+      expect(capture.error[0]).toBeDefined();
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
   it('describe resolves wildcard provider keys from concrete names', async () => {
     const root = await createRepoRoot();
     const { command, capture } = createHarness({ cwd: root });

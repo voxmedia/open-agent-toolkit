@@ -1224,6 +1224,134 @@ describe('resolveEffectiveConfig', () => {
       source: 'shared',
     });
   });
+
+  it('exposes all explainer defaults and publish keys with source attribution', async () => {
+    const result = await resolveEffectiveConfig(
+      '/repo',
+      '/tmp/user',
+      {},
+      {
+        readOatConfig: async () =>
+          ({
+            version: 1,
+            explainers: {
+              defaults: {
+                palette: 'ocean',
+                themeBundlePath: 'themes/shared.json',
+              },
+              publish: {
+                provider: 's3-static',
+                s3Uri: 's3://bucket/explainers',
+                publicBaseUrl: 'https://docs.example.com/explainers',
+                awsRegion: 'us-east-1',
+              },
+            },
+          }) satisfies OatConfig,
+        readOatLocalConfig: async () =>
+          ({
+            version: 1,
+            explainers: {
+              defaults: { visualProfile: 'technical' },
+              publish: { awsProfile: 'local-sso' },
+            },
+            workflow: {
+              explainers: { projectExplainer: 'always' },
+            },
+          }) satisfies OatLocalConfig,
+        readUserConfig: async () =>
+          ({
+            version: 1,
+            explainers: {
+              defaults: {
+                palette: 'violet',
+                visualProfile: 'editorial',
+              },
+              publish: { awsProfile: 'user-sso' },
+            },
+            workflow: {
+              explainers: {
+                projectExplainer: 'never',
+                projectRecap: 'always',
+              },
+            },
+          }) satisfies UserConfig,
+      },
+    );
+
+    expect(result.resolved).toMatchObject({
+      'explainers.defaults.palette': { value: 'ocean', source: 'shared' },
+      'explainers.defaults.visualProfile': {
+        value: 'technical',
+        source: 'local',
+      },
+      'explainers.defaults.themeBundlePath': {
+        value: 'themes/shared.json',
+        source: 'shared',
+      },
+      'explainers.publish.provider': {
+        value: 's3-static',
+        source: 'shared',
+      },
+      'explainers.publish.s3Uri': {
+        value: 's3://bucket/explainers',
+        source: 'shared',
+      },
+      'explainers.publish.publicBaseUrl': {
+        value: 'https://docs.example.com/explainers',
+        source: 'shared',
+      },
+      'explainers.publish.awsRegion': {
+        value: 'us-east-1',
+        source: 'shared',
+      },
+      'explainers.publish.awsProfile': {
+        value: 'local-sso',
+        source: 'local',
+      },
+      'workflow.explainers.projectExplainer': {
+        value: 'always',
+        source: 'local',
+      },
+      'workflow.explainers.projectRecap': {
+        value: 'always',
+        source: 'user',
+      },
+    });
+  });
+
+  it('uses built-in explainer defaults when no surface configures them', async () => {
+    const repoRoot = await createRepoRoot();
+    const userConfigDir = await createUserConfigDir();
+    const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
+
+    expect(result.resolved).toMatchObject({
+      'explainers.defaults.palette': { value: 'neutral', source: 'default' },
+      'explainers.defaults.visualProfile': {
+        value: 'clean',
+        source: 'default',
+      },
+      'explainers.defaults.themeBundlePath': {
+        value: null,
+        source: 'default',
+      },
+      'explainers.publish.provider': { value: null, source: 'default' },
+      'explainers.publish.s3Uri': { value: null, source: 'default' },
+      'explainers.publish.publicBaseUrl': {
+        value: null,
+        source: 'default',
+      },
+      'explainers.publish.awsRegion': { value: null, source: 'default' },
+      'explainers.publish.awsProfile': { value: null, source: 'default' },
+      'workflow.explainers.projectExplainer': {
+        value: 'ask',
+        source: 'default',
+      },
+      'workflow.explainers.projectRecap': {
+        value: 'ask',
+        source: 'default',
+      },
+    });
+  });
 });
 
 describe('resolveGate', () => {

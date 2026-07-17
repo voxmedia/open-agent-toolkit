@@ -1,5 +1,5 @@
 import { readFile as readFileDefault } from 'node:fs/promises';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { buildCommandContext, type CommandContext } from '@app/command-context';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
@@ -100,6 +100,14 @@ type ConfigKey =
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
+  | 'explainers.defaults.palette'
+  | 'explainers.defaults.themeBundlePath'
+  | 'explainers.defaults.visualProfile'
+  | 'explainers.publish.awsProfile'
+  | 'explainers.publish.awsRegion'
+  | 'explainers.publish.provider'
+  | 'explainers.publish.publicBaseUrl'
+  | 'explainers.publish.s3Uri'
   | 'git.defaultBranch'
   | 'projects.root'
   | 'tools.brainstorm'
@@ -126,6 +134,8 @@ type ConfigKey =
   | 'workflow.dispatchCeiling.providers.claude'
   | 'workflow.dispatchCeiling.providers.codex'
   | WorkflowDispatchProviderConfigKey
+  | 'workflow.explainers.projectExplainer'
+  | 'workflow.explainers.projectRecap'
   | 'workflow.gateTimeouts.code'
   | 'workflow.gateTimeouts.artifact'
   | 'workflow.hillCheckpointDefault'
@@ -204,6 +214,14 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.tooling',
   'documentation.config',
   'documentation.requireForProjectCompletion',
+  'explainers.defaults.palette',
+  'explainers.defaults.visualProfile',
+  'explainers.defaults.themeBundlePath',
+  'explainers.publish.provider',
+  'explainers.publish.s3Uri',
+  'explainers.publish.publicBaseUrl',
+  'explainers.publish.awsRegion',
+  'explainers.publish.awsProfile',
   'git.defaultBranch',
   'projects.root',
   'tools.brainstorm',
@@ -230,6 +248,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.dispatchCeiling.preset',
   'workflow.dispatchCeiling.providers.codex',
   'workflow.dispatchCeiling.providers.claude',
+  'workflow.explainers.projectExplainer',
+  'workflow.explainers.projectRecap',
   'workflow.gateTimeouts.code',
   'workflow.gateTimeouts.artifact',
   'worktrees.root',
@@ -489,6 +509,128 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat tools install / oat tools update',
     description: 'Whether the workflows tool pack is installed.',
+  },
+  {
+    key: 'explainers.defaults.palette',
+    group: 'Explainer Defaults (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'local, shared, or user',
+    type: 'non-empty string',
+    defaultValue: 'neutral',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.defaults.palette <value> [--local|--shared|--user]',
+    description: 'Named default color palette for explainer builds.',
+  },
+  {
+    key: 'explainers.defaults.visualProfile',
+    group: 'Explainer Defaults (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'local, shared, or user',
+    type: 'non-empty string',
+    defaultValue: 'clean',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.defaults.visualProfile <value> [--local|--shared|--user]',
+    description: 'Named default visual profile for explainer builds.',
+  },
+  {
+    key: 'explainers.defaults.themeBundlePath',
+    group: 'Explainer Defaults (local > shared)',
+    file: '.oat/config.local.json | .oat/config.json',
+    scope: 'local or shared',
+    type: 'path',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.defaults.themeBundlePath <path> [--local|--shared]',
+    description:
+      'Theme bundle path; shared values must be repository-relative and local values may be absolute.',
+  },
+  {
+    key: 'explainers.publish.provider',
+    group: 'Explainer Publish (shared)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 's3-static',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.provider s3-static --shared',
+    description: 'Static publishing provider for explainer artifacts.',
+  },
+  {
+    key: 'explainers.publish.s3Uri',
+    group: 'Explainer Publish (shared)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 's3:// URI',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.s3Uri <s3://bucket/prefix> --shared',
+    description: 'Shared S3 destination root for explainer publishing.',
+  },
+  {
+    key: 'explainers.publish.publicBaseUrl',
+    group: 'Explainer Publish (shared)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'https:// URL',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.publicBaseUrl <https://url> --shared',
+    description: 'Shared public URL root for published explainer artifacts.',
+  },
+  {
+    key: 'explainers.publish.awsRegion',
+    group: 'Explainer Publish (shared)',
+    file: '.oat/config.json',
+    scope: 'shared repo',
+    type: 'non-empty string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.awsRegion <region> --shared',
+    description: 'AWS region used for explainer publishing.',
+  },
+  {
+    key: 'explainers.publish.awsProfile',
+    group: 'Explainer Publish Credentials (local > user)',
+    file: '.oat/config.local.json | ~/.oat/config.json',
+    scope: 'local or user',
+    type: 'non-empty string',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.publish.awsProfile <profile> [--local|--user]',
+    description:
+      'Checkout- or user-specific AWS profile used for explainer publishing.',
+  },
+  {
+    key: 'workflow.explainers.projectExplainer',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'always | ask | never',
+    defaultValue: 'ask',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.explainers.projectExplainer <always|ask|never>',
+    description: 'Controls project-explainer lifecycle invocation.',
+  },
+  {
+    key: 'workflow.explainers.projectRecap',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'always | ask | never',
+    defaultValue: 'ask',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.explainers.projectRecap <always|ask|never>',
+    description: 'Controls project-recap lifecycle invocation.',
   },
   {
     key: 'activeProject',
@@ -864,6 +1006,54 @@ function normalizeSharedRoot(value: string): string {
   return trimmed.replace(/\/+$/, '');
 }
 
+function parseExplainerValue(
+  key: ConfigKey,
+  rawValue: string,
+  surface: ConfigSurface,
+): string {
+  const value = rawValue.trim();
+  if (!value) {
+    throw new Error(`Invalid value for ${key}: value cannot be empty.`);
+  }
+
+  if (key === 'explainers.defaults.themeBundlePath') {
+    if (
+      surface === 'shared' &&
+      (isAbsolute(value) || value === '..' || value.startsWith('../'))
+    ) {
+      throw new Error(
+        `Invalid value for ${key}: shared theme bundle paths must be repository-relative.`,
+      );
+    }
+    return value;
+  }
+  if (key === 'explainers.publish.provider') {
+    if (value !== 's3-static') {
+      throw new Error(
+        `Invalid value for ${key}: expected 's3-static', got '${rawValue}'.`,
+      );
+    }
+    return value;
+  }
+  if (key === 'explainers.publish.s3Uri') {
+    if (!/^s3:\/\/[^/\s]+(?:\/.*)?$/.test(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected an s3:// URI, got '${rawValue}'.`,
+      );
+    }
+    return value.replace(/\/+$/, '');
+  }
+  if (key === 'explainers.publish.publicBaseUrl') {
+    if (!/^https:\/\/[^/\s]+(?:\/.*)?$/.test(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected an https:// URL, got '${rawValue}'.`,
+      );
+    }
+    return value.replace(/\/+$/, '');
+  }
+  return value;
+}
+
 const WORKFLOW_ENUM_VALUES = {
   'workflow.hillCheckpointDefault': ['every', 'final'],
   'workflow.postImplementSequence': ['wait', 'summary', 'pr', 'docs-pr'],
@@ -885,6 +1075,8 @@ const WORKFLOW_ENUM_VALUES = {
     'opus',
     'fable',
   ],
+  'workflow.explainers.projectExplainer': ['always', 'ask', 'never'],
+  'workflow.explainers.projectRecap': ['always', 'ask', 'never'],
 } as const satisfies Partial<Record<ConfigKey, readonly string[]>>;
 
 function closedDispatchProviderValues(
@@ -945,6 +1137,24 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
     return;
   }
 
+  if (key.startsWith('explainers.')) {
+    const allowed: ConfigSurface[] =
+      key === 'explainers.defaults.palette' ||
+      key === 'explainers.defaults.visualProfile'
+        ? ['shared', 'local', 'user']
+        : key === 'explainers.defaults.themeBundlePath'
+          ? ['shared', 'local']
+          : key === 'explainers.publish.awsProfile'
+            ? ['local', 'user']
+            : ['shared'];
+    if (!allowed.includes(surface)) {
+      throw new Error(
+        `Cannot set '${key}' at '${surface}' scope. Allowed scopes: ${allowed.join(', ')}.`,
+      );
+    }
+    return;
+  }
+
   if (isStructuralKey(key)) {
     if (surface !== 'shared') {
       throw new Error(
@@ -991,6 +1201,14 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
 function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
   if (key === 'updateNotifications') {
     return 'user';
+  }
+  if (
+    key === 'explainers.defaults.palette' ||
+    key === 'explainers.defaults.visualProfile' ||
+    key === 'explainers.defaults.themeBundlePath' ||
+    key === 'explainers.publish.awsProfile'
+  ) {
+    return 'local';
   }
   if (isWorkflowKey(key) || isStateKey(key)) {
     return 'local';
@@ -1355,6 +1573,19 @@ function applyWorkflowValue(
     } as OatWorkflowConfig;
   }
 
+  if (subKey.startsWith('explainers.')) {
+    const explainerKey = subKey.slice('explainers.'.length) as
+      | 'projectExplainer'
+      | 'projectRecap';
+    return {
+      ...workflow,
+      explainers: {
+        ...workflow.explainers,
+        [explainerKey]: value,
+      },
+    } as OatWorkflowConfig;
+  }
+
   return {
     ...workflow,
     [subKey]: value,
@@ -1594,6 +1825,57 @@ async function setConfigValue(
       value: String(nextValue),
       source: 'user',
     };
+  }
+
+  if (key.startsWith('explainers.')) {
+    const nextValue = parseExplainerValue(key, rawValue, effectiveSurface);
+    const section = key.startsWith('explainers.defaults.')
+      ? 'defaults'
+      : 'publish';
+    const field = key.slice(`explainers.${section}.`.length);
+
+    if (effectiveSurface === 'user') {
+      const userConfig = await dependencies.readUserConfig(userConfigDir);
+      await dependencies.writeUserConfig(userConfigDir, {
+        ...userConfig,
+        explainers: {
+          ...userConfig.explainers,
+          [section]: {
+            ...userConfig.explainers?.[section],
+            [field]: nextValue,
+          },
+        },
+      });
+      return { key, value: nextValue, source: 'user' };
+    }
+
+    if (effectiveSurface === 'local') {
+      const localConfig = await dependencies.readOatLocalConfig(repoRoot);
+      await dependencies.writeOatLocalConfig(repoRoot, {
+        ...localConfig,
+        explainers: {
+          ...localConfig.explainers,
+          [section]: {
+            ...localConfig.explainers?.[section],
+            [field]: nextValue,
+          },
+        },
+      });
+      return { key, value: nextValue, source: 'local' };
+    }
+
+    const sharedConfig = await dependencies.readOatConfig(repoRoot);
+    await dependencies.writeOatConfig(repoRoot, {
+      ...sharedConfig,
+      explainers: {
+        ...sharedConfig.explainers,
+        [section]: {
+          ...sharedConfig.explainers?.[section],
+          [field]: nextValue,
+        },
+      },
+    });
+    return { key, value: nextValue, source: 'shared' };
   }
 
   const config = await dependencies.readOatConfig(repoRoot);
