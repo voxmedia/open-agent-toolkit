@@ -187,6 +187,38 @@ oat_project_recap: null
   });
 
   it.each([
+    ['oat_project_explainer', 'generate', 'interactive', true],
+    ['oat_project_explainer', 'skip', 'interactive', true],
+    ['oat_project_explainer', 'generate', 'kickoff_prompt', true],
+    ['oat_project_explainer', 'skip', 'kickoff_prompt', false],
+    ['oat_project_explainer', 'generate', 'autonomous_policy', false],
+    ['oat_project_explainer', 'skip', 'autonomous_policy', false],
+    ['oat_project_recap', 'generate', 'interactive', true],
+    ['oat_project_recap', 'skip', 'interactive', true],
+    ['oat_project_recap', 'generate', 'kickoff_prompt', false],
+    ['oat_project_recap', 'skip', 'kickoff_prompt', false],
+    ['oat_project_recap', 'generate', 'autonomous_policy', true],
+    ['oat_project_recap', 'skip', 'autonomous_policy', false],
+  ] as const)(
+    'parses only allowed %s %s/%s decisions',
+    (key, decision, source, expectedValid) => {
+      const parsed = parseStateFrontmatter(`---
+${key}:
+  decision: ${decision}
+  source: ${source}
+  decided_at: '2026-04-09T21:30:00Z'
+---
+`);
+      const product =
+        key === 'oat_project_explainer'
+          ? parsed.projectExplainer
+          : parsed.projectRecap;
+
+      expect(product === null).toBe(!expectedValid);
+    },
+  );
+
+  it.each([
     [
       'unknown key',
       `oat_project_explainer:
@@ -215,13 +247,6 @@ oat_project_recap: null
   decision: generate
   source: interactive
   decided_at: yesterday`,
-    ],
-    [
-      'autonomous skip',
-      `oat_project_explainer:
-  decision: skip
-  source: autonomous_policy
-  decided_at: '2026-04-09T21:30:00Z'`,
     ],
   ])('normalizes an %s record to null', (_label, frontmatter) => {
     expect(

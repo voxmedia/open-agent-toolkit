@@ -1,21 +1,48 @@
 import { realpath } from 'node:fs/promises';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
 
-export async function resolveRootConfinedPath(root, candidate) {
+export function validatePortablePath(candidate, { allowAbsolute = true } = {}) {
   const path = typeof candidate === 'string' ? candidate : '';
   if (
     !path ||
-    isAbsolute(path) ||
+    (!allowAbsolute && isAbsolute(path)) ||
     path.includes('\0') ||
     path.includes('\\') ||
     path.split('/').includes('..')
   ) {
     return invalid(
       path,
-      'path-traversal',
-      'Path must be a non-empty relative POSIX path without traversal.',
+      'unsafe-path',
+      allowAbsolute
+        ? 'Path must use POSIX separators and contain no NUL or traversal segments.'
+        : 'Path must be a non-empty relative POSIX path without traversal.',
     );
   }
+
+  return {
+    valid: true,
+    normalizedPath: `${isAbsolute(path) ? '/' : ''}${path
+      .split('/')
+      .filter(Boolean)
+      .join('/')}`,
+    errors: [],
+  };
+}
+
+export function validateSafeRelativePath(candidate) {
+  return validatePortablePath(candidate, { allowAbsolute: false });
+}
+
+export async function resolveRootConfinedPath(root, candidate) {
+  const lexical = validateSafeRelativePath(candidate);
+  if (!lexical.valid) {
+    return invalid(
+      typeof candidate === 'string' ? candidate : '',
+      'path-traversal',
+      lexical.errors[0].message,
+    );
+  }
+  const path = lexical.normalizedPath;
 
   let realRoot;
   try {

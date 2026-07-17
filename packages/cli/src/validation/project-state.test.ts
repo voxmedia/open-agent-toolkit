@@ -156,6 +156,43 @@ describe('validateProjectState - explainer intent', () => {
   });
 
   it.each([
+    ['oat_project_explainer', 'generate', 'interactive', true],
+    ['oat_project_explainer', 'skip', 'interactive', true],
+    ['oat_project_explainer', 'generate', 'kickoff_prompt', true],
+    ['oat_project_explainer', 'skip', 'kickoff_prompt', false],
+    ['oat_project_explainer', 'generate', 'autonomous_policy', false],
+    ['oat_project_explainer', 'skip', 'autonomous_policy', false],
+    ['oat_project_recap', 'generate', 'interactive', true],
+    ['oat_project_recap', 'skip', 'interactive', true],
+    ['oat_project_recap', 'generate', 'kickoff_prompt', false],
+    ['oat_project_recap', 'skip', 'kickoff_prompt', false],
+    ['oat_project_recap', 'generate', 'autonomous_policy', true],
+    ['oat_project_recap', 'skip', 'autonomous_policy', false],
+  ] as const)(
+    'validates the %s %s/%s decision-source matrix',
+    (key, decision, source, expectedValid) => {
+      const result = validateProjectState({
+        frontmatter: {
+          [key]: {
+            decision,
+            source,
+            decided_at: '2026-07-17T20:00:00Z',
+          },
+        },
+      });
+
+      expect(result.ok).toBe(expectedValid);
+      if (!expectedValid) {
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            code: 'invalid-explainer-decision-source',
+          }),
+        );
+      }
+    },
+  );
+
+  it.each([
     [
       'unknown keys',
       {
@@ -192,15 +229,6 @@ describe('validateProjectState - explainer intent', () => {
         decided_at: 'not-iso',
       },
       'invalid-explainer-timestamp',
-    ],
-    [
-      'autonomous-policy skip decisions',
-      {
-        decision: 'skip',
-        source: 'autonomous_policy',
-        decided_at: '2026-07-17T20:00:00Z',
-      },
-      'autonomous-explainer-skip-forbidden',
     ],
   ])('rejects %s', (_label, decision, expectedCode) => {
     const result = validateProjectState({

@@ -6,6 +6,7 @@ import { afterEach, test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
+import { runValidationCli } from '../scripts/validate.mjs';
 
 const HASH_A = `sha256:${'a'.repeat(64)}`;
 const HASH_B = `sha256:${'b'.repeat(64)}`;
@@ -269,15 +270,212 @@ test('rejects unsafe paths, invalid render strategies, and duplicate paths', () 
   );
 });
 
-test('rejects incomplete publish blocks and raw secret fields', () => {
-  const incomplete = runRequest();
-  incomplete.durability = { strategy: 'publish' };
+test('rejects non-POSIX and unsafe path values across public contracts', () => {
+  const cases = [
+    [
+      'run-request fact base',
+      'run-request',
+      runRequest(),
+      (value) => {
+        value.factBase.path = 'source\\facts.json';
+      },
+    ],
+    [
+      'run-request output root',
+      'run-request',
+      runRequest(),
+      (value) => {
+        value.outputRoot = 'output\0root';
+      },
+    ],
+    [
+      'run-request nested publish path',
+      'run-request',
+      runRequest(),
+      (value) => {
+        value.durability = {
+          strategy: 'publish',
+          publish: publishRequest(),
+        };
+        value.durability.publish.siteRoot = 'site\\generated';
+      },
+    ],
+    [
+      'manifest artifact',
+      'manifest',
+      manifest(),
+      (value) => {
+        value.artifacts[0].contentPath = '/absolute/content.json';
+      },
+    ],
+    [
+      'manifest hash key',
+      'manifest',
+      manifest(),
+      (value) => {
+        value.source.inputHashes = { 'source\\plan.md': HASH_A };
+      },
+    ],
+    [
+      'build record output',
+      'build-record',
+      buildRecord(),
+      (value) => {
+        value.stages[0].outputPaths = ['site\\index.html'];
+      },
+    ],
+    [
+      'durability evidence path',
+      'durability-evidence',
+      {
+        schemaVersion: 'explainer-kit.durability-evidence/v1',
+        manifestPath: 'manifest.json',
+        evidence: {
+          kind: 'commit',
+          repoRoot: '/repo',
+          commit: 'abcdef1',
+          paths: ['site/index.html'],
+        },
+      },
+      (value) => {
+        value.evidence.paths = ['../site/index.html'];
+      },
+    ],
+    [
+      'publish request site root',
+      'publish-request',
+      publishRequest(),
+      (value) => {
+        value.siteRoot = 'site\\generated';
+      },
+    ],
+    [
+      'publish receipt artifact',
+      'publish-receipt',
+      publishReceipt(),
+      (value) => {
+        value.artifacts[0].relativePath = 'site\0index.html';
+      },
+    ],
+  ];
+
+  for (const [label, kind, fixture, mutate] of cases) {
+    mutate(fixture);
+    const result = validateContract(kind, fixture);
+    assert.equal(result.valid, false, label);
+    assert.ok(
+      result.errors.some((error) => error.code === 'unsafe-path'),
+      `${label}: ${JSON.stringify(result.errors)}`,
+    );
+  }
+});
+
+test('public validation CLI rejects unsafe paths', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-validation-cli-'));
+  tempDirs.push(root);
+  const inputPath = join(root, 'manifest.json');
+  const unsafe = manifest();
+  unsafe.source.factBasePath = 'source\\facts.json';
+  await writeFile(inputPath, JSON.stringify(unsafe), 'utf8');
+  const output = [];
+
+  const exitCode = await runValidationCli(['manifest', inputPath], {
+    log: (line) => output.push(line),
+  });
+
+  assert.equal(exitCode, 1);
   assert.ok(
-    validateContract('run-request', incomplete).errors.some(
-      (error) => error.code === 'incomplete-publish',
+    JSON.parse(output.join('\n')).errors.some(
+      (error) => error.code === 'unsafe-path',
     ),
   );
+});
 
+test('enforces every run-request fact-base and durability invariant', () => {
+  const invalidCases = [
+    [
+      'supplied with sources',
+      (value) => {
+        value.factBase.sources = [
+          { id: 'plan', kind: 'file', locator: 'plan.md' },
+        ];
+      },
+      'fact-base-fields',
+    ],
+    [
+      'federated with path',
+      (value) => {
+        value.factBase = {
+          mode: 'federated',
+          path: 'fact-base.json',
+          sources: [{ id: 'plan', kind: 'file', locator: 'plan.md' }],
+          freshnessPolicy: 'live-wins',
+        };
+      },
+      'fact-base-fields',
+    ],
+    [
+      'publish without settings',
+      (value) => {
+        value.durability = { strategy: 'publish' };
+      },
+      'incomplete-publish',
+    ],
+    [
+      'none with publish settings',
+      (value) => {
+        value.durability = {
+          strategy: 'none',
+          publish: publishRequest(),
+        };
+      },
+      'unexpected-publish',
+    ],
+    [
+      'commit with publish settings',
+      (value) => {
+        value.durability = {
+          strategy: 'commit',
+          publish: publishRequest(),
+        };
+      },
+      'unexpected-publish',
+    ],
+    [
+      'retained direction without theme',
+      (value) => {
+        delete value.theme;
+        value.privacy = { retainRawArtDirection: true };
+      },
+      'art-direction-required',
+    ],
+    [
+      'retained direction without art direction',
+      (value) => {
+        value.privacy = { retainRawArtDirection: true };
+      },
+      'art-direction-required',
+    ],
+  ];
+
+  for (const [label, mutate, expectedCode] of invalidCases) {
+    const value = runRequest();
+    mutate(value);
+    const result = validateContract('run-request', value);
+    assert.equal(result.valid, false, label);
+    assert.ok(
+      result.errors.some((error) => error.code === expectedCode),
+      `${label}: ${JSON.stringify(result.errors)}`,
+    );
+  }
+
+  const retained = runRequest();
+  retained.theme.artDirection = 'Use hand-drawn diagrams';
+  retained.privacy = { retainRawArtDirection: true };
+  assert.equal(validateContract('run-request', retained).valid, true);
+});
+
+test('rejects raw secret fields', () => {
   const secret = {
     ...publishRequest(),
     awsSecretAccessKey: 'never-persist-this',

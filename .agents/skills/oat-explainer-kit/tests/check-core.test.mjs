@@ -33,15 +33,16 @@ async function createInstalledLayout(version) {
       'utf8',
     );
   }
-  return { root, adapterRoot };
+  return { root, skillsRoot, adapterRoot };
 }
 
 test('accepts a compatible installed canonical core', async () => {
-  const { adapterRoot } = await createInstalledLayout('1.4.2');
+  const { adapterRoot, skillsRoot } = await createInstalledLayout('1.4.2');
 
   assert.deepEqual(
     await checkCoreCompatibility({
       adapterRoot,
+      userSkillsRoot: skillsRoot,
       minimumVersion: '1.2.0',
     }),
     {
@@ -56,10 +57,41 @@ test('accepts a compatible installed canonical core', async () => {
   );
 });
 
-test('fails closed with install guidance when the core is missing', async () => {
-  const { adapterRoot } = await createInstalledLayout(null);
+test('resolves a user-scoped core independently from a project-scoped adapter', async () => {
+  const root = await mkdtemp(join(tmpdir(), 'oat-explainer-cross-scope-'));
+  tempDirs.push(root);
+  const adapterRoot = join(
+    root,
+    'project',
+    '.agents',
+    'skills',
+    'oat-explainer-kit',
+  );
+  const userSkillsRoot = join(root, 'home', '.agents', 'skills');
+  const coreRoot = join(userSkillsRoot, 'explainer-kit');
+  await mkdir(adapterRoot, { recursive: true });
+  await mkdir(coreRoot, { recursive: true });
+  await writeFile(
+    join(coreRoot, 'SKILL.md'),
+    '---\nname: explainer-kit\nversion: 1.3.0\n---\n',
+    'utf8',
+  );
+
   const result = await checkCoreCompatibility({
     adapterRoot,
+    userSkillsRoot,
+    minimumVersion: '1.0.0',
+  });
+
+  assert.equal(result.ok, true);
+  assert.equal(result.coreRoot, coreRoot);
+});
+
+test('fails closed with install guidance when the core is missing', async () => {
+  const { adapterRoot, skillsRoot } = await createInstalledLayout(null);
+  const result = await checkCoreCompatibility({
+    adapterRoot,
+    userSkillsRoot: skillsRoot,
     minimumVersion: '1.0.0',
   });
 
@@ -71,9 +103,10 @@ test('fails closed with install guidance when the core is missing', async () => 
 
 test('rejects old major and old minor versions with update guidance', async () => {
   for (const version of ['0.9.0', '1.1.9']) {
-    const { adapterRoot } = await createInstalledLayout(version);
+    const { adapterRoot, skillsRoot } = await createInstalledLayout(version);
     const result = await checkCoreCompatibility({
       adapterRoot,
+      userSkillsRoot: skillsRoot,
       minimumVersion: '1.2.0',
     });
 
@@ -88,7 +121,7 @@ test('rejects old major and old minor versions with update guidance', async () =
 });
 
 test('does not treat a source checkout core as installed', async () => {
-  const { root, adapterRoot } = await createInstalledLayout(null);
+  const { root, adapterRoot, skillsRoot } = await createInstalledLayout(null);
   const sourceCore = join(
     root,
     'checkout',
@@ -105,9 +138,10 @@ test('does not treat a source checkout core as installed', async () => {
 
   const result = await checkCoreCompatibility({
     adapterRoot,
+    userSkillsRoot: skillsRoot,
     minimumVersion: '1.0.0',
   });
   assert.equal(result.ok, false);
   assert.equal(result.code, 'missing');
-  assert.equal(result.coreRoot, join(adapterRoot, '..', 'explainer-kit'));
+  assert.equal(result.coreRoot, join(skillsRoot, 'explainer-kit'));
 });

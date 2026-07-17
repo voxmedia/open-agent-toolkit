@@ -1,11 +1,16 @@
 import { readFile } from 'node:fs/promises';
+import { homedir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 
 export const CORE_INSTALL_COMMAND = 'oat tools install utility --scope user';
 export const CORE_UPDATE_COMMAND =
   'oat tools update --pack utility --scope user';
 
-export async function checkCoreCompatibility({ adapterRoot, minimumVersion }) {
+export async function checkCoreCompatibility({
+  adapterRoot,
+  userSkillsRoot = join(homedir(), '.agents', 'skills'),
+  minimumVersion,
+}) {
   const minimum = parseVersion(minimumVersion);
   if (minimum === null) {
     throw new TypeError(
@@ -14,12 +19,15 @@ export async function checkCoreCompatibility({ adapterRoot, minimumVersion }) {
   }
 
   const canonicalAdapterRoot = resolve(adapterRoot);
-  const skillsRoot = dirname(canonicalAdapterRoot);
-  const coreRoot = join(skillsRoot, 'explainer-kit');
+  const adapterSkillsRoot = dirname(canonicalAdapterRoot);
+  const canonicalUserSkillsRoot = resolve(userSkillsRoot);
+  const coreRoot = join(canonicalUserSkillsRoot, 'explainer-kit');
   if (
     basename(canonicalAdapterRoot) !== 'oat-explainer-kit' ||
-    basename(skillsRoot) !== 'skills' ||
-    basename(dirname(skillsRoot)) !== '.agents'
+    basename(adapterSkillsRoot) !== 'skills' ||
+    basename(dirname(adapterSkillsRoot)) !== '.agents' ||
+    basename(canonicalUserSkillsRoot) !== 'skills' ||
+    basename(dirname(canonicalUserSkillsRoot)) !== '.agents'
   ) {
     return failure({
       code: 'invalid-layout',

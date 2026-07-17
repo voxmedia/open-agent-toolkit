@@ -21,6 +21,18 @@ const EXPLAINER_SOURCES = [
   'autonomous_policy',
 ] as const;
 const EXPLAINER_DECISION_KEYS = ['decision', 'source', 'decided_at'] as const;
+const EXPLAINER_ALLOWED_PAIRS = {
+  oat_project_explainer: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:kickoff_prompt',
+  ]),
+  oat_project_recap: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:autonomous_policy',
+  ]),
+} as const;
 const ISO_TIMESTAMP_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
@@ -173,10 +185,13 @@ function readExplainerDecision(
     });
     valid = false;
   }
-  if (source === 'autonomous_policy' && decision === 'skip') {
+  if (
+    valid &&
+    !EXPLAINER_ALLOWED_PAIRS[key].has(`${String(decision)}:${String(source)}`)
+  ) {
     errors.push({
-      code: 'autonomous-explainer-skip-forbidden',
-      message: `${key} cannot skip when source is autonomous_policy`,
+      code: 'invalid-explainer-decision-source',
+      message: `${key} does not allow decision ${String(decision)} from source ${String(source)}`,
     });
     valid = false;
   }

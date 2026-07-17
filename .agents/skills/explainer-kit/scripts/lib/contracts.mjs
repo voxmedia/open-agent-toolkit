@@ -1,6 +1,8 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
+import { validatePortablePath } from './safe-paths.mjs';
+
 const SCHEMA_FILES = {
   'run-request': 'run-request.schema.json',
   'fact-base': 'fact-base.schema.json',
@@ -58,6 +60,7 @@ export function validateContract(kind, value, context = {}) {
   const errors = [];
   findRawSecrets(value, '$', errors);
   validateSchema(schema, value, '$', schema, errors);
+  validateContractPaths(kind, value, errors);
   validateCrossRecord(kind, value, context, errors);
   return { valid: errors.length === 0, errors };
 }
@@ -88,6 +91,11 @@ function canonicalize(value) {
 
 function validateSchema(schema, value, path, rootSchema, errors) {
   if (schema.$ref) {
+    if (schema.$ref.endsWith('/safeRelativePath')) {
+      addLexicalPathErrors(value, path, errors, false);
+    } else if (schema.$ref.endsWith('/relativeOrAbsolutePath')) {
+      addLexicalPathErrors(value, path, errors, true);
+    }
     const resolved = resolveReference(schema.$ref, rootSchema);
     if (!resolved) {
       add(
@@ -268,6 +276,99 @@ function validateSchema(schema, value, path, rootSchema, errors) {
   }
 }
 
+function validateContractPaths(kind, value, errors) {
+  if (!isObject(value)) {
+    return;
+  }
+
+  if (kind === 'run-request') {
+    addLexicalPathErrors(value.outputRoot, '$.outputRoot', errors, true);
+    if (isObject(value.factBase)) {
+      addLexicalPathErrors(
+        value.factBase.path,
+        '$.factBase.path',
+        errors,
+        true,
+      );
+    }
+    if (isObject(value.theme)) {
+      addLexicalPathErrors(
+        value.theme.suppliedBundlePath,
+        '$.theme.suppliedBundlePath',
+        errors,
+        true,
+      );
+    }
+    if (isObject(value.durability) && isObject(value.durability.publish)) {
+      validateContractPaths(
+        'publish-request',
+        value.durability.publish,
+        errors,
+      );
+    }
+  }
+
+  if (kind === 'publish-request') {
+    addLexicalPathErrors(value.siteRoot, '$.siteRoot', errors, true);
+    addLexicalPathErrors(value.manifestPath, '$.manifestPath', errors, true);
+  }
+
+  if (kind === 'durability-evidence') {
+    addLexicalPathErrors(value.manifestPath, '$.manifestPath', errors, true);
+    if (isObject(value.evidence)) {
+      addLexicalPathErrors(
+        value.evidence.repoRoot,
+        '$.evidence.repoRoot',
+        errors,
+        true,
+      );
+      addLexicalPathErrors(
+        value.evidence.receiptPath,
+        '$.evidence.receiptPath',
+        errors,
+        true,
+      );
+      if (Array.isArray(value.evidence.paths)) {
+        value.evidence.paths.forEach((candidate, index) =>
+          addLexicalPathErrors(
+            candidate,
+            `$.evidence.paths[${index}]`,
+            errors,
+            false,
+          ),
+        );
+      }
+    }
+  }
+
+  if (kind === 'manifest' && Array.isArray(value.artifacts)) {
+    value.artifacts.forEach((artifact, index) => {
+      if (isObject(artifact) && isObject(artifact.rebuild)) {
+        addLexicalPathErrors(
+          artifact.rebuild.cwd,
+          `$.artifacts[${index}].rebuild.cwd`,
+          errors,
+          true,
+        );
+      }
+    });
+  }
+}
+
+function addLexicalPathErrors(value, path, errors, allowAbsolute) {
+  if (value === undefined) {
+    return;
+  }
+  if (typeof value !== 'string') {
+    return;
+  }
+
+  const result = validatePortablePath(value, { allowAbsolute });
+  if (!result.valid) {
+    add(errors, path, 'unsafe-path', result.errors[0].message);
+  }
+}
+
 function resolveReference(reference, rootSchema) {
   if (reference.startsWith('#/')) {
     const parts = reference
@@ -290,6 +391,23 @@ function validateCrossRecord(kind, value, context, errors) {
   }
 
   if (kind === 'run-request') {
+    const factBase = value.factBase;
+    if (isObject(factBase)) {
+      const hasPath = typeof factBase.path === 'string';
+      const hasSources = Array.isArray(factBase.sources);
+      if (
+        (factBase.mode === 'supplied' && (!hasPath || hasSources)) ||
+        (factBase.mode === 'federated' && (!hasSources || hasPath))
+      ) {
+        add(
+          errors,
+          '$.factBase',
+          'fact-base-fields',
+          'Supplied fact bases require only path; federated fact bases require only sources.',
+        );
+      }
+    }
+
     const durability = value.durability;
     if (
       isObject(durability) &&
@@ -301,6 +419,33 @@ function validateCrossRecord(kind, value, context, errors) {
         '$.durability.publish',
         'incomplete-publish',
         'Publish durability requires a complete publish request.',
+      );
+    }
+    if (
+      isObject(durability) &&
+      durability.strategy !== 'publish' &&
+      'publish' in durability
+    ) {
+      add(
+        errors,
+        '$.durability.publish',
+        'unexpected-publish',
+        'Publish settings are allowed only for publish durability.',
+      );
+    }
+
+    if (
+      isObject(value.privacy) &&
+      value.privacy.retainRawArtDirection === true &&
+      (!isObject(value.theme) ||
+        typeof value.theme.artDirection !== 'string' ||
+        value.theme.artDirection.length === 0)
+    ) {
+      add(
+        errors,
+        '$.privacy.retainRawArtDirection',
+        'art-direction-required',
+        'Retaining raw art direction requires theme.artDirection.',
       );
     }
   }
