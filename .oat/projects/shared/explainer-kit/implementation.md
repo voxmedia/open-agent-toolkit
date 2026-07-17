@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t04
+oat_current_task_id: p02-t05
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 3/10      |
+| Phase 2 | in_progress | 10    | 4/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 9/38 tasks completed
+**Total:** 10/38 tasks completed
 
 ---
 
@@ -253,6 +253,27 @@ oat_generated: false
 
 - Recipe, contract, and schema suites — pass (23/23).
 - Scoped formatting, lint, and whitespace checks — pass.
+
+---
+
+### Task p02-t04: Implement dual-mode theme resolution
+
+**Status:** completed
+**Commit:** `1286424d`
+
+**Outcome:**
+
+- Added five curated semantic palettes, three visual profiles, and dual-mode
+  theme resolution with canonical identity hashes.
+- Enforced supplied-bundle precedence, AA contrast pairs, art-direction
+  redaction/hash behavior, and separation of render strategy from bundle
+  identity.
+
+**Verification:**
+
+- Theme suite — pass (8/8).
+- Schema, contract, and records regression suites — pass (23/23).
+- Scoped formatting and whitespace checks — pass.
 
 ---
 
