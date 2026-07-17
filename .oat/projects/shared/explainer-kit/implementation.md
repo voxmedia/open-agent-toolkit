@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | pending  | 10    | 0/10      |
-| Phase 3 | pending  | 9     | 0/9       |
-| Phase 4 | pending  | 9     | 0/9       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 6     | 6/6       |
+| Phase 2 | in_progress | 10    | 1/10      |
+| Phase 3 | pending     | 9     | 0/9       |
+| Phase 4 | pending     | 9     | 0/9       |
+| Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 6/38 tasks completed
+**Total:** 7/38 tasks completed
 
 ---
 
@@ -192,15 +192,28 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Core pipeline
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-17
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Normalize run requests and create atomic run records
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `28fc86cd`
+
+**Outcome:**
+
+- Added confined filesystem helpers and atomic initialization/update/write
+  primitives for explainer run requests, build records, and manifests.
+- Normalizes slugs, redacts transient art direction by default, enforces
+  monotonic stage transitions, and cleans failed temporary writes.
+
+**Verification:**
+
+- Records suite — pass (9/9).
+- Existing contract/path suite — pass (9/9).
+- Scoped formatting and whitespace checks — pass.
 
 ---
 
