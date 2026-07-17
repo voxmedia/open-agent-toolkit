@@ -1,0 +1,191 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.manifest/v1",
+  "title": "ArtifactManifestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "slug",
+    "recipe",
+    "createdAt",
+    "source",
+    "theme",
+    "artifacts",
+    "outcome",
+    "buildRecord",
+    "warnings"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.manifest/v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "createdAt": { "type": "string", "format": "date-time" },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["factBasePath", "factBaseHash", "inputHashes"],
+      "properties": {
+        "factBasePath": { "$ref": "#/$defs/safeRelativePath" },
+        "factBaseHash": { "$ref": "#/$defs/hash" },
+        "sourceRevision": { "type": "string", "minLength": 1 },
+        "inputHashes": { "$ref": "#/$defs/hashMap" }
+      }
+    },
+    "theme": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hash", "derived"],
+      "properties": {
+        "path": { "const": "theme.resolved.json" },
+        "hash": { "$ref": "#/$defs/hash" },
+        "derived": { "type": "boolean" }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifactEntry" },
+      "uniqueItems": true
+    },
+    "outcome": {
+      "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
+    },
+    "buildRecord": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hash"],
+      "properties": {
+        "path": { "const": "build-record.json" },
+        "hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "publishReceipt": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "hash"],
+      "properties": {
+        "path": { "const": "publish-receipt.json" },
+        "hash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "hashMap": {
+      "type": "object",
+      "propertyNames": { "$ref": "#/$defs/safeRelativePath" },
+      "additionalProperties": { "$ref": "#/$defs/hash" }
+    },
+    "failure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "recovery"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "recovery": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "durableEvidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "ref", "paths", "attestedAt"],
+      "properties": {
+        "kind": { "enum": ["commit", "publish"] },
+        "ref": { "type": "string", "minLength": 1 },
+        "paths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/safeRelativePath" },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "attestedAt": { "type": "string", "format": "date-time" },
+        "supersedes": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ref", "paths"],
+          "properties": {
+            "ref": { "type": "string", "minLength": 1 },
+            "paths": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/safeRelativePath" },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        }
+      }
+    },
+    "rebuild": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["argv", "cwd", "inputHashes"],
+      "properties": {
+        "argv": {
+          "type": "array",
+          "items": { "type": "string" },
+          "minItems": 1
+        },
+        "cwd": { "type": "string", "minLength": 1 },
+        "inputHashes": { "$ref": "#/$defs/hashMap" }
+      }
+    },
+    "artifactEntry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type", "contentPath", "status", "rebuildable"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["hub", "diagram", "explainer", "deck", "catalog"] },
+        "contentPath": { "$ref": "#/$defs/safeRelativePath" },
+        "renderedPath": {
+          "allOf": [
+            { "$ref": "#/$defs/safeRelativePath" },
+            { "pattern": "^site/" }
+          ],
+          "pattern": "^site/"
+        },
+        "mediaType": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["built", "failed", "skipped"] },
+        "hash": { "$ref": "#/$defs/hash" },
+        "rebuildable": { "type": "boolean" },
+        "rebuild": { "$ref": "#/$defs/rebuild" },
+        "durableEvidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/durableEvidence" },
+          "uniqueItems": true
+        },
+        "failure": { "$ref": "#/$defs/failure" }
+      }
+    }
+  }
+}

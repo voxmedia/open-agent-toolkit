@@ -1,0 +1,130 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.run-request/v1",
+  "title": "ExplainerRunRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "recipe",
+    "slug",
+    "outputRoot",
+    "factBase",
+    "mode"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.run-request/v1"
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 }
+      }
+    },
+    "slug": {
+      "type": "string",
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+    },
+    "outputRoot": { "$ref": "#/$defs/relativeOrAbsolutePath" },
+    "factBase": { "$ref": "#/$defs/factBaseBinding" },
+    "theme": { "$ref": "#/$defs/themeSelection" },
+    "publicBaseUrl": { "type": "string", "format": "uri" },
+    "durability": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["strategy"],
+      "properties": {
+        "strategy": {
+          "enum": ["none", "commit", "publish"]
+        },
+        "publish": {
+          "$ref": "explainer-kit.publish-request/v1"
+        }
+      }
+    },
+    "privacy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["retainRawArtDirection"],
+      "properties": {
+        "retainRawArtDirection": { "type": "boolean" }
+      }
+    },
+    "mode": { "enum": ["interactive", "unattended"] }
+  },
+  "$defs": {
+    "relativeOrAbsolutePath": {
+      "type": "string",
+      "minLength": 1
+    },
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "sourceBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "locator"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["file", "directory", "git", "github", "session", "other"]
+        },
+        "locator": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "authoritativeFor": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "factBaseBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["mode", "freshnessPolicy"],
+      "properties": {
+        "mode": { "enum": ["supplied", "federated"] },
+        "path": { "$ref": "#/$defs/relativeOrAbsolutePath" },
+        "sources": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/sourceBinding" },
+          "minItems": 1
+        },
+        "freshnessPolicy": { "const": "live-wins" }
+      },
+      "oneOf": [
+        {
+          "required": ["path"],
+          "properties": { "mode": { "const": "supplied" } }
+        },
+        {
+          "required": ["sources"],
+          "properties": { "mode": { "const": "federated" } }
+        }
+      ]
+    },
+    "themeSelection": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "palette": { "type": "string", "minLength": 1 },
+        "visualProfile": { "type": "string", "minLength": 1 },
+        "suppliedBundlePath": {
+          "$ref": "#/$defs/relativeOrAbsolutePath"
+        },
+        "artDirection": { "type": "string", "minLength": 1 },
+        "defaultMode": { "enum": ["light", "dark"] },
+        "renderStrategy": {
+          "enum": ["default-only", "user-switchable"],
+          "default": "default-only"
+        }
+      }
+    }
+  }
+}

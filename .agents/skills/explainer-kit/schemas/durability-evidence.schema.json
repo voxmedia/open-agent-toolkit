@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.durability-evidence/v1",
+  "title": "DurabilityEvidenceRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "manifestPath", "evidence"],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.durability-evidence/v1"
+    },
+    "manifestPath": { "type": "string", "minLength": 1 },
+    "evidence": {
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "repoRoot", "commit", "paths"],
+          "properties": {
+            "kind": { "const": "commit" },
+            "repoRoot": { "type": "string", "minLength": 1 },
+            "commit": {
+              "type": "string",
+              "pattern": "^[a-f0-9]{7,64}$"
+            },
+            "paths": {
+              "type": "array",
+              "items": { "$ref": "#/$defs/safeRelativePath" },
+              "minItems": 1,
+              "uniqueItems": true
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "receiptPath"],
+          "properties": {
+            "kind": { "const": "publish" },
+            "receiptPath": { "type": "string", "minLength": 1 }
+          }
+        }
+      ]
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    }
+  }
+}

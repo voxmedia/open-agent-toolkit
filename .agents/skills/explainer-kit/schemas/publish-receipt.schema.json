@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.publish-receipt/v1",
+  "title": "PublishReceiptV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "provider",
+    "publishedAt",
+    "roots",
+    "sentinel",
+    "artifacts"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.publish-receipt/v1" },
+    "provider": { "const": "s3-static" },
+    "publishedAt": { "type": "string", "format": "date-time" },
+    "roots": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["s3Uri", "publicBaseUrl"],
+      "properties": {
+        "s3Uri": {
+          "type": "string",
+          "pattern": "^s3://[^/\\s]+(?:/[^\\s]*)?$"
+        },
+        "publicBaseUrl": {
+          "type": "string",
+          "pattern": "^https://[^\\s]+$"
+        }
+      }
+    },
+    "sentinel": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relativePath",
+        "uploadVerified",
+        "publicVerified",
+        "deleted"
+      ],
+      "properties": {
+        "relativePath": { "$ref": "#/$defs/safeRelativePath" },
+        "uploadVerified": { "type": "boolean" },
+        "publicVerified": { "type": "boolean" },
+        "deleted": { "type": "boolean" }
+      }
+    },
+    "artifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/artifact" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "relativePath",
+        "hash",
+        "s3Uri",
+        "publicUrl",
+        "httpStatus",
+        "contentType"
+      ],
+      "properties": {
+        "relativePath": { "$ref": "#/$defs/safeRelativePath" },
+        "hash": { "$ref": "#/$defs/hash" },
+        "s3Uri": {
+          "type": "string",
+          "pattern": "^s3://[^/\\s]+/.+$"
+        },
+        "publicUrl": {
+          "type": "string",
+          "pattern": "^https://[^\\s]+$"
+        },
+        "httpStatus": {
+          "type": "integer",
+          "minimum": 200,
+          "maximum": 299
+        },
+        "contentType": { "type": "string", "minLength": 1 }
+      }
+    }
+  }
+}

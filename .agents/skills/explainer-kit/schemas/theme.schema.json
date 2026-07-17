@@ -1,0 +1,217 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.theme/v1",
+  "title": "ResolvedThemeV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "name",
+    "defaultMode",
+    "modes",
+    "provenance",
+    "typography",
+    "spacing",
+    "geometry",
+    "elevation",
+    "density",
+    "motion",
+    "diagrams",
+    "bundleHash"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.theme/v1" },
+    "name": { "type": "string", "minLength": 1 },
+    "defaultMode": { "enum": ["light", "dark"] },
+    "modes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["light", "dark"],
+      "properties": {
+        "light": { "$ref": "#/$defs/colors" },
+        "dark": { "$ref": "#/$defs/colors" }
+      }
+    },
+    "provenance": { "$ref": "#/$defs/provenance" },
+    "typography": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sans", "serif", "mono", "scale", "lineHeight"],
+      "properties": {
+        "sans": { "$ref": "#/$defs/fontList" },
+        "serif": { "$ref": "#/$defs/fontList" },
+        "mono": { "$ref": "#/$defs/fontList" },
+        "scale": { "$ref": "#/$defs/stringMap" },
+        "lineHeight": { "$ref": "#/$defs/positiveNumberMap" }
+      }
+    },
+    "spacing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["unit", "scale"],
+      "properties": {
+        "unit": { "type": "number", "exclusiveMinimum": 0, "maximum": 64 },
+        "scale": { "$ref": "#/$defs/positiveNumberMap" }
+      }
+    },
+    "geometry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["radius", "borderWidth"],
+      "properties": {
+        "radius": { "$ref": "#/$defs/nonNegativeNumberMap" },
+        "borderWidth": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 16
+        }
+      }
+    },
+    "elevation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["shadows"],
+      "properties": {
+        "shadows": { "$ref": "#/$defs/stringMap" }
+      }
+    },
+    "density": { "enum": ["compact", "comfortable", "spacious"] },
+    "motion": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["enabled", "durationMs", "easing", "reducedMotion"],
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "durationMs": { "$ref": "#/$defs/nonNegativeNumberMap" },
+        "easing": { "$ref": "#/$defs/stringMap" },
+        "reducedMotion": { "const": "disable-nonessential" }
+      }
+    },
+    "diagrams": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lineWidth", "nodeGap", "arrowStyle", "labelTreatment"],
+      "properties": {
+        "lineWidth": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 16
+        },
+        "nodeGap": {
+          "type": "number",
+          "exclusiveMinimum": 0,
+          "maximum": 512
+        },
+        "arrowStyle": { "enum": ["straight", "curved"] },
+        "labelTreatment": { "enum": ["inline", "boxed"] }
+      }
+    },
+    "bundleHash": {
+      "$ref": "#/$defs/hash",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "color": {
+      "type": "string",
+      "pattern": "^#[0-9a-fA-F]{6}$"
+    },
+    "colors": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["surface", "ink", "accent", "status", "diagramSeries"],
+      "properties": {
+        "surface": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["canvas", "panel", "elevated"],
+          "properties": {
+            "canvas": { "$ref": "#/$defs/color" },
+            "panel": { "$ref": "#/$defs/color" },
+            "elevated": { "$ref": "#/$defs/color" }
+          }
+        },
+        "ink": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "muted", "inverse"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "muted": { "$ref": "#/$defs/color" },
+            "inverse": { "$ref": "#/$defs/color" }
+          }
+        },
+        "accent": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["primary", "secondary"],
+          "properties": {
+            "primary": { "$ref": "#/$defs/color" },
+            "secondary": { "$ref": "#/$defs/color" }
+          }
+        },
+        "status": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["success", "warning", "danger", "info"],
+          "properties": {
+            "success": { "$ref": "#/$defs/color" },
+            "warning": { "$ref": "#/$defs/color" },
+            "danger": { "$ref": "#/$defs/color" },
+            "info": { "$ref": "#/$defs/color" }
+          }
+        },
+        "diagramSeries": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/color" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["derived"],
+      "properties": {
+        "palette": { "type": "string", "minLength": 1 },
+        "visualProfile": { "type": "string", "minLength": 1 },
+        "derived": { "type": "boolean" },
+        "instructionHash": { "$ref": "#/$defs/hash" },
+        "suppliedBundleHash": { "$ref": "#/$defs/hash" }
+      }
+    },
+    "fontList": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 },
+      "minItems": 1
+    },
+    "stringMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": { "type": "string", "minLength": 1 }
+    },
+    "positiveNumberMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "number",
+        "exclusiveMinimum": 0,
+        "maximum": 1024
+      }
+    },
+    "nonNegativeNumberMap": {
+      "type": "object",
+      "propertyNames": { "minLength": 1 },
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 10000
+      }
+    }
+  }
+}
