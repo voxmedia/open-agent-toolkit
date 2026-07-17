@@ -1,12 +1,11 @@
 ---
 oat_plan_source: spec-driven
-oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - Cross-family plan gate target codex-5-6-sol-max timed out after 900000ms without producing a review artifact.
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_import_reference: null
 oat_import_source_path: null
@@ -35,6 +34,10 @@ Vitest/Node test runner, Playwright/browser QA, pnpm/Turborepo, AWS CLI.
 
 **Commit Convention:** `{type}(pNN-tNN): {description}`
 
+**Atomic Staging Rule:** Every task must stage only the exact paths listed in
+that task's **Files** section. Directory-wide pathspecs are prohibited when
+they could include work from another task.
+
 ## Planning Checklist
 
 - [x] Defer HiLL checkpoint confirmation to `oat-project-implement`
@@ -43,7 +46,9 @@ Vitest/Node test runner, Playwright/browser QA, pnpm/Turborepo, AWS CLI.
 - [x] Complete dispatch ladder verified
 - [x] Project dispatch policy recorded: managed `high`
 - [x] Optional Phase gate review disabled by user
-- [x] Plan artifact review passed
+- [x] Managed structured pre-gate plan review passed
+- [x] Cross-family gate explicitly waived by the user after manual review and
+      acceptance of the late artifact's fixes
 
 ## Parallelism
 
@@ -93,7 +98,7 @@ Expected: Both skills are valid and pack/bundle lists agree.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit .agents/skills/oat-explainer-kit packages/cli
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/src/commands/init/tools/shared/skill-manifest.ts packages/cli/scripts/bundle-assets.sh packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts packages/cli/src/validation/skills.test.ts
 git commit -m "feat(p01-t01): scaffold explainer skill family"
 ```
 
@@ -106,15 +111,17 @@ git commit -m "feat(p01-t01): scaffold explainer skill family"
 - Create: `.agents/skills/explainer-kit/schemas/theme.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/build-record.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/durability-evidence.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/publish-request.schema.json`
 - Create: `.agents/skills/explainer-kit/schemas/publish-receipt.schema.json`
 - Create: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
 
 **Step 1: Write test (RED)**
 
-Cover required schema IDs, closed object shapes, shared outcome enums, path
-fields, render strategy, durability evidence arrays, and receipt artifact
-uniqueness declarations.
+Cover required schema IDs and closed object shapes for every versioned
+contract, including `DurabilityEvidenceRequestV1`; cover shared outcome enums,
+path fields, render strategy persistence, durability evidence arrays, and
+receipt artifact uniqueness declarations.
 
 Run: `node --test .agents/skills/explainer-kit/tests/schemas.test.mjs`
 Expected: Tests fail because schemas do not exist.
@@ -136,7 +143,7 @@ Expected: Schema structure and identity cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/schemas/run-request.schema.json .agents/skills/explainer-kit/schemas/fact-base.schema.json .agents/skills/explainer-kit/schemas/theme.schema.json .agents/skills/explainer-kit/schemas/manifest.schema.json .agents/skills/explainer-kit/schemas/build-record.schema.json .agents/skills/explainer-kit/schemas/durability-evidence.schema.json .agents/skills/explainer-kit/schemas/publish-request.schema.json .agents/skills/explainer-kit/schemas/publish-receipt.schema.json .agents/skills/explainer-kit/tests/schemas.test.mjs
 git commit -m "feat(p01-t02): define explainer v1 schemas"
 ```
 
@@ -177,7 +184,7 @@ Expected: Every key is discoverable and invalid scope/value cases fail.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/config packages/cli/src/commands/config
+git add packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts packages/cli/src/commands/config/index.ts packages/cli/src/commands/config/index.test.ts
 git commit -m "feat(p01-t03): register typed explainer config"
 ```
 
@@ -218,7 +225,7 @@ Expected: Old projects remain valid and intent invariants pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane packages/cli/src/validation
+git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.test.ts packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts
 git commit -m "feat(p01-t04): model explainer lifecycle intent"
 ```
 
@@ -257,7 +264,7 @@ Expected: Installed-layout dependency behavior passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit packages/cli/src/commands/init/tools
+git add .agents/skills/oat-explainer-kit/scripts/check-core.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs .agents/skills/oat-explainer-kit/SKILL.md packages/cli/src/commands/init/tools/utility/install-utility.test.ts packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts
 git commit -m "feat(p01-t05): enforce explainer core compatibility"
 ```
 
@@ -274,7 +281,8 @@ git commit -m "feat(p01-t05): enforce explainer core compatibility"
 
 Cover valid v1 fixtures plus unknown versions/keys, unsafe relative paths and
 symlink escapes, incomplete publish blocks, invalid render strategy, duplicate
-artifact paths, canonical hashes, cross-record mismatch, and raw-secret fields.
+artifact paths, canonical hashes, cross-record mismatch, raw-secret fields,
+and direct validation of the `durability-evidence` contract kind.
 
 Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`
 Expected: Runtime contract validation does not exist.
@@ -297,7 +305,7 @@ Expected: Positive, negative, path, hash, and cross-record cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/scripts/lib/safe-paths.mjs .agents/skills/explainer-kit/scripts/validate.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
 git commit -m "feat(p01-t06): validate explainer contracts"
 ```
 
@@ -340,7 +348,7 @@ Expected: Filesystem and record state tests pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/fs-safe.mjs .agents/skills/explainer-kit/scripts/lib/records.mjs .agents/skills/explainer-kit/tests/records.test.mjs
 git commit -m "feat(p02-t01): add atomic explainer run records"
 ```
 
@@ -356,15 +364,18 @@ git commit -m "feat(p02-t01): add atomic explainer run records"
 
 Cover supplied-base consistency/freshness checks, federated source precedence,
 contradiction classification, operator overrides, citations, and unresolved
-claims.
+claims. Assert that federated processing invokes a provider-neutral critic
+callback and incorporates its result, while supplied fact bases run only the
+documented lightweight consistency/freshness check.
 
 Run: `node --test .agents/skills/explainer-kit/tests/fact-base.test.mjs`
 Expected: Fact-base processor is missing.
 
 **Step 2: Implement (GREEN)**
 
-Implement supplied/federated normalization and critic-result ingestion without
-embedding provider-specific dispatch commands.
+Implement supplied/federated normalization and a provider-neutral critic
+execution seam without embedding provider-specific dispatch commands. Define
+how the critic result enters contradiction classification and provenance.
 
 **Step 3: Format**
 
@@ -378,7 +389,7 @@ Expected: Both source modes produce cited, reconciled records.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/fact-base.mjs .agents/skills/explainer-kit/references/fact-base-contract.md .agents/skills/explainer-kit/tests/fact-base.test.mjs
 git commit -m "feat(p02-t02): implement explainer fact base"
 ```
 
@@ -396,15 +407,17 @@ git commit -m "feat(p02-t02): implement explainer fact base"
 
 Assert recipe/version lookup, closed source roles, one-project recap binding,
 the six recap accountability sections, unsupported recipe errors, and generic
-engineer-tour independence.
+engineer-tour independence. Cover recipe-level unknown-size discovery limits:
+stop after two consecutive no-new-findings rounds and always stop at the
+recipe's hard maximum.
 
 Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
 Expected: Registry and recipes are missing.
 
 **Step 2: Implement (GREEN)**
 
-Implement `loadRecipe(id, version)` and narrative/content-model validation.
-Do not add `program-recap`.
+Implement `loadRecipe(id, version)`, narrative/content-model validation, and
+closed discovery-limit configuration. Do not add `program-recap`.
 
 **Step 3: Format**
 
@@ -418,7 +431,7 @@ Expected: Canonical and optional recipe contracts pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/recipes/project-explainer.json .agents/skills/explainer-kit/recipes/project-recap.json .agents/skills/explainer-kit/recipes/engineer-tour.json .agents/skills/explainer-kit/scripts/lib/recipes.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs
 git commit -m "feat(p02-t03): add explainer recipe registry"
 ```
 
@@ -441,7 +454,9 @@ git commit -m "feat(p02-t03): add explainer recipe registry"
 
 Cover neutral defaults, 3–5 palettes, 2–3 profiles, supplied-bundle precedence,
 art-direction hashes/redaction, both complete modes, AA pairs, canonical bundle
-hashes, and default-only/user-switchable presentation.
+hashes, and default-only/user-switchable presentation. Assert that
+`renderStrategy` is persisted in normalized requests/build records while
+remaining absent from `ResolvedThemeV1` and `bundleHash`.
 
 Run: `node --test .agents/skills/explainer-kit/tests/theme.test.mjs`
 Expected: Theme resolver/assets are missing.
@@ -449,7 +464,8 @@ Expected: Theme resolver/assets are missing.
 **Step 2: Implement (GREEN)**
 
 Implement `resolveTheme(selection)` with closed semantic roles and keep
-`renderStrategy` in the normalized request/build record, not bundle identity.
+`renderStrategy` in the normalized request/build record, not bundle identity;
+the renderer receives it as a separate input.
 
 **Step 3: Format**
 
@@ -463,7 +479,7 @@ Expected: Theme precedence, contrast, and hash cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/palettes/neutral.json .agents/skills/explainer-kit/palettes/ocean.json .agents/skills/explainer-kit/palettes/ember.json .agents/skills/explainer-kit/palettes/forest.json .agents/skills/explainer-kit/palettes/violet.json .agents/skills/explainer-kit/profiles/clean.json .agents/skills/explainer-kit/profiles/editorial.json .agents/skills/explainer-kit/profiles/technical.json .agents/skills/explainer-kit/scripts/lib/theme.mjs .agents/skills/explainer-kit/tests/theme.test.mjs
 git commit -m "feat(p02-t04): implement resolved theme system"
 ```
 
@@ -509,7 +525,7 @@ Expected: Every production shell is neutral and token-complete.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/templates/house-style.html .agents/skills/explainer-kit/templates/deck-shell.html .agents/skills/explainer-kit/templates/diagram-shell.html .agents/skills/explainer-kit/templates/engineer-tour.html .agents/skills/explainer-kit/examples/project-explainer/fact-base.md .agents/skills/explainer-kit/examples/project-explainer/content.md .agents/skills/explainer-kit/examples/project-recap/fact-base.md .agents/skills/explainer-kit/examples/project-recap/content.md .agents/skills/explainer-kit/examples/theme-bundle.json .agents/skills/explainer-kit/tests/templates.test.mjs
 git commit -m "feat(p02-t05): add neutral explainer templates"
 ```
 
@@ -531,8 +547,10 @@ Expected: Renderer is missing.
 
 **Step 2: Implement (GREEN)**
 
-Implement `renderArtifact({ recipeArtifact, content, theme, publicBaseUrl })`
-using only validated recipes/themes and bundled templates.
+Implement
+`renderArtifact({ recipeArtifact, content, theme, renderStrategy, publicBaseUrl })`
+using only validated recipes/themes, a separately validated render strategy,
+and bundled templates.
 
 **Step 3: Format**
 
@@ -546,7 +564,7 @@ Expected: Neutral self-contained artifacts render to typed paths.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/render.mjs .agents/skills/explainer-kit/tests/render.test.mjs
 git commit -m "feat(p02-t06): render typed explainer artifacts"
 ```
 
@@ -563,15 +581,18 @@ git commit -m "feat(p02-t06): render typed explainer artifacts"
 
 Cover unresolved tokens, denylisted strings, inline-only assets, tag balance,
 heading/link rules, inner-container overflow probes, reduced motion, keyboard
-navigation, representative widths, and seeded leak rejection.
+navigation, representative widths, seeded leak rejection, and cross-set
+cohesion. Add positive/negative artifact-set fixtures for inconsistent
+terminology, numeric claims, and statuses.
 
 Run: `node --test .agents/skills/explainer-kit/tests/qa.test.mjs`
 Expected: QA entry points are missing.
 
 **Step 2: Implement (GREEN)**
 
-Implement structural checks plus a browser-probe contract that can use
-available Playwright/browser tooling without becoming a core dependency.
+Implement structural and cross-set cohesion checks plus a browser-probe
+contract that can use available Playwright/browser tooling without becoming a
+core dependency.
 
 **Step 3: Format**
 
@@ -585,7 +606,7 @@ Expected: Positive fixtures pass and the seeded leak/overflow cases fail.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/qa.mjs .agents/skills/explainer-kit/scripts/render-qa.mjs .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/fixtures/seeded-leak.html
 git commit -m "feat(p02-t07): add explainer render QA"
 ```
 
@@ -624,7 +645,7 @@ Expected: Commit/publish evidence and false-claim cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/durability.mjs .agents/skills/explainer-kit/scripts/record-durability.mjs .agents/skills/explainer-kit/tests/durability.test.mjs
 git commit -m "feat(p02-t08): implement durability evidence"
 ```
 
@@ -641,7 +662,10 @@ git commit -m "feat(p02-t08): implement durability evidence"
 
 Run canonical recipes from temporary directories with no `.oat` files; cover
 supplied/federated facts, stage failures, retained intermediates, privacy-safe
-records, schema-valid results, and unattended approved-source runs.
+records, schema-valid results, and unattended approved-source runs. Assert
+federated runs execute the adversarial critic while supplied runs perform only
+the lightweight check. Exercise both the two-empty-round discovery stop and
+the recipe hard maximum.
 
 Run: `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs`
 Expected: Core orchestration entry point is missing.
@@ -650,7 +674,8 @@ Expected: Core orchestration entry point is missing.
 
 Compose validate → fact-base → recipe/content → theme → render → QA →
 manifest/build-record for unattended approved-source runs, with optional
-durability/publish invoked only by request.
+durability/publish invoked only by request. Enforce recipe discovery bounds and
+wire the provider-neutral critic execution seam only for federated inputs.
 
 **Step 3: Format**
 
@@ -664,7 +689,7 @@ Expected: Full config-free core suite passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/references/contracts.md .agents/skills/explainer-kit/SKILL.md .agents/skills/explainer-kit/tests/run.integration.test.mjs
 git commit -m "feat(p02-t09): compose explainer core pipeline"
 ```
 
@@ -704,7 +729,7 @@ Expected: Interactive approval/resume and unattended provenance cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/content-approval.mjs .agents/skills/explainer-kit/tests/content-approval.test.mjs .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/SKILL.md
 git commit -m "feat(p02-t10): gate explainer content approval"
 ```
 
@@ -748,7 +773,7 @@ Expected: Config/path matrix passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit
+git add .agents/skills/oat-explainer-kit/scripts/resolve-config.mjs .agents/skills/oat-explainer-kit/scripts/resolve-paths.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/references/config-contract.md
 git commit -m "feat(p03-t01): resolve OAT explainer inputs"
 ```
 
@@ -787,7 +812,7 @@ Expected: Adapter/core integration passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit
+git add .agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs .agents/skills/oat-explainer-kit/scripts/run.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/SKILL.md
 git commit -m "feat(p03-t02): bind OAT explainer sources"
 ```
 
@@ -825,7 +850,7 @@ Expected: Full precedence table passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit
+git add .agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs .agents/skills/oat-explainer-kit/scripts/persist-intent.mjs .agents/skills/oat-explainer-kit/tests/intent.test.mjs .agents/skills/oat-explainer-kit/references/lifecycle-contract.md
 git commit -m "feat(p03-t03): resolve explainer lifecycle intent"
 ```
 
@@ -863,7 +888,7 @@ Expected: Planning/autonomous contract assertions pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-plan .agents/skills/oat-project-autonomous packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-autonomous/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t04): add explainer planning intent"
 ```
 
@@ -901,7 +926,7 @@ Expected: Two-commit choreography terminates and failure remains recoverable.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit
+git add .agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs .agents/skills/oat-explainer-kit/references/lifecycle-contract.md
 git commit -m "feat(p03-t05): centralize explainer durability commits"
 ```
 
@@ -939,7 +964,7 @@ Expected: Non-blocking recap and summary visibility contracts pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-implement .agents/skills/oat-project-summary packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-summary/SKILL.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t06): add implementation recap lifecycle"
 ```
 
@@ -981,7 +1006,7 @@ Expected: Copy-before-delete and retry-safe archive cases pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/src/commands/project/archive
+git add packages/cli/src/commands/project/archive/index.ts packages/cli/src/commands/project/archive/index.test.ts packages/cli/src/commands/project/archive/push-runner.ts packages/cli/src/commands/project/archive/push-runner.test.ts packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts
 git commit -m "feat(p03-t07): export durable project recaps"
 ```
 
@@ -997,7 +1022,9 @@ git commit -m "feat(p03-t07): export durable project recaps"
 
 Cover batched ask behavior, persisted generate/skip intent, fresh-recap reuse,
 final recap selection, archive argument plumbing, no-recap completion, and
-project-explainer exclusion from durable reference products.
+project-explainer exclusion from durable reference products. Add a local-scope
+project case asserting no tracked recap export, no archive argument, and
+`built-not-durable` unless independent publish evidence exists.
 
 Run: `node --test .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
 Expected: Completion flow lacks explainer policy and selection.
@@ -1020,7 +1047,7 @@ Expected: Interactive completion policy and selection cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-complete .agents/skills/oat-explainer-kit packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p03-t08): integrate completion recap policy"
 ```
 
@@ -1059,7 +1086,7 @@ Expected: Archive-safe durability and link cases pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-project-complete .agents/skills/oat-explainer-kit
+git add .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs .agents/skills/oat-explainer-kit/references/lifecycle-contract.md
 git commit -m "feat(p03-t09): reattest archived project recaps"
 ```
 
@@ -1104,7 +1131,7 @@ Expected: Local fake-S3/HTTP connector suite passes.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/scripts/lib/s3-static.mjs .agents/skills/explainer-kit/scripts/publish.mjs .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/references/destination-contract.md
 git commit -m "feat(p04-t01): add s3 static connector"
 ```
 
@@ -1143,7 +1170,7 @@ Expected: Visual/traceability fixtures pass and false claims fail.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit
+git add .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/explainer-kit/tests/fixtures/operational-wisdom.json .agents/skills/explainer-kit/scripts/render-qa.mjs
 git commit -m "test(p04-t02): add explainer release QA fixtures"
 ```
 
@@ -1184,7 +1211,7 @@ Expected: Fixture proves the public seam without private assets.
 **Step 5: Commit**
 
 ```bash
-git add tools/smoke/explainer-kit .agents/skills/explainer-kit .agents/skills/oat-explainer-kit
+git add tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/fixtures/private-wrapper.mjs .agents/skills/explainer-kit/references/extension-contract.md .agents/skills/oat-explainer-kit/references/migration.md .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md
 git commit -m "test(p04-t03): prove wrapper extension seam"
 ```
 
@@ -1228,7 +1255,7 @@ Expected: Authored contents, generated index, and docs build pass.
 **Step 6: Commit**
 
 ```bash
-git add apps/oat-docs/docs apps/oat-docs/index.md NOTICES.md
+git add apps/oat-docs/docs/workflows/skills/explainer-kit.md apps/oat-docs/docs/workflows/skills/index.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/cli-utilities/configuration.md apps/oat-docs/docs/cli-utilities/tool-packs.md apps/oat-docs/index.md NOTICES.md
 git commit -m "docs(p04-t04): document explainer kit"
 ```
 
@@ -1312,7 +1339,7 @@ Expected: Installed core/adapter success and dependency failures pass.
 **Step 5: Commit**
 
 ```bash
-git add tools/smoke/explainer-kit
+git add tools/smoke/explainer-kit/packaged-layout.test.mjs tools/smoke/explainer-kit/fixtures/package-root.mjs
 git commit -m "test(p04-t06): verify packaged explainer execution"
 ```
 
@@ -1553,7 +1580,7 @@ RC identity pass.
 **Step 5: Commit**
 
 ```bash
-git add .oat/repo/reference/explainer-kit-acceptance/v1
+git add .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-request.json .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-result.json .oat/repo/reference/explainer-kit-acceptance/v1/publish-receipt.json .oat/repo/reference/explainer-kit-acceptance/v1/s3-cdn-smoke.md
 git commit -m "test(p05-t03): record live explainer publish"
 ```
 
@@ -1588,17 +1615,17 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T191324Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| p05    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T191324Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -1615,7 +1642,9 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 
 **Total: 38 tasks**
 
-Ready for implementation after planning readiness gates complete.
+Ready for implementation. The configured cross-family gate was explicitly
+waived by the user after manual review and acceptance of the late artifact's
+fixes.
 
 ## References
 

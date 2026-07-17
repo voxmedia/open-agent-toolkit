@@ -892,6 +892,7 @@ interface ArtifactEntryV1 {
 interface BuildRecordV1 {
   schemaVersion: 'explainer-kit.build-record/v1';
   runId: string;
+  renderStrategy: 'default-only' | 'user-switchable';
   startedAt: string;
   completedAt?: string;
   stages: Array<{
@@ -919,6 +920,8 @@ interface BuildRecordV1 {
 
 - Stage transitions are monotonic.
 - A failed stage cannot later become passed without a new recorded attempt.
+- `renderStrategy` must match the normalized run request and is excluded from
+  `ResolvedThemeV1` identity and `bundleHash`.
 - Raw prompts, credentials, environment dumps, and unredacted subprocess output
   are forbidden.
 

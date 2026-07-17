@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
-oat_blockers:
-  - Cross-family plan gate target codex-5-6-sol-max timed out after 900000ms without producing a review artifact.
+oat_ready_for: oat-project-implement
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p01-t01
 oat_generated: false
@@ -208,9 +207,42 @@ Track test execution during implementation.
 
 - **2026-07-17:** The configured cross-family plan gate target
   `codex-5-6-sol-max` was accepted against committed planning baseline
-  `27659c61` but timed out after 900000ms before producing a review artifact.
-  No findings were returned and the result was not receive-eligible. Planning
-  remains `in_progress`; resume `oat-project-plan` to rerun the configured gate.
+  `27659c61` and timed out after 900000ms. Its reviewer later wrote
+  `artifact-plan-review-2026-07-17T191324Z.md`; receive-review resolved all
+  findings directly in `plan.md` and `design.md`.
+- **2026-07-17:** The user accepted the artifact corrections after manual
+  review and explicitly waived the configured gate rerun for this project.
+  Planning is complete and implementation may begin.
+
+### Review Received: plan
+
+**Date:** 2026-07-17
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-07-17T191324Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 4
+- Medium: 3
+- Minor: 1
+
+**Artifact dispositions:**
+
+- I1: clarified the separate managed-review and cross-family-gate statuses.
+- I2: added the versioned durability-evidence schema and validation coverage.
+- I3: made `renderStrategy` explicit at the renderer/build-record seam.
+- I4: assigned provider-neutral adversarial critic execution and integration
+  coverage.
+- M1: added the local-project non-export completion case.
+- M2: added cross-set terminology, number, and status cohesion QA.
+- M3: assigned and tested bounded unknown-size discovery controls.
+- m1: prohibited broad staging and narrowed affected task commit commands.
+
+**New tasks added:** None; this was an artifact review and the approved changes
+were applied directly.
+
+**Next:** Execute the plan with `oat-project-implement`.
 
 ## References
 
