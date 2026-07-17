@@ -45,7 +45,7 @@ Gate g01 is operator-assisted and outside implementation phase ownership: it com
 
 ### Gate procedure: Verify and record every shippable Cursor pin mapping
 
-**Execution contract:** This gate is not an implementation phase or task and has no phase-implementer or phase-review bookkeeping. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so restarting Cursor does not abandon an accepted child-agent handle.
+**Execution contract:** This gate is not an implementation phase or task and has no phase-implementer or phase-review bookkeeping. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so the fresh session can resume from the recorded handoff.
 
 **Files:**
 
@@ -174,7 +174,7 @@ Require:
 
 **Step 2: Implement catalogue, naming, and marker helpers**
 
-Use the approved Phase 1 evidence verbatim. Preserve owner values `supported-catalogue | user-config | project-config`. Do not implement suffix stripping or a flat-ID frontmatter fallback.
+Use the approved gate g01 evidence verbatim. Preserve owner values `supported-catalogue | user-config | project-config`. Do not implement suffix stripping or a flat-ID frontmatter fallback.
 
 **Step 3: Implement the Markdown materializer**
 
@@ -512,7 +512,7 @@ git commit -m "docs(p04-t02): dispatch cursor native variants"
 
 **Step 1: Write failing recommendation tests**
 
-Require source/asset parity, a new recommendation marker version, materializability for every Cursor candidate, and the operator-approved multi-family tier placement with Grok in Balanced only if Phase 1 approved its exact mapping.
+Require source/asset parity, a new recommendation marker version, materializability for every Cursor candidate, and the operator-approved multi-family tier placement with Grok in Balanced only if gate g01 approved its exact mapping.
 
 **Step 2: Update source and bundled copy**
 
@@ -630,6 +630,10 @@ Expected: generated assets contain only approved mappings and focused tests pass
 **Step 4: Persist the final-launch restart handoff**
 
 Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. This persisted handoff is the p05 HiLL checkpoint input after the phase implementer returns.
+
+```bash
+pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
+```
 
 **Step 5: Commit**
 
@@ -797,7 +801,7 @@ Ready for code review and merge after all tasks and reviews pass.
 
 - Discovery: `discovery.md`
 - Lightweight design: `design.md`
-- Pin verification record: `references/cursor-pin-verification.md` (created by p01-t01)
+- Pin verification record: `references/cursor-pin-verification.md` (created by gate g01)
 - Codex command reference: `packages/cli/src/commands/providers/codex/materialize.ts`
 - Codex codec reference: `packages/cli/src/providers/codex/codec/`
 - Proven cloud ladder: `.oat/projects/shared/cursor-cloud-autonomous-projects/references/oat-user-config.cloud.json`
