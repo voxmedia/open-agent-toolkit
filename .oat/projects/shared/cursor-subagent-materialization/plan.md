@@ -590,10 +590,13 @@ Run:
 
 ```bash
 pnpm exec oxfmt --write apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/cli-utilities/configuration.md
+pnpm --filter oat-docs docs:lint
+pnpm build:docs
 pnpm docs:check-links
+git diff --exit-code -- apps/oat-docs/index.md
 ```
 
-Expected: docs links pass and terminology consistently separates configured selection, catalogue availability, and runtime identity.
+Expected: docs lint, compilation, and links pass; the generated index remains clean; and terminology consistently separates configured selection, catalogue availability, and runtime identity.
 
 **Step 3: Commit**
 
