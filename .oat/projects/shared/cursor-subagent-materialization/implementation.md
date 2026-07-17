@@ -30,7 +30,18 @@ oat_generated: false
 - The two preceding Important findings were resolved in commit `447f0389`.
 - The operator explicitly waived another configured exit-gate attempt after manually invoking an independent artifact review.
 - `artifact-plan-review-2026-07-17T194713Z.md` passed with 0 Critical, Important, Medium, or Minor findings and was received as the plan-readiness review.
-- This clears the quick-start readiness blocker only. Pre-implementation gate g01 remains required before `oat-project-implement` begins at p02.
+- This cleared the quick-start readiness blocker. Pre-implementation gate g01 subsequently completed before p02.
+
+## Pre-implementation Gate g01
+
+**Completed:** 2026-07-17
+**Commit:** `734bf418`
+**Evidence:** `references/cursor-pin-verification.md`
+
+- All 15 current shippable Cursor mapping entries have independent Cursor IDE hook evidence and are approved.
+- GPT uses `reasoning`; Claude uses `effort`; Grok uses base `grok-4.5` with explicit `fast`; Composer aliases use explicit `fast=true`.
+- Cursor CLI child lifecycle hooks were insufficient for pin proof in the tested build, so g01 and the final generated-role gate use Cursor IDE Agent Chat.
+- p02-t01 is the next implementation task.
 
 ## Progress Overview
 

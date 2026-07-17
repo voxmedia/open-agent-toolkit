@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T20:07:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T23:37:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Plan complete - Manual artifact review passed; configured exit-gate rerun waived by operator
+Plan and pre-implementation verification complete - Ready for `oat-project-implement`
 
 ## Artifacts
 
@@ -70,7 +70,7 @@ Plan complete - Manual artifact review passed; configured exit-gate rerun waived
 - ✓ Execution plan drafted
 - ✓ Manual plan artifact review passed
 - ✓ Configured quick-start exit-gate rerun explicitly skipped by operator
-- ⧗ Pre-implementation gate g01: live Cursor pin verification
+- ✓ Pre-implementation gate g01 passed: 15 mappings approved
 
 ## Blockers
 
@@ -78,4 +78,4 @@ None
 
 ## Next Milestone
 
-Complete pre-implementation gate g01, then run `oat-project-implement`
+Run `oat-project-implement` starting at p02-t01

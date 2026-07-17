@@ -37,13 +37,15 @@ oat_template: false
 
 ## Parallelism
 
-Gate g01 is operator-assisted and outside implementation phase ownership: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. The plan recommends p05 as a HiLL checkpoint, but `oat-project-implement` must confirm and persist that choice at implementation start. Phase p06 runs the lockstep release boundary only after the confirmed gate passes.
+Gate g01 is operator-assisted and outside implementation phase ownership: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. The plan recommends p05 as a HiLL checkpoint, but `oat-project-implement` must confirm and persist that choice at implementation start. Phase p06 runs the lockstep release boundary only after the confirmed gate passes.
 
 ---
 
 ## Pre-implementation Gate g01: Live Cursor Pin Verification
 
 ### Gate procedure: Verify and record every shippable Cursor pin mapping
+
+**Status:** Complete in commit `734bf418` with 15 approved mappings, 0 excluded, and 0 inconclusive. The authoritative mapping table and superseded fallback diagnostics are in `references/cursor-pin-verification.md`.
 
 **Execution contract:** This gate is not an implementation phase or task and has no phase-implementer or phase-review bookkeeping. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so the fresh session can resume from the recorded handoff.
 
@@ -62,15 +64,15 @@ Create one temporary native agent definition per distinct proposed mapping entry
 
 **Step 3: Launch from the fresh native-agent discovery boundary**
 
-In the new Cursor session, verify the persisted `awaiting-fresh-session` handoff, then invoke each exact temporary agent type through Cursor's native agent-definition surface. Do not substitute `cursor-agent --model`: that tests CLI selector routing, not definition-level frontmatter pinning.
+In a fresh Cursor IDE Agent Chat, verify the persisted `awaiting-fresh-session` handoff, then invoke each exact temporary agent type through Cursor's native agent-definition surface. Do not substitute `cursor-agent --model`: that tests CLI selector routing, not definition-level frontmatter pinning. The tested Cursor CLI build did not emit the child lifecycle hooks required for proof.
 
-Cover GPT effort, Claude effort, Composer standard/fast, and Grok effort/fast syntax. Test `claude-fable-5-thinking-*` and `cursor-grok-4.5-high-fast` explicitly rather than inferring them.
+Cover GPT reasoning, Claude effort, Composer fast, and Grok effort/fast syntax. Test every Fable, Grok, and alias mapping explicitly rather than inferring one entry from another.
 
 For each probe, record:
 
 - exact definition and bracket-form `model:` value;
-- launch acceptance and externally observable configured-model evidence from Cursor's native launch UI/metadata;
-- `CURSOR_CONVERSATION_ID` for transcript correlation;
+- launch acceptance and `subagentStart.subagent_model` evidence from Cursor IDE hooks;
+- hook-provided subagent, parent-conversation, and tool-call IDs plus `subagentStop` status;
 - the unique proposed mapping row authorized by this launch;
 - result: `approved` or `excluded`, with rationale.
 
@@ -165,8 +167,8 @@ Require:
 
 - explicit `ladderModelId` → `frontmatterModel` entries only;
 - an approved mapping-specific gate g01 evidence row for every registry entry, regardless of catalogue/recommendation/configuration-only classification;
-- a bracket segment in every emitted model (`[]` allowed);
-- exact Composer standard/fast forms;
+- a non-empty bracket segment in every emitted model;
+- exact Composer aliases and GPT/Claude/Grok parameter names from g01;
 - no unapproved Fable/Grok entry;
 - unique normalized variant names;
 - explicit Cursor `name`, `description`, and mapped `model`;
@@ -379,7 +381,7 @@ Change Cursor's mechanism to `pinned-variant`, preserve candidate ladder order a
 
 **Step 3: Implement audit wording**
 
-Record selected variant/model as launcher-configured controls. Keep runtime producer/model/effort null, provenance unknown, and confidence `not-reported`; `CURSOR_CONVERSATION_ID` is correlation only.
+Record selected variant/model as launcher-configured controls. Keep runtime producer/model/effort null, provenance unknown, and confidence `not-reported`; do not depend on undocumented conversation-ID environment variables.
 
 **Step 4: Format and verify**
 
@@ -402,49 +404,6 @@ git commit -m "feat(p03-t05): dispatch cursor pinned variants"
 ---
 
 ## Phase 4: Canonical Guidance, Recommendation, and Documentation
-
-### Task p04-t01: Add Cursor conversation correlation to canonical roles
-
-**Files:**
-
-- Modify: `.agents/agents/oat-reviewer.md`
-- Modify: `.agents/agents/oat-phase-implementer.md`
-- Modify: `packages/cli/src/validation/skills.test.ts`
-- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
-
-**Step 1: Update canonical return contracts**
-
-When `CURSOR_AGENT=1` and `CURSOR_CONVERSATION_ID` is present, require the returned result to include that ID as transcript/session correlation. Explicitly state that it is not model evidence.
-
-**Step 2: Bump both agent versions**
-
-Increase each changed canonical agent's frontmatter version once for this PR.
-
-**Step 3: Update pinned-version tests**
-
-Update assertions that pin these two canonical agent versions in the same task, so this commit is independently green.
-
-**Step 4: Format and verify**
-
-Run:
-
-```bash
-pnpm exec oxfmt --write .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
-pnpm run cli:source -- internal validate-oat-skills
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
-git diff --exit-code -- packages/cli/assets
-```
-
-Expected: both canonical roles and pinned-version tests pass, generated assets remain untouched, and provenance uses `configured`, never `verified`.
-
-**Step 5: Commit**
-
-```bash
-git add .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
-git commit -m "feat(p04-t01): report cursor conversation correlation"
-```
-
----
 
 ### Task p04-t02: Migrate canonical dispatch guidance to native Cursor variants
 
@@ -522,7 +481,7 @@ Require source/asset parity, a new recommendation marker version, materializabil
 
 **Step 2: Update source and bundled copy**
 
-Promote only verified GPT, Claude, Composer, and Grok entries. Exclude unresolved Fable/Grok forms rather than guessing. Keep the supported catalogue broader than this reusable selection policy where evidence permits.
+Promote only the exact GPT, Claude, Composer, and Grok entries approved by gate g01. Keep the supported catalogue broader than this reusable selection policy where evidence permits.
 
 **Step 3: Format and verify**
 
@@ -691,7 +650,7 @@ Expected: generated assets contain only approved mappings and focused tests pass
 
 **Step 4: Persist the final-launch restart handoff**
 
-Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. This persisted handoff is the recommended p05 HiLL checkpoint input after the phase implementer returns. Implementation preflight must have confirmed and persisted p05 before execution reaches this step; otherwise stop and revise the gate route.
+Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. The operator will launch them from a fresh Cursor IDE Agent Chat with the temporary hook-evidence setup proven by g01; the tested Cursor CLI path is insufficient. This persisted handoff is the recommended p05 HiLL checkpoint input after the phase implementer returns. Implementation preflight must have confirmed and persisted p05 before execution reaches this step; otherwise stop and revise the gate route.
 
 ```bash
 pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
@@ -735,11 +694,11 @@ Confirm the verification record says `status: awaiting-final-launch` and names a
 
 **Step 2: Launch through the native agent-definition surface**
 
-In the fresh Cursor session, launch both exact native types. Do not substitute `cursor-agent --model`. Capture externally observable configured-model evidence and each returned `CURSOR_CONVERSATION_ID`.
+In the fresh Cursor IDE session, launch both exact native types. Do not substitute `cursor-agent --model`. Capture `subagentStart.subagent_model`, correlation IDs, and `subagentStop` status through the temporary hook setup.
 
 **Step 3: Record the evidence boundary**
 
-Append the role launch, configured variant/model evidence, and conversation correlation to the verification record. Keep runtime model and effort `not-reported`; neither successful completion nor the conversation ID is runtime identity proof.
+Append the role launch, configured variant/model evidence, and hook correlation to the verification record. Keep runtime model and effort `not-reported`; neither successful completion nor hook evidence from the tested session is a general runtime identity guarantee.
 
 **Step 4: Format, verify, and commit**
 
@@ -851,11 +810,11 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 - Gate g01: Live evidence gates every shipped Cursor mapping before implementation.
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 4 tasks - Sync/status/init, doctor, resolver, and audit integration.
-- Phase 4: 5 tasks - Canonical roles, dispatch guidance, recommendation, docs, and planning-producer gate identity.
+- Phase 4: 4 tasks - Dispatch guidance, recommendation, docs, and planning-producer gate identity.
 - Phase 5: 1 task plus a recommended HiLL checkpoint - Generated provider views and final native role-launch evidence.
 - Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
-**Total: 14 implementation tasks plus 1 pre-implementation gate**
+**Total: 13 implementation tasks plus 1 completed pre-implementation gate**
 
 Ready for code review and merge after all tasks and reviews pass.
 

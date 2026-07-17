@@ -16,7 +16,7 @@ Extend OAT's sync-time materialization architecture with a provider-neutral exte
 
 Cursor target selection is deliberately split into two identities. The resolver and generated variant name use the ladder-surface flat ID, while an explicit mapping entry supplies the base-ID-plus-brackets value written to frontmatter. No fallback derives one form from the other: an unmapped config-owned target cannot produce a managed variant and must fail with an actionable diagnostic rather than emit an undocumented flat ID. The supported catalogue is the shipped capability set; layered user/project configuration can change ownership and select mapped entries without changing codec behavior.
 
-The verification lane is a release gate for mapping data, not a best-effort smoke test. One pinned test agent per proposed mapping entry must establish that Cursor accepted the exact configured pin before that entry ships. The awkward Claude Fable and Grok entries remain unresolved design inputs until that lane supplies evidence; they are corrected or excluded rather than guessed. Runtime audit language records the selected variant and model as launcher-owned `configured` provenance, reports `CURSOR_CONVERSATION_ID` for transcript correlation, and never claims Cursor self-verified its model.
+The verification lane is a release gate for mapping data, not a best-effort smoke test. Gate g01 approved all 15 current mapping entries through one Cursor IDE hook-correlated native launch per entry. Its corrections are authoritative: GPT uses `reasoning`, Fable and Grok use their hook-reported base IDs, and Composer defaults are expressed explicitly. Runtime audit language records the selected variant and model as launcher-owned `configured` provenance and never claims Cursor self-verified its model.
 
 Plan-style workflow gate reviews also need family-aware producer routing before implementation dispatch stamps exist. When the configured command invokes `oat gate review`, the planning parent supplies its current model as ephemeral `declared` identity; the review consumes that declaration only when no stronger explicit or scoped-stamp identity exists. Other gate command types receive no producer-declaration environment. This improves same-family avoidance without hardcoding a producer into user config or promoting self-declaration into observed runtime evidence.
 
@@ -117,7 +117,7 @@ The common contract is intentionally narrow. It does not force Cursor to emulate
 
 ```typescript
 type CursorPinSyntaxFamily =
-  | 'gpt-effort'
+  | 'gpt-reasoning'
   | 'claude-effort'
   | 'composer-fast'
   | 'grok-effort-fast';
@@ -133,7 +133,7 @@ interface SupportedCursorRoleTarget extends CursorModelPinMapping {
 }
 ```
 
-`ladderModelId` is the exact candidate string used by dispatch configuration. `frontmatterModel` is an explicit documented base-ID-plus-brackets value, and every entry must contain a bracket segment (an empty `[]` is valid). Composer mappings are always explicit: standard mode is `composer-2.5[]` and fast mode is `composer-2.5[fast=true]`, because bare `composer-2.5` may default to fast. There is no parser that strips suffixes and no fallback that writes `ladderModelId` into frontmatter.
+`ladderModelId` is the exact candidate string used by dispatch configuration. `frontmatterModel` is an explicit documented base-ID-plus-brackets value, and every entry must contain a bracket segment. The registry copies the 15 approved g01 rows verbatim: GPT `reasoning`, Claude `effort`, Grok `effort` plus explicit `fast`, and explicit Composer `fast=true`. Both Composer surface aliases map to the verified fast form; empty brackets are not shipped, while verified `fast=false` remains diagnostic-only. There is no parser that strips suffixes and no fallback that writes `ladderModelId` into frontmatter.
 
 The mapping registry may contain materializable entries beyond the bundled supported catalogue so user/project configuration can retain `user-config` or `project-config` ownership. A config target absent from the registry is rejected with an actionable mapping error; this is required to preserve the documented-syntax invariant. Catalogue tests require unique ladder IDs, unique generated variant names, valid bracket syntax, and a mapping for every shipped target.
 
@@ -152,7 +152,7 @@ The mapping registry may contain materializable entries beyond the bundled suppo
 
 Generated filenames and `name` values use one deterministic builder shared with the resolver. Before writing, the extension checks all Cursor-readable project agent locations (`.cursor/agents`, `.claude/agents`, and Cursor-compatible `.codex/agents` Markdown definitions). A collision with an unmanaged definition or a distinct desired mapping is an error. Codex TOML files are not treated as Cursor Markdown definitions merely because they share a stem.
 
-The two canonical role definitions gain a provider-conditional return requirement: when `CURSOR_AGENT=1` and `CURSOR_CONVERSATION_ID` is present, include that conversation ID in the result. Their versions are bumped and all provider views are regenerated, so each Cursor variant body remains identical to its canonical source.
+Canonical role definitions remain provider-neutral. Cursor mapping evidence uses external IDE hook payloads during verification; generated role behavior does not depend on undocumented conversation-ID environment variables.
 
 ### Cursor Target Collection and Sync Lifecycle
 
@@ -172,7 +172,7 @@ The Cursor ceiling adapter changes from `model-arg` to `pinned-variant` and comp
 
 The skill-validation contract in `packages/cli/src/validation/skills.test.ts` currently requires Cursor guidance to reference `providers.cursor.dispatchArgs.model`. Update those assertions in the same change as the resolver and canonical dispatch-skill prose so validation enforces `providers.cursor.dispatchArgs.variant` and native-variant-first launch semantics instead.
 
-Dispatch reports describe the variant/model as **configured** by the launcher. `CURSOR_CONVERSATION_ID` is session-correlation evidence only; runtime model/effort remain `not-reported`. Skill and provider-reference edits must land after, or be carefully rebased over, `gate-execution-hardening` commit `c57bdc9d` because that project edits the same dispatch guidance.
+Dispatch reports describe the variant/model as **configured** by the launcher; runtime model/effort remain `not-reported`. Gate g01 hook evidence proves the shipped mapping data in the tested Cursor IDE, not every future launch. Skill and provider-reference edits must land after, or be carefully rebased over, `gate-execution-hardening` commit `c57bdc9d` because that project edits the same dispatch guidance.
 
 ### Artifact Gate Producer Identity Bridge
 
@@ -184,7 +184,7 @@ The bridge affects routing, not proof. Gate JSON records source `environment`, p
 
 ### Verification Lane
 
-The lane creates one temporary pinned test definition per proposed mapping entry, launches each by native agent type, and captures evidence that the exact configured pin took. It tests known mappings first, then the awkward Fable and Grok decompositions. Only mappings supported by mapping-specific positive evidence are added to the shipped registry, including configuration-only entries outside the catalogue/recommendation; ambiguous or silently falling-back entries are excluded and recorded in project verification results.
+The lane creates one temporary pinned test definition per proposed mapping entry, launches each by native agent type in Cursor IDE, and captures `subagentStart.subagent_model` plus start/stop correlation IDs. Cursor CLI hook coverage is insufficient for pin proof in the tested build. Only mappings supported by mapping-specific positive evidence are added to the shipped registry, including configuration-only entries outside the catalogue/recommendation; ambiguous or silently falling-back entries are excluded and recorded in project verification results.
 
 This live lane is separate from `cursor-agent --list-models`: catalogue presence checks availability of the flat ladder ID, while the launch verifies definition-level bracket syntax. A bonus flat-ID experiment may be recorded, but generated files and tests never rely on it.
 
@@ -211,8 +211,8 @@ The gate producer bridge adds no durable configuration model. `OAT_GATE_PRODUCER
 
 ### Unit Tests
 
-- Mapping table: exact flat-to-bracket pairs, syntax-family assignment, a bracket segment in every `frontmatterModel`, explicit `composer-2.5[]`/`composer-2.5[fast=true]` behavior, no flat suffixed value in `frontmatterModel`, uniqueness, and catalogue coverage.
-- Cursor codec: explicit five-field-compatible frontmatter, comment markers, canonical body identity, deterministic names, and conversation-ID instruction inherited from canonical roles.
+- Mapping table: the exact 15 g01-approved flat-to-bracket pairs, syntax-family assignment, a non-empty bracket segment in every `frontmatterModel`, explicit Composer alias behavior, no flat suffixed value in `frontmatterModel`, uniqueness, and catalogue coverage.
+- Cursor codec: explicit five-field-compatible frontmatter, comment markers, canonical body identity, and deterministic names.
 - Owner parsing/cleanup: supported, user, and project ownership; legacy/unmanaged preservation; stale-owner boundaries.
 - Resolver: each managed Cursor candidate compiles to the expected `dispatchArgs.variant`, never `dispatchArgs.model`.
 - Dispatch reporting: configured provenance and not-reported runtime identity remain distinct.
@@ -230,9 +230,8 @@ The gate producer bridge adds no durable configuration model. `OAT_GATE_PRODUCER
 
 ### Live Verification
 
-- Launch one native pinned test subagent per proposed mapping entry and record the exact definition, requested model syntax, conversation ID, and observed confirmation.
-- Resolve Fable and Grok only through this lane; correct their mapping or exclude them.
-- Generate the full supported variants, launch representative reviewer and implementer variants by native agent type, and verify transcript correlation without claiming runtime model self-report.
+- Gate g01 records one Cursor IDE native launch per proposed mapping entry, including exact definition, requested syntax, hook-reported subagent model, correlation IDs, and stop status.
+- Generate the full supported variants, launch representative reviewer and implementer variants by native agent type, and capture the same external hook evidence without claiming runtime model self-report.
 
 ### Release Checks
 
