@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p01-t04
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -24,78 +24,172 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 6     | 0/6       |
-| Phase 2 | pending     | 10    | 0/10      |
-| Phase 3 | pending     | 9     | 0/9       |
-| Phase 4 | pending     | 9     | 0/9       |
-| Phase 5 | pending     | 4     | 0/4       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | blocked | 6     | 6/6       |
+| Phase 2 | pending | 10    | 0/10      |
+| Phase 3 | pending | 9     | 0/9       |
+| Phase 4 | pending | 9     | 0/9       |
+| Phase 5 | pending | 4     | 0/4       |
 
-**Total:** 0/38 tasks completed
+**Total:** 6/38 tasks completed
 
 ---
 
 ## Phase 1: Contracts, configuration, and packaged skeleton
 
-**Status:** in_progress
+**Status:** blocked
 **Started:** 2026-07-16
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Added canonical `explainer-kit` and `oat-explainer-kit` skill skeletons and
+  pack registration.
+- Added strict v1 JSON Schemas and runtime/path validation.
+- Added typed explainer configuration and project-state lifecycle intent.
+- Added installed-core compatibility checks for the OAT adapter.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `.agents/skills/explainer-kit/` - core contracts and validators.
+- `.agents/skills/oat-explainer-kit/` - adapter contract and compatibility
+  checks.
+- `packages/cli/src/config/` - typed configuration.
+- `packages/control-plane/src/` - project-state lifecycle intent.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Result: blocked by one cross-task regression. Current
+  `src/validation/skills.test.ts` expects both new skills at `1.0.0`, but
+  p01-t05 changed `oat-explainer-kit` to `1.1.0`. All other p01 task suites
+  pass under root reconciliation.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- The user approved adding `packages/control-plane/src/project.ts` to p01-t04.
+- The user accepted the non-behavioral p01-t03 commit-subject deviation.
+- Root failed to create required bookkeeping commits after each task; this
+  section is the explicit reconciliation and must not be represented as
+  retroactive per-task bookkeeping.
 
 ### Task p01-t01: Scaffold canonical skills and register both packs
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** completed
+**Commit:** `043f91bf`
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Both canonical skills exist, are assigned to utility/workflow packs, and are
+  included by the asset bundler.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `.agents/skills/{explainer-kit,oat-explainer-kit}/SKILL.md`
+- `packages/cli/scripts/bundle-assets.sh`
+- `packages/cli/src/commands/init/tools/shared/{skill-manifest.ts,bundle-consistency.test.ts}`
+- `packages/cli/src/validation/skills.test.ts`
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Result: originally passed; root reconciliation later found a regression
+  introduced by p01-t05's version bump.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- No task-boundary deviation.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Current cross-task version regression is routed to a p01 fix.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Define strict versioned contract schemas
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `3cb70802`
+
+**Outcome:**
+
+- Added eight closed v1 schemas plus schema identity/invariant tests.
+
+**Verification:**
+
+- `node --test .agents/skills/explainer-kit/tests/schemas.test.mjs` — pass
+  (5/5).
+
+---
+
+### Task p01-t03: Register typed explainer configuration
+
+**Status:** completed
+**Commit:** `24a7bf72`
+
+**Outcome:**
+
+- Registered typed build, publish, and lifecycle preference configuration with
+  layered resolution and CLI metadata.
+
+**Verification:**
+
+- Config and command suites — pass (268/268).
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- User accepted commit subject `feat(config): register explainer settings`
+  instead of the planned subject.
+
+---
+
+### Task p01-t04: Add explainer intent to project state
+
+**Status:** completed
+**Commit:** `6c9f46b1`
+
+**Outcome:**
+
+- Added typed optional explainer/recap decisions to parsed and public project
+  state plus CLI validation.
+
+**Verification:**
+
+- Control-plane and project-state suites — pass (42/42).
+
+---
+
+### Task p01-t05: Enforce packaged core dependency compatibility
+
+**Status:** completed_with_regression
+**Commit:** `a7d5a3b8`
+
+**Outcome:**
+
+- Added installed-core compatibility checks and install/update guidance.
+
+**Verification:**
+
+- Compatibility and installer suites — pass (23/23).
+- Cross-task regression: changed adapter version to `1.1.0`, causing one
+  p01-t01 validation assertion to fail.
+
+---
+
+### Task p01-t06: Implement contract and safe-path validation
+
+**Status:** completed
+**Commit:** `0d829a44`
+
+**Outcome:**
+
+- Added runtime contract validation, canonical hashes, and root-confined path
+  resolution.
+
+**Verification:**
+
+- `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs` — pass
+  (6/6).
 
 ---
 
@@ -138,7 +232,11 @@ Chronological log of implementation progress.
   selected model `gpt-5.6-sol-high`.
 - HiLL checkpoints: final phase only (`p05`).
 - Auto-review at HiLL checkpoints: enabled.
-- Current task: `p01-t01`.
+- Phase 1 task commits: p01-t01 through p01-t06.
+- Current remediation: p01-t05 cross-task skill-version regression.
+- Bookkeeping correction: root did not update tracking after each task commit.
+  One reconciliation commit records the actual history; future task dispatches
+  must return control after each code commit for root-owned bookkeeping.
 
 ### 2026-07-16
 
@@ -179,19 +277,21 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                                              | Actual / Accepted                                                  | Reason                                                                                                                   | Source of Truth   | Follow-up                                    |
-| ------------- | --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ----------------- | -------------------------------------------- |
-| p01-t03       | `plan.md`       | Commit subject `feat(p01-t03): register typed explainer config`   | Commit `24a7bf72` uses `feat(config): register explainer settings` | User accepted the non-behavioral subject deviation; files and verification remained task-bounded                         | Commit `24a7bf72` | None                                         |
-| p01-t04       | `plan.md`       | State intent task omitted `packages/control-plane/src/project.ts` | Added `project.ts` to the task boundary before implementation      | `getProjectState()` manually constructs the public `ProjectState`, so the design cannot be implemented without this file | Updated `plan.md` | Resume p01-t04 in the original phase session |
+| Task / Review | Source Artifact               | Planned / Documented                                               | Actual / Accepted                                                  | Reason                                                                                                                   | Source of Truth                     | Follow-up                                                   |
+| ------------- | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------- |
+| p01-t03       | `plan.md`                     | Commit subject `feat(p01-t03): register typed explainer config`    | Commit `24a7bf72` uses `feat(config): register explainer settings` | User accepted the non-behavioral subject deviation; files and verification remained task-bounded                         | Commit `24a7bf72`                   | None                                                        |
+| p01-t04       | `plan.md`                     | State intent task omitted `packages/control-plane/src/project.ts`  | Added `project.ts` to the task boundary before implementation      | `getProjectState()` manually constructs the public `ProjectState`, so the design cannot be implemented without this file | Updated `plan.md`                   | Resume p01-t04 in the original phase session                |
+| bookkeeping   | Implementation workflow       | Separate root-owned tracking commit after every code commit        | Six task commits landed without interleaved tracking commits       | Root delegated the full phase without a per-task return boundary                                                         | Git history and this reconciliation | Enforce per-task return and bookkeeping from Phase 2 onward |
+| p01-t05       | `plan.md` / p01-t01 invariant | New skill family remains at `1.0.0` until centralized release bump | p01-t05 changed `oat-explainer-kit` to `1.1.0`                     | Implementer applied the general changed-skill bump rule despite this project's centralized bump plan                     | Failing `skills.test.ts` assertion  | Append-only Phase 1 fix required                            |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| Phase | Tests Run | Passed | Failed | Coverage                                                 |
+| ----- | --------- | ------ | ------ | -------------------------------------------------------- |
+| 1     | 388       | 387    | 1      | One skill-version regression; all other task suites pass |
+| 2     | -         | -      | -      | -                                                        |
 
 ## Final Summary (for PR/docs)
 

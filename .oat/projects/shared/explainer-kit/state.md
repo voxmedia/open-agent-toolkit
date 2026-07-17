@@ -1,7 +1,8 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: 24a7bf72
-oat_blockers: []
+oat_current_task: p01-t05
+oat_last_commit: 0d829a44
+oat_blockers:
+  - Phase 1 verification found oat-explainer-kit at 1.1.0 while the p01 contract requires the new skill family to remain at 1.0.0.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T21:43:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T22:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 resuming at `p01-t04`
+Implementation - Phase 1 task commits complete; verification fix required
 
 ## Artifacts
 
@@ -58,7 +59,7 @@ Implementation - Phase 1 resuming at `p01-t04`
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; late artifact findings resolved)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (in progress; per-task history reconciled)
 
 ## Progress
 
@@ -70,13 +71,16 @@ Implementation - Phase 1 resuming at `p01-t04`
 - ✓ Managed plan artifact review passed
 - ✓ Late cross-family review artifact received and all findings resolved
 - ✓ User explicitly waived the configured gate rerun after manual review
-- ✓ Phase 1 tasks `p01-t01` through `p01-t03` completed
-- ⧗ Phase 1 resuming at `p01-t04` after approved file-boundary correction
+- ✓ Phase 1 tasks `p01-t01` through `p01-t06` committed
+- ⚠ Root reconciliation recorded missed per-task bookkeeping commits
+- ⧗ Phase 1 verification is blocked by the p01-t05 skill-version regression
 
 ## Blockers
 
-None
+- `oat-explainer-kit` is `1.1.0`; p01-t01's required current-state
+  validation expects the new family to remain at `1.0.0`.
 
 ## Next Milestone
 
-Complete Phase 1 tasks `p01-t04` through `p01-t06`.
+Apply an append-only p01 fix, rerun Phase 1 verification, then run the Phase 1
+review.
