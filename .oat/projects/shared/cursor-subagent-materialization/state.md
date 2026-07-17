@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -38,26 +38,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-16T20:31:01Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T00:17:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Design Complete
+**Status:** Planning
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-16
 
 ## Current Phase
 
-Lightweight design approved - Ready for plan generation
+Plan drafted - Awaiting review and readiness gates
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (in progress)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -67,6 +67,8 @@ Lightweight design approved - Ready for plan generation
 - ✓ Lightweight design drafted
 - ✓ Design review findings resolved
 - ✓ Design re-review passed
+- ✓ Execution plan drafted
+- ⧗ Plan review and readiness gates
 
 ## Blockers
 
@@ -74,4 +76,4 @@ None
 
 ## Next Milestone
 
-Generate the quick implementation plan
+Pass plan review and initialize implementation tracking
