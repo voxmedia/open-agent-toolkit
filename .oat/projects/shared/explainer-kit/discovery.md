@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-07-17
+oat_last_updated: 2026-07-16
 oat_generated: false
 ---
 
@@ -107,8 +107,7 @@ existing private bucket — policy scoped to the prefix).
    tree. The public seam freezes in a packaged release candidate; the private
    wrapper migrates against that RC, and only a passing operator-executed E2E
    promotes it to release. Reconsider a dedicated communications pack only
-   after at least three
-   coherent public communications skills exist or the family develops a
+   after at least three coherent public communications skills exist or the family develops a
    materially independent asset footprint/release cadence.
 3. **Config schema and artifact roots.** `explainers.*` becomes a typed,
    documented OAT adapter surface with v1 `oat config get/set/describe`

@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-07-17
+oat_last_updated: 2026-07-16
 oat_generated: false
 oat_template: false
 ---
@@ -161,6 +161,10 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
     slash or escape the artifact root.
   - The connector verifies a sentinel before bulk upload, preserves explicit
     MIME types, verifies public artifact URLs, and emits a versioned receipt.
+  - Publishing is additive and idempotent outside the current manifest set:
+    the connector never deletes or overwrites undeclared objects and never
+    performs root-wide destructive synchronization.
+  - Sentinel paths are unique per run so concurrent publishes cannot collide.
   - Explicit `index.html` URLs are the portable default.
   - Authentication failures never expose credentials and never trigger unsafe
     automatic reauthentication.
@@ -434,7 +438,7 @@ the same manifest/receipt after the run.
 | FR5  | Artifact manifest and honest durability | P0       | unit + integration: stage and durability states  | See plan.md   |
 | FR6  | S3 static publishing connector          | P0       | integration + e2e: root mapping and live publish | See plan.md   |
 | FR7  | Typed OAT configuration adapter         | P0       | unit + integration: key registry and resolution  | See plan.md   |
-| FR8  | Scope-derived OAT artifact placement    | P0       | unit: project/repo root and traversal cases      | See plan.md   |
+| FR8  | Scope-derived OAT artifact placement    | P0       | unit + integration: roots, symlinks, traversal   | See plan.md   |
 | FR9  | Lifecycle intent and policy             | P0       | unit + integration: precedence and prompts       | See plan.md   |
 | FR10 | Non-blocking mandatory autonomous recap | P0       | integration: forced failure completion path      | See plan.md   |
 | FR11 | Packaged dependency contract            | P0       | integration: installed utility/workflows layout  | See plan.md   |
