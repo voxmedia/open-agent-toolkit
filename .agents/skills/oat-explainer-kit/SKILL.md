@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.1.0
+version: 1.0.0
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
