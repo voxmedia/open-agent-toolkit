@@ -37,15 +37,15 @@ oat_template: true
 
 ## Parallelism
 
-Phase p01 is an operator-assisted pre-implementation gate: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. Phase p06 runs the lockstep release boundary only after that gate passes.
+Gate g01 is operator-assisted and outside implementation phase ownership: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. Phase p06 runs the lockstep release boundary only after that gate passes.
 
 ---
 
-## Phase 1: Live Cursor Pin Verification
+## Pre-implementation Gate g01: Live Cursor Pin Verification
 
-### Task p01-t01: Verify and record every shippable Cursor pin mapping
+### Gate procedure: Verify and record every shippable Cursor pin mapping
 
-**Execution contract:** This is an operator-assisted pre-implementation gate, not a phase-implementer assignment. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so restarting Cursor does not abandon an accepted child-agent handle.
+**Execution contract:** This gate is not an implementation phase or task and has no phase-implementer or phase-review bookkeeping. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so restarting Cursor does not abandon an accepted child-agent handle.
 
 **Files:**
 
@@ -98,10 +98,10 @@ Expected: the evidence record is formatted; no temporary agent definition remain
 
 ```bash
 git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
-git commit -m "test(p01-t01): verify cursor pin syntax mappings"
+git commit -m "test(g01): verify cursor pin syntax mappings"
 ```
 
-After this commit, mark p01 complete and begin tracked implementation at p02. No phase implementer is created for p01.
+After this commit, begin tracked implementation at p02. Do not add a p01 orchestration run or code-review row; g01 is covered by its persisted evidence record and the plan artifact review.
 
 ---
 
@@ -314,46 +314,6 @@ Expected: managed Cursor files are not false-positive strays and status/init pre
 ```bash
 git add packages/cli/src/commands/status packages/cli/src/commands/init packages/cli/src/commands/shared/codex-strays.ts packages/cli/src/commands/shared/codex-strays.test.ts
 git commit -m "feat(p03-t02): integrate cursor variants with lifecycle commands"
-```
-
----
-
-### Task p03-t03: Add the direct Cursor materialize provider command
-
-**Files:**
-
-- Create: `packages/cli/src/commands/providers/cursor/index.ts`
-- Create: `packages/cli/src/commands/providers/cursor/materialize.ts`
-- Create: `packages/cli/src/commands/providers/cursor/materialize.test.ts`
-- Modify: `packages/cli/src/commands/providers/providers.types.ts`
-- Modify: `packages/cli/src/commands/providers/index.ts`
-- Modify: `packages/cli/src/commands/index.test.ts`
-- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
-
-**Step 1: Write failing command tests**
-
-Specify `oat providers cursor materialize <agent-name> --model <ladder-id>` for project/user scope, dry-run/JSON behavior, role/path overrides, owner assignment, unknown mapping rejection, and no raw frontmatter override.
-
-**Step 2: Implement the thin command**
-
-Reuse the Cursor codec and scope/path conventions; keep file planning and writes in provider modules.
-
-**Step 3: Format and verify**
-
-Run:
-
-```bash
-pnpm exec oxfmt --write packages/cli/src/commands/providers/cursor packages/cli/src/commands/providers/providers.types.ts packages/cli/src/commands/providers/index.ts packages/cli/src/commands/index.test.ts packages/cli/src/commands/help-snapshots.test.ts
-pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/providers/cursor/materialize.test.ts src/commands/index.test.ts src/commands/help-snapshots.test.ts
-```
-
-Expected: command help and behavior expose mapped ladder IDs only and never emit flat IDs into generated frontmatter.
-
-**Step 4: Commit**
-
-```bash
-git add packages/cli/src/commands/providers packages/cli/src/commands/index.test.ts packages/cli/src/commands/help-snapshots.test.ts
-git commit -m "feat(p03-t03): add cursor materialize command"
 ```
 
 ---
@@ -801,7 +761,6 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                             |
 | p02    | code     | pending         | -          | -                                                             |
 | p03    | code     | pending         | -          | -                                                             |
 | p04    | code     | pending         | -          | -                                                             |
@@ -821,14 +780,14 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 
 **Summary:**
 
-- Phase 1: 1 task - Live evidence gates every shipped Cursor mapping.
+- Gate g01: Live evidence gates every shipped Cursor mapping before implementation.
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
-- Phase 3: 5 tasks - Sync/status/init/provider/doctor/resolver/audit integration.
+- Phase 3: 4 tasks - Sync/status/init, doctor, resolver, and audit integration.
 - Phase 4: 4 tasks - Canonical roles, dispatch guidance, recommendation, and docs.
 - Phase 5: 1 task plus a configured HiLL checkpoint - Generated provider views and final native role-launch evidence.
 - Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
-**Total: 15 tasks**
+**Total: 13 implementation tasks plus 1 pre-implementation gate**
 
 Ready for code review and merge after all tasks and reviews pass.
 
