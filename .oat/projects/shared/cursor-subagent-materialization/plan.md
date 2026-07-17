@@ -6,6 +6,7 @@ oat_last_updated: 2026-07-17
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p03', 'p04']]
+oat_plan_hill_phases: ['p05']
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -631,6 +632,7 @@ git commit -m "docs(p04-t04): explain cursor materialized dispatch"
 - Generated: `.cursor/**`
 - Generated: `.oat/sync/manifest.json`
 - Generated: `packages/cli/assets/**`
+- Modify: `.oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md`
 
 **Step 1: Bundle canonical assets**
 
@@ -665,14 +667,18 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.te
 
 Expected: generated assets contain only approved mappings and focused tests pass.
 
-**Step 4: Commit**
+**Step 4: Persist the final-launch restart handoff**
+
+Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. This persisted handoff is the p05 HiLL checkpoint input after the phase implementer returns.
+
+**Step 5: Commit**
 
 ```bash
-git add .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
+git add .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
 git commit -m "chore(p05-t01): sync cursor materialized agents"
 ```
 
-**Step 5: Enforce post-commit generated cleanliness**
+**Step 6: Enforce post-commit generated cleanliness**
 
 Run:
 
@@ -680,15 +686,16 @@ Run:
 pnpm run --silent cli:source -- sync --scope all --dry-run --json > /tmp/oat-sync-dry-run.json
 node -e 'const fs = require("node:fs"); const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (report.summary.plannedOperations !== 0) throw new Error(`plannedOperations=${report.summary.plannedOperations}`);' /tmp/oat-sync-dry-run.json
 git diff --exit-code -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
+test -z "$(git status --porcelain --untracked-files=all -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets)"
 ```
 
-Expected: `summary.plannedOperations` is exactly zero and all generated provider views, the sync manifest, and bundled assets are clean. If not, regenerate, amend the task commit, and repeat before advancing.
+Expected: `summary.plannedOperations` is exactly zero and all generated provider views, the sync manifest, and bundled assets are clean, including untracked files. If not, regenerate, amend the task commit, and repeat before advancing.
 
 ---
 
-### Task p05-t02: Launch final generated Cursor role variants
+### HiLL checkpoint after p05: Launch final generated Cursor role variants
 
-**Execution contract:** This is an operator-assisted gate after p05-t01's phase implementer has returned and committed the generated views. Do not assign it to that implementer. Start a fresh Cursor session rooted at this worktree so the newly generated native agent definitions are discovered.
+`oat_plan_hill_phases: ['p05']` makes this a persisted root/operator lifecycle boundary after p05-t01's phase implementer returns. `oat-project-implement` pauses at p05; no second p05 task is dispatched. The operator starts a fresh Cursor session rooted at this worktree so the committed generated native definitions are discovered, then resumes the project at this checkpoint.
 
 **Files:**
 
@@ -696,9 +703,9 @@ Expected: `summary.plannedOperations` is exactly zero and all generated provider
 - Read: `.cursor/agents/oat-reviewer-*.md`
 - Read: `.cursor/agents/oat-phase-implementer-*.md`
 
-**Step 1: Select exact final variants**
+**Step 1: Validate the persisted handoff**
 
-Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native agent type and its generated bracket-form `model:` value.
+Confirm the verification record says `status: awaiting-final-launch` and names at least one approved generated reviewer variant plus one approved generated phase-implementer variant with their bracket-form `model:` values.
 
 **Step 2: Launch through the native agent-definition surface**
 
@@ -721,10 +728,10 @@ Expected: both final generated role families were launched by exact native type,
 
 ```bash
 git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
-git commit -m "test(p05-t02): verify generated cursor role launches"
+git commit -m "test(p05-hill): verify generated cursor role launches"
 ```
 
-After this commit, mark p05 complete and resume `oat-project-implement` at p06.
+After this evidence commit, record p05 in `oat_hill_completed` through the normal lifecycle bookkeeping and resume `oat-project-implement` at p06.
 
 ---
 
@@ -783,9 +790,10 @@ Run:
 pnpm run --silent cli:source -- sync --scope all --dry-run --json > /tmp/oat-sync-dry-run.json
 node -e 'const fs = require("node:fs"); const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (report.summary.plannedOperations !== 0) throw new Error(`plannedOperations=${report.summary.plannedOperations}`);' /tmp/oat-sync-dry-run.json
 git diff --exit-code -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
+test -z "$(git status --porcelain --untracked-files=all -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets)"
 ```
 
-Expected: `summary.plannedOperations` is exactly zero and the generated provider views, sync manifest, and bundled assets remain clean after the release commit.
+Expected: `summary.plannedOperations` is exactly zero and the generated provider views, sync manifest, and bundled assets remain clean after the release commit, including untracked files.
 
 ---
 
@@ -817,10 +825,10 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 5 tasks - Sync/status/init/provider/doctor/resolver/audit integration.
 - Phase 4: 4 tasks - Canonical roles, dispatch guidance, recommendation, and docs.
-- Phase 5: 2 tasks - Generated provider views and final native role-launch evidence.
+- Phase 5: 1 task plus a configured HiLL checkpoint - Generated provider views and final native role-launch evidence.
 - Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
-**Total: 16 tasks**
+**Total: 15 tasks**
 
 Ready for code review and merge after all tasks and reviews pass.
 
