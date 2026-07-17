@@ -53,18 +53,20 @@ Phases p01 and p02 are sequential foundations: shipped mapping data cannot prece
 
 List every proposed ladder ID, exact bracket-form frontmatter value, syntax family, and intended catalogue/recommendation use. Start from discovery; do not derive mappings by suffix parsing.
 
-**Step 2: Launch native probes**
+**Step 2: Establish a fresh native-agent discovery boundary**
 
-Create one temporary native agent definition per syntax family and launch it by exact agent type. Cover GPT effort, Claude effort, Composer standard/fast, and Grok effort/fast syntax. Test `claude-fable-5-thinking-*` and `cursor-grok-4.5-high-fast` explicitly rather than inferring them.
+Create one temporary native agent definition per syntax family, then start a fresh Cursor session rooted at this worktree so Cursor discovers those definitions before any launch. Invoke each exact temporary agent type through Cursor's native agent-definition surface. Do not substitute `cursor-agent --model`: that tests CLI selector routing, not definition-level frontmatter pinning.
+
+Cover GPT effort, Claude effort, Composer standard/fast, and Grok effort/fast syntax. Test `claude-fable-5-thinking-*` and `cursor-grok-4.5-high-fast` explicitly rather than inferring them.
 
 For each probe, record:
 
 - exact definition and bracket-form `model:` value;
-- launch acceptance and externally observable configured-model evidence;
+- launch acceptance and externally observable configured-model evidence from Cursor's native launch UI/metadata;
 - `CURSOR_CONVERSATION_ID` for transcript correlation;
 - result: `approved` or `excluded`, with rationale.
 
-Subagent self-report, catalogue presence, or successful completion alone is not model-pin proof. If positive pin evidence is unavailable or fallback is plausible, exclude the entry.
+Subagent self-report, catalogue presence, successful completion, or `cursor-agent --model` output is not definition-pin proof. If the native launch surface does not expose evidence that distinguishes the configured pin from silent fallback, exclude the entry.
 
 **Step 3: Gate every entry**
 
@@ -436,6 +438,8 @@ git commit -m "feat(p03-t05): dispatch cursor pinned variants"
 
 - Modify: `.agents/agents/oat-reviewer.md`
 - Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 1: Update canonical return contracts**
 
@@ -445,21 +449,27 @@ When `CURSOR_AGENT=1` and `CURSOR_CONVERSATION_ID` is present, require the retur
 
 Increase each changed canonical agent's frontmatter version once for this PR.
 
-**Step 3: Format and verify**
+**Step 3: Update pinned-version tests**
+
+Update assertions that pin these two canonical agent versions in the same task, so this commit is independently green.
+
+**Step 4: Format and verify**
 
 Run:
 
 ```bash
-pnpm exec oxfmt --write .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md
-pnpm run cli -- internal validate-oat-skills
+pnpm exec oxfmt --write .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+pnpm run cli:source -- internal validate-oat-skills
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
+git diff --exit-code -- packages/cli/assets
 ```
 
-Expected: both canonical roles validate and use `configured`, never `verified`, for Cursor model provenance.
+Expected: both canonical roles and pinned-version tests pass, generated assets remain untouched, and provenance uses `configured`, never `verified`.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
-git add .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md
+git add .agents/agents/oat-reviewer.md .agents/agents/oat-phase-implementer.md packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p04-t01): report cursor conversation correlation"
 ```
 
@@ -473,6 +483,7 @@ git commit -m "feat(p04-t01): report cursor conversation correlation"
 - Modify: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md`
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Modify: `.agents/skills/oat-project-plan-writing/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
 - Modify: `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
 - Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
@@ -489,7 +500,7 @@ Replace concrete managed Cursor `dispatchArgs.model` rules with `dispatchArgs.va
 
 **Step 3: Bump changed skill versions**
 
-Increase each changed canonical `SKILL.md` version once for the final PR diff, including `oat-dispatch-subagents` when its provider reference changes.
+Increase each changed canonical `SKILL.md` version once for the final PR diff. This includes `oat-dispatch-subagents` when its provider reference changes and `oat-project-implement` when its reference files change.
 
 **Step 4: Update validation contracts**
 
@@ -500,17 +511,19 @@ Require variant-first guidance and reject stale concrete Cursor model-argument l
 Run:
 
 ```bash
-pnpm exec oxfmt --write .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
-pnpm run cli -- internal validate-oat-skills
+pnpm exec oxfmt --write .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+pnpm run cli:source -- internal validate-oat-skills
+pnpm run cli:source -- internal validate-skill-version-bumps --base-ref origin/main
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts
+git diff --exit-code -- packages/cli/assets
 ```
 
-Expected: canonical skills validate, gate-hardening guidance remains present, and tests enforce Cursor variants rather than model arguments.
+Expected: canonical skills and version bumps validate, generated assets remain untouched, gate-hardening guidance remains present, and tests enforce Cursor variants rather than model arguments.
 
 **Step 6: Commit**
 
 ```bash
-git add .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git add .agents/skills/oat-dispatch-subagents .agents/skills/oat-project-review-provide/SKILL.md .agents/skills/oat-project-plan-writing/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-implement/references packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "docs(p04-t02): dispatch cursor native variants"
 ```
 
