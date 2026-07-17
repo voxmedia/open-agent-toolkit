@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Phase 1 review requires a bounded fix loop before Phase 2.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -238,7 +237,7 @@ Chronological log of implementation progress.
   One reconciliation commit records the actual history; future task dispatches
   must return control after each code commit for root-owned bookkeeping.
 
-### Phase 1 Review — Fixes Added
+### Phase 1 Review — Fixes Completed
 
 **Artifact:** `reviews/p01-review-2026-07-17T224106Z.md`
 
@@ -251,9 +250,10 @@ Chronological log of implementation progress.
 - Important: enforce run-request cross-field invariants.
 - Medium: enforce the allowed decision/source matrix per lifecycle product.
 
-**Disposition:** All four findings are accepted for one bounded append-only fix
-commit, followed by the full Phase 1 verification matrix and reviewer
-re-review.
+**Disposition:** All four findings were resolved in append-only commit
+`fb1068eb`. The implementer reported 491 focused tests passing, both affected
+packages passing type-check and lint, scoped formatting passing, and no
+remaining blocker. Reviewer re-review is pending.
 
 ### 2026-07-16
 
@@ -305,10 +305,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage                             |
-| ----- | --------- | ------ | ------ | ------------------------------------ |
-| 1     | 388       | 388    | 0      | All planned Phase 1 task suites pass |
-| 2     | -         | -      | -      | -                                    |
+| Phase | Tests Run | Passed | Failed | Coverage                                   |
+| ----- | --------- | ------ | ------ | ------------------------------------------ |
+| 1     | 491       | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
+| 2     | -         | -      | -      | -                                          |
 
 ## Final Summary (for PR/docs)
 

@@ -1,8 +1,7 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: 29af9518
-oat_blockers:
-  - Phase 1 review found one critical, two important, and one medium issue requiring a bounded fix loop.
+oat_last_commit: fb1068eb
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T22:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T22:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 bounded review-fix loop
+Implementation - Phase 1 fixes complete; re-review pending
 
 ## Artifacts
 
@@ -74,15 +73,14 @@ Implementation - Phase 1 bounded review-fix loop
 - ✓ Phase 1 tasks `p01-t01` through `p01-t06` committed
 - ⚠ Root reconciliation recorded missed per-task bookkeeping commits
 - ✓ Phase 1 verification passed after append-only fix `e7742119`
-- ⚠ Phase 1 review found 1 critical, 2 important, and 1 medium issue
-- ⧗ All four findings accepted for a bounded fix loop
+- ✓ Phase 1 review fix commit `fb1068eb` resolves all four findings
+- ✓ Full post-fix matrix passed (491 tests plus type-check, lint, and format)
+- ⧗ Phase 1 reviewer re-review pending
 
 ## Blockers
 
-- Cross-scope adapter/core resolution, public safe-path validation,
-  run-request cross-field invariants, and lifecycle decision/source matrices
-  require correction before Phase 1 can pass.
+None
 
 ## Next Milestone
 
-Apply the bounded Phase 1 review fixes, rerun verification, and re-review.
+Run the Phase 1 reviewer re-review before starting Phase 2.
