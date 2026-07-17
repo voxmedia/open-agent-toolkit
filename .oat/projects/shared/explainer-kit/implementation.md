@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -179,9 +179,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                              | Actual / Accepted                                                  | Reason                                                                                                                   | Source of Truth   | Follow-up                                    |
+| ------------- | --------------- | ----------------------------------------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ----------------- | -------------------------------------------- |
+| p01-t03       | `plan.md`       | Commit subject `feat(p01-t03): register typed explainer config`   | Commit `24a7bf72` uses `feat(config): register explainer settings` | User accepted the non-behavioral subject deviation; files and verification remained task-bounded                         | Commit `24a7bf72` | None                                         |
+| p01-t04       | `plan.md`       | State intent task omitted `packages/control-plane/src/project.ts` | Added `project.ts` to the task boundary before implementation      | `getProjectState()` manually constructs the public `ProjectState`, so the design cannot be implemented without this file | Updated `plan.md` | Resume p01-t04 in the original phase session |
 
 ## Test Results
 

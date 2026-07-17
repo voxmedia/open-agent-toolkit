@@ -195,6 +195,7 @@ git commit -m "feat(p01-t03): register typed explainer config"
 **Files:**
 
 - Modify: `packages/control-plane/src/types.ts`
+- Modify: `packages/control-plane/src/project.ts`
 - Modify: `packages/control-plane/src/state/parser.ts`
 - Modify: `packages/control-plane/src/state/parser.test.ts`
 - Modify: `packages/control-plane/src/project.test.ts`
@@ -217,7 +218,7 @@ Add `ExplainerDecisionV1` and optional `oat_project_explainer` /
 
 **Step 3: Format**
 
-Run: `pnpm exec oxfmt --write packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.test.ts packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts`
+Run: `pnpm exec oxfmt --write packages/control-plane/src/types.ts packages/control-plane/src/project.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.test.ts packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts`
 
 **Step 4: Verify**
 
@@ -227,7 +228,7 @@ Expected: Old projects remain valid and intent invariants pass.
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane/src/types.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.test.ts packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts
+git add packages/control-plane/src/types.ts packages/control-plane/src/project.ts packages/control-plane/src/state/parser.ts packages/control-plane/src/state/parser.test.ts packages/control-plane/src/project.test.ts packages/cli/src/validation/project-state.ts packages/cli/src/validation/project-state.test.ts
 git commit -m "feat(p01-t04): model explainer lifecycle intent"
 ```
 
