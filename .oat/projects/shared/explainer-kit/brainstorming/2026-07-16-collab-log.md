@@ -347,3 +347,10 @@ Append-only. Entries by Fable unless marked otherwise.
 - **Assessment:** works-well
 - **Fable's position:** PASS — design artifacts converged from the reviewer side; ready for consolidated user review per draft-and-review mode.
 - **Skill implication:** none. Two-round adversarial convergence (11 findings → all accepted → verified) completed without either peer editing the other's artifacts.
+
+### [2026-07-17 07:49] content — DECISION: user approved converged spec/design at HiLL gate (msg_ddda9d2f0175)
+
+- **What happened:** User approved the converged `spec.md`/`design.md` at the design HiLL gate. Sol is marking design complete and the project ready for planning.
+- **Assessment:** works-well
+- **Fable's position:** No dissent — the approved artifacts are the round-2 PASS versions with all 11 review findings incorporated; nothing changed between my PASS and the approval.
+- **Skill implication:** none. Design phase closed. The draft-and-review collaboration pattern (Sol drafts, Fable adversarial review, user reviews consolidated result) completed its full cycle: 1 draft, 11 findings, 1 revision round, PASS, user approval.
