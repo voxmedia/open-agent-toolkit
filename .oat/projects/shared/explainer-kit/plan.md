@@ -1588,17 +1588,17 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact |
-| ------ | -------- | ------- | ---------- | -------- |
-| p01    | code     | pending | -          | -        |
-| p02    | code     | pending | -          | -        |
-| p03    | code     | pending | -          | -        |
-| p04    | code     | pending | -          | -        |
-| p05    | code     | pending | -          | -        |
-| final  | code     | pending | -          | -        |
-| spec   | artifact | pending | -          | -        |
-| design | artifact | pending | -          | -        |
-| plan   | artifact | passed  | 2026-07-17 | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| p04    | code     | pending  | -          | -                                                  |
+| p05    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | pending  | -          | -                                                  |
+| plan   | artifact | received | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T191324Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
