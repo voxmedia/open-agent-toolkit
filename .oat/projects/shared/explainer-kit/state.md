@@ -1,8 +1,7 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: 0d829a44
-oat_blockers:
-  - Phase 1 verification found oat-explainer-kit at 1.1.0 while the p01 contract requires the new skill family to remain at 1.0.0.
+oat_current_task: p02-t01
+oat_last_commit: e7742119
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T22:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T22:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 task commits complete; verification fix required
+Implementation - Phase 1 verification passed; review pending
 
 ## Artifacts
 
@@ -73,14 +72,13 @@ Implementation - Phase 1 task commits complete; verification fix required
 - ✓ User explicitly waived the configured gate rerun after manual review
 - ✓ Phase 1 tasks `p01-t01` through `p01-t06` committed
 - ⚠ Root reconciliation recorded missed per-task bookkeeping commits
-- ⧗ Phase 1 verification is blocked by the p01-t05 skill-version regression
+- ✓ Phase 1 verification passed after append-only fix `e7742119`
+- ⧗ Phase 1 code review pending
 
 ## Blockers
 
-- `oat-explainer-kit` is `1.1.0`; p01-t01's required current-state
-  validation expects the new family to remain at `1.0.0`.
+None
 
 ## Next Milestone
 
-Apply an append-only p01 fix, rerun Phase 1 verification, then run the Phase 1
-review.
+Run the Phase 1 code review before starting Phase 2.
