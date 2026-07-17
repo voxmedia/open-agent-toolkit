@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: explainer-kit
 
 **Started:** 2026-07-16
-**Last Updated:** 2026-07-16
+**Last Updated:** 2026-07-17
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,14 +26,17 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 6     | 0/6       |
+| Phase 2 | pending     | 10    | 0/10      |
+| Phase 3 | pending     | 9     | 0/9       |
+| Phase 4 | pending     | 9     | 0/9       |
+| Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/38 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Contracts, configuration, and packaged skeleton
 
 **Status:** in_progress
 **Started:** 2026-07-16
@@ -57,7 +60,7 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Scaffold canonical skills and register both packs
 
 **Status:** completed / in_progress / pending / blocked
 **Commit:** {sha} (if completed)
@@ -127,6 +130,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 ## Implementation Log
 
 Chronological log of implementation progress.
+
+### 2026-07-17 — Implementation Run 1
+
+- Plan: five sequential phases, 38 tasks.
+- Dispatch: Tier 1 target-pinned Cursor subagents; managed `high` policy;
+  selected model `gpt-5.6-sol-high`.
+- HiLL checkpoints: final phase only (`p05`).
+- Auto-review at HiLL checkpoints: enabled.
+- Current task: `p01-t01`.
 
 ### 2026-07-16
 
