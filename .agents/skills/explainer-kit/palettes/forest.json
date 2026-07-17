@@ -1,0 +1,37 @@
+{
+  "name": "forest",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#f7fee7",
+        "panel": "#ecfccb",
+        "elevated": "#d9f99d"
+      },
+      "ink": { "primary": "#052e16", "muted": "#365314", "inverse": "#ffffff" },
+      "accent": { "primary": "#166534", "secondary": "#3f6212" },
+      "status": {
+        "success": "#166534",
+        "warning": "#854d0e",
+        "danger": "#991b1b",
+        "info": "#1e40af"
+      },
+      "diagramSeries": ["#166534", "#3f6212", "#854d0e", "#1e40af"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#052e16",
+        "panel": "#14532d",
+        "elevated": "#365314"
+      },
+      "ink": { "primary": "#f7fee7", "muted": "#d9f99d", "inverse": "#052e16" },
+      "accent": { "primary": "#86efac", "secondary": "#bef264" },
+      "status": {
+        "success": "#86efac",
+        "warning": "#fde047",
+        "danger": "#fca5a5",
+        "info": "#93c5fd"
+      },
+      "diagramSeries": ["#86efac", "#bef264", "#fde047", "#93c5fd"]
+    }
+  }
+}

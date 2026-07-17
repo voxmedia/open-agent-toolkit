@@ -1,0 +1,37 @@
+{
+  "name": "violet",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#faf5ff",
+        "panel": "#f3e8ff",
+        "elevated": "#e9d5ff"
+      },
+      "ink": { "primary": "#2e1065", "muted": "#581c87", "inverse": "#ffffff" },
+      "accent": { "primary": "#6b21a8", "secondary": "#5b21b6" },
+      "status": {
+        "success": "#166534",
+        "warning": "#854d0e",
+        "danger": "#991b1b",
+        "info": "#1e40af"
+      },
+      "diagramSeries": ["#6b21a8", "#5b21b6", "#166534", "#854d0e"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#2e1065",
+        "panel": "#4c1d95",
+        "elevated": "#581c87"
+      },
+      "ink": { "primary": "#faf5ff", "muted": "#e9d5ff", "inverse": "#2e1065" },
+      "accent": { "primary": "#d8b4fe", "secondary": "#c4b5fd" },
+      "status": {
+        "success": "#86efac",
+        "warning": "#fde047",
+        "danger": "#fca5a5",
+        "info": "#93c5fd"
+      },
+      "diagramSeries": ["#d8b4fe", "#c4b5fd", "#86efac", "#fde047"]
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "name": "technical",
+  "typography": {
+    "sans": ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+    "serif": ["ui-serif", "Georgia", "serif"],
+    "mono": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+    "scale": {
+      "caption": "0.8125rem",
+      "body": "0.9375rem",
+      "title": "1.375rem",
+      "display": "2rem"
+    },
+    "lineHeight": { "caption": 1.35, "body": 1.5, "title": 1.2, "display": 1.1 }
+  },
+  "spacing": {
+    "unit": 3,
+    "scale": { "xs": 3, "sm": 6, "md": 12, "lg": 18, "xl": 30 }
+  },
+  "geometry": { "radius": { "sm": 2, "md": 4, "lg": 6 }, "borderWidth": 1 },
+  "elevation": {
+    "shadows": {
+      "low": "0 1px 2px rgb(0 0 0 / 0.12)",
+      "high": "0 8px 20px rgb(0 0 0 / 0.2)"
+    }
+  },
+  "density": "compact",
+  "motion": {
+    "enabled": false,
+    "durationMs": { "fast": 0, "normal": 0, "slow": 0 },
+    "easing": { "standard": "linear", "emphasized": "linear" },
+    "reducedMotion": "disable-nonessential"
+  },
+  "diagrams": {
+    "lineWidth": 2,
+    "nodeGap": 24,
+    "arrowStyle": "straight",
+    "labelTreatment": "boxed"
+  }
+}
