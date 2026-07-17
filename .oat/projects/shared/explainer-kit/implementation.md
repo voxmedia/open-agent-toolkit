@@ -317,6 +317,13 @@ remaining blocker. Re-review passed with zero findings; canonical artifact:
   private Stoa configuration example without introducing it into neutral public
   core fixtures.
 
+### Operator Input — Deck Presentation Axis
+
+- Added directly to upcoming task p02-t05 before template implementation.
+- `deck-shell.html` defaults to left-to-right paging, confines wide inner
+  content on the x-axis, supports both horizontal and vertical arrow pairs,
+  remains readable without JavaScript, and prints as a vertical document.
+
 ### 2026-07-16
 
 **Session Start:** {time}

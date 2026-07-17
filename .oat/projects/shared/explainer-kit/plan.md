@@ -506,6 +506,10 @@ git commit -m "feat(p02-t04): implement resolved theme system"
 Cover documented tokens, inline-only assets, valid shell structure, and absence
 of organization-specific names, colors, destinations, or example content.
 Assert worked examples exist only under `examples/` and use RFC 2606 domains.
+For `deck-shell.html`, cover left-to-right slide advance as the presentation
+default, x-axis overflow confinement inside slide content, both keyboard arrow
+pairs (`Left`/`Right` and `Up`/`Down`), a readable no-JS fallback, and a
+vertical print layout.
 
 Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs`
 Expected: Neutral production templates are missing.
@@ -515,6 +519,9 @@ Expected: Neutral production templates are missing.
 Evolve the reference shells while removing hardcoded branding/destinations and
 preserving sticky navigation, diagrams, deck layout, and expandable code. Move
 worked content into the exact external example fixtures.
+Implement the deck as horizontal paging by default; preserve vertical document
+flow when JavaScript is unavailable and in print media. Keep wide inner content
+contained on the x-axis rather than expanding the page.
 
 **Step 3: Format**
 
@@ -523,7 +530,8 @@ Run: `pnpm exec oxfmt --write .agents/skills/explainer-kit/templates .agents/ski
 **Step 4: Verify**
 
 Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs`
-Expected: Every production shell is neutral and token-complete.
+Expected: Every production shell is neutral and token-complete; deck navigation,
+overflow, no-JS, and print-axis cases pass.
 
 **Step 5: Commit**
 
