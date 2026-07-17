@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers:
-  - 'Quick-start exit gate timed out after 900000ms on final remediation review; no review artifact was produced.'
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -13,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -39,26 +38,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T17:26:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T20:07:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Planning
+**Status:** Plan Complete
 **Started:** 2026-07-16
-**Last Updated:** 2026-07-16
+**Last Updated:** 2026-07-17
 
 ## Current Phase
 
-Plan drafted - Awaiting review and readiness gates
+Plan complete - Manual artifact review passed; configured exit-gate rerun waived by operator
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (in progress)
+- **Plan:** `plan.md` (complete; ready for implementation)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -69,7 +68,9 @@ Plan drafted - Awaiting review and readiness gates
 - ✓ Design review findings resolved
 - ✓ Design re-review passed
 - ✓ Execution plan drafted
-- ⧗ Plan review and readiness gates
+- ✓ Manual plan artifact review passed
+- ✓ Configured quick-start exit-gate rerun explicitly skipped by operator
+- ⧗ Pre-implementation gate g01: live Cursor pin verification
 
 ## Blockers
 
@@ -77,4 +78,4 @@ None
 
 ## Next Milestone
 
-Pass plan review and initialize implementation tracking
+Complete pre-implementation gate g01, then run `oat-project-implement`

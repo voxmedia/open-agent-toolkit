@@ -1,17 +1,17 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [['p03', 'p04']]
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: cursor-subagent-materialization
@@ -838,7 +838,7 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
 | plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T142637Z.md   |
 | plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T160504Z.md   |
-| plan   | artifact | received        | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T194713Z.md            |
+| plan   | artifact | passed          | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T194713Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

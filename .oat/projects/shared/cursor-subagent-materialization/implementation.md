@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'Quick-start exit gate timed out after 900000ms on final remediation review; no review artifact was produced.'
+oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -23,14 +22,15 @@ oat_generated: false
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
-## Quick-start Gate Blocker
+## Quick-start Gate Disposition
 
-**Recorded:** 2026-07-17T17:26:23Z
+**Recorded:** 2026-07-17T20:07:20Z
 
 - The configured `oat-project-quick-start` exit gate accepted its final remediation reviewer but timed out after `900000ms`.
 - The two preceding Important findings were resolved in commit `447f0389`.
-- The timeout returned `status: review_failed` and produced no corroborated review artifact, so review receipt and implementation-readiness finalization are not allowed.
-- Resume by invoking `oat-project-quick-start` again. Keep `plan.md` in its interruption-safe pre-review state until a configured gate completes.
+- The operator explicitly waived another configured exit-gate attempt after manually invoking an independent artifact review.
+- `artifact-plan-review-2026-07-17T194713Z.md` passed with 0 Critical, Important, Medium, or Minor findings and was received as the plan-readiness review.
+- This clears the quick-start readiness blocker only. Pre-implementation gate g01 remains required before `oat-project-implement` begins at p02.
 
 ## Progress Overview
 
