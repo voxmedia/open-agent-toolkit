@@ -1,6 +1,6 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-plan
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_generated: false
@@ -153,13 +153,47 @@ Project runs use
 `<resolved-project-path>/explainers/<slug>/`. Non-project OAT runs use
 `.oat/repo/explainers/<slug>/`. Direct callers pass `outputRoot`.
 
-OAT project and repo runs track the complete run directory, including `site/`;
-the implementation does not write `.gitignore` rules for them. Direct callers
-own ignore policy for their output root and may ignore only outputs whose
-manifest entries are both rebuildable and safely reproduced elsewhere.
+Shared-project and repo runs track the complete run directory, including
+`site/`; the implementation does not write `.gitignore` rules for them.
+Local-project runs inherit the local project root's ignored/untracked posture,
+so commit durability is unavailable unless the caller first relocates the run
+to a tracked root. Direct callers own ignore policy for their output root and
+may ignore only outputs whose manifest entries are both rebuildable and safely
+reproduced elsewhere.
 
 Each run owns its slug-scoped `catalog.json`. Aggregating catalogs across runs
 or maintaining a destination-wide initiative index is out of scope for v1.
+
+### Archive-Safe Final Location
+
+Active project output remains under
+`<resolved-project-path>/explainers/<slug>/`. When
+`oat-project-complete` archives a shared project, `oat project archive` owns an
+additional export before deleting the active tree:
+
+```text
+.oat/repo/explainers/_projects/<archive-snapshot>/
+└── <complete copied explainers subtree>
+```
+
+`_projects` is an internal namespace that cannot collide with valid kebab-case
+run slugs. The archive snapshot identifier comes from the CLI's collision-safe
+archive target. The command copies the complete subtree, including failed-run
+intermediates, verifies every copied manifest artifact hash, and reports the
+tracked export root. A copy or verification failure fails archival before the
+active project is removed. The gitignored archive remains local history and is
+never a durable link target.
+
+Only shared projects enter this archive/export path. Local projects are not
+archived by `oat-project-complete`; their explainer packages retain the local
+project's untracked durability posture and must remain `built-not-durable`
+unless verified publish evidence exists.
+
+Manifest paths remain relative to each run root, so relocation does not rewrite
+content/artifact entries. Commit durability evidence does carry repository
+paths; after export it is re-attested against the tracked export commit and
+supersedes evidence for the deleted active path. Summary and archive-aware PR
+links point to the tracked export path.
 
 ## Component Design
 
@@ -334,6 +368,12 @@ elements. `project-explainer` emphasizes planned architecture, decisions,
 risks, phases, and validation approach. OAT path knowledge lives only in the
 adapter's source-role binding.
 
+`project-recap` binds exactly one project source set. A multi-project
+bird's-eye recap is a different product: the wave project owns the future
+`program-recap` recipe and its lifecycle integration. That recipe can extend
+this registry and use `FactBaseBindingV1.mode: 'supplied'` without changing the
+v1 request, fact-base, theme, or manifest contracts.
+
 ### Theme Resolver
 
 **Purpose:** Convert flexible selection inputs into one replayable concrete
@@ -361,6 +401,11 @@ uses the bundle and emits a warning.
 **Design Decisions:**
 
 - Light/dark are modes within one semantic palette, not unrelated palettes.
+- `renderStrategy` defaults to `default-only`; callers can explicitly request
+  `user-switchable`. The normalized run request and build record persist this
+  rendering choice, while the resolved bundle always contains both validated
+  modes. Render strategy is excluded from bundle identity and derived-preset
+  promotion.
 - V1 ships a small matrix to keep visual QA bounded.
 - Raw art direction is excluded from public records unless the caller
   explicitly opts into retaining it in a private output.
@@ -459,6 +504,32 @@ core contract.
 - Derive project/non-project output roots.
 - Bind OAT artifacts to generic recipe source roles.
 - Resolve lifecycle intent and invoke the core.
+- Own one shared tracked-run finalizer so planning, implementation, and
+  completion callers do not improvise commit/durability choreography.
+
+**Tracked-Run Finalizer:**
+
+```typescript
+interface FinalizeTrackedExplainerRunV1 {
+  runRoot: string;
+  manifestPath: string;
+  commitMode: 'dedicated' | 'completion-bookkeeping';
+  relocatedFrom?: string;
+}
+```
+
+For a normal plan/implementation run, the finalizer creates a dedicated artifact
+commit (`docs(oat): persist <recipe> for <project>`), calls
+`recordDurability` with that commit and the generated paths, then commits the
+manifest/build-record evidence update. For completion-time runs, the existing
+lifecycle bookkeeping commit is the artifact commit; the evidence update is a
+second commit. Both commits are pushed together. The core verifies commits but
+never creates them.
+
+If evidence verification fails, the run remains `built-not-durable`; the
+failure is warned and recorded without blocking project completion. The
+artifact commit is still pushed. A later attestation can update the same
+manifest.
 
 **Config Surface:**
 
@@ -548,18 +619,33 @@ resolve(product, mode, state, preference, kickoffRequest):
   pre-approval summary/document steps, `oat-project-implement` checks for a
   fresh recap. Autonomous policy invokes `project-recap` before the final HiLL
   boundary. The outcome is included in the completion report; failure never
-  blocks approval or later PR steps.
+  blocks approval or later PR steps. A successful run uses the shared
+  tracked-run finalizer; if the project is archived later, completion rehomes
+  and re-attests the existing package.
 - **Interactive completion:** `oat-project-complete` resolves
   `projectRecap` before lifecycle mutation. `ask` joins the existing batched
   completion prompt and persists the answer. A generate decision runs after
   optional summary refresh and before `complete-state`, unless a fresh recap
-  manifest already exists.
+  manifest already exists. When archive is selected, the completion sequence
+  is:
+  1. generate or reuse the recap under the active project;
+  2. let `oat project archive` export the entire `explainers/` subtree to the
+     tracked archive-snapshot root before deleting the active project;
+  3. create the existing lifecycle bookkeeping commit containing the export and
+     active-tree deletion;
+  4. call `recordDurability` for exported manifests using that commit and
+     supersede active-path evidence;
+  5. commit the evidence updates, then push both commits.
+     Without archive, the same two-commit pattern uses the active project paths.
 - **Summary visibility:** If `summary.md` exists, recap outcome is appended or
   refreshed in a concise `Explainer Outcome` section. The tracked build record
-  remains the durable source of truth when no summary exists.
+  remains the durable source of truth when no summary exists. Archive-aware
+  summary and PR links use the tracked export root, never
+  `.oat/projects/archived/`.
 
-Wave/program callers are not modified in v1. They can later pass the same
-fact-base contract and canonical recipe IDs.
+Wave/program callers are not modified in v1. The wave project owns the future
+`program-recap` recipe and can later pass the same supplied fact-base contract;
+this project does not broaden `project-recap` to cover multi-project products.
 
 ### Packaging and Release Validation
 
@@ -604,6 +690,15 @@ interface ExplainerRunRequestV1 {
   mode: 'interactive' | 'unattended';
 }
 
+interface ThemeSelectionV1 {
+  palette?: string;
+  visualProfile?: string;
+  suppliedBundlePath?: string;
+  artDirection?: string;
+  defaultMode?: 'light' | 'dark';
+  renderStrategy?: 'default-only' | 'user-switchable';
+}
+
 interface DurabilityEvidenceRequestV1 {
   schemaVersion: 'explainer-kit.durability-evidence/v1';
   manifestPath: string;
@@ -629,10 +724,17 @@ interface DurabilityEvidenceRequestV1 {
 - `recipe.id` must resolve to a bundled or explicitly supplied valid recipe.
 - `retainRawArtDirection: true` requires an art-direction input; otherwise the
   request is invalid. A supplied bundle does not invent or retain direction.
+- `renderStrategy` defaults to `default-only`. That strategy renders only the
+  resolved theme's `defaultMode`; `user-switchable` exposes both validated
+  modes.
 - Publish settings are complete or absent.
 - Commit evidence is submitted only after the caller creates the commit. The
   verifier confirms the referenced commit contains the declared paths at the
   manifest hashes; the core never creates git commits.
+- Commit evidence paths identify immutable inputs and built artifacts, not the
+  mutable manifest/build-record files that receive the evidence. Their follow-up
+  commit makes the attestation durable without requiring evidence about itself,
+  so finalization terminates after two commits.
 
 **Storage:** The normalized request is persisted in privacy-safe form under the
 run root. Sensitive/transient values are redacted.
@@ -744,10 +846,13 @@ interface ArtifactEntryV1 {
     cwd: string;
     inputHashes: Record<string, string>;
   };
-  durableEvidence?: {
+  durableEvidence?: Array<{
     kind: 'commit' | 'publish';
     ref: string;
-  };
+    paths: string[];
+    attestedAt: string;
+    supersedes?: { ref: string; paths: string[] };
+  }>;
   failure?: { code: string; message: string; recovery: string[] };
 }
 ```
@@ -759,6 +864,9 @@ interface ArtifactEntryV1 {
 - `rebuildable: true` requires complete rebuild metadata.
 - `built-durable` requires durable evidence for every required
   non-rebuildable artifact.
+- Commit evidence is current only while its declared paths exist at the
+  referenced repository state. Archive relocation appends verified evidence for
+  the export paths and marks prior active-path evidence superseded.
 - Manifest and build-record outcomes must agree.
 
 **Storage:** `manifest.json` is tracked.
@@ -917,6 +1025,26 @@ The control-plane parser and project-state validator add typed optional
 `ProjectState` as nullable decisions. Existing projects with absent fields
 remain valid.
 
+### Archive Export API
+
+`oat project archive --json` extends its existing result with an optional,
+backward-compatible explainer export report:
+
+```typescript
+interface ArchiveExplainerExportV1 {
+  sourceRoot: string;
+  exportRoot: string;
+  manifests: Array<{
+    relativePath: string;
+    verifiedArtifactCount: number;
+  }>;
+}
+```
+
+The command reports this only when the project contains `explainers/`. It
+copies and hash-verifies before active-tree removal. The completion skill uses
+`exportRoot` to construct commit evidence and archive-aware links.
+
 ## Security Considerations
 
 ### Authentication
@@ -999,6 +1127,9 @@ No database is introduced.
   and do not claim success.
 - **Durability errors:** Mark `built-not-durable`; preserve local output and
   explain commit/publish recovery.
+- **Archive export errors:** Fail archival before active-tree deletion. A later
+  evidence-attestation failure does not block completion; it leaves the recap
+  `built-not-durable` with the tracked export and recovery instructions.
 - **External publish errors:** Preserve the complete local package and partial
   receipt diagnostics; never delete local artifacts.
 - **Lifecycle policy conflicts:** Interactive invalid intent is rejected.
@@ -1035,11 +1166,11 @@ No database is introduced.
 | FR1  | integration        | Packaged core with no OAT; invalid schema/path/publish inputs            |
 | FR2  | integration        | Federated contradictions; supplied fact base; override noise suppression |
 | FR3  | integration        | Both canonical recipes; parameterized source roles; engineer tour        |
-| FR4  | unit + visual      | Named/supplied/derived themes; precedence; AA and matrix QA              |
-| FR5  | unit + integration | Stage transitions; partial failure; durability and rebuildability        |
+| FR4  | unit + visual      | Dual-mode bundle; default-only/switchable rendering; AA and matrix QA    |
+| FR5  | unit + integration | Stage transitions; two-commit evidence; relocation and rebuildability    |
 | FR6  | integration + e2e  | Root normalization; sentinel; MIME; live URL receipt                     |
 | FR7  | unit + integration | Config registry, scopes, sources, precedence, cross-field errors         |
-| FR8  | unit + integration | Shared/local projects, real symlinks, and traversal rejection            |
+| FR8  | unit + integration | Active roots; archive export/hash verification; symlinks and traversal   |
 | FR9  | unit + integration | Autonomous/interactive precedence, ask-once persistence, stale conflict  |
 | FR10 | integration        | Forced render and durability failures still allow project completion     |
 | FR11 | integration        | Pack installs; dependency version failure; installed-path invocation     |
@@ -1074,6 +1205,9 @@ modules receive explicit table-driven cases.
 - Installed utility/workflows pack layouts
 - Adapter use of `oat config get --json`
 - Project/repo artifact roots and lifecycle state mutation
+- Archive copy-before-delete, collision-safe export roots, manifest hash
+  verification, and no-delete-on-failure
+- Two-commit tracked-run finalization and superseded active-path evidence
 - Local fake-S3/HTTP harness for mirror and public verification behavior
 - Rebuild spot check: sample every deterministic renderer class plus one seeded
   false claim that must fail
@@ -1083,6 +1217,8 @@ modules receive explicit table-driven cases.
 - Build-only canonical recipe run from packaged core
 - OAT project plan explainer run from packaged adapter
 - Autonomous recap render failure followed by successful project completion
+- Successful autonomous recap followed by archival, tracked export, re-attested
+  durability, and non-404 archive-aware links
 - Operator-run private-wrapper migration against the packaged RC
 - One live S3/CloudFront sentinel-and-artifact run with retained receipt
 
@@ -1153,6 +1289,10 @@ No database or data migration is required.
 The in-repo compatibility fixture is a development guard, not a substitute for
 the operator-owned E2E.
 
+Previously published flat-layout sites are not migrated automatically. Because
+the connector is additive, their owners may retain them or consciously
+republish under the typed v1 layout without destructive collisions.
+
 ## Open Questions
 
 No design-blocking questions remain. Implementation may tune the exact curated
@@ -1183,7 +1323,8 @@ recipes.
 **Tasks:**
 
 - Evolve the fact-base/content pipeline and recipe registry from the drafts.
-- Implement theme resolution and curated palettes/profiles.
+- Implement theme resolution, curated palettes/profiles, and
+  default-only/user-switchable render strategies.
 - Neutralize production templates and externalize examples.
 - Implement manifest/build-record persistence, render QA, leak checks, and
   durability classification.
@@ -1199,12 +1340,17 @@ forced-stage failures, leak fixture, and artifact contract validation pass.
 
 - Implement config-to-request translation and canonical path derivation.
 - Bind project artifacts to recipe source roles.
+- Implement the shared two-commit tracked-run finalizer.
 - Add interactive plan and completion resolution.
 - Add autonomous kickoff intent and non-blocking lifecycle-tail recap.
+- Extend CLI-owned archival to export and hash-verify `explainers/` before
+  active-tree removal, report the tracked export root, and re-attest relocated
+  manifests.
 - Surface recap outcome in completion reporting and summary when present.
 
 **Verification:** Full precedence matrix, ask-once behavior, fresh-manifest
-deduplication, and autonomous failure completion tests pass.
+deduplication, autonomous failure completion, and archive-safe durability tests
+pass.
 
 ### Phase 4: Publishing, documentation, and release validation
 
@@ -1283,10 +1429,18 @@ RC; only then is release promotion allowed.
 - **Autonomous recap causes lifecycle regressions:** Probability Medium |
   Impact High
   - **Mitigation:** Keep status separate, preserve existing phase ownership,
-    deduplicate by manifest freshness, and test every failure stage.
+    centralize commit choreography, deduplicate by manifest freshness, and test
+    every failure stage.
   - **Contingency:** Disable only the adapter invocation in a patch while
     retaining recorded autonomous intent; never reinterpret failure as project
     failure.
+- **Archival invalidates tracked recap paths:** Probability High | Impact High
+  - **Mitigation:** CLI-owned copy-before-delete export, manifest hash
+    verification, collision-safe tracked roots, re-attested evidence, and
+    archive-aware links.
+  - **Contingency:** Fail archival before deletion when export verification
+    fails; if later attestation fails, push the export and report
+    `built-not-durable` with recovery instructions.
 - **S3/CDN roots do not correspond:** Probability Medium | Impact High
   - **Mitigation:** Sentinel-first verification before bulk transfer.
   - **Contingency:** Fail with root/origin-path diagnostics and preserve the

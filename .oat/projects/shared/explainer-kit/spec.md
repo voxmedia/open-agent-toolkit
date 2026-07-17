@@ -69,6 +69,11 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
 - Blocking discovery, design, or initial implementation on external wrapper or
   infrastructure acceptance. Those checks run against the release candidate.
 - Promoting wave/program-close integration on behalf of their owning projects.
+- Defining `program-recap` in v1. It is a distinct multi-project product owned
+  by the wave project; `project-recap` must not be stretched to substitute for
+  it.
+- Migrating already-published flat-layout explainer URLs. V1 publishing is
+  additive, so owners may consciously republish under the typed layout.
 - Creating a dedicated communications pack or brand-pack system in v1.
 - Replacing OAT's existing project summary or PR description artifacts.
 
@@ -110,6 +115,9 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
   - `project-recap` includes the original request, key agent decisions,
     as-built architecture, implementation record, validation evidence, and
     outcome.
+  - `project-recap` accepts one project source set. A future `program-recap`
+    recipe may use the same registry and supplied fact-base contract without
+    changing v1 core schemas.
   - Recipe source sets are parameterized so future callers can supply
     non-project fact bases without changing the recipe contract.
   - An optional engineer-tour recipe can reuse generic sticky navigation,
@@ -129,6 +137,8 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
     profiles.
   - The resolved bundle covers color roles, typography, spacing, geometry,
     motion, and diagram treatment and is persisted with the artifact set.
+  - Every resolved palette defines validated light and dark modes. A render
+    strategy can commit output to the default mode or expose both modes.
   - Public records retain a derived flag and hashes, not raw natural-language
     art direction by default.
   - Palette/profile/template combinations meet AA contrast and render-QA
@@ -148,6 +158,11 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
   - Fact base, content model, resolved theme, manifest, and build record are
     retained when later rendering or publishing stages fail.
   - Artifact freshness binds to source commit and artifact hashes.
+  - Commit durability uses caller-created commits followed by core verification
+    and a separately committed evidence update; the core never creates commits.
+  - If archival relocates an artifact package, prior path evidence is superseded
+    by evidence for the tracked export path before completion reports the recap
+    as durable at its final location.
 - **Priority:** P0
 
 **FR6: S3 static publishing connector**
@@ -193,6 +208,17 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
 - **Acceptance Criteria:**
   - Project artifact sets live under
     `<resolved-project-path>/explainers/`.
+  - Before a shared project is archived, the archive command copies its entire
+    `explainers/` subtree to
+    `.oat/repo/explainers/_projects/<archive-snapshot>/`, verifies manifest
+    hashes, and only then removes the active project path.
+  - `_projects` is a reserved internal namespace that cannot collide with a
+    valid kebab-case run slug.
+  - Archive exports are tracked, collision-safe, and used by summary/PR links;
+    gitignored archive paths are never treated as durable link targets.
+  - Local-scope projects are not exported because the completion workflow does
+    not archive them; their explainer packages inherit the local project's
+    untracked durability posture.
   - Non-project OAT artifact sets live under `.oat/repo/explainers/`.
   - Direct core callers must provide an explicit output root.
   - Paths remain within their resolved root after symlink and traversal checks.
@@ -435,10 +461,10 @@ the same manifest/receipt after the run.
 | FR2  | Reconciled fact-base pipeline           | P0       | integration: raw and supplied fact-base paths    | See plan.md   |
 | FR3  | Recipe-driven artifact production       | P0       | integration: canonical recipe outputs            | See plan.md   |
 | FR4  | Resolved theme system                   | P0       | unit + visual: theme validation and matrix QA    | See plan.md   |
-| FR5  | Artifact manifest and honest durability | P0       | unit + integration: stage and durability states  | See plan.md   |
+| FR5  | Artifact manifest and honest durability | P0       | unit + integration: evidence and relocation      | See plan.md   |
 | FR6  | S3 static publishing connector          | P0       | integration + e2e: root mapping and live publish | See plan.md   |
 | FR7  | Typed OAT configuration adapter         | P0       | unit + integration: key registry and resolution  | See plan.md   |
-| FR8  | Scope-derived OAT artifact placement    | P0       | unit + integration: roots, symlinks, traversal   | See plan.md   |
+| FR8  | Scope-derived OAT artifact placement    | P0       | integration: active roots and archive exports    | See plan.md   |
 | FR9  | Lifecycle intent and policy             | P0       | unit + integration: precedence and prompts       | See plan.md   |
 | FR10 | Non-blocking mandatory autonomous recap | P0       | integration: forced failure completion path      | See plan.md   |
 | FR11 | Packaged dependency contract            | P0       | integration: installed utility/workflows layout  | See plan.md   |
