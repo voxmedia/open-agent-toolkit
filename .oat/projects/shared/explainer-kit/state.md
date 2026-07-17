@@ -1,7 +1,8 @@
 ---
 oat_current_task: p02-t01
-oat_last_commit: e7742119
-oat_blockers: []
+oat_last_commit: 29af9518
+oat_blockers:
+  - Phase 1 review found one critical, two important, and one medium issue requiring a bounded fix loop.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T22:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T22:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 verification passed; review pending
+Implementation - Phase 1 bounded review-fix loop
 
 ## Artifacts
 
@@ -73,12 +74,15 @@ Implementation - Phase 1 verification passed; review pending
 - ✓ Phase 1 tasks `p01-t01` through `p01-t06` committed
 - ⚠ Root reconciliation recorded missed per-task bookkeeping commits
 - ✓ Phase 1 verification passed after append-only fix `e7742119`
-- ⧗ Phase 1 code review pending
+- ⚠ Phase 1 review found 1 critical, 2 important, and 1 medium issue
+- ⧗ All four findings accepted for a bounded fix loop
 
 ## Blockers
 
-None
+- Cross-scope adapter/core resolution, public safe-path validation,
+  run-request cross-field invariants, and lifecycle decision/source matrices
+  require correction before Phase 1 can pass.
 
 ## Next Milestone
 
-Run the Phase 1 code review before starting Phase 2.
+Apply the bounded Phase 1 review fixes, rerun verification, and re-review.

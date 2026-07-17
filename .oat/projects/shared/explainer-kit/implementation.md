@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - Phase 1 review requires a bounded fix loop before Phase 2.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -236,6 +237,23 @@ Chronological log of implementation progress.
 - Bookkeeping correction: root did not update tracking after each task commit.
   One reconciliation commit records the actual history; future task dispatches
   must return control after each code commit for root-owned bookkeeping.
+
+### Phase 1 Review — Fixes Added
+
+**Artifact:** `reviews/p01-review-2026-07-17T224106Z.md`
+
+**Findings:**
+
+- Critical: resolve the user-scoped core independently from a project-scoped
+  adapter.
+- Important: enforce POSIX safe-relative paths through the public contract
+  validator.
+- Important: enforce run-request cross-field invariants.
+- Medium: enforce the allowed decision/source matrix per lifecycle product.
+
+**Disposition:** All four findings are accepted for one bounded append-only fix
+commit, followed by the full Phase 1 verification matrix and reviewer
+re-review.
 
 ### 2026-07-16
 
