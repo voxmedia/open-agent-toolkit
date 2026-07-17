@@ -151,7 +151,10 @@ Direct/private caller ──────────────┤
 
 Project runs use
 `<resolved-project-path>/explainers/<slug>/`. Non-project OAT runs use
-`.oat/repo/explainers/<slug>/`. Direct callers pass `outputRoot`.
+`.oat/repo/reference/explainers/<slug>/`. Direct callers pass `outputRoot`.
+
+Repo-level explainers are durable reference products. Completion-time project
+recap records live separately under `.oat/repo/reference/project-recaps/`.
 
 Shared-project and repo runs track the complete run directory, including
 `site/`; the implementation does not write `.gitignore` rules for them.
@@ -169,20 +172,31 @@ or maintaining a destination-wide initiative index is out of scope for v1.
 Active project output remains under
 `<resolved-project-path>/explainers/<slug>/`. When
 `oat-project-complete` archives a shared project, `oat project archive` owns an
-additional export before deleting the active tree:
+additional export of the selected final `project-recap` run before deleting the
+active tree:
 
 ```text
-.oat/repo/explainers/_projects/<archive-snapshot>/
-└── <complete copied explainers subtree>
+.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/
+└── <complete selected project-recap package>
 ```
 
-`_projects` is an internal namespace that cannot collide with valid kebab-case
-run slugs. The archive snapshot identifier comes from the CLI's collision-safe
-archive target. The command copies the complete subtree, including failed-run
-intermediates, verifies every copied manifest artifact hash, and reports the
-tracked export root. A copy or verification failure fails archival before the
-active project is removed. The gitignored archive remains local history and is
-never a durable link target.
+The base directory name uses the same `buildArchiveSnapshotName` identity as
+project-summary exports. An existing destination is an error: the command does
+not overwrite, merge, or invent a second completion snapshot for the same
+project/date. The command copies the complete selected recap package, including
+failed-run outcome records and successful intermediates, verifies every built
+manifest artifact hash, and reports the tracked export root. Export writes to a
+temporary sibling and atomically renames into place only after verification;
+failure removes the staging path and leaves no partial destination. A
+destination, copy, or verification failure fails archival before the active
+project is removed. The gitignored archive remains local history and is never a
+durable link target.
+
+Project explainers are working artifacts. They are committed while useful to an
+active shared project, but completion intentionally removes them from the
+tracked branch with the rest of the project plans/designs. They remain in the
+local archived project and are not re-attested or linked as post-completion
+reference products.
 
 Only shared projects enter this archive/export path. Local projects are not
 archived by `oat-project-complete`; their explainer packages retain the local
@@ -191,9 +205,9 @@ unless verified publish evidence exists.
 
 Manifest paths remain relative to each run root, so relocation does not rewrite
 content/artifact entries. Commit durability evidence does carry repository
-paths; after export it is re-attested against the tracked export commit and
-supersedes evidence for the deleted active path. Summary and archive-aware PR
-links point to the tracked export path.
+paths; for the selected recap it is re-attested against the tracked export
+commit and supersedes evidence for the deleted active path. Summary and
+archive-aware PR links point to the tracked recap export.
 
 ## Component Design
 
@@ -629,11 +643,12 @@ resolve(product, mode, state, preference, kickoffRequest):
   manifest already exists. When archive is selected, the completion sequence
   is:
   1. generate or reuse the recap under the active project;
-  2. let `oat project archive` export the entire `explainers/` subtree to the
-     tracked archive-snapshot root before deleting the active project;
+  2. pass that selected recap run to `oat project archive`, which exports only
+     its complete package to the tracked dated recap root before deleting the
+     active project;
   3. create the existing lifecycle bookkeeping commit containing the export and
      active-tree deletion;
-  4. call `recordDurability` for exported manifests using that commit and
+  4. call `recordDurability` for the exported recap manifest using that commit and
      supersede active-path evidence;
   5. commit the evidence updates, then push both commits.
      Without archive, the same two-commit pattern uses the active project paths.
@@ -1025,25 +1040,30 @@ The control-plane parser and project-state validator add typed optional
 `ProjectState` as nullable decisions. Existing projects with absent fields
 remain valid.
 
-### Archive Export API
+### Archive Recap Export API
 
 `oat project archive --json` extends its existing result with an optional,
-backward-compatible explainer export report:
+backward-compatible recap export report. `oat-project-complete` supplies the
+selected run through `--project-recap-run <project-relative-run-path>`; the
+option is absent when recap policy resolves to no generation.
 
 ```typescript
-interface ArchiveExplainerExportV1 {
-  sourceRoot: string;
+interface ArchiveProjectRecapExportV1 {
+  sourceRunRoot: string;
   exportRoot: string;
-  manifests: Array<{
-    relativePath: string;
+  manifest: {
+    relativePath: 'manifest.json';
     verifiedArtifactCount: number;
-  }>;
+  };
 }
 ```
 
-The command reports this only when the project contains `explainers/`. It
-copies and hash-verifies before active-tree removal. The completion skill uses
-`exportRoot` to construct commit evidence and archive-aware links.
+The command validates that the selected run is inside the project's
+`explainers/` directory and that its manifest recipe is `project-recap`. It
+rejects an existing destination, stages to a temporary sibling, hash-verifies,
+then atomically renames before active-tree removal. A failed attempt cleans the
+staging path. The completion skill uses `exportRoot` to construct commit
+evidence and archive-aware links.
 
 ## Security Considerations
 
@@ -1205,8 +1225,10 @@ modules receive explicit table-driven cases.
 - Installed utility/workflows pack layouts
 - Adapter use of `oat config get --json`
 - Project/repo artifact roots and lifecycle state mutation
-- Archive copy-before-delete, collision-safe export roots, manifest hash
-  verification, and no-delete-on-failure
+- Selected-recap copy-before-delete, exact dated reference root,
+  destination-exists rejection, manifest hash verification, and
+  atomic-staging cleanup/no-delete-on-failure
+- Project explainer exclusion from the tracked post-completion tree
 - Two-commit tracked-run finalization and superseded active-path evidence
 - Local fake-S3/HTTP harness for mirror and public verification behavior
 - Rebuild spot check: sample every deterministic renderer class plus one seeded
@@ -1343,9 +1365,9 @@ forced-stage failures, leak fixture, and artifact contract validation pass.
 - Implement the shared two-commit tracked-run finalizer.
 - Add interactive plan and completion resolution.
 - Add autonomous kickoff intent and non-blocking lifecycle-tail recap.
-- Extend CLI-owned archival to export and hash-verify `explainers/` before
-  active-tree removal, report the tracked export root, and re-attest relocated
-  manifests.
+- Extend CLI-owned archival to export and hash-verify only the selected final
+  `project-recap` package before active-tree removal, report the tracked
+  reference root, and re-attest its manifest.
 - Surface recap outcome in completion reporting and summary when present.
 
 **Verification:** Full precedence matrix, ask-once behavior, fresh-manifest
@@ -1436,7 +1458,7 @@ RC; only then is release promotion allowed.
     failure.
 - **Archival invalidates tracked recap paths:** Probability High | Impact High
   - **Mitigation:** CLI-owned copy-before-delete export, manifest hash
-    verification, collision-safe tracked roots, re-attested evidence, and
+    verification, destination-exists rejection, re-attested evidence, and
     archive-aware links.
   - **Contingency:** Fail archival before deletion when export verification
     fails; if later attestation fails, push the export and report

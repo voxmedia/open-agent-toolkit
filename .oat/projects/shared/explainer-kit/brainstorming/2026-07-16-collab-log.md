@@ -368,3 +368,10 @@ Append-only. Entries by Fable unless marked otherwise.
 - **Assessment:** works-well
 - **Fable's position:** PASS — archive-safe amendment converged from the reviewer side; awaiting user re-approval at the reopened design gate.
 - **Skill implication:** none. Amendment cycle: finding → amendment → 3 review findings → all resolved → PASS, in two review rounds.
+
+### [2026-07-17 09:08] content — durable-reference placement refinement: PASS with hardening note (msg_f44ee0fb6e1c → msg_8882067487cf)
+
+- **What happened:** User refined the archive amendment before approval. New boundary: project explainers are working artifacts that leave the tracked tree at archive like plans/designs; only the selected final `project-recap` package (including failed structured outcomes/intermediates) exports to `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/` (reusing `buildArchiveSnapshotName`, destination-exists is an error, no overwrite/merge); non-project explainers move to `.oat/repo/reference/explainers/<slug>/`; completion passes exactly one selected recap run via a new optional `--project-recap-run` archive argument with containment and recipe-identity validation. Fable reviewed the working-tree delta over a3144374.
+- **Assessment:** works-well
+- **Fable's position:** PASS. The working-artifact/reference-record cut is conceptually right — explainers follow plan/design out of the tracked tree; the recap graduates to the `reference/` namespace already used for durable records, name-consistent with summary snapshots. Last round's `_projects` namespace concern dissolves (disjoint subtrees); zero residual old-path references across all three artifacts; failure cases, two-commit durability choreography, and re-attestation scoping verified; unexported explainer commit evidence stays honest under the existing immutable-commit validation rule. One non-blocking hardening note sent: destination-exists-is-error plus a mid-copy failure could strand a partial export that blocks retries — recommend stage-to-temp-then-atomic-rename wording; does not gate the pass.
+- **Skill implication:** none; awaiting user re-approval at the reopened design gate.

@@ -208,18 +208,29 @@ real private-wrapper E2E and one live S3/CDN publish smoke test.
 - **Acceptance Criteria:**
   - Project artifact sets live under
     `<resolved-project-path>/explainers/`.
-  - Before a shared project is archived, the archive command copies its entire
-    `explainers/` subtree to
-    `.oat/repo/explainers/_projects/<archive-snapshot>/`, verifies manifest
-    hashes, and only then removes the active project path.
-  - `_projects` is a reserved internal namespace that cannot collide with a
-    valid kebab-case run slug.
-  - Archive exports are tracked, collision-safe, and used by summary/PR links;
-    gitignored archive paths are never treated as durable link targets.
+  - Before a shared project is archived, completion selects exactly one final
+    `project-recap` run and the archive command copies that package to
+    `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies its
+    manifest hashes, and only then removes the active project path.
+  - A failed final recap still exports its structured outcome and successful
+    intermediates. Projects whose resolved policy did not request a recap
+    produce no recap export.
+  - The export directory mirrors project-summary snapshot naming and fails
+    before active-tree deletion if the destination already exists; it never
+    overwrites or merges with an earlier record.
+  - Export stages to a temporary sibling and atomically renames into place;
+    failed copy or verification leaves no partial destination that blocks
+    retry.
+  - Project explainers are working artifacts: they remain in the local archived
+    project but are intentionally absent from the tracked post-completion tree,
+    like project plans and designs.
+  - Recap exports are tracked and used by summary/PR links; gitignored archive
+    paths are never treated as durable link targets.
   - Local-scope projects are not exported because the completion workflow does
     not archive them; their explainer packages inherit the local project's
     untracked durability posture.
-  - Non-project OAT artifact sets live under `.oat/repo/explainers/`.
+  - Non-project OAT artifact sets live under
+    `.oat/repo/reference/explainers/`.
   - Direct core callers must provide an explicit output root.
   - Paths remain within their resolved root after symlink and traversal checks.
 - **Priority:** P0

@@ -134,8 +134,12 @@ existing private bucket — policy scoped to the prefix).
    Artifact placement is scope-derived, not configured: project-specific sets
    always live at `<resolved-project-path>/explainers/` (normally
    `.oat/projects/<shared|local>/<project>/explainers/`); non-project OAT sets
-   always live at `.oat/repo/explainers/` in v1. The destination-blind core
-   still requires callers outside OAT to pass an explicit output root.
+   always live at `.oat/repo/reference/explainers/` in v1. At shared-project
+   completion, only the selected final `project-recap` package is exported to
+   `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`; plan
+   explainers remain working project artifacts and leave the tracked branch
+   when the project is archived. The destination-blind core still requires
+   callers outside OAT to pass an explicit output root.
 
    The tracked artifact package contains the source/content model, manifest,
    resolved theme, and privacy-safe build record. The manifest classifies each
