@@ -36,13 +36,15 @@ oat_template: true
 
 ## Parallelism
 
-Phases p01 and p02 are sequential foundations: shipped mapping data cannot precede live syntax evidence, and lifecycle integration depends on the shared extension and Cursor codec contracts. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge because provider-view regeneration and lockstep versioning must reflect the complete final tree.
+Phase p01 is an operator-assisted pre-implementation gate: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. Phase p06 runs the lockstep release boundary only after that gate passes.
 
 ---
 
 ## Phase 1: Live Cursor Pin Verification
 
 ### Task p01-t01: Verify and record every shippable Cursor pin mapping
+
+**Execution contract:** This is an operator-assisted pre-implementation gate, not a phase-implementer assignment. Complete it in the project worktree before invoking `oat-project-implement` for p02. The preparation state is persisted on disk so restarting Cursor does not abandon an accepted child-agent handle.
 
 **Files:**
 
@@ -53,9 +55,13 @@ Phases p01 and p02 are sequential foundations: shipped mapping data cannot prece
 
 List every proposed ladder ID, exact bracket-form frontmatter value, syntax family, and intended catalogue/recommendation use. Start from discovery; do not derive mappings by suffix parsing.
 
-**Step 2: Establish a fresh native-agent discovery boundary**
+**Step 2: Persist the restart handoff**
 
-Create one temporary native agent definition per syntax family, then start a fresh Cursor session rooted at this worktree so Cursor discovers those definitions before any launch. Invoke each exact temporary agent type through Cursor's native agent-definition surface. Do not substitute `cursor-agent --model`: that tests CLI selector routing, not definition-level frontmatter pinning.
+Create one temporary native agent definition per syntax family and write the proposed matrix plus `status: awaiting-fresh-session` to the verification record. Confirm both the record and temporary definitions exist in the worktree, then stop. The operator starts a new Cursor session rooted at this same worktree; do not delegate this gate to a phase implementer or continue launches in the preparing session.
+
+**Step 3: Launch from the fresh native-agent discovery boundary**
+
+In the new Cursor session, verify the persisted `awaiting-fresh-session` handoff, then invoke each exact temporary agent type through Cursor's native agent-definition surface. Do not substitute `cursor-agent --model`: that tests CLI selector routing, not definition-level frontmatter pinning.
 
 Cover GPT effort, Claude effort, Composer standard/fast, and Grok effort/fast syntax. Test `claude-fable-5-thinking-*` and `cursor-grok-4.5-high-fast` explicitly rather than inferring them.
 
@@ -68,15 +74,15 @@ For each probe, record:
 
 Subagent self-report, catalogue presence, successful completion, or `cursor-agent --model` output is not definition-pin proof. If the native launch surface does not expose evidence that distinguishes the configured pin from silent fallback, exclude the entry.
 
-**Step 3: Gate every entry**
+**Step 4: Gate every entry**
 
 Map every proposed shipped catalogue/recommendation entry to approved evidence. Record the optional flat-ID experiment separately; never use it to authorize generated frontmatter.
 
-**Step 4: Clean temporary files**
+**Step 5: Clean temporary files**
 
-Remove all `oat-pin-probe-*` definitions and confirm no probe file remains.
+Change the verification record status to `complete`, remove all `oat-pin-probe-*` definitions, and confirm no probe file remains.
 
-**Step 5: Format and verify**
+**Step 6: Format and verify**
 
 Run:
 
@@ -87,12 +93,14 @@ test -z "$(git status --porcelain -- .cursor/agents/oat-pin-probe-*.md)"
 
 Expected: the evidence record is formatted; no temporary agent definition remains; each future shipped entry is approved or explicitly excluded.
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
 git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
 git commit -m "test(p01-t01): verify cursor pin syntax mappings"
 ```
+
+After this commit, mark p01 complete and begin tracked implementation at p02. No phase implementer is created for p01.
 
 ---
 
@@ -504,7 +512,7 @@ Increase each changed canonical `SKILL.md` version once for the final PR diff. T
 
 **Step 4: Update validation contracts**
 
-Require variant-first guidance and reject stale concrete Cursor model-argument language while preserving Claude model-argument behavior.
+Require variant-first guidance and reject stale concrete Cursor model-argument language in canonical skill assertions while preserving Claude model-argument behavior. Restrict this task's `packages/cli/src/validation/skills.test.ts` edits to canonical-skill contracts; defer assertions over rendered docs pages to p04-t04 so each commit remains independently green.
 
 **Step 5: Format and verify**
 
@@ -579,10 +587,11 @@ git commit -m "feat(p04-t03): recommend cursor multi-family dispatch"
 - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/artifacts.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `packages/cli/src/validation/skills.test.ts` (docs-page assertions only)
 
 **Step 1: Update user-facing behavior**
 
-Document sync-time Cursor variants, explicit flat-ID/bracket mapping, owner scopes, native variant launch, silent fallback risk, doctor availability diagnostics, and `configured` provenance. Remove claims that managed Cursor dispatch is enforced through a Task-level model argument.
+Document sync-time Cursor variants, explicit flat-ID/bracket mapping, owner scopes, native variant launch, silent fallback risk, doctor availability diagnostics, and `configured` provenance. Remove claims that managed Cursor dispatch is enforced through a Task-level model argument. Update the docs-page assertions in `skills.test.ts` to enforce the revised rendered guidance.
 
 **Step 2: Format and verify**
 
@@ -590,6 +599,8 @@ Run:
 
 ```bash
 pnpm exec oxfmt --write apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/cli-utilities/configuration.md
+pnpm exec oxfmt --write packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 pnpm --filter oat-docs docs:lint
 pnpm build:docs
 pnpm docs:check-links
@@ -601,13 +612,13 @@ Expected: docs lint, compilation, and links pass; the generated index remains cl
 **Step 3: Commit**
 
 ```bash
-git add apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/cli-utilities/configuration.md
+git add apps/oat-docs/docs/provider-sync/providers.md apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/artifacts.md apps/oat-docs/docs/cli-utilities/configuration.md packages/cli/src/validation/skills.test.ts
 git commit -m "docs(p04-t04): explain cursor materialized dispatch"
 ```
 
 ---
 
-## Phase 5: Generated Views and Release Validation
+## Phase 5: Generated Views and Native Launch Gate
 
 ### Task p05-t01: Regenerate and verify all provider views
 
@@ -645,16 +656,14 @@ Assert:
 - managed role/owner comments;
 - canonical body identity;
 - no excluded mapping or probe file;
-- no generated-file drift on a second dry run.
 
 Run:
 
 ```bash
-pnpm run cli -- sync --scope all --dry-run
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts
 ```
 
-Expected: the dry run reports no changes and generated assets contain only approved mappings.
+Expected: generated assets contain only approved mappings and focused tests pass.
 
 **Step 4: Commit**
 
@@ -663,9 +672,65 @@ git add .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
 git commit -m "chore(p05-t01): sync cursor materialized agents"
 ```
 
+**Step 5: Enforce post-commit generated cleanliness**
+
+Run:
+
+```bash
+pnpm run --silent cli:source -- sync --scope all --dry-run --json > /tmp/oat-sync-dry-run.json
+node -e 'const fs = require("node:fs"); const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (report.summary.plannedOperations !== 0) throw new Error(`plannedOperations=${report.summary.plannedOperations}`);' /tmp/oat-sync-dry-run.json
+git diff --exit-code -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
+```
+
+Expected: `summary.plannedOperations` is exactly zero and all generated provider views, the sync manifest, and bundled assets are clean. If not, regenerate, amend the task commit, and repeat before advancing.
+
 ---
 
-### Task p05-t02: Bump public packages and run the release boundary
+### Task p05-t02: Launch final generated Cursor role variants
+
+**Execution contract:** This is an operator-assisted gate after p05-t01's phase implementer has returned and committed the generated views. Do not assign it to that implementer. Start a fresh Cursor session rooted at this worktree so the newly generated native agent definitions are discovered.
+
+**Files:**
+
+- Modify: `.oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md`
+- Read: `.cursor/agents/oat-reviewer-*.md`
+- Read: `.cursor/agents/oat-phase-implementer-*.md`
+
+**Step 1: Select exact final variants**
+
+Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native agent type and its generated bracket-form `model:` value.
+
+**Step 2: Launch through the native agent-definition surface**
+
+In the fresh Cursor session, launch both exact native types. Do not substitute `cursor-agent --model`. Capture externally observable configured-model evidence and each returned `CURSOR_CONVERSATION_ID`.
+
+**Step 3: Record the evidence boundary**
+
+Append the role launch, configured variant/model evidence, and conversation correlation to the verification record. Keep runtime model and effort `not-reported`; neither successful completion nor the conversation ID is runtime identity proof.
+
+**Step 4: Format, verify, and commit**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
+test -z "$(git status --porcelain -- .cursor/agents/oat-pin-probe-*.md)"
+```
+
+Expected: both final generated role families were launched by exact native type, their conversation IDs are recorded, the configured/runtime evidence boundary is explicit, and no probe definition remains.
+
+```bash
+git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
+git commit -m "test(p05-t02): verify generated cursor role launches"
+```
+
+After this commit, mark p05 complete and resume `oat-project-implement` at p06.
+
+---
+
+## Phase 6: Release Validation
+
+### Task p06-t01: Bump public packages and run the release boundary
 
 **Files:**
 
@@ -699,17 +764,28 @@ pnpm --filter @open-agent-toolkit/cli test
 pnpm build
 pnpm format
 pnpm release:validate
-pnpm run cli -- sync --scope all --dry-run
 ```
 
-Expected: all checks pass, the five package versions are identical, release validation passes, and provider views are clean.
+Expected: all checks pass, the five package versions are identical, and release validation passes.
 
 **Step 4: Commit**
 
 ```bash
 git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
-git commit -m "chore(p05-t02): bump public package versions"
+git commit -m "chore(p06-t01): bump public package versions"
 ```
+
+**Step 5: Enforce final generated cleanliness**
+
+Run:
+
+```bash
+pnpm run --silent cli:source -- sync --scope all --dry-run --json > /tmp/oat-sync-dry-run.json
+node -e 'const fs = require("node:fs"); const report = JSON.parse(fs.readFileSync(process.argv[1], "utf8")); if (report.summary.plannedOperations !== 0) throw new Error(`plannedOperations=${report.summary.plannedOperations}`);' /tmp/oat-sync-dry-run.json
+git diff --exit-code -- .claude .codex .cursor .oat/sync/manifest.json packages/cli/assets
+```
+
+Expected: `summary.plannedOperations` is exactly zero and the generated provider views, sync manifest, and bundled assets remain clean after the release commit.
 
 ---
 
@@ -722,6 +798,7 @@ git commit -m "chore(p05-t02): bump public package versions"
 | p03    | code     | pending         | -          | -                                                             |
 | p04    | code     | pending         | -          | -                                                             |
 | p05    | code     | pending         | -          | -                                                             |
+| p06    | code     | pending         | -          | -                                                             |
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
@@ -740,9 +817,10 @@ git commit -m "chore(p05-t02): bump public package versions"
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 5 tasks - Sync/status/init/provider/doctor/resolver/audit integration.
 - Phase 4: 4 tasks - Canonical roles, dispatch guidance, recommendation, and docs.
-- Phase 5: 2 tasks - Generated provider views and lockstep release validation.
+- Phase 5: 2 tasks - Generated provider views and final native role-launch evidence.
+- Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
-**Total: 15 tasks**
+**Total: 16 tasks**
 
 Ready for code review and merge after all tasks and reviews pass.
 
