@@ -6,7 +6,6 @@ oat_last_updated: 2026-07-17
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: [['p03', 'p04']]
-oat_plan_hill_phases: ['p05']
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -34,10 +33,11 @@ oat_template: true
 - [x] Stable task IDs and per-task verification are defined.
 - [x] Phase-level parallelism and write boundaries are evaluated.
 - [x] Managed project dispatch policy is `high`.
+- [x] Defer HiLL checkpoint confirmation to `oat-project-implement`.
 
 ## Parallelism
 
-Gate g01 is operator-assisted and outside implementation phase ownership: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. Phase p06 runs the lockstep release boundary only after that gate passes.
+Gate g01 is operator-assisted and outside implementation phase ownership: it completes and commits live syntax evidence before `oat-project-implement` begins at p02. Phase p02 is the sequential implementation foundation. After p02, p03 and p04 may run concurrently in isolated worktrees because p03 owns CLI/runtime TypeScript integration while p04 owns canonical agents, skills, recommendation data, and docs. Their verification suites are separate. Phase p05 runs only after both lanes merge; its generated-view task completes before a second operator-assisted fresh-session gate launches final role variants. The plan recommends p05 as a HiLL checkpoint, but `oat-project-implement` must confirm and persist that choice at implementation start. Phase p06 runs the lockstep release boundary only after the confirmed gate passes.
 
 ---
 
@@ -58,7 +58,7 @@ List every proposed ladder ID, exact bracket-form frontmatter value, syntax fami
 
 **Step 2: Persist the restart handoff**
 
-Create one temporary native agent definition per syntax family and write the proposed matrix plus `status: awaiting-fresh-session` to the verification record. Confirm both the record and temporary definitions exist in the worktree, then stop. The operator starts a new Cursor session rooted at this same worktree; do not delegate this gate to a phase implementer or continue launches in the preparing session.
+Create one temporary native agent definition per distinct proposed mapping entry and write the proposed matrix plus `status: awaiting-fresh-session` to the verification record. Every definition must carry exactly that row's bracket-form `model:` value; family-level representatives cannot authorize unlaunched mappings. Confirm both the record and all temporary definitions exist in the worktree, then stop. The operator starts a new Cursor session rooted at this same worktree; do not delegate this gate to a phase implementer or continue launches in the preparing session.
 
 **Step 3: Launch from the fresh native-agent discovery boundary**
 
@@ -71,13 +71,14 @@ For each probe, record:
 - exact definition and bracket-form `model:` value;
 - launch acceptance and externally observable configured-model evidence from Cursor's native launch UI/metadata;
 - `CURSOR_CONVERSATION_ID` for transcript correlation;
+- the unique proposed mapping row authorized by this launch;
 - result: `approved` or `excluded`, with rationale.
 
 Subagent self-report, catalogue presence, successful completion, or `cursor-agent --model` output is not definition-pin proof. If the native launch surface does not expose evidence that distinguishes the configured pin from silent fallback, exclude the entry.
 
 **Step 4: Gate every entry**
 
-Map every proposed shipped catalogue/recommendation entry to approved evidence. Record the optional flat-ID experiment separately; never use it to authorize generated frontmatter.
+Require one mapping-specific approved evidence row for every proposed shipped catalogue/recommendation entry. Exclude any entry without an exact launch. Record the optional flat-ID experiment separately; never use it to authorize generated frontmatter.
 
 **Step 5: Clean temporary files**
 
@@ -629,7 +630,7 @@ Expected: generated assets contain only approved mappings and focused tests pass
 
 **Step 4: Persist the final-launch restart handoff**
 
-Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. This persisted handoff is the p05 HiLL checkpoint input after the phase implementer returns.
+Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. This persisted handoff is the recommended p05 HiLL checkpoint input after the phase implementer returns. Implementation preflight must have confirmed and persisted p05 before execution reaches this step; otherwise stop and revise the gate route.
 
 ```bash
 pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
@@ -657,9 +658,9 @@ Expected: `summary.plannedOperations` is exactly zero and all generated provider
 
 ---
 
-### HiLL checkpoint after p05: Launch final generated Cursor role variants
+### Recommended HiLL checkpoint after p05: Launch final generated Cursor role variants
 
-`oat_plan_hill_phases: ['p05']` makes this a persisted root/operator lifecycle boundary after p05-t01's phase implementer returns. `oat-project-implement` pauses at p05; no second p05 task is dispatched. The operator starts a fresh Cursor session rooted at this worktree so the committed generated native definitions are discovered, then resumes the project at this checkpoint.
+At implementation start, confirm p05 as the HiLL checkpoint and persist `oat_plan_hill_phases: ['p05']`. That makes this a root/operator lifecycle boundary after p05-t01's phase implementer returns. `oat-project-implement` pauses at p05; no second p05 task is dispatched. The operator starts a fresh Cursor session rooted at this worktree so the committed generated native definitions are discovered, then resumes the project at this checkpoint.
 
 **Files:**
 
@@ -774,7 +775,7 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
-| plan   | artifact | received        | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T142637Z.md            |
+| plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T142637Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -788,7 +789,7 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 4 tasks - Sync/status/init, doctor, resolver, and audit integration.
 - Phase 4: 4 tasks - Canonical roles, dispatch guidance, recommendation, and docs.
-- Phase 5: 1 task plus a configured HiLL checkpoint - Generated provider views and final native role-launch evidence.
+- Phase 5: 1 task plus a recommended HiLL checkpoint - Generated provider views and final native role-launch evidence.
 - Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
 **Total: 13 implementation tasks plus 1 pre-implementation gate**
