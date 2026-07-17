@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-07-15
+oat_last_updated: 2026-07-17
 oat_generated: false
 oat_template: false
 oat_template_name: discovery
