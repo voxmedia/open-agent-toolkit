@@ -776,6 +776,7 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
 | plan   | artifact | fixes_completed | 2026-07-17 | reviews/archived/artifact-plan-review-2026-07-17T142637Z.md   |
+| plan   | artifact | received        | 2026-07-17 | reviews/artifact-plan-review-2026-07-17T160504Z.md            |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
