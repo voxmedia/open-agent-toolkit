@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-16
+oat_last_updated: 2026-07-17
 oat_generated: false
 oat_template: false
 oat_template_name: design
@@ -16,7 +16,9 @@ Extend OAT's sync-time materialization architecture with a provider-neutral exte
 
 Cursor target selection is deliberately split into two identities. The resolver and generated variant name use the ladder-surface flat ID, while an explicit mapping entry supplies the base-ID-plus-brackets value written to frontmatter. No fallback derives one form from the other: an unmapped config-owned target cannot produce a managed variant and must fail with an actionable diagnostic rather than emit an undocumented flat ID. The supported catalogue is the shipped capability set; layered user/project configuration can change ownership and select mapped entries without changing codec behavior.
 
-The verification lane is a release gate for mapping data, not a best-effort smoke test. One pinned test agent per syntax family must establish that Cursor accepted the configured pin before entries from that family ship. The awkward Claude Fable and Grok entries remain unresolved design inputs until that lane supplies evidence; they are corrected or excluded rather than guessed. Runtime audit language records the selected variant and model as launcher-owned `configured` provenance, reports `CURSOR_CONVERSATION_ID` for transcript correlation, and never claims Cursor self-verified its model.
+The verification lane is a release gate for mapping data, not a best-effort smoke test. One pinned test agent per proposed mapping entry must establish that Cursor accepted the exact configured pin before that entry ships. The awkward Claude Fable and Grok entries remain unresolved design inputs until that lane supplies evidence; they are corrected or excluded rather than guessed. Runtime audit language records the selected variant and model as launcher-owned `configured` provenance, reports `CURSOR_CONVERSATION_ID` for transcript correlation, and never claims Cursor self-verified its model.
+
+Plan-style workflow gate reviews also need family-aware producer routing before implementation dispatch stamps exist. When the configured command invokes `oat gate review`, the planning parent supplies its current model as ephemeral `declared` identity; the review consumes that declaration only when no stronger explicit or scoped-stamp identity exists. Other gate command types receive no producer-declaration environment. This improves same-family avoidance without hardcoding a producer into user config or promoting self-declaration into observed runtime evidence.
 
 ## Architecture
 
@@ -33,6 +35,7 @@ Provider-neutral orchestration owns lifecycle mechanics only: compute a desired 
 - **Cursor mapping catalogue and codec:** Maps flat ladder IDs to documented bracket syntax and renders managed Markdown variants from canonical agents.
 - **Cursor extension adapter:** Collects catalogue/config targets, computes owner-aware create/update/remove operations, and rejects discovery-name collisions.
 - **Dispatch compiler and audit guidance:** Resolves Cursor candidates to native variant names and records launcher-owned `configured` provenance.
+- **Artifact-gate producer bridge:** Carries ephemeral parent-declared model identity into plan-style gate selection while preserving stronger identity sources and audit provenance.
 
 ### Component Diagram
 
@@ -66,6 +69,7 @@ canonical .agents/agents/*.md
 4. Render desired provider-native content, detect duplicate names and unmanaged cross-directory collisions, and diff it against existing managed files.
 5. Apply or report create/update/remove/skip operations. Never remove a file whose managed marker and owner do not match the cleanup scope.
 6. Compile managed Cursor dispatch to the same deterministic variant name. The launcher selects that native agent type first and records the selected mapping as configured, while runtime identity remains not reported.
+7. Before a plan-style workflow executes an exact configured `oat gate review` command, export the current parent model as declared producer identity when available. Other command types execute without the variable. Review selection resolves explicit CLI identity first, scoped dispatch stamps second, the ephemeral declaration third, and unknown identity last.
 
 ## Component Design
 
@@ -170,9 +174,17 @@ The skill-validation contract in `packages/cli/src/validation/skills.test.ts` cu
 
 Dispatch reports describe the variant/model as **configured** by the launcher. `CURSOR_CONVERSATION_ID` is session-correlation evidence only; runtime model/effort remain `not-reported`. Skill and provider-reference edits must land after, or be carefully rebased over, `gate-execution-hardening` commit `c57bdc9d` because that project edits the same dispatch guidance.
 
+### Artifact Gate Producer Identity Bridge
+
+`oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` determine the current planning parent's model from session context. When that value is non-empty and the resolved command invokes `oat gate review`, they export `OAT_GATE_PRODUCER_IDENTITY=<model>:declared` immediately before executing the configured command unchanged. They leave the variable unset for non-review gate command types and when current model identity is unavailable. They do not write the value into shared/user config.
+
+`oat gate review` extends producer resolution precedence to explicit `--producer-identity`, then applicable implementation dispatch stamps, then `OAT_GATE_PRODUCER_IDENTITY`, then unknown. The environment form accepts declared provenance only, is consumed for gate diversity selection/audit metadata, and is removed from the child reviewer's environment so it cannot masquerade as reviewer runtime identity or leak into nested execution. Existing implementation/final review stamps therefore remain authoritative.
+
+The bridge affects routing, not proof. Gate JSON records source `environment`, provenance `declared`, and the classified family; it does not populate `runtimeIdentity`. If the environment value is malformed or absent, the gate emits the existing unknown-producer behavior rather than failing an otherwise runnable review.
+
 ### Verification Lane
 
-The lane creates one temporary pinned test definition per syntax family, launches each by native agent type, and captures evidence that the configured pin took. It tests representative known mappings first, then the awkward Fable and Grok decompositions. Only mappings supported by positive evidence are added to the shipped registry/catalogue and recommendation; ambiguous or silently falling-back entries are excluded and recorded in project verification results.
+The lane creates one temporary pinned test definition per proposed mapping entry, launches each by native agent type, and captures evidence that the exact configured pin took. It tests known mappings first, then the awkward Fable and Grok decompositions. Only mappings supported by mapping-specific positive evidence are added to the shipped registry, including configuration-only entries outside the catalogue/recommendation; ambiguous or silently falling-back entries are excluded and recorded in project verification results.
 
 This live lane is separate from `cursor-agent --list-models`: catalogue presence checks availability of the flat ladder ID, while the launch verifies definition-level bracket syntax. A bonus flat-ID experiment may be recorded, but generated files and tests never rely on it.
 
@@ -182,6 +194,8 @@ The mapping table is the only new durable data model. It lives in `packages/cli/
 
 No new config field is introduced for frontmatter syntax in this project. Supporting a new Cursor flat ID therefore requires adding and live-verifying an explicit mapping entry before it can materialize. This keeps malformed or undocumented pin strings out of generated assets.
 
+The gate producer bridge adds no durable configuration model. `OAT_GATE_PRODUCER_IDENTITY` is an invocation-scoped transport string with `<model>:declared` syntax; it is never persisted by OAT.
+
 ## Error Handling
 
 - **Missing mapping:** fail plan computation for the affected config-owned target with its source and flat ID; never emit the flat ID as frontmatter.
@@ -189,6 +203,8 @@ No new config field is introduced for frontmatter syntax in this project. Suppor
 - **Managed-marker mismatch:** leave the file untouched and report a stray/conflict; cleanup is limited to files with a recognized owner marker.
 - **Unavailable catalogue ID:** doctor reports the existing availability diagnostic. Sync may still render an explicitly mapped definition, but release verification cannot approve a shipped catalogue entry without live evidence.
 - **Silent Cursor fallback:** treat absence of positive pin evidence as inconclusive, not success. Exclude the mapping from shipped data.
+- **Missing/malformed gate producer declaration:** retain unknown-producer routing and provenance; never infer a family from the current runtime alone.
+- **Conflicting producer evidence:** explicit CLI identity wins, then an applicable dispatch stamp, then the ephemeral declaration. Preserve each selected source's original provenance.
 - **Partial apply failure:** retain the extension result's applied/failed/skipped counts and return a non-successful sync result without deleting unrelated managed files.
 
 ## Testing Strategy
@@ -200,6 +216,7 @@ No new config field is introduced for frontmatter syntax in this project. Suppor
 - Owner parsing/cleanup: supported, user, and project ownership; legacy/unmanaged preservation; stale-owner boundaries.
 - Resolver: each managed Cursor candidate compiles to the expected `dispatchArgs.variant`, never `dispatchArgs.model`.
 - Dispatch reporting: configured provenance and not-reported runtime identity remain distinct.
+- Gate producer resolution: explicit flag > scoped stamp > ephemeral declared environment > unknown; malformed declarations fail safely to unknown.
 
 ### Integration Tests
 
@@ -208,11 +225,12 @@ No new config field is introduced for frontmatter syntax in this project. Suppor
 - Status/init/stray flows use the same desired-state plan and detect cross-directory name conflicts.
 - Bundled recommendation tests assert the discovery-defined multi-family tier placement (including Grok in Balanced), marker-version advancement, asset-copy parity, and that every Cursor candidate is materializable.
 - Skill-validation tests require `providers.cursor.dispatchArgs.variant` and reject stale Cursor model-argument guidance.
+- Gate integration tests prove plan/quick-start/import-plan export dynamic declared identity only for `oat gate review` without mutating configured commands, same-family selection uses it, non-review gate commands receive no declaration, and child reviewer environments do not inherit it.
 - Canonical role version bumps plus `oat sync --scope all` produce current provider views without hand-edited generated files.
 
 ### Live Verification
 
-- Launch one native pinned test subagent per syntax family and record the exact definition, requested model syntax, conversation ID, and observed confirmation.
+- Launch one native pinned test subagent per proposed mapping entry and record the exact definition, requested model syntax, conversation ID, and observed confirmation.
 - Resolve Fable and Grok only through this lane; correct their mapping or exclude them.
 - Generate the full supported variants, launch representative reviewer and implementer variants by native agent type, and verify transcript correlation without claiming runtime model self-report.
 

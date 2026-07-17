@@ -18,9 +18,9 @@ oat_template: true
 
 > Execute this plan using `oat-project-implement`.
 
-**Goal:** Materialize model-pinned Cursor reviewer and phase-implementer variants from canonical agents, dispatch them by native variant name, and ship only live-verified base-ID-plus-bracket mappings with launcher-owned `configured` provenance.
+**Goal:** Materialize model-pinned Cursor reviewer and phase-implementer variants from canonical agents, dispatch them by native variant name, ship only live-verified base-ID-plus-bracket mappings with launcher-owned `configured` provenance, and preserve family-aware gate review through dynamic declared planning-producer identity.
 
-**Architecture:** Introduce a narrow provider-neutral materialization-extension lifecycle while retaining provider-owned Codex TOML and Cursor Markdown codecs. Cursor keeps flat ladder IDs for selection and deterministic variant names, but an explicit verified mapping table is the only source for emitted bracket-form `model:` values.
+**Architecture:** Introduce a narrow provider-neutral materialization-extension lifecycle while retaining provider-owned Codex TOML and Cursor Markdown codecs. Cursor keeps flat ladder IDs for selection and deterministic variant names, but an explicit verified mapping table is the only source for emitted bracket-form `model:` values. Plan-style workflows supply ephemeral declared parent identity only to resolved configured `oat gate review` commands and only when stronger explicit/stamped producer evidence is absent; non-review gate commands receive no declaration.
 
 **Tech Stack:** TypeScript ESM, Commander, Vitest, YAML/TOML codecs, pnpm/Turborepo, OAT canonical skill/agent sync.
 
@@ -585,6 +585,62 @@ git commit -m "docs(p04-t04): explain cursor materialized dispatch"
 
 ---
 
+### Task p04-t05: Bridge planning-producer identity into family-aware gates
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `.agents/skills/oat-project-plan/SKILL.md`
+- Modify: `.agents/skills/oat-project-quick-start/SKILL.md`
+- Modify: `.agents/skills/oat-project-import-plan/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+
+**Step 1: Write failing producer-resolution tests**
+
+Require producer precedence `explicit --producer-identity` > applicable scoped dispatch stamp > `OAT_GATE_PRODUCER_IDENTITY` > unknown. Cover a valid `<model>:declared` environment value selecting a different family within the same runtime, absent/malformed values preserving unknown-producer behavior, stronger evidence winning, the parent-only environment value being stripped from the reviewer child, and non-review configured gate commands receiving no declaration.
+
+**Step 2: Implement the ephemeral environment bridge**
+
+Teach `oat gate review` to consume `OAT_GATE_PRODUCER_IDENTITY` only as declared producer evidence when no stronger source exists. Record source `environment`, preserve `declared` provenance, classify its family for diversity routing, and never populate reviewer runtime identity from it.
+
+**Step 3: Update gate-aware planning workflows**
+
+When the resolved configured command invokes `oat gate review`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` export the current planning parent's model as `OAT_GATE_PRODUCER_IDENTITY=<model>:declared` when session context provides a non-empty identity, then execute the command unchanged. They leave it unset for non-review gate command types and when current identity is unavailable. Do not write the model into shared/user config or append a static `--producer-identity` argument.
+
+These skills already receive their one required PR-scoped version bump in p04-t02; do not bump them a second time. Re-run the version validator against the final branch diff.
+
+**Step 4: Update validation and documentation**
+
+Extend canonical skill tests to require conditional dynamic declared producer export plus exact configured-command execution, including a non-review command case with the variable absent. Document automatic stamp/environment precedence, same-family behavior within multi-family Cursor, unknown fallback, the review-command-only boundary, and why user gate config must remain producer-neutral.
+
+**Step 5: Format and verify**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts src/validation/skills.test.ts
+pnpm run cli:source -- internal validate-oat-skills
+pnpm run cli:source -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm --filter oat-docs docs:lint
+pnpm build:docs
+pnpm docs:check-links
+git diff --exit-code -- apps/oat-docs/index.md packages/cli/assets
+```
+
+Expected: plan-style gates prefer a different declared producer family when available, stronger identity evidence remains authoritative, unknown remains safe, configured commands/assets stay unchanged, and docs compile.
+
+**Step 6: Commit**
+
+```bash
+git add packages/cli/src/commands/gate/index.ts packages/cli/src/commands/gate/index.test.ts .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-quick-start/SKILL.md .agents/skills/oat-project-import-plan/SKILL.md packages/cli/src/validation/skills.test.ts apps/oat-docs/docs/cli-utilities/workflow-gates.md
+git commit -m "feat(p04-t05): declare planning producer to gates"
+```
+
+---
+
 ## Phase 5: Generated Views and Native Launch Gate
 
 ### Task p05-t01: Regenerate and verify all provider views
@@ -794,11 +850,11 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 - Gate g01: Live evidence gates every shipped Cursor mapping before implementation.
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 4 tasks - Sync/status/init, doctor, resolver, and audit integration.
-- Phase 4: 4 tasks - Canonical roles, dispatch guidance, recommendation, and docs.
+- Phase 4: 5 tasks - Canonical roles, dispatch guidance, recommendation, docs, and planning-producer gate identity.
 - Phase 5: 1 task plus a recommended HiLL checkpoint - Generated provider views and final native role-launch evidence.
 - Phase 6: 1 task - Lockstep public-package versioning and release validation.
 
-**Total: 13 implementation tasks plus 1 pre-implementation gate**
+**Total: 14 implementation tasks plus 1 pre-implementation gate**
 
 Ready for code review and merge after all tasks and reviews pass.
 

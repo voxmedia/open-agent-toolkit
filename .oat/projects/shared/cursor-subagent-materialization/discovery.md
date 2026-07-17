@@ -57,11 +57,12 @@ Operator (2026-07-15): the Cursor team confirmed that while the _native_ subagen
 
 1. **Frontmatter-only codec, documented syntax only:** emitted `model:` values use the documented base-ID + bracket form. Flat suffixed IDs never go into generated frontmatter.
 2. **Catalogue is an explicit mapping table:** each entry pairs the ladder-surface flat string with its frontmatter form. Known-clean mappings: `gpt-5.6-{luna,terra,sol}-<effort>` → `gpt-5.6-{family}[effort=<effort>]` (incl. `sol-max` → `[effort=max]`); `claude-sonnet-5-high` → `claude-sonnet-5[effort=high]` (docs-example shape); Composer explicitly `composer-2.5[]` (standard) / `composer-2.5[fast=true]` (fast) — bare `composer-2.5` may default fast, so always bracket-explicit. **Awkward entries flagged for the verification lane, not guessed:** `claude-fable-5-thinking-high` (likely base `claude-fable-5-thinking` + `[effort=high]`, since `thinking` is not a documented bracket option and must be part of the family name) and `cursor-grok-4.5-high-fast` (plausibly `cursor-grok-4.5[effort=high,fast=true]`).
-3. **Verification lane is a requirement:** implementation launches one pinned test subagent per syntax family and confirms the pin took before a mapping entry is trusted; ambiguous entries are corrected or excluded (mapping is data — one-line fixes). Bonus check: whether flat IDs happen to work (undocumented; never relied upon).
+3. **Verification lane is a requirement:** implementation launches one pinned test subagent per distinct proposed mapping entry and records mapping-specific evidence that the exact pin took before the entry is trusted; syntax-family similarity is not sufficient evidence. Ambiguous entries are corrected or excluded (mapping is data — one-line fixes). Bonus check: whether flat IDs happen to work (undocumented; never relied upon).
 4. **Catalogue scope is multi-family, seeded from the proven cloud ladder** (the operator-authored `2026-07-11.1` set above), not a Codex mirror: gpt-5.6 ladder + Claude family + Grok (Balanced tier per operator) + Composer. Two roles (`oat-reviewer`, `oat-phase-implementer`) × catalogue ≈ 30 files. Cursor-exclusive models ARE the point — that's the differentiating capability.
 5. **Bundled `dispatch-matrix-recommendation.json` Cursor cells are enriched in the same project** (multi-family tier placement promoted from the cloud ladder; Grok in Balanced). Variants no ladder cell can select are dead files. The catalogue (capability) stays broader than any one operator's ladder (selection policy) — the operator keeps their own ladder narrow; the layer separation is exactly the existing Codex owner-marker architecture.
 6. **Resolver/skill adoption is in scope:** the resolver's Cursor cells emit the materialized variant name Codex-style (launch as native subagent type first), and the dispatch skills' Cursor rules update from "pass the opaque model value" accordingly.
 7. **Provenance is launcher-owned, `configured` confidence:** Cursor cannot self-report model identity (no env var, no transcript field, model self-belief unreliable) and pin fallback is silent — so the dispatch audit claims "configured to run X via variant file," never "verified running X." Variant instructions have the agent report `CURSOR_CONVERSATION_ID` (session identity — verifiable) into its output for transcript-precise correlation.
+8. **Artifact gate reviews receive dynamic declared producer identity:** when their resolved configured command invokes `oat gate review`, `oat-project-plan`, `oat-project-quick-start`, and `oat-project-import-plan` pass the planning parent's current model as ephemeral `declared` producer identity when no scoped dispatch stamp exists. Other gate command types execute without this environment value. Review routing may use the declaration for same-family avoidance, but audit output must preserve its lower-confidence provenance. No user-level gate command hardcodes a producer model, and stronger explicit/stamped evidence is never overwritten.
 
 ## Constraints
 
@@ -70,6 +71,7 @@ Operator (2026-07-15): the Cursor team confirmed that while the _native_ subagen
 - The materializer must preserve the Codex owner-marker system (`supported-catalogue | user-config | project-config`) so user/project ladder cells outside the catalogue also materialize.
 - Availability probing reuses the existing `cursor-agent --list-models` grep pattern (doctor check: variant pins a model no longer listed).
 - Sequencing: independent of `gate-execution-hardening` implementation (no shared files beyond possible dispatch-skill prose adjacency — check at planning; both may touch `oat-dispatch-subagents` references, where gate-hardening p02-t06 adds dispatch-mode guidance).
+- Dynamic gate producer identity is parent-only and ephemeral. It must not become a reusable config value, be forwarded as reviewer runtime identity, or be promoted from `declared` to `observed`/`verified`.
 
 ## Success Criteria
 
@@ -77,6 +79,7 @@ Operator (2026-07-15): the Cursor team confirmed that while the _native_ subagen
 - Managed Cursor dispatch resolves a ladder cell to a named materialized variant and launches it as the native subagent type; the dispatch audit records launcher-owned `configured` provenance.
 - The bundled recommendation's Cursor cells are multi-family; `oat sync`/doctor/strays handle Cursor variants as they do Codex ones.
 - Verification lane results recorded: every shipped mapping entry's pin confirmed live (or the entry excluded with a note).
+- Plan-style workflows whose resolved configured command invokes `oat gate review` automatically avoid the declared producer family when current-session model context is available, while scoped dispatch stamps remain authoritative and unknown producer identity remains a safe fallback. Non-review gate commands receive no producer declaration.
 
 ## Out of Scope
 
