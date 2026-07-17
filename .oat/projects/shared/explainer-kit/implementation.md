@@ -1,8 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-07-16
+oat_blockers:
+  - Cross-family plan gate target codex-5-6-sol-max timed out after 900000ms without producing a review artifact.
+oat_last_updated: 2026-07-17
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -202,6 +203,14 @@ Track test execution during implementation.
 **Design deltas (if any):**
 
 - {what changed vs design.md and why}
+
+## Planning Gate Feedback
+
+- **2026-07-17:** The configured cross-family plan gate target
+  `codex-5-6-sol-max` was accepted against committed planning baseline
+  `27659c61` but timed out after 900000ms before producing a review artifact.
+  No findings were returned and the result was not receive-eligible. Planning
+  remains `in_progress`; resume `oat-project-plan` to rerun the configured gate.
 
 ## References
 

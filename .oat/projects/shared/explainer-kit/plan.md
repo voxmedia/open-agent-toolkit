@@ -2,7 +2,8 @@
 oat_plan_source: spec-driven
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Cross-family plan gate target codex-5-6-sol-max timed out after 900000ms without producing a review artifact.
 oat_last_updated: 2026-07-17
 oat_phase: plan
 oat_phase_status: in_progress
