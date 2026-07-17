@@ -19,6 +19,7 @@ async function seedAssets(assetsRoot: string): Promise<void> {
     recursive: true,
   });
   await mkdir(join(assetsRoot, 'skills', 'other-skill'), { recursive: true });
+  await mkdir(join(assetsRoot, 'skills', 'explainer-kit'), { recursive: true });
   await writeFile(
     join(assetsRoot, 'skills', 'oat-review-provide', 'SKILL.md'),
     '---\nname: oat-review-provide\nversion: 1.0.0\n---\n',
@@ -27,6 +28,11 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   await writeFile(
     join(assetsRoot, 'skills', 'other-skill', 'SKILL.md'),
     '---\nname: other-skill\nversion: 1.0.0\n---\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'skills', 'explainer-kit', 'SKILL.md'),
+    '---\nname: explainer-kit\nversion: 1.0.0\n---\n',
     'utf8',
   );
 }
@@ -61,6 +67,27 @@ describe('installUtility', () => {
         'utf8',
       ),
     ).resolves.toContain('oat-review-provide');
+  });
+
+  it('installs the canonical explainer core from the utility pack', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'user-target');
+    await seedAssets(assetsRoot);
+
+    const result = await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['explainer-kit'],
+    });
+
+    expect(result.copiedSkills).toEqual(['explainer-kit']);
+    await expect(
+      readFile(
+        join(targetRoot, '.agents', 'skills', 'explainer-kit', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('version: 1.0.0');
   });
 
   it('copies oat-review-provide at user scope', async () => {

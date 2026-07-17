@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.0
+version: 1.1.0
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
@@ -24,6 +24,17 @@ Adapt OAT project context into the versioned request consumed by the canonical
 This adapter depends on `explainer-kit`; the core never depends on this adapter.
 Fail closed when the compatible installed core is unavailable. Do not copy core
 runtime logic into the adapter.
+
+Before reading OAT config or invoking the core, call
+`scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
+directory and minimum core version `1.0.0`. Continue only when it returns
+`ok: true`.
+
+- Missing core: stop and show
+  `oat tools install utility --scope user`.
+- Incompatible core: stop and show
+  `oat tools update --pack utility --scope user`.
+- Never search a repository checkout or another noncanonical path as fallback.
 
 ## Asset Resolution
 

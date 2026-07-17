@@ -87,11 +87,18 @@ describe('installWorkflows', () => {
     const result = await installWorkflows({ assetsRoot, targetRoot });
 
     expect(result.copiedSkills).toHaveLength(WORKFLOW_SKILLS.length);
+    expect(result.copiedSkills).toContain('oat-explainer-kit');
     expect(result.outdatedSkills).toEqual([]);
     expect(result.copiedAgents).toHaveLength(WORKFLOW_AGENTS.length);
     expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.copiedScripts).toHaveLength(3);
     expect(result.projectsRootInitialized).toBe(true);
+    await expect(
+      readFile(
+        join(targetRoot, '.agents', 'skills', 'oat-explainer-kit', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toContain('name: oat-explainer-kit');
   });
 
   it('installs all four asset classes at user scope without project scaffolding', async () => {
