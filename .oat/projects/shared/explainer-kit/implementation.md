@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 2/10      |
+| Phase 2 | in_progress | 10    | 3/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 8/38 tasks completed
+**Total:** 9/38 tasks completed
 
 ---
 
@@ -234,6 +234,25 @@ oat_generated: false
 
 - Fact-base, contract, and schema suites — pass (21/21).
 - Scoped formatting and whitespace checks — pass.
+
+---
+
+### Task p02-t03: Add recipe registry and canonical narrative contracts
+
+**Status:** completed
+**Commit:** `3cd8c3f8`
+
+**Outcome:**
+
+- Added versioned project-explainer, project-recap, and engineer-tour recipe
+  contracts plus registry lookup and narrative validation.
+- Enforced one-project recap binding, six accountability sections, closed
+  source roles, and bounded unknown-size discovery.
+
+**Verification:**
+
+- Recipe, contract, and schema suites — pass (23/23).
+- Scoped formatting, lint, and whitespace checks — pass.
 
 ---
 
