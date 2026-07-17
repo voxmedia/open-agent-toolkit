@@ -57,6 +57,14 @@ oat_pr_url: null
 oat_project_created: '2026-04-08T17:16:52.421Z'
 oat_project_completed: null
 oat_project_state_updated: '2026-04-09T22:00:00Z'
+oat_project_explainer:
+  decision: generate
+  source: interactive
+  decided_at: '2026-04-09T21:30:00Z'
+oat_project_recap:
+  decision: generate
+  source: autonomous_policy
+  decided_at: '2026-04-09T21:35:00Z'
 oat_generated: false
 ---
 `,
@@ -129,6 +137,16 @@ oat_template: false
     expect(projectState.lifecycle).toBe('paused');
     expect(projectState.pauseTimestamp).toBe('2026-04-09T21:00:00Z');
     expect(projectState.pauseReason).toBe('waiting on review');
+    expect(projectState.projectExplainer).toEqual({
+      decision: 'generate',
+      source: 'interactive',
+      decided_at: '2026-04-09T21:30:00Z',
+    });
+    expect(projectState.projectRecap).toEqual({
+      decision: 'generate',
+      source: 'autonomous_policy',
+      decided_at: '2026-04-09T21:35:00Z',
+    });
     expect(projectState.progress).toEqual({
       total: 2,
       completed: 2,
@@ -197,6 +215,27 @@ oat_template: false
       phase: 'implement',
       phaseStatus: 'pr_open',
       lifecycle: 'active',
+    });
+  });
+
+  it('exposes null explainer decisions for existing projects without intent', async () => {
+    const repoRoot = await createDir('oat-control-plane-legacy-project-');
+    const projectDir = join(repoRoot, '.oat', 'projects', 'shared', 'legacy');
+    await mkdir(projectDir, { recursive: true });
+    await writeFile(
+      join(projectDir, 'state.md'),
+      `---
+oat_phase: discovery
+oat_phase_status: in_progress
+oat_workflow_mode: spec-driven
+---
+`,
+      'utf8',
+    );
+
+    await expect(getProjectState(projectDir)).resolves.toMatchObject({
+      projectExplainer: null,
+      projectRecap: null,
     });
   });
 

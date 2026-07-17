@@ -119,6 +119,117 @@ describe('validateProjectState - coordination additions', () => {
   });
 });
 
+describe('validateProjectState - explainer intent', () => {
+  it('accepts independent decisions, valid sources, timestamps, and nulls', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_explainer: {
+            decision: 'generate',
+            source: 'kickoff_prompt',
+            decided_at: '2026-07-17T20:00:00Z',
+          },
+          oat_project_recap: null,
+        },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_explainer: {
+          decision: 'generate',
+          source: 'kickoff_prompt',
+          decided_at: '2026-07-17T20:00:00Z',
+        },
+        oat_project_recap: null,
+      },
+    });
+  });
+
+  it('keeps projects without explainer intent valid', () => {
+    expect(validateProjectState({ frontmatter: {} })).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_explainer: undefined,
+        oat_project_recap: undefined,
+      },
+    });
+  });
+
+  it.each([
+    [
+      'unknown keys',
+      {
+        decision: 'generate',
+        source: 'interactive',
+        decided_at: '2026-07-17T20:00:00Z',
+        extra: true,
+      },
+      'invalid-explainer-decision-keys',
+    ],
+    [
+      'invalid decisions',
+      {
+        decision: 'ask',
+        source: 'interactive',
+        decided_at: '2026-07-17T20:00:00Z',
+      },
+      'invalid-explainer-decision',
+    ],
+    [
+      'invalid sources',
+      {
+        decision: 'generate',
+        source: 'workflow_preference',
+        decided_at: '2026-07-17T20:00:00Z',
+      },
+      'invalid-explainer-source',
+    ],
+    [
+      'invalid timestamps',
+      {
+        decision: 'generate',
+        source: 'interactive',
+        decided_at: 'not-iso',
+      },
+      'invalid-explainer-timestamp',
+    ],
+    [
+      'autonomous-policy skip decisions',
+      {
+        decision: 'skip',
+        source: 'autonomous_policy',
+        decided_at: '2026-07-17T20:00:00Z',
+      },
+      'autonomous-explainer-skip-forbidden',
+    ],
+  ])('rejects %s', (_label, decision, expectedCode) => {
+    const result = validateProjectState({
+      frontmatter: { oat_project_recap: decision },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: expectedCode }),
+    );
+  });
+
+  it('rejects partial decision/source records', () => {
+    const result = validateProjectState({
+      frontmatter: {
+        oat_project_explainer: {
+          decision: 'generate',
+          decided_at: '2026-07-17T20:00:00Z',
+        },
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'invalid-explainer-source' }),
+    );
+  });
+});
+
 describe('child linkage validation', () => {
   const tempDirs: string[] = [];
 
