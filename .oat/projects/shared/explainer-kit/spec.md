@@ -466,28 +466,28 @@ the same manifest/receipt after the run.
 
 ## Requirement Index
 
-| ID   | Description                             | Priority | Verification                                     | Planned Tasks |
-| ---- | --------------------------------------- | -------- | ------------------------------------------------ | ------------- |
-| FR1  | Generic core invocation contract        | P0       | integration: config-free packaged core           | See plan.md   |
-| FR2  | Reconciled fact-base pipeline           | P0       | integration: raw and supplied fact-base paths    | See plan.md   |
-| FR3  | Recipe-driven artifact production       | P0       | integration: canonical recipe outputs            | See plan.md   |
-| FR4  | Resolved theme system                   | P0       | unit + visual: theme validation and matrix QA    | See plan.md   |
-| FR5  | Artifact manifest and honest durability | P0       | unit + integration: evidence and relocation      | See plan.md   |
-| FR6  | S3 static publishing connector          | P0       | integration + e2e: root mapping and live publish | See plan.md   |
-| FR7  | Typed OAT configuration adapter         | P0       | unit + integration: key registry and resolution  | See plan.md   |
-| FR8  | Scope-derived OAT artifact placement    | P0       | integration: active roots and archive exports    | See plan.md   |
-| FR9  | Lifecycle intent and policy             | P0       | unit + integration: precedence and prompts       | See plan.md   |
-| FR10 | Non-blocking mandatory autonomous recap | P0       | integration: forced failure completion path      | See plan.md   |
-| FR11 | Packaged dependency contract            | P0       | integration: installed utility/workflows layout  | See plan.md   |
-| FR12 | Private-wrapper extension compatibility | P0       | fixture + manual e2e: wrapper migration          | See plan.md   |
-| FR13 | Neutral templates and leak prevention   | P0       | structural: token, denylist, seeded leak         | See plan.md   |
-| FR14 | Release acceptance evidence             | P0       | manual e2e: RC wrapper and S3/CDN receipts       | See plan.md   |
-| NFR1 | Portability and configuration isolation | P0       | integration: empty-environment smoke             | See plan.md   |
-| NFR2 | Security and privacy                    | P0       | unit + security: validation and redaction        | See plan.md   |
-| NFR3 | Accessibility and visual quality        | P0       | visual + manual: AA and browser QA               | See plan.md   |
-| NFR4 | Traceability and reproducibility        | P0       | integration: hashes and rebuild spot checks      | See plan.md   |
-| NFR5 | Failure transparency                    | P0       | integration: partial-stage outcome records       | See plan.md   |
-| NFR6 | Release integrity                       | P0       | release: bundled validation and version policy   | See plan.md   |
+| ID   | Description                             | Priority | Verification                                     | Planned Tasks                                                 |
+| ---- | --------------------------------------- | -------- | ------------------------------------------------ | ------------------------------------------------------------- |
+| FR1  | Generic core invocation contract        | P0       | integration: config-free packaged core           | p01-t02, p01-t06, p02-t01, p02-t09, p02-t10, p04-t06          |
+| FR2  | Reconciled fact-base pipeline           | P0       | integration: raw and supplied fact-base paths    | p02-t02, p02-t09                                              |
+| FR3  | Recipe-driven artifact production       | P0       | integration: canonical recipe outputs            | p02-t03, p02-t09, p02-t10                                     |
+| FR4  | Resolved theme system                   | P0       | unit + visual: theme validation and matrix QA    | p02-t04, p02-t05, p02-t06, p04-t02                            |
+| FR5  | Artifact manifest and honest durability | P0       | unit + integration: evidence and relocation      | p02-t01, p02-t08, p03-t05, p03-t07, p03-t09                   |
+| FR6  | S3 static publishing connector          | P0       | integration + e2e: root mapping and live publish | p04-t01, p05-t03                                              |
+| FR7  | Typed OAT configuration adapter         | P0       | unit + integration: key registry and resolution  | p01-t03, p03-t01                                              |
+| FR8  | Scope-derived OAT artifact placement    | P0       | integration: active roots and archive exports    | p03-t01, p03-t07, p03-t08, p03-t09                            |
+| FR9  | Lifecycle intent and policy             | P0       | unit + integration: precedence and prompts       | p01-t04, p03-t03, p03-t04, p03-t06, p03-t08                   |
+| FR10 | Non-blocking mandatory autonomous recap | P0       | integration: forced failure completion path      | p03-t04, p03-t06, p03-t08                                     |
+| FR11 | Packaged dependency contract            | P0       | integration: installed utility/workflows layout  | p01-t01, p01-t05, p04-t05, p04-t06                            |
+| FR12 | Private-wrapper extension compatibility | P0       | fixture + manual e2e: wrapper migration          | p04-t03, p05-t02                                              |
+| FR13 | Neutral templates and leak prevention   | P0       | structural: token, denylist, seeded leak         | p02-t05, p02-t07, p04-t02                                     |
+| FR14 | Release acceptance evidence             | P0       | manual e2e: RC wrapper and S3/CDN receipts       | p04-t07, p04-t08, p04-t09, p05-t01, p05-t02, p05-t03, p05-t04 |
+| NFR1 | Portability and configuration isolation | P0       | integration: empty-environment smoke             | p01-t06, p02-t09, p04-t05, p04-t06                            |
+| NFR2 | Security and privacy                    | P0       | unit + security: validation and redaction        | p01-t06, p02-t07, p04-t01                                     |
+| NFR3 | Accessibility and visual quality        | P0       | visual + manual: AA and browser QA               | p02-t04, p02-t05, p02-t06, p02-t07, p04-t02                   |
+| NFR4 | Traceability and reproducibility        | P0       | integration: hashes and rebuild spot checks      | p02-t01, p02-t08, p04-t02                                     |
+| NFR5 | Failure transparency                    | P0       | integration: partial-stage outcome records       | p02-t01, p02-t08, p03-t06, p03-t08, p03-t09                   |
+| NFR6 | Release integrity                       | P0       | release: bundled validation and version policy   | p01-t01, p04-t05, p04-t07, p04-t08, p04-t09, p05-t04          |
 
 ## Open Questions
 
