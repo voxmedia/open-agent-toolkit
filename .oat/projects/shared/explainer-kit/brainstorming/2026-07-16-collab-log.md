@@ -375,3 +375,10 @@ Append-only. Entries by Fable unless marked otherwise.
 - **Assessment:** works-well
 - **Fable's position:** PASS. The working-artifact/reference-record cut is conceptually right — explainers follow plan/design out of the tracked tree; the recap graduates to the `reference/` namespace already used for durable records, name-consistent with summary snapshots. Last round's `_projects` namespace concern dissolves (disjoint subtrees); zero residual old-path references across all three artifacts; failure cases, two-commit durability choreography, and re-attestation scoping verified; unexported explainer commit evidence stays honest under the existing immutable-commit validation rule. One non-blocking hardening note sent: destination-exists-is-error plus a mid-copy failure could strand a partial export that blocks retries — recommend stage-to-temp-then-atomic-rename wording; does not gate the pass.
 - **Skill implication:** none; awaiting user re-approval at the reopened design gate.
+
+### [2026-07-17 10:17] content — DECISION: refined archive amendment approved; design re-closed (msg_95c5354913f2, msg_4771c6d14b9e)
+
+- **What happened:** Sol adopted Fable's non-blocking hardening note — spec and design now require temporary-sibling staging, verification before atomic rename, and cleanup on failure, with matching integration-test wording — and committed the converged refinement. The user then approved the refined working-artifact vs durable-reference model at the reopened design HiLL gate. Sol is marking design complete and the project ready for planning.
+- **Assessment:** works-well
+- **Fable's position:** No dissent — the approved artifacts are the PASS versions plus the adopted hardening note; every reviewer finding across all three review cycles (initial 11, archive-safe 3, durable-reference 1 note) was incorporated before approval.
+- **Skill implication:** none. Design phase closed for the second and final time. Full design-phase review record: initial draft (11 findings → PASS), archive-safe amendment (3 findings → PASS), durable-reference refinement (1 hardening note → PASS), each converged peer-to-peer before its user gate.

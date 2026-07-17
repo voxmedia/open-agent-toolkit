@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: e5f49b29
+oat_last_commit: 3fb38038
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,10 +9,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -34,25 +34,25 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T13:26:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-17T15:16:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Design amendment in progress
+**Status:** Design complete
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-17
 
 ## Current Phase
 
-Design - Archive-safe durability amendment under peer review
+Design - Archive-safe durability amendment approved; ready for planning
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (in_progress — archive-safe durability amendment)
+- **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -61,7 +61,8 @@ Design - Archive-safe durability amendment under peer review
 - ✓ Discovery complete and approved
 - ✓ Specification complete
 - ✓ Initial design approved
-- ⧗ Archive-safe durability amendment in Sol/Fable convergence review
+- ✓ Archive-safe durability amendment approved
+- ⧗ Awaiting implementation plan
 
 ## Blockers
 
@@ -69,4 +70,4 @@ None
 
 ## Next Milestone
 
-Present the amended design for user approval
+Create the implementation plan with `oat-project-plan`
