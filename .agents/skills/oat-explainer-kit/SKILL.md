@@ -42,6 +42,32 @@ Resolve adapter scripts and references relative to this installed skill
 directory. Resolve the core only from its installed canonical skill path. Never
 fall back to a repository source checkout.
 
+## Core Invocation
+
+Call `scripts/run.mjs#runOatExplainer` with the repository root, project
+invocation, active project path, recipe, slug, lifecycle mode, and any explicit
+runtime overrides. The adapter:
+
+1. checks the user-scoped installed core at minimum version `1.0.0`;
+2. resolves only the public `explainers.*` and `workflow.explainers.*` keys;
+3. derives the canonical project output root;
+4. binds approved OAT artifacts to the recipe's single `project` source set;
+5. creates one `ExplainerRunRequestV1`;
+6. calls the installed core's `runExplainer(request, options)` export; and
+7. consumes and returns the resulting `explainer-kit.manifest/v1`.
+
+`project-explainer` binds `plan.md`, `design.md`, and `spec.md`.
+`project-recap` additionally binds `implementation.md` and `summary.md`.
+Missing optional artifacts are omitted, but at least one approved lifecycle
+artifact is required. An explicit supplied fact-base path bypasses artifact
+federation and is passed through as `factBase.mode: supplied`.
+
+Unattended project runs pass `approved-oat-artifacts` provenance to the core's
+content-approval seam and never prompt. Federated runs still require an
+explicit provider-neutral critic callback in `coreOptions`; approval provenance
+does not bypass fact reconciliation. Do not read private presets, vault files,
+provider configuration, or ambient destination configuration.
+
 ## Progress Indicators
 
 For interactive runs, show a concise banner and adapter stage updates:
