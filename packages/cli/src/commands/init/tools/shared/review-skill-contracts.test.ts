@@ -498,6 +498,82 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('integrates interactive completion recap policy before lifecycle mutation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const normalizedContent = content.replace(/\s+/g, ' ');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(content).toContain(
+      'Resolve `projectRecap` intent before presenting the batched completion prompt.',
+    );
+    expect(content).toContain(
+      'When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt',
+    );
+    expect(content).toContain(
+      'Persist either `generate` or `skip` as the returned `interactive` record before continuing.',
+    );
+    expect(content).toContain(
+      'A valid persisted `oat_project_recap` decision prevents another prompt.',
+    );
+
+    const resolveIndex = normalizedContent.indexOf(
+      'Resolve `projectRecap` intent before presenting the batched completion prompt.',
+    );
+    const recapIndex = normalizedContent.indexOf(
+      '### Step 3.6: Select Final Project Recap',
+    );
+    const completeStateIndex = normalizedContent.indexOf(
+      '### Step 5: Set Lifecycle Complete',
+    );
+    expect(resolveIndex).toBeGreaterThanOrEqual(0);
+    expect(recapIndex).toBeGreaterThan(resolveIndex);
+    expect(completeStateIndex).toBeGreaterThan(recapIndex);
+  });
+
+  it('selects and archives only the final shared-project recap', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again.',
+    );
+    expect(content).toContain(
+      'Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run.',
+    );
+    expect(content).toContain('ARCHIVE_ARGS=("$PROJECT_PATH")');
+    expect(content).toContain(
+      'ARCHIVE_ARGS+=("--project-recap-run" "$SELECTED_PROJECT_RECAP_RUN")',
+    );
+    expect(content).toContain(
+      'Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty.',
+    );
+    expect(content).toContain(
+      '`project-explainer` runs are active-project working artifacts, not durable post-completion reference products.',
+    );
+    expect(content).toContain(
+      'Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.',
+    );
+  });
+
+  it('keeps local completion recaps outside tracked archive durability', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
+    );
+    expect(content).toContain(
+      'A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence.',
+    );
+    expect(content).toContain(
+      'Do not treat local filesystem presence as durability.',
+    );
+  });
+
   it('delegates project completion state mutation to the CLI command', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',

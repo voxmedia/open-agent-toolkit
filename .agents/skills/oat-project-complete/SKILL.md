@@ -91,6 +91,7 @@ remain valid.
 ```bash
 ARCHIVE_PREF=$(oat config get workflow.archiveOnComplete 2>/dev/null || true)
 PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
+PROJECT_RECAP_CONFIG=$(oat config get workflow.explainers.projectRecap --json 2>/dev/null || true)
 ```
 
 - **If `ARCHIVE_PREF` is `true`:** Set `SHOULD_ARCHIVE="true"`. Skip the archive question. Print `Archive on complete: enabled (from workflow.archiveOnComplete).`
@@ -102,6 +103,19 @@ PR_ON_COMPLETE=$(oat config get workflow.createPrOnComplete 2>/dev/null || true)
 - The existing tracked-PR skip still applies: if `oat_pr_status` is `open`, do not ask the Open PR question and do not honor `PR_ON_COMPLETE=true` — the PR already exists.
 
 The "Ready to mark complete?" confirmation is always asked — it is a meaningful "are you sure" moment, not a preference.
+
+Resolve `projectRecap` intent before presenting the batched completion prompt.
+Use the `oat-explainer-kit` lifecycle intent resolver in interactive mode with
+the current `oat_project_recap` value from the same `state.md` read and the
+source-aware `workflow.explainers.projectRecap` preference. Preserve the state
+content hash required by the adapter's safe intent persistence contract.
+
+When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt: "Generate a final project recap as part of completion?" Do not open a second prompt. Resolve the answer as `generate` or `skip`, then use the adapter's intent persistence helper with the captured state hash. Persist either `generate` or `skip` as the returned `interactive` record before continuing. If persistence reports a stale write, re-read state and resolve precedence again; never retry the stale record blindly. A valid persisted `oat_project_recap` decision prevents another prompt.
+
+Set `SHOULD_GENERATE_RECAP="true"` only when the final resolved decision is
+`generate`; otherwise set it to `"false"`. Direct `always` or `never` workflow
+preference results are effective for this run but are not copied into project
+state.
 
 Also preflight summary status using the same freshness rules as `oat-project-summary`:
 
@@ -116,7 +130,8 @@ Also preflight summary status using the same freshness rules as `oat-project-sum
 3. **Generate or refresh summary** (only if summary status is `missing` or `stale`): present the status explicitly:
    - Missing example: "A summary has not been generated yet. Would you like me to generate it now as part of completion?"
    - Stale example: "The project summary is out of date. Would you like me to refresh it now as part of completion?"
-4. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
+4. **Generate final project recap** (only when recap intent resolution returned `needsPrompt: true`): "Generate a final project recap as part of completion?"
+5. **Open PR:** "Open a PR in GitHub after generating the PR description?" — ask this only when no tracked open PR already exists.
 
 If `oat_pr_status` is `open`, do not ask the Open PR question. Set `SHOULD_OPEN_PR="false"` and treat the existing PR as already tracked.
 
@@ -127,12 +142,13 @@ Ready to complete project **{PROJECT_NAME}**?
 
 1. Archive the project after completion? (yes/no)
 2. A summary has not been generated yet. Generate it now as part of completion? (yes/no)
-3. Open a PR in GitHub? (yes/no)
+3. Generate a final project recap as part of completion? (yes/no)
+4. Open a PR in GitHub? (yes/no)
 ```
 
 If the user declines the completion confirmation, exit gracefully.
 
-Store the answers as `SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, and `SHOULD_OPEN_PR` for use in later steps.
+After the user accepts the completion confirmation, store the answers as `SHOULD_ARCHIVE`, `SHOULD_GENERATE_SUMMARY`, `SHOULD_GENERATE_RECAP`, and `SHOULD_OPEN_PR` for use in later steps. Persist a prompted recap answer only after that confirmation is accepted.
 
 If the summary status is `current`, set `SHOULD_GENERATE_SUMMARY="false"` and note that a current summary is already available.
 
@@ -257,6 +273,24 @@ Check if `{PROJECT_PATH}/summary.md` exists and whether it is current against th
   - Used as source for the PR description (in Step 7)
   - Preserved in the archived project directory (in Step 8)
 
+### Step 3.6: Select Final Project Recap
+
+Run this gate after the optional summary refresh and before any lifecycle
+mutation. Initialize `SELECTED_PROJECT_RECAP_RUN=""`.
+
+When `SHOULD_GENERATE_RECAP="true"`, inspect manifests under
+`{PROJECT_PATH}/explainers/` before generating. A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs, including the refreshed summary when present.
+
+If no fresh recap exists, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A failed adapter run warns but does not block completion. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
+
+Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run. The value must be project-relative in the form `explainers/<run-slug>` so it can be passed safely to the archive CLI. An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap.
+
+When recap intent resolves to `skip`, or generation produces no valid final recap, leave `SELECTED_PROJECT_RECAP_RUN` empty and complete without a recap. Record any failed recap attempt as a warning rather than changing project completion status.
+
+`project-explainer` runs are active-project working artifacts, not durable post-completion reference products. Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.
+
+For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Completion-bookkeeping durability, relocation re-attestation, and archive-aware recap links are handled by the later durability stage, not by this selection gate.
+
 ### Step 4: Archive Residual Active Review Artifacts
 
 Detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
@@ -349,6 +383,7 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
   - When `archive.summaryExportPath` is unset or `summary.md` is missing, omit this bullet rather than emit a broken link.
 - **Keep References bullets** that resolve independently of the archive: backlog item links under `.oat/repo/pjm/backlog/`, decision record links under `.oat/repo/reference/decisions/`, repo-reference docs, ticket URLs, and anything else under tracked paths outside the project directory.
 - Apply the existing `localPaths`-based exclusion rule from `oat-project-pr-final` Step 4 on top of these rules — it already covers `.oat/**/pr` and `.oat/**/reviews/archived` and may catch additional patterns configured per repo.
+- Do not add a durable reference for any `project-explainer` run. Only the selected final `project-recap` can enter the tracked completion export path.
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
@@ -362,7 +397,12 @@ The archive-side effects in this step are CLI-owned. Do not reimplement local ar
 
 ```bash
 ARCHIVE_OUTPUT=""
-if ! ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1); then
+ARCHIVE_ARGS=("$PROJECT_PATH")
+if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
+  ARCHIVE_ARGS+=("--project-recap-run" "$SELECTED_PROJECT_RECAP_RUN")
+fi
+
+if ! ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" 2>&1); then
   printf '%s\n' "$ARCHIVE_OUTPUT" >&2
   echo "Error: Project archive failed." >&2
   exit 1
@@ -380,6 +420,8 @@ PROJECT_PATH="$ARCHIVE_PATH"
 ARCHIVE_S3_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | sed -nE 's/^S3 archive: (.+)$/\1/p' | tail -1)
 ARCHIVE_S3_CONTEXT=$(printf '%s\n' "$ARCHIVE_OUTPUT" | grep -E '^Archive S3 sync: .*profile=.*region=' | tail -1 || true)
 ```
+
+SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing `oat project archive "$PROJECT_PATH"` behavior. Because this step runs only for shared projects, local-scope projects never pass a recap archive argument.
 
 Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details. If S3 sync ran and only `ARCHIVE_S3_PATH` is available, report the destination and note that credential context was not emitted by the command.
 
