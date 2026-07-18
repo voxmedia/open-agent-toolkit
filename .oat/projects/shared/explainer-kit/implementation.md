@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t04
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 3/9       |
+| Phase 3 | in_progress | 9     | 4/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 19/38 tasks completed
+**Total:** 20/38 tasks completed
 
 ---
 
@@ -491,6 +491,27 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 - Adapter intent suites — pass (27/27).
 - Control-plane and CLI project-state suites — pass (64/64).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t04: Integrate plan and autonomous kickoff gates
+
+**Status:** completed
+**Commit:** `85224702`
+
+**Outcome:**
+
+- Added interactive ask-once/post-plan explainer guidance and failure semantics
+  without altering plan review, dispatch, or HiLL contracts.
+- Added autonomous forced-recap and kickoff-request-only explainer intent.
+
+**Verification:**
+
+- Skill contract RED failed for the two missing behaviors, then GREEN passed
+  with 119 relevant tests.
+- Root rerun of full skill validation — pass (98/98); the worker's reported
+  metadata blocker was not reproducible in the committed tree.
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
