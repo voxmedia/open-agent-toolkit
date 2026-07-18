@@ -635,6 +635,25 @@ describe('oat-config', () => {
       });
     });
 
+    it('does not expose legacy known strays as a general user preference', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+      await writeFile(
+        join(userConfigDir, 'config.json'),
+        JSON.stringify({
+          version: 1,
+          activeIdea: '.oat/ideas/example',
+          knownStrays: ['.cursor/skills/local-only'],
+        }),
+        'utf8',
+      );
+
+      await expect(readUserConfig(userConfigDir)).resolves.toEqual({
+        version: 1,
+        activeIdea: '.oat/ideas/example',
+      });
+    });
+
     it('setActiveIdea writes to local config', async () => {
       const repoRoot = await createRepoRoot();
 

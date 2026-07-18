@@ -693,7 +693,6 @@ export interface OatLocalConfig {
 export interface UserConfig {
   version: number;
   activeIdea?: string | null;
-  knownStrays?: string[];
   updateNotifications?: boolean;
   workflow?: OatWorkflowConfig;
 }
@@ -739,29 +738,6 @@ function trimNonEmptyString(value: unknown): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function normalizeKnownStrayPath(pathValue: string): string | undefined {
-  const trimmed = pathValue.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  const normalized = trimPathValue(normalizeToPosixPath(trimmed));
-  return normalized && normalized !== '.' ? normalized : undefined;
-}
-
-function normalizeKnownStrays(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const normalized = value
-    .filter((pathValue): pathValue is string => typeof pathValue === 'string')
-    .map((pathValue) => normalizeKnownStrayPath(pathValue))
-    .filter((pathValue): pathValue is string => pathValue !== undefined);
-
-  return normalized.length > 0 ? [...new Set(normalized)].sort() : undefined;
 }
 
 export function normalizeProjectPath(
@@ -1195,11 +1171,6 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
-  }
-
-  const knownStrays = normalizeKnownStrays(parsed.knownStrays);
-  if (knownStrays) {
-    next.knownStrays = knownStrays;
   }
 
   if (typeof parsed.updateNotifications === 'boolean') {

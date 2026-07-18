@@ -4,7 +4,6 @@ import { join } from 'node:path';
 
 import {
   BUILTIN_EXEC_TARGETS,
-  readUserConfig,
   type ExecTarget,
   type GateConfig,
   type OatConfig,
@@ -260,7 +259,8 @@ describe('resolveEffectiveConfig', () => {
     });
   });
 
-  it('normalizes user-level known strays from config.json', async () => {
+  it('does not expose legacy user known strays through effective config', async () => {
+    const repoRoot = await createRepoRoot();
     const userConfigDir = await createUserConfigDir();
     await writeFile(
       join(userConfigDir, 'config.json'),
@@ -277,35 +277,10 @@ describe('resolveEffectiveConfig', () => {
       'utf8',
     );
 
-    const config = await readUserConfig(userConfigDir);
+    const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
 
-    expect(config.knownStrays).toEqual([
-      '.cursor/skills/cloud-environment-setup',
-      '.cursor/skills/local-only',
-    ]);
-  });
-
-  it('resolves user-level known strays with source attribution', async () => {
-    const result = await resolveEffectiveConfig(
-      '/repo',
-      '/tmp/user',
-      {},
-      {
-        readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
-        readOatLocalConfig: async () =>
-          ({ version: 1 }) satisfies OatLocalConfig,
-        readUserConfig: async () =>
-          ({
-            version: 1,
-            knownStrays: ['.cursor/skills/cloud-environment-setup'],
-          }) satisfies UserConfig,
-      },
-    );
-
-    expect(result.resolved['knownStrays']).toEqual({
-      value: ['.cursor/skills/cloud-environment-setup'],
-      source: 'user',
-    });
+    expect(result.user).toEqual({ version: 1 });
+    expect(result.resolved['knownStrays']).toBeUndefined();
   });
 
   it('walks generic nested keys without hardcoding them', async () => {
