@@ -119,37 +119,43 @@ _(Task ID p01-t03 intentionally unused — merged into p01-t02 during plan revie
 
 Run: `oat sync --scope all` (fallback: `pnpm run cli -- sync --scope all`).
 
-**Step 2: Verify**
+**Step 2: Verify (all configured providers, manifest-derived)**
 
-Run: `ls .claude/skills/oat-wave-execute/SKILL.md .claude/skills/oat-wave-program/SKILL.md && git status --short | head -20`
-Expected: views exist for all configured providers; only sync-managed files changed (inspect for unrelated deletions — B3's own failure class).
+Run: `rg -n "oat-wave-execute|oat-wave-program" .oat/sync/manifest.json && ls .claude/skills/oat-wave-execute/SKILL.md .claude/skills/oat-wave-program/SKILL.md`
+Then assert every provider view path the manifest records for both skills exists (check `.codex` and `.cursor` entries explicitly — do not stop at Claude). Fail on any absent path.
+Also run: `git status --short` and inspect for unrelated deletions (B3's own failure class) before staging.
 
-**Step 3: Commit**
+**Step 3: Commit (stage only verified sync-managed paths; no error suppression)**
 
 ```bash
-git add -- .claude .codex .cursor .oat/sync/manifest.json 2>/dev/null || true
+git add .oat/sync/manifest.json
+git add <the exact provider-view paths verified in Step 2>
 git commit -m "chore(p01-t04): sync provider views for wave skills"
 ```
 
 ---
 
-### Task p01-t05: Fresh-install smoke check
+### Task p01-t05: Fresh-install verification (real install, not bundle inspection)
 
-**Files:** none (verification only; temp dir)
+**Files:** none in-repo (verification only; temp dir); result recorded in `implementation.md`
 
-**Step 1: Build + bundle**
+**Step 1: Build + bundle (prerequisite check)**
 
-Run: `pnpm build && bash packages/cli/scripts/bundle-assets.sh`
-Expected: `packages/cli/assets/skills/oat-wave-execute/` and `.../oat-wave-program/` exist; `tests/` dirs absent; script executable.
+Run: `pnpm build && bash packages/cli/scripts/bundle-assets.sh && test -x packages/cli/assets/skills/oat-wave-execute/scripts/bootstrap-group.sh && test ! -d packages/cli/assets/skills/oat-wave-execute/tests`
+Expected: bundle contains both skills; script executable; tests dir stripped.
 
-**Step 2: Verify bundled contents**
+**Step 2: Fresh install into an isolated temp repo (FR1 acceptance path)**
 
-Run: `test -x packages/cli/assets/skills/oat-wave-execute/scripts/bootstrap-group.sh && ls packages/cli/assets/skills/oat-wave-execute/assets/ packages/cli/assets/skills/oat-wave-program/assets/`
-Expected: exit 0; both asset templates listed for execute, one for program.
+Materialize an empty temp repo (`mktemp -d`, `git init`), then run the BRANCH-LOCAL CLI's non-interactive workflow-pack install against it (e.g. `pnpm run cli -- tools install workflows --scope project` with cwd in the temp repo, or the current `init tools` equivalent — verify exact command via `pnpm run cli -- help` first).
 
-**Step 3: Commit**
+**Step 3: Assert installed materialization**
 
-No commit (verification-only). Record result in `implementation.md`.
+In the temp repo, assert: both skill trees present with SKILL.md, all asset templates (2 execute + 1 program), `bootstrap-group.sh` present WITH execute bit, and provider views generated for every provider enabled in the temp repo's config after `oat sync`.
+Expected: all assertions pass; cleanup temp dir.
+
+**Step 4: Record**
+
+No repo commit (verification-only). Record the install evidence (commands, assertions, result) in `implementation.md` phase notes.
 
 ---
 
@@ -169,7 +175,7 @@ Rewrite Process Step 3.2: scaffold-placeholder handling becomes a verification g
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md && git diff .agents/skills/oat-wave-execute/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md && git diff .agents/skills/oat-wave-execute/SKILL.md`
 Expected: full diff shows changes confined to the Step 3.2 region (visual confirm).
 
 **Step 3: Commit**
@@ -193,7 +199,7 @@ In merge choreography (Step 5) add: mandatory `pwd` + `git branch --show-current
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md && git diff .agents/skills/oat-wave-execute/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md && git diff .agents/skills/oat-wave-execute/SKILL.md`
 Expected: full diff shows changes confined to the merge-choreography region (visual confirm).
 
 **Step 3: Commit**
@@ -222,8 +228,8 @@ Merge choreography: add sync-commit content inspection before dispatch. Frame pe
 
 **Step 3: Format + Verify**
 
-Run: `bash -n .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh && pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md && rg -n "mapfile|declare -A" .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh | wc -l`
-Expected: syntax OK; zero bash-4 constructs.
+Run: `/bin/bash --version | head -1 && /bin/bash -n .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh && pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md && rg -n "mapfile|declare -A" .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh | wc -l`
+Expected: interpreter reports 3.2.x (macOS system bash — log the version as evidence); syntax OK under it; zero bash-4 constructs. Runtime execution under `/bin/bash` is exercised by the p05 dry-run.
 
 **Step 4: Commit**
 
@@ -246,7 +252,7 @@ Promote "integration gates after every fan-in" from practice to a numbered stand
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md && rg -n "fan-in" .agents/skills/oat-wave-execute/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md && rg -n "fan-in" .agents/skills/oat-wave-execute/SKILL.md`
 Expected: rule present in the Standing Rules list.
 
 **Step 3: Commit**
@@ -270,7 +276,7 @@ Fix-loop guidance: every fix disposition — including root-verified bounded fix
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md && rg -n "verification record" .agents/skills/oat-wave-execute/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md && rg -n "verification record" .agents/skills/oat-wave-execute/SKILL.md`
 Expected: requirement present.
 
 **Step 3: Commit**
@@ -294,7 +300,7 @@ Docs note in the fix-loop/dispatch guidance: prefer resuming the original implem
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md`
 Expected: clean.
 
 **Step 3: Commit**
@@ -323,7 +329,7 @@ Neutral phrasing per the design: pnpm/nvm/better-sqlite3/oxfmt/lint-staged/`.cod
 
 **Step 3: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md .oat/projects/shared/wave-skills-promotion/references/equivalence-checklist.md && rg -c "intent preserved" .oat/projects/shared/wave-skills-promotion/references/equivalence-checklist.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md .oat/projects/shared/wave-skills-promotion/references/equivalence-checklist.md && rg -c "intent preserved" .oat/projects/shared/wave-skills-promotion/references/equivalence-checklist.md`
 Expected: checklist has a row for every rule (spot-check count vs the 9+ standing rules + inherited invariants + program contract items).
 
 **Step 4: Commit**
@@ -340,6 +346,7 @@ git commit -m "feat(p02-t07): genericize stoa-isms with behavioral-equivalence c
 **Files:**
 
 - Modify: `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+- Modify: `.oat/projects/shared/wave-skills-promotion/implementation.md` (traceability table — FR2's verification artifact)
 
 **Step 1: Edit**
 
@@ -351,13 +358,13 @@ Append the six-row queue-item ↔ commit traceability table (item # + one-line d
 
 **Step 2: Format + Verify**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md && head -8 .agents/skills/oat-wave-execute/SKILL.md && head -8 .agents/skills/oat-wave-program/SKILL.md && pnpm lint`
-Expected: versions 1.5.0 / 1.1.0; no "dogfood draft" strings remain (`rg -n "dogfood" .agents/skills/oat-wave-*` → empty).
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md .oat/projects/shared/wave-skills-promotion/implementation.md && head -8 .agents/skills/oat-wave-execute/SKILL.md && head -8 .agents/skills/oat-wave-program/SKILL.md && pnpm lint`
+Expected: versions 1.5.0 / 1.1.0; no "dogfood draft" strings remain (`rg -n "dogfood" .agents/skills/oat-wave-*` → empty); `implementation.md` contains six distinct queue rows, each with a resolvable SHA or a written rejection rationale (no placeholder cells).
 
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md
+git add .agents/skills/oat-wave-execute/SKILL.md .agents/skills/oat-wave-program/SKILL.md .oat/projects/shared/wave-skills-promotion/implementation.md
 git commit -m "feat(p02-t08): toolkit conventions + versions 1.5.0/1.1.0
 
 Release-collapse note: stoa ledger items queued as 1.4.1 (scaffold
@@ -433,23 +440,29 @@ git commit -m "feat(p03-t01): document singleton-group rule + ungrouped alternat
 
 - Create: 5 items under `.oat/repo/pjm/backlog/` (+ regenerate index per backlog conventions)
 
-**Step 1: Create items** (follow `oat-pjm-add-backlog-item` conventions; use `oat backlog new` if available)
+**Step 1: Create items via `oat backlog new`** (follow `oat-pjm-add-backlog-item` conventions)
 
 1. `oat wave new/refresh/close` CLI family — grouped with item 2; trigger: operator prioritization after W6.
 2. Execution-program artifact format as stable OAT contract — grouped with item 1; trigger: second consumer (wave CLI or recap recipe).
 3. `oat worktree bootstrap-group` TS command — rationale from design (proven bash ports as-is; rewrite later).
 4. Post-W6 reviews-row restore-watch removal — trigger: W6 clean final-gate observation reported back via the mini-runbook.
-5. Tracked-config guard — **closed rejection record**: root-caused to stale local binary in consuming repo; cure is dependency hygiene there; CLI guard unnecessary.
+5. Tracked-config guard — rejected: root-caused to stale local binary in consuming repo; cure is dependency hygiene there; CLI guard unnecessary.
 
-**Step 2: Verify**
+**Step 2: Archive the rejected item per the PJM terminal lifecycle**
 
-Run: `ls .oat/repo/pjm/backlog/ && pnpm format:fix .oat/repo/pjm/`
-Expected: 5 new items; index regenerated.
+Active `backlog/items/` is for active work only. Immediately archive item 5:
+Run: `oat backlog archive <item-5-id> --wont-do --summary "root-caused to stale locally-resolved CLI in consuming repo; dependency hygiene there is the cure; CLI-level guard unnecessary"`
+Expected: item 5 moved to `backlog/archived/` with terminal `wont_do`; index + completed ledger regenerated by the command.
 
-**Step 3: Commit**
+**Step 3: Verify**
+
+Run: `oat pjm doctor && git status --short .oat/repo/pjm/`
+Expected: doctor clean; items 1–4 in active backlog, item 5 archived; only produced files modified. Resolve the exact created paths from the git status output.
+
+**Step 4: Commit (stage only the produced files)**
 
 ```bash
-git add .oat/repo/pjm/
+git add <exact item files, archived item path, regenerated index/ledger files from Step 3>
 git commit -m "docs(p03-t02): file deferred-work backlog items for wave-skills promotion"
 ```
 
@@ -471,13 +484,13 @@ git commit -m "docs(p03-t02): file deferred-work backlog items for wave-skills p
 
 **Step 2: Verify**
 
-Run: `git status --short .oat/repo/pjm/backlog/ | wc -l && pnpm format:fix .oat/repo/pjm/`
+Run: `git status --short .oat/repo/pjm/backlog/ | wc -l && pnpm exec oxfmt --write .oat/repo/pjm/`
 Expected: ~5 new-or-modified records for this task (p03-t02's 5 items are already committed); 10 total dispositions across p03-t02/t03 verifiable via `git log --oneline -- .oat/repo/pjm/backlog/` or the backlog index.
 
-**Step 3: Commit**
+**Step 3: Commit (stage only the produced files)**
 
 ```bash
-git add .oat/repo/pjm/
+git add <exact item files + regenerated index files from Step 2's git status>
 git commit -m "docs(p03-t03): triage upstream feedback + file sync version-stamp candidate"
 ```
 
@@ -487,25 +500,30 @@ git commit -m "docs(p03-t03): triage upstream feedback + file sync version-stamp
 
 **Goal:** wave workflow documented; docs build green.
 
-### Task p04-t01: Wave-workflow docs page
+### Task p04-t01: Wave-workflow docs page + authored navigation
 
 **Files:**
 
-- Create: docs page under `apps/oat-docs/docs/` (location per `apps/oat-docs/AGENTS.md` conventions — read it first)
+- Create: docs leaf page under `apps/oat-docs/docs/` (exact location per `apps/oat-docs/AGENTS.md` conventions — read it first)
+- Modify: the nearest authored `index.md` (`## Contents` link — the docs contract makes unlisted pages invisible to navigation)
 
-**Step 1: Author**
+**Step 1: Author the leaf page**
 
-Sections: what waves are (program layer over per-project lifecycle); the two skills and their split; mechanical/judgment ownership boundary; composition with `oat-project-implement` (wrapper projects, worktree groups); descriptive execution-program artifact format section with the explicit "documented, NOT a stable contract" note and pointer to the contract+CLI backlog grouping.
+Required frontmatter: `title` + `description`. Sections: what waves are (program layer over per-project lifecycle); the two skills and their split; mechanical/judgment ownership boundary; composition with `oat-project-implement` (wrapper projects, worktree groups); descriptive execution-program artifact format section with the explicit "documented, NOT a stable contract" note and pointer to the contract+CLI backlog grouping.
 
-**Step 2: Format + Verify**
+**Step 2: Wire authored navigation**
 
-Run: `pnpm format:fix apps/oat-docs/docs/ && rg -n "not a stable contract" apps/oat-docs/docs/ -i`
-Expected: note present.
+Add a `.md`-suffixed link for the new page to the nearest authored `index.md` `## Contents` map, then run `oat docs nav sync`.
 
-**Step 3: Commit**
+**Step 3: Format + Verify**
+
+Run: `pnpm exec oxfmt --write <leaf page path> <authored index path> && rg -n "not a stable contract" apps/oat-docs/docs/ -i && rg -n "<leaf-page-filename>" <authored index path>`
+Expected: note present; Contents link present.
+
+**Step 4: Commit (exact files, not the whole app)**
 
 ```bash
-git add apps/oat-docs/
+git add <leaf page path> <authored index path> <nav-sync outputs if any>
 git commit -m "docs(p04-t01): add wave-workflow documentation"
 ```
 
@@ -548,8 +566,8 @@ Functions: `materialize()` (copy fixture tree to `$TMPDIR/mini-wave-<ts>`, `git 
 
 **Step 2: Verify**
 
-Run: `bash -n .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh && bash .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh && rg -n "mapfile|declare -A" .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh | wc -l`
-Expected: materializes under `$TMPDIR`; zero bash-4 constructs.
+Run: `/bin/bash --version | head -1 && /bin/bash -n .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh && /bin/bash .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh && rg -n "mapfile|declare -A" .agents/skills/oat-wave-execute/tests/mini-wave-fixture/setup-fixture.sh | wc -l`
+Expected: interpreter reports 3.2.x (log as evidence); syntax + full execution succeed under `/bin/bash`; materializes under `$TMPDIR`; zero bash-4 constructs.
 
 **Step 3: Verify bundle exclusion**
 
@@ -577,7 +595,7 @@ Steps: setup → `oat-wave-program new` (assert coverage invariant: 3 plans ↔ 
 
 **Step 2: Format + Commit**
 
-Run: `pnpm format:fix .agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md`
+Run: `pnpm exec oxfmt --write .agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md`
 
 ```bash
 git add .agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md
@@ -601,7 +619,7 @@ Fix skill-text/script defects found (amend via normal task-fix flow); record eac
 
 **Step 3: Verify**
 
-Both legs pass on re-run. Run: `pnpm format:fix .oat/projects/shared/wave-skills-promotion/`
+Both legs pass on re-run. Run: `pnpm exec oxfmt --write .oat/projects/shared/wave-skills-promotion/`
 
 **Step 4: Commit**
 
@@ -617,18 +635,19 @@ git commit -m "test(p05-t03): mini-wave dry-run executed - findings dispositione
 **Files:**
 
 - Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json` (generated by `bundle-assets.sh` from the bumped manifests; published in the CLI's assets dir)
 
-**Step 1: Bump** all five public packages together (bundled assets = shipped CLI functionality).
+**Step 1: Bump** all five public packages together (bundled assets = shipped CLI functionality), then regenerate the bundle: `bash packages/cli/scripts/bundle-assets.sh`.
 
 **Step 2: Verify**
 
-Run: `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`
-Expected: all green.
+Run: `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test && git status --short packages/`
+Expected: all green; `public-package-versions.json` records the bumped versions (spot-check vs the five manifests); no expected release artifact left unstaged after Step 3.
 
-**Step 3: Commit**
+**Step 3: Commit (exact declared files)**
 
 ```bash
-git add packages/*/package.json
+git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json
 git commit -m "chore(p05-t04): lockstep public package bumps for wave skills release"
 ```
 
@@ -649,7 +668,7 @@ git commit -m "chore(p05-t04): lockstep public package bumps for wave skills rel
 
 **Step 2: Format + Commit**
 
-Run: `pnpm format:fix .oat/projects/shared/wave-skills-promotion/references/w6-handoff-runbook.md`
+Run: `pnpm exec oxfmt --write .oat/projects/shared/wave-skills-promotion/references/w6-handoff-runbook.md`
 
 ```bash
 git add .oat/projects/shared/wave-skills-promotion/references/w6-handoff-runbook.md
@@ -662,7 +681,9 @@ git commit -m "docs(p05-t05): W6 handoff mini-runbook"
 
 **Goal:** program-recap recipe + close-callers + personal-wrapper migration against the frozen RC.
 
-> **GATE:** Do not start until the packaged explainer-kit v1 RC exists (project on this repo's `explainer-kit` branch). Build against the RC only — never its source tree. Coordinate merge order with explainer-kit Phase 3 (touches the same lifecycle skills). Detailed task bodies are intentionally thin; refine them at gate-open against the frozen schemas (plan revision, not scope change).
+> **GATE:** Do not start until the packaged explainer-kit v1 RC exists (project on this repo's `explainer-kit` branch). Build against the RC only — never its source tree. Coordinate merge order with explainer-kit Phase 3 (touches the same lifecycle skills). Detailed task bodies are intentionally thin placeholders and are NOT implementation-ready as written.
+>
+> **Gate-open checkpoint (mandatory before any p06 execution):** refine every p06 task body against the frozen RC schemas — concrete file paths, runnable verification commands, atomic staging sets — via a plan revision that preserves the existing task IDs, then re-run the plan artifact review scoped to Phase 6 before implementation proceeds.
 
 ### Task p06-t01: program-recap recipe
 
@@ -698,24 +719,40 @@ Commit: `feat(p06-t03): personal-wrapper migration to ExplainerRunRequestV1`
 
 ---
 
+### Task p06-t04: Phase 6 release readiness (lockstep bumps for the separately merged delta)
+
+**Files:**
+
+- Modify: the five public package manifests (`packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`) + `packages/cli/assets/public-package-versions.json`
+
+p06-t02 changes canonical `.agents/skills` assets, and repo policy requires the lockstep five-package bump + release validation in the SAME PR as any shipped-asset change. Since Phase 6 merges separately from the p05 release, it needs its own release choreography: bump all five packages, regenerate the bundle (`bash packages/cli/scripts/bundle-assets.sh`), run `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`, stage the six exact files.
+
+Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration release`
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact |
-| ------ | -------- | ------- | ---------- | -------- |
-| p01    | code     | pending | -          | -        |
-| p02    | code     | pending | -          | -        |
-| p03    | code     | pending | -          | -        |
-| p04    | code     | pending | -          | -        |
-| p05    | code     | pending | -          | -        |
-| p06    | code     | pending | -          | -        |
-| final  | code     | pending | -          | -        |
-| spec   | artifact | pending | -          | -        |
-| design | artifact | passed  | 2026-07-18 | -        |
-| plan   | artifact | passed  | 2026-07-18 | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| p04    | code     | pending  | -          | -                                                  |
+| p05    | code     | pending  | -          | -                                                  |
+| p06    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| spec   | artifact | pending  | -          | -                                                  |
+| design | artifact | passed   | 2026-07-18 | -                                                  |
+| plan   | artifact | passed   | 2026-07-18 | -                                                  |
+| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md |
+| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
+
+_First plan-row provenance: in-session structured review (`oat-reviewer` subagent, inherited parent model, 3 attempts → clean, 2026-07-18); no artifact file — findings F1–F7 applied in the plan draft commits. The two `received` rows are the cross-family gate reviews (codex gpt-5.6-sol/max); their findings were applied directly during planning (see the gate-fix commit) — dispositions below._
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -724,7 +761,7 @@ _Design-row provenance: operator-relayed external review by the stoa-side packet
 - `received`: review artifact exists (not yet converted into fix tasks)
 - `fixes_added`: fix tasks were added to the plan (work queued)
 - `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+- `passed`: re-review run and recorded as passing (no unresolved Critical/Important/Medium)
 
 ---
 
@@ -737,9 +774,9 @@ _Design-row provenance: operator-relayed external review by the stoa-side packet
 - Phase 3: 3 tasks - Dispositions (validate-plan, backlog)
 - Phase 4: 2 tasks - Docs
 - Phase 5: 5 tasks - Validation + release readiness
-- Phase 6: 3 tasks - §4 explainer integration (RC-gated)
+- Phase 6: 4 tasks - §4 explainer integration + its own release choreography (RC-gated)
 
-**Total: 26 tasks** (23 unblocked; 3 gated on explainer-kit RC)
+**Total: 27 tasks** (23 unblocked; 4 gated on explainer-kit RC)
 
 Ready for code review and merge.
 

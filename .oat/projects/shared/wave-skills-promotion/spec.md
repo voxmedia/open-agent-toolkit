@@ -165,13 +165,18 @@ two (skills + new CLI surface).
     found already fixed), with evidence pointers.
 - **Priority:** P1
 
-**FR7: File the deferred-work backlog items**
+**FR7: File the deferred-work backlog dispositions**
 
-- **Description:** The five deferred items from discovery are filed as
-  backlog items with owner/trigger: wave CLI family (grouped with the
-  artifact-format-contract item), artifact format as stable contract,
-  `oat worktree bootstrap-group` command, post-W6 reviews-row watch
-  removal, CLI-level tracked-config guard (blocked on BL-260715).
+- **Description:** The five deferred items from discovery become durable
+  backlog dispositions (amended at design review after the sync-drift
+  root cause landed): four ACTIVE items with owner/trigger — wave CLI
+  family (grouped with the artifact-format-contract item), artifact
+  format as stable contract, `oat worktree bootstrap-group` command,
+  post-W6 reviews-row watch removal — plus ONE terminal `wont_do`
+  archived rejection for the CLI-level tracked-config guard (root-caused
+  to a stale local binary in the consuming repo; dependency hygiene there
+  is the cure). A tenth disposition — the `oat sync` version-stamp
+  warning candidate — was accepted as a design-review amendment.
 - **Acceptance Criteria:**
   - All five exist in the repo backlog with rationale, trigger conditions,
     and the noted groupings.
@@ -305,7 +310,7 @@ without disturbing the ported core.
 - Queue-application + genericization edit set (rule-text level)
 - Workflow-pack/bundle integration (manifest, bundle script, sync)
 - validate-plan help update
-- Backlog filing set (5 deferred + 4 triage items)
+- Backlog disposition set (4 deferred + 1 closed rejection + 4 triage + 1 new upstream candidate = 10)
 - Docs surface (wave workflow + descriptive artifact format)
 - Validation fixture + dry-run procedure
 - §4 explainer integration set (gated)
@@ -325,8 +330,8 @@ without disturbing the ported core.
 - Stoa W6 executes on the promoted skills with zero behavioral
   regressions (the packet's headline criterion).
 - 6/6 §2 items traceably shipped or rejected in writing.
-- 6/6 §3 rows dispositioned; 5 deferred backlog items + 4 triage items
-  filed.
+- 6/6 §3 rows dispositioned; 10 backlog dispositions recorded (4 deferred
+  - 1 archived `wont_do` rejection + 4 triage + 1 new upstream candidate).
 - Fixture dry-run green before W6 handoff.
 - `pnpm release:validate` + full repo quality gates green.
 - §4: personal-wrapper E2E green against the frozen RC (when gated phase
@@ -334,35 +339,37 @@ without disturbing the ported core.
 
 ## Requirement Index
 
-| ID   | Description                                             | Priority | Verification                                           | Planned Tasks                      |
-| ---- | ------------------------------------------------------- | -------- | ------------------------------------------------------ | ---------------------------------- |
-| FR1  | Port both skills into workflow pack with scripts/assets | P0       | integration: install + sync + bundle-consistency tests | p01-t01, p01-t02, p01-t04, p01-t05 |
-| FR2  | Apply all six §2 queued changes (or reject in writing)  | P0       | manual: per-item traceability checklist                | p02-t01..t06, p02-t08              |
-| FR3  | Genericize stoa-isms via neutral phrasing               | P0       | manual: rule-by-rule intent-preservation review        | p02-t07                            |
-| FR4  | Preserve mechanical/judgment split + log discipline     | P0       | manual: ownership-boundary + closeout-order review     | p02-t07, p02-t08                   |
-| FR5  | validate-plan singleton-group help/docs                 | P1       | unit: validate-plan help + rejection message           | p03-t01                            |
-| FR6  | Triage four upstream feedback items to backlog          | P1       | manual: backlog items exist with evidence              | p03-t03                            |
-| FR7  | File five deferred-work backlog items                   | P0       | manual: backlog items with owner/trigger/groupings     | p03-t02                            |
-| FR8  | Wave-workflow docs incl. descriptive artifact format    | P1       | integration: docs build + index regeneration           | p04-t01, p04-t02                   |
-| FR9  | In-repo fixture + mini-wave dry-run                     | P0       | e2e: dry-run procedure against fixture                 | p05-t01..t03                       |
-| FR10 | §4 explainer integration (RC-gated)                     | P0\*     | e2e: personal-wrapper E2E vs frozen RC (operator)      | p06-t01..t03                       |
-| NFR1 | Zero-regression bar vs 1.4.0 + §2                       | P0       | e2e: fixture dry-run + manual equivalence checklist    | p02-t07, p05-t03, p05-t05          |
-| NFR2 | Release conventions (lockstep bumps, release:validate)  | P0       | integration: release:validate + repo gates             | p05-t04                            |
-| NFR3 | bootstrap script bash-3.2 portability                   | P0       | manual + e2e: fixture dry-run on macOS system bash     | p02-t03, p05-t01                   |
-| NFR4 | Provider portability of promoted skills                 | P1       | integration: sync views generated for all providers    | p01-t04, p02-t09                   |
+| ID   | Description                                               | Priority | Verification                                           | Planned Tasks                      |
+| ---- | --------------------------------------------------------- | -------- | ------------------------------------------------------ | ---------------------------------- |
+| FR1  | Port both skills into workflow pack with scripts/assets   | P0       | integration: install + sync + bundle-consistency tests | p01-t01, p01-t02, p01-t04, p01-t05 |
+| FR2  | Apply all six §2 queued changes (or reject in writing)    | P0       | manual: per-item traceability checklist                | p02-t01..t06, p02-t08              |
+| FR3  | Genericize stoa-isms via neutral phrasing                 | P0       | manual: rule-by-rule intent-preservation review        | p02-t07                            |
+| FR4  | Preserve mechanical/judgment split + log discipline       | P0       | manual: ownership-boundary + closeout-order review     | p02-t07, p02-t08                   |
+| FR5  | validate-plan singleton-group help/docs                   | P1       | unit: validate-plan help + rejection message           | p03-t01                            |
+| FR6  | Triage four upstream feedback items to backlog            | P1       | manual: backlog items exist with evidence              | p03-t03                            |
+| FR7  | Record deferred-work backlog dispositions (4 + 1 wont_do) | P0       | manual: backlog items with owner/trigger/groupings     | p03-t02                            |
+| FR8  | Wave-workflow docs incl. descriptive artifact format      | P1       | integration: docs build + index regeneration           | p04-t01, p04-t02                   |
+| FR9  | In-repo fixture + mini-wave dry-run                       | P0       | e2e: dry-run procedure against fixture                 | p05-t01..t03                       |
+| FR10 | §4 explainer integration (RC-gated)                       | P0\*     | e2e: personal-wrapper E2E vs frozen RC (operator)      | p06-t01..t04                       |
+| NFR1 | Zero-regression bar vs 1.4.0 + §2                         | P0       | e2e: fixture dry-run + manual equivalence checklist    | p02-t07, p05-t03, p05-t05          |
+| NFR2 | Release conventions (lockstep bumps, release:validate)    | P0       | integration: release:validate + repo gates             | p05-t04, p06-t04                   |
+| NFR3 | bootstrap script bash-3.2 portability                     | P0       | manual + e2e: fixture dry-run on macOS system bash     | p02-t03, p05-t01                   |
+| NFR4 | Provider portability of promoted skills                   | P1       | integration: sync views generated for all providers    | p01-t04, p02-t09                   |
 
 \* FR10 is P0 within its gate; the gate (explainer-kit RC) blocks only the
 final phase, not the rest of the project.
 
 ## Open Questions
 
-- **Versioning:** what frontmatter versions do the promoted skills carry
-  (continue stoa's lineage — e.g. 1.5.0 for oat-wave-execute with the
-  queue applied — vs reset to 1.0.0 as new toolkit skills)? Design
-  proposes continuing lineage; flagged for operator confirmation.
-- **W6 handoff shape:** what exactly does stoa consume (npm release with
-  the packaged skills + `oat tools update`?) and is a pre-release channel
-  needed? Design-level; affects only the handoff step after phase 4.
+None remaining. Both spec-time questions were resolved at design review
+(2026-07-18):
+
+- **Versioning:** continue stoa's lineage — `oat-wave-execute` 1.5.0,
+  `oat-wave-program` 1.1.0, with the 1.4.1+1.5.0 release-collapse recorded
+  so signal-ledger citations resolve.
+- **W6 handoff shape:** normal npm release consumed via `oat tools update`
+  - `oat sync`; no pre-release channel. Delivered as a mini-runbook
+    (pinned version, migration sequence, row-stomp observation task).
 
 ## Assumptions
 
