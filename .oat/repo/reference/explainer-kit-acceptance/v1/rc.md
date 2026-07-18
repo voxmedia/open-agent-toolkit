@@ -2,8 +2,8 @@
 
 ## Frozen identity
 
-- Code commit: `c485b784cf6c9269514b769d78c192fe4b80393f`
-- RC ID: `sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
+- Code commit: `534a408eed0080bcf653a6dde3abc1dd612f0ccb`
+- RC ID: `sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`
 - Identity record: `rc.json`
 - Retained local artifacts: `dist/explainer-kit-rc/`
 - Candidate changes reported by the builder: none
@@ -15,13 +15,13 @@ here.
 
 ## Packages
 
-| Package                               | Version  | Retained artifact                               | SHA-256                                                            |
-| ------------------------------------- | -------- | ----------------------------------------------- | ------------------------------------------------------------------ |
-| `@open-agent-toolkit/cli`             | `0.1.74` | `open-agent-toolkit-cli-0.1.74.tgz`             | `de1989d9bdb35036219153516bb497f7033fe538935f815b68f406de9a65d9e3` |
-| `@open-agent-toolkit/control-plane`   | `0.1.74` | `open-agent-toolkit-control-plane-0.1.74.tgz`   | `98ab857624401d2c39af4b7f3d5b285dce31adec1ba0466b84eb3ebc1eadba25` |
-| `@open-agent-toolkit/docs-config`     | `0.1.74` | `open-agent-toolkit-docs-config-0.1.74.tgz`     | `f5333a7f37a82f1038de9b3ae4fad026961f861f02f0020923e413c1577d52f4` |
-| `@open-agent-toolkit/docs-theme`      | `0.1.74` | `open-agent-toolkit-docs-theme-0.1.74.tgz`      | `262cb04fa41aa438403673cf02ad11be2854ee79f399bf297e63780e925b00a7` |
-| `@open-agent-toolkit/docs-transforms` | `0.1.74` | `open-agent-toolkit-docs-transforms-0.1.74.tgz` | `a5fffbd78bf6e2571d93b1e38b6d2332dd4dc25838c4392c5d5c78bbfe66e220` |
+| Package                               | Version | Retained artifact                              | SHA-256                                                            |
+| ------------------------------------- | ------- | ---------------------------------------------- | ------------------------------------------------------------------ |
+| `@open-agent-toolkit/cli`             | `0.2.1` | `open-agent-toolkit-cli-0.2.1.tgz`             | `3229470321f278183158e320380c93a05d06081b4a74007fe91cd8dbf755d5dc` |
+| `@open-agent-toolkit/control-plane`   | `0.2.1` | `open-agent-toolkit-control-plane-0.2.1.tgz`   | `6ebfcde0d79e26de137578c6b8955ab9f20b5f2dda23daf3d371a8b107f2ca76` |
+| `@open-agent-toolkit/docs-config`     | `0.2.1` | `open-agent-toolkit-docs-config-0.2.1.tgz`     | `6677634b3ff32b488688d25433cb125758b64ffc357f7260842067da998f5695` |
+| `@open-agent-toolkit/docs-theme`      | `0.2.1` | `open-agent-toolkit-docs-theme-0.2.1.tgz`      | `efa30129492972206949a00411114482198c8353d002acb229eedf47e853c60e` |
+| `@open-agent-toolkit/docs-transforms` | `0.2.1` | `open-agent-toolkit-docs-transforms-0.2.1.tgz` | `0bce3e640bceacfeb565f1efdc905ffda2fe70f9fe8a2060927398197f5ae79a` |
 
 ## Skills
 
@@ -50,6 +50,15 @@ here.
 | `engineer-tour`     | `1`     | `explainer-kit.recipe/v1` | `recipes/engineer-tour.json`     | `041a1c5201d7e72c0aef8a097c0389088001ac0cc11fede9e8b8c64f477be0fd` |
 | `project-explainer` | `1`     | `explainer-kit.recipe/v1` | `recipes/project-explainer.json` | `0202736cccacc5b9f7a26c6783148aadcc6ad66e7dc9f78e85fc133127651535` |
 | `project-recap`     | `1`     | `explainer-kit.recipe/v1` | `recipes/project-recap.json`     | `1881b9a7ff9e4d4afcbe1ca96df5e396f32017fec0d44af16390f208112c2866` |
+
+## Operator notes
+
+This candidate was refrozen after wave promotion reconciliation. It supersedes
+the prior tracked RC
+`sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
+at code commit `c485b784cf6c9269514b769d78c192fe4b80393f`. External acceptance must use the
+new RC ID and retained `0.2.1` package tarballs; evidence for the superseded RC
+does not apply.
 
 ## Operator verification
 
