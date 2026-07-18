@@ -786,7 +786,7 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p02    | code     | pending         | -          | -                                                             |
+| p02    | code     | fixes_added     | 2026-07-18 | reviews/code-p02-review-2026-07-18T002439Z.md                 |
 | p03    | code     | pending         | -          | -                                                             |
 | p04    | code     | pending         | -          | -                                                             |
 | p05    | code     | pending         | -          | -                                                             |
