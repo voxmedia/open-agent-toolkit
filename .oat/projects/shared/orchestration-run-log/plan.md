@@ -530,21 +530,142 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 
 ---
 
+### Task p03-t06: (review) Harden helper-written entry serialization boundaries
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/append.ts`
+- Modify: shared project-log grammar/parser modules as required
+- Modify: `packages/cli/src/commands/project/log/append.test.ts`
+- Modify: `packages/cli/src/commands/project/log/check.test.ts`
+- Modify: `packages/cli/src/commands/project/log/rollup.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding I1: helper-accepted delimiter and body/version-note values can collide with the heading and section grammar, producing entries that check rejects or roll-up omits.
+
+**Step 2: Implement fix**
+
+Make validation and parsing share an unambiguous serialization boundary. Reject `·` in heading fields, require `versionNote` to be single-line, enforce structural bodies as one line, and prevent judgment body lines from colliding with command-owned level-two/level-three markers. Error messages must name the violated contract.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts src/commands/project/log/check.test.ts src/commands/project/log/rollup.test.ts`
+Expected: delimiter, newline, and markdown-marker collision tests pass; existing project-log behavior remains green.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/log/
+git commit -m "fix(p03-t06): harden project-log serialization boundaries"
+```
+
+---
+
+### Task p03-t07: (review) Stage every summary roll-up mutation
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-summary/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: autonomy prompt-site inventory only if the skill edit changes stable keys
+
+**Step 1: Understand the issue**
+
+Review finding I2: summary roll-up can mutate the configured repository ledger and append a promoted project-log entry, but the summary commit step stages only `summary.md` and optional decision records.
+
+**Step 2: Implement fix**
+
+Track whether Step 2.5 appended a promotion and whether roll-up returned `ledgerOutcome: "appended"`. Resolve the effective `workflow.projectLogLedgerPath`; stage `project-log.md` after promotion and the resolved ledger after append. Preserve the permitted-skip behavior and do not hand-implement writes. The skill already received its required PR-scoped version bump; do not bump it again.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/autonomy-gate-inventory.test.ts`
+Expected: contract tests pin all mutated surfaces in the commit step and inventory remains current.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-summary/ .agents/docs/autonomy-contract.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p03-t07): stage summary roll-up mutations"
+```
+
+---
+
+### Task p03-t08: (review) Authorize implement project-log appends
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: autonomy prompt-site inventory only if the frontmatter edit changes stable keys
+
+**Step 1: Understand the issue**
+
+Review finding I3: the implement skill requires `oat project log append` but its declared tool contract permits only `Bash(git:*)`, so enforcing hosts can deny the required structural appends.
+
+**Step 2: Implement fix**
+
+Add the repository-approved `Bash(oat project log:*)` permission and pin it alongside the append-point contract. The skill already received its required PR-scoped version bump; do not bump it again.
+
+**Step 3: Verify**
+
+Run: `pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/autonomy-gate-inventory.test.ts`
+Expected: permission and append-point assertions pass; inventory remains current.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/ .agents/docs/autonomy-contract.md packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p03-t08): authorize implement project-log appends"
+```
+
+---
+
+### Task p03-t09: (review) Deduplicate first-batch ledger candidates
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/rollup.ts`
+- Modify: `packages/cli/src/commands/project/log/rollup.test.ts`
+
+**Step 1: Understand the issue**
+
+Review finding M1: first roll-up filters candidates only against existing ledger keys, so duplicate same-date/same-area entries in one project log are both appended.
+
+**Step 2: Implement fix**
+
+Build additions while updating a working key set, preserving only the first candidate for each date-plus-area key.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/rollup.test.ts`
+Expected: two same-date/same-area general entries produce one ledger entry on the initial roll-up and remain deduplicated on rerun.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/log/rollup.ts packages/cli/src/commands/project/log/rollup.test.ts
+git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| final  | code     | received | 2026-07-18 | reviews/final-review-2026-07-18T122856Z.md         |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md |
+| Scope  | Type     | Status      | Date       | Artifact                                            |
+| ------ | -------- | ----------- | ---------- | --------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                   |
+| p02    | code     | pending     | -          | -                                                   |
+| p03    | code     | pending     | -          | -                                                   |
+| final  | code     | fixes_added | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md |
+| spec   | artifact | pending     | -          | -                                                   |
+| design | artifact | pending     | -          | -                                                   |
+| plan   | artifact | received    | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md  |
 
 **Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max), 2 attempts per `onFailure: block`. Attempt 1 (run a7a501f4, `reviews/artifact-plan-review-2026-07-14T005456Z.md`): 1 Important + 4 Medium — all remediated (added p03-t05; gate `false`-with-artifact case; docs nav-sync/Contents requirements; append boundary-validation tests; corrections-never-strike-through contract). Attempt 2 (run in `reviews/artifact-plan-review-2026-07-14T010828Z.md`): 1 residual Important — p03-t05 could not exercise the skill-owned roll-up/seal enforcement from vitest. Attempts exhausted → escalated per gate contract; **human decision 2026-07-13: option (a)** — new `oat project log rollup` subcommand (p01-t06) makes the enforcement path an executable CLI surface with a structured outcome that skills route on and p03-t05 tests directly, including the failure signal. Remediation applied to design + plan; escalation closed.
 
@@ -565,9 +686,9 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 
 - Phase 1: 6 tasks - CLI foundation (config keys, template + bundling manifests, `append`, `check`, `synthesize`, `rollup`)
 - Phase 2: 2 tasks - Scaffold flags and gate-internal structural append (all terminal outcomes)
-- Phase 3: 5 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test
+- Phase 3: 9 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test, and four final-review fixes
 
-**Total: 13 tasks**
+**Total: 17 tasks**
 
 Ready for code review and merge.
 

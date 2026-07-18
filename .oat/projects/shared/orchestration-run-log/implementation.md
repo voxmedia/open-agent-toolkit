@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 6     | 6/6       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 5     | 5/5       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 6     | 6/6       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 9     | 5/9       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/17 tasks completed
 
 ---
 
@@ -242,6 +242,26 @@ oat_generated: false
 **Status:** completed
 **Commit:** 526616d3
 
+### Task p03-t06: Harden helper-written entry serialization boundaries
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t07: Stage every summary roll-up mutation
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t08: Authorize implement project-log appends
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t09: Deduplicate first-batch ledger candidates
+
+**Status:** pending
+**Commit:** -
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -315,6 +335,33 @@ Chronological log of implementation progress.
 **Follow-up:** implement append-based ledger graduation in the p03 summary skill contract.
 
 **Blockers:** none.
+
+---
+
+### Review Received: final
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T122856Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 3
+- Medium: 1
+- Minor: 0
+
+**Finding disposition map:**
+
+- I1 → p03-t06: harden delimiter, version-note, structural-body, and markdown-marker serialization boundaries.
+- I2 → p03-t07: stage promoted project-log and appended ledger mutations in summary commits.
+- I3 → p03-t08: authorize `oat project log` in the implement skill tool contract.
+- M1 → p03-t09: deduplicate same-date/same-area candidates within the first ledger batch.
+
+**New tasks added:** p03-t06, p03-t07, p03-t08, p03-t09
+
+**Deferred Medium findings:** none; M1 converted to p03-t09.
+
+**Next:** execute fix tasks, mark this artifact-identified event `fixes_completed`, then rerun final review.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 56097949
+oat_current_task: p03-t06
+oat_last_commit: 82cfbd23
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T12:29:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T12:38:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - All tasks complete; awaiting final review
+Implementation - Final review fixes queued at p03-t06
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - All tasks complete; awaiting final review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete; 13/13 tasks)
+- **Implementation:** `implementation.md` (in progress; 13/17 tasks complete)
 
 ## Progress
 
@@ -66,8 +66,8 @@ Implementation - All tasks complete; awaiting final review
 - ✓ Execution artifacts scaffolded
 - ✓ Phase 1 CLI foundation complete and verified
 - ✓ Phase 2 scaffold and gate integration complete and verified
-- ✓ Phase 3 skill integrations, docs, and release bookkeeping complete and verified
-- ⧗ Awaiting final review
+- ✓ Phase 3 original tasks complete and verified
+- ⧗ Four final-review fix tasks queued
 
 ## Blockers
 
@@ -75,4 +75,4 @@ None
 
 ## Next Milestone
 
-Pass final code review
+Complete p03-t06 through p03-t09 and rerun final review
