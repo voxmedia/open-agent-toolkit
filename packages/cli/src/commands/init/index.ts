@@ -20,6 +20,7 @@ import {
 } from '@commands/shared/adopt-stray';
 import {
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
 import {
@@ -69,6 +70,7 @@ import {
   type HookInstallInfo,
   installHook,
   isHookInstalled,
+  scanBundledManagedAgents,
   scanCanonical,
   uninstallHook,
 } from '@engine/index';
@@ -89,11 +91,16 @@ import {
 } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import {
+  applyCursorProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+} from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
+  type MaterializationPlan,
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
@@ -168,6 +175,7 @@ interface InitDependencies {
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
     activeAdapters?: ProviderAdapter[],
+    userConfigDir?: string,
   ) => Promise<InitStrayCandidate[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   selectManyWithAbort: <T extends string>(
@@ -283,23 +291,74 @@ async function collectStraysDefault(
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
   activeAdapters?: ProviderAdapter[],
+  userConfigDir = join(scopeRoot, '.oat'),
 ): Promise<InitStrayCandidate[]> {
   const adaptersToScan =
     activeAdapters ??
     (await getActiveAdapters(getDefaultAdapters(), scopeRoot));
   const candidates: InitStrayCandidate[] = [];
+  const hasMaterializationAdapter = adaptersToScan.some(
+    (adapter) => adapter.name === 'codex' || adapter.name === 'cursor',
+  );
+  const materializationCanonicalEntries =
+    scope === 'user' && hasMaterializationAdapter
+      ? [...canonicalEntries, ...(await scanBundledManagedAgents())]
+      : canonicalEntries;
+  const codexExtensionPlan = adaptersToScan.some(
+    (adapter) => adapter.name === 'codex',
+  )
+    ? await computeCodexProjectExtensionPlan(
+        scopeRoot,
+        materializationCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const cursorExtensionPlan = adaptersToScan.some(
+    (adapter) => adapter.name === 'cursor',
+  )
+    ? await computeCursorProjectExtensionPlan(
+        scopeRoot,
+        materializationCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const materializationPlans: MaterializationPlan[] = [
+    ...(codexExtensionPlan
+      ? [
+          {
+            provider: 'codex',
+            operations: codexExtensionPlan.operations.map((operation) => ({
+              ...operation,
+              provider: 'codex',
+              entryName: operation.roleName,
+            })),
+            managedEntries: codexExtensionPlan.managedRoles,
+            aggregateHash: codexExtensionPlan.aggregateConfigHash,
+            metadata: codexExtensionPlan.metadata,
+          },
+        ]
+      : []),
+    ...(cursorExtensionPlan ? [cursorExtensionPlan] : []),
+  ];
 
   for (const adapter of adaptersToScan) {
     const adoptionSources = getAdoptionSources(adapter, scope);
     for (const source of adoptionSources) {
       const providerDir = join(scopeRoot, source.directory);
-      const strays = await detectStrays(
-        adapter.name,
-        providerDir,
-        manifest,
-        canonicalEntries,
-        source.mapping,
-      );
+      const strays = filterMaterializationManagedStrays(
+        (
+          await detectStrays(
+            adapter.name,
+            providerDir,
+            manifest,
+            canonicalEntries,
+            source.mapping,
+          )
+        ).map((report) => ({ provider: adapter.name, report })),
+        materializationPlans,
+      ).map((candidate) => candidate.report);
       for (const report of strays) {
         if (report.state.status !== 'stray') {
           continue;
@@ -313,18 +372,11 @@ async function collectStraysDefault(
     }
   }
 
-  if (
-    scope === 'project' &&
-    adaptersToScan.some((adapter) => adapter.name === 'codex')
-  ) {
-    const codexExtensionPlan = await computeCodexProjectExtensionPlan(
-      scopeRoot,
-      canonicalEntries,
-    );
+  if (adaptersToScan.some((adapter) => adapter.name === 'codex')) {
     const codexStrays = await detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
-      new Set(codexExtensionPlan.managedRoles),
+      new Set(codexExtensionPlan!.managedRoles),
     );
     for (const stray of codexStrays) {
       candidates.push({
@@ -919,6 +971,7 @@ async function runInitCommand(
       manifest,
       canonicalEntries,
       activeAdaptersForStrays,
+      userConfigDir,
     );
     const { candidates: strays } = filterKnownStrays({
       reports: collectedStrays.map((stray) => stray.report),
@@ -1092,6 +1145,21 @@ async function runInitCommand(
           computeExtensionPlan: computeCodexProjectExtensionPlan,
           applyExtensionPlan: applyCodexProjectExtensionPlan,
         });
+        if (
+          activeAdaptersForStrays?.some((adapter) => adapter.name === 'cursor')
+        ) {
+          const refreshedCanonical = await dependencies.scanCanonical(
+            scopeRoot,
+            scope,
+          );
+          const cursorPlan = await computeCursorProjectExtensionPlan(
+            scopeRoot,
+            refreshedCanonical,
+            undefined,
+            { userConfigDir },
+          );
+          await applyCursorProjectExtensionPlan(scopeRoot, cursorPlan);
+        }
       }
 
       if (straysAdopted > 0) {

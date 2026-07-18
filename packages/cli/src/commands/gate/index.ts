@@ -9,6 +9,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { appendProjectLog } from '@commands/project/log/append';
 import type { LatestReview } from '@commands/review/latest';
 import {
   getFrontmatterBlock,
@@ -117,6 +118,7 @@ interface GateCommandDependencies {
     options: ProcessRunOptions,
   ) => Promise<ProcessRunResult>;
   parseReviewGateVerdict: typeof parseReviewGateVerdict;
+  appendProjectLog: typeof appendProjectLog;
   processEnv: NodeJS.ProcessEnv;
   writeGateRunMarker: (
     path: string,
@@ -252,6 +254,24 @@ type GateDiversityAchieved =
   | 'unknown-producer';
 type GateWriteLayer = 'shared' | 'local' | 'user';
 type ReviewGateThreshold = 'critical' | 'important' | 'medium' | 'minor';
+type ReviewGateTerminalStatus =
+  | 'ok'
+  | 'blocked'
+  | 'review_failed'
+  | 'targeting_correlation_failed'
+  | 'artifact_validation_failed';
+interface ReviewGateProjectLogFinalization {
+  repoRoot: string;
+  home: string;
+  project: string;
+  ref: string;
+  target: string;
+  threshold: ReviewGateThreshold;
+  status: ReviewGateTerminalStatus;
+  exitCode: number;
+  counts?: ReviewGateVerdict['counts'];
+  artifactPath?: string;
+}
 type ReviewProjectResolutionSource =
   | 'declared'
   | 'active-project'
@@ -277,7 +297,7 @@ interface GateProducerIdentity {
   contributingScopes?: string[];
   contributingStampCount?: number;
   diversityClaimable: boolean;
-  source: 'flag' | 'stamp' | 'aggregated-stamps' | 'unknown';
+  source: 'flag' | 'stamp' | 'aggregated-stamps' | 'environment' | 'unknown';
 }
 
 interface GateDiversityMetadata {
@@ -379,6 +399,7 @@ const DEFAULT_DEPENDENCIES: GateCommandDependencies = {
   readGateRouteReceipt,
   runProcess: runChildProcess,
   parseReviewGateVerdict,
+  appendProjectLog,
   processEnv: process.env,
   writeGateRunMarker,
   removeGateRunMarker,
@@ -1387,6 +1408,27 @@ function parseProducerIdentityOption(
   );
 }
 
+function parseEnvironmentProducerIdentity(
+  value: string | undefined,
+): GateProducerIdentity {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return unknownProducerIdentity();
+  }
+
+  const separator = trimmed.lastIndexOf(':');
+  const producer = separator > 0 ? trimmed.slice(0, separator).trim() : '';
+  const provenance = separator > 0 ? trimmed.slice(separator + 1).trim() : '';
+  if (!producer || provenance !== 'declared') {
+    return unknownProducerIdentity();
+  }
+
+  return identityFromRecords(
+    [{ value: producer, provenance: 'declared' }],
+    'environment',
+  );
+}
+
 function identityFromStamp(
   stamp: ReturnType<typeof parseDispatchStamps>[number],
 ): GateProducerIdentity {
@@ -1405,6 +1447,23 @@ function exactIdentityFromStamp(
     : unknownProducerIdentity();
 }
 
+function aggregateIdentityFromStamp(
+  stamp: ReturnType<typeof parseDispatchStamps>[number],
+): GateProducerIdentity {
+  const producerIdentity = identityFromStamp(stamp);
+  if (
+    producerIdentity.diversityClaimable &&
+    producerIdentity.family !== 'unknown'
+  ) {
+    return producerIdentity;
+  }
+
+  return identityFromRecords(
+    [{ value: stamp.target, provenance: 'inferred' }],
+    'stamp',
+  );
+}
+
 function aggregateIdentityFromStamps(
   stamps: ReturnType<typeof parseDispatchStamps>,
 ): GateProducerIdentity {
@@ -1412,7 +1471,7 @@ function aggregateIdentityFromStamps(
     return unknownProducerIdentity();
   }
 
-  const identities = stamps.map(identityFromStamp);
+  const identities = stamps.map(aggregateIdentityFromStamp);
   const avoidFamilies = [
     ...new Set(
       identities.flatMap((identity) =>
@@ -1509,6 +1568,7 @@ async function readStampedProducerIdentity(options: {
 }
 
 async function resolveReviewProducerIdentity(options: {
+  env: NodeJS.ProcessEnv;
   explicit?: string;
   repoRoot: string;
   projectPath: string;
@@ -1518,7 +1578,21 @@ async function resolveReviewProducerIdentity(options: {
     return parseProducerIdentityOption(options.explicit);
   }
 
-  return readStampedProducerIdentity(options);
+  const stamped = await readStampedProducerIdentity(options);
+  if (stamped.diversityClaimable) {
+    return stamped;
+  }
+
+  const environment = parseEnvironmentProducerIdentity(
+    options.env.OAT_GATE_PRODUCER_IDENTITY,
+  );
+  return environment.diversityClaimable ? environment : stamped;
+}
+
+function reviewerChildProcessEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const childEnv = { ...env };
+  delete childEnv.OAT_GATE_PRODUCER_IDENTITY;
+  return childEnv;
 }
 
 function findPinnedModelArg(argv: readonly string[]): string | undefined {
@@ -2799,6 +2873,38 @@ function writeReviewGateTargetingFailure(
   );
 }
 
+async function finalizeReviewGateProjectLog(
+  context: CommandContext,
+  dependencies: GateCommandDependencies,
+  finalization: ReviewGateProjectLogFinalization,
+): Promise<void> {
+  const findings = finalization.counts
+    ? ` findings=critical:${finalization.counts.critical},important:${finalization.counts.important},medium:${finalization.counts.medium},minor:${finalization.counts.minor}`
+    : '';
+  const artifact = finalization.artifactPath
+    ? ` artifact=${finalization.artifactPath}`
+    : '';
+  const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact}`;
+
+  try {
+    await dependencies.appendProjectLog({
+      repoRoot: finalization.repoRoot,
+      home: finalization.home,
+      project: finalization.project,
+      structural: true,
+      producer: 'oat gate review',
+      ref: finalization.ref,
+      body,
+    });
+  } catch (error) {
+    context.logger.warn(
+      `Warning: unable to append oat gate review result to the project log: ${
+        error instanceof Error ? error.message : String(error)
+      }. Gate result is unchanged.`,
+    );
+  }
+}
+
 async function updateConfigLayer(
   context: CommandContext,
   layer: GateWriteLayer,
@@ -3039,6 +3145,8 @@ async function runReviewGate(
   let runMarkerPath: string | undefined;
   let runMarkerWritten = false;
   let branchLocalGateCli: BranchLocalGateCli | undefined;
+  let projectLogFinalization: ReviewGateProjectLogFinalization | undefined;
+  let projectLogFinalized = false;
   let postSelectionContext:
     | {
         project: string;
@@ -3064,6 +3172,7 @@ async function runReviewGate(
     const projectPath = reviewProject.path;
     const targets = resolveExecTargets(effective);
     const producerIdentity = await resolveReviewProducerIdentity({
+      env: dependencies.processEnv,
       explicit: options.producerIdentity,
       repoRoot,
       projectPath,
@@ -3105,6 +3214,16 @@ async function runReviewGate(
       dispatchReport,
     };
     const threshold = parseReviewGateThreshold(options.exitNonzeroOn);
+    projectLogFinalization = {
+      repoRoot,
+      home: context.home,
+      project: projectPath,
+      ref: options.reviewScope?.trim() || 'gate-review',
+      target: selected.id,
+      threshold,
+      status: 'review_failed',
+      exitCode: 1,
+    };
     const before = await listReviewGateArtifactCandidates({
       repoRoot,
       effective,
@@ -3162,7 +3281,7 @@ async function runReviewGate(
       {
         ...dependencies,
         processEnv: {
-          ...dependencies.processEnv,
+          ...reviewerChildProcessEnv(dependencies.processEnv),
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,
@@ -3195,6 +3314,10 @@ async function runReviewGate(
       if (!refusal) {
         return false;
       }
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -3225,6 +3348,11 @@ async function runReviewGate(
       before,
       after,
     });
+    if (projectLogFinalization) {
+      projectLogFinalization.artifactPath =
+        artifactResolution.artifact?.path ??
+        artifactResolution.diagnosticArtifact?.path;
+    }
     if (!artifactResolution.artifact && writeRefusalFailure()) {
       return;
     }
@@ -3233,6 +3361,10 @@ async function runReviewGate(
       !childResult.timedOut &&
       !artifactResolution.artifact
     ) {
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = childExitCode;
+      }
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -3256,6 +3388,10 @@ async function runReviewGate(
       artifactResolution.matchingArtifactPaths.length === 0 &&
       !artifactResolution.diagnosticArtifact
     ) {
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'review_failed';
+        projectLogFinalization.exitCode = childExitCode;
+      }
       writeReviewGateExecutionFailure(context, {
         runId,
         target: selected.id,
@@ -3293,6 +3429,10 @@ async function runReviewGate(
           : initialTargetCorroboration.run === 'mismatched'
             ? `The changed review artifact did not carry the expected gate run ID ${runId}.`
             : `No direct active project review artifact carried gate run ID ${runId}.`;
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'targeting_correlation_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateTargetingFailure(context, {
         runId,
         target: selected.id,
@@ -3316,6 +3456,10 @@ async function runReviewGate(
     ) {
       if (writeRefusalFailure()) {
         return;
+      }
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'targeting_correlation_failed';
+        projectLogFinalization.exitCode = 1;
       }
       writeReviewGateTargetingFailure(context, {
         runId,
@@ -3344,6 +3488,10 @@ async function runReviewGate(
     ) {
       if (writeRefusalFailure()) {
         return;
+      }
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.exitCode = 1;
       }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
@@ -3384,6 +3532,10 @@ async function runReviewGate(
         return;
       }
       const detail = error instanceof Error ? error.message : String(error);
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
         target: selected.id,
@@ -3404,6 +3556,9 @@ async function runReviewGate(
       process.exitCode = 1;
       return;
     }
+    if (projectLogFinalization) {
+      projectLogFinalization.counts = verdict.counts;
+    }
     const targetCorroboration = initialTargetCorroboration;
     const corroboration = corroborateGateInvocation(
       gateInvocation,
@@ -3420,6 +3575,10 @@ async function runReviewGate(
       const missing =
         corroboration.run === 'missing' ||
         corroboration.invocation === 'missing';
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.exitCode = 1;
+      }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
         target: selected.id,
@@ -3441,6 +3600,10 @@ async function runReviewGate(
     if (verdict.invocation !== 'gate') {
       if (writeRefusalFailure()) {
         return;
+      }
+      if (projectLogFinalization) {
+        projectLogFinalization.status = 'artifact_validation_failed';
+        projectLogFinalization.exitCode = 1;
       }
       writeReviewGateArtifactValidationFailure(context, {
         runId,
@@ -3466,6 +3629,12 @@ async function runReviewGate(
       threshold,
       blocking,
     });
+    if (projectLogFinalization) {
+      projectLogFinalization.status = blocking ? 'blocked' : 'ok';
+      projectLogFinalization.exitCode = blocking ? 1 : 0;
+      projectLogFinalization.counts = verdict.counts;
+      projectLogFinalization.artifactPath = producedArtifact.path;
+    }
 
     writeReviewGateResult(context, {
       status: blocking ? 'blocked' : 'ok',
@@ -3501,13 +3670,24 @@ async function runReviewGate(
       writeError(context, error);
     }
   } finally {
-    if (branchLocalGateCli) {
-      await dependencies.removeBranchLocalGateCli(branchLocalGateCli);
-    }
-    if (runMarkerPath) {
-      await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
-        context.logger.warn(message),
-      );
+    try {
+      if (branchLocalGateCli) {
+        await dependencies.removeBranchLocalGateCli(branchLocalGateCli);
+      }
+      if (runMarkerPath) {
+        await dependencies.removeGateRunMarker(runMarkerPath, (message) =>
+          context.logger.warn(message),
+        );
+      }
+    } finally {
+      if (projectLogFinalization && !projectLogFinalized) {
+        projectLogFinalized = true;
+        await finalizeReviewGateProjectLog(
+          context,
+          dependencies,
+          projectLogFinalization,
+        );
+      }
     }
   }
 }

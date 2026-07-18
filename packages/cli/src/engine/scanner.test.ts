@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { scanBundledManagedCodexAgents, scanCanonical } from './scanner';
+import { scanBundledManagedAgents, scanCanonical } from './scanner';
 
 describe('scanCanonical', () => {
   const tempDirs: string[] = [];
@@ -66,8 +66,8 @@ describe('scanCanonical', () => {
     expect(entries.some((entry) => entry.type === 'agent')).toBe(false);
   });
 
-  it('loads only the two bundled agents needed by Codex materialization', async () => {
-    const entries = await scanBundledManagedCodexAgents();
+  it('loads the two bundled base roles shared by materialization extensions', async () => {
+    const entries = await scanBundledManagedAgents();
 
     expect(entries.map((entry) => entry.name)).toEqual([
       'oat-phase-implementer.md',

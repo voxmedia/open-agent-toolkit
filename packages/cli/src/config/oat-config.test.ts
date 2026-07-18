@@ -2213,5 +2213,52 @@ describe('oat-config', () => {
         });
       });
     });
+
+    it.each([true, false, 'auto'] as const)(
+      'accepts workflow.projectLog value %s',
+      async (projectLog) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: {
+              projectLog,
+              projectLogLedgerPath: '.oat/custom/project-observations.md',
+            },
+          }),
+          'utf8',
+        );
+
+        await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+          workflow: {
+            projectLog,
+            projectLogLedgerPath: '.oat/custom/project-observations.md',
+          },
+        });
+      },
+    );
+
+    it.each(['yes', 1, null, {}, []])(
+      'rejects invalid workflow.projectLog value %#',
+      async (projectLog) => {
+        const repoRoot = await createRepoRoot();
+        await writeFile(
+          join(repoRoot, '.oat', 'config.json'),
+          JSON.stringify({
+            version: 1,
+            workflow: { projectLog, archiveOnComplete: true },
+          }),
+          'utf8',
+        );
+
+        await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+          workflow: { archiveOnComplete: true },
+        });
+        expect((await readOatConfig(repoRoot)).workflow).not.toHaveProperty(
+          'projectLog',
+        );
+      },
+    );
   });
 });

@@ -74,9 +74,7 @@ async function readEntries(dirPath: string): Promise<ScannedEntry[]> {
   }
 }
 
-export async function scanBundledManagedCodexAgents(): Promise<
-  CanonicalEntry[]
-> {
+export async function scanBundledManagedAgents(): Promise<CanonicalEntry[]> {
   const agentsDir = join(await resolveAssetsRoot(), 'agents');
   const entries = await readEntries(agentsDir);
   const available = new Set(
@@ -88,7 +86,7 @@ export async function scanBundledManagedCodexAgents(): Promise<
 
   if (missing.length > 0) {
     throw new CliError(
-      `Bundled managed Codex role definitions are unavailable: ${missing.join(', ')}. Reinstall or rebuild OAT before running user sync.`,
+      `Bundled managed role definitions are unavailable: ${missing.join(', ')}. Reinstall or rebuild OAT before running user sync.`,
     );
   }
 
@@ -99,6 +97,9 @@ export async function scanBundledManagedCodexAgents(): Promise<
     isFile: true,
   }));
 }
+
+/** @deprecated Use scanBundledManagedAgents for provider-neutral materialization. */
+export const scanBundledManagedCodexAgents = scanBundledManagedAgents;
 
 export async function scanCanonical(
   basePath: string,

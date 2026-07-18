@@ -25,6 +25,7 @@ import { UTILITY_SKILLS } from '../utility/install-utility';
 import {
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
 } from '../workflows/install-workflows';
 import { BRAINSTORM_SKILLS, RESEARCH_AGENTS } from './skill-manifest';
 
@@ -86,6 +87,13 @@ function getDispatchMatrixRecommendationSourcePath(): string {
   return join(
     import.meta.dirname,
     '../../../../../config/dispatch-matrix-recommendation.json',
+  );
+}
+
+function getDispatchMatrixRecommendationAssetPath(): string {
+  return join(
+    import.meta.dirname,
+    '../../../../../assets/config/dispatch-matrix-recommendation.json',
   );
 }
 
@@ -282,6 +290,17 @@ describe('bundle-assets.sh consistency', () => {
       missing,
       `Templates listed in bundle-assets.sh but missing from .oat/templates: ${missing.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('bundles every workflow template, including the project log', () => {
+    const missing = WORKFLOW_TEMPLATES.filter(
+      (template) => !bundleTemplates.includes(template),
+    );
+    expect(
+      missing,
+      `Missing workflow templates from bundle-assets.sh: ${missing.join(', ')}`,
+    ).toEqual([]);
+    expect(WORKFLOW_TEMPLATES).toContain('project-log.md');
   });
 
   it('does not bundle skills that belong to no pack', () => {
@@ -517,11 +536,39 @@ describe('bundle-assets.sh consistency', () => {
           version?: unknown;
           providers?: Record<string, unknown>;
         };
+        const checkedInAsset = JSON.parse(
+          readFileSync(getDispatchMatrixRecommendationAssetPath(), 'utf8'),
+        );
 
         expect(recommendation).toEqual(sourceRecommendation);
+        expect(checkedInAsset).toEqual(sourceRecommendation);
+        expect(recommendation.version).toBe('2026-07-11.1');
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
-        expect(recommendation.providers?.cursor).toBeDefined();
+        expect(recommendation.providers?.cursor).toEqual({
+          economy: {
+            candidates: [
+              'composer-2.5',
+              'claude-sonnet-5-high',
+              'gpt-5.6-luna-high',
+              'gpt-5.6-luna-xhigh',
+            ],
+          },
+          balanced: {
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
+          },
+          high: {
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
+          },
+          frontier: {
+            candidates: [
+              'claude-fable-5-thinking-high',
+              'claude-fable-5-thinking-xhigh',
+              'gpt-5.6-sol-xhigh',
+              'gpt-5.6-sol-max',
+            ],
+          },
+        });
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });
       }

@@ -1,12 +1,12 @@
 ---
 name: oat-project-implement
-version: 2.1.2
+version: 2.1.3
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 ---
 
 # Implementation Phase
@@ -34,6 +34,22 @@ After resolving `ACTIVE_PROVIDER`, read exactly one active-provider reference
 from `.agents/skills/oat-dispatch-subagents/references/`
 (`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
 merge provider mechanics.
+
+## Project Log Append Points
+
+At each point below, invoke `oat project log append` and defer entry flags and
+format to `oat project log append --help`. Never pre-check project-log config:
+the helper no-ops when the feature is off.
+
+- After every accepted subagent dispatch, invoke `oat project log append` for
+  a structural stamp that references the corresponding run record by
+  `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
+- Before every STOP or park return, invoke `oat project log append` for a
+  structural entry naming the triggering condition.
+- After every phase outcome, invoke `oat project log append` for a structural
+  entry with the verdict and fix-loop count.
+- After every parallel-group merge attempt, invoke `oat project log append` for
+  a structural entry with the merge result.
 
 ## Autonomy Policy
 

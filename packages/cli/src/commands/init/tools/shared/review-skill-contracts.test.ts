@@ -201,6 +201,95 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pins every oat-project-implement project-log append point', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const appendPoints =
+      content.match(
+        /## Project Log Append Points[\s\S]*?## Autonomy Policy/,
+      )?.[0] ?? '';
+
+    expect(appendPoints).toContain('oat project log append --help');
+    expect(appendPoints).toContain('the helper no-ops when the feature is off');
+    expect(content).toMatch(/^allowed-tools:.*Bash\(oat project log:\*\).*$/m);
+    expect(appendPoints).toMatch(
+      /accepted subagent dispatch[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toContain(
+      '$PROJECT_PATH/implementation.md#<run-anchor>',
+    );
+    expect(appendPoints).toContain('never mirror that record');
+    expect(appendPoints).toMatch(/STOP or park[\s\S]*?oat project log append/i);
+    expect(appendPoints).toMatch(
+      /phase outcome[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toMatch(
+      /parallel-group merge[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toContain('fix-loop count');
+  });
+
+  it('pins oat-project-summary project-log graduation and roll-up ordering', () => {
+    const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
+    const graduationIndex = content.indexOf(
+      '### Step 2.5: Check Project Log and Offer Ledger Graduation',
+    );
+    const summaryAuthoringIndex = content.indexOf(
+      '### Step 4: Generate / Update Summary Sections',
+    );
+    const rollupIndex = content.indexOf(
+      '### Step 6: Roll Up Project Observations and Offer Backlog Graduation',
+    );
+    const learningsIndex = content.indexOf(
+      '**Autonomous Execution Learnings (conditional):**',
+    );
+    const coexistenceIndex = content.indexOf(
+      '**Workflow Observations coexistence contract:**',
+    );
+
+    expect(graduationIndex).toBeGreaterThanOrEqual(0);
+    expect(summaryAuthoringIndex).toBeGreaterThan(graduationIndex);
+    expect(rollupIndex).toBeGreaterThan(summaryAuthoringIndex);
+    expect(coexistenceIndex).toBeGreaterThan(learningsIndex);
+    expect(content).toContain(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    expect(content).toMatch(
+      /Before roll-up[\s\S]*?oat project log append[\s\S]*?--scope general/i,
+    );
+    expect(content).toMatch(/original entry's\s+exact heading/);
+    expect(content).toMatch(
+      /never edit, annotate, strike through, or add\s+side metadata to the original entry/,
+    );
+    expect(content).toContain(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    expect(content).toMatch(
+      /status: "failed"[\s\S]*?surface the failure[\s\S]*?stop before commit/i,
+    );
+    expect(content).toMatch(
+      /ledgerOutcome: "skipped_permitted"[\s\S]*?proceed and report/i,
+    );
+    expect(content).toContain('## Workflow Observations');
+    expect(content).toContain('## Autonomous Execution Learnings');
+    expect(content).toContain('one-line cross-reference');
+    expect(content).toContain('oat-pjm-add-backlog-item');
+    expect(content).toMatch(
+      /Backlog graduation creates a\s+tracked work item; it is not ledger graduation/,
+    );
+
+    const commitStep =
+      content.match(/### Step 8: Commit[\s\S]*?(?=### Step 9:)/)?.[0] ?? '';
+    expect(content).toContain('PROJECT_LOG_PROMOTION_APPENDED="false"');
+    expect(content).toContain('PROJECT_LOG_LEDGER_APPENDED="false"');
+    expect(content).toContain('oat config get workflow.projectLogLedgerPath');
+    expect(commitStep).toContain('PROJECT_LOG_PROMOTION_APPENDED');
+    expect(commitStep).toContain('git add "$PROJECT_PATH/project-log.md"');
+    expect(commitStep).toContain('PROJECT_LOG_LEDGER_APPENDED');
+    expect(commitStep).toContain('git add "$PROJECT_LOG_LEDGER_PATH"');
+  });
+
   it('requires workflow skills to use canonical dispatch policy choices', () => {
     const quickStartContent = readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
@@ -317,6 +406,43 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('dispatches concrete Cursor reviews through resolver-selected native variants', () => {
+    const local = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['local review', local],
+      ['remote review', remote],
+    ] as const) {
+      expect(content, `${name} Cursor variant payload`).toContain(
+        'providers.cursor.dispatchArgs.variant',
+      );
+      expect(content, `${name} exact native variant`).toMatch(
+        /Cursor[\s\S]{0,420}exact resolver-(?:returned|selected) native reviewer variant/i,
+      );
+      expect(content, `${name} pre-start rejection boundary`).toMatch(
+        /pre-start native role-selection rejection/i,
+      );
+      expect(content, `${name} no stale Cursor model argument`).not.toContain(
+        'providers.cursor.dispatchArgs.model',
+      );
+      expect(content, `${name} no concrete base reviewer launch`).not.toContain(
+        'Cursor: explicit invocation `/oat-reviewer`',
+      );
+    }
+
+    expect(
+      remote,
+      'malformed output remains terminal after acceptance',
+    ).not.toMatch(
+      /malformed (?:structured )?output[\s\S]{0,160}(?:fall through|fallback|proceed|continue|route)[\s\S]{0,80}Tier [23]/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',
@@ -421,6 +547,47 @@ describe('review skill contracts', () => {
     expect(content).not.toContain(
       'sed \'s/^oat_lifecycle:.*/oat_lifecycle: complete/\' "$STATE_FILE" > "$STATE_FILE.tmp"',
     );
+  });
+
+  it('pins project-log roll-up and seal before lifecycle completion and archive', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const checkIndex = content.indexOf(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const sealIndex = content.indexOf(
+      '--producer oat-project-complete \\\n  --ref seal',
+    );
+    const completeStateIndex = content.indexOf(
+      'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+    );
+    const archiveIndex = content.indexOf(
+      'ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1)',
+    );
+
+    expect(checkIndex).toBeGreaterThanOrEqual(0);
+    expect(rollupIndex).toBeGreaterThan(checkIndex);
+    expect(sealIndex).toBeGreaterThan(rollupIndex);
+    expect(completeStateIndex).toBeGreaterThan(sealIndex);
+    expect(archiveIndex).toBeGreaterThan(completeStateIndex);
+    expect(content).toMatch(
+      /synthesisPending: true[\s\S]*?Warning:[\s\S]*?do not block completion/i,
+    );
+    expect(content).toContain('Synthesis is warn-only');
+    expect(content).toMatch(
+      /Do not set lifecycle complete, seal, or archive unless[\s\S]*?status: "ok"/,
+    );
+    expect(content).toMatch(
+      /ledgerOutcome: "skipped_permitted"[\s\S]*?proceed and report/,
+    );
+    expect(content).toMatch(
+      /status: "failed"[\s\S]*?stop and surface the roll-up failure[\s\S]*?Never continue to seal or\s+archive/,
+    );
+    expect(content).toContain('No project-log append may follow the seal');
   });
 
   it('delegates project completion archive side effects to the CLI command', () => {

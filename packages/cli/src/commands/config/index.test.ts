@@ -1163,6 +1163,65 @@ describe('oat config', () => {
       });
     });
 
+    it('sets, gets, and lists project-log workflow keys', async () => {
+      const root = await createRepoRoot();
+      const projectLogHarness = createHarness({ cwd: root });
+      await runCommand(projectLogHarness.command, [
+        'set',
+        'workflow.projectLog',
+        'true',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const ledgerHarness = createHarness({ cwd: root });
+      await runCommand(ledgerHarness.command, [
+        'set',
+        'workflow.projectLogLedgerPath',
+        '.oat/custom/observations.md',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(raw.workflow).toMatchObject({
+        projectLog: true,
+        projectLogLedgerPath: '.oat/custom/observations.md',
+      });
+
+      const getHarness = createHarness({ cwd: root });
+      await runCommand(
+        getHarness.command,
+        ['get', 'workflow.projectLog'],
+        ['--json'],
+      );
+      expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.projectLog',
+        value: 'true',
+        source: 'shared',
+      });
+
+      const listHarness = createHarness({ cwd: root });
+      await runCommand(listHarness.command, ['list']);
+      expect(listHarness.capture.info[0]).toContain('workflow.projectLog');
+      expect(listHarness.capture.info[0]).toContain(
+        'workflow.projectLogLedgerPath',
+      );
+    });
+
+    it('rejects invalid workflow.projectLog values', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'workflow.projectLog', 'sometimes']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('true | false | auto');
+    });
+
     it('gets default-on workflow.autoArtifactReview.analysis when unset', async () => {
       const root = await createRepoRoot();
       const home = await createHome();
@@ -1693,7 +1752,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-07-10.2');
+      expect(recommendation.version).toBe('2026-07-11.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -1735,29 +1794,25 @@ describe('oat config', () => {
         cursor: {
           economy: {
             candidates: [
-              'gpt-5.6-luna-low',
-              'gpt-5.6-luna-medium',
+              'composer-2.5',
+              'claude-sonnet-5-high',
               'gpt-5.6-luna-high',
+              'gpt-5.6-luna-xhigh',
             ],
           },
           balanced: {
-            candidates: [
-              'gpt-5.6-luna-xhigh',
-              'gpt-5.6-terra-low',
-              'gpt-5.6-terra-medium',
-              'gpt-5.6-terra-high',
-              'gpt-5.6-terra-xhigh',
-            ],
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
           },
           high: {
-            candidates: [
-              'gpt-5.6-sol-low',
-              'gpt-5.6-sol-medium',
-              'gpt-5.6-sol-high',
-            ],
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
           },
           frontier: {
-            candidates: ['gpt-5.6-sol-xhigh', 'gpt-5.6-sol-max'],
+            candidates: [
+              'claude-fable-5-thinking-high',
+              'claude-fable-5-thinking-xhigh',
+              'gpt-5.6-sol-xhigh',
+              'gpt-5.6-sol-max',
+            ],
           },
         },
       });

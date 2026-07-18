@@ -16,8 +16,15 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import {
+  appendProjectLog as appendProjectLogFromDisk,
+  instantiateProjectLogTemplate,
+  type AppendProjectLogInput,
+  type ProjectLogAppendResult,
+} from '@commands/project/log/append';
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
 import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
+import { resolveAssetsRoot } from '@fs/assets';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -52,6 +59,9 @@ interface HarnessOptions {
     expectedCliRoot: string,
     expectedRuntime: string,
   ) => Promise<GateRouteReceipt>;
+  appendProjectLog?: (
+    input: AppendProjectLogInput,
+  ) => Promise<ProjectLogAppendResult>;
 }
 
 interface ProcessCall {
@@ -149,6 +159,9 @@ function createHarness(options: HarnessOptions): {
     ...(options.removeGateRunMarker
       ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
+    appendProjectLog:
+      options.appendProjectLog ??
+      (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -362,6 +375,7 @@ async function runReviewGate(options: {
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
+  appendProjectLog?: HarnessOptions['appendProjectLog'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -377,6 +391,7 @@ async function runReviewGate(options: {
     removeGateRunMarker: options.removeGateRunMarker,
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
+    appendProjectLog: options.appendProjectLog,
   });
   await runCommand(
     command,
@@ -444,6 +459,24 @@ describe('oat gate', () => {
       `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
       'utf8',
     );
+  }
+
+  async function writeExistingProjectLog(
+    root: string,
+    projectPath: string,
+  ): Promise<string> {
+    const assetsRoot = await resolveAssetsRoot();
+    const template = await readFile(
+      join(assetsRoot, 'templates', 'project-log.md'),
+      'utf8',
+    );
+    const logPath = join(root, projectPath, 'project-log.md');
+    await writeFile(
+      logPath,
+      instantiateProjectLogTemplate(template, 'demo', '2026-07-17'),
+      'utf8',
+    );
+    return logPath;
   }
 
   async function writeImplementation(
@@ -1942,6 +1975,217 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('uses declared producer identity from the review-only environment bridge', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': null,
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.6-sol-high', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p04',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'gpt-5.6-sol-xhigh:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+      purpose: 'execute',
+    });
+    expect(runner.calls.at(-1)?.env).not.toHaveProperty(
+      'OAT_GATE_PRODUCER_IDENTITY',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'gpt-5.6-sol-xhigh',
+          provenance: 'declared',
+          family: 'openai',
+          source: 'environment',
+          avoidFamilies: ['openai'],
+        },
+      },
+      dispatchReport: {
+        runtimeIdentity: {
+          producer: null,
+          confidence: 'not-reported',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { name: 'absent', value: undefined },
+    { name: 'malformed', value: 'gpt-5.6-sol-xhigh' },
+    { name: 'non-declared provenance', value: 'gpt-5.6-sol-xhigh:observed' },
+  ])(
+    'preserves unknown producer behavior for an $name environment bridge',
+    async ({ value }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope: 'p04',
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv:
+          value === undefined ? {} : { OAT_GATE_PRODUCER_IDENTITY: value },
+        runProcess: runner.runProcess,
+        args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          achieved: 'unknown-producer',
+          producer: {
+            value: 'unknown',
+            provenance: 'unknown',
+            family: 'unknown',
+            source: 'unknown',
+            avoidFamilies: [],
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('keeps explicit and stamped producer evidence stronger than the environment bridge', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p04',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const stamped = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'composer-2.5:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+    });
+    expect(stamped.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.source',
+      'stamp',
+    );
+    expect(stamped.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.value',
+      'gpt-5.6-sol-xhigh',
+    );
+
+    const explicit = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'composer-2.5:declared',
+      },
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p04',
+        '--producer-identity',
+        'claude-fable-5-thinking-high:declared',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+    expect(explicit.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.source',
+      'flag',
+    );
+    expect(explicit.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.value',
+      'claude-fable-5-thinking-high',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not consume the review-only producer environment in generic execution', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'gpt-5.6-sol-xhigh:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Run'],
+      globalArgs: [],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'achieved=unknown-producer producer=unknown',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it.each([
     {
       name: 'legacy',
@@ -2153,6 +2397,174 @@ describe('oat gate', () => {
           target: 'composer-reviewer',
           model: 'composer-2.5',
           family: 'composer',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('falls back to a configured target family when an aggregate producer is unknown', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': null,
+              'openai-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.6-sol-max'],
+                priority: 300,
+              },
+              'claude-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['claude-fable-5-xhigh'],
+                priority: 250,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'claude-fable-5-xhigh', expect.any(String)],
+      purpose: 'execute',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+        reviewer: {
+          target: 'claude-reviewer',
+          model: 'claude-fable-5-xhigh',
+          family: 'claude',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps a known aggregate producer authoritative over a conflicting configured target', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=claude-opus-4-8 provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('uses the configured target when a concrete aggregate producer is not claimable', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol-high provenance=unknown model_axis=selected:claude-fable-5-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-fable-5-xhigh target=claude-fable-5-xhigh',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
         },
       },
     });
@@ -4179,6 +4591,262 @@ describe('oat gate', () => {
     // artifact's oat_generated_at so callers can correlate result to artifact.
     expect(capture.jsonPayloads[0]?.runId).toMatch(/[0-9a-f-]{8,}/i);
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      outcome: 'success',
+      childExitCode: 0,
+      finding: 'clean' as const,
+      expectedStatus: 'ok',
+      expectedExitCode: 0,
+      expectedArtifact: true,
+      expectedCounts: true,
+    },
+    {
+      outcome: 'blocking verdict',
+      childExitCode: 0,
+      finding: 'important' as const,
+      expectedStatus: 'blocked',
+      expectedExitCode: 1,
+      expectedArtifact: true,
+      expectedCounts: true,
+    },
+    {
+      outcome: 'child failure',
+      childExitCode: 3,
+      expectedStatus: 'review_failed',
+      expectedExitCode: 3,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'timeout',
+      childExitCode: 124,
+      timedOut: true,
+      expectedStatus: 'review_failed',
+      expectedExitCode: 124,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'targeting-correlation failure',
+      childExitCode: 0,
+      expectedStatus: 'targeting_correlation_failed',
+      expectedExitCode: 1,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'artifact-validation failure',
+      childExitCode: 0,
+      finding: 'clean' as const,
+      parseFailure: true,
+      expectedStatus: 'artifact_validation_failed',
+      expectedExitCode: 1,
+      expectedArtifact: true,
+      expectedCounts: false,
+    },
+  ])(
+    'appends exactly one project log structural entry after $outcome',
+    async ({
+      childExitCode,
+      expectedArtifact,
+      expectedCounts,
+      expectedExitCode,
+      expectedStatus,
+      finding,
+      parseFailure,
+      timedOut,
+    }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const appendProjectLog = vi.fn(
+        async (
+          _input: AppendProjectLogInput,
+        ): Promise<ProjectLogAppendResult> => ({
+          status: 'appended',
+          logPath: join(root, projectPath, 'project-log.md'),
+          heading: '### 2026-07-17 · structural · oat gate review · p02',
+          created: false,
+        }),
+      );
+      const runner = createProcessRunner({
+        executeExitCode: childExitCode,
+        executeTimedOut: timedOut,
+        onExecute: finding
+          ? async () => {
+              await writeReviewArtifact({ root, projectPath, finding });
+            }
+          : undefined,
+      });
+
+      await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        appendProjectLog,
+        parseReviewGateVerdict: parseFailure
+          ? async () => {
+              throw new Error('invalid artifact');
+            }
+          : undefined,
+        args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+      });
+
+      expect(appendProjectLog).toHaveBeenCalledTimes(1);
+      const input = appendProjectLog.mock.calls[0]?.[0];
+      expect(input).toMatchObject({
+        repoRoot: root,
+        home,
+        project: projectPath,
+        structural: true,
+        producer: 'oat gate review',
+        ref: 'p02',
+      });
+      expect(input?.body).toContain('target=codex-default');
+      expect(input?.body).toContain('threshold=important');
+      expect(input?.body).toContain(`exit=${expectedExitCode}`);
+      expect(input?.body).toContain(`status=${expectedStatus}`);
+      if (expectedCounts) {
+        expect(input?.body).toContain('findings=critical:');
+      } else {
+        expect(input?.body).not.toContain('findings=');
+      }
+      if (expectedArtifact) {
+        expect(input?.body).toContain('artifact=');
+      } else {
+        expect(input?.body).not.toContain('artifact=');
+      }
+    },
+  );
+
+  it('honors config false when no project log exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ workflow: { projectLog: false } })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+    });
+
+    await expect(
+      readFile(join(root, projectPath, 'project-log.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('appends once to an existing project log even when config is false', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ workflow: { projectLog: false } })}\n`,
+      'utf8',
+    );
+    const logPath = await writeExistingProjectLog(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    const content = await readFile(logPath, 'utf8');
+    expect(
+      content.match(
+        /^### \d{4}-\d{2}-\d{2} · structural · oat gate review · p02$/gm,
+      ),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('creates the project log on the first gate append under auto config', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    const content = await readFile(
+      join(root, projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(content).toContain('# Project Log: demo');
+    expect(
+      content.match(
+        /^### \d{4}-\d{2}-\d{2} · structural · oat gate review · p02$/gm,
+      ),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns on project log append failure without changing the blocking gate result', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: async () => {
+        throw new Error('project log is unwritable');
+      },
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('project log is unwritable'),
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      outcome: 'review_completed_blocking_findings',
+      receiveEligible: true,
+      handoff: expect.stringContaining('oat-project-review-receive'),
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('injects headless context only into gate review children', async () => {

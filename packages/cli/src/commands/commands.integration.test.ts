@@ -462,6 +462,7 @@ describe('CLI command integration', () => {
   it('doctor on healthy setup reports all pass', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
+    await rm(join(root, '.cursor'), { recursive: true, force: true });
     const previousHome = process.env.HOME;
     process.env.HOME = root;
 
