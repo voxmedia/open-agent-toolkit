@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | complete | 10    | 10/10     |
-| Phase 3 | pending  | 9     | 0/9       |
-| Phase 4 | pending  | 9     | 0/9       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 6     | 6/6       |
+| Phase 2 | complete    | 10    | 10/10     |
+| Phase 3 | in_progress | 9     | 1/9       |
+| Phase 4 | pending     | 9     | 0/9       |
+| Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 16/38 tasks completed
+**Total:** 17/38 tasks completed
 
 ---
 
@@ -427,6 +427,30 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 - Approval and integration suites — pass (14/14).
 - Full core suite — pass (98/98).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+## Phase 3: OAT adapter and lifecycle integration
+
+**Status:** in_progress
+**Started:** 2026-07-18
+
+### Task p03-t01: Resolve adapter config and canonical output roots
+
+**Status:** completed
+**Commit:** `1dedbdd6`
+
+**Outcome:**
+
+- Added source-aware OAT config translation and canonical project/non-project
+  output-root resolution into versioned core requests.
+- Enforced publish cross-fields, runtime override limits, direct-call
+  rejection, and symlink/traversal containment.
+
+**Verification:**
+
+- Config, path, core contract, and adapter compatibility suites — pass (21/21).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
