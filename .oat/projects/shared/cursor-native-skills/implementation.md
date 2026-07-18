@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,11 +17,11 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
-| p02   | in_progress | 2     | 0/2       |
-| p03   | pending     | 3     | 0/3       |
+| p02   | complete    | 2     | 2/2       |
+| p03   | in_progress | 3     | 0/3       |
 | p04   | pending     | 2     | 0/2       |
 
-**Total:** 2/9 tasks completed
+**Total:** 4/9 tasks completed
 
 ## Phase 1: Native-Read Mapping and Adoption Sources
 
@@ -56,21 +56,39 @@ removal while ordinary provider behavior remains unchanged.
 
 ## Phase 2: Safe Legacy View Retirement
 
-**Status:** in_progress
+**Status:** complete
+
+### Phase Summary
+
+- Obsolete mapping retirement now re-verifies managed provider paths before
+  deletion.
+- Clean legacy views are removed, missing views are untracked, and changed or
+  unverified views are preserved and detached for migration.
+- Project and user upgrade behavior is covered through engine, command
+  integration, and end-to-end tests.
+
+**Verification:** 74 focused tests passed; package format, type-check, and lint
+passed.
 
 ### Task p02-t01: Add preservation-aware detach operations
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `77a1b3bb`
+
+Retirement planning and execution now distinguish safe removal from
+preservation-aware manifest detachment.
 
 ### Task p02-t02: Cover Cursor upgrade behavior end to end
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `510a34f6`
+
+Integration coverage verifies clean, missing, modified, and unmanaged Cursor
+skill upgrade paths at project and user scope.
 
 ## Phase 3: Per-Skill Decisions and User Config Migration
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p03-t01: Canonicalize user known-stray configuration
 
@@ -111,7 +129,8 @@ removal while ordinary provider behavior remains unchanged.
 - Execution: sequential
 - HiLL checkpoint: after p04
 - Phase p01: complete
-- Phase p02: next
+- Phase p02: complete
+- Phase p03: next
 
 <!-- orchestration-runs-end -->
 
@@ -121,7 +140,9 @@ removal while ordinary provider behavior remains unchanged.
 
 - [x] p01-t01: Model Cursor skills as native-read — `74964c2e`
 - [x] p01-t02: Scan provider-local adoption sources — `c45145ce`
-- [ ] p02-t01: Add preservation-aware detach operations
+- [x] p02-t01: Add preservation-aware detach operations — `77a1b3bb`
+- [x] p02-t02: Cover Cursor upgrade behavior end to end — `510a34f6`
+- [ ] p03-t01: Canonicalize user known-stray configuration
 
 **Decisions:**
 
@@ -141,7 +162,7 @@ None.
 | Phase | Tests Run | Passed | Failed | Notes                         |
 | ----- | --------- | ------ | ------ | ----------------------------- |
 | p01   | 173       | 173    | 0      | Format, type-check, lint pass |
-| p02   | -         | -      | -      | Pending                       |
+| p02   | 74        | 74     | 0      | Format, type-check, lint pass |
 | p03   | -         | -      | -      | Pending                       |
 | p04   | -         | -      | -      | Pending                       |
 
