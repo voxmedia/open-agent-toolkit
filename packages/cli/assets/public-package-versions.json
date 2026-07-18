@@ -1,6 +1,6 @@
 {
-  "cli": "0.1.73",
-  "docs-config": "0.1.73",
-  "docs-theme": "0.1.73",
-  "docs-transforms": "0.1.73"
+  "cli": "0.2.0",
+  "docs-config": "0.2.0",
+  "docs-theme": "0.2.0",
+  "docs-transforms": "0.2.0"
 }
