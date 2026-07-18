@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: 6f30fe7a27e5f176914a4bb6e53af27fe629f0c3
+oat_current_task: null
+oat_last_commit: da411582032a17949d1fcb1b95dd3db197df1b4c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,27 +38,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T13:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T14:29:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Plan Complete
+**Status:** Implementation Complete — Awaiting p06 HiLL Checkpoint
 **Started:** 2026-07-16
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Plan and pre-implementation verification complete - Ready for `oat-project-implement`
+All 13 implementation tasks and phase reviews passed. The p06 fresh-session Cursor IDE launch checkpoint is ready.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete; ready for implementation)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (implementation tasks complete; p06 HiLL pending)
+- **Implementation:** `implementation.md` (13/13 tasks complete)
 
 ## Progress
 
@@ -71,6 +71,9 @@ Plan and pre-implementation verification complete - Ready for `oat-project-imple
 - ✓ Manual plan artifact review passed
 - ✓ Configured quick-start exit-gate rerun explicitly skipped by operator
 - ✓ Pre-implementation gate g01 passed: 15 mappings approved
+- ✓ Phases p02-p06 implemented and independently reviewed
+- ✓ Lockstep package version `0.1.73` passed `pnpm release:validate`
+- ◯ p06 HiLL checkpoint: launch generated reviewer and implementer variants in a fresh Cursor IDE session
 
 ## Blockers
 
@@ -78,4 +81,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` starting at p02-t01
+Complete the p06 final generated-role launch checkpoint in a fresh Cursor IDE session.
