@@ -232,14 +232,15 @@ values. Planning shows the complete bundled recommendation before asking for
 this scope, then rechecks the effective ladder. If explicit cells still leave
 the ladder incomplete, readiness blocks; OAT does not overwrite them.
 
-Scope determines ownership and Codex materialization:
+Scope determines ownership and Codex/Cursor materialization:
 
 - `--shared` and `--local` are project configuration sources. Their configured
-  Codex candidates materialize into the tracked project `.codex` view.
+  Codex and Cursor candidates materialize into the tracked project `.codex`
+  and `.cursor` views.
 - `--user` writes reusable personal defaults to `~/.oat/config.json`; those
-  Codex candidates materialize under `~/.codex`.
-- Active-project sparse candidates also materialize into the tracked project
-  view.
+  candidates materialize under `~/.codex` and `~/.cursor`.
+- Active-project sparse candidates also materialize into the applicable tracked
+  project view.
 
 Project-generated provider views remain visible to version control. OAT does
 not auto-ignore them. A project-specific active policy or ceiling must not be
@@ -274,7 +275,7 @@ even when the reusable ladder is user-owned.
         },
         "cursor": {
           "balanced": {
-            "candidates": ["opaque:model/lower [v1]", "opaque:model/high [v2]"]
+            "candidates": ["cursor-grok-4.5-high", "gpt-5.6-terra-high"]
           }
         }
       }
@@ -285,9 +286,11 @@ even when the reusable ladder is user-owned.
 
 The bundled recommendation covers 13 Codex model/effort combinations: Luna and
 Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
-`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 13
-opaque configured strings. Cursor spelling never supplies capability metadata;
-the configured candidate position owns the tier meaning.
+`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 12
+verified multi-family flat IDs across Composer, Claude, GPT, and Grok. An
+explicit mapping connects each flat ladder ID to a separate bracket-form
+frontmatter model; configuration and skills never derive or normalize either
+form.
 
 The corresponding pinned Codex variant catalogue includes
 `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
@@ -360,7 +363,7 @@ oat project dispatch-ceiling resolve \
   --provider cursor \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model 'opaque:model/lower [v1]' \
+  --candidate-model gpt-5.6-sol-high \
   --json
 ```
 
@@ -381,11 +384,12 @@ remains compatibility behavior for legacy scalar ceilings and managed
 | -------- | ---------------------------------------------------------------------------------------------------- |
 | Codex    | `providers.codex.dispatchArgs.variant` as `agent_type`, or a fresh child pinned to model plus effort |
 | Claude   | `providers.claude.dispatchArgs.model` as the actual Agent `model`                                    |
-| Cursor   | `providers.cursor.dispatchArgs.model` byte-for-byte as the actual opaque invocation model            |
+| Cursor   | `providers.cursor.dispatchArgs.variant` as the exact native agent type first                         |
 
-Project sync materializes the supported Codex catalogue and every configured
-project-owned candidate for both `oat-phase-implementer` and `oat-reviewer`.
-User sync materializes user-owned candidates under `~/.codex`:
+Project sync materializes the supported Codex and Cursor catalogues and every
+configured project-owned candidate for both `oat-phase-implementer` and
+`oat-reviewer`. User sync materializes user-owned candidates under `~/.codex`
+and `~/.cursor/agents`:
 
 ```bash
 oat sync --scope project
@@ -394,60 +398,31 @@ oat sync --scope all
 ```
 
 Generated roles carry `supported-catalogue`, `project-config`, or `user-config`
-ownership. Cleanup reconciles only the current owner. Materialization is best
-effort at sync boundaries; the exact fresh-child route means workflow
-correctness does not require provider restart or hot reload.
+ownership. Cleanup reconciles only the current owner. Cursor's mapping registry
+rejects unknown flat IDs instead of writing unverified frontmatter.
 
 Reviewer resolution uses the final candidate at the configured review ceiling.
-Codex selects the exact reviewer variant; Claude and Cursor pass the resolver's
-exact model argument. Timeout retries preserve the same complete payload. A
-lower reviewer candidate requires a separate reviewed contract.
+Codex and Cursor select exact native reviewer variants; Claude passes the
+resolver's exact model argument. Timeout retries preserve the same complete
+payload. A lower reviewer candidate requires a separate reviewed contract.
 
 Tier 2 remains target-preserving. Inline review is permitted only when the host
 has verified equivalent current-host controls for explicit inherit,
 managed-uncapped, or base-role behavior. Capped managed reviews still require
 the exact registered role, pinned child, or resolver-returned model argument.
 
-### Cursor validation pass and live evidence
+### Cursor availability and evidence
 
-Config adoption and doctor validate Cursor candidates with one command-scoped
-pass context. Duplicate references to the same byte-for-byte candidate share
-one Task/subagent probe. If a decisive probe is unavailable, the pass resolves
-the broad catalog once, with at most one `--list-models` fallback. The cache
-ends with that adopt or doctor command; it is not process-global and has no
-TTL.
+`oat doctor` compares configured Cursor flat IDs with the current Cursor
+catalogue and reports availability drift. This check is diagnostic: catalogue
+presence does not prove that a bracket-form definition pin was honored.
 
-A correlated Task start/completion pair that preserves the exact model argument
-and returns the sentinel establishes that the argument is eligible for that
-account and client. A structured rejection or exact allow-list exclusion can
-establish `unknown-value`. Neither result identifies the backend runtime model:
-`runtimeIdentity` remains `not-reported` unless trusted Cursor telemetry or
-Cursor support confirms it. Parent prose and broad catalog presence are
-diagnostic-only, so OAT preserves `unvalidated` when launcher evidence is
-absent instead of inferring capability from candidate spelling.
-
-The [dated GPT-5.6 Cursor verification evidence](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
-preserves the original text-mode pass and a versioned stream-JSON second pass.
-The second pass ran a dynamic positive control and deliberate invalid control
-before candidates. Both parent runs completed without a Task event, making the
-controls inconclusive; the stop rule therefore executed zero of the 13
-recommended candidates and did not execute exploratory
-`gpt-5.6-sol-high-fast`. The recommendation remains unchanged and candidate
-eligibility remains unresolved.
-
-The tracked artifact's structured second-pass block contains only allowlisted
-event structure, derived outcomes, sanitized auth-presence context, and
-non-reversible identifier hashes. Exact request/session/tool-call IDs and
-credential-redacted unprojected streams from that pass stay under gitignored
-`.oat/projects/local/` storage for possible Cursor support diagnosis.
-
-The same public artifact intentionally retains the sanitized historical v1
-text-mode record for provenance. That older section includes command arguments
-and prompts, stdout and stderr, exit and duration data, and capture-environment
-details such as user-specific binary paths; it is not limited to the structured
-second-pass allowlist. Re-run after a Cursor client rollout exposes Task in
-headless mode or Cursor support confirms the private requests; review the open
-verification item by 2026-08-08.
+Each shipped mapping has mapping-specific native-launch evidence, but Cursor
+can silently fallback when account, plan, or administration constraints prevent
+the requested pin. OAT therefore records the selected variant and mapped model
+with launcher-owned `configured` provenance. Runtime identity remains
+`not-reported` unless independently observed; self-report and catalogue
+availability do not upgrade that evidence.
 
 ### Legacy compatibility
 

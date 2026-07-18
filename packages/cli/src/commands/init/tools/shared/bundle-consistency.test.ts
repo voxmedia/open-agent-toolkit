@@ -90,6 +90,13 @@ function getDispatchMatrixRecommendationSourcePath(): string {
   );
 }
 
+function getDispatchMatrixRecommendationAssetPath(): string {
+  return join(
+    import.meta.dirname,
+    '../../../../../assets/config/dispatch-matrix-recommendation.json',
+  );
+}
+
 /**
  * Extract the canonical decision-index header row from the live CLI render
  * logic, so the regression assertion below pins the migration prompt asset to
@@ -529,11 +536,39 @@ describe('bundle-assets.sh consistency', () => {
           version?: unknown;
           providers?: Record<string, unknown>;
         };
+        const checkedInAsset = JSON.parse(
+          readFileSync(getDispatchMatrixRecommendationAssetPath(), 'utf8'),
+        );
 
         expect(recommendation).toEqual(sourceRecommendation);
+        expect(checkedInAsset).toEqual(sourceRecommendation);
+        expect(recommendation.version).toBe('2026-07-11.1');
         expect(recommendation.providers?.codex).toBeDefined();
         expect(recommendation.providers?.claude).toBeDefined();
-        expect(recommendation.providers?.cursor).toBeDefined();
+        expect(recommendation.providers?.cursor).toEqual({
+          economy: {
+            candidates: [
+              'composer-2.5',
+              'claude-sonnet-5-high',
+              'gpt-5.6-luna-high',
+              'gpt-5.6-luna-xhigh',
+            ],
+          },
+          balanced: {
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
+          },
+          high: {
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
+          },
+          frontier: {
+            candidates: [
+              'claude-fable-5-thinking-high',
+              'claude-fable-5-thinking-xhigh',
+              'gpt-5.6-sol-xhigh',
+              'gpt-5.6-sol-max',
+            ],
+          },
+        });
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });
       }

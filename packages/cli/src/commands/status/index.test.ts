@@ -22,6 +22,7 @@ import {
   computeCodexProjectExtensionPlan as computeCodexExtensionPlanFromDisk,
   type CodexExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
+import type { CursorExtensionPlan } from '@providers/cursor/codec/sync-extension';
 import type { ProviderAdapter } from '@providers/shared';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
@@ -39,6 +40,7 @@ interface TestHarnessOptions {
   syncConfigKnownStrays?: string[];
   userKnownStrays?: string[];
   codexExtensionPlan?: CodexExtensionPlan;
+  cursorExtensionPlan?: CursorExtensionPlan;
   canonicalEntries?: CanonicalEntry[];
   bundledCodexEntries?: CanonicalEntry[];
   cwd?: string;
@@ -231,6 +233,22 @@ function createHarness(options: TestHarnessOptions = {}): {
     failed: 0,
     skipped: 0,
   }));
+  const computeCursorProjectExtensionPlan = vi.fn(async () => {
+    return (
+      options.cursorExtensionPlan ?? {
+        provider: 'cursor',
+        operations: [],
+        managedEntries: [],
+        aggregateHash: 'cursor-hash',
+        metadata: { cleanupOwners: [], isPartialSync: false },
+      }
+    );
+  });
+  const applyCursorProjectExtensionPlan = vi.fn(async () => ({
+    applied: 0,
+    failed: 0,
+    skipped: 0,
+  }));
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -254,7 +272,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     readUserConfig: vi.fn(async () => userConfig),
     saveManifest,
     scanCanonical,
-    scanBundledManagedCodexAgents,
+    scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
     getSyncMappings: vi.fn(
@@ -269,6 +287,8 @@ function createHarness(options: TestHarnessOptions = {}): {
     detectCodexRoleStrays,
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
+    computeCursorProjectExtensionPlan,
+    applyCursorProjectExtensionPlan,
     selectManyWithAbort,
     confirmAction,
     adoptStray,
@@ -694,6 +714,51 @@ describe('createStatusCommand', () => {
     expect(capture.info[0]).toContain('codex:missing');
     expect(capture.info[0]).toContain('codex:drifted:modified');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('reports managed Cursor variants as desired-state drift, not strays', async () => {
+    const cursorOnlyAdapter: ProviderAdapter = {
+      name: 'cursor',
+      displayName: 'Cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [],
+      userMappings: [],
+      detect: async () => true,
+    };
+    const { capture, command, selectManyWithAbort } = createHarness({
+      adapters: [cursorOnlyAdapter],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      cursorExtensionPlan: {
+        provider: 'cursor',
+        operations: [
+          {
+            provider: 'cursor',
+            action: 'create',
+            target: 'role',
+            path: '.cursor/agents/oat-reviewer-gpt.md',
+            reason: 'managed Cursor role file missing',
+            entryName: 'oat-reviewer-gpt',
+            roleName: 'oat-reviewer-gpt',
+            content: '# reviewer',
+          },
+        ],
+        managedEntries: ['oat-reviewer-gpt'],
+        aggregateHash: 'cursor-hash',
+        metadata: {
+          cleanupOwners: ['supported-catalogue'],
+          isPartialSync: false,
+        },
+      },
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.info[0]).toContain(
+      'cursor:missing:.cursor/agents/oat-reviewer-gpt.md',
+    );
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
   });
 
   it('reports Codex extension drift for user scope', async () => {

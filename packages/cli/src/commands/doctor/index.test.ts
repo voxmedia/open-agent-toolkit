@@ -7,6 +7,7 @@ import type { OatConfig, OatLocalConfig, UserConfig } from '@config/oat-config';
 import type { Manifest } from '@manifest/index';
 import type {
   AvailabilityOracleDependencies,
+  CursorMaterializedModelDiagnostic,
   MatrixCellAvailability,
   MatrixCellAvailabilityResult,
   ValidateMatrixCellOptions,
@@ -68,6 +69,7 @@ interface HarnessOptions {
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailability | MatrixCellAvailabilityResult>;
   availabilityDependencies?: Partial<AvailabilityOracleDependencies>;
+  cursorMaterializedDiagnostics?: CursorMaterializedModelDiagnostic[];
 }
 
 interface RunDoctorArgs {
@@ -235,6 +237,18 @@ function createHarness(options: HarnessOptions = {}): {
     runPjmDoctorChecks,
     checkStaleInvocations,
     validateMatrixCell,
+    diagnoseCursorMaterializedModels: vi.fn(async (ladderModelIds) => {
+      return (
+        options.cursorMaterializedDiagnostics ??
+        ladderModelIds.map((ladderModelId) => ({
+          ladderModelId,
+          availability: 'available' as const,
+          evidence: 'broad-cli-catalog' as const,
+          message:
+            'Broad catalog entry only; definition pin and runtime identity not tested.',
+        }))
+      );
+    }),
     processEnv: {},
     ...validationOverrides,
   });
@@ -804,6 +818,30 @@ describe('createDoctorCommand', () => {
     expect(capture.info[0]).toContain('gpt-5.3-codex-low');
     expect(capture.info[0]).toContain('Allowed subagent models');
     expect(capture.info[0]).toContain('gpt-5.3-codex');
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('warns when a mapped Cursor flat ID disappears without claiming pin verification', async () => {
+    const { command, capture } = createHarness({
+      providers: [{ name: 'cursor', detected: true, version: '3.12.10' }],
+      cursorMaterializedDiagnostics: [
+        {
+          ladderModelId: 'retired-model-high',
+          availability: 'missing',
+          evidence: 'broad-cli-catalog',
+          message:
+            'Cursor broad CLI catalog no longer lists the model; definition pin and runtime identity were not tested.',
+        },
+      ],
+    });
+
+    await runDoctor(command);
+
+    expect(capture.info[0]).toContain('cursor_materialized_models');
+    expect(capture.info[0]).toContain('retired-model-high');
+    expect(capture.info[0]).toContain(
+      'does not verify definition pins or runtime identity',
+    );
     expect(process.exitCode).toBe(1);
   });
 
