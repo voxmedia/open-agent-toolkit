@@ -16,6 +16,8 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  isProjectLogEntryMarker,
+  isProjectLogSectionMarker,
   JUDGMENT_HEADING_RE,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
@@ -108,16 +110,18 @@ function emptyCounts(): Pick<
 }
 
 function entriesSection(content: string): string {
-  const marker = /^## Entries\s*$/m.exec(content);
-  if (!marker) {
+  const lines = content.split(/\r?\n/);
+  const markerIndex = lines.findIndex(
+    (line) => line.trimEnd() === '## Entries',
+  );
+  if (markerIndex < 0) {
     return '';
   }
-  const start = marker.index + marker[0].length;
-  const remainder = content.slice(start);
-  const nextSection = /^## .+$/m.exec(remainder);
-  return nextSection?.index === undefined
-    ? remainder
-    : remainder.slice(0, nextSection.index);
+  const remainder = lines.slice(markerIndex + 1);
+  const nextSectionIndex = remainder.findIndex(isProjectLogSectionMarker);
+  return (
+    nextSectionIndex < 0 ? remainder : remainder.slice(0, nextSectionIndex)
+  ).join('\n');
 }
 
 export function parseProjectLogEntries(content: string): ParsedProjectLog {
@@ -127,13 +131,16 @@ export function parseProjectLogEntries(content: string): ParsedProjectLog {
 
   for (let index = 0; index < lines.length; index += 1) {
     const heading = lines[index];
-    if (!heading?.startsWith('### ')) {
+    if (!heading || !isProjectLogEntryMarker(heading)) {
       continue;
     }
 
     const bodyLines: string[] = [];
     let cursor = index + 1;
-    while (cursor < lines.length && !lines[cursor]?.startsWith('### ')) {
+    while (
+      cursor < lines.length &&
+      !isProjectLogEntryMarker(lines[cursor] ?? '')
+    ) {
       bodyLines.push(lines[cursor] ?? '');
       cursor += 1;
     }

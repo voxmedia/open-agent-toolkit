@@ -10,6 +10,8 @@ import {
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
+import { appendProjectLog } from './append';
+import { checkProjectLog } from './check';
 import { createProjectLogCommand } from './index';
 
 function createHarness(cwd: string): {
@@ -237,6 +239,39 @@ Valid structural.`),
       grammarViolations: ['### handwritten heading'],
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('parses a helper-written multiline judgment without boundary collisions', async () => {
+    const { root, projectPath, logPath } = await createRepo();
+    await writeFile(logPath, logContent(''), 'utf8');
+
+    await appendProjectLog({
+      repoRoot: root,
+      project: projectPath,
+      type: 'feedback',
+      scope: 'project',
+      area: 'serialization boundary',
+      body: [
+        'Observation: Safe multiline bodies remain within one entry.',
+        'Impact: Check retains the complete judgment.',
+        'Recommendation: Keep command-owned headings out of bodies.',
+      ].join('\n'),
+    });
+
+    await expect(
+      checkProjectLog({ repoRoot: root, project: projectPath }),
+    ).resolves.toMatchObject({
+      entryCounts: {
+        structural: 0,
+        judgment: {
+          bug: 0,
+          friction: 0,
+          'worked-well': 0,
+          feedback: 1,
+        },
+      },
+      grammarViolations: [],
+    });
   });
 
   it('ignores sibling append-only artifacts entirely', async () => {

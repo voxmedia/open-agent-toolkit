@@ -10,11 +10,20 @@ export type ProjectLogType = (typeof PROJECT_LOG_TYPES)[number];
 export type ProjectLogScope = (typeof PROJECT_LOG_SCOPES)[number];
 
 export const PROJECT_LOG_AREA_MAX_LENGTH = 120;
+export const PROJECT_LOG_HEADING_DELIMITER = '·';
 
 export const JUDGMENT_HEADING_RE =
   /^### (\d{4}-\d{2}-\d{2}) · (project|general) · (bug|friction|worked-well|feedback) · ([^·\r\n]+)$/;
 export const STRUCTURAL_HEADING_RE =
   /^### (\d{4}-\d{2}-\d{2}) · structural · ([^·\r\n]+) · ([^·\r\n]+)$/;
+
+export function isProjectLogSectionMarker(line: string): boolean {
+  return /^## .+$/.test(line);
+}
+
+export function isProjectLogEntryMarker(line: string): boolean {
+  return /^### .+$/.test(line);
+}
 
 export function composeJudgmentHeading(input: {
   date: string;

@@ -243,6 +243,91 @@ describe('oat project log append', () => {
   );
 
   it.each([
+    [
+      [...judgmentArgs.slice(0, 5), 'gate · review', ...judgmentArgs.slice(6)],
+      '--area',
+      'heading delimiter',
+    ],
+    [
+      [
+        '--structural',
+        '--producer',
+        'oat · implement',
+        '--ref',
+        'p01',
+        '--body',
+        'Dispatched.',
+      ],
+      '--producer',
+      'heading delimiter',
+    ],
+    [
+      [
+        '--structural',
+        '--producer',
+        'oat-project-implement',
+        '--ref',
+        'p01 · review',
+        '--body',
+        'Dispatched.',
+      ],
+      '--ref',
+      'heading delimiter',
+    ],
+    [
+      [...judgmentArgs, '--version-note', 'oat 0.1.72\ncommit abc'],
+      '--version-note',
+      'single line',
+    ],
+    [
+      [
+        '--structural',
+        '--producer',
+        'oat-project-implement',
+        '--ref',
+        'p01',
+        '--body',
+        'Started.\nFinished.',
+      ],
+      '--body',
+      'one line',
+    ],
+    [
+      [
+        ...judgmentArgs.slice(0, -1),
+        'Observation recorded.\n## End-of-run synthesis',
+      ],
+      '--body',
+      'level-two or level-three Markdown headings',
+    ],
+    [
+      [
+        ...judgmentArgs.slice(0, -1),
+        'Observation recorded.\n### handwritten entry',
+      ],
+      '--body',
+      'level-two or level-three Markdown headings',
+    ],
+  ])(
+    'rejects serialization-boundary collision in %s',
+    async (args, option, message) => {
+      const { root } = await createRepo();
+      const { command, capture } = createHarness(root);
+
+      await runCommand(command, args);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'error',
+        message: expect.stringContaining(option),
+      });
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        message: expect.stringContaining(message),
+      });
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it.each([
     [['--scope', 'project', '--area', 'area', '--body', 'body'], '--type'],
     [['--type', 'bug', '--area', 'area', '--body', 'body'], '--scope'],
     [['--type', 'bug', '--scope', 'project', '--body', 'body'], '--area'],

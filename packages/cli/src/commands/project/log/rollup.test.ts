@@ -208,6 +208,48 @@ Verdict: adopt the task commit discipline.
     expect(ledger.match(/review retries/g)).toHaveLength(1);
   });
 
+  it('rolls up complete safe multiline judgment bodies', async () => {
+    const { root, logPath, summaryPath, ledgerPath } = await createRepo();
+    await writeFile(
+      logPath,
+      `# Project Log: demo
+
+## Entries
+
+### 2026-07-17 · general · feedback · serialization boundary
+
+Observation: Safe multiline bodies remain within one entry.
+Impact: Roll-up retains the complete judgment.
+Recommendation: Keep command-owned headings out of bodies.
+
+## End-of-run synthesis
+
+Complete.
+`,
+      'utf8',
+    );
+
+    await expect(
+      rollupProjectLog({ repoRoot: root, home: join(root, 'home') }),
+    ).resolves.toMatchObject({
+      status: 'ok',
+      ledgerOutcome: 'appended',
+      entriesRolledUp: 1,
+    });
+    for (const path of [summaryPath, ledgerPath]) {
+      const content = await readFile(path, 'utf8');
+      expect(content).toContain(
+        'Observation: Safe multiline bodies remain within one entry.',
+      );
+      expect(content).toContain(
+        'Impact: Roll-up retains the complete judgment.',
+      );
+      expect(content).toContain(
+        'Recommendation: Keep command-owned headings out of bodies.',
+      );
+    }
+  });
+
   it('permits a skipped ledger when the default reference layer is absent', async () => {
     const { root, ledgerPath } = await createRepo({ referenceLayer: false });
 

@@ -21,7 +21,10 @@ import { Command } from 'commander';
 import {
   composeJudgmentHeading,
   composeStructuralHeading,
+  isProjectLogEntryMarker,
+  isProjectLogSectionMarker,
   PROJECT_LOG_AREA_MAX_LENGTH,
+  PROJECT_LOG_HEADING_DELIMITER,
   PROJECT_LOG_SCOPES,
   PROJECT_LOG_TYPES,
   type ProjectLogScope,
@@ -128,17 +131,48 @@ function validateSingleLine(
   return normalized;
 }
 
+function validateHeadingField(
+  value: string | undefined,
+  option: string,
+): string {
+  const normalized = validateSingleLine(value, option);
+  if (normalized.includes(PROJECT_LOG_HEADING_DELIMITER)) {
+    throw new Error(
+      `${option} must not contain the project-log heading delimiter '${PROJECT_LOG_HEADING_DELIMITER}'.`,
+    );
+  }
+  return normalized;
+}
+
+function validateVersionNote(value: string | undefined): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  return validateSingleLine(value, '--version-note', Number.MAX_SAFE_INTEGER);
+}
+
+function containsCommandOwnedMarker(body: string): boolean {
+  return body
+    .split(/\r?\n/)
+    .some(
+      (line) =>
+        isProjectLogSectionMarker(line) || isProjectLogEntryMarker(line),
+    );
+}
+
 function validateEntry(
   input: AppendProjectLogInput,
   date: string,
 ): {
   heading: string;
   body: string;
+  versionNote: string | undefined;
 } {
   const body = input.body?.trim();
   if (!body) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
+  const versionNote = validateVersionNote(input.versionNote);
 
   if (input.structural) {
     if (
@@ -150,11 +184,17 @@ function validateEntry(
         '--structural cannot be combined with judgment flags --type, --scope, or --area.',
       );
     }
-    const producer = validateSingleLine(input.producer, '--producer');
-    const ref = validateSingleLine(input.ref, '--ref');
+    if (/[\r\n]/.test(body)) {
+      throw new Error(
+        '--body for structural entries must be one line without newline characters.',
+      );
+    }
+    const producer = validateHeadingField(input.producer, '--producer');
+    const ref = validateHeadingField(input.ref, '--ref');
     return {
       heading: composeStructuralHeading({ date, producer, ref }),
       body,
+      versionNote,
     };
   }
 
@@ -191,7 +231,12 @@ function validateEntry(
       )}.`,
     );
   }
-  const area = validateSingleLine(input.area, '--area');
+  if (containsCommandOwnedMarker(body)) {
+    throw new Error(
+      '--body for judgment entries must not contain command-owned level-two or level-three Markdown headings.',
+    );
+  }
+  const area = validateHeadingField(input.area, '--area');
   return {
     heading: composeJudgmentHeading({
       date,
@@ -200,6 +245,7 @@ function validateEntry(
       area,
     }),
     body,
+    versionNote,
   };
 }
 
@@ -295,7 +341,7 @@ export async function appendProjectLog(
   }
 
   const date = dependencies.now().toISOString().slice(0, 10);
-  const { heading, body } = validateEntry(input, date);
+  const { heading, body, versionNote } = validateEntry(input, date);
   let created = false;
 
   if (!logExists) {
@@ -312,7 +358,7 @@ export async function appendProjectLog(
     created = true;
   }
 
-  await appendEntry(logPath, heading, body, input.versionNote);
+  await appendEntry(logPath, heading, body, versionNote);
   return { status: 'appended', logPath, heading, created };
 }
 
