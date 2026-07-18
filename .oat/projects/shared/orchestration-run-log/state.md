@@ -18,11 +18,11 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/156' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T13:45:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T13:47:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation closeout — PR open; awaiting final HiLL approval.
 
 ## Artifacts
 
@@ -80,9 +80,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Phase 3 original tasks complete and verified
 - ✓ Four final-review fix tasks complete and verified
 - ✓ Final re-review passed
-- ⧗ Running configured pre-approval sequence: summary → document → PR
+- ✓ Configured pre-approval sequence complete: summary → document → PR
 - ✓ PR created
-- ⧗ Awaiting human review
+- ⧗ Awaiting final HiLL approval
 
 ## Blockers
 
@@ -90,8 +90,4 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Approve, decline, or defer the final implementation checkpoint.
