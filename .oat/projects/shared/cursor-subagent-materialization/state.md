@@ -1,8 +1,7 @@
 ---
-oat_current_task: null
-oat_last_commit: 31fdc9510b5f33a89100975890ccd0d439ec593a
-oat_blockers:
-  - 'Configured final review exhausted two 30-minute cursor-fable-5-xhigh attempts without producing a canonical review artifact; operator disposition required.'
+oat_current_task: p07-t01
+oat_last_commit: 283d60a0cc802d49164c94d94637e8dbc8bc4c28
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,27 +38,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T17:42:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T18:27:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Blocked — Final Review Attempts Timed Out Before Artifact Creation
+**Status:** Final Review Fix Ready — p07-t01
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. The bounded final-gate routing fix passed independent review and the full p06 release boundary again. Both configured cross-family final-review attempts selected Cursor Fable and completed substantive review work but timed out before writing a canonical artifact.
+The manual final review was received with one Important finding and no other findings. Task `p07-t01` is ready to repair configured-model provenance for the documented bare Cursor provider target, rerun release verification, and proceed to focused final re-review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (implementation tasks and p06 HiLL complete; final review pending)
-- **Implementation:** `implementation.md` (13/13 tasks complete)
+- **Plan:** `plan.md` (14 tasks; p07-t01 pending)
+- **Implementation:** `implementation.md` (13/14 tasks complete)
 
 ## Progress
 
@@ -76,12 +75,14 @@ All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE
 - ✓ Lockstep package version `0.1.73` passed `pnpm release:validate`
 - ✓ p06 HiLL checkpoint passed: generated reviewer and implementer variants launched with matching configured-model hook evidence
 - ✓ Final aggregate routing fix passed independent review and p06 revalidation
-- ◯ Final code review
+- ✓ Manual final code review received: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- ◯ p07-t01 final-review fix
+- ◯ Focused final re-review
 
 ## Blockers
 
-The configured final-review gate exhausted `maxAttempts: 2`. Both `cursor-fable-5-xhigh` attempts hit the `1800000ms` timeout immediately before artifact creation; no artifact is receive-eligible. Operator disposition is required.
+None
 
 ## Next Milestone
 
-Authorize an extended-budget operational retry or choose an explicit alternative final-review disposition.
+Execute `p07-t01` through `oat-project-implement`, then run and receive a focused final re-review.

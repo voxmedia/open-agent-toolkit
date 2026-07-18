@@ -782,6 +782,62 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 
 ---
 
+## Phase 7: Final Review Fixes
+
+### Task p07-t01: Preserve configured model provenance for bare Cursor targets
+
+**Review finding:** `I1` from `final-review-2026-07-18T180150Z.md`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
+- Modify: `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts`
+
+**Step 1: Add the failing legacy-target regression**
+
+Create a command-level fixture for the documented bare provider form `workflow.dispatchCeiling.providers.cursor: "gpt-5.6-sol-high"`. Require successful compilation to `oat-reviewer-gpt-5-6-sol-high`, `modelAxis: selected:gpt-5.6-sol-high`, a Dispatch Report model control with mechanism `materialized-role`, and runtime identity `not-reported`. Preserve the existing unresolved behavior for genuinely unmapped or uncompiled selections.
+
+**Step 2: Derive model provenance only from a successful Cursor variant selection**
+
+When the Cursor model-axis provider has successfully compiled a non-empty pinned `variant` but has no concrete route target, derive the selected model axis from `selection.selectedValue`. Keep concrete `selection.target.model` and `{ model }` dispatch arguments authoritative. Do not apply this fallback to Codex, where `selection.selectedValue` may represent effort rather than model, and do not promote the configured value into observed runtime identity.
+
+**Step 3: Run focused verification**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/dispatch-ceiling/index.test.ts src/providers/identity/dispatch-report.test.ts
+pnpm --filter @open-agent-toolkit/cli type-check
+pnpm --filter @open-agent-toolkit/cli lint
+```
+
+Expected: the bare Cursor compatibility form reports launcher-owned configured model provenance through the materialized role, matrix-backed Cursor and Codex behavior remain unchanged, and focused verification passes.
+
+**Step 4: Re-run the release boundary**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli test
+pnpm build
+pnpm format
+pnpm release:validate
+pnpm run --silent cli:source -- sync --scope all --dry-run --json
+git diff --exit-code -- apps/oat-docs/index.md packages/cli/assets
+```
+
+Expected: package version `0.1.73` remains the single PR-scoped lockstep bump, all release checks pass, the sync dry-run plans zero operations, and generated assets remain clean.
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/commands/project/dispatch-ceiling/index.ts packages/cli/src/commands/project/dispatch-ceiling/index.test.ts
+git commit -m "fix(p07-t01): preserve bare cursor model provenance"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
@@ -794,7 +850,7 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 | p04    | code     | passed          | 2026-07-18 | reviews/code-p04-rereview-2026-07-18T123821Z.md               |
 | p05    | code     | passed          | 2026-07-18 | reviews/code-p05-review-2026-07-18T133600Z.md                 |
 | p06    | code     | passed          | 2026-07-18 | reviews/code-p06-review-2026-07-18T142950Z.md                 |
-| final  | code     | received        | 2026-07-18 | reviews/final-review-2026-07-18T180150Z.md                    |
+| final  | code     | fixes_added     | 2026-07-18 | reviews/archived/final-review-2026-07-18T180150Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
@@ -816,10 +872,11 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 - Phase 4: 4 tasks - Dispatch guidance, recommendation, docs, and planning-producer gate identity.
 - Phase 5: 1 task - Generated provider views and persisted native-launch handoff.
 - Phase 6: 1 task plus the final HiLL checkpoint - Lockstep public-package versioning, release validation, and final native role-launch evidence.
+- Phase 7: 1 task - Final-review fix for legacy bare Cursor configured-model provenance.
 
-**Total: 13 implementation tasks plus 1 completed pre-implementation gate**
+**Total: 14 implementation tasks plus 1 completed pre-implementation gate**
 
-Ready for code review and merge after all tasks and reviews pass.
+Ready for final re-review and merge after p07-t01 passes implementation and release verification.
 
 ---
 

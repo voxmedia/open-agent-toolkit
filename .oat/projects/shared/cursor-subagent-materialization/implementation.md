@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_current_task_id: p07-t01
 oat_generated: false
 ---
 
@@ -61,8 +61,9 @@ oat_generated: false
 | p04   | complete | 4     | 4/4       |
 | p05   | complete | 1     | 1/1       |
 | p06   | complete | 1     | 1/1       |
+| p07   | pending  | 1     | 0/1       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/14 tasks completed
 
 ---
 
@@ -198,6 +199,35 @@ oat_generated: false
 - The exact generated reviewer and phase-implementer native types launched serially in Cursor IDE, each reported `subagent_model: gpt-5.6-sol-high`, and both stopped `completed`.
 - After the bounded final-gate aggregation fix, CLI lint/type-check/test, workspace build/format, `pnpm release:validate`, all-scope sync dry-run, and generated asset/index cleanliness passed again.
 - The verification record preserves configured launch observation as the evidence boundary; generalized runtime model and effort remain `not-reported`.
+
+---
+
+## Phase p07: Final Review Fixes
+
+**Status:** pending
+**Current task:** `p07-t01`
+
+### Review Received: final
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T180150Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 0
+
+**Finding disposition:**
+
+- `I1` — converted to `p07-t01`: preserve launcher-owned configured model provenance for the documented bare Cursor provider target while retaining Codex semantics and `not-reported` runtime identity.
+
+**New tasks added:** `p07-t01`
+
+**Deferred Medium ledger:** empty; the final review and prior implementation notes contain no deferred Medium findings.
+
+**Next:** Execute `p07-t01` through `oat-project-implement`, rerun its release boundary, and perform a focused final re-review before closeout.
 
 ---
 
