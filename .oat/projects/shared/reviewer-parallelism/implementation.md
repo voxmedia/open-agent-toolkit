@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t03
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | in_progress | 3     | 2/3       |
+| Phase 3 | in_progress | 3     | 3/3       |
 
-**Total:** 4/5 tasks completed
+**Total:** 5/5 tasks completed
 
 ---
 
@@ -201,8 +201,25 @@ oat_generated: false
 
 ### Task p03-t03: Correct the release to the next unpublished lockstep version
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** cde08669c3ddc51fdf80166ad99a3a4ed3984a9f
+
+**Outcome (required when completed):**
+
+- Release surfaces now use unpublished lockstep version `0.2.1`, derived from upstream `0.2.0` and verified absent for every public package immediately before commit.
+
+**Files changed:**
+
+- Five public package manifests, bundled public versions, sync manifest, and PJM current-state release attribution.
+
+**Verification:**
+
+- Run: complete lint, type, test, build, docs, sync, registry-uniqueness, formatting, and release-validation suite.
+- Result: pass; all five `0.2.1` tarballs validate and provider dry-run reports no drift.
+
+**Notes / Decisions:**
+
+- Upstream history was not merged or rewritten; the bounded correction integrated the authoritative release baseline through the next unused patch.
 
 ---
 
