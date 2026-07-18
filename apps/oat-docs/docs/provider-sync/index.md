@@ -5,11 +5,16 @@ description: Standalone adoption lane for canonical assets, provider views, sync
 
 # Provider Sync
 
-Provider Sync is the OAT lane for keeping a canonical rules-and-skills layout in sync with provider-specific surfaces such as Claude, Cursor, Copilot, Gemini, or Codex.
+Provider Sync is the OAT lane for reconciling a canonical rules-and-skills
+layout with provider-specific surfaces such as Claude, Cursor, Copilot, Gemini,
+or Codex.
 
 You can adopt this layer on its own. It does not require tracked OAT projects, and it is the right starting point when you mainly want interoperability and drift control.
 
-In practice, you edit the canonical layout in `.agents/` and `.oat/`, then let OAT generate or reconcile provider-specific views for Claude Code, Cursor, Copilot, Gemini, Codex, and other supported providers.
+In practice, you edit the canonical layout in `.agents/` and `.oat/`. OAT
+generates provider-specific views where required, leaves native-read assets in
+their canonical directories, and keeps intentional provider-local adoption
+surfaces visible.
 
 ## Contents
 
@@ -22,13 +27,19 @@ In practice, you edit the canonical layout in `.agents/` and `.oat/`, then let O
 
 ## What This Section Is
 
-This section explains how OAT treats `.agents/` and `.oat/` as the source of truth, how provider views are derived from those canonical assets, and how sync/adoption workflows keep everything aligned.
+This section explains how OAT treats `.agents/` and `.oat/` as the source of
+truth, when provider views are derived from those canonical assets, how
+native-read mappings avoid redundant output, and how provider-local adoption
+surfaces remain discoverable.
 
 ## What OAT Treats As Canonical
 
 - canonical skills, agents, and rules under `.agents/`
 - sync state and related metadata under `.oat/`
-- provider-specific files as derived views unless they are explicitly adopted back into canonical form
+- provider-specific files as derived views when a mapping requires output
+- native-read assets in canonical directories without mirrored provider files
+- provider-local extension files as adoption candidates until explicitly
+  adopted or remembered as intentional strays
 
 ## Who It's For
 
@@ -41,7 +52,8 @@ This section explains how OAT treats `.agents/` and `.oat/` as the source of tru
 1. Run `oat init` to create the base OAT layout and setup state.
 2. Inspect current sync state with `oat status`.
 3. Adjust provider enablement with `oat providers ...` if needed.
-4. Run `oat sync` to materialize provider views from canonical assets.
+4. Run `oat sync` to materialize required provider views and reconcile managed
+   state. Native-read assets do not produce provider-view operations.
 5. Re-run `oat status` after edits to confirm whether anything drifted or needs adoption.
 
 ## Start Here

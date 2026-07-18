@@ -30,7 +30,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.1.75` makes Cursor skills native-read from project and user
+- CLI `0.1.76` makes Cursor skills native-read from project and user
   `.agents/skills` roots while retaining `.cursor/skills` as an explicit
   Cursor-only extension and migration surface. Interactive `init` and `status`
   require an adopt-or-keep decision per local skill, keep-local choices persist

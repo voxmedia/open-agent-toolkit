@@ -138,7 +138,9 @@ abort, and retain the existing non-Cursor checklist behavior.
   describes Cursor native-read skills and provider-local adoption behavior.
 - The canonical skills guide and bundled skill reference are aligned, with the
   required skill version bump.
-- All five public packages are versioned at `0.1.73`.
+- Phase p04 initially versioned all five public packages at `0.1.73`.
+  Subsequent `origin/main` reconciliation and the final documentation follow-up
+  advance the branch release to `0.1.76`.
 - Reviewed sync reconciliation removed 72 project and 55 user Cursor skill
   symlinks, with no detach or unverified operations.
 - A post-apply dry-run reports no remaining provider mutations.

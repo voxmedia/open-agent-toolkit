@@ -20,6 +20,17 @@ description: 'Common issues and fixes for skills visibility, worktrees, sync, an
 
 Expected for native-read skill mappings. Codex can read canonical skills without mirrored provider writes.
 
+## Cursor appears detected but no skill sync actions are listed
+
+Expected for native-read skill mappings. Verify project skills under
+`.agents/skills` and personal skills under `~/.agents/skills`; Cursor reads
+those canonical directories directly. Sync will not create `.cursor/skills`
+mirrors.
+
+Use `.cursor/skills` only for intentionally Cursor-specific packages. Interactive
+`oat init` and `oat status` offer each unresolved Cursor-local skill for
+canonical adoption or a remembered Keep Cursor-only choice.
+
 ## `sync` reports provider config mismatch
 
 - For interactive runs, select detected providers to enable when prompted.

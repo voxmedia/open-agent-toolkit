@@ -41,7 +41,7 @@ canonical inventory or intentionally keep it Cursor-only.
   the legacy key, and is safe to retry.
 - The feature was reconciled with the latest `origin/main`, including Cursor
   managed-agent materialization, and the five lockstep public packages were
-  validated at `0.1.75`.
+  validated at `0.1.76` after the final documentation audit.
 
 ## Key Decisions
 
@@ -88,4 +88,4 @@ canonical inventory or intentionally keep it Cursor-only.
 - General user-config writers must continue routing through the shared migration
   boundary before rewriting `~/.oat/config.json`.
 - The release definition of done includes the lockstep package set and
-  `pnpm release:validate`; this project ships in version `0.1.75`.
+  `pnpm release:validate`; this project ships in version `0.1.76`.
