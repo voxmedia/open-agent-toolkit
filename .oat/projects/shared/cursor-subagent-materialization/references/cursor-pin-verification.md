@@ -1,6 +1,6 @@
 # Cursor Pin Verification (Gate g01)
 
-status: complete
+status: awaiting-final-launch
 
 ## Outcome
 
@@ -51,6 +51,17 @@ Conversation `64f65057-f29c-4768-b3f1-95235a2c2496` successfully launched both c
 **Additional diagnostic probes:** 1 (`oat-pin-probe-composer-2-5-non-fast`)
 
 **Disposition totals:** 15 approved, 0 excluded, 0 inconclusive
+
+## Final Generated Role Launch Handoff
+
+status: awaiting-final-launch
+
+The operator will launch these committed generated definitions from a fresh Cursor IDE Agent Chat after p06 release validation. This phase records configured native types and pins only; it does not perform or claim the final launches.
+
+| role              | exact native type                        | exact bracket-form `model:` value |
+| ----------------- | ---------------------------------------- | --------------------------------- |
+| reviewer          | `oat-reviewer-gpt-5-6-sol-high`          | `gpt-5.6-sol[reasoning=high]`     |
+| phase implementer | `oat-phase-implementer-gpt-5-6-sol-high` | `gpt-5.6-sol[reasoning=high]`     |
 
 ## Mapping-Specific Evidence
 
