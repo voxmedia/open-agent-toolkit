@@ -26,6 +26,16 @@ This skill is the canonical core. It must not depend on `oat-explainer-kit` or
 OAT project state. Adapters and private wrappers may construct a core run
 request and consume its manifest, build record, and optional publish receipt.
 
+## Wrapper Extension Seam
+
+Wrappers own private pre-resolution and post-run work. They resolve presets,
+vaults, external documents, and personal destinations before translating the
+result into one `ExplainerRunRequestV1`; after the core run, they consume the
+versioned manifest and optional receipt to create links or companion records.
+They must not inject private work between core stages or expose private lanes as
+public config. See `references/extension-contract.md` for the frozen sequence,
+version policy, and compatibility fixture.
+
 ## Asset Resolution
 
 Resolve schemas, recipes, templates, scripts, examples, and references relative

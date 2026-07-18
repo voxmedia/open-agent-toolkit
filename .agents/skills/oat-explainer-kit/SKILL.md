@@ -26,6 +26,11 @@ This adapter depends on `explainer-kit`; the core never depends on this adapter.
 Fail closed when the compatible installed core is unavailable. Do not copy core
 runtime logic into the adapter.
 
+Private wrappers use the core's frozen pre-resolution/request/core-run/manifest/
+post-run seam directly; they do not route presets, vaults, Google Docs, Stoa, or
+personal destinations through this adapter. For the release-candidate sequence,
+rollback, and operator-owned real-wrapper gate, use `references/migration.md`.
+
 Before reading OAT config or invoking the core, call
 `scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
 directory and minimum core version `1.0.0`. Continue only when it returns

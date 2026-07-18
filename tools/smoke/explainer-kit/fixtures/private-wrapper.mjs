@@ -1,0 +1,152 @@
+import { readFile } from 'node:fs/promises';
+
+import { runExplainer } from '../../../../.agents/skills/explainer-kit/scripts/run.mjs';
+
+export const PERSONAL_PRESETS_EXAMPLE = Object.freeze({
+  'personal-oat': Object.freeze({
+    publicBaseUrl: 'https://dy4vzrzaexuy5.cloudfront.net',
+    publish: Object.freeze({
+      provider: 's3-static',
+      s3Uri: 's3://tkstang-open-agent-toolkit/explainers',
+      awsRegion: 'us-east-1',
+    }),
+  }),
+});
+
+export function preResolvePrivateWrapper({
+  presetName,
+  presets,
+  invocation,
+  privateLanes = {},
+}) {
+  const preset = presets?.[presetName];
+  if (!preset) {
+    throw new Error(`Unknown private wrapper preset: ${presetName}.`);
+  }
+  if (!invocation?.outputRoot || !invocation?.factBasePath) {
+    throw new Error(
+      'Private wrapper invocation requires outputRoot and factBasePath.',
+    );
+  }
+
+  return {
+    preset: structuredClone(preset),
+    privateLanes: structuredClone(privateLanes),
+    request: {
+      schemaVersion: 'explainer-kit.run-request/v1',
+      recipe: structuredClone(invocation.recipe),
+      slug: invocation.slug,
+      outputRoot: invocation.outputRoot,
+      factBase: {
+        mode: 'supplied',
+        path: invocation.factBasePath,
+        freshnessPolicy: 'live-wins',
+      },
+      theme: {
+        palette: invocation.palette ?? 'neutral',
+        visualProfile: invocation.visualProfile ?? 'clean',
+        renderStrategy: invocation.renderStrategy ?? 'default-only',
+      },
+      publicBaseUrl: preset.publicBaseUrl,
+      durability: { strategy: 'none' },
+      privacy: { retainRawArtDirection: false },
+      mode: 'unattended',
+    },
+  };
+}
+
+export async function runPrivateWrapper({
+  presetName,
+  presets,
+  invocation,
+  privateLanes,
+  writeStoaNote,
+  syncGoogleDoc,
+  coreOptions = {},
+}) {
+  const preResolved = preResolvePrivateWrapper({
+    presetName,
+    presets,
+    invocation,
+    privateLanes,
+  });
+  const result = await runExplainer(preResolved.request, coreOptions);
+  if (result.outcome === 'failed' || result.outcome === 'incomplete') {
+    throw new Error(
+      `Core run did not produce a consumable manifest: ${result.outcome}.`,
+    );
+  }
+
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assertConsumableManifest(manifest, result, preResolved.request);
+  const links = manifest.artifacts
+    .filter(
+      ({ status, renderedPath }) =>
+        status === 'built' && typeof renderedPath === 'string',
+    )
+    .map(({ id, type, renderedPath }) => {
+      if (!renderedPath.startsWith('site/')) {
+        throw new Error(
+          `Manifest rendered path is outside the publish mirror: ${renderedPath}.`,
+        );
+      }
+      return {
+        id,
+        type,
+        url: `${preResolved.preset.publicBaseUrl}/${renderedPath.slice('site/'.length)}`,
+      };
+    });
+  const postRun = [];
+
+  if (preResolved.privateLanes.stoa) {
+    if (typeof writeStoaNote !== 'function') {
+      throw new Error('The Stoa lane requires writeStoaNote.');
+    }
+    postRun.push(
+      await writeStoaNote({
+        ...preResolved.privateLanes.stoa,
+        slug: manifest.slug,
+        manifestPath: result.manifestPath,
+        links,
+      }),
+    );
+  }
+  if (preResolved.privateLanes.gdocs) {
+    if (typeof syncGoogleDoc !== 'function') {
+      throw new Error('The Google Docs lane requires syncGoogleDoc.');
+    }
+    postRun.push(
+      await syncGoogleDoc({
+        ...preResolved.privateLanes.gdocs,
+        slug: manifest.slug,
+        manifestPath: result.manifestPath,
+        links,
+      }),
+    );
+  }
+
+  return {
+    preResolved,
+    request: preResolved.request,
+    result,
+    manifest,
+    links,
+    postRun,
+  };
+}
+
+function assertConsumableManifest(manifest, result, request) {
+  if (manifest.schemaVersion !== 'explainer-kit.manifest/v1') {
+    throw new Error(
+      `Unsupported manifest version: ${manifest.schemaVersion ?? 'missing'}.`,
+    );
+  }
+  if (
+    manifest.runId !== result.runId ||
+    manifest.slug !== request.slug ||
+    manifest.recipe?.id !== request.recipe.id ||
+    manifest.recipe?.version !== request.recipe.version
+  ) {
+    throw new Error('Manifest identity does not match the wrapper core run.');
+  }
+}
