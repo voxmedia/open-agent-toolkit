@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: 4d1321e2
+oat_current_task: p03-t01
+oat_last_commit: e72516a2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T00:34:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T00:48:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 complete; Phase 2 ready at p02-t01
+Implementation - Phases 1–2 complete; Phase 3 ready at p03-t01
 
 ## Artifacts
 
@@ -58,14 +58,15 @@ Implementation - Phase 1 complete; Phase 2 ready at p02-t01
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress; 6/13 tasks complete)
+- **Implementation:** `implementation.md` (in progress; 8/13 tasks complete)
 
 ## Progress
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Phase 1 CLI foundation complete and verified
-- ⧗ Phase 2 scaffold and gate integration
+- ✓ Phase 2 scaffold and gate integration complete and verified
+- ⧗ Phase 3 skill integrations, docs, and release bookkeeping
 
 ## Blockers
 
@@ -73,4 +74,4 @@ None
 
 ## Next Milestone
 
-Complete p02-t01 and p02-t02
+Resolve graduated-entry semantics, then complete p03-t01 through p03-t05

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 6     | 6/6       |
-| Phase 2 | pending   | 2     | 0/2       |
+| Phase 2 | completed | 2     | 2/2       |
 | Phase 3 | pending   | 5     | 0/5       |
 
-**Total:** 6/13 tasks completed
+**Total:** 8/13 tasks completed
 
 ---
 
@@ -155,20 +155,45 @@ oat_generated: false
 
 ## Phase 2: Scaffold and gate integration
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
+
+### Phase Summary
+
+**Outcome:**
+
+- Added explicit `oat project new` opt-in/opt-out flags and config-driven scaffold behavior.
+- Added once-only project-log finalization for all six gate terminal outcomes without changing gate results when logging fails.
+
+**Verification:**
+
+- Run: `pnpm format`; `pnpm lint`; `pnpm type-check`; combined scaffold/gate suites.
+- Result: all passed; 310 tests.
 
 ### Task p02-t01: Add project-log scaffold flags
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4d9be92a
+
+**Outcome:**
+
+- `oat project new` now honors `--with-project-log`, `--no-project-log`, and `workflow.projectLog` while using the real canonical template.
 
 ---
 
 ### Task p02-t02: Append gate review structural entries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e72516a2
+
+**Outcome:**
+
+- Every gate terminal path invokes one shared finalizer that appends exactly one structural entry; append failures remain non-fatal to gate semantics.
+
+**Issues Encountered:**
+
+- Initial new-test assertions hardcoded `p02` while the fixtures resolved `p01`; expectations were corrected to the actual review scope and the full suite passed.
 
 ---
 
@@ -207,6 +232,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Outstanding:** define whether and how project-scoped entries are marked as graduated for repository-ledger inclusion before p03-t02.
 
+### Run 2 — 2026-07-18
+
+**Branch:** `orchestration-run-log`
+**Dispatch policy:** high
+**Resolved target:** `oat-phase-implementer` via Cursor (inherited current model)
+**Request:** `run-log-p02-2026-07-17`
+
+| Phase | Outcome | Commits                  | Verification |
+| ----- | ------- | ------------------------ | ------------ |
+| p02   | DONE    | `4d9be92a..e72516a2` (2) | passed       |
+
+**Outstanding:** none introduced.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -232,6 +270,17 @@ Chronological log of implementation progress.
 
 ---
 
+### 2026-07-18 — Phase 2
+
+- [x] p02-t01: scaffold flags - 4d9be92a
+- [x] p02-t02: gate structural entries - e72516a2
+
+**What changed:** completed scaffold and gate integration and advanced the next task to p03-t01.
+
+**Blocker before p03-t02:** choose the v1 meaning of “graduated” project-scoped ledger entries.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
@@ -247,7 +296,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 343       | 343    | 0      | Targeted |
-| 2     | -         | -      | -      | -        |
+| 2     | 310       | 310    | 0      | Targeted |
 | 3     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
