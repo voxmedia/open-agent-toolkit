@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "oatVersion": "0.1.73",
+  "oatVersion": "0.1.77",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -803,5 +803,5 @@
       "lastSynced": "2026-07-14T00:27:35.913Z"
     }
   ],
-  "lastUpdated": "2026-07-18T15:42:04.772Z"
+  "lastUpdated": "2026-07-18T21:54:06.887Z"
 }
