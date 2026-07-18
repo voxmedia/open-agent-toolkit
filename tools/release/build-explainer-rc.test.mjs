@@ -103,6 +103,54 @@ test('builds retained tarballs and a stable timestamp-free RC identity', async (
   assert.equal(assetStatus, '');
 });
 
+test('hashes tracked internal directory and file symlinks as links', async () => {
+  const fixture = await createFixture();
+
+  const result = await runBuilder(fixture, 'symlinked-inputs');
+
+  assert.match(result.record.rcId, /^sha256:[a-f0-9]{64}$/);
+});
+
+test('fails closed for dangling and external-target candidate symlinks', async () => {
+  const dangling = await createFixture({
+    prepareInputs: async (root) => {
+      await symlink(
+        'missing.md',
+        join(root, '.agents/skills/oat-project-plan/dangling.md'),
+      );
+    },
+  });
+  assert.equal((await runBuilderFailure(dangling)).code, 'E_CANDIDATE_SYMLINK');
+
+  const externalRoot = await mkdtemp(join(tmpdir(), 'explainer-rc-external-'));
+  tempRoots.push(externalRoot);
+  const externalFile = join(externalRoot, 'outside.md');
+  await writeFile(externalFile, 'outside declared inputs\n');
+  const external = await createFixture({
+    prepareInputs: async (root) => {
+      await symlink(
+        externalFile,
+        join(root, '.agents/skills/oat-project-plan/external.md'),
+      );
+    },
+  });
+  assert.equal((await runBuilderFailure(external)).code, 'E_CANDIDATE_SYMLINK');
+});
+
+test('fails closed when a candidate symlink targets an undeclared repository input', async () => {
+  const fixture = await createFixture({
+    prepareInputs: async (root) => {
+      await writeText(join(root, 'private/undeclared.md'), 'undeclared\n');
+      await symlink(
+        '../../../private/undeclared.md',
+        join(root, '.agents/skills/oat-project-plan/undeclared.md'),
+      );
+    },
+  });
+
+  assert.equal((await runBuilderFailure(fixture)).code, 'E_CANDIDATE_SYMLINK');
+});
+
 test('rejects tracked or untracked changes to release candidate inputs', async () => {
   const fixture = await createFixture();
   await writeFile(
@@ -223,7 +271,7 @@ test('atomically replaces only an RC output carrying the ownership marker', asyn
   assert.equal(marker.schemaVersion, 'explainer-kit.rc-output-owner/v1');
 });
 
-async function createFixture() {
+async function createFixture({ prepareInputs = async () => {} } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'explainer-rc-'));
   tempRoots.push(root);
   const bin = join(root, 'bin');
@@ -276,6 +324,25 @@ async function createFixture() {
       join(root, '.agents/skills/oat-project-plan/SKILL.md'),
       skill('oat-project-plan'),
     ),
+    writeText(
+      join(
+        root,
+        '.agents/skills/oat-agent-instructions-analyze/references/docs/guide.md',
+      ),
+      '# Guide\n',
+    ),
+    writeText(
+      join(root, '.agents/skills/oat-agent-instructions-apply/SKILL.md'),
+      skill('oat-agent-instructions-apply'),
+    ),
+    writeText(
+      join(root, '.agents/skills/create-agnostic-skill/SKILL.md'),
+      skill('create-agnostic-skill'),
+    ),
+    writeText(
+      join(root, '.agents/docs/skills-guide.md'),
+      '# Canonical skill guide\n',
+    ),
     writeText(join(root, '.agents/agents/oat-reviewer.md'), '# Reviewer\n'),
     writeText(join(root, '.oat/templates/plan.md'), '# Plan\n'),
     writeText(join(root, '.oat/templates/ideas/example.md'), '# Idea\n'),
@@ -284,6 +351,35 @@ async function createFixture() {
       '#!/usr/bin/env bash\n',
     ),
   ]);
+  await mkdir(
+    join(root, '.agents/skills/oat-agent-instructions-apply/references'),
+    { recursive: true },
+  );
+  await mkdir(
+    join(root, '.agents/skills/create-agnostic-skill/references/docs'),
+    { recursive: true },
+  );
+  await Promise.all([
+    symlink(
+      '../../oat-agent-instructions-analyze/references/docs',
+      join(root, '.agents/skills/oat-agent-instructions-apply/references/docs'),
+    ),
+    symlink(
+      'guide.md',
+      join(
+        root,
+        '.agents/skills/oat-agent-instructions-analyze/references/docs/guide-link.md',
+      ),
+    ),
+    symlink(
+      '../../../../docs/skills-guide.md',
+      join(
+        root,
+        '.agents/skills/create-agnostic-skill/references/docs/skills-guide.md',
+      ),
+    ),
+  ]);
+  await prepareInputs(root);
   await mkdir(bin, { recursive: true });
   await writeFile(
     join(bin, 'pnpm'),

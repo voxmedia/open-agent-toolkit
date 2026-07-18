@@ -7,6 +7,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  readlink,
   readdir,
   realpath,
   rename,
@@ -263,13 +264,191 @@ async function snapshotTrackedCandidates(repoRoot) {
       .filter(Boolean)
       .forEach((path) => paths.add(path));
   }
+  const canonicalRoot = await realpath(repoRoot);
   const entries = await Promise.all(
     sorted(paths).map(async (path) => [
       path,
-      await hashFile(join(repoRoot, path)),
+      await hashCandidateInput({
+        repoRoot,
+        canonicalRoot,
+        path,
+        declaredPaths: paths,
+      }),
     ]),
   );
   return new Map(entries);
+}
+
+async function hashCandidateInput({
+  repoRoot,
+  canonicalRoot,
+  path,
+  declaredPaths,
+}) {
+  const absolutePath = join(repoRoot, path);
+  const stats = await lstat(absolutePath);
+  if (stats.isFile()) return hashFile(absolutePath);
+  if (!stats.isSymbolicLink()) {
+    throw candidateSymlinkError(
+      'Release candidate inputs must be regular files or safe symlinks.',
+    );
+  }
+
+  const link = await readlink(absolutePath);
+  await validateCandidateSymlink({
+    repoRoot,
+    canonicalRoot,
+    linkPath: absolutePath,
+    link,
+    declaredPaths,
+    visitedDirectories: new Set(),
+  });
+  return hashBytes(Buffer.from(`symlink\0${link}`));
+}
+
+async function validateCandidateSymlink({
+  repoRoot,
+  canonicalRoot,
+  linkPath,
+  link,
+  declaredPaths,
+  visitedDirectories,
+}) {
+  const lexicalTarget = resolve(dirname(linkPath), link);
+  if (!isContained(resolve(repoRoot), lexicalTarget)) {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must not target outside the repository.',
+    );
+  }
+
+  let lexicalStats;
+  try {
+    await rejectSymlinkAncestors(resolve(repoRoot), lexicalTarget);
+    lexicalStats = await lstat(lexicalTarget);
+  } catch {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must resolve to an existing declared input.',
+    );
+  }
+  if (lexicalStats.isSymbolicLink()) {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must not resolve through another symlink.',
+    );
+  }
+
+  let target;
+  try {
+    target = await realpath(lexicalTarget);
+  } catch {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must resolve to an existing declared input.',
+    );
+  }
+  if (!isContained(canonicalRoot, target)) {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must not resolve outside the repository.',
+    );
+  }
+
+  const stats = await lstat(target);
+  if (stats.isFile()) {
+    requireDeclaredTarget(canonicalRoot, target, declaredPaths);
+    return;
+  }
+  if (stats.isDirectory()) {
+    await validateDeclaredDirectory({
+      repoRoot,
+      canonicalRoot,
+      directory: target,
+      declaredPaths,
+      visitedDirectories,
+    });
+    return;
+  }
+  throw candidateSymlinkError(
+    'Release candidate symlink targets must be files or directories.',
+  );
+}
+
+async function validateDeclaredDirectory({
+  repoRoot,
+  canonicalRoot,
+  directory,
+  declaredPaths,
+  visitedDirectories,
+}) {
+  const canonicalDirectory = await realpath(directory);
+  if (visitedDirectories.has(canonicalDirectory)) {
+    throw candidateSymlinkError(
+      'Release candidate symlinks must not contain directory cycles.',
+    );
+  }
+  visitedDirectories.add(canonicalDirectory);
+  try {
+    for (const entry of await readdir(canonicalDirectory, {
+      withFileTypes: true,
+    })) {
+      const path = join(canonicalDirectory, entry.name);
+      const stats = await lstat(path);
+      if (stats.isFile()) {
+        requireDeclaredTarget(canonicalRoot, path, declaredPaths);
+      } else if (stats.isDirectory()) {
+        await validateDeclaredDirectory({
+          repoRoot,
+          canonicalRoot,
+          directory: path,
+          declaredPaths,
+          visitedDirectories,
+        });
+      } else if (stats.isSymbolicLink()) {
+        requireDeclaredTarget(canonicalRoot, path, declaredPaths);
+        await validateCandidateSymlink({
+          repoRoot,
+          canonicalRoot,
+          linkPath: path,
+          link: await readlink(path),
+          declaredPaths,
+          visitedDirectories,
+        });
+      } else {
+        throw candidateSymlinkError(
+          'Release candidate symlink targets contain an unsupported filesystem entry.',
+        );
+      }
+    }
+  } finally {
+    visitedDirectories.delete(canonicalDirectory);
+  }
+}
+
+function requireDeclaredTarget(canonicalRoot, target, declaredPaths) {
+  const path = relative(canonicalRoot, target).split(sep).join('/');
+  if (!declaredPaths.has(path)) {
+    throw candidateSymlinkError(
+      `Release candidate symlink target is not declared: ${path}.`,
+    );
+  }
+}
+
+async function rejectSymlinkAncestors(root, target) {
+  const parts = relative(root, target).split(sep).slice(0, -1);
+  let current = root;
+  for (const part of parts) {
+    current = join(current, part);
+    if ((await lstat(current)).isSymbolicLink()) {
+      throw candidateSymlinkError(
+        'Release candidate symlinks must not traverse symlinked directories.',
+      );
+    }
+  }
+}
+
+function isContained(root, candidate) {
+  return candidate === root || candidate.startsWith(`${root}${sep}`);
+}
+
+function candidateSymlinkError(message) {
+  return new RcBuildError('E_CANDIDATE_SYMLINK', message);
 }
 
 function findHashChanges(before, after) {

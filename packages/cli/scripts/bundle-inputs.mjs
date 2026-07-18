@@ -106,6 +106,14 @@ export const BUNDLE_INPUTS = Object.freeze({
     'generate-thin-index.sh',
     'resolve-tracking.sh',
   ]),
+  linkedFiles: Object.freeze([
+    '.agents/docs/agent-instruction.md',
+    '.agents/docs/autonomy-contract.md',
+    '.agents/docs/cursor-rules-files.md',
+    '.agents/docs/provider-reference.md',
+    '.agents/docs/rules-files.md',
+    '.agents/docs/skills-guide.md',
+  ]),
   publicVersionPackages: Object.freeze([
     'cli',
     'docs-config',
@@ -148,6 +156,7 @@ export function releaseCandidatePathspecGroups() {
         (name) => `.oat/templates/${name}`,
       ),
       ...BUNDLE_INPUTS.oatScripts.map((name) => `.oat/scripts/${name}`),
+      ...BUNDLE_INPUTS.linkedFiles,
       BUNDLE_INPUTS.docsRoot,
       BUNDLE_INPUTS.migrationPrompt,
       BUNDLE_INPUTS.dispatchMatrix,
