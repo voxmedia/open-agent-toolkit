@@ -794,7 +794,7 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 | p04    | code     | passed          | 2026-07-18 | reviews/code-p04-rereview-2026-07-18T123821Z.md               |
 | p05    | code     | passed          | 2026-07-18 | reviews/code-p05-review-2026-07-18T133600Z.md                 |
 | p06    | code     | passed          | 2026-07-18 | reviews/code-p06-review-2026-07-18T142950Z.md                 |
-| final  | code     | pending         | -          | -                                                             |
+| final  | code     | received        | 2026-07-18 | reviews/final-review-2026-07-18T180150Z.md                    |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
