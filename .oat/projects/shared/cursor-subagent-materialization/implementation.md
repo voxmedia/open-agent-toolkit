@@ -279,7 +279,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### Run 6 — final-gate routing repair and p06 revalidation
 
-- **Status:** complete; final gate ready to rerun.
+- **Status:** blocked after configured final-gate attempts.
 - **Trigger:** two stopped final-review gate attempts selected an OpenAI reviewer because the relevant implementation stamp recorded `producer=unknown`; neither attempt produced a review artifact eligible for receipt.
 - **Operator authorization:** use configured implementation target family as a bounded fallback when final/range aggregation cannot claim the stamped producer.
 - **Fix commits:** `d6e37c15`, `53208704`, `31fdc951`.
@@ -287,7 +287,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Review:** independent bounded review passed with zero Critical, Important, Medium, or Minor findings after two documentation/test refinements.
 - **Verification:** focused gate tests, CLI type-check/lint, skill validators, docs lint/build, formatting, all-scope sync dry-run, and generated cleanliness passed. The full p06 boundary then passed again: CLI lint/type-check/test, workspace build/format, and `pnpm release:validate`.
 - **Known baseline:** docs link checking still reports only the two pre-existing p04 anchor defects.
-- **Next:** rerun and receive the configured cross-family final code review.
+- **Final gate attempts:** run IDs `3c7bf80a-fd73-42a2-9757-267d395d7410` and `50deb7cf-f62e-4175-80ee-e243c6695b58` both selected `cursor-fable-5-xhigh`, confirming cross-family routing. Each reviewer completed substantive inspection and passing verification in its transcript, then hit the `1800000ms` scope-default budget immediately before artifact creation. Neither run produced a canonical review artifact, so neither is receive-eligible.
+- **Next:** operator decision required after the configured `maxAttempts: 2` were exhausted: authorize one extended-budget operational retry or choose an explicit alternative final-review disposition.
 
 <!-- orchestration-runs-end -->
 

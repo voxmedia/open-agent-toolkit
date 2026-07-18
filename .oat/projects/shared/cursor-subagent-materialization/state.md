@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: 31fdc9510b5f33a89100975890ccd0d439ec593a
-oat_blockers: []
+oat_blockers:
+  - 'Configured final review exhausted two 30-minute cursor-fable-5-xhigh attempts without producing a canonical review artifact; operator disposition required.'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,19 +39,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T16:39:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T17:42:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Implementation Tasks and HiLL Complete — Awaiting Final Review
+**Status:** Blocked — Final Review Attempts Timed Out Before Artifact Creation
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. The bounded final-gate routing fix passed independent review and the full p06 release boundary again. Final review is next.
+All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. The bounded final-gate routing fix passed independent review and the full p06 release boundary again. Both configured cross-family final-review attempts selected Cursor Fable and completed substantive review work but timed out before writing a canonical artifact.
 
 ## Artifacts
 
@@ -79,8 +80,8 @@ All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE
 
 ## Blockers
 
-None
+The configured final-review gate exhausted `maxAttempts: 2`. Both `cursor-fable-5-xhigh` attempts hit the `1800000ms` timeout immediately before artifact creation; no artifact is receive-eligible. Operator disposition is required.
 
 ## Next Milestone
 
-Run the final independent code review.
+Authorize an extended-budget operational retry or choose an explicit alternative final-review disposition.
