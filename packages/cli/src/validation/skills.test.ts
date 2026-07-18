@@ -1549,7 +1549,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.1.7'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.20'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.2'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.3'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.2'],
@@ -3802,15 +3802,15 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-summary/SKILL.md',
     );
-    const stepSix = content.match(
-      /### Step 6: Promote Key Decisions[\s\S]*?(?=### Step 7:)/,
+    const stepSeven = content.match(
+      /### Step 7: Promote Key Decisions[\s\S]*?(?=### Step 8:)/,
     )?.[0];
 
-    expect(stepSix).toBeDefined();
-    expect(stepSix).toMatch(
+    expect(stepSeven).toBeDefined();
+    expect(stepSeven).toMatch(
       /oat decision new "<title>"[\s\S]*--context "<context>"[\s\S]*--decision "<decision>"[\s\S]*--consequences "<consequences>"/,
     );
-    expect(stepSix).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
+    expect(stepSeven).not.toMatch(/oat decision new[\s\S]{0,300}\bTODO\b/);
   });
 
   it('requires backlog capture to use atomic CLI creation with the confirmed estimate', async () => {

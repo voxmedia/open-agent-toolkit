@@ -229,6 +229,56 @@ describe('review skill contracts', () => {
     expect(appendPoints).toContain('fix-loop count');
   });
 
+  it('pins oat-project-summary project-log graduation and roll-up ordering', () => {
+    const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
+    const graduationIndex = content.indexOf(
+      '### Step 2.5: Check Project Log and Offer Ledger Graduation',
+    );
+    const summaryAuthoringIndex = content.indexOf(
+      '### Step 4: Generate / Update Summary Sections',
+    );
+    const rollupIndex = content.indexOf(
+      '### Step 6: Roll Up Project Observations and Offer Backlog Graduation',
+    );
+    const learningsIndex = content.indexOf(
+      '**Autonomous Execution Learnings (conditional):**',
+    );
+    const coexistenceIndex = content.indexOf(
+      '**Workflow Observations coexistence contract:**',
+    );
+
+    expect(graduationIndex).toBeGreaterThanOrEqual(0);
+    expect(summaryAuthoringIndex).toBeGreaterThan(graduationIndex);
+    expect(rollupIndex).toBeGreaterThan(summaryAuthoringIndex);
+    expect(coexistenceIndex).toBeGreaterThan(learningsIndex);
+    expect(content).toContain(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    expect(content).toMatch(
+      /Before roll-up[\s\S]*?oat project log append[\s\S]*?--scope general/i,
+    );
+    expect(content).toMatch(/original entry's\s+exact heading/);
+    expect(content).toMatch(
+      /never edit, annotate, strike through, or add\s+side metadata to the original entry/,
+    );
+    expect(content).toContain(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    expect(content).toMatch(
+      /status: "failed"[\s\S]*?surface the failure[\s\S]*?stop before commit/i,
+    );
+    expect(content).toMatch(
+      /ledgerOutcome: "skipped_permitted"[\s\S]*?proceed and report/i,
+    );
+    expect(content).toContain('## Workflow Observations');
+    expect(content).toContain('## Autonomous Execution Learnings');
+    expect(content).toContain('one-line cross-reference');
+    expect(content).toContain('oat-pjm-add-backlog-item');
+    expect(content).toMatch(
+      /Backlog graduation creates a\s+tracked work item; it is not ledger graduation/,
+    );
+  });
+
   it('requires workflow skills to use canonical dispatch policy choices', () => {
     const quickStartContent = readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
