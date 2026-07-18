@@ -45,21 +45,24 @@ export async function runExplainerRc({
   artifactsDir,
   entry,
   record,
-  receipt,
   entryArgs = [],
   cwd = process.cwd(),
   env = process.env,
+  ...unsupported
 }) {
+  if (
+    Object.prototype.hasOwnProperty.call(unsupported, 'receipt') ||
+    unsupported.receipt !== undefined
+  ) {
+    throw new RcRunError(
+      'E_USAGE',
+      'Wrapper post-run receipts must be validated by the acceptance stage.',
+    );
+  }
   const manifestPath = resolve(cwd, rcManifest);
   const artifactsRoot = await resolveArtifactsDirectory(cwd, artifactsDir);
   const recordPath = resolve(cwd, record);
   validateEntry(entry);
-  if (entry === 'scripts/publish.mjs' && receipt) {
-    throw new RcRunError(
-      'E_USAGE',
-      'Top-level --receipt is only valid for packaged core runs.',
-    );
-  }
   const manifest = await loadManifest(manifestPath);
   const artifacts = await verifyArtifacts(manifest, artifactsRoot);
   const request = await readRequestBinding(entry, entryArgs, cwd);
@@ -81,7 +84,6 @@ export async function runExplainerRc({
             entryArgs,
             exit,
             request,
-            declaredReceipt: receipt,
             cwd,
           })
         : {
@@ -362,14 +364,7 @@ async function readRequestBinding(entry, entryArgs, cwd) {
   };
 }
 
-async function readOutputBindings({
-  entry,
-  entryArgs,
-  exit,
-  request,
-  declaredReceipt,
-  cwd,
-}) {
+async function readOutputBindings({ entry, entryArgs, exit, request, cwd }) {
   let manifestPath;
   let receiptPath;
   let reportedRunId;
@@ -386,11 +381,9 @@ async function readOutputBindings({
     }
     manifestPath = resolve(cwd, result.manifestPath);
     receiptPath =
-      declaredReceipt !== undefined
-        ? resolve(cwd, declaredReceipt)
-        : typeof result.publishReceiptPath === 'string'
-          ? resolve(cwd, result.publishReceiptPath)
-          : undefined;
+      typeof result.publishReceiptPath === 'string'
+        ? resolve(cwd, result.publishReceiptPath)
+        : undefined;
     reportedRunId = result.runId;
   }
 
@@ -448,13 +441,13 @@ async function readBoundJson(path, schemaVersion, label) {
 }
 
 function parseEntryResult(stdout) {
-  for (const line of String(stdout).trim().split('\n').reverse()) {
-    try {
-      const value = JSON.parse(line);
-      if (value && typeof value === 'object') return value;
-    } catch {
-      // Structured output may follow non-JSON progress lines.
+  try {
+    const value = JSON.parse(String(stdout).trim());
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return value;
     }
+  } catch {
+    // The packaged CLI contract is exactly one complete JSON document.
   }
   throw new RcRunError(
     'E_EXECUTION_BINDING',
@@ -592,8 +585,7 @@ function parseArguments(argv) {
       argument !== '--rc-manifest' &&
       argument !== '--artifacts-dir' &&
       argument !== '--entry' &&
-      argument !== '--record' &&
-      argument !== '--receipt'
+      argument !== '--record'
     ) {
       throw new RcRunError('E_USAGE', 'Unknown runner argument.');
     }
@@ -621,7 +613,7 @@ function parseArguments(argv) {
   ) {
     throw new RcRunError(
       'E_USAGE',
-      'Usage: run-explainer-rc.mjs --rc-manifest <json> --artifacts-dir <dir> --entry <path> --record <json> [--receipt <json>] -- <entry args>',
+      'Usage: run-explainer-rc.mjs --rc-manifest <json> --artifacts-dir <dir> --entry <path> --record <json> -- <entry args>',
     );
   }
   return { ...options, entryArgs };

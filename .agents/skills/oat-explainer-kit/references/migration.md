@@ -74,15 +74,40 @@ neutral fixture.
 
 2. Run packaged direct-core and OAT-adapter build-only smoke tests.
 3. Migrate the real private wrapper against that exact RC.
-4. Run the operator-owned wrapper E2E with the private request held outside the
-   repository. Verify preset resolution, vault/Stoa output, Google Docs sync,
-   personal destination links, manifest consumption, and durability evidence.
+4. Run the operator-owned wrapper E2E as an executable pre/core/post sequence:
+   resolve the private preset and external request; invoke the packaged core;
+   then publish the manifest, retain its complete receipt, and perform
+   vault/Stoa, Google Docs, and personal-link work. Verify all post-run evidence
+   against the immutable core execution record.
 5. Run the live S3/CDN acceptance against the same unchanged RC.
 6. Promote only when both retained acceptance records pass and reference the
    same RC identity.
 
 Every packaged invocation supplies the retained artifacts explicitly; there is
-no current-working-directory fallback:
+no current-working-directory fallback. The wrapper core stage does not declare
+post-run receipt evidence:
+
+```bash
+node tools/release/run-explainer-rc.mjs \
+  --rc-manifest .oat/repo/reference/explainer-kit-acceptance/v1/rc.json \
+  --artifacts-dir dist/explainer-kit-rc \
+  --entry scripts/run.mjs \
+  --record .oat/repo/reference/explainer-kit-acceptance/v1/private-wrapper-execution.json \
+  -- \
+  --request /path/to/private/run-request.json
+```
+
+The packaged CLI emits exactly one complete JSON result document; pretty
+printing across lines is valid and progress text is not. After that command
+returns, the private wrapper publishes and links the core manifest. Retain
+`private-wrapper-manifest.json`,
+`private-wrapper-publish-receipt.json`, and
+`private-wrapper-result.json` beside the RC identity. Wrapper acceptance reads
+and validates the full receipt as a separate post-run stage and rejects a
+foreign run ID, sentinel, artifact set, or manifest hash even when caller-owned
+files repeat the same receipt hash.
+
+The live connector stage is a separate packaged invocation:
 
 ```bash
 node tools/release/run-explainer-rc.mjs \

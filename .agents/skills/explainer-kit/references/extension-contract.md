@@ -40,19 +40,32 @@ substitute for the operator-owned release-candidate gate.
 Release-candidate execution requires the retained tarball directory explicitly:
 
 ```bash
+# Pre: resolve private inputs and write the external run request.
 node tools/release/run-explainer-rc.mjs \
   --rc-manifest /path/to/acceptance/rc.json \
   --artifacts-dir /path/to/retained/explainer-kit-rc \
   --entry scripts/run.mjs \
   --record /path/to/acceptance/private-wrapper-execution.json \
-  --receipt /path/to/acceptance/private-wrapper-publish-receipt.json \
   -- --request /path/to/private/request.json
 ```
 
-When the wrapper creates receipt evidence after the core invocation, it
-declares that path with the runner's top-level `--receipt`; the option is not
-forwarded to the packaged core. The sanitized execution record stores canonical
-request, manifest, and optional receipt hashes plus the core run ID. It does not
-store request paths, argument values, credentials, or private content.
-Acceptance rejects evidence from a different request or run even when its RC ID
-is valid.
+The packaged CLI stdout contract is exactly one complete JSON result document.
+The document may be pretty-printed across lines; progress text and
+line-delimited JSON are not part of this machine framing. The RC runner parses
+the complete document, then binds the request, child-reported manifest, and core
+run ID. It binds a receipt only when the packaged child itself reports that
+output. The sanitized record does not store paths, argument values, credentials,
+or private content.
+
+After the core command returns, the wrapper performs its post-run publication
+and linking work. It retains the immutable core manifest as
+`private-wrapper-manifest.json`, the complete `PublishReceiptV1` as
+`private-wrapper-publish-receipt.json`, and its sanitized wrapper result as
+`private-wrapper-result.json`. The wrapper result repeats canonical hashes for
+the request, manifest, and post-run receipt.
+
+The wrapper acceptance stage reads those post-run files separately. It
+validates the closed receipt contract, every manifest artifact/hash and
+destination, the run-unique sentinel, the manifest hash, and the core run ID
+against `private-wrapper-execution.json`. Repeating a matching hash cannot make
+a foreign or stale receipt attributable to the packaged run.

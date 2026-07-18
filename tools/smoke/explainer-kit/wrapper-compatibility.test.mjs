@@ -42,6 +42,33 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
     locator: `gdoc:${document.account}:${document.slug}`,
     links: document.links,
   }));
+  const publishManifest = mock.fn(
+    async ({ publish, publicBaseUrl, manifest }) => ({
+      schemaVersion: 'explainer-kit.publish-receipt/v1',
+      provider: publish.provider,
+      publishedAt: NOW,
+      roots: {
+        s3Uri: publish.s3Uri,
+        publicBaseUrl,
+      },
+      sentinel: {
+        relativePath: `.explainer-kit-sentinel/${manifest.runId}-0123456789abcdeffedcba9876543210.txt`,
+        uploadVerified: true,
+        publicVerified: true,
+        deleted: true,
+      },
+      artifacts: manifest.artifacts
+        .filter(({ status }) => status === 'built')
+        .map(({ renderedPath, hash, mediaType }) => ({
+          relativePath: renderedPath,
+          hash,
+          s3Uri: `${publish.s3Uri}/${renderedPath.slice('site/'.length)}`,
+          publicUrl: `${publicBaseUrl}/${renderedPath.slice('site/'.length)}`,
+          httpStatus: 200,
+          contentType: mediaType,
+        })),
+    }),
+  );
 
   const wrapped = await runPrivateWrapper({
     presetName: 'personal-oat',
@@ -56,6 +83,7 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
       stoa: { vaultRoot: '/Users/operator/vault' },
       gdocs: { account: 'operator@example.com' },
     },
+    publishManifest,
     writeStoaNote,
     syncGoogleDoc,
     coreOptions: { now: () => NOW },
@@ -102,6 +130,15 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   );
   assert.equal(writeStoaNote.mock.callCount(), 1);
   assert.equal(syncGoogleDoc.mock.callCount(), 1);
+  assert.equal(publishManifest.mock.callCount(), 1);
+  assert.equal(
+    wrapped.publishReceipt.schemaVersion,
+    'explainer-kit.publish-receipt/v1',
+  );
+  assert.match(
+    wrapped.publishReceipt.sentinel.relativePath,
+    new RegExp(wrapped.manifest.runId),
+  );
   assert.deepEqual(
     wrapped.postRun.map(({ kind }) => kind),
     ['stoa', 'gdocs'],

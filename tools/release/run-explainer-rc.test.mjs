@@ -226,18 +226,13 @@ test('requires one explicit artifacts directory and never searches cwd fallbacks
   assert.ok(fallback.endsWith('dist/explainer-kit-rc'));
 });
 
-test('binds execution evidence to canonical request, declared outputs, and core run ID', async () => {
+test('binds core execution only to outputs reported by the packaged child', async () => {
   const fixture = await createFixture();
   const recordPath = join(fixture.root, 'bound-execution.json');
-  await writeJson(fixture.receiptPath, {
-    schemaVersion: 'explainer-kit.publish-receipt/v1',
-    coreRunId: 'run-core-123',
-  });
 
   await run(fixture, {
     entry: 'scripts/run.mjs',
     recordPath,
-    receipt: fixture.receiptPath,
   });
 
   const record = JSON.parse(await readFile(recordPath, 'utf8'));
@@ -250,13 +245,41 @@ test('binds execution evidence to canonical request, declared outputs, and core 
       schemaVersion: 'explainer-kit.manifest/v1',
       sha256: await hashJsonFile(fixture.coreManifestPath),
     },
-    receipt: {
-      schemaVersion: 'explainer-kit.publish-receipt/v1',
-      sha256: await hashJsonFile(fixture.receiptPath),
-    },
+    receipt: null,
   });
   assert.equal(record.coreRunId, 'run-core-123');
   assert.doesNotMatch(JSON.stringify(record), new RegExp(fixture.root));
+});
+
+test('rejects top-level wrapper receipt assertions for core runs', async () => {
+  const fixture = await createFixture();
+  await writeJson(fixture.receiptPath, {
+    schemaVersion: 'explainer-kit.publish-receipt/v1',
+  });
+
+  const failure = await runFailure(fixture, {
+    entry: 'scripts/run.mjs',
+    receipt: fixture.receiptPath,
+  });
+
+  assert.equal(failure.code, 'E_USAGE');
+});
+
+test('rejects progress text instead of guessing at JSON lines', async () => {
+  const fixture = await createFixture({
+    prepareCore: async (coreRoot) => {
+      await writeText(
+        join(coreRoot, 'scripts/run.mjs'),
+        `process.stdout.write('progress\\n{"runId":"foreign"}\\n');\n`,
+      );
+    },
+  });
+
+  const failure = await runFailure(fixture, {
+    entry: 'scripts/run.mjs',
+  });
+
+  assert.equal(failure.code, 'E_EXECUTION_BINDING');
 });
 
 test('records packaged child failures and emits one sanitized structured error', async () => {
@@ -556,7 +579,7 @@ if (exitIndex >= 0) {
       outcome: 'built-not-durable',
       source: 'packaged',
       args,
-    }) + '\\n');
+    }, null, 2) + '\\n');
   }
 }
 `;

@@ -83,14 +83,15 @@ node tools/release/run-explainer-rc.mjs \
   --artifacts-dir dist/explainer-kit-rc \
   --entry scripts/run.mjs \
   --record /path/to/sanitized-execution.json \
-  --receipt /path/to/private-wrapper-publish-receipt.json \
   -- --request /path/to/request.json
 ```
 
-The resulting execution record binds the canonical request and declared
-manifest/receipt outputs to the core run ID without retaining private argument
-values. The top-level `--receipt` declares wrapper-created receipt evidence to
-the runner and is not forwarded to the packaged core.
+The packaged CLI emits one complete JSON result document; pretty-printed
+multiline JSON is valid, while progress text and line-by-line guessing are not.
+The resulting execution record binds the canonical request and child-reported
+manifest to the core run ID without retaining private argument values.
+Wrapper-created receipt evidence is produced only after core execution and is
+validated separately against the immutable execution record and manifest.
 
 ## OAT lifecycle policy
 
@@ -113,9 +114,11 @@ typed adapter settings.
 
 Private integrations use the core boundary directly: resolve private inputs
 before the run, construct one versioned request, invoke the core once, then
-consume the versioned manifest and optional receipt after the run. Presets,
-private source systems, external-document synchronization, and personal
-destinations remain wrapper-owned.
+publish or link the versioned manifest after the run. Wrapper acceptance reads
+the complete post-run `PublishReceiptV1`, verifies every manifest artifact and
+the core run ID, and rejects foreign or stale receipts. Presets, private source
+systems, external-document synchronization, and personal destinations remain
+wrapper-owned.
 
 V1 exposes no plugin registry or private mid-pipeline hook. Unsupported
 contract majors and identity mismatches fail closed instead of being guessed

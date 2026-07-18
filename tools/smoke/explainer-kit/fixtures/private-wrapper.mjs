@@ -60,6 +60,7 @@ export async function runPrivateWrapper({
   presets,
   invocation,
   privateLanes,
+  publishManifest,
   writeStoaNote,
   syncGoogleDoc,
   coreOptions = {},
@@ -79,6 +80,16 @@ export async function runPrivateWrapper({
 
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
   assertConsumableManifest(manifest, result, preResolved.request);
+  if (typeof publishManifest !== 'function') {
+    throw new Error('The wrapper post-run stage requires publishManifest.');
+  }
+  const publishReceipt = await publishManifest({
+    publish: preResolved.preset.publish,
+    publicBaseUrl: preResolved.preset.publicBaseUrl,
+    manifestPath: result.manifestPath,
+    manifest: structuredClone(manifest),
+  });
+  assertConsumableReceipt(publishReceipt, manifest);
   const links = manifest.artifacts
     .filter(
       ({ status, renderedPath }) =>
@@ -107,6 +118,7 @@ export async function runPrivateWrapper({
         ...preResolved.privateLanes.stoa,
         slug: manifest.slug,
         manifestPath: result.manifestPath,
+        publishReceipt: structuredClone(publishReceipt),
         links,
       }),
     );
@@ -120,6 +132,7 @@ export async function runPrivateWrapper({
         ...preResolved.privateLanes.gdocs,
         slug: manifest.slug,
         manifestPath: result.manifestPath,
+        publishReceipt: structuredClone(publishReceipt),
         links,
       }),
     );
@@ -130,9 +143,32 @@ export async function runPrivateWrapper({
     request: preResolved.request,
     result,
     manifest,
+    publishReceipt,
     links,
     postRun,
   };
+}
+
+function assertConsumableReceipt(receipt, manifest) {
+  const manifestArtifacts = new Map(
+    manifest.artifacts
+      .filter(({ status }) => status === 'built')
+      .map(({ renderedPath, hash }) => [renderedPath, hash]),
+  );
+  if (
+    receipt?.schemaVersion !== 'explainer-kit.publish-receipt/v1' ||
+    !receipt.sentinel?.relativePath?.includes(manifest.runId) ||
+    receipt.sentinel.uploadVerified !== true ||
+    receipt.sentinel.publicVerified !== true ||
+    receipt.sentinel.deleted !== true ||
+    !Array.isArray(receipt.artifacts) ||
+    receipt.artifacts.length !== manifestArtifacts.size ||
+    !receipt.artifacts.every(
+      ({ relativePath, hash }) => manifestArtifacts.get(relativePath) === hash,
+    )
+  ) {
+    throw new Error('Publish receipt does not match the wrapper core run.');
+  }
 }
 
 function assertConsumableManifest(manifest, result, request) {

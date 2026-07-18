@@ -18,6 +18,8 @@ const GATES = new Set(['wrapper', 'publish', 'all']);
 const FILES = {
   rc: 'rc.json',
   wrapper: 'private-wrapper-result.json',
+  wrapperManifest: 'private-wrapper-manifest.json',
+  wrapperReceipt: 'private-wrapper-publish-receipt.json',
   publishRequest: 'live-publish-request.json',
   publishExecution: 'live-publish-result.json',
   receipt: 'publish-receipt.json',
@@ -45,11 +47,18 @@ export async function validateExplainerAcceptance({
   const gates = {};
 
   if (gate === 'wrapper' || gate === 'all') {
-    const wrapper = await readEvidence(
-      join(acceptanceRoot, FILES.wrapper),
-      FILES.wrapper,
-    );
-    gates.wrapper = validateWrapperEvidence(wrapper, rc);
+    const [wrapper, manifest, receipt] = await Promise.all([
+      readEvidence(join(acceptanceRoot, FILES.wrapper), FILES.wrapper),
+      readEvidence(
+        join(acceptanceRoot, FILES.wrapperManifest),
+        FILES.wrapperManifest,
+      ),
+      readEvidence(
+        join(acceptanceRoot, FILES.wrapperReceipt),
+        FILES.wrapperReceipt,
+      ),
+    ]);
+    gates.wrapper = validateWrapperEvidence(wrapper, manifest, receipt, rc);
   }
   if (gate === 'publish' || gate === 'all') {
     const [request, execution, receipt] = await Promise.all([
@@ -100,7 +109,7 @@ function validateReleaseCandidate(rc) {
   }
 }
 
-function validateWrapperEvidence(wrapper, rc) {
+function validateWrapperEvidence(wrapper, manifest, receipt, rc) {
   requireObject(wrapper, FILES.wrapper);
   requireExactKeys(
     wrapper,
@@ -140,6 +149,17 @@ function validateWrapperEvidence(wrapper, rc) {
   validateWrapperHashes(wrapper.hashes);
   validateDurability(wrapper.durability);
   validateCapabilities(wrapper.capabilities);
+  const manifestArtifacts = validateReceiptManifest(
+    manifest,
+    FILES.wrapperManifest,
+    'site/',
+  );
+  if (wrapper.hashes.manifest !== hashCanonicalJson(manifest)) {
+    wrapperEvidenceMismatch(
+      FILES.wrapperManifest,
+      'Wrapper manifest hash does not match the retained post-run evidence.',
+    );
+  }
   validatePackagedExecution(
     wrapper.packagedExecution,
     rc,
@@ -149,10 +169,29 @@ function validateWrapperEvidence(wrapper, rc) {
     {
       request: wrapper.hashes.request,
       manifest: wrapper.hashes.manifest,
-      receipt: wrapper.hashes.publishReceipt,
+      receipt: null,
       coreRunId: wrapper.coreRunId,
     },
   );
+  if (wrapper.hashes.publishReceipt !== hashCanonicalJson(receipt)) {
+    wrapperEvidenceMismatch(
+      FILES.wrapperReceipt,
+      'Wrapper receipt hash does not match the retained post-run evidence.',
+    );
+  }
+  const roots = normalizeRoots(
+    receipt?.roots?.s3Uri,
+    receipt?.roots?.publicBaseUrl,
+    FILES.wrapperReceipt,
+  );
+  validatePublishReceipt({
+    receipt,
+    roots,
+    manifest,
+    manifestArtifacts,
+    sitePrefix: 'site/',
+    evidence: FILES.wrapperReceipt,
+  });
   if (wrapper.verdict !== 'passed') {
     if (wrapper.verdict !== 'failed') {
       incomplete(FILES.wrapper, 'Wrapper verdict must be passed or failed.');
@@ -163,6 +202,7 @@ function validateWrapperEvidence(wrapper, rc) {
     status: 'passed',
     packagedEntry: wrapper.packagedExecution.entry,
     durability: wrapper.durability.outcome,
+    postRunReceipt: 'validated',
   };
 }
 
@@ -182,13 +222,14 @@ async function validatePublishEvidence({
     request,
     manifestEvidence,
   );
-  const artifactCount = validatePublishReceipt(
+  const artifactCount = validatePublishReceipt({
     receipt,
-    request,
     roots,
     manifest,
     manifestArtifacts,
-  );
+    sitePrefix: `${basename(resolve(request.siteRoot))}/`,
+    evidence: FILES.receipt,
+  });
   validatePackagedExecution(
     execution,
     rc,
@@ -308,12 +349,18 @@ function validateExecutionBindings(execution, expected, evidence) {
     expected.manifest,
     evidence,
   );
-  validateExecutionOutput(
-    execution.outputs.receipt,
-    'explainer-kit.publish-receipt/v1',
-    expected.receipt,
-    evidence,
-  );
+  if (expected.receipt === null) {
+    if (execution.outputs.receipt !== null) {
+      executionBindingError(evidence);
+    }
+  } else {
+    validateExecutionOutput(
+      execution.outputs.receipt,
+      'explainer-kit.publish-receipt/v1',
+      expected.receipt,
+      evidence,
+    );
+  }
   if (
     execution.coreRunId !== expected.coreRunId ||
     !nonEmptyString(execution.coreRunId)
@@ -336,6 +383,10 @@ function executionBindingError(evidence) {
     'Packaged execution is not bound to the accepted request and outputs.',
     { evidence },
   );
+}
+
+function wrapperEvidenceMismatch(evidence, message) {
+  throw new AcceptanceError('E_RECEIPT_MISMATCH', message, { evidence });
 }
 
 function validatePublishRequest(request) {
@@ -369,6 +420,14 @@ function validatePublishRequest(request) {
 }
 
 function validatePublishManifest(manifest, request, evidence) {
+  return validateReceiptManifest(
+    manifest,
+    evidence,
+    `${basename(resolve(request.siteRoot))}/`,
+  );
+}
+
+function validateReceiptManifest(manifest, evidence, sitePrefix) {
   requireObject(manifest, evidence);
   if (
     manifest.schemaVersion !== 'explainer-kit.manifest/v1' ||
@@ -377,7 +436,6 @@ function validatePublishManifest(manifest, request, evidence) {
   ) {
     incomplete(evidence, 'The publish manifest is incomplete.');
   }
-  const sitePrefix = `${basename(resolve(request.siteRoot))}/`;
   const artifacts = new Map();
   for (const artifact of manifest.artifacts) {
     if (artifact?.status !== 'built') continue;
@@ -400,14 +458,15 @@ function validatePublishManifest(manifest, request, evidence) {
   return artifacts;
 }
 
-function validatePublishReceipt(
+function validatePublishReceipt({
   receipt,
-  request,
   roots,
   manifest,
   manifestArtifacts,
-) {
-  requireObject(receipt, FILES.receipt);
+  sitePrefix,
+  evidence,
+}) {
+  requireObject(receipt, evidence);
   requireExactKeys(
     receipt,
     [
@@ -418,48 +477,47 @@ function validatePublishReceipt(
       'sentinel',
       'artifacts',
     ],
-    FILES.receipt,
+    evidence,
   );
   if (
     receipt.schemaVersion !== 'explainer-kit.publish-receipt/v1' ||
     receipt.provider !== 's3-static' ||
     !validDateTime(receipt.publishedAt)
   ) {
-    incomplete(FILES.receipt, 'Publish receipt fields are incomplete.');
+    incomplete(evidence, 'Publish receipt fields are incomplete.');
   }
-  requireObject(receipt.roots, FILES.receipt);
-  requireExactKeys(receipt.roots, ['s3Uri', 'publicBaseUrl'], FILES.receipt);
+  requireObject(receipt.roots, evidence);
+  requireExactKeys(receipt.roots, ['s3Uri', 'publicBaseUrl'], evidence);
   if (
     receipt.roots.s3Uri !== roots.s3Uri ||
     receipt.roots.publicBaseUrl !== roots.publicBaseUrl
   ) {
     throw new AcceptanceError(
       'E_RECEIPT_MISMATCH',
-      'Publish receipt roots do not match the live request.',
-      { evidence: FILES.receipt },
+      'Publish receipt roots do not match the expected publication roots.',
+      { evidence },
     );
   }
-  validateSentinel(receipt.sentinel, manifest.runId);
+  validateSentinel(receipt.sentinel, manifest.runId, evidence);
   if (!Array.isArray(receipt.artifacts) || receipt.artifacts.length === 0) {
-    incomplete(FILES.receipt, 'Publish receipt must contain artifacts.');
+    incomplete(evidence, 'Publish receipt must contain artifacts.');
   }
   if (receipt.artifacts.length !== manifestArtifacts.size) {
     throw new AcceptanceError(
       'E_RECEIPT_MISMATCH',
       'Publish receipt does not contain exactly the declared manifest artifacts.',
-      { evidence: FILES.receipt },
+      { evidence },
     );
   }
 
   const seen = new Set();
-  const sitePrefix = `${basename(resolve(request.siteRoot))}/`;
   for (const artifact of receipt.artifacts) {
-    validateReceiptArtifact(artifact);
+    validateReceiptArtifact(artifact, evidence);
     if (!safeRelativePath(artifact.relativePath)) {
       throw new AcceptanceError(
         'E_PUBLISH_SAFETY',
         'Receipt artifact path escapes its declared site root.',
-        { evidence: FILES.receipt },
+        { evidence },
       );
     }
     if (
@@ -469,7 +527,7 @@ function validatePublishReceipt(
       throw new AcceptanceError(
         'E_PUBLISH_SAFETY',
         'Receipt contains duplicate or sentinel artifact scope.',
-        { evidence: FILES.receipt },
+        { evidence },
       );
     }
     seen.add(artifact.relativePath);
@@ -478,7 +536,7 @@ function validatePublishReceipt(
       throw new AcceptanceError(
         'E_RECEIPT_MISMATCH',
         'Receipt artifact hashes do not match the declared manifest.',
-        { evidence: FILES.receipt },
+        { evidence },
       );
     }
     const publishedPath = artifact.relativePath.slice(sitePrefix.length);
@@ -492,45 +550,53 @@ function validatePublishReceipt(
       throw new AcceptanceError(
         'E_RECEIPT_MISMATCH',
         'Receipt artifact destinations do not match the corresponding roots.',
-        { evidence: FILES.receipt },
+        { evidence },
       );
     }
   }
   return receipt.artifacts.length;
 }
 
-function validateSentinel(sentinel, runId) {
-  requireObject(sentinel, FILES.receipt);
+function validateSentinel(sentinel, runId, evidence) {
+  requireObject(sentinel, evidence);
   requireExactKeys(
     sentinel,
     ['relativePath', 'uploadVerified', 'publicVerified', 'deleted'],
-    FILES.receipt,
+    evidence,
   );
   const prefix = `.explainer-kit-sentinel/${safeRunId(runId)}-`;
-  const suffix = nonEmptyString(sentinel.relativePath)
-    ? sentinel.relativePath.slice(prefix.length, -'.txt'.length)
-    : '';
+  const match = nonEmptyString(sentinel.relativePath)
+    ? sentinel.relativePath.match(
+        /^\.explainer-kit-sentinel\/[a-z0-9-]+-([a-f0-9]{32})\.txt$/,
+      )
+    : null;
   if (
-    !sentinel.relativePath?.startsWith(prefix) ||
-    !sentinel.relativePath.endsWith('.txt') ||
-    !SENTINEL_SUFFIX_PATTERN.test(suffix) ||
+    !match ||
+    !SENTINEL_SUFFIX_PATTERN.test(match[1]) ||
     sentinel.uploadVerified !== true ||
     sentinel.publicVerified !== true ||
     sentinel.deleted !== true
   ) {
     incomplete(
-      FILES.receipt,
+      evidence,
       'Sentinel upload, public verification, uniqueness, and deletion are required.',
+    );
+  }
+  if (!sentinel.relativePath.startsWith(prefix)) {
+    throw new AcceptanceError(
+      'E_RECEIPT_MISMATCH',
+      'Publish receipt sentinel does not belong to the packaged core run.',
+      { evidence },
     );
   }
 }
 
-function validateReceiptArtifact(artifact) {
-  requireObject(artifact, FILES.receipt);
+function validateReceiptArtifact(artifact, evidence) {
+  requireObject(artifact, evidence);
   requireExactKeys(
     artifact,
     ['relativePath', 'hash', 's3Uri', 'publicUrl', 'httpStatus', 'contentType'],
-    FILES.receipt,
+    evidence,
   );
   if (
     !nonEmptyString(artifact.relativePath) ||
@@ -542,7 +608,7 @@ function validateReceiptArtifact(artifact) {
     artifact.httpStatus > 299 ||
     !nonEmptyString(artifact.contentType)
   ) {
-    incomplete(FILES.receipt, 'A publish receipt artifact is incomplete.');
+    incomplete(evidence, 'A publish receipt artifact is incomplete.');
   }
 }
 

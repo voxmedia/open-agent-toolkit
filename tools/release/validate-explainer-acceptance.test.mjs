@@ -202,6 +202,28 @@ test('rejects packaged evidence reused with a different request or run output', 
   );
 });
 
+test('rejects a foreign wrapper post-run receipt even when its repeated hash matches', async () => {
+  const fixture = await createFixture();
+  fixture.receipt.sentinel.relativePath =
+    '.explainer-kit-sentinel/foreign-run-0123456789abcdeffedcba9876543210.txt';
+  fixture.wrapper.hashes.publishReceipt = hashJson(fixture.receipt);
+  await Promise.all([
+    writeJson(
+      join(fixture.root, 'private-wrapper-publish-receipt.json'),
+      fixture.receipt,
+    ),
+    writeJson(
+      join(fixture.root, 'private-wrapper-result.json'),
+      fixture.wrapper,
+    ),
+  ]);
+
+  const failure = await runFailure(fixture.root, 'wrapper');
+
+  assert.equal(failure.code, 'E_RECEIPT_MISMATCH');
+  assert.equal(failure.evidence, 'private-wrapper-publish-receipt.json');
+});
+
 test('rejects public roots containing userinfo, query, or fragment evidence', async () => {
   for (const publicBaseUrl of [
     'https://user:secret@cdn.example.com/published',
@@ -432,6 +454,9 @@ async function createFixture() {
       ),
     ],
   };
+  wrapper.coreRunId = manifest.runId;
+  wrapper.hashes.manifest = hashJson(manifest);
+  wrapper.hashes.publishReceipt = hashJson(receipt);
   wrapper.packagedExecution = packagedExecution(rc, 'scripts/run.mjs', {
     request: {
       schemaVersion: 'explainer-kit.run-request/v1',
@@ -442,10 +467,7 @@ async function createFixture() {
         schemaVersion: 'explainer-kit.manifest/v1',
         sha256: wrapper.hashes.manifest,
       },
-      receipt: {
-        schemaVersion: 'explainer-kit.publish-receipt/v1',
-        sha256: wrapper.hashes.publishReceipt,
-      },
+      receipt: null,
     },
     coreRunId: wrapper.coreRunId,
   });
@@ -469,6 +491,8 @@ async function createFixture() {
   await Promise.all([
     writeJson(join(root, 'rc.json'), rc),
     writeJson(join(root, 'private-wrapper-result.json'), wrapper),
+    writeJson(join(root, 'private-wrapper-manifest.json'), manifest),
+    writeJson(join(root, 'private-wrapper-publish-receipt.json'), receipt),
     writeJson(join(root, 'live-publish-request.json'), publishRequest),
     writeJson(join(root, 'live-publish-result.json'), publishExecution),
     writeJson(join(root, 'publish-receipt.json'), receipt),
