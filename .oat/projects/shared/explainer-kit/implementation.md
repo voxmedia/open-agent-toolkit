@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t09
+oat_current_task_id: p02-t10
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 8/10      |
+| Phase 2 | in_progress | 10    | 9/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 14/38 tasks completed
+**Total:** 15/38 tasks completed
 
 ---
 
@@ -352,6 +352,26 @@ oat_generated: false
 
 - Durability, schema, contract, and records suites — pass (33/33).
 - Post-commit durability suite — pass (10/10).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p02-t09: Compose the config-blind core run
+
+**Status:** completed
+**Commit:** `de89b40d`
+
+**Outcome:**
+
+- Composed the config-blind validate-to-manifest core pipeline for supplied and
+  federated inputs without requiring `.oat` files.
+- Enforced critic-mode separation, discovery bounds, privacy-safe records,
+  retained failure intermediates, and request-only durability/publish stages.
+
+**Verification:**
+
+- Full config-free core suite — pass (91/91).
+- Run integration suite — pass (7/7).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
