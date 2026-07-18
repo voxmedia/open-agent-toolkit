@@ -1,0 +1,273 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, DIAGRAM, FOOTER
+  CONTENT sections use data-active-nodes/data-active-edges and may include expandable snippets.
+  DIAGRAM contains validated inline SVG nodes and edges.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <style>
+      :root {
+        --canvas: hsl(215 24% 13%);
+        --panel: hsl(215 20% 18%);
+        --panel-muted: hsl(215 18% 22%);
+        --border: hsl(215 14% 32%);
+        --ink: hsl(210 18% 92%);
+        --muted: hsl(210 10% 70%);
+        --accent: hsl(190 38% 70%);
+        --warning: hsl(38 55% 68%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        {{THEME_CSS}}
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.65;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 13rem minmax(0, 1fr) 23rem;
+        gap: 2rem;
+        max-width: 86rem;
+        margin: auto;
+        padding-inline: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        max-height: 100dvh;
+        overflow-y: auto;
+        padding-block: 2.5rem;
+      }
+      .toc-brand,
+      .eyebrow,
+      .section-number {
+        color: var(--muted);
+        font: 0.7rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.35rem 0.75rem;
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        color: var(--accent);
+      }
+      .tour-body {
+        min-width: 0;
+        padding-block: 3.5rem 6rem;
+      }
+      h1,
+      h2 {
+        font-family: var(--serif);
+        line-height: 1.15;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2.3rem, 5vw, 3.8rem);
+        margin-block: 0.6rem 1rem;
+      }
+      section {
+        margin-block: 4rem;
+        scroll-margin-top: 2rem;
+      }
+      .snippet {
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        background: var(--panel);
+      }
+      .snippet-toggle {
+        width: 100%;
+        border: 0;
+        border-block-end: 1px solid transparent;
+        background: var(--panel-muted);
+        color: var(--ink);
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        text-align: start;
+        font: 0.85rem var(--sans);
+      }
+      .snippet-toggle[aria-expanded='true'] {
+        border-block-end-color: var(--border);
+      }
+      .snippet pre {
+        max-width: 100%;
+        margin: 0;
+        overflow-x: auto;
+        padding: 1rem;
+        font-family: var(--mono);
+      }
+      .snippet:not(.open) pre {
+        display: none;
+      }
+      .diagram-rail {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100dvh;
+        padding-block: 3.5rem 2rem;
+      }
+      .diagram-card {
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--panel);
+        padding: 1rem;
+      }
+      .diagram-card svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .diagram-card .node,
+      .diagram-card .edge {
+        transition: opacity 180ms ease, stroke 180ms ease, fill 180ms ease;
+      }
+      .diagram-card .node:not(.active),
+      .diagram-card .edge:not(.active) {
+        opacity: 0.35;
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 74rem) {
+        .layout {
+          grid-template-columns: 12rem minmax(0, 1fr);
+        }
+        .diagram-rail {
+          display: none;
+        }
+      }
+      @media (max-width: 52rem) {
+        .layout {
+          grid-template-columns: 1fr;
+          padding-inline: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-brand {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+        }
+        .tour-body {
+          padding-block-start: 1.5rem;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <nav class="toc" aria-label="Tour sections">
+        <div class="toc-brand">{{EYEBROW}}</div>
+        {{NAVIGATION}}
+      </nav>
+      <main class="tour-body">
+        <header>
+          <div class="eyebrow">{{EYEBROW}}</div>
+          <h1>{{TITLE}}</h1>
+          <p>{{DESCRIPTION}}</p>
+        </header>
+        {{CONTENT}}
+        <footer>{{FOOTER}}</footer>
+      </main>
+      <aside class="diagram-rail" aria-label="System diagram">
+        <div class="diagram-card">
+          <svg viewBox="0 0 360 540" role="img" aria-label="{{TITLE}}">
+            {{DIAGRAM}}
+          </svg>
+        </div>
+      </aside>
+    </div>
+    <script>
+      (() => {
+        document.querySelectorAll('.snippet-toggle').forEach((button) => {
+          button.setAttribute('aria-expanded', 'false');
+          button.addEventListener('click', () => {
+            const snippet = button.closest('.snippet');
+            const expanded = snippet.classList.toggle('open');
+            button.setAttribute('aria-expanded', String(expanded));
+          });
+        });
+
+        const sections = [...document.querySelectorAll('section[id]')];
+        const links = [...document.querySelectorAll('.toc a[data-target]')];
+        const nodes = [
+          ...document.querySelectorAll('.diagram-card [data-node]'),
+        ];
+        const edges = [
+          ...document.querySelectorAll('.diagram-card [data-edge]'),
+        ];
+        const activate = (section) => {
+          const activeNodes = new Set(
+            (section.dataset.activeNodes || '').split(',').filter(Boolean),
+          );
+          const activeEdges = new Set(
+            (section.dataset.activeEdges || '').split(',').filter(Boolean),
+          );
+          nodes.forEach((node) =>
+            node.classList.toggle('active', activeNodes.has(node.dataset.node)),
+          );
+          edges.forEach((edge) =>
+            edge.classList.toggle('active', activeEdges.has(edge.dataset.edge)),
+          );
+          links.forEach((link) =>
+            link.classList.toggle('active', link.dataset.target === section.id),
+          );
+        };
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const visible = entries.find((entry) => entry.isIntersecting);
+            if (visible) activate(visible.target);
+          },
+          { rootMargin: '-15% 0px -60% 0px', threshold: [0.1, 0.4, 0.7] },
+        );
+        sections.forEach((section) => observer.observe(section));
+        if (sections[0]) activate(sections[0]);
+      })();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,231 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, SLIDES
+  SLIDES contains semantic section.slide elements with escaped content.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{{TITLE}}</title>
+    <meta name="description" content="{{DESCRIPTION}}" />
+    <script>
+      document.documentElement.classList.add('js');
+    </script>
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --border: hsl(210 14% 80%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        {{THEME_CSS}}
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        min-height: 100%;
+      }
+      body {
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+      .deck {
+        display: flex;
+        width: 100%;
+        height: 100dvh;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+        overscroll-behavior-x: contain;
+      }
+      .slide {
+        flex: 0 0 100%;
+        width: 100%;
+        min-width: 0;
+        height: 100dvh;
+        overflow: hidden;
+        scroll-snap-align: start;
+        scroll-snap-stop: always;
+        display: grid;
+        place-items: center;
+        padding: clamp(2rem, 7vw, 7rem);
+        border-inline-end: 1px solid var(--border);
+      }
+      .slide__content {
+        width: min(100%, 72rem);
+        max-width: 100%;
+        max-height: 100%;
+        min-width: 0;
+        overflow-x: auto;
+        overflow-y: auto;
+        overflow-wrap: anywhere;
+        padding: 0.25rem;
+      }
+      .slide h1,
+      .slide h2 {
+        max-width: 24ch;
+        font-family: var(--serif);
+        font-size: clamp(2rem, 6vw, 4.5rem);
+        line-height: 1.08;
+        margin-block: 0 1rem;
+        text-wrap: balance;
+      }
+      .slide p,
+      .slide li {
+        max-width: 52ch;
+        font-size: clamp(1rem, 2.2vw, 1.45rem);
+        line-height: 1.5;
+      }
+      .table-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .deck-controls {
+        position: fixed;
+        z-index: 3;
+        inset: auto 1rem 1rem auto;
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--panel);
+        padding: 0.35rem;
+        font: 0.75rem var(--mono);
+      }
+      .deck-controls button {
+        border: 0;
+        border-radius: 50%;
+        background: transparent;
+        color: var(--ink);
+        min-width: 2rem;
+        min-height: 2rem;
+        cursor: pointer;
+      }
+      .deck-controls button:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      html:not(.js) .deck {
+        display: block;
+        height: auto;
+        overflow: visible;
+        scroll-snap-type: none;
+      }
+      html:not(.js) .slide {
+        min-height: auto;
+        height: auto;
+        overflow: visible;
+        border-block-end: 1px solid var(--border);
+      }
+      html:not(.js) .slide__content {
+        overflow: visible;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .deck {
+          scroll-behavior: auto;
+        }
+      }
+      @media print {
+        .deck {
+          display: block;
+          width: auto;
+          height: auto;
+          overflow: visible;
+          scroll-snap-type: none;
+        }
+        .slide {
+          display: block;
+          width: auto;
+          height: auto;
+          min-height: auto;
+          overflow: visible;
+          break-after: page;
+          border: 0;
+          padding: 2rem 0;
+        }
+        .slide__content {
+          width: auto;
+          max-height: none;
+          overflow: visible;
+        }
+        .deck-controls {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>
+      <p>This deck remains available below as a readable vertical document.</p>
+    </noscript>
+    <main class="deck" aria-label="{{TITLE}}">{{SLIDES}}</main>
+    <nav class="deck-controls" aria-label="Slide navigation">
+      <button type="button" data-direction="-1" aria-label="Previous slide">
+        ←
+      </button>
+      <span id="deck-counter" aria-live="polite"></span>
+      <button type="button" data-direction="1" aria-label="Next slide">
+        →
+      </button>
+    </nav>
+    <script>
+      (() => {
+        const deck = document.querySelector('.deck');
+        const slides = [...document.querySelectorAll('.slide')];
+        const counter = document.querySelector('#deck-counter');
+        let current = 0;
+
+        const update = (index) => {
+          current = Math.max(0, Math.min(slides.length - 1, index));
+          counter.textContent = `${current + 1} / ${slides.length}`;
+        };
+        const go = (index) => {
+          update(index);
+          slides[current]?.scrollIntoView({
+            behavior: 'smooth',
+            block: 'nearest',
+            inline: 'start',
+          });
+        };
+        document.querySelectorAll('[data-direction]').forEach((button) => {
+          button.addEventListener('click', () =>
+            go(current + Number(button.dataset.direction)),
+          );
+        });
+        addEventListener('keydown', (event) => {
+          if (event.target.closest('input, textarea, [contenteditable]'))
+            return;
+          if (['ArrowRight', 'ArrowDown'].includes(event.key)) {
+            event.preventDefault();
+            go(current + 1);
+          } else if (['ArrowLeft', 'ArrowUp'].includes(event.key)) {
+            event.preventDefault();
+            go(current - 1);
+          }
+        });
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const visible = entries.find((entry) => entry.isIntersecting);
+            if (visible) update(slides.indexOf(visible.target));
+          },
+          { root: deck, threshold: 0.6 },
+        );
+        slides.forEach((slide) => observer.observe(slide));
+        update(0);
+      })();
+    </script>
+  </body>
+</html>
