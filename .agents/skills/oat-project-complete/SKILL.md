@@ -384,6 +384,9 @@ When archiving, the project artifacts at `{PROJECT_PATH}/{plan,implementation,di
 - **Keep References bullets** that resolve independently of the archive: backlog item links under `.oat/repo/pjm/backlog/`, decision record links under `.oat/repo/reference/decisions/`, repo-reference docs, ticket URLs, and anything else under tracked paths outside the project directory.
 - Apply the existing `localPaths`-based exclusion rule from `oat-project-pr-final` Step 4 on top of these rules — it already covers `.oat/**/pr` and `.oat/**/reviews/archived` and may catch additional patterns configured per repo.
 - Do not add a durable reference for any `project-explainer` run. Only the selected final `project-recap` can enter the tracked completion export path.
+- When a final project recap is selected, defer its summary and PR link until
+  Step 8 returns `projectRecapExport.exportRoot`. Do not predict that path from
+  the date or project name.
 
 Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path under `.oat/projects/archived/<name>/...`. That path is gitignored on every checkout and never reaches the remote.
 
@@ -402,28 +405,55 @@ if [[ -n "$SELECTED_PROJECT_RECAP_RUN" ]]; then
   ARCHIVE_ARGS+=("--project-recap-run" "$SELECTED_PROJECT_RECAP_RUN")
 fi
 
-if ! ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" 2>&1); then
+if ! ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" --json 2>&1); then
   printf '%s\n' "$ARCHIVE_OUTPUT" >&2
   echo "Error: Project archive failed." >&2
   exit 1
 fi
 
 printf '%s\n' "$ARCHIVE_OUTPUT"
-
-ARCHIVE_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | sed -nE 's/^Archived project `[^`]+` to `(.+)`\.$/\1/p' | tail -1)
-if [[ -z "$ARCHIVE_PATH" ]]; then
-  echo "Error: oat project archive did not report the archived path." >&2
-  exit 1
-fi
-
-PROJECT_PATH="$ARCHIVE_PATH"
-ARCHIVE_S3_PATH=$(printf '%s\n' "$ARCHIVE_OUTPUT" | sed -nE 's/^S3 archive: (.+)$/\1/p' | tail -1)
-ARCHIVE_S3_CONTEXT=$(printf '%s\n' "$ARCHIVE_OUTPUT" | grep -E '^Archive S3 sync: .*profile=.*region=' | tail -1 || true)
 ```
 
-SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing `oat project archive "$PROJECT_PATH"` behavior. Because this step runs only for shared projects, local-scope projects never pass a recap archive argument.
+Parse `ARCHIVE_OUTPUT` as the `oat project archive --json` report. Require
+`status: "ok"`, `mode: "apply"`, and a non-empty `archivePath`; use its
+`s3Path`, `summaryExportFile`, and `warnings` fields for later reporting. Set
+`ARCHIVE_PATH` from `archivePath`, then set `PROJECT_PATH="$ARCHIVE_PATH"`.
 
-Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details. If S3 sync ran and only `ARCHIVE_S3_PATH` is available, report the destination and note that credential context was not emitted by the command.
+When `SELECTED_PROJECT_RECAP_RUN` is non-empty, also require the report's
+`projectRecapExport.sourceRunRoot`, `projectRecapExport.exportRoot`, and
+`projectRecapExport.manifest.relativePath === "manifest.json"`. Confirm the
+reported source is the selected run under the pre-archive project path and the
+export root is inside the tracked
+`.oat/repo/reference/project-recaps/` root. Record:
+
+- `sourceRunRoot` as the relocation source;
+- `exportRoot` as the final recap run root; and
+- `exportRoot/manifest.relativePath` as the final manifest.
+
+Do not infer or reconstruct the recap export root. The archive report is
+authoritative. A missing, malformed, mismatched, outside-root, or gitignored
+export report is an archive failure; stop before lifecycle bookkeeping.
+Never use the gitignored archive as evidence or a link target.
+
+SELECTED_PROJECT_RECAP_RUN must be project-relative. Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty. The empty case remains the existing archive behavior. Because this step runs only for shared projects, local-scope projects never pass a recap archive argument.
+
+The no-recap invocation remains `oat project archive "$PROJECT_PATH"` with
+`--json` added only to select the machine-readable report.
+Use `ARCHIVE_S3_CONTEXT` in Step 12 if the command reports profile/region details.
+
+#### Step 8.5: Finalize Archive-Aware Recap Links
+
+Run this only when archive returned a `projectRecapExport`.
+
+Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport.exportRoot`; do not derive them from the local archive.
+Use a repository-relative path under
+`.oat/repo/reference/project-recaps/` and a blob URL on the current head branch
+while the PR is open. If `summaryExportFile` is non-null, update its concise
+`Explainer Outcome` recap link. Update the archived PR-description artifact
+used by Step 11 or 11.5 so its recap reference points to the same tracked root.
+Omit either link when its containing artifact does not exist.
+
+Use the current head branch for the blob URL while the PR is open. Never link to `.oat/projects/archived/`; it is gitignored and will return 404 remotely.
 
 ### Step 9: Regenerate Dashboard
 
@@ -435,7 +465,9 @@ oat state refresh
 
 ### Step 10: Commit + Push Bookkeeping (Required)
 
-Completion is not done until bookkeeping changes are committed and pushed. This prevents local-only `state.md` updates that leave project status stale for later sessions/reviews.
+Completion is not done until lifecycle changes are committed. This commit also
+anchors commit durability for a selected shared-project recap. Do not push yet
+when recap attestation is pending.
 
 Expected changes may include:
 
@@ -446,21 +478,80 @@ Expected changes may include:
 - `.oat/state.md` is regenerated locally in Step 9 but should not be staged; it is generated dashboard state and normally gitignored.
 - `.oat/config.local.json` (if `activeProject` cleared)
 - Shared-project deletions under `{PROJECTS_ROOT}/{PROJECT_NAME}` (if archived)
+- The complete tracked recap export and tracked summary export reported by
+  archive (if present)
 
 Run:
 
 ```bash
 git status --short
-git add -A
+git add -- <exact completion and lifecycle paths>
 git commit -m "chore(oat): complete project lifecycle for ${PROJECT_NAME}"
-git push
+LIFECYCLE_COMMIT=$(git rev-parse HEAD)
 ```
 
 Rules:
 
-- If there are unrelated unstaged/staged changes, stage and commit only the completion/bookkeeping files (do not sweep unrelated work into this commit).
+- If there are unrelated unstaged/staged changes, stage and commit only the
+  completion/bookkeeping files. Never use a repository-wide `git add -A` when
+  unrelated changes exist.
 - If there is nothing to commit, state that explicitly and verify whether the completion bookkeeping was already committed in a prior commit.
-- If push fails, report the failure and do not claim completion is fully recorded.
+- The lifecycle bookkeeping commit is the artifact commit for final recap
+  durability. It must contain the final run's immutable paths.
+- Snapshot unrelated working-tree changes before finalization so the shared
+  finalizer can verify they remain unchanged.
+
+### Step 10.5: Re-attest Final Project Recap
+
+Skip when no final recap was selected, for local-scope projects, or when the
+selected recap is already durable solely through independently verified publish
+evidence.
+
+For an archived recap, consume the exact `projectRecapExport` values recorded
+in Step 8. Plan finalization through
+`oat-explainer-kit/scripts/finalize-tracked-run.mjs#planTrackedRunFinalization`
+with:
+
+- `runRoot`: `projectRecapExport.exportRoot`;
+- `manifestPath`:
+  `projectRecapExport.exportRoot/projectRecapExport.manifest.relativePath`;
+- commitMode: `completion-bookkeeping`;
+- relocatedFrom: `sourceRunRoot`; and
+- context `artifactCommit`: the full `LIFECYCLE_COMMIT` SHA.
+
+For a shared project that was not archived, use the selected active run and
+omit `relocatedFrom`, but keep the same `completion-bookkeeping` mode.
+
+The lifecycle bookkeeping commit is the artifact commit. Call the compatible
+core's `recordDurability(...)` with the finalizer's planned request. Submit only immutable paths under `projectRecapExport.exportRoot` as commit evidence for an archived recap; `manifest.json` and `build-record.json` are mutable records and
+must not appear in that evidence path list. The successful exported-path
+attestation supersedes the prior active-path evidence. Verify the resulting
+manifest records the old evidence in `supersedes` and reports the final
+tracked export path.
+
+Never submit the gitignored archive path as commit evidence. Local archive
+presence cannot make a recap durable.
+
+A failed exported recap attestation does not fail project completion. Preserve
+the tracked export, report `built-not-durable`, retain actionable recovery
+details, and continue to the evidence commit.
+
+### Step 10.6: Commit Evidence + Push
+
+When Step 10.5 ran, create the evidence update. Commit only the exported `manifest.json` and `build-record.json` as the evidence update, including warning-bearing records from a failed attestation. On failure, commit the warning-bearing `manifest.json` and `build-record.json`. Run
+`verifyTrackedRunFinalization(...)` with the artifact commit, immediate evidence
+commit parent/order, exact evidence paths, attestation outcome, and unchanged
+unrelated-change snapshots.
+
+Archive completion is exactly two commits when recap attestation runs:
+
+1. lifecycle bookkeeping, including the tracked recap export; then
+2. final recap evidence records.
+
+Push once after both commits exist so they travel together. If no attestation
+ran, push the lifecycle bookkeeping commit once. If verification detects
+contamination or wrong commit order, do not push. If push fails, report the
+failure and do not claim completion is fully recorded.
 
 ### Step 11: Open PR in GitHub (Conditional)
 
@@ -474,10 +565,9 @@ Steps:
 1. Locate the PR description artifact at `{PROJECT_PATH}/pr/project-pr-*.md`.
 2. Write the stripped body to a temporary file (remove all lines from the opening `---` through the closing `---`, inclusive).
 3. Verify the temp file does not start with YAML frontmatter keys.
-4. Push and create the PR:
+4. Create the PR from the branch already pushed in Step 10.6:
 
 ```bash
-git push -u origin "$(git rev-parse --abbrev-ref HEAD)"
 gh pr create --base main --title "{title}" --body-file "$TMP_BODY"
 ```
 
@@ -489,7 +579,7 @@ Do not assume `gh` is installed; if missing, instruct manual PR creation using t
 
 **Run only when `WAS_PR_OPEN_AT_START="true"` AND `SHOULD_ARCHIVE="true"`.**
 
-When the PR was already open at the start of this skill (typically because `oat-project-pr-final` ran earlier in the lifecycle) AND we just archived, the GitHub PR description authored by `oat-project-pr-final` still points to the active artifact paths. Step 8 moved those artifacts to a gitignored archive location and Step 10 pushed the move, so any blob link in the open PR body now 404s. Push the regenerated archive-aware body to the existing PR.
+When the PR was already open at the start of this skill (typically because `oat-project-pr-final` ran earlier in the lifecycle) AND we just archived, the GitHub PR description authored by `oat-project-pr-final` still points to the active artifact paths. Step 8 moved those artifacts to a gitignored archive location and Step 10.6 pushed the move, so any blob link in the open PR body now 404s. Push the regenerated archive-aware body to the existing PR.
 
 Skip this step when:
 
@@ -523,7 +613,8 @@ Failure handling:
 
 - If `gh` is missing, warn and print the path to the regenerated artifact body so the user can paste it into the PR manually. Do not fail the skill.
 - If `gh pr edit` fails (e.g. PR was merged between Step 2 and now, or the auth token lacks edit permission), warn and continue. Step 12's completion summary should call out that the PR body was not updated and surface the artifact path so the user can update it manually.
-- Never re-archive or re-commit on failure here — the lifecycle bookkeeping in Step 10 already shipped.
+- Never re-archive or re-commit on failure here — the lifecycle bookkeeping
+  and any recap evidence update in Step 10.6 already shipped.
 
 ### Step 12: Confirm to User
 
@@ -532,7 +623,11 @@ Show user:
 - "Project **{PROJECT_NAME}** marked as complete."
 - If archived: "Archived location: **{PROJECT_PATH}**"
 - If S3 archive sync ran: include `ARCHIVE_S3_CONTEXT` when the archive command reported profile/region details. If only `ARCHIVE_S3_PATH` is available, include the S3 destination and note that profile/region context was not reported by the command. Never echo raw credentials (`AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, etc.).
-- Include commit hash and push result for the bookkeeping changes.
+- Include both lifecycle bookkeeping and recap evidence commit hashes when
+  attestation ran, plus the single push result.
+- Report the final recap outcome and tracked reference root. A failed
+  attestation is a warning with `built-not-durable`, not a project-completion
+  failure.
 - If PR was opened: include the PR URL.
 - If `oat_pr_url` is present, show it in the completion summary even when PR creation was skipped because the project already tracked an open PR.
 - If Step 11.5 ran, report whether the PR description was synced (e.g. `PR description synced: <PR URL>`) or warn that the sync failed and surface the artifact path so the user can update it manually.

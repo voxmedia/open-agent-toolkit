@@ -111,3 +111,33 @@ For archive relocation, `relocatedFrom` identifies the prior active run for
 caller reporting. The current run's immutable paths and the export bookkeeping
 commit are submitted to the core; core evidence supersession remains the
 authoritative relocation record.
+
+## Completion-time archive relocation
+
+Completion consumes the machine-readable `oat project archive --json` report.
+When a recap was selected, `projectRecapExport.sourceRunRoot`,
+`projectRecapExport.exportRoot`, and
+`projectRecapExport.manifest.relativePath` identify the relocation. The caller
+must not predict the dated export path or substitute the gitignored local
+archive.
+
+Archive completion is exactly two commits: the lifecycle bookkeeping commit, then the exported recap evidence commit. The bookkeeping commit contains the
+tracked export and active-tree deletion and is passed to the finalizer as the
+existing artifact commit in `completion-bookkeeping` mode. The finalizer
+attests only immutable package paths under the reported export root. The
+second commit contains only the updated exported `manifest.json` and
+`build-record.json`; one push follows both commits.
+
+The exported-path evidence supersedes the selected run's prior active-path evidence. Mutable records are never part of their own commit evidence, and no
+path under `.oat/projects/archived/` is evidence.
+
+Failure to verify the exported commit evidence is non-blocking. The tracked
+export remains committed, the mutable records retain the warning and
+`built-not-durable` outcome, and the evidence-record commit and push still
+complete. A later attestation may recover durability without repeating the
+archive.
+
+Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
+under `.oat/repo/reference/project-recaps/` on the current head branch. The
+tracked summary export and the PR body may carry that link; the gitignored
+archive never does.

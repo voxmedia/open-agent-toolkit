@@ -12,7 +12,12 @@ const completionSkillPath = resolve(
   repoRoot,
   '.agents/skills/oat-project-complete/SKILL.md',
 );
+const lifecycleContractPath = resolve(
+  repoRoot,
+  '.agents/skills/oat-explainer-kit/references/lifecycle-contract.md',
+);
 const completionSkill = await readFile(completionSkillPath, 'utf8');
+const lifecycleContract = await readFile(lifecycleContractPath, 'utf8');
 
 test('resolves recap intent before one batched completion prompt and persists either answer', () => {
   const resolveIndex = completionSkill.indexOf(
@@ -119,5 +124,121 @@ test('keeps local-project recaps untracked and built-not-durable without publish
   assert.match(
     completionSkill,
     /Do not treat local filesystem presence as durability/,
+  );
+});
+
+test('consumes the archive JSON export report as the final recap location', () => {
+  assert.match(
+    completionSkill,
+    /oat project archive .*--json/,
+    'archive must return its machine-readable export report',
+  );
+  assert.match(
+    completionSkill,
+    /projectRecapExport\.sourceRunRoot/,
+    'completion must consume the reported source run root',
+  );
+  assert.match(
+    completionSkill,
+    /projectRecapExport\.exportRoot/,
+    'completion must consume the reported tracked export root',
+  );
+  assert.match(
+    completionSkill,
+    /projectRecapExport\.manifest\.relativePath/,
+    'completion must consume the reported exported manifest path',
+  );
+  assert.match(
+    completionSkill,
+    /Do not infer or reconstruct the recap export root/,
+  );
+});
+
+test('uses lifecycle bookkeeping then exported recap attestation as two commits', () => {
+  const archiveIndex = completionSkill.indexOf(
+    '### Step 8: Archive Project (Conditional)',
+  );
+  const bookkeepingIndex = completionSkill.indexOf(
+    '### Step 10: Commit + Push Bookkeeping (Required)',
+  );
+  const attestationIndex = completionSkill.indexOf(
+    '### Step 10.5: Re-attest Final Project Recap',
+  );
+  const evidenceIndex = completionSkill.indexOf(
+    '### Step 10.6: Commit Evidence + Push',
+  );
+
+  assert.ok(archiveIndex >= 0, 'archive step must exist');
+  assert.ok(bookkeepingIndex > archiveIndex, 'bookkeeping follows archive');
+  assert.ok(
+    attestationIndex > bookkeepingIndex,
+    'attestation follows bookkeeping commit',
+  );
+  assert.ok(
+    evidenceIndex > attestationIndex,
+    'evidence commit follows attestation',
+  );
+  assert.match(completionSkill, /commitMode: `completion-bookkeeping`/);
+  assert.match(completionSkill, /relocatedFrom: `sourceRunRoot`/);
+  assert.match(
+    completionSkill,
+    /The lifecycle bookkeeping commit is the artifact commit/,
+  );
+  assert.match(
+    completionSkill,
+    /Commit only the exported `manifest\.json` and `build-record\.json` as the evidence update/,
+  );
+  assert.match(completionSkill, /Push once after both commits exist/);
+  assert.match(
+    lifecycleContract,
+    /Archive completion is exactly two commits: the lifecycle bookkeeping commit, then the exported recap evidence commit/,
+  );
+});
+
+test('supersedes active-path evidence with exported immutable path evidence', () => {
+  assert.match(
+    completionSkill,
+    /Submit only immutable paths under `projectRecapExport\.exportRoot` as commit evidence/,
+  );
+  assert.match(completionSkill, /supersedes the prior active-path evidence/);
+  assert.match(
+    completionSkill,
+    /Never submit the gitignored archive path as commit evidence/,
+  );
+  assert.match(
+    lifecycleContract,
+    /The exported-path evidence supersedes the selected run's prior active-path evidence/,
+  );
+});
+
+test('warns on failed exported attestation without failing completion', () => {
+  assert.match(
+    completionSkill,
+    /A failed exported recap attestation does not fail project completion/,
+  );
+  assert.match(completionSkill, /report `built-not-durable`/);
+  assert.match(
+    completionSkill,
+    /commit the warning-bearing `manifest\.json` and `build-record\.json`/,
+  );
+  assert.match(
+    lifecycleContract,
+    /Failure to verify the exported commit evidence is non-blocking/,
+  );
+});
+
+test('rewrites summary and PR recap links to the tracked export root', () => {
+  assert.match(
+    completionSkill,
+    /Rewrite recap links in the tracked summary export and the PR description body from `projectRecapExport\.exportRoot`/,
+  );
+  assert.match(
+    completionSkill,
+    /Use the current head branch for the blob URL while the PR is open/,
+  );
+  assert.match(completionSkill, /Never link to `\.oat\/projects\/archived\/`/);
+  assert.match(
+    lifecycleContract,
+    /Post-archive summary and PR recap links target `projectRecapExport\.exportRoot`/,
   );
 });
