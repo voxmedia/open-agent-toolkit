@@ -113,6 +113,8 @@ const DEFAULT_WORKFLOW_CONFIG = {
       plan: true,
       analysis: true,
     },
+    projectLog: 'auto',
+    projectLogLedgerPath: '.oat/repo/reference/project-observations.md',
     designMode: null,
     dispatchCeiling: {
       preset: null,

@@ -95,6 +95,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'plan.md',
     'implementation.md',
     'summary.md',
+    'project-log.md',
   ]),
   templateDirectories: Object.freeze([
     'ideas',

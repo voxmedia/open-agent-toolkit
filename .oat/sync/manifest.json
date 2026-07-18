@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "oatVersion": "0.1.71",
+  "oatVersion": "0.1.74",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -1521,7 +1521,47 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-07-14T00:27:35.914Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/explainer-kit",
+      "providerPath": ".claude/skills/explainer-kit",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T19:43:53.003Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-explainer-kit",
+      "providerPath": ".claude/skills/oat-explainer-kit",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T19:43:53.004Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/explainer-kit",
+      "providerPath": ".cursor/skills/explainer-kit",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T19:43:53.005Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-explainer-kit",
+      "providerPath": ".cursor/skills/oat-explainer-kit",
+      "provider": "cursor",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T19:43:53.005Z"
     }
   ],
-  "lastUpdated": "2026-07-14T00:27:35.914Z"
+  "lastUpdated": "2026-07-18T19:43:53.005Z"
 }

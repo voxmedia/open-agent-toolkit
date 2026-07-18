@@ -99,6 +99,10 @@ describe('installWorkflows', () => {
         'utf8',
       ),
     ).resolves.toContain('name: oat-explainer-kit');
+    expect(WORKFLOW_TEMPLATES).toContain('project-log.md');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'templates', 'project-log.md'), 'utf8'),
+    ).resolves.toBe('# project-log.md\n');
   });
 
   it('installs all four asset classes at user scope without project scaffolding', async () => {

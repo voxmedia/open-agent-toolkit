@@ -740,6 +740,72 @@ describe('resolveEffectiveConfig', () => {
       });
     });
 
+    it('defaults project-log workflow settings when unset', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () => ({ version: 1 }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.projectLog']).toEqual({
+        value: 'auto',
+        source: 'default',
+      });
+      expect(result.resolved['workflow.projectLogLedgerPath']).toEqual({
+        value: '.oat/repo/reference/project-observations.md',
+        source: 'default',
+      });
+    });
+
+    it('resolves project-log settings with local over shared over user precedence', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                projectLog: false,
+                projectLogLedgerPath: 'shared-ledger.md',
+              },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                projectLog: true,
+                projectLogLedgerPath: 'local-ledger.md',
+              },
+            }) satisfies OatLocalConfig,
+          readUserConfig: async () =>
+            ({
+              version: 1,
+              workflow: {
+                projectLog: 'auto',
+                projectLogLedgerPath: 'user-ledger.md',
+              },
+            }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.projectLog']).toEqual({
+        value: true,
+        source: 'local',
+      });
+      expect(result.resolved['workflow.projectLogLedgerPath']).toEqual({
+        value: 'local-ledger.md',
+        source: 'local',
+      });
+    });
+
     it('resolves workflow.dispatchCeiling.providers.codex with local > shared > user precedence', async () => {
       const result = await resolveEffectiveConfig(
         '/repo',

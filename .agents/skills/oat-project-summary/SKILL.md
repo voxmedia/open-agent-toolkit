@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.3.3
+version: 1.3.4
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -36,16 +36,17 @@ When executing this skill, provide lightweight progress feedback so the user can
   ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 - Before multi-step work, print step indicators, e.g.:
-  - `[1/5] Resolving project + reading artifacts…`
-  - `[2/5] Checking for existing summary…`
-  - `[3/5] Generating / updating summary sections…`
-  - `[4/5] Promoting key decisions to reference/decisions/ (if PJM installed)…`
-  - `[5/5] Committing…`
+  - `[1/6] Resolving project + reading artifacts…`
+  - `[2/6] Checking project log + existing summary…`
+  - `[3/6] Generating / updating summary sections…`
+  - `[4/6] Rolling up project observations…`
+  - `[5/6] Promoting key decisions to reference/decisions/ (if PJM installed)…`
+  - `[6/6] Committing…`
 
 **BLOCKED Activities:**
 
 - ❌ No implementation work
-- ❌ No changing project artifacts (other than summary.md)
+- ❌ No hand-editing project artifacts (other than summary.md)
 - ❌ No creating tasks or modifying plan
 - ❌ No hand-authoring decision files or editing `reference/decisions/index.md` inside its managed markers
 
@@ -53,6 +54,10 @@ When executing this skill, provide lightweight progress feedback so the user can
 
 - ✅ Reading all project artifacts
 - ✅ Creating or updating summary.md
+- ✅ Using `oat project log append` and `oat project log rollup` as the only
+  writers for project-log promotion and roll-up
+- ✅ Offering follow-up-marked project-log entries to
+  `oat-pjm-add-backlog-item`
 - ✅ Committing summary.md changes
 - ✅ Promoting the summary's Key Decisions into canonical `reference/decisions/` records via `oat decision new` (Step 7), gated on the PJM tool pack being installed
 
@@ -120,6 +125,8 @@ Read all available artifacts for synthesis:
 - `"$PROJECT_PATH/plan.md"` — phases, tasks, reviews, deferred items
 - `"$PROJECT_PATH/implementation.md"` — task outcomes, deviations, challenges, review notes
 - `"$PROJECT_PATH/state.md"` — associated issues, workflow mode
+- `"$PROJECT_PATH/project-log.md"` — optional append-only workflow
+  observations; never hand-edit
 - `"$PROJECT_PATH/oat-execution-learnings.md"` — optional append-only
   autonomous-run observations and recommendations
 
@@ -127,6 +134,34 @@ Read all available artifacts for synthesis:
 
 If `oat-execution-learnings.md` is absent, do not infer autonomous learnings
 from other artifacts and do not add an Autonomous Execution Learnings section.
+
+### Step 2.5: Check Project Log and Offer Ledger Graduation
+
+Run the read-only status probe before authoring or refreshing `summary.md`:
+
+```bash
+PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
+PROJECT_LOG_PROMOTION_APPENDED="false"
+```
+
+Route on the structured result. `status: "absent"` is inert. When the entry
+counts show one or more entries, keep the log in the summary flow even if task,
+revision, and autonomous-learning tracking fields are otherwise current.
+
+Before roll-up, inspect `project`-scoped judgments for observations that are
+reusable across projects and offer ledger graduation. For every observation the
+user selects, invoke `oat project log append` with the original judgment type
+and area, `--scope general`, and a body that references the original entry's
+exact heading. The new body may explain why the observation is reusable, but it
+must not copy the full original entry. Request the append result as structured
+JSON; whenever it reports `status: "appended"`, set
+`PROJECT_LOG_PROMOTION_APPENDED="true"` so the commit step includes the mutated
+project log.
+
+Ledger graduation is append-only: never edit, annotate, strike through, or add
+side metadata to the original entry. The newly appended `general` judgment is
+the promotion, and the later `rollup` command naturally selects it for the
+ledger.
 
 ### Step 3: Check for Existing Summary
 
@@ -154,7 +189,7 @@ test -f "$PROJECT_PATH/summary.md"
      identifiers (timestamp, category, and title) with the source pointers in
      the existing `## Autonomous Execution Learnings` section. Treat missing,
      added, or changed recommendations as `learnings_changed`.
-   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
+   - If `oat_summary_last_task == current_last_task` AND `oat_summary_revision_count == current_rev_count` AND learnings are absent or unchanged AND the project-log check reports no entries: **No changes detected. Skip update.** Report: "Summary is current. No updates needed."
    - If `current_rev_count > oat_summary_revision_count`: New revision phases exist. Update: Revision History, What Was Implemented, Follow-up Items.
    - If `current_last_task > oat_summary_last_task`: New tasks completed. Update: What Was Implemented, Notable Challenges, Tradeoffs Made.
    - If `learnings_changed`: update Autonomous Execution Learnings even when
@@ -192,6 +227,7 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 | Revision History               | plan.md p-revN phases, implementation.md revision notes                |
 | Follow-up Items                | implementation.md deferred findings, plan.md deferred items            |
 | Associated Issues              | state.md `associated_issues` field                                     |
+| Workflow Observations          | project-log.md via `oat project log rollup` only                       |
 | Autonomous Execution Learnings | oat-execution-learnings.md dated entries                               |
 | Explainer Outcome              | project-recap `manifest.json` and `build-record.json`                  |
 
@@ -249,6 +285,17 @@ entries, omit the entire section. If the file is absent, this behavior is inert:
 remove the template placeholder during a first render and make no
 learnings-driven update on a re-run.
 
+**Workflow Observations coexistence contract:**
+
+Keep `## Workflow Observations` and `## Autonomous Execution Learnings` as
+distinct summary sections. Author the autonomous-execution section first, then
+perform the project-log roll-up in Step 6. Because the roll-up command writes
+every project-log entry, keep the project-log observation in Workflow
+Observations and represent any overlap from Autonomous Execution Learnings with
+a one-line cross-reference instead of copying it there. The roll-up command
+remains the only writer of Workflow Observations—never hand-implement its
+section or ledger writes.
+
 **For incremental updates (re-run):**
 
 Only update sections affected by the new content. Do not rewrite the entire summary. Preserve existing section content and append/modify as needed.
@@ -270,11 +317,50 @@ oat_summary_includes_revisions: [{ list of p-revN IDs reflected }]
 ---
 ```
 
-### Step 6: Promote Key Decisions to Canonical Decision Records
+### Step 6: Roll Up Project Observations and Offer Backlog Graduation
+
+Run this step after `summary.md` has been authored or refreshed, including the
+distinct `## Autonomous Execution Learnings` section when its source artifact
+exists.
+
+When Step 2.5 found entries, run:
+
+```bash
+PROJECT_LOG_LEDGER_PATH=$(oat config get workflow.projectLogLedgerPath)
+PROJECT_LOG_LEDGER_APPENDED="false"
+PROJECT_LOG_ROLLUP=$(oat project log rollup --project "$PROJECT_PATH" --json)
+```
+
+`PROJECT_LOG_LEDGER_PATH` must be the effective resolved path, including the
+default when no override exists. If it cannot be resolved, stop before roll-up
+because a later `ledgerOutcome: "appended"` could not be staged safely.
+
+Route only on the structured `ProjectLogRollupResult`:
+
+- `status: "ok"` with `ledgerOutcome: "appended"`: set
+  `PROJECT_LOG_LEDGER_APPENDED="true"` and proceed.
+- `status: "ok"` with `ledgerOutcome: "deduplicated"`: proceed without staging
+  the unchanged ledger.
+- `status: "ok"` with `ledgerOutcome: "skipped_permitted"`: proceed and report
+  that the ledger was permissibly skipped because the default reference layer
+  is absent.
+- `status: "failed"` or `ledgerOutcome: "failed"`: surface the failure to the
+  user and stop before commit. Do not describe the summary as fully rolled up.
+
+The command mechanically writes or updates `## Workflow Observations` and
+appends/deduplicates eligible `general` judgments in the configured ledger. Do
+not reproduce either write by hand.
+
+Separately inspect follow-up-marked project-log entries and offer backlog
+graduation through `oat-pjm-add-backlog-item`. Backlog graduation creates a
+tracked work item; it is not ledger graduation and must not replace the
+append-based `project` → `general` promotion in Step 2.5.
+
+### Step 7: Promote Key Decisions to Canonical Decision Records
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 
-**6.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is installed:
+**7.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is installed:
 
 ```bash
 PJM_ENABLED=$(oat config get tools.project-management 2>/dev/null || echo "")
@@ -283,9 +369,9 @@ PJM_ENABLED=$(oat config get tools.project-management 2>/dev/null || echo "")
 - If `PJM_ENABLED` is `true` → perform the promotion automatically. Do NOT ask the user.
 - Otherwise (any other value, empty, or unset) → **skip this entire step silently.** Do not print a warning or prompt.
 
-**6.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
+**7.2 — Skip if nothing to promote.** If `summary.md` has no `## Key Decisions` section, or that section has no decision content, skip the step. There is nothing to promote.
 
-**6.3 — Ensure the decisions surface exists.** The canonical decisions root is `.oat/repo/reference/decisions` (the `oat decision` default; pass `--decisions-root <path>` only for an explicit override). If its managed index is missing — i.e. `.oat/repo/reference/decisions/index.md` does not exist — initialize it first so `oat decision new` can succeed:
+**7.3 — Ensure the decisions surface exists.** The canonical decisions root is `.oat/repo/reference/decisions` (the `oat decision` default; pass `--decisions-root <path>` only for an explicit override). If its managed index is missing — i.e. `.oat/repo/reference/decisions/index.md` does not exist — initialize it first so `oat decision new` can succeed:
 
 ```bash
 test -f .oat/repo/reference/decisions/index.md || oat decision init
@@ -293,7 +379,7 @@ test -f .oat/repo/reference/decisions/index.md || oat decision init
 
 `oat decision init` is idempotent; running it when the scaffold already exists is harmless.
 
-**6.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
+**7.4 — Idempotent, date-independent promotion (critical).** For each decision in `## Key Decisions`:
 
 1. **Derive title + complete sections.** Ground every value in the Key Decision and its project artifacts:
    - The bold lead-in / first clause becomes the **title** (a short noun phrase).
@@ -325,7 +411,7 @@ Because of the date-independent slug dedup, this step is **safe to run every tim
 
 **Status value:** use `--status accepted`. The decision template's status field (`.oat/templates/decision.md`) is free-form, and the canonical accepted/decided value in the decision vocabulary (`proposed` → `accepted` → `superseded`) is `accepted`. A Key Decision in a completed project's summary represents a decision that was made and shipped, so `accepted` is the correct status.
 
-**6.5 — Report, don't prompt.** After processing all Key Decisions, print a short informational summary, e.g.:
+**7.5 — Report, don't prompt.** After processing all Key Decisions, print a short informational summary, e.g.:
 
 ```
 Promoted N key decision(s) to reference/decisions/:
@@ -335,14 +421,25 @@ Promoted N key decision(s) to reference/decisions/:
 
 This is informational only. There is no interactive prompt anywhere in this step.
 
-### Step 7: Commit
+### Step 8: Commit
 
 ```bash
 git add "$PROJECT_PATH/summary.md"
+if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
+  git add "$PROJECT_PATH/project-log.md"
+fi
+if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
+  git add "$PROJECT_LOG_LEDGER_PATH"
+fi
 git commit -m "docs: generate summary for {project-name}"
 ```
 
-If decision records were promoted in Step 6, also stage `.oat/repo/reference/decisions/` so the new `DR-*.md` records and the regenerated `index.md` land with the summary.
+These conditional paths are required: append-based promotion mutates
+`project-log.md`, while `ledgerOutcome: "appended"` mutates the effective
+repository ledger. A permitted skip or deduplicated ledger does not add a
+ledger staging path.
+
+If decision records were promoted in Step 7, also stage `.oat/repo/reference/decisions/` so the new `DR-*.md` records and the regenerated `index.md` land with the summary.
 
 If this is a re-run (incremental update):
 
@@ -350,7 +447,7 @@ If this is a re-run (incremental update):
 git commit -m "docs: update summary for {project-name}"
 ```
 
-### Step 8: Output Summary
+### Step 9: Output Summary
 
 ```
 Summary generated for {project-name}.
@@ -377,6 +474,13 @@ Summary tracks: last task {task_id}, {N} revision phases
   follow-ups, and Workflow issues with source-entry pointers
 - When `oat-execution-learnings.md` is absent, no Autonomous Execution
   Learnings section is rendered and normal summary behavior is unchanged
+- Project-log ledger graduation appends a new referencing `general` judgment
+  before roll-up and never mutates the original `project` judgment
+- `oat project log rollup --json` owns the distinct Workflow Observations
+  section and ledger writes; `failed` stops the summary flow while
+  `skipped_permitted` proceeds with a note
+- Follow-up-marked project-log entries use backlog graduation separately from
+  ledger graduation
 - When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt
 - A project-recap attempt appears once in a concise Explainer Outcome section

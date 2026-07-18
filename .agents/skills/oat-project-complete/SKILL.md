@@ -1,6 +1,6 @@
 ---
 name: oat-project-complete
-version: 1.5.3
+version: 1.5.4
 description: Use when all implementation work is finished and the project is ready to close. Marks the OAT project lifecycle as complete.
 disable-model-invocation: true
 user-invocable: true
@@ -292,6 +292,62 @@ When recap intent resolves to `skip`, or generation produces no valid final reca
 
 For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`. A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence. Do not treat local filesystem presence as durability. Completion-bookkeeping durability, relocation re-attestation, and archive-aware recap links are handled by the later durability stage, not by this selection gate.
 
+### Step 3.7: Project Log Completion Gate
+
+Run the project-log status probe before any lifecycle mutation or archive work:
+
+```bash
+PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
+```
+
+Route on the structured result:
+
+- `status: "absent"`: the feature is inert; proceed without a roll-up or seal
+  append.
+- `status: "synthesis_pending"` or `synthesisPending: true`: emit
+  `Warning: Project-log end-of-run synthesis is pending. Complete it with oat project log synthesize.`
+  Offer to invoke `oat project log synthesize`, but do not block completion if
+  the synthesis remains pending. Synthesis is warn-only.
+- When entry counts are nonzero, require a current `summary.md`. This hard gate
+  overrides Step 3.5's tolerance for declined, skipped, missing, or failed
+  summary generation: invoke `oat-project-summary` when available or author a
+  complete summary inline before continuing.
+
+For a log with entries, reuse the summary flow's structured roll-up result only
+when this completion run has that exact result in memory and it reports
+`status: "ok"`. Otherwise run the idempotent enforcement surface:
+
+```bash
+PROJECT_LOG_ROLLUP=$(oat project log rollup --project "$PROJECT_PATH" --json)
+```
+
+Do not set lifecycle complete, seal, or archive unless the structured
+`ProjectLogRollupResult` reports `status: "ok"`.
+
+- `ledgerOutcome: "appended"` or `"deduplicated"` with `status: "ok"`:
+  proceed.
+- `ledgerOutcome: "skipped_permitted"` with `status: "ok"`: proceed and report
+  the permitted skip; the absent default reference layer is not a block.
+- `status: "failed"`, `ledgerOutcome: "failed"`, malformed JSON, or a command
+  error: stop and surface the roll-up failure. Never continue to seal or
+  archive.
+
+When the status probe found an existing project log, append the completion seal
+as the final project-log entry before any lifecycle-complete mutation:
+
+```bash
+oat project log append \
+  --project "$PROJECT_PATH" \
+  --structural \
+  --producer oat-project-complete \
+  --ref seal \
+  --body "Completion sealed at $(date -u +%Y-%m-%dT%H:%M:%SZ); project-log roll-up status: ok."
+```
+
+Only append this seal after Step 3.7 has either confirmed there are no entries
+to roll up or obtained `status: "ok"`. If the append fails for an existing log,
+stop before setting lifecycle complete or archiving. No project-log append may follow the seal.
+
 ### Step 4: Archive Residual Active Review Artifacts
 
 Detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
@@ -394,6 +450,9 @@ Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path
 ### Step 8: Archive Project (Conditional)
 
 **Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
+
+This conditional skips archive movement only; it does not skip the Step 3.7
+seal append for an existing project log.
 
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 

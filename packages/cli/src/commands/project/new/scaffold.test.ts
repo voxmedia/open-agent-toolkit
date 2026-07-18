@@ -3,6 +3,7 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import YAML from 'yaml';
 
@@ -20,6 +21,7 @@ const PROJECT_TEMPLATE_NAMES = [
   'design.md',
   'plan.md',
   'implementation.md',
+  'project-log.md',
 ] as const;
 const SINGLE_BRACE_OAT_PLACEHOLDER = /(?<!\{)\{\s*OAT_[A-Z0-9_]+\s*\}(?!\})/g;
 
@@ -53,11 +55,12 @@ async function seedTemplates(repoRoot: string): Promise<void> {
     'plan.md',
     'implementation.md',
     'project-index.md',
+    'project-log.md',
   ];
 
   for (const name of templateNames) {
     const content =
-      name === 'state.md'
+      name === 'state.md' || name === 'project-log.md'
         ? await readFile(join(REPO_ROOT, '.oat', 'templates', name), 'utf8')
         : [
             '---',
@@ -76,6 +79,17 @@ async function createRepoRoot(): Promise<string> {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-scaffold-'));
   await seedTemplates(repoRoot);
   return repoRoot;
+}
+
+async function setProjectLogConfig(
+  repoRoot: string,
+  projectLog: true | false | 'auto',
+): Promise<void> {
+  await writeFile(
+    join(repoRoot, '.oat', 'config.json'),
+    `${JSON.stringify({ workflow: { projectLog } })}\n`,
+    'utf8',
+  );
 }
 
 async function createRepoRootWithRealTemplates(): Promise<string> {
@@ -700,6 +714,89 @@ describe('scaffoldProject', () => {
       'Complete discovery and generate a quick implementation plan',
     );
   });
+
+  it('creates project-log.md from the real repo template when forced on', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await setProjectLogConfig(repoRoot, false);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'forced-log',
+      mode: 'quick',
+      projectLog: true,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-17',
+    });
+
+    const actual = await readFile(
+      join(repoRoot, result.projectPath, 'project-log.md'),
+      'utf8',
+    );
+    const realTemplate = await readFile(
+      join(REPO_ROOT, '.oat', 'templates', 'project-log.md'),
+      'utf8',
+    );
+    expect(actual).toBe(
+      instantiateProjectLogTemplate(realTemplate, 'forced-log', '2026-07-17'),
+    );
+    expect(result.createdFiles).toContain('project-log.md');
+  });
+
+  it('suppresses project-log.md when forced off', async () => {
+    const repoRoot = await createRepoRoot();
+    tempDirs.push(repoRoot);
+    await setProjectLogConfig(repoRoot, true);
+
+    const result = await scaffoldProject({
+      repoRoot,
+      projectName: 'suppressed-log',
+      mode: 'quick',
+      projectLog: false,
+      refreshDashboard: false,
+      setActive: false,
+      today: '2026-07-17',
+    });
+
+    await expect(
+      readFile(join(repoRoot, result.projectPath, 'project-log.md'), 'utf8'),
+    ).rejects.toThrow();
+    expect(result.createdFiles).not.toContain('project-log.md');
+  });
+
+  it.each([
+    { projectLog: true as const, createsLog: true },
+    { projectLog: 'auto' as const, createsLog: false },
+    { projectLog: false as const, createsLog: false },
+  ])(
+    'uses workflow.projectLog=$projectLog for default scaffold behavior',
+    async ({ projectLog, createsLog }) => {
+      const repoRoot = await createRepoRoot();
+      tempDirs.push(repoRoot);
+      await setProjectLogConfig(repoRoot, projectLog);
+
+      const result = await scaffoldProject({
+        repoRoot,
+        projectName: `config-${String(projectLog)}`,
+        mode: 'quick',
+        refreshDashboard: false,
+        setActive: false,
+        today: '2026-07-17',
+      });
+      const logPath = join(repoRoot, result.projectPath, 'project-log.md');
+
+      if (createsLog) {
+        await expect(readFile(logPath, 'utf8')).resolves.toContain(
+          `# Project Log: config-${String(projectLog)}`,
+        );
+        expect(result.createdFiles).toContain('project-log.md');
+      } else {
+        await expect(readFile(logPath, 'utf8')).rejects.toThrow();
+        expect(result.createdFiles).not.toContain('project-log.md');
+      }
+    },
+  );
 
   it('rejects a scaffolded state that uses decomposition without coordination kind', async () => {
     const repoRoot = await createRepoRoot();
