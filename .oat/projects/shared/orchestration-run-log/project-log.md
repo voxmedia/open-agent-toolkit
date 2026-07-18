@@ -56,6 +56,14 @@ Observation: The root append performed after phase-worker launch disappeared whi
 
 Focused final re-review passed with 0 findings after p03-t10 and p03-t11; artifact: .oat/projects/shared/orchestration-run-log/reviews/archived/final-review-2026-07-18T150415Z.md.
 
-## End-of-run synthesis (pending — do not skip at project completion)
+### 2026-07-18 · general · friction · same-worktree dispatch logging
 
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
+Promoted from . Reusable lesson: root-owned writes created after a same-worktree child captures its clean baseline can be erased by child cleanup, so lifecycle orchestration must coordinate write ownership, preserve files the child did not create, or isolate the child in a separate worktree. (observed on open-agent-toolkit 0.1.73)
+
+### 2026-07-18 · general · friction · same-worktree dispatch ownership
+
+Correction to `### 2026-07-18 · general · friction · same-worktree dispatch logging`, whose source heading was dropped by shell quoting. Promoted from `### 2026-07-18 · project · friction · same-worktree dispatch logging`: root-owned writes created after a same-worktree child captures its clean baseline can be erased by child cleanup, so lifecycle orchestration must coordinate write ownership, preserve files the child did not create, or isolate the child in a separate worktree. (observed on open-agent-toolkit 0.1.73)
+
+## End-of-run synthesis
+
+The project-log lifecycle shipped and passed focused final re-review after hardening structural marker validation, canonical synthesis lookup, and byte-preservation behavior. This run exposed a reusable same-worktree ownership hazard where child cleanup erased a root-owned dispatch append; the observation was promoted to the repository ledger with a recommendation to coordinate writes or isolate child worktrees. No project-log follow-up was converted into a backlog item during this synthesis.
