@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-10
+oat_last_updated: 2026-07-18
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: reviewer-parallelism
 
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-18
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,19 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 1     | 0/1       |
+| Phase 2 | pending | 1     | 0/1       |
+| Phase 3 | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/4 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Canonical Reviewer Orchestration Contract
 
-**Status:** in_progress
-**Started:** 2026-07-10
+**Status:** pending
+**Started:** -
 
 ### Phase Summary (fill when phase is complete)
 
@@ -57,10 +58,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Add bounded reconnaissance behavior with semantic regression coverage
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** pending
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,23 +86,31 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 2: Review Workflow Documentation
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Document broad-review latency benefit and safety boundary
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Provider Sync and Shipped Release Validation
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Regenerate provider views and finalize lockstep release metadata
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Close the shipped backlog item
 
 **Status:** pending
 **Commit:** -
@@ -130,36 +139,29 @@ Chronological log of implementation progress.
 
 ### 2026-07-10
 
-**Session Start:** {time}
+**Session Start:** quick-start initialization
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Add bounded reconnaissance behavior with semantic regression coverage - next
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Quick-mode discovery and the reviewed execution plan were completed.
+- Implementation tracking was initialized for four tasks across three sequential phases.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Keep execution sequential because documentation depends on the finalized contract and provider/release output depends on both canonical and docs changes.
+- Keep primary-reviewer judgment in the root reviewer; delegate only bounded, advisory reconnaissance.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Execute `p01-t01` via `oat-project-implement`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-07-10
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 2026-07-18
 
 ---
 
@@ -179,6 +181,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 

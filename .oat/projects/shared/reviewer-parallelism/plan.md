@@ -1,16 +1,16 @@
 ---
 oat_plan_source: quick
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_last_updated: 2026-07-18
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: reviewer-parallelism
@@ -57,7 +57,7 @@ Add a dedicated semantic contract test that reads the canonical reviewer and ass
 - broad-review eligibility examples: final code reviews, broad phase/range reviews, docs sweeps, and provider-view audits;
 - narrow-review inline behavior;
 - one bounded, read-only, non-recursive round of disjoint lanes;
-- compact reports with exact `file:line` evidence, coverage/gaps, and explicit uncertainty;
+- compact reports with coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty;
 - cheaper/faster worker preference only when the host reliably exposes that control;
 - primary-only source validation, reconciliation, synthesis, severity, validation decisions, artifact writing, and `StructuredFindings`;
 - capability/authorization/failure fallback with no checklist or output-contract downgrade.
@@ -78,7 +78,7 @@ Update `.agents/agents/oat-reviewer.md` and both existing exact-version assertio
 - update the reviewer version assertions in `packages/cli/src/validation/skills.test.ts` and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` from `1.1.7` to `1.1.8`;
 - add a provider-neutral bounded-reconnaissance policy after dispatch control;
 - make the primary reviewer establish authoritative scope before considering delegation;
-- define a compact lane prompt/return contract and one-level fan-out limit;
+- define a compact lane prompt/return contract requiring coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty, with a one-level fan-out limit;
 - require direct re-verification of load-bearing positive and negative claims;
 - keep workers advisory and prevent them from mutating files, emitting findings, assigning severity, or writing either output sink;
 - preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged;
@@ -140,7 +140,7 @@ Expand the existing `Subagent Compatibility` section to distinguish:
 - outer dispatch of `oat-reviewer` from optional reviewer-local reconnaissance;
 - eligible broad-review examples and the expected wall-clock/cost benefit;
 - the one-round, read-only, non-recursive lane boundary;
-- evidence and uncertainty requirements;
+- worker-report coverage, checks performed, exact evidence, gaps, and uncertainty requirements;
 - primary-reviewer ownership of verification, synthesis, severity, and final findings;
 - inline fallback when nested workers or explicit cheaper-tier controls are unavailable.
 
@@ -275,6 +275,8 @@ Expected: all repository and publishable-package checks pass and no generated pr
 - Move: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md` → `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
 - Modify: `.oat/repo/pjm/backlog/completed.md`
 - Regenerate: `.oat/repo/pjm/backlog/index.md`
+- Modify: `.oat/repo/pjm/roadmap.md`
+- Modify as applicable: `.oat/repo/pjm/current-state.md`
 
 **Step 1: Archive the completed backlog item**
 
@@ -295,7 +297,13 @@ pnpm run cli:source -- backlog archive BL-260708-enable-oat-reviewer-subagent --
 
 Expected: the item is marked closed, moved to `backlog/archived/`, recorded in `backlog/completed.md`, and removed from the active generated index.
 
-**Step 2: Verify backlog integrity and formatting**
+**Step 2: Reconcile curated PJM surfaces**
+
+- Remove this item from `roadmap.md` under `Next (Planned)`.
+- Update the curated overview in `backlog/index.md` to describe bounded reviewer reconnaissance as shipped rather than tracked active work.
+- Inspect `current-state.md`; update it only if its operating-picture prose still describes this item as active or planned.
+
+**Step 3: Verify backlog integrity and formatting**
 
 Run:
 
@@ -305,28 +313,35 @@ test -f .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md
 ! rg -n '^oat_template(_name)?:' .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md
 rg -n 'BL-260708-enable-oat-reviewer-subagent' .oat/repo/pjm/backlog/completed.md
 ! rg -n 'BL-260708-enable-oat-reviewer-subagent' .oat/repo/pjm/backlog/index.md
+! rg -n 'BL-260708-enable-oat-reviewer-subagent' .oat/repo/pjm/roadmap.md
 pnpm run cli:source -- pjm doctor --json || test $? -eq 2
 pnpm exec oxfmt --write \
   .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/completed.md \
-  .oat/repo/pjm/backlog/index.md
+  .oat/repo/pjm/backlog/index.md \
+  .oat/repo/pjm/roadmap.md \
+  .oat/repo/pjm/current-state.md
 pnpm exec oxfmt --check \
   .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/completed.md \
-  .oat/repo/pjm/backlog/index.md
+  .oat/repo/pjm/backlog/index.md \
+  .oat/repo/pjm/roadmap.md \
+  .oat/repo/pjm/current-state.md
 git diff --check
 ```
 
-Expected: this item exists only in the archive, has no template markers, appears in the completed ledger, and is absent from the active index. The doctor may retain its pre-existing unrelated template-frontmatter failure (exit `2`), but it must no longer name this item or report any new failure introduced by this task.
+Expected: this item exists only in the archive, has no template markers, appears in the completed ledger, and is absent from the active index and roadmap. The curated overview describes the capability as shipped. The doctor may retain its pre-existing unrelated template-frontmatter failure (exit `2`), but it must no longer name this item or report any new failure introduced by this task.
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add \
   .oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/completed.md \
-  .oat/repo/pjm/backlog/index.md
+  .oat/repo/pjm/backlog/index.md \
+  .oat/repo/pjm/roadmap.md \
+  .oat/repo/pjm/current-state.md
 git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 ```
 
@@ -343,11 +358,13 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md |
-| plan   | artifact | received        | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T200447Z.md          |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
 Quick-mode implementation readiness depends on the `plan` artifact review, not on optional `spec` or `design` rows.
+
+The configured gate passed at its Important threshold on 2026-07-18. Its two non-blocking Medium findings were applied directly to this plan before finalization.
 
 ---
 
