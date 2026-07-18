@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | in_progress | 3     | 3/3       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 3     | 3/3       |
 
 **Total:** 5/5 tasks completed
 
@@ -379,8 +379,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - **p01-M1 — Semantic regression coverage does not pin every declared safety boundary**
   - Source: `reviews/archived/p01-review-2026-07-18T224716Z.md`
-  - Disposition: deferred under the non-blocking per-phase review policy.
-  - Rationale: implementation behavior is correct and all focused tests pass; final review must decide whether to add targeted assertions for the no-hard-coded-model policy, one-time capability check, and prohibition on worker writes to either final output sink.
+  - Final disposition: accepted as a non-blocking follow-up after final review resurfaced it at Medium severity.
+  - Rationale: shipped behavior is correct and validation passes, but targeted assertions remain necessary for the no-hard-coded-model policy, one-time capability check, and prohibition on worker writes to either final output sink.
+
+- **Final-M2 — Implementation completion status was internally inconsistent**
+  - Source: `reviews/archived/final-review-2026-07-18T234708Z.md`
+  - Final disposition: resolved during completion bookkeeping by setting `oat_status` and the Phase 3 overview row to `complete`.
 
 ## Test Results
 
