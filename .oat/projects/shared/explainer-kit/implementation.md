@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t06
+oat_current_task_id: p04-t07
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 5/9       |
+| Phase 4 | in_progress | 9     | 6/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 30/38 tasks completed
+**Total:** 31/38 tasks completed
 
 ---
 
@@ -770,6 +770,27 @@ stale version pins and unmapped Phase 3 lifecycle prompt sites.
 - Build, lint, format, type-check, and the full workspace test suite pass.
 - Focused repaired fixtures pass (124/124); full suites passed across CLI,
   control plane, docs packages, and smoke tests.
+
+---
+
+### Task p04-t06: Prove packaged core and adapter execution
+
+**Status:** completed
+**Commit:** `d98fe0b9`
+
+**Outcome:**
+
+- Added packaged-layout smoke coverage using bundled assets in an isolated
+  temporary root.
+- Proved config-free core and adapter execution plus fail-closed missing and
+  incompatible core behavior without source-checkout fallback.
+
+**Verification:**
+
+- Packaged-layout smoke — pass (4/4).
+- Related wrapper smoke — pass (6/6).
+- CLI asset suite — pass (3,055 tests).
+- Scoped lint, formatting, and whitespace checks — pass.
 
 ---
 
