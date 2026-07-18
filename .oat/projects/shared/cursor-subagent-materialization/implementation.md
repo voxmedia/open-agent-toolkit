@@ -146,7 +146,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **p03 outcome:** no implementation edits, tests, commits, or children; worktree preserved at `.worktrees/cursor-subagent-materialization/p03`.
 - **p04 outcome:** no implementation edits, tests, commits, or children; worktree preserved at `.worktrees/cursor-subagent-materialization/p04`.
 - **Containment:** no sequential degradation and no replacement launch.
-- **Recovery boundary:** requires explicit operator authorization for a new parallel run after diagnosing and cleaning or recreating the worktrees.
+- **Recovery boundary:** operator authorized a new bounded parallel run on 2026-07-18. Recovery recreates only the two invalid worktrees, commits bootstrap-owned sync metadata, verifies clean descendants of the current root, and relaunches the same pinned phase targets once.
 
 <!-- orchestration-runs-end -->
 
