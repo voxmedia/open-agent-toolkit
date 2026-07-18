@@ -17,126 +17,181 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Reinforce the implementation workflow so its configured skill-exit gate is an
+independent, mandatory closeout boundary whenever configured. The workflow
+currently can finish its lifecycle self-review, optional phase review, final
+HiLL approval, and post-implementation sequence before reaching gate
+resolution, allowing it to report success without producing configured-gate
+provenance.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Workflow depth
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should this use quick mode with a lightweight design?
+**A:** Yes. Scaffold and seed the quick-start project, confirm the lightweight
+design and plan, then implement through review.
+**Decision:** Use native quick mode and produce `design.md` before planning.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+The direction is constrained by the incident: move the configured skill-exit
+gate into the authoritative closeout sequence and persist its lifecycle state.
+The lightweight design will resolve the exact state shape and ordering boundary.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Enforce the configured exit gate as a resumable final closeout
+state machine, separate from lifecycle self-review and optional phase review.
+**Rationale:** Documentation-only reordering cannot prevent premature state
+transitions or make interruption, retry, and stale-result handling safe.
+**User validated:** Yes — the request explicitly requires durable pending,
+allowed, and blocked outcomes tied to the reviewed HEAD/run.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
+### Option A: Instruction-only ordering
 
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
+**Description:** Move gate instructions above completion and strengthen success
+criteria without adding durable state.
 
 **Pros:**
 
-- {Benefit 1}
-- {Benefit 2}
+- Small and easy to review.
+- Directly fixes the misleading appendix placement.
 
 **Cons:**
 
-- {Drawback 1}
-- {Drawback 2}
+- Cannot safely resume interrupted gate handling.
+- Cannot invalidate a stale successful result after later commits.
+- Relies on prose compliance to prevent premature completion.
 
-**Chosen:** {A/B/Neither}
+**Chosen:** No
 
-**Summary:** {1-2 sentence summary of the chosen option and why}
+### Option B: Durable closeout gate state
+
+**Description:** Combine corrected lifecycle ordering with persisted gate
+resolution/outcome provenance bound to the reviewed revision and run.
+
+**Pros:**
+
+- Makes pending, allowed, and blocked outcomes machine-checkable.
+- Supports interruption/resume without duplicate valid runs.
+- Makes later commits invalidate stale gate success.
+
+**Cons:**
+
+- Requires state contracts, fixtures, tests, and documentation updates.
+
+**Chosen:** Yes
+
+**Summary:** Use durable state plus explicit ordering because the failure is a
+lifecycle correctness problem, not only a documentation problem.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Mechanism independence:** Mandatory lifecycle self-review, optional
+   `oat_phase_review_gate`, and optional configured skill-exit gate remain
+   separate mechanisms; none satisfies or disables another.
+2. **Ordering:** Resolve and handle the configured implementation gate after
+   all prerequisite implementation closeout work but before implementation
+   completion state or success output.
+3. **Durability:** Persist gate pending, policy-allowed/passed, and
+   blocked/failed states with enough provenance to resume safely.
+4. **Freshness:** Bind a successful gate disposition to the reviewed HEAD/run;
+   any later commit invalidates that success.
+5. **Compatibility:** Preserve null resolution, configured `onFailure`,
+   `maxAttempts`, structured envelope validation, receive eligibility, and
+   review-receive semantics.
+6. **Provenance:** A manual independent review without configured-gate
+   provenance cannot satisfy the exit gate.
+7. **Coordination:** Keep this project functionally separate from the
+   orchestration run-log feature while stacking on its branch until PR #156
+   merges.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve fail-closed behavior; never substitute normal final self-review for
+  the independent configured gate.
+- Preserve current configured-gate failure policy and retry semantics.
+- Do not duplicate a still-valid successful gate on resume.
+- Add regression coverage for ordering, phase-gate independence, null
+  resolution, all failure policies, interruption/resume, and stale-HEAD
+  invalidation.
+- Update bundled workflow documentation when ordering or persisted state
+  changes.
+- Bump the changed canonical skill version once and run provider sync.
+- Treat canonical skill changes as shipped CLI functionality and perform the
+  required lockstep public-package version bump.
+- Run targeted validation plus repository format, lint, type-check, full tests,
+  build, and release validation.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A configured implementation exit gate is always resolved and handled,
+  regardless of optional phase-gate configuration.
+- Implementation cannot become complete and cannot emit success before the
+  configured gate reaches a policy-allowed terminal disposition.
+- Null gate resolution remains a valid no-gate outcome.
+- Block, prompt, warn, and success paths preserve their existing semantics and
+  structured receive contract.
+- Persisted state supports safe resume, avoids duplicate valid gate runs, and
+  invalidates success when HEAD changes.
+- Lifecycle ordering and post-implementation sequence tests prevent regression.
+- Required documentation, synchronization, release versioning, and validation
+  gates pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing the behavior or ownership of mandatory lifecycle self-review.
+- Enabling or redesigning optional per-phase external review gates.
+- Adding orchestration run-log functionality beyond compatibility with the
+  stacked base.
+- Treating arbitrary manual reviews as configured exit-gate runs.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+None identified.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **State ownership:** Whether gate lifecycle state belongs in project
+  `state.md`, implementation tracking, or a coordinated split between the two.
+- **Run identity:** Which existing gate envelope fields and revision identifiers
+  form the canonical freshness key.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Existing gate resolution and review-receive commands remain the source of
+  truth; this project orchestrates them rather than replacing their contracts.
+- Existing frontmatter/state parsing can be extended compatibly without a data
+  migration for projects that lack gate state.
+- PR #156 remains the temporary stack base and will be replaced by `main` after
+  it merges.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **False freshness:** A result may appear reusable after code or bookkeeping
+  commits change the reviewed revision.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Define the exact reviewed revision boundary and test
+    both unchanged resume and changed-HEAD invalidation.
+- **Conflated gates:** New logic could accidentally make phase-review or final
+  self-review status satisfy the configured exit gate.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Separate state/provenance fields and explicit
+    independence tests.
+- **Closeout ordering drift:** Post-implementation sequence mutations could
+  occur after a successful gate and immediately make it stale.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Put the exit gate after all lifecycle mutations and
+    immediately before completion/output, with structural ordering tests.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Produce and confirm a lightweight design covering closeout ordering, durable
+gate state, freshness/resume behavior, and regression testing before generating
+the execution plan.
