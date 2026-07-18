@@ -3,6 +3,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
+import YAML from 'yaml';
 
 import {
   isProjectStateFrontmatterField,
@@ -216,6 +217,33 @@ describe('frontmatter', () => {
   });
 
   describe('project state recognition', () => {
+    const implementExitGateFixtures = [
+      {
+        name: 'pending',
+        frontmatter: `oat_implement_exit_gate:
+  status: pending
+  disposition: null`,
+      },
+      {
+        name: 'allowed',
+        frontmatter: `oat_implement_exit_gate:
+  status: allowed
+  disposition: passed`,
+      },
+      {
+        name: 'blocked',
+        frontmatter: `oat_implement_exit_gate:
+  status: blocked
+  disposition: null`,
+      },
+      {
+        name: 'stale',
+        frontmatter: `oat_implement_exit_gate:
+  status: stale
+  disposition: passed`,
+      },
+    ];
+
     it('recognizes the coordination kind field and values', () => {
       expect(isProjectStateFrontmatterField('oat_kind')).toBe(true);
       expect(isProjectStateFrontmatterField('oat_parent')).toBe(true);
@@ -234,6 +262,38 @@ describe('frontmatter', () => {
       expect(isProjectStatePhase('decomposition')).toBe(true);
       expect(isProjectStatePhase('discovery')).toBe(true);
       expect(isProjectStatePhase('unknown')).toBe(false);
+    });
+
+    it.each(implementExitGateFixtures)(
+      'recognizes and preserves $name implementation exit-gate state',
+      ({ frontmatter }) => {
+        const parsed = YAML.parse(frontmatter) as Record<string, unknown>;
+        const preserved = Object.fromEntries(
+          Object.entries(parsed).filter(([field]) =>
+            isProjectStateFrontmatterField(field),
+          ),
+        );
+
+        expect(isProjectStateFrontmatterField('oat_implement_exit_gate')).toBe(
+          true,
+        );
+        expect(preserved).toEqual(parsed);
+      },
+    );
+
+    it('preserves legacy project state without adding an exit-gate field', () => {
+      const parsed = YAML.parse('oat_phase: implement') as Record<
+        string,
+        unknown
+      >;
+      const preserved = Object.fromEntries(
+        Object.entries(parsed).filter(([field]) =>
+          isProjectStateFrontmatterField(field),
+        ),
+      );
+
+      expect(preserved).toEqual(parsed);
+      expect(preserved).not.toHaveProperty('oat_implement_exit_gate');
     });
   });
 });

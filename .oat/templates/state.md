@@ -29,6 +29,23 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: { OAT_WORKFLOW_MODE } # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
+# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
+#   status: pending # pending | allowed | blocked | stale
+#   resolution: configured # configured | no_gate
+#   disposition: null # null | passed | warned | prompt_approved | no_gate
+#   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   on_failure: block # block | prompt | warn | null
+#   max_attempts: 2
+#   attempts_completed: 0
+#   reviewed_head: null
+#   implementation_fingerprint: null
+#   gate_run_id: null
+#   envelope_status: null # ok | blocked | review_failed | other terminal status
+#   artifact: null
+#   receive_eligible: false
+#   receive_completed: false
+#   failure: null
+#   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
