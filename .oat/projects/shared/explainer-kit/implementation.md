@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t08
+oat_current_task_id: p02-t09
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 7/10      |
+| Phase 2 | in_progress | 10    | 8/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 13/38 tasks completed
+**Total:** 14/38 tasks completed
 
 ---
 
@@ -332,6 +332,26 @@ oat_generated: false
 **Verification:**
 
 - QA, renderer, and template suites — pass (27/27).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p02-t08: Implement honest durability evidence
+
+**Status:** completed
+**Commit:** `84806204`
+
+**Outcome:**
+
+- Added commit and publish durability verification with rebuildability false by
+  default, replay evidence, supersession arrays, and mutable-record exclusion.
+- Durability recording never creates commits and preserves
+  `built-not-durable` when evidence cannot be verified.
+
+**Verification:**
+
+- Durability, schema, contract, and records suites — pass (33/33).
+- Post-commit durability suite — pass (10/10).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
