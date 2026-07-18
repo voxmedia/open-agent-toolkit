@@ -657,18 +657,18 @@ git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
 
 {Keep both code + artifact rows below. Add additional code rows as needed, but do not delete `spec`/`design`.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                            |
-| ------ | -------- | --------------- | ---------- | --------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                   |
-| p02    | code     | pending         | -          | -                                                   |
-| p03    | code     | pending         | -          | -                                                   |
-| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md |
-| final  | code     | passed          | 2026-07-18 | reviews/final-review-2026-07-18T125009Z.md          |
-| spec   | artifact | pending         | -          | -                                                   |
-| design | artifact | pending         | -          | -                                                   |
-| plan   | artifact | received        | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md  |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md         |
+| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T125009Z.md         |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | received        | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-14T010828Z.md |
 
-**Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max), 2 attempts per `onFailure: block`. Attempt 1 (run a7a501f4, `reviews/artifact-plan-review-2026-07-14T005456Z.md`): 1 Important + 4 Medium — all remediated (added p03-t05; gate `false`-with-artifact case; docs nav-sync/Contents requirements; append boundary-validation tests; corrections-never-strike-through contract). Attempt 2 (run in `reviews/artifact-plan-review-2026-07-14T010828Z.md`): 1 residual Important — p03-t05 could not exercise the skill-owned roll-up/seal enforcement from vitest. Attempts exhausted → escalated per gate contract; **human decision 2026-07-13: option (a)** — new `oat project log rollup` subcommand (p01-t06) makes the enforcement path an executable CLI surface with a structured outcome that skills route on and p03-t05 tests directly, including the failure signal. Remediation applied to design + plan; escalation closed.
+**Plan review disposition (2026-07-13):** two review layers. (1) In-session structured-mode artifact review, 3 rounds: 2C/6I/5M → 4I/4M/1m → 1M/1m; all findings fixed. (2) Cross-runtime gate review (codex-5-6-sol-max), 2 attempts per `onFailure: block`. Attempt 1 (run a7a501f4, `reviews/archived/artifact-plan-review-2026-07-14T005456Z.md`): 1 Important + 4 Medium — all remediated (added p03-t05; gate `false`-with-artifact case; docs nav-sync/Contents requirements; append boundary-validation tests; corrections-never-strike-through contract). Attempt 2 (run in `reviews/archived/artifact-plan-review-2026-07-14T010828Z.md`): 1 residual Important — p03-t05 could not exercise the skill-owned roll-up/seal enforcement from vitest. Attempts exhausted → escalated per gate contract; **human decision 2026-07-13: option (a)** — new `oat project log rollup` subcommand (p01-t06) makes the enforcement path an executable CLI surface with a structured outcome that skills route on and p03-t05 tests directly, including the failure signal. Remediation applied to design + plan; escalation closed.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
