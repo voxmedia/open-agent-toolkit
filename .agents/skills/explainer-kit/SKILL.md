@@ -32,6 +32,30 @@ Resolve schemas, recipes, templates, scripts, examples, and references relative
 to this installed skill directory. Never resolve runtime assets from a source
 checkout or from absolute operator-specific paths.
 
+## Core Run
+
+Construct a complete `ExplainerRunRequestV1`, then invoke the packaged core:
+
+```bash
+node scripts/run.mjs --request /path/to/request.json
+```
+
+The core composes validation, fact-base processing, bounded recipe/content
+discovery, theme resolution, rendering, QA, and manifest/build-record
+persistence. It runs without OAT files or ambient configuration. Supplied fact
+bases receive only lightweight consistency/freshness checks. Federated inputs
+require a provider-neutral critic callback and invoke it exactly once.
+
+Unattended calls use explicit, already-approved source artifacts and never
+prompt. Interactive content approval and resume are a separate lifecycle step.
+See `references/contracts.md` for source formats, callback modules, retained
+intermediates, and result semantics.
+
+Durability and publishing run only when the request selects them and the caller
+supplies the matching callback. The core does not create commits, discover
+destinations, or publish automatically. A successful build remains
+`built-not-durable` until caller-supplied evidence is verified.
+
 ## Progress Indicators
 
 For interactive runs, show a concise banner and stage updates:
