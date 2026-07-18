@@ -7,6 +7,10 @@ choreography, not review quality. Run every command with macOS system
 
 Set `TOOLKIT_ROOT` to the toolkit checkout containing this README. All other
 commands run in the materialized fixture unless a step says otherwise.
+The fixture intentionally has no formatter dependency. Format its authored
+Markdown through the toolkit checkout:
+`(cd "$TOOLKIT_ROOT" && pnpm exec oxfmt --write "$FIXTURE_REPO/<path>")`.
+Do not run `pnpm exec oxfmt` from the fixture repo.
 
 ## 1. Materialize the fixture
 
@@ -104,8 +108,10 @@ From the clean fixture root on `wave-1-execution`, run the promoted script:
   "$TOOLKIT_ROOT/.agents/skills/oat-wave-execute/scripts/bootstrap-group.sh" \
   wave-1 "$BASE_SHA" p01 p02 | tee "$FIXTURE_REPO/bootstrap-status.log"
 grep -q '^STATUS view-parity=ok$' "$FIXTURE_REPO/bootstrap-status.log"
-grep -q '^STATUS p01: status=success ' "$FIXTURE_REPO/bootstrap-status.log"
-grep -q '^STATUS p02: status=success ' "$FIXTURE_REPO/bootstrap-status.log"
+grep -q '^STATUS p01: status=success .*git_clean=pass$' \
+  "$FIXTURE_REPO/bootstrap-status.log"
+grep -q '^STATUS p02: status=success .*git_clean=pass$' \
+  "$FIXTURE_REPO/bootstrap-status.log"
 rm "$FIXTURE_REPO/bootstrap-status.log"
 git status --short
 ```

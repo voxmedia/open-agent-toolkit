@@ -81,3 +81,19 @@ This checklist compares the frozen source skills with the promoted skills. Histo
 | PR-S2  | Artifact alone supports session-loss recovery (`skill-sources/oat-wave-program/SKILL.md:107-108`)                                             | Preserved verbatim in Success Criteria.                                    | Yes               | None.                              |
 | PR-S3  | Ledger is current within one closeout commit (`skill-sources/oat-wave-program/SKILL.md:109`)                                                  | Preserved verbatim in Success Criteria.                                    | Yes               | None.                              |
 | PR-S4  | Composition changes retain their reasons (`skill-sources/oat-wave-program/SKILL.md:110-111`)                                                  | Preserved verbatim in Success Criteria.                                    | Yes               | None.                              |
+
+## Mini-Wave Dry-Run Outcome (2026-07-18)
+
+| Fixture plan | Outcome | Promoted behavior exercised                                                                                                                                                                                              |
+| ------------ | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| p01 alpha    | Pass    | Program coverage row; write-disjoint group bootstrap; `STATUS view-parity=ok`; clean phase status; two task commits; pre-merge root/branch assertions; conventional `--no-ff` merge.                                     |
+| p02 beta     | Pass    | Parallel bootstrap; scoped sync-commit inspection (`skip`, no churn); two task commits; rebase onto the updated integration tip; repeated pre-merge assertions; mandatory p01+p02 fan-in gate.                           |
+| p03 finale   | Pass    | Ungrouped solo-lane alternative to a singleton group; two task commits after fan-in; asserted merge; final happy gate; forced failing gate with park/fix verification record; `wave-close` 3↔3 coverage and ledger flip. |
+
+The smoke found and dispositioned fixture-only cleanliness defects: pnpm
+materialized `node_modules/` and normalized a missing lockfile. The fixture now
+ignores `node_modules/` and commits pnpm's normalized lockfile. A procedure
+ambiguity was also fixed by pinning formatting to the toolkit checkout and by
+making bootstrap assertions require `git_clean=pass`. The final happy and
+unhappy legs both passed after these corrections; no promoted skill-text or
+`bootstrap-group.sh` defect was found.
