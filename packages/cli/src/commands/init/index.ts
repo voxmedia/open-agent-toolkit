@@ -20,6 +20,7 @@ import {
 } from '@commands/shared/adopt-stray';
 import {
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
@@ -85,12 +86,17 @@ import {
 } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import {
+  applyCursorProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+} from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
   getSyncMappings,
+  type MaterializationPlan,
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
@@ -276,18 +282,51 @@ async function collectStraysDefault(
     activeAdapters ??
     (await getActiveAdapters(getDefaultAdapters(), scopeRoot));
   const candidates: InitStrayCandidate[] = [];
+  const codexExtensionPlan =
+    scope === 'project' &&
+    adaptersToScan.some((adapter) => adapter.name === 'codex')
+      ? await computeCodexProjectExtensionPlan(scopeRoot, canonicalEntries)
+      : undefined;
+  const cursorExtensionPlan =
+    scope === 'project' &&
+    adaptersToScan.some((adapter) => adapter.name === 'cursor')
+      ? await computeCursorProjectExtensionPlan(scopeRoot, canonicalEntries)
+      : undefined;
+  const materializationPlans: MaterializationPlan[] = [
+    ...(codexExtensionPlan
+      ? [
+          {
+            provider: 'codex',
+            operations: codexExtensionPlan.operations.map((operation) => ({
+              ...operation,
+              provider: 'codex',
+              entryName: operation.roleName,
+            })),
+            managedEntries: codexExtensionPlan.managedRoles,
+            aggregateHash: codexExtensionPlan.aggregateConfigHash,
+            metadata: codexExtensionPlan.metadata,
+          },
+        ]
+      : []),
+    ...(cursorExtensionPlan ? [cursorExtensionPlan] : []),
+  ];
 
   for (const adapter of adaptersToScan) {
     const mappings = getSyncMappings(adapter, scope);
     for (const mapping of mappings) {
       const providerDir = join(scopeRoot, mapping.providerDir);
-      const strays = await detectStrays(
-        adapter.name,
-        providerDir,
-        manifest,
-        canonicalEntries,
-        mapping,
-      );
+      const strays = filterMaterializationManagedStrays(
+        (
+          await detectStrays(
+            adapter.name,
+            providerDir,
+            manifest,
+            canonicalEntries,
+            mapping,
+          )
+        ).map((report) => ({ provider: adapter.name, report })),
+        materializationPlans,
+      ).map((candidate) => candidate.report);
       for (const report of strays) {
         if (report.state.status !== 'stray') {
           continue;
@@ -305,14 +344,10 @@ async function collectStraysDefault(
     scope === 'project' &&
     adaptersToScan.some((adapter) => adapter.name === 'codex')
   ) {
-    const codexExtensionPlan = await computeCodexProjectExtensionPlan(
-      scopeRoot,
-      canonicalEntries,
-    );
     const codexStrays = await detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
-      new Set(codexExtensionPlan.managedRoles),
+      new Set(codexExtensionPlan!.managedRoles),
     );
     for (const stray of codexStrays) {
       candidates.push({
@@ -980,6 +1015,21 @@ async function runInitCommand(
           computeExtensionPlan: computeCodexProjectExtensionPlan,
           applyExtensionPlan: applyCodexProjectExtensionPlan,
         });
+        if (
+          activeAdaptersForStrays?.some((adapter) => adapter.name === 'cursor')
+        ) {
+          const refreshedCanonical = await dependencies.scanCanonical(
+            scopeRoot,
+            scope,
+          );
+          const cursorPlan = await computeCursorProjectExtensionPlan(
+            scopeRoot,
+            refreshedCanonical,
+            undefined,
+            { userConfigDir },
+          );
+          await applyCursorProjectExtensionPlan(scopeRoot, cursorPlan);
+        }
       }
 
       if (straysAdopted > 0) {

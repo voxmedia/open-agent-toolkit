@@ -7,6 +7,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 
 import {
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from './codex-strays';
 
@@ -186,6 +187,47 @@ config_file = "agents/custom-gpt-5-6-sol-high.toml"
       {
         roleName: 'old-orphan',
         providerPath: '.codex/agents/old-orphan.toml',
+      },
+    ]);
+  });
+});
+
+describe('filterMaterializationManagedStrays', () => {
+  it('removes provider-owned Cursor variants without hiding unrelated files', () => {
+    const candidates = [
+      {
+        provider: 'cursor',
+        report: {
+          providerPath: '.cursor/agents/oat-reviewer-gpt.md',
+        },
+      },
+      {
+        provider: 'cursor',
+        report: { providerPath: '.cursor/agents/custom.md' },
+      },
+    ];
+    const plans = [
+      {
+        provider: 'cursor',
+        operations: [
+          {
+            provider: 'cursor',
+            action: 'skip' as const,
+            target: 'role',
+            path: '.cursor/agents/oat-reviewer-gpt.md',
+            reason: 'already in sync',
+          },
+        ],
+        managedEntries: ['oat-reviewer-gpt'],
+        aggregateHash: 'hash',
+        metadata: {},
+      },
+    ];
+
+    expect(filterMaterializationManagedStrays(candidates, plans)).toEqual([
+      {
+        provider: 'cursor',
+        report: { providerPath: '.cursor/agents/custom.md' },
       },
     ]);
   });
