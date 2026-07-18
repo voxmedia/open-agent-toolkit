@@ -1,6 +1,6 @@
 ---
 name: oat-project-import-plan
-version: 1.4.6
+version: 1.4.7
 description: Use when you have an external markdown plan to execute with OAT. Preserves the source plan and normalizes it into canonical plan.md format.
 argument-hint: '<path-to-plan.md> [--provider codex|cursor|claude] [--project <name>]'
 oat_gateable: true
@@ -332,9 +332,12 @@ Apply the shared loop exactly:
 - For that exception only, apply the shared concrete target contract. A Codex
   materialized variant must first be launched as the exact native `agent_type`;
   only a recorded actual pre-start role-selection rejection permits a fresh
-  child pinned to the resolved model and effort. Claude and Cursor use the
-  exact resolver-returned `providers.<provider>.dispatchArgs.model` value;
-  Cursor strings remain opaque.
+  child pinned to the resolved model and effort. Claude uses the exact
+  resolver-returned `providers.claude.dispatchArgs.model` value. Cursor
+  launches the exact resolver-returned
+  `providers.cursor.dispatchArgs.variant` native reviewer variant first;
+  Cursor model strings remain opaque inside the mapping and resolver. Only a
+  pre-start native role-selection rejection permits another route.
 - After acceptance, poll, nudge, or continue only through the existing reviewer
   handle. A terminal timeout blocks or escalates without another launch.
   Replacement eligibility is limited to explicit pre-start rejection.

@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan
-version: 1.4.1
+version: 1.4.2
 description: Use when design.md is complete and executable implementation tasks are needed. Breaks design into bite-sized TDD tasks in canonical plan.md format.
 oat_gateable: true
 disable-model-invocation: true
@@ -492,9 +492,12 @@ Apply the shared loop exactly:
 - For that exception only, apply the shared concrete target contract. A Codex
   materialized variant must first be launched as the exact native `agent_type`;
   only a recorded actual pre-start role-selection rejection permits a fresh
-  child pinned to the resolved model and effort. Claude and Cursor use the
-  exact resolver-returned `providers.<provider>.dispatchArgs.model` value;
-  Cursor strings remain opaque.
+  child pinned to the resolved model and effort. Claude uses the exact
+  resolver-returned `providers.claude.dispatchArgs.model` value. Cursor
+  launches the exact resolver-returned
+  `providers.cursor.dispatchArgs.variant` native reviewer variant first;
+  Cursor model strings remain opaque inside the mapping and resolver. Only a
+  pre-start native role-selection rejection permits another route.
 - After acceptance, poll, nudge, or continue only through the existing reviewer
   handle. A terminal timeout blocks or escalates without another launch.
   Replacement eligibility is limited to explicit pre-start rejection.
