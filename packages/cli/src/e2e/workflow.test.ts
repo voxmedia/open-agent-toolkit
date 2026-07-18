@@ -4,6 +4,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -334,6 +335,77 @@ describe('e2e workflow', () => {
     expect(entry).toBeDefined();
     expect(entry?.strategy).toBe('copy');
     expect(entry?.contentHash).toBeTruthy();
+  });
+
+  it('Cursor native-read upgrade retires legacy views once without recreating them', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+
+    await runCli(root, ['init']);
+    await seedCanonical(root);
+    await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+    await symlink(
+      join(root, '.agents', 'skills', 'skill-one'),
+      join(root, '.cursor', 'skills', 'skill-one'),
+      'dir',
+    );
+    await mkdir(join(root, '.cursor', 'skills', 'cursor-only'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.cursor', 'skills', 'cursor-only', 'SKILL.md'),
+      'cursor only',
+      'utf8',
+    );
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const legacyManifest = await readManifest(root);
+    legacyManifest.entries.push({
+      canonicalPath: '.agents/skills/skill-one',
+      providerPath: '.cursor/skills/skill-one',
+      provider: 'cursor',
+      contentType: 'skill',
+      strategy: 'symlink',
+      contentHash: null,
+      isFile: false,
+      lastSynced: new Date().toISOString(),
+    });
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify(legacyManifest, null, 2)}\n`,
+      'utf8',
+    );
+
+    const firstSync = await runCli(root, ['sync']);
+    expect(firstSync.exitCode).toBe(0);
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(
+        join(root, '.cursor', 'skills', 'cursor-only', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('cursor only');
+
+    const firstManifest = await readManifest(root);
+    expect(
+      firstManifest.entries.some(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
+
+    const secondSync = await runCli(root, ['sync']);
+    expect(secondSync.exitCode).toBe(0);
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    const secondManifest = await readManifest(root);
+    expect(
+      secondManifest.entries.some(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
   });
 
   it('rule status: sync → frontmatter edit → status still in sync', async () => {

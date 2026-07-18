@@ -2,7 +2,7 @@
 
 Quick reference for skills, subagents, hooks, and agent instructions across all major AI coding tools.
 
-_Last updated: February 2026_
+_Last updated: July 2026_
 
 ---
 
@@ -144,10 +144,16 @@ The package manager for the agent skills ecosystem. Installs skills across 27+ a
 
 **Skill locations:**
 
-- Project: `.cursor/skills/<skill-name>/SKILL.md`
-- Personal: `~/.cursor/skills/<skill-name>/SKILL.md`
+- **Portable project skills:** `.agents/skills/<skill-name>/SKILL.md`
+- **Portable personal skills:** `~/.agents/skills/<skill-name>/SKILL.md`
+- **Cursor-only project skills:** `.cursor/skills/<skill-name>/SKILL.md`
+- **Cursor-only personal skills:** `~/.cursor/skills/<skill-name>/SKILL.md`
 - **Claude compatibility:** `.claude/skills/` (project) and `~/.claude/skills/` (personal)
 - **Codex compatibility:** `.codex/skills/` (project) and `~/.codex/skills/` (personal)
+
+OAT keeps portable skills canonical under `.agents/skills`; it does not
+generate `.cursor/skills` mirrors. Cursor-specific skill directories remain
+supported as intentional local extensions and migration sources.
 
 ### Subagents
 

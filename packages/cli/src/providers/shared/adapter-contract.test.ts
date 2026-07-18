@@ -36,6 +36,11 @@ function assertMappingsValid(
     if (mapping.nativeRead) {
       expect(mapping.providerDir).toBe(mapping.canonicalDir);
     }
+    for (const adoptionSourceDir of mapping.adoptionSourceDirs ?? []) {
+      expect(adoptionSourceDir.startsWith('.')).toBe(true);
+      expect(adoptionSourceDir).not.toContain('..');
+      expect(adoptionSourceDir).not.toBe(mapping.canonicalDir);
+    }
   }
 }
 

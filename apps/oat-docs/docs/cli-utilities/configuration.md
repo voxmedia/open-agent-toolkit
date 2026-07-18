@@ -16,21 +16,23 @@ For the deep file-by-file reference, see:
 - [`.oat` Directory Structure](../reference/oat-directory-structure.md)
 - [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md)
 
-## The four config surfaces
+## The five config surfaces
 
-| Surface              | File                     | Typical contents                                                                                                                                      | Primary CLI surface                            |
-| -------------------- | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| Shared repo config   | `.oat/config.json`       | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
-| Repo-local config    | `.oat/config.local.json` | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
-| User config          | `~/.oat/config.json`     | User-level state such as global `activeIdea` fallback, personal `workflow.*` defaults, and personal known provider strays                             | `oat config describe`, `oat gate`              |
-| Provider sync config | `.oat/sync/config.json`  | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`     |
+| Surface                   | File                      | Typical contents                                                                                                                                      | Primary CLI surface                            |
+| ------------------------- | ------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Shared repo config        | `.oat/config.json`        | Repo-wide non-sync settings such as `projects.root`, `git.defaultBranch`, `documentation.*`, `archive.*`, `tools.*`, and shared `workflow.*` defaults | `oat config get/set/list/describe`, `oat gate` |
+| Repo-local config         | `.oat/config.local.json`  | Per-developer state for this checkout, such as `activeProject`, `lastPausedProject`, repo-local `activeIdea`, and local `workflow.*` overrides        | `oat config get/set/list/describe`, `oat gate` |
+| User config               | `~/.oat/config.json`      | User-level state such as global `activeIdea` fallback and personal `workflow.*` defaults                                                              | `oat config describe`, `oat gate`              |
+| Project sync config       | `.oat/sync/config.json`   | Provider enablement, sync strategy, and repo-level known stray settings                                                                               | `oat providers set`, `oat config describe`     |
+| User provider sync config | `~/.oat/sync/config.json` | User sync strategy and personal known provider strays                                                                                                 | Provider-sync commands, `oat config describe`  |
 
 The main split is:
 
 - `.oat/config.json` for shared repo behavior
 - `.oat/config.local.json` for local developer state
-- `~/.oat/config.json` for user-scope fallback state and personal provider-sync exceptions
-- `.oat/sync/config.json` for provider sync only
+- `~/.oat/config.json` for user-scope fallback and workflow state
+- `.oat/sync/config.json` for project provider sync
+- `~/.oat/sync/config.json` for user provider sync
 
 ## The fastest way to inspect config
 
@@ -634,9 +636,13 @@ Use:
 - `oat config describe ...` to understand sync keys
 - `oat providers set ...` to mutate sync/provider settings
 
-Known provider strays are the narrow cross-surface exception: repo-wide
-`knownStrays` entries live in `.oat/sync/config.json`, while personal
-`knownStrays` entries can live in `~/.oat/config.json`.
+Known provider strays follow sync ownership: repo-wide `knownStrays` entries
+live in `.oat/sync/config.json`, while personal entries live in
+`~/.oat/sync/config.json`. Before resolving user sync settings or writing any
+general user-config change, OAT migrates legacy
+`~/.oat/config.json#knownStrays` by writing the normalized union to the user
+sync config first, then deleting only the legacy key. The migration is
+idempotent.
 
 For the provider-sync schema details, use [Sync Config (`.oat/sync/config.json`)](../provider-sync/config.md).
 

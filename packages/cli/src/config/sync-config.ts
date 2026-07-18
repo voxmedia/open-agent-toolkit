@@ -50,7 +50,7 @@ function mergeProviderConfigs(
   return merged;
 }
 
-function normalizeKnownStrayPath(pathValue: string): string | undefined {
+export function normalizeKnownStrayPath(pathValue: string): string | undefined {
   const trimmed = pathValue.trim();
   if (!trimmed) {
     return undefined;
@@ -63,12 +63,20 @@ function normalizeKnownStrayPath(pathValue: string): string | undefined {
   return normalized && normalized !== '.' ? normalized : undefined;
 }
 
-function normalizeKnownStrays(paths: string[] | undefined): string[] {
+export function normalizeKnownStrays(
+  paths: readonly string[] | undefined,
+): string[] {
   const normalized = paths
     ?.map((pathValue) => normalizeKnownStrayPath(pathValue))
     .filter((pathValue): pathValue is string => pathValue !== undefined);
 
   return [...new Set(normalized ?? [])].sort();
+}
+
+export function mergeKnownStrays(
+  ...pathSets: ReadonlyArray<readonly string[] | undefined>
+): string[] {
+  return normalizeKnownStrays(pathSets.flatMap((paths) => paths ?? []));
 }
 
 function normalizeConfig(
@@ -78,10 +86,7 @@ function normalizeConfig(
   return {
     version: 1,
     defaultStrategy: config.defaultStrategy ?? defaults.defaultStrategy,
-    knownStrays: normalizeKnownStrays([
-      ...defaults.knownStrays,
-      ...(config.knownStrays ?? []),
-    ]),
+    knownStrays: mergeKnownStrays(defaults.knownStrays, config.knownStrays),
     providers: mergeProviderConfigs(defaults.providers, config.providers ?? {}),
   };
 }
@@ -177,4 +182,23 @@ export async function setProviderEnabled(
   };
 
   return saveSyncConfig(configPath, next);
+}
+
+export async function appendKnownStray(
+  configPath: string,
+  pathValue: string,
+): Promise<SyncConfig> {
+  const current = await loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
+  const knownStrays = mergeKnownStrays(current.knownStrays, [pathValue]);
+  if (
+    knownStrays.length === current.knownStrays.length &&
+    knownStrays.every((path, index) => path === current.knownStrays[index])
+  ) {
+    return current;
+  }
+
+  return saveSyncConfig(configPath, {
+    ...current,
+    knownStrays,
+  });
 }

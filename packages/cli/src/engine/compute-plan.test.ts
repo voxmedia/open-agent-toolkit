@@ -3,11 +3,14 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
+import { computeDirectoryHash } from '@manifest/hash';
 import { createEmptyManifest } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { computeSyncPlan } from './compute-plan';
+import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import type { CanonicalEntry } from './scanner';
 import { createTestAdapter } from './test-helpers';
 
@@ -31,6 +34,43 @@ function manifestWithEntry(entry: ManifestEntry): Manifest {
   return {
     ...manifest,
     entries: [entry],
+  };
+}
+
+function createCursorNativeSkillAdapter(): ProviderAdapter {
+  return createTestAdapter({
+    name: 'cursor',
+    projectMappings: [
+      {
+        contentType: 'skill',
+        canonicalDir: '.agents/skills',
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.cursor/skills'],
+      },
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.cursor/agents',
+        nativeRead: false,
+      },
+    ],
+  });
+}
+
+function createCursorSkillManifestEntry(
+  overrides: Partial<ManifestEntry> = {},
+): ManifestEntry {
+  return {
+    canonicalPath: '.agents/skills/skill-one',
+    providerPath: '.cursor/skills/skill-one',
+    provider: 'cursor',
+    contentType: 'skill',
+    strategy: 'symlink',
+    contentHash: null,
+    isFile: false,
+    lastSynced: new Date().toISOString(),
+    ...overrides,
   };
 }
 
@@ -180,6 +220,191 @@ describe('computeSyncPlan', () => {
       operation: 'remove',
       providerPath: join(root, '.claude', 'skills', 'skill-one'),
     });
+  });
+
+  it('removes verified clean symlinks when a mapping becomes native-read', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+    await symlink(canonicalPath, providerPath, 'dir');
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(createCursorSkillManifestEntry()),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'remove',
+        reason: 'obsolete mapping has verified clean managed symlink',
+        providerPath,
+      }),
+    ]);
+  });
+
+  it('detaches missing obsolete mapping rows without planning deletion', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(createCursorSkillManifestEntry()),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        reason:
+          'obsolete mapping provider path is missing; detach manifest ownership',
+      }),
+    ]);
+  });
+
+  it.each([
+    {
+      name: 'replaced path',
+      seedProvider: async (root: string) => {
+        const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+        await mkdir(providerPath, { recursive: true });
+        await writeFile(join(providerPath, 'SKILL.md'), 'user content', 'utf8');
+      },
+    },
+    {
+      name: 'broken symlink',
+      seedProvider: async (root: string) => {
+        await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+        await symlink(
+          join(root, '.agents', 'skills', 'missing'),
+          join(root, '.cursor', 'skills', 'skill-one'),
+          'dir',
+        );
+      },
+    },
+  ])('preserves and detaches an obsolete $name', async ({ seedProvider }) => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await seedProvider(root);
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(createCursorSkillManifestEntry()),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        reason:
+          'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+      }),
+    ]);
+  });
+
+  it('removes a verified clean generated directory copy for an obsolete mapping', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+    const contentHash = await computeDirectoryHash(canonicalPath);
+    await mkdir(providerPath, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${marker}\n# skill\n`,
+      'utf8',
+    );
+    await writeFile(
+      join(providerPath, OAT_DIRECTORY_SENTINEL),
+      `${marker}\n`,
+      'utf8',
+    );
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(
+        createCursorSkillManifestEntry({
+          strategy: 'copy',
+          contentHash,
+        }),
+      ),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'remove',
+        reason: 'obsolete mapping has verified clean managed copy',
+      }),
+    ]);
+  });
+
+  it('preserves a modified generated copy while detaching obsolete ownership', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    const canonicalPath = join(root, '.agents', 'skills', 'skill-one');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await mkdir(canonicalPath, { recursive: true });
+    await writeFile(join(canonicalPath, 'SKILL.md'), '# skill\n', 'utf8');
+    const contentHash = await computeDirectoryHash(canonicalPath);
+    await mkdir(providerPath, { recursive: true });
+    const marker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+    await writeFile(
+      join(providerPath, 'SKILL.md'),
+      `${marker}\n# user-modified skill\n`,
+      'utf8',
+    );
+    await writeFile(
+      join(providerPath, OAT_DIRECTORY_SENTINEL),
+      `${marker}\n`,
+      'utf8',
+    );
+
+    const plan = await computeSyncPlan({
+      canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+      adapters: [createCursorNativeSkillAdapter()],
+      manifest: manifestWithEntry(
+        createCursorSkillManifestEntry({
+          strategy: 'copy',
+          contentHash,
+        }),
+      ),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(plan.removals).toEqual([
+      expect.objectContaining({
+        operation: 'detach',
+        reason:
+          'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+      }),
+    ]);
   });
 
   it.each([

@@ -10,6 +10,7 @@ export const SYNC_OPERATION_TYPES = [
   'update_symlink',
   'update_copy',
   'remove',
+  'detach',
   'skip',
 ] as const;
 
@@ -25,7 +26,9 @@ export interface SyncPlanEntry {
   renderedContent?: string;
 }
 
-export type RemovalSyncPlanEntry = SyncPlanEntry & { operation: 'remove' };
+export type RemovalSyncPlanEntry = SyncPlanEntry & {
+  operation: 'remove' | 'detach';
+};
 
 export interface SyncPlan {
   scope: EngineScope;

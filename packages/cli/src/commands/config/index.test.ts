@@ -611,6 +611,8 @@ describe('oat config', () => {
     expect(capture.info[0]).toContain('Repo Local (.oat/config.local.json)');
     expect(capture.info[0]).toContain('User (~/.oat/config.json)');
     expect(capture.info[0]).toContain('Sync/Provider (.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('User Sync (~/.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('sync.knownStrays');
     expect(capture.info[0]).toContain('sync.providers.<name>.enabled');
     expect(process.exitCode).toBe(0);
   });
@@ -661,6 +663,19 @@ describe('oat config', () => {
     expect(capture.info[0]).toContain('Key: sync.providers.<name>.enabled');
     expect(capture.info[0]).toContain('File: .oat/sync/config.json');
     expect(capture.info[0]).toContain('Owning command: oat providers set');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe shows project and user ownership for sync known strays', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'sync.knownStrays']);
+
+    expect(capture.info[0]).toContain('File: .oat/sync/config.json');
+    expect(capture.info[0]).toContain('Scope: project sync');
+    expect(capture.info[0]).toContain('File: ~/.oat/sync/config.json');
+    expect(capture.info[0]).toContain('Scope: user sync');
     expect(process.exitCode).toBe(0);
   });
 

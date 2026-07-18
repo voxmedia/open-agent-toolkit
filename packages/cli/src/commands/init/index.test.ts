@@ -21,7 +21,6 @@ import type {
   PromptContext,
 } from '@commands/shared/shared.prompts';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
-import type { UserConfig } from '@config/oat-config';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
@@ -95,6 +94,27 @@ function createStray(
   };
 }
 
+function createCursorSkillStray(
+  providerPath = '.cursor/skills/cursor-local',
+): InitStrayCandidate {
+  return {
+    provider: 'cursor',
+    report: {
+      canonical: null,
+      provider: 'cursor',
+      providerPath,
+      state: { status: 'stray' },
+    },
+    mapping: {
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    },
+  };
+}
+
 function createCanonicalEntries(): CanonicalEntry[] {
   return [];
 }
@@ -113,6 +133,7 @@ function createHarness(options: HarnessOptions = {}): {
   loadSyncConfig: ReturnType<typeof vi.fn>;
   saveSyncConfig: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
+  applyCursorSkillDisposition: ReturnType<typeof vi.fn>;
   getHookInstallInfo: ReturnType<typeof vi.fn>;
   configureLocalHooksPath: ReturnType<typeof vi.fn>;
   installHook: ReturnType<typeof vi.fn>;
@@ -145,8 +166,8 @@ function createHarness(options: HarnessOptions = {}): {
       return selectResponses.shift() ?? [];
     },
   );
-  const selectWithAbort = vi.fn(
-    async () => singleSelectResponses.shift() ?? 'no',
+  const selectWithAbort = vi.fn(async () =>
+    singleSelectResponses.length > 0 ? singleSelectResponses.shift()! : 'no',
   );
   const selectProvidersWithAbort = vi.fn(
     async () => providerSelectResponses.shift() ?? [],
@@ -161,6 +182,13 @@ function createHarness(options: HarnessOptions = {}): {
     async (_scopeRoot: string, _stray, manifest: Manifest) => {
       return manifest;
     },
+  );
+  const applyCursorSkillDisposition = vi.fn(
+    async (
+      _scopeRoot: string,
+      _stray: InitStrayCandidate,
+      manifest: Manifest,
+    ) => manifest,
   );
   const getHookInstallInfo = vi.fn(async () => ({
     hookPath: '/tmp/workspace/.git/hooks/pre-commit',
@@ -194,14 +222,12 @@ function createHarness(options: HarnessOptions = {}): {
   const loadSyncConfig = vi.fn(
     async () => options.loadedSyncConfig ?? DEFAULT_SYNC_CONFIG,
   );
-  const readUserConfig = vi.fn(async (): Promise<UserConfig> => {
-    return {
-      version: 1,
-      ...(options.userKnownStrays
-        ? { knownStrays: options.userKnownStrays }
-        : {}),
-    };
-  });
+  const resolveUserSyncConfig = vi.fn(
+    async (): Promise<SyncConfig> => ({
+      ...DEFAULT_SYNC_CONFIG,
+      knownStrays: options.userKnownStrays ?? [],
+    }),
+  );
   const adapters =
     options.adapters ??
     ([
@@ -251,8 +277,9 @@ function createHarness(options: HarnessOptions = {}): {
     selectProvidersWithAbort,
     getAdapters: () => adapters,
     loadSyncConfig,
-    readUserConfig,
+    resolveUserSyncConfig,
     saveSyncConfig,
+    applyCursorSkillDisposition,
     getConfigAwareAdapters: vi.fn(async () => ({
       activeAdapters: adapters.filter((adapter) =>
         (options.configAwareActiveAdapterNames ?? ['claude']).includes(
@@ -313,6 +340,7 @@ function createHarness(options: HarnessOptions = {}): {
     loadSyncConfig,
     saveSyncConfig,
     adoptStray,
+    applyCursorSkillDisposition,
     getHookInstallInfo,
     configureLocalHooksPath,
     installHook,
@@ -609,6 +637,200 @@ describe('createInitCommand', () => {
 
     expect(selectManyWithAbort).not.toHaveBeenCalled();
     expect(adoptStray).not.toHaveBeenCalled();
+  });
+
+  it('discovers Cursor-local skills through native-read adoption sources', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-cursor-stray-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.cursor', 'skills', 'cursor-local'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.cursor', 'skills', 'cursor-local', 'SKILL.md'),
+      '# Cursor local\n',
+      'utf8',
+    );
+    const skillMapping = {
+      contentType: 'skill' as const,
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    };
+    const cursorOnlyAdapter: ProviderAdapter = {
+      name: 'cursor',
+      displayName: 'Cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [skillMapping],
+      userMappings: [skillMapping],
+      detect: async () => true,
+    };
+    const { command, selectWithAbort } = createHarness({
+      interactive: true,
+      scopeRootByScope: { project: root },
+      useDefaultCollectStrays: true,
+      adapters: [cursorOnlyAdapter],
+      configAwareActiveAdapterNames: ['cursor'],
+      providerSelectResponses: [['cursor']],
+      hookInstalled: true,
+      singleSelectResponses: [null],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const choices = selectWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    expect(choices).toEqual([
+      expect.objectContaining({
+        label: 'Adopt into canonical',
+        value: 'adopt',
+      }),
+      expect.objectContaining({
+        label: 'Keep Cursor-only',
+        value: 'keep',
+      }),
+    ]);
+    expect(selectWithAbort.mock.calls[0]?.[0]).toContain(
+      '.cursor/skills/cursor-local',
+    );
+  });
+
+  it('prompts for each Cursor skill with only adopt and keep choices', async () => {
+    const {
+      command,
+      selectWithAbort,
+      selectManyWithAbort,
+      applyCursorSkillDisposition,
+    } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      strays: [
+        createCursorSkillStray('.cursor/skills/adopt-me'),
+        createCursorSkillStray('.cursor/skills/keep-me'),
+      ],
+      singleSelectResponses: ['adopt', 'keep'],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(
+      selectWithAbort.mock.calls.filter(([message]) =>
+        String(message).startsWith('Migrate Cursor skill'),
+      ),
+    ).toHaveLength(2);
+    for (const call of selectWithAbort.mock.calls) {
+      expect(call[1]).toEqual([
+        expect.objectContaining({
+          label: 'Adopt into canonical',
+          value: 'adopt',
+        }),
+        expect.objectContaining({
+          label: 'Keep Cursor-only',
+          value: 'keep',
+        }),
+      ]);
+      expect(call[1]).toHaveLength(2);
+    }
+    expect(
+      applyCursorSkillDisposition.mock.calls.map((call) => call[3]),
+    ).toEqual(['adopt', 'keep']);
+    expect(applyCursorSkillDisposition.mock.calls[1]?.[4]).toBe(
+      '/tmp/workspace/.oat/sync/config.json',
+    );
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('continues later scope setup but stops migration prompts on abort', async () => {
+    const {
+      command,
+      selectWithAbort,
+      selectManyWithAbort,
+      applyCursorSkillDisposition,
+      ensureCanonicalDirs,
+      saveManifest,
+    } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      strays: [
+        createCursorSkillStray('.cursor/skills/answered'),
+        createCursorSkillStray('.cursor/skills/aborted'),
+        createCursorSkillStray('.cursor/skills/unanswered'),
+        createStray('.claude/skills/ordinary'),
+      ],
+      singleSelectResponses: ['keep', null],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
+
+    expect(
+      selectWithAbort.mock.calls.filter(([message]) =>
+        String(message).startsWith('Migrate Cursor skill'),
+      ),
+    ).toHaveLength(2);
+    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(
+      applyCursorSkillDisposition.mock.calls[0]?.[1].report.providerPath,
+    ).toBe('.cursor/skills/answered');
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(ensureCanonicalDirs).toHaveBeenCalledWith('/tmp/home', 'user');
+    expect(saveManifest).toHaveBeenCalledWith(
+      '/tmp/home/.oat/sync/manifest.json',
+      expect.any(Object),
+    );
+  });
+
+  it('writes Cursor dispositions to each scope sync config', async () => {
+    const { command, applyCursorSkillDisposition } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      strays: [createCursorSkillStray()],
+      singleSelectResponses: ['keep', 'keep'],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
+
+    expect(
+      applyCursorSkillDisposition.mock.calls.map((call) => call[4]),
+    ).toEqual([
+      '/tmp/workspace/.oat/sync/config.json',
+      '/tmp/home/.oat/sync/config.json',
+    ]);
+  });
+
+  it('reports keep-local name collisions without recording the choice', async () => {
+    const { command, capture, applyCursorSkillDisposition } = createHarness({
+      interactive: true,
+      hookInstalled: true,
+      strays: [createCursorSkillStray()],
+      singleSelectResponses: ['keep'],
+    });
+    applyCursorSkillDisposition.mockRejectedValueOnce(
+      new CliError(
+        'Cannot keep .cursor/skills/cursor-local Cursor-only because canonical skill .agents/skills/cursor-local has the same name. Rename one skill, then run the command again.',
+      ),
+    );
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(capture.warn.join('\n')).toContain('Rename one skill');
+    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports unresolved Cursor skills without prompting in non-interactive mode', async () => {
+    const { command, capture, selectWithAbort, applyCursorSkillDisposition } =
+      createHarness({
+        interactive: false,
+        hookInstalled: true,
+        strays: [createCursorSkillStray()],
+      });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    expect(capture.warn).toContain(ADOPT_REMEDIATION);
+    expect(selectWithAbort).not.toHaveBeenCalled();
+    expect(applyCursorSkillDisposition).not.toHaveBeenCalled();
   });
 
   it('detects codex role strays via default collector and includes codex adoption metadata', async () => {
