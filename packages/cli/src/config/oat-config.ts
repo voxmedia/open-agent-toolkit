@@ -10,6 +10,7 @@ import {
   type WorkflowDispatchProviderValue,
 } from './dispatch-matrix';
 import { parseJsonConfig } from './json';
+import { resolveUserSyncConfig } from './user-sync-config';
 
 export {
   VALID_DISPATCH_MATRIX_TIERS,
@@ -1160,6 +1161,14 @@ function getUserConfigPath(userConfigDir: string): string {
   return join(userConfigDir, 'config.json');
 }
 
+const USER_CONFIG_OWNED_KEYS = new Set([
+  'version',
+  'activeIdea',
+  'updateNotifications',
+  'workflow',
+  'knownStrays',
+]);
+
 function normalizeUserConfig(parsed: unknown): UserConfig {
   const next: UserConfig = { ...DEFAULT_USER_CONFIG };
   if (!isRecord(parsed)) {
@@ -1185,6 +1194,32 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
   return next;
 }
 
+async function readUnknownUserConfigFields(
+  configPath: string,
+): Promise<Record<string, unknown>> {
+  try {
+    const parsed = parseJsonConfig(
+      await readFile(configPath, 'utf8'),
+      configPath,
+    );
+    if (!isRecord(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([key]) => !USER_CONFIG_OWNED_KEYS.has(key),
+      ),
+    );
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return {};
+    }
+
+    throw error;
+  }
+}
+
 export async function readUserConfig(
   userConfigDir: string,
 ): Promise<UserConfig> {
@@ -1207,8 +1242,10 @@ export async function writeUserConfig(
   config: UserConfig,
 ): Promise<void> {
   const configPath = getUserConfigPath(userConfigDir);
+  await resolveUserSyncConfig(userConfigDir);
+  const unknownFields = await readUnknownUserConfigFields(configPath);
   const normalized = normalizeUserConfig(config);
-  await atomicWriteJson(configPath, normalized);
+  await atomicWriteJson(configPath, { ...unknownFields, ...normalized });
 }
 
 export async function resolveActiveIdea(

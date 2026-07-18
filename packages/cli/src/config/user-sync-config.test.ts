@@ -142,4 +142,30 @@ describe('resolveUserSyncConfig', () => {
       unknown: 'preserved',
     });
   });
+
+  it('retains the legacy key when the canonical write fails', async () => {
+    const userConfigDir = await createUserConfigDir();
+    const legacyConfigPath = join(userConfigDir, 'config.json');
+    const legacyConfig = {
+      version: 1,
+      knownStrays: ['.cursor/skills/legacy-only'],
+      unknown: 'preserved',
+    };
+    await writeFile(legacyConfigPath, JSON.stringify(legacyConfig), 'utf8');
+
+    await expect(
+      resolveUserSyncConfig(userConfigDir, {
+        saveSyncConfig: vi
+          .fn()
+          .mockRejectedValue(new Error('simulated canonical write failure')),
+      }),
+    ).rejects.toThrow('simulated canonical write failure');
+
+    expect(JSON.parse(await readFile(legacyConfigPath, 'utf8'))).toEqual(
+      legacyConfig,
+    );
+    await expect(
+      readFile(getUserSyncConfigPath(userConfigDir), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
 });

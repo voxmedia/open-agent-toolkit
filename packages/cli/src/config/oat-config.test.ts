@@ -654,6 +654,46 @@ describe('oat-config', () => {
       });
     });
 
+    it('migrates legacy known strays before an unrelated user-config write', async () => {
+      const userConfigDir = await mkdtemp(join(tmpdir(), 'oat-user-config-'));
+      tempDirs.push(userConfigDir);
+      const userConfigPath = join(userConfigDir, 'config.json');
+      await writeFile(
+        userConfigPath,
+        JSON.stringify({
+          version: 1,
+          activeIdea: '.oat/ideas/example',
+          knownStrays: [' .cursor\\skills\\legacy-only '],
+          futureField: { preserved: true },
+        }),
+        'utf8',
+      );
+
+      const userConfig = await readUserConfig(userConfigDir);
+      await writeUserConfig(userConfigDir, {
+        ...userConfig,
+        updateNotifications: false,
+      });
+      await writeUserConfig(userConfigDir, {
+        ...(await readUserConfig(userConfigDir)),
+        updateNotifications: false,
+      });
+
+      expect(
+        JSON.parse(
+          await readFile(join(userConfigDir, 'sync', 'config.json'), 'utf8'),
+        ),
+      ).toMatchObject({
+        knownStrays: ['.cursor/skills/legacy-only'],
+      });
+      expect(JSON.parse(await readFile(userConfigPath, 'utf8'))).toEqual({
+        version: 1,
+        activeIdea: '.oat/ideas/example',
+        updateNotifications: false,
+        futureField: { preserved: true },
+      });
+    });
+
     it('setActiveIdea writes to local config', async () => {
       const repoRoot = await createRepoRoot();
 
