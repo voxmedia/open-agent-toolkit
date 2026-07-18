@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-07-10
+oat_last_updated: 2026-07-18
 oat_generated: false
 ---
 
@@ -44,7 +44,7 @@ Rejected for this project. The primary reviewer has the best context to decide w
 2. **Bounded fan-out:** Use one read-only reconnaissance round with disjoint, explicitly scoped lanes. Workers must not mutate files, write review artifacts, emit final structured findings, or spawn additional workers.
 3. **Worker output:** Require compact lane reports containing coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty. Candidate observations are advisory, not accepted findings.
 4. **Primary ownership:** The primary reviewer establishes authoritative scope, reopens and verifies every load-bearing source, reconciles overlap or disagreement, deduplicates, assigns severity, determines validation, and alone produces the artifact-mode review or canonical `StructuredFindings` response.
-5. **Dispatch preference:** Prefer cheaper/faster capable workers only when the host exposes a reliable tier or model control. Do not hard-code provider model names or imply that nested workers inherit the primary reviewer's managed dispatch target.
+5. **Dispatch preference:** Before delegated reconnaissance, require the primary reviewer to load `.agents/skills/oat-dispatch-subagents/SKILL.md` and its single active-provider reference. That shared contract owns capability, catalog, economical `recon` target, route, authorization, and launch evidence. Do not hard-code provider model names or imply that nested workers inherit the primary reviewer's managed dispatch target.
 6. **Capability and fallback:** Capability-check reviewer-local delegation once. If it is unsupported, unauthorized, failed, empty, or malformed, cover the same lane inline without weakening the checklist or output contract.
 7. **Implementation surface:** Update the canonical reviewer instructions and version, add durable semantic contract assertions, document the latency/cost benefit and safety boundary, regenerate provider views, and complete lockstep public-package release bookkeeping.
 
@@ -52,6 +52,7 @@ Rejected for this project. The primary reviewer has the best context to decide w
 
 - Preserve the existing authoritative commit-range/scope rules, severity model, artifact-mode format, gate parsing contract, and structured-output schema.
 - Keep concrete provider targets in the existing dispatch matrix/provider adapters; reviewer guidance stays provider-neutral.
+- Add the `Task` tool to the canonical reviewer so hosts that enforce agent tool allowlists can expose nested dispatch.
 - Account for hosts where a dispatched reviewer cannot itself spawn subagents; inline fallback is required.
 - Generated provider views must be refreshed through `oat sync`; canonical files remain the source of truth.
 - Changes under `.agents/agents` and the docs app are shipped CLI functionality, requiring all five public package versions to move in lockstep and `pnpm release:validate` to pass.

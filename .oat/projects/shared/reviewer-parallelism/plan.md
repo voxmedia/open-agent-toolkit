@@ -1,16 +1,16 @@
 ---
 oat_plan_source: quick
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_last_updated: 2026-07-18
 oat_generated: false
-oat_template: false
+oat_template: true
 ---
 
 # Implementation Plan: reviewer-parallelism
@@ -58,6 +58,8 @@ Add a dedicated semantic contract test that reads the canonical reviewer and ass
 - narrow-review inline behavior;
 - one bounded, read-only, non-recursive round of disjoint lanes;
 - compact reports with coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty;
+- `Task` is present in the canonical reviewer tool allowlist;
+- delegated reconnaissance requires loading `.agents/skills/oat-dispatch-subagents/SKILL.md` plus exactly one active-provider reference, maps workers to the `recon` role class, and leaves model/route selection to that shared contract;
 - cheaper/faster worker preference only when the host reliably exposes that control;
 - primary-only source validation, reconciliation, synthesis, severity, validation decisions, artifact writing, and `StructuredFindings`;
 - capability/authorization/failure fallback with no checklist or output-contract downgrade.
@@ -76,7 +78,10 @@ Update `.agents/agents/oat-reviewer.md` and both existing exact-version assertio
 
 - bump the canonical reviewer `version` from `1.1.7` to `1.1.8`;
 - update the reviewer version assertions in `packages/cli/src/validation/skills.test.ts` and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` from `1.1.7` to `1.1.8`;
+- add `Task` to the canonical reviewer tool allowlist so hosts that enforce agent tools can expose nested dispatch;
 - add a provider-neutral bounded-reconnaissance policy after dispatch control;
+- require the reviewer to read `.agents/skills/oat-dispatch-subagents/SKILL.md` before delegated reconnaissance, resolve the active provider, and read exactly one matching provider reference;
+- map reconnaissance workers to the shared `recon` role class so the dispatch contract selects an explicit economical target and never silently inherits the primary reviewer's model;
 - make the primary reviewer establish authoritative scope before considering delegation;
 - define a compact lane prompt/return contract requiring coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty, with a one-level fan-out limit;
 - require direct re-verification of load-bearing positive and negative claims;
@@ -141,6 +146,7 @@ Expand the existing `Subagent Compatibility` section to distinguish:
 - eligible broad-review examples and the expected wall-clock/cost benefit;
 - the one-round, read-only, non-recursive lane boundary;
 - worker-report coverage, checks performed, exact evidence, gaps, and uncertainty requirements;
+- shared `oat-dispatch-subagents` ownership of nested capability, economical model/route selection, authorization, launch evidence, and provider-specific mechanics;
 - primary-reviewer ownership of verification, synthesis, severity, and final findings;
 - inline fallback when nested workers or explicit cheaper-tier controls are unavailable.
 
@@ -359,6 +365,7 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md |
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md |
+| plan   | artifact | pending         | -          | -                                                           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -387,5 +394,6 @@ Ready for code review and merge after all tasks and required reviews pass.
 - Discovery: `discovery.md`
 - Backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — current: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md`; after `p03-t02`: `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
 - Current reviewer: `.agents/agents/oat-reviewer.md`
+- Shared nested-dispatch contract: `.agents/skills/oat-dispatch-subagents/SKILL.md`
 - Review workflow docs: `apps/oat-docs/docs/workflows/projects/reviews.md`
 - Project summary follow-up: `.oat/repo/reference/project-summaries/20260709-codex-family-subagents.md`
