@@ -94,8 +94,9 @@ lifecycle correctness problem, not only a documentation problem.
    `oat_phase_review_gate`, and optional configured skill-exit gate remain
    separate mechanisms; none satisfies or disables another.
 2. **Ordering:** Resolve and handle the configured implementation gate after
-   all prerequisite implementation closeout work but before implementation
-   completion state or success output.
+   final implementation verification and mandatory lifecycle review, but before
+   the approval-aware pre/post-implementation sequence, final HiLL approval,
+   implementation completion state, or success output.
 3. **Durability:** Persist gate pending, policy-allowed/passed, and
    blocked/failed states with enough provenance to resume safely.
 4. **Freshness:** Bind a successful gate disposition to the reviewed HEAD/run;
@@ -183,12 +184,14 @@ None identified.
   - **Impact:** High
   - **Mitigation Ideas:** Separate state/provenance fields and explicit
     independence tests.
-- **Closeout ordering drift:** Post-implementation sequence mutations could
-  occur after a successful gate and immediately make it stale.
+- **Closeout ordering drift:** Expected post-gate sequence mutations could be
+  mistaken for substantive implementation changes, or substantive changes
+  could be incorrectly treated as closeout-only descendants.
   - **Likelihood:** Medium
   - **Impact:** High
-  - **Mitigation Ideas:** Put the exit gate after all lifecycle mutations and
-    immediately before completion/output, with structural ordering tests.
+  - **Mitigation Ideas:** Define a narrow closeout-only descendant policy,
+    invalidate on implementation changes, and enforce the intended ordering
+    with structural tests.
 
 ## Next Steps
 

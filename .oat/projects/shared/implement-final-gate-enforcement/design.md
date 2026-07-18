@@ -15,18 +15,21 @@ The implementation closeout workflow will treat the configured
 `oat-project-implement` skill-exit gate as its own resumable lifecycle boundary.
 Mandatory phase/final self-review, optional `oat_phase_review_gate`, final HiLL
 approval, and the approval-aware post-implementation sequence keep their
-existing responsibilities. After those prerequisite operations and all
-closeout mutations finish, the orchestrator resolves the configured skill gate
-and records its disposition before it may mark implementation complete or emit
+existing responsibilities. After final implementation verification and
+mandatory lifecycle review pass, the orchestrator resolves the configured
+skill gate before it starts the approval-aware pre/post-implementation
+sequence, requests final HiLL approval, marks implementation complete, or emits
 the success summary.
 
 The gate boundary will use durable project state to distinguish pending,
 policy-allowed, and blocked outcomes. A successful/allowed disposition carries
-configured-gate provenance and a freshness binding to the reviewed repository
-revision and gate run, allowing resume to reuse an unchanged valid result while
-forcing a new gate run after later commits. A `null` gate resolution remains a
-valid no-gate terminal outcome, while configured `block`, `prompt`, and `warn`
-policies retain their current retry and receive-eligibility semantics.
+configured-gate provenance and a freshness binding to the reviewed
+implementation revision and gate run. Resume may reuse that result through the
+expected gate/sequence/HiLL bookkeeping descendants, but any substantive
+implementation change invalidates it and returns closeout to the gate. A
+`null` gate resolution remains a valid no-gate terminal outcome, while
+configured `block`, `prompt`, and `warn` policies retain their current retry and
+receive-eligibility semantics.
 
 This combines instruction ordering with executable contract coverage. The
 implementation skill and closeout reference define the authoritative sequence;
