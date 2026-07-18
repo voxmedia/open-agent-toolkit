@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t02
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 1/9       |
+| Phase 3 | in_progress | 9     | 2/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 17/38 tasks completed
+**Total:** 18/38 tasks completed
 
 ---
 
@@ -452,6 +452,26 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 - Config, path, core contract, and adapter compatibility suites — pass (21/21).
 - Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t02: Bind OAT artifacts and invoke the core
+
+**Status:** completed
+**Commit:** `4a28b255`
+
+**Outcome:**
+
+- Added OAT project artifact source-role binding with review provenance and
+  supplied fact-base pass-through.
+- Added cross-scope installed-core invocation through one normalized
+  request/result/manifest seam without ambient private configuration.
+
+**Verification:**
+
+- Adapter run, config/path, compatibility, and core integration suites — pass
+  (36/36).
+- Scoped syntax, lint, formatting, and whitespace checks — pass.
 
 ---
 
