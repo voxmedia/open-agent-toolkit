@@ -71,9 +71,10 @@ Expected: the new assertions fail because the orchestration contract is not yet 
 
 **Step 2: Implement the canonical reviewer contract (GREEN)**
 
-Update `.agents/agents/oat-reviewer.md`:
+Update `.agents/agents/oat-reviewer.md` and the existing exact-version assertion in `packages/cli/src/validation/skills.test.ts`:
 
-- bump `version` from `1.1.5` to `1.1.6`;
+- bump the canonical reviewer `version` from `1.1.7` to `1.1.8`;
+- update the existing reviewer version assertion from `1.1.7` to `1.1.8`;
 - add a provider-neutral bounded-reconnaissance policy after dispatch control;
 - make the primary reviewer establish authoritative scope before considering delegation;
 - define a compact lane prompt/return contract and one-level fan-out limit;
@@ -174,7 +175,7 @@ git commit -m "docs(p02-t01): explain reviewer reconnaissance boundaries"
 
 **Step 1: Apply the lockstep patch release**
 
-Bump all five public packages from `0.1.46` to `0.1.47`. Keep the versions identical.
+Re-read all five public package manifests to confirm the lockstep baseline is still `0.1.73`, then bump them together to `0.1.74`. If the baseline has advanced, stop and use the next shared patch version instead of downgrading or reusing a released version.
 
 Run the asset bundler after the version changes:
 
@@ -235,6 +236,51 @@ Expected: all repository and publishable-package checks pass. If a correction is
 
 ---
 
+### Task p03-t02: Close the shipped backlog item
+
+**Files:**
+
+- Move: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md` → `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Regenerate: `.oat/repo/pjm/backlog/index.md`
+
+**Step 1: Archive the completed backlog item**
+
+After the implementation and release validation satisfy the item acceptance criteria, run:
+
+```bash
+oat backlog archive BL-260708-enable-oat-reviewer-subagent --summary "Enabled bounded reviewer-local reconnaissance for faster broad reviews while preserving primary-reviewer judgment and evidence validation."
+```
+
+Expected: the item is marked closed, moved to `backlog/archived/`, recorded in `backlog/completed.md`, and removed from the active generated index.
+
+**Step 2: Verify backlog integrity and formatting**
+
+Run:
+
+```bash
+oat pjm doctor
+pnpm exec oxfmt --check \
+  .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
+  .oat/repo/pjm/backlog/completed.md \
+  .oat/repo/pjm/backlog/index.md
+git diff --check
+```
+
+Expected: PJM state is consistent, generated backlog files are current, and formatting passes.
+
+**Step 3: Commit**
+
+```bash
+git add \
+  .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
+  .oat/repo/pjm/backlog/completed.md \
+  .oat/repo/pjm/backlog/index.md
+git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status  | Date | Artifact |
@@ -259,9 +305,9 @@ Quick-mode implementation readiness depends on the `plan` artifact review, not o
 
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
-- Phase 3: 1 task - Provider synchronization and lockstep release validation
+- Phase 3: 2 tasks - Provider synchronization, lockstep release validation, and backlog closeout
 
-**Total: 3 phases, 3 tasks**
+**Total: 3 phases, 4 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 
@@ -270,7 +316,7 @@ Ready for code review and merge after all tasks and required reviews pass.
 ## References
 
 - Discovery: `discovery.md`
-- Backlog item: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md`
+- Backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
 - Current reviewer: `.agents/agents/oat-reviewer.md`
 - Review workflow docs: `apps/oat-docs/docs/workflows/projects/reviews.md`
 - Project summary follow-up: `.oat/repo/reference/project-summaries/20260709-codex-family-subagents.md`
