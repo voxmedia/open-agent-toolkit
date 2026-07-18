@@ -212,6 +212,7 @@ describe('review skill contracts', () => {
 
     expect(appendPoints).toContain('oat project log append --help');
     expect(appendPoints).toContain('the helper no-ops when the feature is off');
+    expect(content).toMatch(/^allowed-tools:.*Bash\(oat project log:\*\).*$/m);
     expect(appendPoints).toMatch(
       /accepted subagent dispatch[\s\S]*?oat project log append/i,
     );
