@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: prev2-t01
+oat_current_task_id: p06-t01 # RC gate open (f212d630); gate-open plan revision next
 oat_generated: false
 ---
 
@@ -40,7 +40,7 @@ oat_generated: false
 | Phase 5: Validation + release          | completed | 5     | 5/5       |
 | Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
 
-**Total:** 26/30 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 29/33 tasks completed (23 executable; 4 gated on explainer-kit RC)
 
 ---
 
@@ -223,6 +223,13 @@ Tasks: p06-t01 (recipe), p06-t02 (close-callers), p06-t03 (personal-wrapper migr
 
 **Next:** Execute revision tasks via oat-project-implement.
 
+### Revision Received: stoa W6-migration report
+
+**Date:** 2026-07-18
+**Source:** references/w6-migration-report-2026-07-18.md (2 findings: installer exec-bit defect via npm mode-stripping; runbook §2 stale-view gap) + §1 content-verify improvement
+
+**New tasks added:** prev2-t01..t03 — completed same day: 2533d6a0 (chmod fix, both install paths, RED→GREEN on 0644 fixtures), 10481e1a (runbook hardening), f9257c72 (lockstep 0.2.1). Review: round 1 PASS clean; reviewer confirmed the fix would have prevented stoa's defect on both paths.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below._
@@ -244,6 +251,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p04    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS           | 1 (ownership wording, `1a6359ec`)           | pass   |
 | p05    | oat-phase-implementer-gpt-5-6-sol-high                   | 5/5   | round 1 FAIL (1 Important — root bookkeeping gap) → round 2 PASS | 1 root-side (`1e336990`, impl record)       | pass   |
 | p-rev1 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (1 Medium, root-fixed inline)                       | 0                                           | pass   |
+| p-rev2 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (0/0/0/0 — first clean round 1)                     | 0                                           | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).

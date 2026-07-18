@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev2-t01
+oat_current_task: p06-t01
 oat_last_commit: 17a56f39
 oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
