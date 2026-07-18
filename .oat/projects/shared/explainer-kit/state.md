@@ -1,8 +1,7 @@
 ---
-oat_current_task: p05-t02
-oat_last_commit: 24ffdac7
-oat_blockers:
-  - p05-t02 awaits the operator-owned private-wrapper migration and E2E result from the wave project.
+oat_current_task: p05-t01
+oat_last_commit: 12c82fb4
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T20:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T23:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 5 waiting on external private-wrapper acceptance
+Implementation - Phase 5 replacing superseded RC after wave merge
 
 ## Artifacts
 
@@ -101,15 +100,14 @@ Implementation - Phase 5 waiting on external private-wrapper acceptance
 - ✓ Final Phase 4 re-review resolved all 11 implementation findings
 - ✓ Current-main reconciliation completed in merge commit `5c6ade31`
 - ✓ Reconciliation review passed with zero findings
-- ✓ Frozen RC recorded in `24ffdac7`
-- ⧗ Frozen RC handoff sent to the active wave-promotion agent
+- ✓ Wave promotion #158 reconciled in merge commit `12c82fb4`
+- ⚠ Prior frozen RC superseded by the merged wave/package set
+- ⧗ Phase 5 restarted at `p05-t01`
 
 ## Blockers
 
-- The real private wrapper is not installed locally; the wave project owns its
-  migration and sanitized E2E evidence.
+None
 
 ## Next Milestone
 
-Receive the wave-owned private-wrapper result, validate it against the frozen
-RC, then continue Phase 5.
+Freeze a replacement RC from the reconciled `0.2.1` package set.

@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - p05-t02 awaits the operator-owned private-wrapper migration and E2E result from the wave project.
+oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -31,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 1/4       |
+| Phase 5 | in_progress | 4     | 0/4       |
 
-**Total:** 35/38 tasks completed
+**Total:** 34/38 tasks completed
 
 ---
 
@@ -924,12 +923,9 @@ passed with zero findings:
 **Status:** in_progress
 **Started:** 2026-07-18
 
-**Current external dependency:** The frozen RC handoff was sent to the active
-wave-promotion agent in Orca message `msg_15544b51e53d`. No installed
-`personal-explainer-kit/scripts/acceptance.mjs` exists on this machine yet.
-Resume `p05-t02` when the wave-owned migration supplies the executable and
-sanitized result; do not substitute the in-repo compatibility fixture for the
-required real private-wrapper gate.
+**Wave reconciliation:** Wave promotion #158 was merged to main and reconciled
+into this branch in merge commit `12c82fb4`. The previously frozen RC is now
+superseded and must not be used for either external acceptance gate.
 
 ### Task p05-t01: Produce and identify the frozen packaged RC
 
@@ -950,6 +946,11 @@ required real private-wrapper gate.
 - Release validation, formatting, and whitespace checks — pass.
 - Commit contains exactly `rc.json` and `rc.md`; retained tarballs stay under
   untracked `dist/explainer-kit-rc/`.
+
+**Superseded:** RC
+`sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
+predates merged wave promotion #158 and package version `0.2.1`. Task
+`p05-t01` is reopened to replace both tracked RC records and retained tarballs.
 
 ---
 
