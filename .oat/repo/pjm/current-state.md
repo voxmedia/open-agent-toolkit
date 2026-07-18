@@ -30,7 +30,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.1.74` enables bounded reviewer-local reconnaissance for broad
+- CLI `0.2.1` enables bounded reviewer-local reconnaissance for broad
   reviews. Read-only, non-recursive evidence lanes can use economical workers,
   while the primary reviewer retains source validation, synthesis, severity,
   validation decisions, and final findings; unsupported hosts preserve the
