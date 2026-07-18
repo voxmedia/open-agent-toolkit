@@ -24,84 +24,67 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 2     | 0/2       |
+| Phase 2 | pending | 2     | 0/2       |
+| Phase 3 | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-07-18
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/6 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Durable State and Resume Routing
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Register the implementation exit-gate state contract
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p01-t02: Prioritize unresolved exit gates in lifecycle routing
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Enforced Final Gate Closeout
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Move the configured gate into authoritative closeout order
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Add resumable outcome and freshness enforcement
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation and Release Surfaces
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Document implementation exit-gate ordering and state
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Synchronize shipped assets and validate the release
 
 **Status:** pending
 **Commit:** -
@@ -147,36 +130,32 @@ Chronological log of implementation progress.
 
 ### 2026-07-18
 
-**Session Start:** {time}
+**Session Start:** 19:48 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Register the implementation exit-gate state contract - next
+- [ ] p01-t02: Prioritize unresolved exit gates in lifecycle routing - pending
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Quick-start discovery, lightweight design, and six-task implementation plan
+  completed.
+- Passing cross-family plan gate review received and archived.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Use a High managed dispatch ceiling.
+- Keep optional phase gate review disabled so implementation verifies its
+  independence from the configured skill-exit gate.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- Confirm implementation-phase HiLL checkpoints at implementation startup.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
-**Session End:** {time}
-
----
-
-### 2026-07-18
-
-**Session Start:** {time}
-
-{Continue log...}
+**Session End:** 19:48 UTC
 
 ---
 
@@ -196,6 +175,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
