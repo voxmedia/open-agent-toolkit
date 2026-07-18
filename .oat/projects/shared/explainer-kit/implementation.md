@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t05
+oat_current_task_id: p02-t06
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 4/10      |
+| Phase 2 | in_progress | 10    | 5/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 10/38 tasks completed
+**Total:** 11/38 tasks completed
 
 ---
 
@@ -274,6 +274,26 @@ oat_generated: false
 - Theme suite — pass (8/8).
 - Schema, contract, and records regression suites — pass (23/23).
 - Scoped formatting and whitespace checks — pass.
+
+---
+
+### Task p02-t05: Neutralize production templates
+
+**Status:** completed
+**Commit:** `91118804`
+
+**Outcome:**
+
+- Added four neutral, tokenized production shells and external RFC 2606 example
+  fixtures with leak-guard coverage.
+- Deck presentation defaults to horizontal paging, confines x-axis inner
+  overflow, supports both arrow pairs, degrades to readable no-JS flow, and
+  prints vertically.
+
+**Verification:**
+
+- Template, recipe, and theme suites — pass (24/24).
+- Scoped formatting, lint, and whitespace checks — pass.
 
 ---
 
