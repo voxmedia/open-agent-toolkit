@@ -329,7 +329,43 @@ allowed --closeout-only descendants----> allowed
 
 ## Error Handling
 
-Pending collaborative review.
+### Outcome Categories
+
+- **No configured gate:** Persist `allowed/no_gate` and continue.
+- **Structured `ok`:** Validate handoff and receive eligibility; invoke receive
+  when authorized, then persist `allowed/passed`.
+- **Structured `blocked`:** Invoke receive only when eligible, then apply the
+  configured `block`, `prompt`, or `warn` policy.
+- **Operational/validation failure:** Invalid or contradictory envelopes,
+  failed correlation, missing handoff, launch failures, unavailable runtimes,
+  and receive failures remain fail-closed. Do not receive an ineligible
+  artifact or mark the gate allowed.
+- **Stale implementation basis:** Preserve prior provenance as stale and start a
+  new generation only after the mandatory final lifecycle review is current for
+  the new basis.
+
+### Retry and Policy Handling
+
+- `block` remediates and reruns up to configured `maxAttempts`; infrastructure
+  or launch failures are escalation-biased and do not consume remediation
+  attempts.
+- `prompt` persists the unresolved boundary and waits. Explicit user
+  continuation records `allowed/prompt_approved`; defer or no response remains
+  blocked/pending.
+- `warn` records the failure details and continues only after persisting
+  `allowed/warned`.
+- An interruption resumes the persisted generation. It never launches a
+  duplicate while a valid completed outcome exists.
+
+### Audit Logging
+
+- Record each state transition, attempt, envelope disposition, receive result,
+  stale-basis decision, and stop/resume action concisely in implementation
+  tracking.
+- Preserve PR #156 project-log append behavior when enabled, including
+  gate-owned project-log mutations.
+- Logs and review rows remain audit evidence; project state is the routing
+  source of truth.
 
 ## Testing Strategy
 
