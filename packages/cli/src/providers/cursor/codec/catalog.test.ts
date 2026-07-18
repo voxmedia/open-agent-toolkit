@@ -1,7 +1,11 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
 import { describe, expect, it } from 'vitest';
 
 import {
   CURSOR_MODEL_PIN_MAPPINGS,
+  findCursorModelPinMapping,
   SUPPORTED_CURSOR_ROLE_TARGETS,
 } from './catalog';
 
@@ -54,6 +58,39 @@ describe('cursor model pin catalogue', () => {
     expect(supported).not.toContain('cursor-grok-4.5-high-fast');
     expect(supported).not.toContain('claude-fable-5-xhigh');
     expect(SUPPORTED_CURSOR_ROLE_TARGETS).toHaveLength(12);
+  });
+
+  it('materializes every Cursor candidate in the bundled recommendation', () => {
+    const recommendation = JSON.parse(
+      readFileSync(
+        join(process.cwd(), 'config', 'dispatch-matrix-recommendation.json'),
+        'utf8',
+      ),
+    ) as {
+      version: string;
+      providers: {
+        cursor: Record<string, { candidates: string[] }>;
+      };
+    };
+
+    expect(recommendation.version).toBe('2026-07-11.1');
+    const candidates = Object.values(recommendation.providers.cursor).flatMap(
+      ({ candidates: tierCandidates }) => tierCandidates,
+    );
+    expect(candidates).toHaveLength(12);
+    for (const candidate of candidates) {
+      expect(
+        findCursorModelPinMapping(candidate),
+        `materialized recommendation candidate ${candidate}`,
+      ).toMatchObject({
+        ladderModelId: candidate,
+        catalogue: true,
+        gateEvidence: {
+          gate: 'g01',
+          disposition: 'approved',
+        },
+      });
+    }
   });
 
   it('contains unique ladder ids', () => {
