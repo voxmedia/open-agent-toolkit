@@ -724,7 +724,7 @@ git commit -m "docs(p03-t11): correct quick-mode spec reference"
 | p03    | code     | pending         | -          | -                                                           |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md         |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T125009Z.md         |
-| final  | code     | fixes_added     | 2026-07-18 | reviews/archived/final-review-2026-07-18T141653Z.md         |
+| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T141653Z.md         |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | received        | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-14T010828Z.md |

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 6     | 6/6       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 11    | 9/11      |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 6     | 6/6       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 11    | 11/11     |
 
-**Total:** 17/19 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -155,10 +155,11 @@ oat_generated: false
 
 ## Phase 2: Scaffold and gate integration
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-18
 **Completed:** 2026-07-18
 **Reopened for review fixes:** 2026-07-18
+**Review fixes completed:** 2026-07-18
 
 ### Phase Summary
 
@@ -265,13 +266,13 @@ oat_generated: false
 
 ### Task p03-t10: Prevent project-log section-marker spoofing
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 719c1d59
 
 ### Task p03-t11: Correct the quick-mode spec reference
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 7b530528
 
 ## Orchestration Runs
 
@@ -323,6 +324,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p03   | DONE_WITH_CONCERNS | `3d87bd36..526616d3` (5) | passed       |
 
 **Outstanding:** overlap direction accepted and design-aligned before final review.
+
+### Run 4 — 2026-07-18
+
+**Branch:** `orchestration-run-log`
+**Dispatch policy:** high
+**Resolved target:** `oat-phase-implementer` via Cursor (`gpt-5.6-sol-high`)
+**Request:** `run-log-p03-review-fixes-2026-07-18`
+
+| Phase | Outcome | Commits                  | Verification |
+| ----- | ------- | ------------------------ | ------------ |
+| p03   | DONE    | `719c1d59..7b530528` (2) | passed       |
+
+**Outstanding:** focused final re-review authorized and pending.
 
 <!-- orchestration-runs-end -->
 
@@ -445,7 +459,9 @@ Chronological log of implementation progress.
 **Minor disposition:** m1 converted to p03-t11 by explicit operator choice.
 **Review-cycle override:** the operator authorized one focused final re-review after p03-t10 and p03-t11, despite the standard three-cycle cap.
 
-**Next:** execute p03-t10 and p03-t11 via `oat-project-implement`, then run a focused final re-review.
+**Fix outcome:** p03-t10 and p03-t11 completed in commits 719c1d59 and 7b530528; 55 targeted project-log regression tests and phase verification passed.
+
+**Next:** run the authorized focused final re-review.
 
 ---
 
