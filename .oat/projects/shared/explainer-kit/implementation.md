@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t02
+oat_current_task_id: p04-t03
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 1/9       |
+| Phase 4 | in_progress | 9     | 2/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 26/38 tasks completed
+**Total:** 27/38 tasks completed
 
 ---
 
@@ -683,6 +683,26 @@ version task. Re-review passed with zero findings; canonical artifact:
 **Verification:**
 
 - Connector, schema, contract, and durability suites — pass (34/34).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p04-t02: Add release-grade visual and traceability fixtures
+
+**Status:** completed
+**Commit:** `661e9268`
+
+**Outcome:**
+
+- Added bounded visual matrix coverage across palettes, modes, profiles,
+  artifacts, viewports, and deck presentation fallbacks.
+- Added false-rebuildability rejection, source/output hash checks, and retained
+  0.4.1 operational-wisdom traceability.
+
+**Verification:**
+
+- Planned release QA suites — pass (11/11).
+- Related QA, theme, render, template, and durability suites — pass (47/47).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
