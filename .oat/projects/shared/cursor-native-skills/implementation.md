@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -18,10 +18,10 @@ oat_generated: false
 | ----- | ----------- | ----- | --------- |
 | p01   | complete    | 2     | 2/2       |
 | p02   | complete    | 2     | 2/2       |
-| p03   | in_progress | 3     | 0/3       |
-| p04   | pending     | 2     | 0/2       |
+| p03   | complete    | 3     | 3/3       |
+| p04   | in_progress | 2     | 0/2       |
 
-**Total:** 4/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ## Phase 1: Native-Read Mapping and Adoption Sources
 
@@ -88,26 +88,48 @@ skill upgrade paths at project and user scope.
 
 ## Phase 3: Per-Skill Decisions and User Config Migration
 
-**Status:** in_progress
+**Status:** complete
+
+### Phase Summary
+
+- User known-stray state now migrates idempotently to
+  `~/.oat/sync/config.json` while preserving unrelated general config.
+- Native-read adoption moves skills to canonical without recreating Cursor
+  views; keep-local records exact known-stray paths.
+- Init and status require an individual adopt-or-keep choice for each Cursor
+  skill and preserve abort semantics.
+- Same-name canonical collisions block keep-local until renamed.
+
+**Verification:** 375 focused tests passed; CLI lint, formatting, and type-check
+passed.
 
 ### Task p03-t01: Canonicalize user known-stray configuration
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `95422e22`
+
+User sync config now owns known strays with idempotent legacy migration and
+updated configuration discovery.
 
 ### Task p03-t02: Support native-read adopt and keep-local actions
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `a6d1dfd9`
+
+Shared disposition actions support native-read adoption and durable keep-local
+choices without provider-view recreation.
 
 ### Task p03-t03: Wire individual choices into init and status
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `3fb2ea22`
+
+Interactive init and status flows now prompt once per Cursor skill, stop on
+abort, and retain the existing non-Cursor checklist behavior.
 
 ## Phase 4: Documentation, Release Metadata, and Final Validation
 
-**Status:** pending
+**Status:** in_progress
 
 ### Task p04-t01: Update provider and configuration documentation
 
@@ -130,7 +152,8 @@ skill upgrade paths at project and user scope.
 - HiLL checkpoint: after p04
 - Phase p01: complete
 - Phase p02: complete
-- Phase p03: next
+- Phase p03: complete
+- Phase p04: next
 
 <!-- orchestration-runs-end -->
 
@@ -142,7 +165,10 @@ skill upgrade paths at project and user scope.
 - [x] p01-t02: Scan provider-local adoption sources — `c45145ce`
 - [x] p02-t01: Add preservation-aware detach operations — `77a1b3bb`
 - [x] p02-t02: Cover Cursor upgrade behavior end to end — `510a34f6`
-- [ ] p03-t01: Canonicalize user known-stray configuration
+- [x] p03-t01: Canonicalize user known-stray configuration — `95422e22`
+- [x] p03-t02: Support native-read adopt and keep-local actions — `a6d1dfd9`
+- [x] p03-t03: Wire individual choices into init and status — `3fb2ea22`
+- [ ] p04-t01: Update provider and configuration documentation
 
 **Decisions:**
 
@@ -155,7 +181,9 @@ skill upgrade paths at project and user scope.
 
 ## Deviations from Plan / Design
 
-None.
+| Task    | Source Artifact | Planned / Documented                        | Actual / Accepted                                    | Reason                                              | Source of Truth                           | Follow-up |
+| ------- | --------------- | ------------------------------------------- | ---------------------------------------------------- | --------------------------------------------------- | ----------------------------------------- | --------- |
+| p03-t01 | `plan.md`       | Modify `packages/cli/src/config/resolve.ts` | Existing normalization needed no source modification | Legacy ownership was removed in focused config code | `packages/cli/src/config/resolve.test.ts` | None      |
 
 ## Test Results
 
@@ -163,7 +191,7 @@ None.
 | ----- | --------- | ------ | ------ | ----------------------------- |
 | p01   | 173       | 173    | 0      | Format, type-check, lint pass |
 | p02   | 74        | 74     | 0      | Format, type-check, lint pass |
-| p03   | -         | -      | -      | Pending                       |
+| p03   | 375       | 375    | 0      | Format, type-check, lint pass |
 | p04   | -         | -      | -      | Pending                       |
 
 ## Final Summary (for PR/docs)
