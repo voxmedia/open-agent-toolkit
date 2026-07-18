@@ -6,6 +6,8 @@ oat_last_updated: 2026-07-18
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [] # confirmed sequential (operator declined p03/p04 parallel group)
+oat_plan_hill_phases: ['p05', 'p06'] # from workflow.hillCheckpointDefault=final: p05 ends this run's mergeable delta; p06 is a separately merged RC-gated delta
+oat_auto_review_at_hill_checkpoints: true # from workflow.autoReviewAtHillCheckpoints
 oat_phase_review_gate:
   enabled: true
   phases: ['p05'] # operator choice: cross-runtime gate at end of implementation only (p06 is RC-gated, merges separately)
