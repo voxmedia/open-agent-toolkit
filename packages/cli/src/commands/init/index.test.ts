@@ -742,12 +742,14 @@ describe('createInitCommand', () => {
     expect(selectManyWithAbort).not.toHaveBeenCalled();
   });
 
-  it('stops current and remaining migration processing on abort', async () => {
+  it('continues later scope setup but stops migration prompts on abort', async () => {
     const {
       command,
       selectWithAbort,
       selectManyWithAbort,
       applyCursorSkillDisposition,
+      ensureCanonicalDirs,
+      saveManifest,
     } = createHarness({
       interactive: true,
       hookInstalled: true,
@@ -760,7 +762,7 @@ describe('createInitCommand', () => {
       singleSelectResponses: ['keep', null],
     });
 
-    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+    await runInitCommand(command, { globalArgs: ['--scope', 'all'] });
 
     expect(
       selectWithAbort.mock.calls.filter(([message]) =>
@@ -772,6 +774,11 @@ describe('createInitCommand', () => {
       applyCursorSkillDisposition.mock.calls[0]?.[1].report.providerPath,
     ).toBe('.cursor/skills/answered');
     expect(selectManyWithAbort).not.toHaveBeenCalled();
+    expect(ensureCanonicalDirs).toHaveBeenCalledWith('/tmp/home', 'user');
+    expect(saveManifest).toHaveBeenCalledWith(
+      '/tmp/home/.oat/sync/manifest.json',
+      expect.any(Object),
+    );
   });
 
   it('writes Cursor dispositions to each scope sync config', async () => {

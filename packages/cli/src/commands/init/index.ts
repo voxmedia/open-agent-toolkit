@@ -992,7 +992,7 @@ async function runInitCommand(
       context.logger.warn(ADOPT_REMEDIATION);
     }
 
-    if (context.interactive && strays.length > 0) {
+    if (context.interactive && strays.length > 0 && !migrationAborted) {
       for (const stray of cursorSkillStrays) {
         const disposition = await dependencies.selectWithAbort(
           `Migrate Cursor skill [${scope}]: ${formatPathForScope(
@@ -1179,9 +1179,6 @@ async function runInitCommand(
       straysFound: strays.length,
       straysAdopted,
     });
-    if (migrationAborted) {
-      break;
-    }
   }
 
   const hookInstalled = await maybeHandleHook(
