@@ -115,9 +115,10 @@ through the import-plan lane.
 
 A concrete managed reviewer remains bound across both tiers. Codex uses the
 exact registered role or a child pinned to the resolved model and effort;
-Claude and Cursor pass the exact resolver-returned `dispatchArgs.model` in the
-actual provider invocation, including retries. Tier 2 does not authorize a
-target downgrade. Inline review is allowed only with verified equivalent host
+Claude passes the exact resolver-returned `dispatchArgs.model`; Cursor launches
+the exact `providers.cursor.dispatchArgs.variant` native reviewer variant.
+Retries preserve that complete target. Tier 2 does not authorize a target
+downgrade. Inline review is allowed only with verified equivalent host
 controls, or for explicit inherit/default behavior or the documented
 managed-uncapped reviewer base-role exception; otherwise the review blocks.
 

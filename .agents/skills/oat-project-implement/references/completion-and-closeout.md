@@ -205,20 +205,22 @@ launcher payload supplies configured invocation evidence, so missing telemetry,
 missing self-report, or a later `BLOCKED` result cannot trigger fallback. Record
 the final review `target`, `model_axis`, and `effort_axis` from resolver output
 and the constructed launcher payload, never from reviewer self-report. A
-concrete managed Claude or Cursor target must put
-`providers.claude.dispatchArgs.model` or
-`providers.cursor.dispatchArgs.model` respectively into the actual provider
-invocation as the exact `model` argument; Cursor strings remain opaque. Before
-acceptance, a transport retry preserves the exact payload. After acceptance,
-poll, nudge, or continue only through the existing reviewer handle. A terminal
-timeout stops or escalates without another launch; a fresh pinned-child route
-is eligible only after explicit pre-start role-selection rejection. If the host
-cannot apply the required role or model argument, fail closed or block unless
-verified equivalent current-host controls permit inline execution. The preference below chooses only among
-routes that preserve that target; it cannot authorize generic inline or base
-execution. Inline remains available only with verified equivalent current-host
-controls or an allowed explicit inherit/default or managed-uncapped reviewer
-base-role exception.
+concrete managed Claude target must put
+`providers.claude.dispatchArgs.model` into the actual provider invocation as
+the exact `model` argument. A concrete managed Cursor target must launch
+`providers.cursor.dispatchArgs.variant` as the exact resolver-selected native
+reviewer variant first; Cursor model strings remain opaque inside the mapping
+and resolver. Before acceptance, a transport retry preserves the exact
+payload. After acceptance, poll, nudge, or continue only through the existing
+reviewer handle. A terminal timeout stops or escalates without another launch;
+a fresh pinned-child route is eligible only after explicit pre-start native
+role-selection rejection. If the host cannot apply the required role, variant,
+or model argument, fail closed or block unless verified equivalent
+current-host controls permit inline execution. The preference below chooses
+only among routes that preserve that target; it cannot authorize generic
+inline or base execution. Inline remains available only with verified
+equivalent current-host controls or an allowed explicit inherit/default or
+managed-uncapped reviewer base-role exception.
 
 ```bash
 REVIEW_MODEL=$(oat config get workflow.reviewExecutionModel 2>/dev/null || true)

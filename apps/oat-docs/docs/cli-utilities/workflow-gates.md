@@ -94,6 +94,31 @@ model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
 
+### Review producer identity
+
+Dynamic planning workflows can declare their current parent model to a review
+gate without writing a provider or model into shared/user config:
+
+```bash
+OAT_GATE_PRODUCER_IDENTITY='<model>:declared' oat gate review ...
+```
+
+This is a review-command-only bridge. `oat gate review` accepts it only when
+the value is non-empty and its provenance suffix is exactly `declared`. The
+gate removes the variable from the child reviewer's environment, and non-review
+commands such as `oat gate cross-provider-exec` ignore it.
+
+Producer evidence precedence is explicit `--producer-identity`, then a
+qualifying implementation dispatch stamp, then the review-only environment
+declaration, and finally unknown producer behavior. The environment bridge does
+not replace stronger explicit or stamped evidence and does not establish
+observed runtime identity.
+
+Keep reusable gate commands producer-neutral in shared and user config.
+Planning skills attach the ephemeral declaration only while executing a
+resolved configured command that invokes `oat gate review`; they leave it
+absent for every other gate command.
+
 ### Headless completion safety
 
 Every `oat gate review` child receives the same headless contract through two
