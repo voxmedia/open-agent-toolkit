@@ -25,6 +25,8 @@ import type { UserConfig } from '@config/oat-config';
 import type { CanonicalEntry } from '@engine/index';
 import { CliError } from '@errors/index';
 import { createEmptyManifest, type Manifest } from '@manifest/index';
+import { codexAdapter } from '@providers/codex';
+import { cursorAdapter } from '@providers/cursor';
 import type { ProviderAdapter } from '@providers/shared';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -34,6 +36,7 @@ import { createInitCommand, type InitStrayCandidate } from './index';
 
 interface HarnessOptions {
   interactive?: boolean;
+  home?: string;
   scopeRootByScope?: Partial<Record<'project' | 'user', string>>;
   strays?: InitStrayCandidate[];
   confirmResponses?: boolean[];
@@ -122,7 +125,7 @@ function createHarness(options: HarnessOptions = {}): {
   const capture = createLoggerCapture();
   const scopeRoots = {
     project: '/tmp/workspace',
-    user: '/tmp/home',
+    user: options.home ?? '/tmp/home',
     ...(options.scopeRootByScope ?? {}),
   };
   const confirmResponses = [...(options.confirmResponses ?? [])];
@@ -234,7 +237,7 @@ function createHarness(options: HarnessOptions = {}): {
       verbose: globalOptions.verbose ?? false,
       json: globalOptions.json ?? false,
       cwd: globalOptions.cwd ?? '/tmp/workspace',
-      home: '/tmp/home',
+      home: options.home ?? '/tmp/home',
       interactive: options.interactive ?? true,
       logger: capture.logger,
     }),
@@ -878,6 +881,120 @@ config_file = "agents/reviewer.toml"
       ),
     ).toBe(false);
   });
+
+  it.each(['user', 'all'] as const)(
+    'excludes user-owned materialized roles from %s-scope adoption while retaining unmanaged roles',
+    async (scope) => {
+      const home = await mkdtemp(join(tmpdir(), 'oat-init-user-variants-'));
+      tempDirs.push(home);
+
+      await mkdir(join(home, '.oat'), { recursive: true });
+      await writeFile(
+        join(home, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                codex: {
+                  high: [
+                    {
+                      harness: 'codex',
+                      model: 'gpt-5.6-terra',
+                      effort: 'xhigh',
+                    },
+                  ],
+                },
+                cursor: {
+                  high: ['gpt-5.6-sol-high'],
+                },
+              },
+            },
+          },
+        }),
+        'utf8',
+      );
+      await mkdir(join(home, '.cursor', 'agents'), { recursive: true });
+      await writeFile(
+        join(
+          home,
+          '.cursor',
+          'agents',
+          'oat-phase-implementer-gpt-5-6-sol-high.md',
+        ),
+        [
+          '---',
+          '# oat-managed: true',
+          '# oat-role: oat-phase-implementer-gpt-5-6-sol-high',
+          '# oat-owner: user-config',
+          'name: oat-phase-implementer-gpt-5-6-sol-high',
+          'description: managed Cursor role',
+          'model: gpt-5.6-sol[reasoning=high]',
+          '---',
+          '',
+        ].join('\n'),
+        'utf8',
+      );
+      await writeFile(
+        join(home, '.cursor', 'agents', 'cursor-unmanaged.md'),
+        '# unmanaged Cursor role\n',
+        'utf8',
+      );
+      await mkdir(join(home, '.codex', 'agents'), { recursive: true });
+      await writeFile(
+        join(
+          home,
+          '.codex',
+          'agents',
+          'oat-phase-implementer-gpt-5-6-terra-xhigh.toml',
+        ),
+        'developer_instructions = "managed Codex role"\n',
+        'utf8',
+      );
+      await writeFile(
+        join(home, '.codex', 'agents', 'codex-unmanaged.toml'),
+        'developer_instructions = "unmanaged Codex role"\n',
+        'utf8',
+      );
+
+      const { command, selectManyWithAbort } = createHarness({
+        interactive: true,
+        home,
+        scopeRootByScope: { user: home },
+        useDefaultCollectStrays: true,
+        adapters: [cursorAdapter, codexAdapter],
+        configAwareActiveAdapterNames: ['cursor', 'codex'],
+        hookInstalled: true,
+        selectResponses: [[]],
+      });
+
+      await runInitCommand(command, { globalArgs: ['--scope', scope] });
+
+      const descriptions = selectManyWithAbort.mock.calls.flatMap((call) =>
+        (call[1] as Array<{ description?: string }>).map(
+          (choice) => choice.description ?? '',
+        ),
+      );
+      expect(descriptions).toEqual(
+        expect.arrayContaining([
+          expect.stringContaining('cursor-unmanaged.md'),
+          expect.stringContaining('codex-unmanaged.toml'),
+        ]),
+      );
+      expect(
+        descriptions.some((description) =>
+          description.includes('oat-phase-implementer-gpt-5-6-sol-high.md'),
+        ),
+      ).toBe(false);
+      expect(
+        descriptions.some((description) =>
+          description.includes(
+            'oat-phase-implementer-gpt-5-6-terra-xhigh.toml',
+          ),
+        ),
+      ).toBe(false);
+    },
+  );
 
   it('supports skip-all by leaving checklist empty', async () => {
     const { command, selectManyWithAbort, adoptStray } = createHarness({

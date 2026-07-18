@@ -820,6 +820,331 @@ describe('createSyncCommand', () => {
     });
   });
 
+  it('applies combined project extensions in deterministic order with partial filters and aggregate counts', async () => {
+    const cursorCompute = vi.fn(async () => ({
+      provider: 'cursor' as const,
+      operations: [
+        {
+          provider: 'cursor' as const,
+          action: 'create' as const,
+          target: 'role',
+          path: '.cursor/agents/oat-reviewer-gpt.md',
+          reason: 'managed Cursor role file missing',
+          entryName: 'oat-reviewer-gpt',
+          content: '# reviewer',
+        },
+      ],
+      managedEntries: ['oat-reviewer-gpt'],
+      aggregateHash: 'cursor-hash',
+      metadata: {},
+    }));
+    const cursorApply = vi.fn(async () => ({
+      applied: 1,
+      failed: 0,
+      skipped: 0,
+    }));
+    const cursorExtension: SyncMaterializationExtension = {
+      provider: 'cursor',
+      computePlan: cursorCompute,
+      applyPlan: cursorApply,
+    };
+    const codexAdapter = createCodexAdapter();
+    const cursorAdapter = createAdapter('cursor');
+    const {
+      capture,
+      command,
+      computeCodexProjectExtensionPlan,
+      applyCodexProjectExtensionPlan,
+    } = createHarness({
+      adapters: [codexAdapter, cursorAdapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          provider: 'codex',
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer.toml',
+              reason: 'managed Codex role file missing',
+              roleName: 'oat-reviewer',
+              content: 'developer_instructions = "review"',
+            },
+          ],
+          managedEntries: ['oat-reviewer'],
+          aggregateHash: 'codex-hash',
+          metadata: {
+            managedRoles: ['oat-reviewer'],
+            aggregateConfigHash: 'codex-hash',
+          },
+          managedRoles: ['oat-reviewer'],
+          aggregateConfigHash: 'codex-hash',
+        },
+      ],
+      codexExtensionApplyResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      extraMaterializationExtensions: [cursorExtension],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--install-canonical', '.agents/agents/oat-reviewer.md'],
+    });
+
+    expect(computeCodexProjectExtensionPlan).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.any(Array),
+      ['.agents/agents/oat-reviewer.md'],
+      { userConfigDir: '/tmp/home/.oat' },
+    );
+    expect(cursorCompute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopeRoot: '/tmp/workspace',
+        allowedCanonicalPaths: ['.agents/agents/oat-reviewer.md'],
+        options: { userConfigDir: '/tmp/home/.oat' },
+      }),
+    );
+    expect(
+      applyCodexProjectExtensionPlan.mock.invocationCallOrder[0],
+    ).toBeLessThan(cursorApply.mock.invocationCallOrder[0]!);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      scope: 'project',
+      dryRun: false,
+      summary: {
+        plannedOperations: 2,
+        applied: 2,
+        failed: 0,
+        skipped: 0,
+      },
+      materializationExtensions: [
+        { provider: 'codex', applied: 1, failed: 0 },
+        { provider: 'cursor', applied: 1, failed: 0 },
+      ],
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('reports combined user extension partial failure in JSON and exits nonzero', async () => {
+    const cursorCompute = vi.fn(async () => ({
+      provider: 'cursor' as const,
+      operations: [
+        {
+          provider: 'cursor' as const,
+          action: 'create' as const,
+          target: 'role',
+          path: '.cursor/agents/oat-reviewer-gpt.md',
+          reason: 'managed Cursor role file missing',
+          entryName: 'oat-reviewer-gpt',
+          content: '# reviewer',
+        },
+      ],
+      managedEntries: ['oat-reviewer-gpt'],
+      aggregateHash: 'cursor-hash',
+      metadata: {},
+    }));
+    const cursorApply = vi.fn(async () => ({
+      applied: 1,
+      failed: 0,
+      skipped: 0,
+    }));
+    const cursorExtension: SyncMaterializationExtension = {
+      provider: 'cursor',
+      computePlan: cursorCompute,
+      applyPlan: cursorApply,
+    };
+    const codexAdapter = createCodexAdapter();
+    const cursorAdapter = createAdapter('cursor');
+    const { capture, command } = createHarness({
+      home: '/tmp/custom-home',
+      adapters: [codexAdapter, cursorAdapter],
+      plans: [createEmptyPlan('user')],
+      configAwareResults: [
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          provider: 'codex',
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer.toml',
+              reason: 'managed Codex role file missing',
+              roleName: 'oat-reviewer',
+              content: 'developer_instructions = "review"',
+            },
+          ],
+          managedEntries: ['oat-reviewer'],
+          aggregateHash: 'codex-hash',
+          metadata: {
+            managedRoles: ['oat-reviewer'],
+            aggregateConfigHash: 'codex-hash',
+          },
+          managedRoles: ['oat-reviewer'],
+          aggregateConfigHash: 'codex-hash',
+        },
+      ],
+      codexExtensionApplyResults: [{ applied: 0, failed: 1, skipped: 0 }],
+      extraMaterializationExtensions: [cursorExtension],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'user', '--json'],
+    });
+
+    expect(cursorCompute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopeRoot: '/tmp/custom-home',
+        options: { userConfigDir: '/tmp/custom-home/.oat' },
+      }),
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      scope: 'user',
+      dryRun: false,
+      summary: {
+        plannedOperations: 2,
+        applied: 1,
+        failed: 1,
+        skipped: 0,
+      },
+      materializationExtensions: [
+        { provider: 'codex', applied: 0, failed: 1 },
+        { provider: 'cursor', applied: 1, failed: 0 },
+      ],
+    });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('makes a combined extension second run a no-op', async () => {
+    const cursorPlans = [
+      {
+        provider: 'cursor' as const,
+        operations: [
+          {
+            provider: 'cursor' as const,
+            action: 'create' as const,
+            target: 'role',
+            path: '.cursor/agents/oat-reviewer-gpt.md',
+            reason: 'managed Cursor role file missing',
+            entryName: 'oat-reviewer-gpt',
+            content: '# reviewer',
+          },
+        ],
+        managedEntries: ['oat-reviewer-gpt'],
+        aggregateHash: 'cursor-hash',
+        metadata: {},
+      },
+      {
+        provider: 'cursor' as const,
+        operations: [],
+        managedEntries: ['oat-reviewer-gpt'],
+        aggregateHash: 'cursor-hash',
+        metadata: {},
+      },
+    ];
+    const cursorCompute = vi.fn(async () => cursorPlans.shift()!);
+    const cursorApply = vi.fn(async () => ({
+      applied: 1,
+      failed: 0,
+      skipped: 0,
+    }));
+    const cursorExtension: SyncMaterializationExtension = {
+      provider: 'cursor',
+      computePlan: cursorCompute,
+      applyPlan: cursorApply,
+    };
+    const codexAdapter = createCodexAdapter();
+    const cursorAdapter = createAdapter('cursor');
+    const { capture, command, applyCodexProjectExtensionPlan } = createHarness({
+      adapters: [codexAdapter, cursorAdapter],
+      plans: [createEmptyPlan('project'), createEmptyPlan('project')],
+      configAwareResults: Array.from({ length: 4 }, () => ({
+        activeAdapters: [codexAdapter, cursorAdapter],
+        detectedUnset: [],
+        detectedDisabled: [],
+      })),
+      codexExtensionPlans: [
+        {
+          provider: 'codex',
+          operations: [
+            {
+              action: 'create',
+              target: 'role',
+              path: '.codex/agents/oat-reviewer.toml',
+              reason: 'managed Codex role file missing',
+              roleName: 'oat-reviewer',
+              content: 'developer_instructions = "review"',
+            },
+          ],
+          managedEntries: ['oat-reviewer'],
+          aggregateHash: 'codex-hash',
+          metadata: {
+            managedRoles: ['oat-reviewer'],
+            aggregateConfigHash: 'codex-hash',
+          },
+          managedRoles: ['oat-reviewer'],
+          aggregateConfigHash: 'codex-hash',
+        },
+        {
+          provider: 'codex',
+          operations: [],
+          managedEntries: ['oat-reviewer'],
+          aggregateHash: 'codex-hash',
+          metadata: {
+            managedRoles: ['oat-reviewer'],
+            aggregateConfigHash: 'codex-hash',
+          },
+          managedRoles: ['oat-reviewer'],
+          aggregateConfigHash: 'codex-hash',
+        },
+      ],
+      codexExtensionApplyResults: [{ applied: 1, failed: 0, skipped: 0 }],
+      extraMaterializationExtensions: [cursorExtension],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+    });
+
+    expect(capture.jsonPayloads).toHaveLength(2);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      summary: { plannedOperations: 2, applied: 2, failed: 0 },
+    });
+    expect(capture.jsonPayloads[1]).toMatchObject({
+      summary: { plannedOperations: 0, applied: 0, failed: 0 },
+      materializationExtensions: [
+        { provider: 'codex', operations: [] },
+        { provider: 'cursor', operations: [] },
+      ],
+    });
+    expect(applyCodexProjectExtensionPlan).toHaveBeenCalledTimes(1);
+    expect(cursorApply).toHaveBeenCalledTimes(1);
+    expect(process.exitCode).toBe(0);
+  });
+
   it('includes codex extension operations in dry-run JSON output', async () => {
     const { capture, command, computeCodexProjectExtensionPlan } =
       createHarness({
