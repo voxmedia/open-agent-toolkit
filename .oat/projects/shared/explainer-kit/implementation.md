@@ -446,7 +446,11 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 **Verification:**
 
-- Phase task suites pass; root phase verification and review pending.
+- Adapter suite — pass (42/42).
+- CLI archive, lifecycle contract, and skill suites — pass (193/193).
+- CLI type-check, lint, canonical skill validation, formatting, and whitespace
+  checks — pass.
+- Phase 3 code review pending.
 
 ### Task p03-t01: Resolve adapter config and canonical output roots
 
@@ -761,6 +765,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | ------------------------------------------ |
 | 1     | 491       | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
 | 2     | 102       | 102    | 0      | Full post-review-fix Phase 2 suite passes  |
+| 3     | 235       | 235    | 0      | Full root Phase 3 matrix passes            |
 
 ## Final Summary (for PR/docs)
 
