@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t04
+oat_current_task_id: p04-t05
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 3/9       |
+| Phase 4 | in_progress | 9     | 4/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 28/38 tasks completed
+**Total:** 29/38 tasks completed
 
 ---
 
@@ -727,6 +727,29 @@ version task. Re-review passed with zero findings; canonical artifact:
 - Core and adapter suites — pass (167/167).
 - Skill validation — pass (98/98).
 - Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p04-t04: Document the public explainer family
+
+**Status:** completed
+**Commit:** `c509f7ce`
+**User approval:** Approved the exact page-level delta before substantive
+authoring on 2026-07-18.
+
+**Outcome:**
+
+- Added the public explainer family guide and updated skills, project artifacts,
+  configuration, and tool-pack documentation.
+- Added external MIT pattern attribution and regenerated the derived docs index.
+
+**Verification:**
+
+- Docs formatting/lint, generated-index reproduction, full docs build, and
+  whitespace checks — pass.
+- Browser link checker could not start because the local Playwright Chromium
+  binary is not installed; this is an environment limitation, not a docs-build
+  failure.
 
 ---
 
