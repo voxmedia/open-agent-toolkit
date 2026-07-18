@@ -273,6 +273,7 @@ Expected: PJM state is consistent, generated backlog files are current, and form
 
 ```bash
 git add \
+  .oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/completed.md \
   .oat/repo/pjm/backlog/index.md
