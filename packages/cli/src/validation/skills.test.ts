@@ -1235,7 +1235,9 @@ describe('validateOatSkills', () => {
       /migrat[\s\S]{0,500}current project[\s\S]{0,500}--project "\$PROJECT_PATH"/i,
     );
     const reusableReviewCommands = [
-      ...workflowGates.matchAll(/--command '([^']*oat gate review[^']*)'/g),
+      ...workflowGates.matchAll(
+        /--command '([^']*oat (?:--json )?gate review[^']*)'/g,
+      ),
     ].map((match) => match[1] ?? '');
     expect(reusableReviewCommands.length).toBeGreaterThan(0);
     for (const command of reusableReviewCommands) {
