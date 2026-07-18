@@ -9,7 +9,7 @@ import {
 } from '@commands/__tests__/helpers';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
 import {
-  scanBundledManagedCodexAgents as scanBundledManagedCodexAgentsFromDisk,
+  scanBundledManagedAgents as scanBundledManagedAgentsFromDisk,
   scanCanonical as scanCanonicalFromDisk,
   type CanonicalEntry,
   type SyncPlan,
@@ -35,6 +35,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createSyncCommand } from './index';
+import type { SyncMaterializationExtension } from './sync.types';
 
 interface HarnessOptions {
   adapters?: ProviderAdapter[];
@@ -53,6 +54,7 @@ interface HarnessOptions {
   useDiskCodexExtension?: boolean;
   useDiskScanner?: boolean;
   useDiskBundledCodexAgents?: boolean;
+  extraMaterializationExtensions?: SyncMaterializationExtension[];
 }
 
 interface RunSyncArgs {
@@ -238,7 +240,14 @@ function createHarness(options: HarnessOptions = {}): {
     : vi.fn(async () => {
         return (
           codexExtensionPlans.shift() ?? {
+            provider: 'codex',
             operations: [],
+            managedEntries: [],
+            aggregateHash: 'hash',
+            metadata: {
+              managedRoles: [],
+              aggregateConfigHash: 'hash',
+            },
             managedRoles: [],
             aggregateConfigHash: 'hash',
           }
@@ -290,25 +299,46 @@ function createHarness(options: HarnessOptions = {}): {
     scanCanonical: options.useDiskScanner
       ? vi.fn(scanCanonicalFromDisk)
       : vi.fn(async () => options.canonicalEntries ?? [createCanonicalEntry()]),
-    scanBundledManagedCodexAgents: options.useDiskBundledCodexAgents
-      ? vi.fn(scanBundledManagedCodexAgentsFromDisk)
+    scanBundledManagedAgents: options.useDiskBundledCodexAgents
+      ? vi.fn(scanBundledManagedAgentsFromDisk)
       : vi.fn(async () => []),
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     selectProvidersWithAbort,
     computeSyncPlan,
     executeSyncPlan,
-    computeCodexProjectExtensionPlan,
-    toCodexExtensionOperations: vi.fn((plan: CodexExtensionPlan) =>
-      plan.operations.map((operation) => ({
-        action: operation.action,
-        target: operation.target,
-        path: operation.path,
-        reason: operation.reason,
-        roleName: operation.roleName,
-      })),
-    ),
-    applyCodexProjectExtensionPlan,
+    getMaterializationExtensions: () => [
+      {
+        provider: 'codex',
+        async computePlan(context) {
+          const plan = await computeCodexProjectExtensionPlan(
+            context.scopeRoot,
+            context.canonicalEntries,
+            context.allowedCanonicalPaths,
+            context.options,
+          );
+          return {
+            provider: 'codex',
+            operations: plan.operations.map((operation) => ({
+              provider: 'codex' as const,
+              entryName: operation.entryName ?? operation.roleName,
+              ...operation,
+            })),
+            managedEntries: plan.managedEntries ?? plan.managedRoles,
+            aggregateHash: plan.aggregateHash ?? plan.aggregateConfigHash,
+            metadata: plan.metadata ?? {
+              managedRoles: plan.managedRoles,
+              aggregateConfigHash: plan.aggregateConfigHash,
+            },
+          };
+        },
+        applyPlan: (scopeRoot, plan) =>
+          applyCodexProjectExtensionPlan(scopeRoot, plan as CodexExtensionPlan),
+      },
+      ...(options.extraMaterializationExtensions ?? []),
+    ],
+    applyMaterializationExtensionPlan: (extension, scopeRoot, plan) =>
+      extension.applyPlan(scopeRoot, plan),
     formatSyncPlan: vi.fn((plan: SyncPlan, applied: boolean) => {
       return `sync-${applied ? 'applied' : 'dry'}-${plan.scope}-${plan.entries.length + plan.removals.length}`;
     }),
@@ -708,6 +738,86 @@ describe('createSyncCommand', () => {
       message: 'Invalid --install-canonical path: ../../etc/passwd',
     });
     expect(computeSyncPlan).not.toHaveBeenCalled();
+  });
+
+  it('combines enabled Codex and Cursor materialization plans in dry-run JSON', async () => {
+    const cursorCompute = vi.fn(async () => ({
+      provider: 'cursor' as const,
+      operations: [
+        {
+          provider: 'cursor' as const,
+          action: 'create' as const,
+          target: 'role',
+          path: '.cursor/agents/oat-reviewer-gpt.md',
+          reason: 'managed Cursor role file missing',
+          entryName: 'oat-reviewer-gpt',
+          content: '# reviewer',
+        },
+      ],
+      managedEntries: ['oat-reviewer-gpt'],
+      aggregateHash: 'cursor-hash',
+      metadata: {},
+    }));
+    const cursorExtension: SyncMaterializationExtension = {
+      provider: 'cursor',
+      computePlan: cursorCompute,
+      applyPlan: vi.fn(async () => ({ applied: 1, failed: 0, skipped: 0 })),
+    };
+    const codexAdapter = createCodexAdapter();
+    const cursorAdapter = createAdapter('cursor');
+    const { capture, command } = createHarness({
+      adapters: [codexAdapter, cursorAdapter],
+      plans: [createEmptyPlan('project')],
+      configAwareResults: [
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+        {
+          activeAdapters: [codexAdapter, cursorAdapter],
+          detectedUnset: [],
+          detectedDisabled: [],
+        },
+      ],
+      codexExtensionPlans: [
+        {
+          provider: 'codex',
+          operations: [],
+          managedEntries: [],
+          aggregateHash: 'codex-hash',
+          metadata: {
+            managedRoles: [],
+            aggregateConfigHash: 'codex-hash',
+          },
+          managedRoles: [],
+          aggregateConfigHash: 'codex-hash',
+        },
+      ],
+      extraMaterializationExtensions: [cursorExtension],
+    });
+
+    await runSyncCommand(command, {
+      globalArgs: ['--scope', 'project', '--json'],
+      commandArgs: ['--dry-run'],
+    });
+
+    expect(cursorCompute).toHaveBeenCalledWith(
+      expect.objectContaining({
+        scopeRoot: '/tmp/workspace',
+        options: { userConfigDir: '/tmp/home/.oat' },
+      }),
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      materializationExtensions: [
+        { provider: 'codex' },
+        {
+          provider: 'cursor',
+          operations: [{ action: 'create', entryName: 'oat-reviewer-gpt' }],
+        },
+      ],
+      summary: { plannedOperations: 1 },
+    });
   });
 
   it('includes codex extension operations in dry-run JSON output', async () => {
