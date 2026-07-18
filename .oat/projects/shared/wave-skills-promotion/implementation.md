@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -36,11 +36,11 @@ oat_generated: false
 | Phase 1: Port + toolkit integration    | completed | 4     | 4/4       |
 | Phase 2: §2 queue + genericization     | completed | 9     | 9/9       |
 | Phase 3: Dispositions                  | completed | 3     | 3/3       |
-| Phase 4: Docs                          | pending   | 2     | 0/2       |
+| Phase 4: Docs                          | completed | 2     | 2/2       |
 | Phase 5: Validation + release          | pending   | 5     | 0/5       |
 | Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
 
-**Total:** 16/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 18/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
 
 ---
 
@@ -148,10 +148,23 @@ oat_generated: false
 
 ## Phase 4: Docs
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
 
-Tasks: p04-t01 (page + authored nav), p04-t02 (index regen + build).
+### Phase Summary
+
+**Outcome:** wave-workflow docs page shipped (`4648e3d8`) with authored `## Contents` navigation, descriptive artifact-format section + explicit "not a stable contract" note pointing at the deferred backlog grouping; generated index regenerated + docs build green (`4b86f380`); review round 1 caught a judgment-attribution error ("composes" assigned to oat-wave-program) — fixed in `1a6359ec`, round 2 PASS with independent ownership-language sweep.
+
+**Notes / Decisions:**
+
+- `oat docs nav sync` is MkDocs-only; Fumadocs equivalent = explicit generate-index + build. Filed `BL-260718-support-fumadocs-in-oat-docs`.
+- Bare `oat docs generate-index` writes a stray repo-root index.md (cwd-relative defaults). Filed `BL-260718-fix-oat-docs-generate-index`.
+
+### Tasks
+
+- p04-t01: **completed**, `4648e3d8` + fix `1a6359ec` (orchestrator-judgment wording)
+- p04-t02: **completed**, `4b86f380`
 
 ---
 
@@ -191,6 +204,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p01   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0) | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
 | p02   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)             | 1 (provenance citation restore, `7601d2d6`) | pass   |
 | p03   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)              | 1 (owner lines, `2d889c19`)                 | pass   |
+| p04   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS          | 1 (ownership wording, `1a6359ec`)           | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
@@ -242,7 +256,7 @@ Chronological log of implementation progress.
 | 1     | CLI suite 3001 tests (250 files) + 2 new regression tests; lint; type-check | all    | 0      | n/a      |
 | 2     | lint + type-check + bash-3.2 + citation-set + asset byte-diffs              | all    | 0      | n/a      |
 | 3     | CLI suite 3002 tests + lint + type-check + pjm lifecycle checks             | all    | 0      | n/a      |
-| 4     | -                                                                           | -      | -      | -        |
+| 4     | docs build (build:docs) x3 runs + content rg checks                         | all    | 0      | n/a      |
 | 5     | -                                                                           | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
