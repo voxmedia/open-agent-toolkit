@@ -28,8 +28,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T18:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T19:42:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_post_implement_sequence:
+  status: pre_approval # pre_approval | awaiting_approval | post_approval | failed | complete
+  source: configured # workflow.postImplementSequence
+  final_phase: p05 # this run's mergeable-delta final phase (plan-final p06 is RC-gated)
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 ---
 
 # Project State: wave-skills-promotion

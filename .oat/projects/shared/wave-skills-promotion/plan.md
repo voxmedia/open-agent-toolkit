@@ -752,7 +752,8 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 | p05    | code     | fixes_completed | 2026-07-18 | reviews/p05-review-2026-07-18T184321Z.md             |
 | p05    | code     | passed          | 2026-07-18 | reviews/p05-review-2026-07-18T185045Z.md             |
 | p06    | code     | pending         | -          | -                                                    |
-| final  | code     | pending         | -          | -                                                    |
+| final  | code     | fixes_completed | 2026-07-18 | reviews/final-review-2026-07-18T191920Z.md           |
+| final  | code     | passed          | 2026-07-18 | reviews/final-review-round2-2026-07-18T193844Z.md    |
 | spec   | artifact | pending         | -          | -                                                    |
 | design | artifact | passed          | 2026-07-18 | -                                                    |
 | plan   | artifact | passed          | 2026-07-18 | -                                                    |
