@@ -1,5 +1,13 @@
 import { execFile as execFileCallback } from 'node:child_process';
-import { rm, writeFile } from 'node:fs/promises';
+import { createHash, randomUUID } from 'node:crypto';
+import {
+  lstat,
+  readFile,
+  realpath,
+  rename,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import {
   basename,
   dirname,
@@ -72,6 +80,7 @@ export interface ArchiveProjectOnCompletionOptions {
   s3Uri?: string | null;
   s3SyncOnComplete: boolean;
   summaryExportPath?: string | null;
+  projectRecapRun?: string | null;
   /**
    * Config-only AWS profile (`archive.awsProfile`). The completion path has no
    * flag override. When non-empty, this value clobbers any parent-env
@@ -126,13 +135,24 @@ interface ArchiveProjectOnCompletionDependencies
   ) => Promise<void>;
   copySingleFile?: typeof copySingleFile;
   fileExists?: typeof fileExists;
+  renamePath?: typeof rename;
   timestamp?: () => string;
+}
+
+export interface ArchiveProjectRecapExportV1 {
+  sourceRunRoot: string;
+  exportRoot: string;
+  manifest: {
+    relativePath: 'manifest.json';
+    verifiedArtifactCount: number;
+  };
 }
 
 export interface ArchiveProjectOnCompletionResult {
   archivePath: string;
   s3Path: string | null;
   summaryExportFile: string | null;
+  projectRecapExport: ArchiveProjectRecapExportV1 | null;
   warnings: string[];
 }
 
@@ -569,6 +589,216 @@ async function exportProjectSummary(
   return summaryTarget;
 }
 
+interface ProjectRecapManifest {
+  recipe: {
+    id: string;
+  };
+  immutableHashes: Record<string, string>;
+}
+
+function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
+  let value: unknown;
+  try {
+    value = JSON.parse(contents);
+  } catch {
+    throw new CliError('Selected project recap has an invalid manifest.json.');
+  }
+
+  if (
+    typeof value !== 'object' ||
+    value === null ||
+    !('recipe' in value) ||
+    typeof value.recipe !== 'object' ||
+    value.recipe === null ||
+    !('id' in value.recipe) ||
+    typeof value.recipe.id !== 'string' ||
+    !('immutableHashes' in value) ||
+    typeof value.immutableHashes !== 'object' ||
+    value.immutableHashes === null ||
+    Array.isArray(value.immutableHashes)
+  ) {
+    throw new CliError(
+      'Selected project recap manifest does not match the explainer-kit manifest contract.',
+    );
+  }
+
+  return value as ProjectRecapManifest;
+}
+
+async function pathExists(target: string): Promise<boolean> {
+  try {
+    await lstat(target);
+    return true;
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return false;
+    }
+    throw error;
+  }
+}
+
+function assertInsideExplainers(
+  explainersRoot: string,
+  selectedRunRoot: string,
+): void {
+  if (
+    selectedRunRoot === explainersRoot ||
+    !isInsidePath(explainersRoot, selectedRunRoot)
+  ) {
+    throw new CliError(
+      'Selected project recap run must be inside the project `explainers/` directory.',
+    );
+  }
+}
+
+async function resolveSelectedProjectRecapRun(
+  projectPath: string,
+  projectRecapRun: string,
+): Promise<string> {
+  const explainersRoot = resolve(projectPath, 'explainers');
+  const selectedRunRoot = resolve(projectPath, projectRecapRun);
+  assertInsideExplainers(explainersRoot, selectedRunRoot);
+
+  const [realExplainersRoot, realSelectedRunRoot] = await Promise.all([
+    realpath(explainersRoot),
+    realpath(selectedRunRoot),
+  ]);
+  assertInsideExplainers(realExplainersRoot, realSelectedRunRoot);
+  return selectedRunRoot;
+}
+
+function parseExpectedSha256(value: string, relativePath: string): string {
+  const match = value.match(/^sha256:([a-f0-9]{64})$/);
+  if (!match?.[1]) {
+    throw new CliError(
+      `Selected project recap manifest has an invalid hash for \`${relativePath}\`.`,
+    );
+  }
+  return match[1];
+}
+
+async function verifyProjectRecapImmutableHashes(
+  stagedRoot: string,
+  manifest: ProjectRecapManifest,
+): Promise<number> {
+  const entries = Object.entries(manifest.immutableHashes);
+  const realStagedRoot = await realpath(stagedRoot);
+
+  for (const [relativePath, expectedHash] of entries) {
+    const artifactPath = resolve(stagedRoot, relativePath);
+    if (
+      artifactPath === stagedRoot ||
+      !isInsidePath(stagedRoot, artifactPath)
+    ) {
+      throw new CliError(
+        `Selected project recap manifest path \`${relativePath}\` escapes the recap package.`,
+      );
+    }
+
+    const realArtifactPath = await realpath(artifactPath);
+    if (!isInsidePath(realStagedRoot, realArtifactPath)) {
+      throw new CliError(
+        `Selected project recap manifest path \`${relativePath}\` escapes the recap package.`,
+      );
+    }
+
+    const actualHash = createHash('sha256')
+      .update(await readFile(realArtifactPath))
+      .digest('hex');
+    if (actualHash !== parseExpectedSha256(expectedHash, relativePath)) {
+      throw new CliError(
+        `Selected project recap hash verification failed for \`${relativePath}\`.`,
+      );
+    }
+  }
+
+  return entries.length;
+}
+
+async function exportSelectedProjectRecap(
+  options: ArchiveProjectOnCompletionOptions,
+  snapshotName: string,
+  dependencies: ArchiveProjectOnCompletionDependencies,
+): Promise<ArchiveProjectRecapExportV1 | null> {
+  const selectedRun = options.projectRecapRun?.trim();
+  if (!selectedRun) {
+    return null;
+  }
+
+  const sourceRunRoot = await resolveSelectedProjectRecapRun(
+    options.projectPath,
+    selectedRun,
+  );
+  const sourceManifestContents = await readFile(
+    join(sourceRunRoot, 'manifest.json'),
+    'utf8',
+  );
+  const sourceManifest = parseProjectRecapManifest(sourceManifestContents);
+  if (sourceManifest.recipe.id !== 'project-recap') {
+    throw new CliError(
+      'Selected project recap manifest recipe must be exactly `project-recap`.',
+    );
+  }
+
+  const exportRoot = join(
+    options.repoRoot,
+    '.oat',
+    'repo',
+    'reference',
+    'project-recaps',
+    snapshotName,
+  );
+  if (await pathExists(exportRoot)) {
+    throw new CliError(
+      `Project recap export destination \`${exportRoot}\` already exists; refusing to overwrite it.`,
+    );
+  }
+
+  const temporaryRoot = `${exportRoot}.tmp-${randomUUID()}`;
+  const makeDir = dependencies.ensureDir ?? ensureDir;
+  const copyProjectDirectory = dependencies.copyDirectory ?? copyDirectory;
+  const removePath =
+    dependencies.removePath ??
+    (async (target, removeOptions) => rm(target, removeOptions));
+  const renamePath = dependencies.renamePath ?? rename;
+
+  await makeDir(dirname(exportRoot));
+  try {
+    await copyProjectDirectory(sourceRunRoot, temporaryRoot);
+    const stagedManifestContents = await readFile(
+      join(temporaryRoot, 'manifest.json'),
+      'utf8',
+    );
+    if (stagedManifestContents !== sourceManifestContents) {
+      throw new CliError(
+        'Selected project recap manifest changed while staging the export.',
+      );
+    }
+    const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
+      temporaryRoot,
+      sourceManifest,
+    );
+    await renamePath(temporaryRoot, exportRoot);
+
+    return {
+      sourceRunRoot,
+      exportRoot,
+      manifest: {
+        relativePath: 'manifest.json',
+        verifiedArtifactCount,
+      },
+    };
+  } catch (error) {
+    await removePath(temporaryRoot, { recursive: true, force: true });
+    throw error;
+  }
+}
+
 export async function archiveProjectOnCompletion(
   options: ArchiveProjectOnCompletionOptions,
   dependencies: ArchiveProjectOnCompletionDependencies = {},
@@ -593,6 +823,11 @@ export async function archiveProjectOnCompletion(
   );
   assertDurableArchiveProjectTarget(archiveTarget);
   const archivePath = archiveTarget.archivePath;
+  const projectRecapExport = await exportSelectedProjectRecap(
+    options,
+    snapshotName,
+    dependencies,
+  );
 
   await makeDir(dirname(archivePath));
   await copyProjectDirectory(options.projectPath, archivePath);
@@ -674,6 +909,7 @@ export async function archiveProjectOnCompletion(
     archivePath,
     s3Path,
     summaryExportFile,
+    projectRecapExport,
     warnings,
   };
 }

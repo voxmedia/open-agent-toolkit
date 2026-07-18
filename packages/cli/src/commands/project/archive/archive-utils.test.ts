@@ -1,6 +1,18 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
+import {
+  access,
+  cp,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rename,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { CliError } from '@errors/cli-error';
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -34,6 +46,51 @@ describe('archive utils', () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-archive-utils-'));
     tempDirs.push(root);
     return root;
+  }
+
+  async function createRecapPackage(
+    projectPath: string,
+    {
+      outcome = 'built-not-durable',
+      recipeId = 'project-recap',
+      runName = 'selected-run',
+    }: {
+      outcome?: 'built-not-durable' | 'failed' | 'incomplete';
+      recipeId?: string;
+      runName?: string;
+    } = {},
+  ): Promise<{ relativeRunPath: string; runRoot: string }> {
+    const relativeRunPath = join('explainers', 'project-recap', runName);
+    const runRoot = join(projectPath, relativeRunPath);
+    const files = {
+      'source/content/recap.md': `# ${runName}\n`,
+      'site/index.html': `<h1>${runName}</h1>\n`,
+    };
+
+    for (const [relativePath, contents] of Object.entries(files)) {
+      const target = join(runRoot, relativePath);
+      await mkdir(dirname(target), { recursive: true });
+      await writeFile(target, contents, 'utf8');
+    }
+
+    const immutableHashes = Object.fromEntries(
+      Object.entries(files).map(([relativePath, contents]) => [
+        relativePath,
+        `sha256:${createHash('sha256').update(contents).digest('hex')}`,
+      ]),
+    );
+    await writeFile(
+      join(runRoot, 'manifest.json'),
+      `${JSON.stringify({
+        schemaVersion: 'explainer-kit.manifest/v1',
+        recipe: { id: recipeId, version: '1' },
+        outcome,
+        immutableHashes,
+      })}\n`,
+      'utf8',
+    );
+
+    return { relativeRunPath, runRoot };
   }
 
   it('builds a repo-scoped remote archive URI', () => {
@@ -225,6 +282,235 @@ describe('archive utils', () => {
     expect(result.s3Path).toBeNull();
     expect(result.summaryExportFile).toBeNull();
     expect(result.warnings).toEqual([]);
+  });
+
+  it.each(['failed', 'incomplete'] as const)(
+    'exports only the selected %s recap package before deleting the active project',
+    async (outcome) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      const selected = await createRecapPackage(projectPath, { outcome });
+      await createRecapPackage(projectPath, { runName: 'unselected-run' });
+      const renamePath = vi.fn(async (source: string, destination: string) =>
+        rename(source, destination),
+      );
+
+      const result = await archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: selected.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          renamePath,
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      );
+
+      const exportRoot = join(
+        repoRoot,
+        '.oat',
+        'repo',
+        'reference',
+        'project-recaps',
+        '20260401-demo',
+      );
+      expect(result.projectRecapExport).toEqual({
+        sourceRunRoot: selected.runRoot,
+        exportRoot,
+        manifest: {
+          relativePath: 'manifest.json',
+          verifiedArtifactCount: 2,
+        },
+      });
+      await expect(
+        readFile(join(exportRoot, 'site', 'index.html'), 'utf8'),
+      ).resolves.toBe('<h1>selected-run</h1>\n');
+      await expect(
+        access(join(exportRoot, '..', 'unselected-run')),
+      ).rejects.toThrow();
+      await expect(access(projectPath)).rejects.toThrow();
+      expect(renamePath).toHaveBeenCalledWith(
+        expect.stringMatching(/20260401-demo\.tmp-/),
+        exportRoot,
+      );
+    },
+  );
+
+  it('preserves existing behavior when no recap run is selected', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+
+    const result = await archiveProjectOnCompletion({
+      repoRoot,
+      projectPath,
+      projectName: 'demo',
+      projectsRoot: '.oat/projects/shared',
+      s3SyncOnComplete: false,
+    });
+
+    expect(result.projectRecapExport).toBeNull();
+    await expect(access(projectPath)).rejects.toThrow();
+  });
+
+  it.each(['../outside-run', 'explainers/project-recap/../../../outside-run'])(
+    'rejects recap paths outside the project explainers directory: %s',
+    async (projectRecapRun) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      const removePath = vi.fn(async () => undefined);
+
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun,
+            s3SyncOnComplete: false,
+          },
+          { removePath },
+        ),
+      ).rejects.toThrow(/inside.*explainers/i);
+
+      expect(removePath).not.toHaveBeenCalled();
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
+
+  it('rejects a recap path that escapes explainers through a symlink', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    const outside = join(repoRoot, 'outside-run');
+    await mkdir(join(projectPath, 'explainers'), { recursive: true });
+    await mkdir(outside, { recursive: true });
+    await symlink(outside, join(projectPath, 'explainers', 'linked-run'));
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: 'explainers/linked-run',
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/inside.*explainers/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('requires exact project-recap recipe identity', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      recipeId: 'project-explainer',
+    });
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/recipe.*project-recap/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('fails without overwrite when the recap destination already exists', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const exportRoot = join(
+      repoRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'project-recaps',
+      '20260401-demo',
+    );
+    await mkdir(exportRoot, { recursive: true });
+    await writeFile(join(exportRoot, 'keep.txt'), 'original\n', 'utf8');
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/already exists/i);
+
+    await expect(readFile(join(exportRoot, 'keep.txt'), 'utf8')).resolves.toBe(
+      'original\n',
+    );
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('cleans the temporary sibling and keeps the active project when copied hashes do not verify', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const copyDirectory = vi.fn(async (source: string, destination: string) => {
+      await cp(source, destination, { recursive: true });
+      await writeFile(
+        join(destination, 'source', 'content', 'recap.md'),
+        '# corrupted\n',
+        'utf8',
+      );
+    });
+    const removePath = vi.fn(
+      async (target: string, options: { recursive: true; force: true }) =>
+        rm(target, options),
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          copyDirectory,
+          removePath,
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow(/hash/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+    expect(removePath).not.toHaveBeenCalledWith(projectPath, expect.anything());
+    const exportParent = join(
+      repoRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'project-recaps',
+    );
+    expect(await readdir(exportParent)).toEqual([]);
   });
 
   it('uploads the archived project to S3 when completion sync is enabled and configured', async () => {
