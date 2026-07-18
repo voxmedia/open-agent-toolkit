@@ -334,22 +334,22 @@ without disturbing the ported core.
 
 ## Requirement Index
 
-| ID   | Description                                             | Priority | Verification                                           | Planned Tasks     |
-| ---- | ------------------------------------------------------- | -------- | ------------------------------------------------------ | ----------------- |
-| FR1  | Port both skills into workflow pack with scripts/assets | P0       | integration: install + sync + bundle-consistency tests | TBD - see plan.md |
-| FR2  | Apply all six §2 queued changes (or reject in writing)  | P0       | manual: per-item traceability checklist                | TBD - see plan.md |
-| FR3  | Genericize stoa-isms via neutral phrasing               | P0       | manual: rule-by-rule intent-preservation review        | TBD - see plan.md |
-| FR4  | Preserve mechanical/judgment split + log discipline     | P0       | manual: ownership-boundary + closeout-order review     | TBD - see plan.md |
-| FR5  | validate-plan singleton-group help/docs                 | P1       | unit: validate-plan help + rejection message           | TBD - see plan.md |
-| FR6  | Triage four upstream feedback items to backlog          | P1       | manual: backlog items exist with evidence              | TBD - see plan.md |
-| FR7  | File five deferred-work backlog items                   | P0       | manual: backlog items with owner/trigger/groupings     | TBD - see plan.md |
-| FR8  | Wave-workflow docs incl. descriptive artifact format    | P1       | integration: docs build + index regeneration           | TBD - see plan.md |
-| FR9  | In-repo fixture + mini-wave dry-run                     | P0       | e2e: dry-run procedure against fixture                 | TBD - see plan.md |
-| FR10 | §4 explainer integration (RC-gated)                     | P0\*     | e2e: personal-wrapper E2E vs frozen RC (operator)      | TBD - see plan.md |
-| NFR1 | Zero-regression bar vs 1.4.0 + §2                       | P0       | e2e: fixture dry-run + manual equivalence checklist    | TBD - see plan.md |
-| NFR2 | Release conventions (lockstep bumps, release:validate)  | P0       | integration: release:validate + repo gates             | TBD - see plan.md |
-| NFR3 | bootstrap script bash-3.2 portability                   | P0       | manual + e2e: fixture dry-run on macOS system bash     | TBD - see plan.md |
-| NFR4 | Provider portability of promoted skills                 | P1       | integration: sync views generated for all providers    | TBD - see plan.md |
+| ID   | Description                                             | Priority | Verification                                           | Planned Tasks                      |
+| ---- | ------------------------------------------------------- | -------- | ------------------------------------------------------ | ---------------------------------- |
+| FR1  | Port both skills into workflow pack with scripts/assets | P0       | integration: install + sync + bundle-consistency tests | p01-t01, p01-t02, p01-t04, p01-t05 |
+| FR2  | Apply all six §2 queued changes (or reject in writing)  | P0       | manual: per-item traceability checklist                | p02-t01..t06, p02-t08              |
+| FR3  | Genericize stoa-isms via neutral phrasing               | P0       | manual: rule-by-rule intent-preservation review        | p02-t07                            |
+| FR4  | Preserve mechanical/judgment split + log discipline     | P0       | manual: ownership-boundary + closeout-order review     | p02-t07, p02-t08                   |
+| FR5  | validate-plan singleton-group help/docs                 | P1       | unit: validate-plan help + rejection message           | p03-t01                            |
+| FR6  | Triage four upstream feedback items to backlog          | P1       | manual: backlog items exist with evidence              | p03-t03                            |
+| FR7  | File five deferred-work backlog items                   | P0       | manual: backlog items with owner/trigger/groupings     | p03-t02                            |
+| FR8  | Wave-workflow docs incl. descriptive artifact format    | P1       | integration: docs build + index regeneration           | p04-t01, p04-t02                   |
+| FR9  | In-repo fixture + mini-wave dry-run                     | P0       | e2e: dry-run procedure against fixture                 | p05-t01..t03                       |
+| FR10 | §4 explainer integration (RC-gated)                     | P0\*     | e2e: personal-wrapper E2E vs frozen RC (operator)      | p06-t01..t03                       |
+| NFR1 | Zero-regression bar vs 1.4.0 + §2                       | P0       | e2e: fixture dry-run + manual equivalence checklist    | p02-t07, p05-t03, p05-t05          |
+| NFR2 | Release conventions (lockstep bumps, release:validate)  | P0       | integration: release:validate + repo gates             | p05-t04                            |
+| NFR3 | bootstrap script bash-3.2 portability                   | P0       | manual + e2e: fixture dry-run on macOS system bash     | p02-t03, p05-t01                   |
+| NFR4 | Provider portability of promoted skills                 | P1       | integration: sync views generated for all providers    | p01-t04, p02-t09                   |
 
 \* FR10 is P0 within its gate; the gate (explainer-kit RC) blocks only the
 final phase, not the rest of the project.
