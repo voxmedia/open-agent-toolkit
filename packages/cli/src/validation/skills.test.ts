@@ -1119,7 +1119,7 @@ describe('validateOatSkills', () => {
         gateSection,
         `${skillName} validates stored review commands`,
       ).toMatch(
-        /configured review\s+command[\s\S]{0,300}must (?:already )?(?:contain|include)[\s\S]{0,120}--project/i,
+        /configured review\s+command[\s\S]{0,300}must\s+(?:already\s+)?(?:contain|include)[\s\S]{0,120}--project/i,
       );
       expect(
         gateSection,
@@ -1183,6 +1183,27 @@ describe('validateOatSkills', () => {
     );
     expect(workflowGates).toMatch(
       /producer-neutral[\s\S]{0,220}(?:shared|user)[\s\S]{0,220}config/i,
+    );
+  });
+
+  it('requires the implementation review gate to use global JSON mode', async () => {
+    const content = await readRepoFile(implementSkillPath);
+    const gateSection = content.slice(
+      content.indexOf('### Step 14: Gate Execution'),
+      content.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+    );
+
+    expect(gateSection).toContain(
+      '`oat --json gate review --project "$PROJECT_PATH" ...`',
+    );
+    expect(gateSection).toMatch(
+      /reject[\s\S]{0,100}`oat gate review \.\.\.`[\s\S]{0,140}global `--json`[\s\S]{0,140}before launch/i,
+    );
+    expect(gateSection).toMatch(
+      /migrate[\s\S]{0,180}(?:stored|resolved) declaration[\s\S]{0,180}before execution/i,
+    );
+    expect(gateSection).not.toMatch(
+      /valid reusable shape is\s+`oat gate review --project/i,
     );
   });
 

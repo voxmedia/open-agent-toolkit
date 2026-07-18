@@ -37,6 +37,39 @@ function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
 
+function expectMarkersInOrder(
+  content: string,
+  markers: readonly string[],
+): void {
+  const indices = markers.map((marker) => {
+    const index = content.indexOf(marker);
+    if (index < 0) {
+      throw new Error(`Missing required marker: ${marker}`);
+    }
+    return index;
+  });
+
+  for (let index = 1; index < indices.length; index += 1) {
+    if (indices[index]! <= indices[index - 1]!) {
+      throw new Error(
+        `Out-of-order marker: ${markers[index]} must follow ${markers[index - 1]}`,
+      );
+    }
+  }
+}
+
+function requiredSlice(content: string, start: string, end: string): string {
+  const startIndex = content.indexOf(start);
+  if (startIndex < 0) {
+    throw new Error(`Missing required marker: ${start}`);
+  }
+  const endIndex = content.indexOf(end, startIndex + start.length);
+  if (endIndex < 0) {
+    throw new Error(`Missing required marker: ${end}`);
+  }
+  return content.slice(startIndex, endIndex);
+}
+
 describe('post-implementation sequence contracts', () => {
   it('keeps non-final checkpoints and root-owned phase execution intact', () => {
     const skill = readImplementSkill();
@@ -67,12 +100,11 @@ describe('post-implementation sequence contracts', () => {
     const closeout = skill.slice(
       skill.indexOf('### Step 15: Final HiLL Closeout Sequence'),
     );
-    expect(closeout.indexOf('Run final verification (Step 13).')).toBeLessThan(
-      closeout.indexOf('Persist this immutable state'),
-    );
-    expect(closeout.indexOf('Final review must be `passed`')).toBeLessThan(
-      closeout.indexOf('Persist this immutable state'),
-    );
+    expectMarkersInOrder(closeout, [
+      'Run final verification (Step 12).',
+      'Final review must be `passed`',
+      'Persist this immutable state',
+    ]);
     expect(closeout).toContain('`oat_post_implement_sequence`');
     expect(closeout).toContain('`pre_approval`');
     expect(closeout).toContain('awaiting_approval');
@@ -81,25 +113,18 @@ describe('post-implementation sequence contracts', () => {
   it('enforces the configured implementation exit gate before every completion boundary', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);
-    const verificationIndex = skill.indexOf('### Step 12: Final Verification');
-    const reviewIndex = skill.indexOf('### Step 13: Trigger Final Review');
-    const gateIndex = skill.indexOf('### Step 14: Gate Execution');
-    const sequenceIndex = skill.indexOf(
+    const markers = [
+      '### Step 12: Final Verification',
+      '### Step 13: Trigger Final Review',
+      '### Step 14: Gate Execution',
       '### Step 15: Final HiLL Closeout Sequence',
-    );
-    const completionIndex = skill.indexOf(
       '### Step 16: Mark Implementation Complete',
-    );
-    const promptIndex = skill.indexOf('### Step 17: Prompt for Next Steps');
-    const outputIndex = skill.indexOf('### Step 18: Output Summary');
+      '### Step 17: Prompt for Next Steps',
+      '### Step 18: Output Summary',
+    ] as const;
+    expectMarkersInOrder(skill, markers);
 
-    expect(verificationIndex).toBeGreaterThanOrEqual(0);
-    expect(reviewIndex).toBeGreaterThan(verificationIndex);
-    expect(gateIndex).toBeGreaterThan(reviewIndex);
-    expect(sequenceIndex).toBeGreaterThan(gateIndex);
-    expect(completionIndex).toBeGreaterThan(sequenceIndex);
-    expect(promptIndex).toBeGreaterThan(completionIndex);
-    expect(outputIndex).toBeGreaterThan(promptIndex);
+    const outputIndex = skill.indexOf('### Step 18: Output Summary');
     expect(normalized).toContain(
       'The configured implementation exit gate is independent from the optional `oat_phase_review_gate`',
     );
@@ -109,9 +134,29 @@ describe('post-implementation sequence contracts', () => {
     expect(skill.slice(outputIndex)).not.toContain('### Gate Execution');
   });
 
+  it('fails ordering validation when any required marker is absent', () => {
+    expect(() =>
+      expectMarkersInOrder('first marker\nthird marker', [
+        'first marker',
+        'second marker',
+        'third marker',
+      ]),
+    ).toThrowError('Missing required marker: second marker');
+  });
+
   it('persists every implementation exit-gate outcome and resumes without duplicate work', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);
+    const gate = requiredSlice(
+      skill,
+      '### Step 14: Gate Execution',
+      '### Step 15: Final HiLL Closeout Sequence',
+    );
+    const state = requiredSlice(
+      gate,
+      '```yaml\noat_implement_exit_gate:',
+      '\n```',
+    );
 
     for (const field of [
       'status',
@@ -125,16 +170,30 @@ describe('post-implementation sequence contracts', () => {
       'attempts_completed',
       'reviewed_head',
       'implementation_fingerprint',
+      'launch_state',
+      'launch_attempt_id',
+      'launch_started_at',
+      'launch_result_receipt',
+      'gate_run_marker',
       'gate_run_id',
       'envelope_status',
       'artifact',
       'handoff',
+      'receive_state',
+      'receive_correlation',
+      'receive_source_artifact',
+      'receive_archived_artifact',
+      'receive_event_identity',
+      'receive_pre_head',
+      'receive_commit',
       'receive_eligible',
       'receive_completed',
       'failure',
       'updated_at',
     ]) {
-      expect(skill, `persisted gate field ${field}`).toContain(`${field}:`);
+      expect(state, `persisted gate field ${field}`).toMatch(
+        new RegExp(`^  ${field}:`, 'm'),
+      );
     }
     expect(normalized).toContain(
       'A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`',
@@ -162,6 +221,109 @@ describe('post-implementation sequence contracts', () => {
     );
   });
 
+  it('requires canonical JSON review commands before any configured launch', () => {
+    const skill = readImplementSkill();
+    const gate = skill.slice(
+      skill.indexOf('### Step 14: Gate Execution'),
+      skill.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+    );
+    const normalized = normalizeWhitespace(gate);
+
+    expect(gate).toContain(
+      '`oat --json gate review --project "$PROJECT_PATH" ...`',
+    );
+    expect(normalized).toContain(
+      'Reject `oat gate review ...` without the global `--json` flag before launch',
+    );
+    expect(normalized).toContain(
+      'migrate the stored declaration before execution; never rewrite user or local configuration during closeout',
+    );
+    expect(gate).not.toContain(
+      'A valid reusable shape is\n   `oat gate review --project "$PROJECT_PATH" ...`',
+    );
+  });
+
+  it('persists launch acceptance markers and reconciles before relaunch', () => {
+    const gate = requiredSlice(
+      readImplementSkill(),
+      '### Step 14: Gate Execution',
+      '### Step 15: Final HiLL Closeout Sequence',
+    );
+    const state = requiredSlice(
+      gate,
+      '```yaml\noat_implement_exit_gate:',
+      '\n```',
+    );
+    const launch = normalizeWhitespace(
+      requiredSlice(
+        gate,
+        '**Launch acceptance and reconciliation:**',
+        'Persist and commit every state transition',
+      ),
+    );
+
+    expect(state).toMatch(
+      /^  launch_state: not_started # not_started \| intent_persisted \| accepted \| result_persisted \| not_accepted$/m,
+    );
+    expect(launch).toContain(
+      '`not_started` → `intent_persisted` → `accepted` → `result_persisted`',
+    );
+    expect(launch).toContain(
+      'persist `launch_attempt_id`, `launch_started_at`, and `launch_result_receipt` before invoking the command',
+    );
+    expect(launch).toContain(
+      'the gate CLI run marker is acceptance evidence established before its reviewer child launch',
+    );
+    expect(launch).toContain(
+      'reconcile the exact `gate_run_marker`, durable result receipt, and run-correlated active or archived artifact',
+    );
+    expect(launch).toContain(
+      'Relaunch only after durable `not_accepted` evidence proves that no gate process or reviewer child was accepted',
+    );
+    expect(launch).toContain(
+      'Absent or ambiguous evidence persists `blocked/launch_reconciliation_required` and never relaunches automatically.',
+    );
+  });
+
+  it('reconciles receive side effects after a post-commit interruption', () => {
+    const gate = requiredSlice(
+      readImplementSkill(),
+      '### Step 14: Gate Execution',
+      '### Step 15: Final HiLL Closeout Sequence',
+    );
+    const state = requiredSlice(
+      gate,
+      '```yaml\noat_implement_exit_gate:',
+      '\n```',
+    );
+    const receive = normalizeWhitespace(
+      requiredSlice(
+        gate,
+        '**Receive intent and reconciliation:**',
+        '- After successful receive',
+      ),
+    );
+
+    expect(state).toMatch(
+      /^  receive_state: not_started # not_started \| intent_persisted \| completed \| reconciliation_required$/m,
+    );
+    expect(receive).toContain(
+      '`not_started` → `intent_persisted` → `completed` or `reconciliation_required`',
+    );
+    expect(receive).toContain(
+      'persist the receive correlation, source and expected archived artifact paths, exact Reviews event identity, and `receive_pre_head` before invoking receive',
+    );
+    expect(receive).toContain(
+      'the exact archived artifact, the bound Reviews event, and the receive bookkeeping commit',
+    );
+    expect(receive).toContain(
+      'set `receive_completed: true` from that corroborated durable receipt without invoking receive again',
+    );
+    expect(receive).toContain(
+      'persist `blocked/receive_reconciliation_required` and stop with the recovery command `oat-project-review-receive`',
+    );
+  });
+
   it('enforces structured receive provenance and fail-closed freshness', () => {
     const skill = readImplementSkill();
     const next = readNextSkill();
@@ -172,7 +334,7 @@ describe('post-implementation sequence contracts', () => {
       'Receive is eligible only for `ok` or `blocked` with `receiveEligible: true` and a corroborated non-null `handoff`.',
     );
     expect(normalized).toContain(
-      'Persist `receive_completed: true` before continuing; an already-completed receive is idempotent and must not run again.',
+      'An already-completed receive is idempotent and must not run again.',
     );
     expect(normalized).toContain(
       'A receive failure persists `blocked` and cannot become an allowed disposition.',

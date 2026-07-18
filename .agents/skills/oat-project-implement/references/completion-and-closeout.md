@@ -311,10 +311,22 @@ oat_implement_exit_gate:
   attempts_completed: 0
   reviewed_head: null
   implementation_fingerprint: null
+  launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
   gate_run_id: null
   envelope_status: null
   artifact: null
   handoff: null
+  receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
   receive_eligible: false
   receive_completed: false
   failure: null
@@ -338,6 +350,45 @@ not reproduce `config_fingerprint`, mark the generation `stale` and fail
 closed. External configuration changes are considered only when a new
 generation starts; they never rewrite an in-flight snapshot.
 
+**Launch acceptance and reconciliation:**
+
+The launch state advances only as `not_started` → `intent_persisted` →
+`accepted` → `result_persisted`; an explicit pre-start rejection instead
+records `not_accepted`. Before invoking the configured command, generate and
+persist `launch_attempt_id`, `launch_started_at`, and
+`launch_result_receipt` before invoking the command. The receipt is a
+closeout-owned path selected before launch; capture the command's stdout there
+without changing its configured argv.
+
+For `oat --json gate review`, the gate CLI run marker is acceptance evidence
+established before its reviewer child launch. Observe the marker that uniquely
+matches the normalized project and starts no earlier than
+`launch_started_at`; persist its path as `gate_run_marker`, its run ID as
+`gate_run_id`, and `launch_state: accepted`. More than one matching marker is
+ambiguous and blocks reconciliation.
+
+On resume from `intent_persisted` or `accepted`, reconcile the exact
+`gate_run_marker`, durable result receipt, and run-correlated active or archived
+artifact before deciding the next transition:
+
+- A still-present matching marker proves an accepted run may be active. Preserve
+  `accepted`, wait for that run, and never launch a replacement.
+- A complete result receipt must parse as exactly one structured envelope whose
+  run ID matches the marker and artifact. Persist its envelope fields and
+  `launch_state: result_persisted` before receive or policy handling.
+- A matching artifact without its result receipt proves acceptance but not the
+  terminal outcome. Persist
+  `blocked/launch_result_reconciliation_required`; do not infer `ok` or
+  `blocked` from findings or exit status.
+- Relaunch only after durable `not_accepted` evidence proves that no gate
+  process or reviewer child was accepted. This requires an explicit pre-start
+  launcher rejection plus absence of a matching marker, result receipt, and
+  active or archived artifact.
+- Absent or ambiguous evidence persists
+  `blocked/launch_reconciliation_required` and never relaunches automatically.
+  Surface the persisted attempt ID, marker/receipt paths, and exact recovery
+  action so a human can reconcile or explicitly retire that attempt.
+
 Persist and commit every state transition before crossing its launch, receive,
 stop, approval-aware sequence, completion, or output boundary. Append a concise
 audit event to `implementation.md`; that prose and review ledger rows are
@@ -356,12 +407,44 @@ evidence, not routing state.
   the matching `oat_gate_run_id` may satisfy the configured gate. A normal
   final review, phase review, or manually produced independent-review artifact
   cannot populate configured-gate provenance.
-- For a receive-eligible `ok` or `blocked` envelope, invoke
-  `oat-project-review-receive` only when `receive_completed` is false and the
-  handoff matches the persisted `gate_run_id` and artifact. Persist
-  `receive_completed: true` before continuing; an already-completed receive is
-  idempotent and must not run again. A receive failure persists `blocked` and
-  cannot become an allowed disposition.
+
+**Receive intent and reconciliation:**
+
+The receive state advances only as `not_started` → `intent_persisted` →
+`completed` or `reconciliation_required`. For a receive-eligible `ok` or
+`blocked` envelope, first resolve the receiver's collision-safe archive
+destination. Then persist the receive correlation, source and expected archived
+artifact paths, exact Reviews event identity, and `receive_pre_head` before
+invoking receive. `receive_correlation` binds the gate run ID, handoff, source
+artifact, scope, type, and source filename; set `receive_state:
+intent_persisted` and commit it before calling `oat-project-review-receive`.
+
+On normal return or resume from `intent_persisted`, reconcile all three durable
+receipt components:
+
+1. the exact archived artifact at `receive_archived_artifact`, carrying the
+   matching `oat_gate_run_id`;
+2. the bound Reviews event identified by Scope + Type + original source
+   filename, with its artifact set to that archived path and a monotonic
+   received/fix/passed status; and
+3. the receive bookkeeping commit after `receive_pre_head`, whose bounded diff
+   contains that archive move and the matching project tracking updates.
+
+When the exact archived artifact, the bound Reviews event, and the receive
+bookkeeping commit all corroborate the persisted correlation, store that commit
+as `receive_commit`, set `receive_state: completed`, and set
+`receive_completed: true` from that corroborated durable receipt without
+invoking receive again. An already-completed receive is idempotent and must not
+run again.
+
+If any component is missing, contradictory, or cannot be uniquely correlated,
+persist `blocked/receive_reconciliation_required` and stop with the recovery
+command `oat-project-review-receive`; do not invoke it automatically. Surface
+the expected source/archive paths, event identity, pre-receive HEAD, and
+candidate commit so a human can repair or confirm the durable receipt before
+resume. A receive failure persists `blocked` and cannot become an allowed
+disposition.
+
 - After successful receive, `ok` persists `allowed/passed`. A `blocked`
   envelope applies the persisted `on_failure` policy.
 - `block` outcomes consume remediation attempts only after a valid configured
@@ -423,19 +506,28 @@ completion, or success output, run the configured gate:
    export PROJECT_PATH
    ```
 
-   If the resolved command invokes `oat gate review`, the configured review
-   command must already include `--project "$PROJECT_PATH"` and must not include
-   `--target <id>`. A valid reusable shape is
-   `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is
-   missing, stop and migrate the stored gate command; do not inject or append
-   arguments at execution time.
+   If the resolved command invokes review, parse its argv before launch and
+   require the canonical global-JSON shape
+   `oat --json gate review --project "$PROJECT_PATH" ...`. The configured review
+   command must place the global `--json` before `gate review`, must already
+   include `--project "$PROJECT_PATH"`, and must not include `--target <id>`. Reject
+   `oat gate review ...` without the global `--json` flag before launch because
+   it emits human-oriented output rather than the structured envelope. For any
+   invalid shape, stop and require the user to migrate the stored declaration
+   before execution; never rewrite user or local configuration during closeout,
+   and never inject, reorder, or append arguments at execution time.
 
-3. Execute the resolved command exactly as configured. Capture stdout, stderr,
-   the exit code, and the structured JSON result. A zero exit code means the
-   review passed its threshold, but it does not by itself authorize artifact
-   receipt or complete the handoff. Persist the run ID, envelope status,
-   artifact, eligibility, handoff correlation, and failure details before
-   receive or policy handling.
+3. If launch reconciliation does not already prove an accepted or completed
+   attempt, persist the launch intent and preselected result receipt, then
+   execute the resolved command exactly as configured. Capture stdout directly
+   into that durable receipt while separately retaining stderr and the exit
+   code; the capture wrapper must not alter the configured command argv.
+   Observe and persist the gate run marker before treating the reviewer child as
+   accepted. A zero exit code means the review passed its threshold, but it does
+   not by itself authorize artifact receipt or complete the handoff. Validate
+   the receipt as one structured envelope, then persist the run ID, envelope
+   status, artifact, eligibility, handoff correlation, failure details, and
+   `launch_state: result_persisted` before receive or policy handling.
 
 4. Review-artifact handoff:
    - Parse the structured gate result. An exit code or artifact path alone never
