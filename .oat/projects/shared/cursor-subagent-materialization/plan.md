@@ -6,6 +6,8 @@ oat_last_updated: 2026-07-17
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [['p03', 'p04']]
+oat_plan_hill_phases: ['p06']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -648,9 +650,9 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.te
 
 Expected: generated assets contain only approved mappings and focused tests pass.
 
-**Step 4: Persist the final-launch restart handoff**
+**Step 4: Persist the post-release final-launch handoff**
 
-Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. The operator will launch them from a fresh Cursor IDE Agent Chat with the temporary hook-evidence setup proven by g01; the tested Cursor CLI path is insufficient. This persisted handoff is the recommended p05 HiLL checkpoint input after the phase implementer returns. Implementation preflight must have confirmed and persisted p05 before execution reaches this step; otherwise stop and revise the gate route.
+Choose at least one approved generated reviewer variant and one approved generated phase-implementer variant. Record each exact native type, its bracket-form `model:` value, and `status: awaiting-final-launch` in the verification record. The operator will launch them from a fresh Cursor IDE Agent Chat with the temporary hook-evidence setup proven by g01; the tested Cursor CLI path is insufficient. This persisted handoff is the p06 HiLL checkpoint input after release validation completes.
 
 ```bash
 pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
@@ -675,50 +677,6 @@ test -z "$(git status --porcelain --untracked-files=all -- .claude .codex .curso
 ```
 
 Expected: `summary.plannedOperations` is exactly zero and all generated provider views, the sync manifest, and bundled assets are clean, including untracked files. If not, regenerate, amend the task commit, and repeat before advancing.
-
----
-
-### Recommended HiLL checkpoint after p05: Launch final generated Cursor role variants
-
-At implementation start, confirm p05 as the HiLL checkpoint and persist `oat_plan_hill_phases: ['p05']`. That makes this a root/operator lifecycle boundary after p05-t01's phase implementer returns. `oat-project-implement` pauses at p05; no second p05 task is dispatched. The operator starts a fresh Cursor session rooted at this worktree so the committed generated native definitions are discovered, then resumes the project at this checkpoint.
-
-**Files:**
-
-- Modify: `.oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md`
-- Read: `.cursor/agents/oat-reviewer-*.md`
-- Read: `.cursor/agents/oat-phase-implementer-*.md`
-
-**Step 1: Validate the persisted handoff**
-
-Confirm the verification record says `status: awaiting-final-launch` and names at least one approved generated reviewer variant plus one approved generated phase-implementer variant with their bracket-form `model:` values.
-
-**Step 2: Launch through the native agent-definition surface**
-
-In the fresh Cursor IDE session, launch both exact native types. Do not substitute `cursor-agent --model`. Capture `subagentStart.subagent_model`, correlation IDs, and `subagentStop` status through the temporary hook setup.
-
-**Step 3: Record the evidence boundary**
-
-Append the role launch, configured variant/model evidence, and hook correlation to the verification record. Keep runtime model and effort `not-reported`; neither successful completion nor hook evidence from the tested session is a general runtime identity guarantee.
-
-**Step 4: Format, verify, and commit**
-
-Run:
-
-```bash
-pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
-test -z "$(git status --porcelain -- .cursor/agents/oat-pin-probe-*.md)"
-```
-
-Expected: both final generated role families were launched by exact native type, their conversation IDs are recorded, the configured/runtime evidence boundary is explicit, and no probe definition remains.
-
-```bash
-git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
-git commit -m "test(p05-hill): verify generated cursor role launches"
-```
-
-After this evidence commit, record p05 in `oat_hill_completed` through the normal lifecycle bookkeeping and resume `oat-project-implement` at p06.
-
----
 
 ## Phase 6: Release Validation
 
@@ -782,6 +740,48 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 
 ---
 
+### Final HiLL checkpoint after p06: Launch generated Cursor role variants
+
+The sole implementation checkpoint is p06. Release validation completes first, then the operator starts a fresh Cursor IDE session rooted at this worktree so the committed generated native definitions are discovered. If native-launch evidence requires any shipped code, generated asset, or package change, reopen the affected task and rerun p06 release validation before accepting the checkpoint.
+
+**Files:**
+
+- Modify: `.oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md`
+- Read: `.cursor/agents/oat-reviewer-*.md`
+- Read: `.cursor/agents/oat-phase-implementer-*.md`
+
+**Step 1: Validate the persisted handoff**
+
+Confirm the verification record says `status: awaiting-final-launch` and names at least one approved generated reviewer variant plus one approved generated phase-implementer variant with their bracket-form `model:` values.
+
+**Step 2: Launch through the native agent-definition surface**
+
+In the fresh Cursor IDE session, launch both exact native types. Do not substitute `cursor-agent --model`. Capture `subagentStart.subagent_model`, correlation IDs, and `subagentStop` status through the temporary hook setup.
+
+**Step 3: Record the evidence boundary**
+
+Append the role launch, configured variant/model evidence, and hook correlation to the verification record. Keep runtime model and effort `not-reported`; neither successful completion nor hook evidence from the tested session is a general runtime identity guarantee.
+
+**Step 4: Format, verify, and commit**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
+test -z "$(git status --porcelain -- .cursor/agents/oat-pin-probe-*.md)"
+```
+
+Expected: both final generated role families were launched by exact native type, their conversation IDs are recorded, the configured/runtime evidence boundary is explicit, and no probe definition remains.
+
+```bash
+git add .oat/projects/shared/cursor-subagent-materialization/references/cursor-pin-verification.md
+git commit -m "test(p06-hill): verify generated cursor role launches"
+```
+
+After this evidence commit, record p06 in `oat_hill_completed` through the normal lifecycle bookkeeping. A failed launch reopens the relevant implementation work; any shipped change also requires rerunning p06 before the checkpoint can pass.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
@@ -811,8 +811,8 @@ Expected: `summary.plannedOperations` is exactly zero and the generated provider
 - Phase 2: 3 tasks - Shared lifecycle, Cursor codec, and owner-aware desired state.
 - Phase 3: 4 tasks - Sync/status/init, doctor, resolver, and audit integration.
 - Phase 4: 4 tasks - Dispatch guidance, recommendation, docs, and planning-producer gate identity.
-- Phase 5: 1 task plus a recommended HiLL checkpoint - Generated provider views and final native role-launch evidence.
-- Phase 6: 1 task - Lockstep public-package versioning and release validation.
+- Phase 5: 1 task - Generated provider views and persisted native-launch handoff.
+- Phase 6: 1 task plus the final HiLL checkpoint - Lockstep public-package versioning, release validation, and final native role-launch evidence.
 
 **Total: 13 implementation tasks plus 1 completed pre-implementation gate**
 

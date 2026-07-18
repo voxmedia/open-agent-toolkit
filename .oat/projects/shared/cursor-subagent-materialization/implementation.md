@@ -43,14 +43,26 @@ oat_generated: false
 - Cursor CLI child lifecycle hooks were insufficient for pin proof in the tested build, so g01 and the final generated-role gate use Cursor IDE Agent Chat.
 - p02-t01 is the next implementation task.
 
+### Run 1
+
+**Started:** 2026-07-17T23:43:00Z
+**Status:** in_progress
+**Dispatch:** Tier 1 native Cursor subagents; managed `high` policy resolved `gpt-5.6-sol-high` through the current Cursor model-argument mechanism.
+**Schedule:** `p02` → `p03 + p04` (parallel group) → `p05` → `p06`
+**HiLL checkpoints:** `p06` only; automatic checkpoint review enabled.
+**Checkpoint rationale:** Final generated-role launches occur after release validation. Any launch-driven shipped change reopens the affected task and requires p06 validation to run again.
+
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p02   | in_progress | 3     | 0/3       |
+| p03   | pending     | 4     | 0/4       |
+| p04   | pending     | 4     | 0/4       |
+| p05   | pending     | 1     | 0/1       |
+| p06   | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/13 tasks completed
 
 ---
 
