@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -35,12 +35,12 @@ oat_generated: false
 | -------------------------------------- | --------- | ----- | --------- |
 | Phase 1: Port + toolkit integration    | completed | 4     | 4/4       |
 | Phase 2: §2 queue + genericization     | completed | 9     | 9/9       |
-| Phase 3: Dispositions                  | pending   | 3     | 0/3       |
+| Phase 3: Dispositions                  | completed | 3     | 3/3       |
 | Phase 4: Docs                          | pending   | 2     | 0/2       |
 | Phase 5: Validation + release          | pending   | 5     | 0/5       |
 | Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
 
-**Total:** 13/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 16/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
 
 ---
 
@@ -120,10 +120,29 @@ oat_generated: false
 
 ## Phase 3: Dispositions
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
 
-Tasks: p03-t01 (validate-plan singleton guidance, TDD), p03-t02 (5 deferred dispositions incl. wont_do archive), p03-t03 (4 triage + sync version-stamp candidate).
+### Phase Summary
+
+**Outcome (what changed):**
+
+- validate-plan rejection + help now state the singleton rule and the ungrouped-phase alternative (`cefdc4a2`, TDD).
+- Ten §3 dispositions durable: 4 active deferred items with owner/trigger/groupings (`68906d88` + owner fix `2d889c19`); tracked-config guard filed-and-archived `wont_do` with root-cause rationale; triage closed 2 as already-fixed on main (`--scope all` placement; resolver flag conflict — both independently re-verified by the reviewer) and filed 3 (`BL-260718-harden-full-surface-gate` with both fresh gate observations, `BL-260718-add-generated-runbook`, `BL-260718-warn-when-oat-sync-uses`) (`50396aa3`).
+- Every packet §3 row has a traceable disposition (reviewer cross-checked row-by-row).
+
+**Verification:** CLI suite 250 files / 3002 tests; lint; type-check; pjm lifecycle checks. Review round 1 FAIL (1 Critical: missing owners) → round 2 PASS.
+
+**Notes / Decisions:**
+
+- Pre-existing `oat pjm doctor` baseline failure (10 older records, template frontmatter; exit 2 at phase base too) — out of scope; candidate for a follow-up backlog item at closeout.
+
+### Tasks
+
+- p03-t01: **completed**, `cefdc4a2`
+- p03-t02: **completed**, `68906d88` + fix `2d889c19` (owner lines; repo convention keeps `assignee: null`)
+- p03-t03: **completed**, `50396aa3` (dispositions: 2 closed-as-fixed, 3 filed)
 
 ---
 
@@ -171,6 +190,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ----- | -------------------------------------------------------- | ----- | --------------------------------------------------------------- | ------------------------------------------- | ------ |
 | p01   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0) | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
 | p02   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)             | 1 (provenance citation restore, `7601d2d6`) | pass   |
+| p03   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)              | 1 (owner lines, `2d889c19`)                 | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
@@ -221,7 +241,7 @@ Chronological log of implementation progress.
 | ----- | --------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | CLI suite 3001 tests (250 files) + 2 new regression tests; lint; type-check | all    | 0      | n/a      |
 | 2     | lint + type-check + bash-3.2 + citation-set + asset byte-diffs              | all    | 0      | n/a      |
-| 3     | -                                                                           | -      | -      | -        |
+| 3     | CLI suite 3002 tests + lint + type-check + pjm lifecycle checks             | all    | 0      | n/a      |
 | 4     | -                                                                           | -      | -      | -        |
 | 5     | -                                                                           | -      | -      | -        |
 
