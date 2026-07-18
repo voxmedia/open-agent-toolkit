@@ -33,6 +33,13 @@ function readNextSkill(): string {
   );
 }
 
+function readStateTemplate(): string {
+  return readFileSync(
+    join(import.meta.dirname, '../../../../../../../.oat/templates/state.md'),
+    'utf8',
+  );
+}
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
@@ -218,6 +225,69 @@ describe('post-implementation sequence contracts', () => {
     );
     expect(normalized).toContain(
       'A fresh `allowed` result resumes after the gate without executing the gate or receive a second time.',
+    );
+  });
+
+  it('ships the complete implementation exit-gate state scaffold', () => {
+    const template = readStateTemplate();
+
+    for (const field of [
+      'status',
+      'resolution',
+      'disposition',
+      'config_fingerprint',
+      'resolved_command',
+      'resolved_description',
+      'on_failure',
+      'max_attempts',
+      'attempts_completed',
+      'reviewed_head',
+      'implementation_fingerprint',
+      'launch_state',
+      'launch_attempt_id',
+      'launch_started_at',
+      'launch_result_receipt',
+      'gate_run_marker',
+      'gate_run_id',
+      'envelope_status',
+      'artifact',
+      'handoff',
+      'receive_state',
+      'receive_correlation',
+      'receive_source_artifact',
+      'receive_archived_artifact',
+      'receive_event_identity',
+      'receive_pre_head',
+      'receive_commit',
+      'receive_eligible',
+      'receive_completed',
+      'failure',
+      'updated_at',
+    ]) {
+      expect(template, `scaffolded gate field ${field}`).toMatch(
+        new RegExp(`^#   ${field}:`, 'm'),
+      );
+    }
+  });
+
+  it('never applies configured failure policy to operational gate failures', () => {
+    const gate = normalizeWhitespace(
+      requiredSlice(
+        readImplementSkill(),
+        '### Step 14: Gate Execution',
+        '### Step 15: Final HiLL Closeout Sequence',
+      ),
+    );
+
+    expect(gate).toContain(
+      'Apply persisted `on_failure` and `max_attempts` only after Step 4 validates a receive-eligible `blocked` envelope and its eligible receive is durably completed.',
+    );
+    expect(gate).toContain('`warn` plus `review_failed` remains `blocked`');
+    expect(gate).toContain(
+      '`warn` plus an invalid, malformed, or contradictory envelope remains `blocked`',
+    );
+    expect(gate).toContain(
+      'Launch failures, missing CLIs, unavailable runtimes, transport failures, validation or correlation failures, and receive failures cannot continue to sequencing, final HiLL, completion, or success output regardless of `on_failure`.',
     );
   });
 

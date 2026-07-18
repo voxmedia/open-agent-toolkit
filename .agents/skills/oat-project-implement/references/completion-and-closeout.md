@@ -402,7 +402,9 @@ evidence, not routing state.
   Ineligible, null, or contradictory handoffs, unknown statuses,
   `review_failed`, `artifact_validation_failed`, and
   `targeting_correlation_failed` persist `blocked`, remain outside receive, and
-  cannot produce an allowed disposition.
+  cannot produce an allowed disposition. They ignore `on_failure`, including
+  `warn`; policy handling is unavailable without a validated, receive-eligible
+  `blocked` envelope whose eligible receive completed durably.
 - Manual review provenance is rejected: only `oat_review_invocation: gate` with
   the matching `oat_gate_run_id` may satisfy the configured gate. A normal
   final review, phase review, or manually produced independent-review artifact
@@ -445,8 +447,9 @@ candidate commit so a human can repair or confirm the durable receipt before
 resume. A receive failure persists `blocked` and cannot become an allowed
 disposition.
 
-- After successful receive, `ok` persists `allowed/passed`. A `blocked`
-  envelope applies the persisted `on_failure` policy.
+- After successful receive, `ok` persists `allowed/passed`. Apply the persisted
+  `on_failure` policy only to a validated, receive-eligible `blocked` envelope
+  after its eligible receive is durably completed.
 - `block` outcomes consume remediation attempts only after a valid configured
   gate result and its eligible receive disposition are durably processed.
   Increment `attempts_completed` before remediation/rerun. Below
@@ -456,8 +459,12 @@ disposition.
   persisted configuration and consumed attempt count. At `maxAttempts`,
   persist `blocked` and stop without another gate launch.
 - Launch failures, missing CLIs, unavailable runtimes, and transport failures
-  do not increment `attempts_completed`. Persist failure context and stop or
-  escalate without treating infrastructure recovery as a remediation attempt.
+  do not increment `attempts_completed`. Persist failure context and
+  `status: blocked`, then stop or escalate without treating infrastructure
+  recovery as a remediation attempt or applying `on_failure`.
+- Envelope validation/correlation failures and receive failures likewise remain
+  `blocked` regardless of `on_failure`; they cannot persist `allowed/warned`,
+  `allowed/prompt_approved`, or any other allowed disposition.
 - An explicit prompt continuation persists `allowed/prompt_approved`; defer or
   no response persists `blocked` and stops. A warn continuation persists
   `allowed/warned` before closeout proceeds.
@@ -549,18 +556,28 @@ completion, or success output, run the configured gate:
      applying the terminal disposition. Never invoke receive again for that
      persisted run.
 
-5. If the command exits nonzero, use `description` to orient the next steps and
-   handle the persisted `on_failure` and `max_attempts`:
+5. Do not route policy from a generic nonzero exit. Apply persisted
+   `on_failure` and `max_attempts` only after Step 4 validates a
+   receive-eligible `blocked` envelope and its eligible receive is durably
+   completed. Use `description` to orient these validated blocking-finding
+   outcomes:
    - `block`: read gate feedback, remediate, and re-run the gate up to
      `maxAttempts` attempts (default `2`). Persist each consumed remediation
      attempt. If the gate ends in `block` after attempts are exhausted,
      escalate to the human with accumulated feedback and append that feedback
-     to `implementation.md`. Treat a launch failure, missing CLI, or no eligible
-     runtime as escalation-biased and do not spend it as a remediation attempt.
+     to `implementation.md`.
    - `prompt`: persist the blocked boundary, surface the gate failure, and ask
      the human how to proceed. Continue only after an explicit persisted
      approval.
    - `warn`: persist the warned allowance and failure details before continuing.
+
+   Any nonzero result without that validated and durably received `blocked`
+   envelope remains blocked and skips all three policies. In particular,
+   `warn` plus `review_failed` remains `blocked`, and `warn` plus an invalid,
+   malformed, or contradictory envelope remains `blocked`. Launch failures,
+   missing CLIs, unavailable runtimes, transport failures, validation or
+   correlation failures, and receive failures cannot continue to sequencing,
+   final HiLL, completion, or success output regardless of `on_failure`.
 
    When the gate ends in `block` after attempts are exhausted or remains at an
    unresolved `prompt` boundary, the completion steps below MUST NOT run. The

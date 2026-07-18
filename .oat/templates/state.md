@@ -34,14 +34,29 @@ oat_workflow_origin: native # native | imported
 #   resolution: configured # configured | no_gate
 #   disposition: null # null | passed | warned | prompt_approved | no_gate
 #   config_fingerprint: '<stable hash of resolved gate declaration>'
+#   resolved_command: null
+#   resolved_description: null
 #   on_failure: block # block | prompt | warn | null
 #   max_attempts: 2
 #   attempts_completed: 0
 #   reviewed_head: null
 #   implementation_fingerprint: null
+#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
+#   launch_attempt_id: null
+#   launch_started_at: null
+#   launch_result_receipt: null
+#   gate_run_marker: null
 #   gate_run_id: null
 #   envelope_status: null # ok | blocked | review_failed | other terminal status
 #   artifact: null
+#   handoff: null
+#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
+#   receive_correlation: null
+#   receive_source_artifact: null
+#   receive_archived_artifact: null
+#   receive_event_identity: null
+#   receive_pre_head: null
+#   receive_commit: null
 #   receive_eligible: false
 #   receive_completed: false
 #   failure: null

@@ -80,9 +80,10 @@ configured command. The state records:
 A `null` resolution is explicit success for that closeout generation:
 `allowed/no_gate` with `disposition: no_gate`. Configured success becomes
 `allowed/passed`; `warn` and an explicit `prompt` continuation persist their
-own allowed dispositions. Blocking, unresolved, malformed, contradictory, or
-operational outcomes remain blocked according to `onFailure` and
-`maxAttempts`.
+own allowed dispositions only for a validated, receive-eligible `blocked`
+envelope after eligible receive completes durably. Unresolved, malformed,
+contradictory, validation, correlation, launch, or receive failures ignore
+`onFailure` and remain blocked.
 
 Resume correlates the persisted launch intent with the gate run marker, durable
 JSON result receipt, and run-bound artifact. Eligible receive similarly
@@ -641,13 +642,21 @@ contributor fields are absent. The achieved level is one of:
 
 ## Failure behavior
 
-Gate failure behavior is owned by the gate-aware skill:
+Gate failure behavior is owned by the gate-aware skill. The configured policy
+applies only to a validated, receive-eligible `blocked` result after its
+eligible receive completes durably:
 
 | `onFailure` | Meaning                                                                              |
 | ----------- | ------------------------------------------------------------------------------------ |
 | `block`     | Read the gate output, attempt remediation, rerun up to `maxAttempts`, then escalate. |
 | `prompt`    | Surface the failure and ask the user how to proceed.                                 |
 | `warn`      | Record the failure and continue.                                                     |
+
+`review_failed`, `artifact_validation_failed`,
+`targeting_correlation_failed`, unknown or contradictory envelopes, launch
+failures, and receive failures are operational failures rather than validated
+blocking findings. They remain blocked regardless of `onFailure`; even `warn`
+cannot turn them into an allowed disposition.
 
 `cross-provider-exec` does fallback only before dispatch, while selecting an
 available target. Once a target actually runs, its exit code is the gate result;
