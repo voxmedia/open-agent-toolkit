@@ -1426,6 +1426,23 @@ function exactIdentityFromStamp(
     : unknownProducerIdentity();
 }
 
+function aggregateIdentityFromStamp(
+  stamp: ReturnType<typeof parseDispatchStamps>[number],
+): GateProducerIdentity {
+  const producerIdentity = identityFromStamp(stamp);
+  if (
+    producerIdentity.diversityClaimable &&
+    producerIdentity.family !== 'unknown'
+  ) {
+    return producerIdentity;
+  }
+
+  return identityFromRecords(
+    [{ value: stamp.target, provenance: 'inferred' }],
+    'stamp',
+  );
+}
+
 function aggregateIdentityFromStamps(
   stamps: ReturnType<typeof parseDispatchStamps>,
 ): GateProducerIdentity {
@@ -1433,7 +1450,7 @@ function aggregateIdentityFromStamps(
     return unknownProducerIdentity();
   }
 
-  const identities = stamps.map(identityFromStamp);
+  const identities = stamps.map(aggregateIdentityFromStamp);
   const avoidFamilies = [
     ...new Set(
       identities.flatMap((identity) =>

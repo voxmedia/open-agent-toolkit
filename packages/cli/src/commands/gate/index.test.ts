@@ -2370,6 +2370,131 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('falls back to a configured target family when an aggregate producer is unknown', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high',
+    );
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': null,
+              'openai-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.6-sol-max'],
+                priority: 300,
+              },
+              'claude-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['claude-fable-5-xhigh'],
+                priority: 250,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'claude-fable-5-xhigh', expect.any(String)],
+      purpose: 'execute',
+    });
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['openai'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+        reviewer: {
+          target: 'claude-reviewer',
+          model: 'claude-fable-5-xhigh',
+          family: 'claude',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('keeps a known aggregate producer authoritative over a conflicting configured target', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=claude-opus-4-8 provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('aggregates every producer stamp in a contiguous review range in document order', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
