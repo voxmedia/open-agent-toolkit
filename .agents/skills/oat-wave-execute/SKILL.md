@@ -127,17 +127,17 @@ reconciliation that waives a source-plan requirement is a plan-gate Important
 ### Step 3: Scaffold the wrapper project
 
 1. `oat project new wave-N-execution --mode quick --no-commit`.
-2. **Fix the known scaffold placeholders AND advance the lifecycle** in
-   `state.md`: placeholders (`{ OAT_HILL_CHECKPOINTS }` → HiLL list,
-   `{ OAT_PHASE }`, `{ OAT_WORKFLOW_MODE }` → `quick`), `oat_dispatch_policy`
-   (managed/high unless the operator says otherwise), `associated_issues`
-   (the wave's backlog items), **`oat_parallel_execution: true`**, and — once
-   plan.md is written — **`oat_phase: plan` + `oat_phase_status: complete`**.
-   Also refresh the state.md BODY prose (Status/Current Phase/Artifacts/
-   Progress/Next Milestone) — frontmatter alone is not enough; two waves hit
-   body-drift findings. (0.1.65+ scaffolds fill the basic placeholders
-   themselves; the lifecycle advance and these wave-specific values remain
-   orchestrator-owned.)
+2. **Verify scaffold substitution AND advance the lifecycle** in `state.md`.
+   On oat ≥0.1.65, verify that the basic scaffold placeholders
+   (`{ OAT_HILL_CHECKPOINTS }`, `{ OAT_PHASE }`, `{ OAT_WORKFLOW_MODE }`) were
+   already substituted; fix them only if unexpected survivors remain. The
+   lifecycle advance and wave-specific values remain orchestrator-owned:
+   `oat_dispatch_policy` (managed/high unless the operator says otherwise),
+   `associated_issues` (the wave's backlog items),
+   **`oat_parallel_execution: true`**, and — once plan.md is written —
+   **`oat_phase: plan` + `oat_phase_status: complete`**. Also refresh the
+   state.md BODY prose (Status/Current Phase/Artifacts/Progress/Next Milestone)
+   — frontmatter alone is not enough; two waves hit body-drift findings.
 3. Write `plan.md` from `assets/wrapper-plan-template.md` — pointer-only tasks,
    the wrapper execution contract verbatim, drift-refresh record marked
    **non-authoritative recon evidence**, HiLL at the final phase (confirm against
