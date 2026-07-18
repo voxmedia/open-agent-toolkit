@@ -256,6 +256,25 @@ re-review.
 
 **Fix status:** completed; final review event is ready for re-review.
 
+### Review Received: final re-review
+
+**Date:** 2026-07-18  
+**Review artifact:** `reviews/archived/final-review-2026-07-18T185705Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Resolved prior findings:**
+
+- I1: resolved by `p05-t01` (`0ffafcfc`).
+- m1: resolved by `p05-t02` (`0d905bd9`).
+
+**Review result:** passed. No deferred Medium or Minor findings remain.
+
 ## Deviations from Plan / Design
 
 | Task    | Source Artifact | Planned / Documented                        | Actual / Accepted                                    | Reason                                              | Source of Truth                           | Follow-up |
@@ -298,7 +317,7 @@ re-review.
   `pnpm release:validate` passed.
 - Post-apply all-scope sync dry-run reports no remaining mutations.
 
-**Review status:** Final review fixes are complete and ready for re-review.
+**Review status:** Final re-review passed with zero findings.
 
 ## References
 
