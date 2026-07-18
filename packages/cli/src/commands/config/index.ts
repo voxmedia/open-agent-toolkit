@@ -118,6 +118,8 @@ type ConfigKey =
   | 'workflow.autoReviewAtHillCheckpoints'
   | 'workflow.createPrOnComplete'
   | 'workflow.designMode'
+  | 'workflow.projectLog'
+  | 'workflow.projectLogLedgerPath'
   | 'workflow.dispatchPolicy.mode'
   | 'workflow.dispatchPolicy.policy'
   | 'workflow.dispatchCeiling'
@@ -224,6 +226,8 @@ const KEY_ORDER: ConfigKey[] = [
   'workflow.autoNarrowReReviewScope',
   'workflow.autoArtifactReview.plan',
   'workflow.autoArtifactReview.analysis',
+  'workflow.projectLog',
+  'workflow.projectLogLedgerPath',
   'workflow.designMode',
   'workflow.dispatchPolicy.mode',
   'workflow.dispatchPolicy.policy',
@@ -664,6 +668,31 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Automatically run the bounded accuracy-review loop for generated analysis artifacts before apply workflows consume them. Resolution: local > shared > user > default.',
   },
   {
+    key: 'workflow.projectLog',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'true | false | auto',
+    defaultValue: 'auto',
+    mutability: 'read/write',
+    owningCommand: 'oat config set workflow.projectLog <true|false|auto>',
+    description:
+      'Controls the append-only per-project observation log. auto creates it on first append; an existing artifact always remains enabled. Resolution: local > shared > user > default.',
+  },
+  {
+    key: 'workflow.projectLogLedgerPath',
+    group: 'Workflow Preferences (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'workflow',
+    type: 'string',
+    defaultValue: '.oat/repo/reference/project-observations.md',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set workflow.projectLogLedgerPath <repo-relative-path>',
+    description:
+      'Repo-relative ledger path used by project-log rollup. Resolution: local > shared > user > default.',
+  },
+  {
     key: 'workflow.designMode',
     group: 'Workflow Preferences (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
@@ -1014,6 +1043,29 @@ function parseWorkflowValue(
 ): boolean | number | string | WorkflowPostImplementSequence {
   if (WORKFLOW_BOOLEAN_KEYS.has(key)) {
     return parseBooleanValue(key, rawValue);
+  }
+
+  if (key === 'workflow.projectLog') {
+    const normalized = rawValue.trim().toLowerCase();
+    if (normalized === 'true' || normalized === 'false') {
+      return normalized === 'true';
+    }
+    if (normalized === 'auto') {
+      return normalized;
+    }
+    throw new Error(
+      `Invalid value for ${key}: expected one of true | false | auto, got '${rawValue}'`,
+    );
+  }
+
+  if (key === 'workflow.projectLogLedgerPath') {
+    const normalized = rawValue.trim();
+    if (!normalized) {
+      throw new Error(
+        `Invalid value for ${key}: expected a non-empty string path`,
+      );
+    }
+    return normalized;
   }
 
   if (key === 'workflow.postImplementSequence') {

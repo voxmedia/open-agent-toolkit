@@ -1148,6 +1148,65 @@ describe('oat config', () => {
       });
     });
 
+    it('sets, gets, and lists project-log workflow keys', async () => {
+      const root = await createRepoRoot();
+      const projectLogHarness = createHarness({ cwd: root });
+      await runCommand(projectLogHarness.command, [
+        'set',
+        'workflow.projectLog',
+        'true',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const ledgerHarness = createHarness({ cwd: root });
+      await runCommand(ledgerHarness.command, [
+        'set',
+        'workflow.projectLogLedgerPath',
+        '.oat/custom/observations.md',
+        '--shared',
+      ]);
+      expect(process.exitCode).toBe(0);
+
+      const raw = JSON.parse(
+        await readFile(join(root, '.oat', 'config.json'), 'utf8'),
+      );
+      expect(raw.workflow).toMatchObject({
+        projectLog: true,
+        projectLogLedgerPath: '.oat/custom/observations.md',
+      });
+
+      const getHarness = createHarness({ cwd: root });
+      await runCommand(
+        getHarness.command,
+        ['get', 'workflow.projectLog'],
+        ['--json'],
+      );
+      expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        key: 'workflow.projectLog',
+        value: 'true',
+        source: 'shared',
+      });
+
+      const listHarness = createHarness({ cwd: root });
+      await runCommand(listHarness.command, ['list']);
+      expect(listHarness.capture.info[0]).toContain('workflow.projectLog');
+      expect(listHarness.capture.info[0]).toContain(
+        'workflow.projectLogLedgerPath',
+      );
+    });
+
+    it('rejects invalid workflow.projectLog values', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, ['set', 'workflow.projectLog', 'sometimes']);
+
+      expect(process.exitCode).toBe(1);
+      expect(capture.error[0]).toContain('true | false | auto');
+    });
+
     it('gets default-on workflow.autoArtifactReview.analysis when unset', async () => {
       const root = await createRepoRoot();
       const home = await createHome();

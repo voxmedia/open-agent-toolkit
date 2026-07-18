@@ -1081,6 +1081,7 @@ describe('help output snapshots', () => {
         complete-state [options] <project-path>      Update a project state.md to the completed lifecycle shape
         dispatch-ceiling                             Resolve OAT project dispatch ceiling metadata
         list [options]                               List tracked OAT projects
+        log                                          Manage the append-only project observation log
         new [options] <name>                         Create or update an OAT project scaffold
         open [options] <name>                        Open or switch to an OAT project
         pause [options] [name]                       Pause an OAT project
@@ -1181,22 +1182,25 @@ describe('help output snapshots', () => {
       Create or update an OAT project scaffold
 
       Arguments:
-        name             Project name (letters, numbers, dash, underscore)
+        name                Project name (letters, numbers, dash, underscore)
 
       Options:
-        --mode <mode>    Scaffold mode (choices: "spec-driven", "quick", "import",
-                         default: "spec-driven")
-        --force          Non-destructive scaffold; create missing files only
-        --no-set-active  Do not update active project in local config
-        --no-dashboard   Do not refresh .oat/state.md after scaffold
-        --no-commit      Do not git-commit the scaffolded project directory
-        -h, --help       display help for command
+        --mode <mode>       Scaffold mode (choices: "spec-driven", "quick", "import",
+                            default: "spec-driven")
+        --force             Non-destructive scaffold; create missing files only
+        --no-set-active     Do not update active project in local config
+        --no-dashboard      Do not refresh .oat/state.md after scaffold
+        --no-commit         Do not git-commit the scaffolded project directory
+        --with-project-log  Create project-log.md regardless of workflow.projectLog
+                            config
+        --no-project-log    Do not create project-log.md during scaffolding
+        -h, --help          display help for command
 
       Global Options:
-        -V, --version    output the version number
-        --json           Output a single JSON document
-        --verbose        Enable verbose debug output
-        --cwd <path>     Override working directory
+        -V, --version       output the version number
+        --json              Output a single JSON document
+        --verbose           Enable verbose debug output
+        --cwd <path>        Override working directory
       "
     `);
   });

@@ -3,9 +3,11 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
 import { join } from 'node:path';
 
+import { instantiateProjectLogTemplate } from '@commands/project/log/append';
 import { resolveProjectsRoot } from '@commands/shared/oat-paths';
 import { generateStateDashboard } from '@commands/state/generate';
 import { setActiveProject } from '@config/oat-config';
+import { resolveEffectiveConfig } from '@config/resolve';
 import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
 import { assertValidProjectStateContent } from '@validation/project-state';
@@ -19,6 +21,7 @@ export interface ScaffoldProjectOptions {
   force?: boolean;
   setActive?: boolean;
   refreshDashboard?: boolean;
+  projectLog?: boolean;
   /**
    * Commit the freshly scaffolded project directory so the artifact baseline is
    * git-tracked from t=0. Opt-in (default false) so library callers that manage
@@ -350,6 +353,29 @@ async function scaffoldModeTemplates(
   return { createdFiles, skippedFiles };
 }
 
+async function scaffoldProjectLog(
+  userOatRoot: string,
+  repoRoot: string,
+  projectPath: string,
+  projectName: string,
+  today: string,
+): Promise<'created' | 'skipped'> {
+  const templateFile = 'project-log.md';
+  const dest = join(repoRoot, projectPath, templateFile);
+  if (await fileExists(dest)) {
+    return 'skipped';
+  }
+
+  const src = await resolveTemplateSource(userOatRoot, repoRoot, templateFile);
+  const template = await readFile(src, 'utf8');
+  await writeFile(
+    dest,
+    instantiateProjectLogTemplate(template, projectName, today),
+    'utf8',
+  );
+  return 'created';
+}
+
 async function resolveTemplateSource(
   userOatRoot: string,
   repoRoot: string,
@@ -424,6 +450,25 @@ export async function scaffoldProject(
     today,
     nowUtc,
   );
+  const effectiveProjectLog =
+    options.projectLog ??
+    (await resolveEffectiveConfig(options.repoRoot, userOatRoot, env)).resolved[
+      'workflow.projectLog'
+    ]?.value === true;
+  if (effectiveProjectLog) {
+    const projectLogResult = await scaffoldProjectLog(
+      userOatRoot,
+      options.repoRoot,
+      projectPath,
+      options.projectName,
+      today,
+    );
+    if (projectLogResult === 'created') {
+      createdFiles.push('project-log.md');
+    } else {
+      skippedFiles.push('project-log.md');
+    }
+  }
 
   if (setActive) {
     await setActiveProject(options.repoRoot, projectPath);
