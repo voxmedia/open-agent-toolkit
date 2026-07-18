@@ -141,6 +141,7 @@ Run the read-only status probe before authoring or refreshing `summary.md`:
 
 ```bash
 PROJECT_LOG_CHECK=$(oat project log check --project "$PROJECT_PATH" --json)
+PROJECT_LOG_PROMOTION_APPENDED="false"
 ```
 
 Route on the structured result. `status: "absent"` is inert. When the entry
@@ -152,7 +153,10 @@ reusable across projects and offer ledger graduation. For every observation the
 user selects, invoke `oat project log append` with the original judgment type
 and area, `--scope general`, and a body that references the original entry's
 exact heading. The new body may explain why the observation is reusable, but it
-must not copy the full original entry.
+must not copy the full original entry. Request the append result as structured
+JSON; whenever it reports `status: "appended"`, set
+`PROJECT_LOG_PROMOTION_APPENDED="true"` so the commit step includes the mutated
+project log.
 
 Ledger graduation is append-only: never edit, annotate, strike through, or add
 side metadata to the original entry. The newly appended `general` judgment is
@@ -305,13 +309,21 @@ exists.
 When Step 2.5 found entries, run:
 
 ```bash
+PROJECT_LOG_LEDGER_PATH=$(oat config get workflow.projectLogLedgerPath)
+PROJECT_LOG_LEDGER_APPENDED="false"
 PROJECT_LOG_ROLLUP=$(oat project log rollup --project "$PROJECT_PATH" --json)
 ```
 
+`PROJECT_LOG_LEDGER_PATH` must be the effective resolved path, including the
+default when no override exists. If it cannot be resolved, stop before roll-up
+because a later `ledgerOutcome: "appended"` could not be staged safely.
+
 Route only on the structured `ProjectLogRollupResult`:
 
-- `status: "ok"` with `ledgerOutcome: "appended"` or `"deduplicated"`:
-  proceed.
+- `status: "ok"` with `ledgerOutcome: "appended"`: set
+  `PROJECT_LOG_LEDGER_APPENDED="true"` and proceed.
+- `status: "ok"` with `ledgerOutcome: "deduplicated"`: proceed without staging
+  the unchanged ledger.
 - `status: "ok"` with `ledgerOutcome: "skipped_permitted"`: proceed and report
   that the ledger was permissibly skipped because the default reference layer
   is absent.
@@ -396,8 +408,19 @@ This is informational only. There is no interactive prompt anywhere in this step
 
 ```bash
 git add "$PROJECT_PATH/summary.md"
+if [ "$PROJECT_LOG_PROMOTION_APPENDED" = "true" ]; then
+  git add "$PROJECT_PATH/project-log.md"
+fi
+if [ "$PROJECT_LOG_LEDGER_APPENDED" = "true" ]; then
+  git add "$PROJECT_LOG_LEDGER_PATH"
+fi
 git commit -m "docs: generate summary for {project-name}"
 ```
+
+These conditional paths are required: append-based promotion mutates
+`project-log.md`, while `ledgerOutcome: "appended"` mutates the effective
+repository ledger. A permitted skip or deduplicated ledger does not add a
+ledger staging path.
 
 If decision records were promoted in Step 7, also stage `.oat/repo/reference/decisions/` so the new `DR-*.md` records and the regenerated `index.md` land with the summary.
 

@@ -277,6 +277,16 @@ describe('review skill contracts', () => {
     expect(content).toMatch(
       /Backlog graduation creates a\s+tracked work item; it is not ledger graduation/,
     );
+
+    const commitStep =
+      content.match(/### Step 8: Commit[\s\S]*?(?=### Step 9:)/)?.[0] ?? '';
+    expect(content).toContain('PROJECT_LOG_PROMOTION_APPENDED="false"');
+    expect(content).toContain('PROJECT_LOG_LEDGER_APPENDED="false"');
+    expect(content).toContain('oat config get workflow.projectLogLedgerPath');
+    expect(commitStep).toContain('PROJECT_LOG_PROMOTION_APPENDED');
+    expect(commitStep).toContain('git add "$PROJECT_PATH/project-log.md"');
+    expect(commitStep).toContain('PROJECT_LOG_LEDGER_APPENDED');
+    expect(commitStep).toContain('git add "$PROJECT_LOG_LEDGER_PATH"');
   });
 
   it('requires workflow skills to use canonical dispatch policy choices', () => {
