@@ -2,6 +2,7 @@
 name: oat-explainer-kit
 version: 1.0.0
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
+disable-model-invocation: false
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, AskUserQuestion
 ---
@@ -68,7 +69,7 @@ explicit provider-neutral critic callback in `coreOptions`; approval provenance
 does not bypass fact reconciliation. Do not read private presets, vault files,
 provider configuration, or ambient destination configuration.
 
-## Progress Indicators
+## Progress Indicators (User-Facing)
 
 For interactive runs, show a concise banner and adapter stage updates:
 
