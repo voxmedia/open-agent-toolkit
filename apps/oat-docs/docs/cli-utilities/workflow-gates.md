@@ -572,8 +572,8 @@ truth:
 
 - `avoidFamilies` is the stable deduplicated union of claimable known producer
   families plus classifiable configured target families from stamps whose
-  producer is not claimable. A known producer remains authoritative over a
-  conflicting target.
+  producer is not claimable or has an unknown family. A known, claimable
+  producer remains authoritative over a conflicting target.
 - `contributingScopes` is the stable document-order list of distinct scopes from
   every relevant stamp.
 - `contributingStampCount` counts every relevant stamp, including unknown or
