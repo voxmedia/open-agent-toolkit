@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Upstream overlap consumed the same lifecycle-skill and public-package versions; current-main reconciliation is required before Phase 5.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t09
 oat_generated: false
@@ -909,6 +908,13 @@ overlapping project-log lifecycle changes and consumed the same three skill
 versions plus lockstep package version `0.1.73`. The branch validates against
 its original base but not current main. Reconcile both feature sets and advance
 versions from the resulting current-base diff before freezing the Phase 5 RC.
+
+**Reconciliation outcome:** The approved merge strategy completed in
+`5c6ade31`. Both recap and project-log lifecycle behavior are preserved,
+overlapping skills advanced to `1.5.4` / `2.1.4` / `1.3.4`, and all five
+public packages advanced together to `0.1.74`. Final reconciliation review
+passed with zero findings:
+`reviews/p04-reconciliation-review-2026-07-18T200037Z.md`.
 
 ---
 

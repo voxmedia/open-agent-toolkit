@@ -1,8 +1,7 @@
 ---
-oat_current_task: p04-t09
-oat_last_commit: e0790c82
-oat_blockers:
-  - Upstream overlap consumed the same lifecycle-skill and public-package versions; current-main reconciliation is required before Phase 5.
+oat_current_task: p05-t01
+oat_last_commit: 5c6ade31
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T19:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T20:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 4 code passed; upstream reconciliation blocked
+Implementation - Phase 4 passed; Phase 5 starting at `p05-t01`
 
 ## Artifacts
 
@@ -99,15 +98,14 @@ Implementation - Phase 4 code passed; upstream reconciliation blocked
 - ✓ Actual clean RC pre/core/post acceptance flow and foreign-receipt negative
   pass
 - ✓ Final Phase 4 re-review resolved all 11 implementation findings
-- ⚠ Current main overlaps lifecycle skills and consumed the same release
-  versions; reconciliation is required before Phase 5
+- ✓ Current-main reconciliation completed in merge commit `5c6ade31`
+- ✓ Reconciliation review passed with zero findings
+- ⧗ Phase 5 begins at `p05-t01`
 
 ## Blockers
 
-- Reconcile the branch with current `origin/main`, preserve both feature sets,
-  and advance skill/package versions from the new base.
+None
 
 ## Next Milestone
 
-Obtain operator approval for history reconciliation, then rebase/merge and
-re-run release/version validation before Phase 5.
+Build and record the frozen Phase 5 release candidate.
