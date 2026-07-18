@@ -201,6 +201,34 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pins every oat-project-implement project-log append point', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const appendPoints =
+      content.match(
+        /## Project Log Append Points[\s\S]*?## Autonomy Policy/,
+      )?.[0] ?? '';
+
+    expect(appendPoints).toContain('oat project log append --help');
+    expect(appendPoints).toContain('the helper no-ops when the feature is off');
+    expect(appendPoints).toMatch(
+      /accepted subagent dispatch[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toContain(
+      '$PROJECT_PATH/implementation.md#<run-anchor>',
+    );
+    expect(appendPoints).toContain('never mirror that record');
+    expect(appendPoints).toMatch(/STOP or park[\s\S]*?oat project log append/i);
+    expect(appendPoints).toMatch(
+      /phase outcome[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toMatch(
+      /parallel-group merge[\s\S]*?oat project log append/i,
+    );
+    expect(appendPoints).toContain('fix-loop count');
+  });
+
   it('requires workflow skills to use canonical dispatch policy choices', () => {
     const quickStartContent = readRepoFile(
       '.agents/skills/oat-project-quick-start/SKILL.md',
