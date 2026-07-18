@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Final review fixes must pass before configured exit-gate execution.
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +25,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 2     | 2/2       |
-| Phase 2 | complete    | 2     | 2/2       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 2     | 2/2       |
+| Phase 2 | complete | 2     | 2/2       |
+| Phase 3 | complete | 2     | 2/2       |
 
-**Total:** 4/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ---
 
@@ -56,14 +57,14 @@ oat_generated: false
 ### Task p01-t01: Register the implementation exit-gate state contract
 
 **Status:** completed
-**Commit:** `fed97e1c`
+**Commit:** `883c7f47`
 
 ---
 
 ### Task p01-t02: Prioritize unresolved exit gates in lifecycle routing
 
 **Status:** completed
-**Commit:** `6463aa4b`
+**Commit:** `943e9e41`
 
 ---
 
@@ -91,33 +92,49 @@ oat_generated: false
 ### Task p02-t01: Move the configured gate into authoritative closeout order
 
 **Status:** completed
-**Commit:** `d969650a`
+**Commit:** `5b961edc`
 
 ---
 
 ### Task p02-t02: Add resumable outcome and freshness enforcement
 
 **Status:** completed
-**Commit:** `ea3a2743`
+**Commit:** `1350d890`
 
 ---
 
 ## Phase 3: Documentation and Release Surfaces
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
+
+### Phase Summary
+
+**Outcome:**
+
+- Documented the independent implementation exit-gate ordering, durable state,
+  resume behavior, and autonomy boundary across four workflow pages.
+- Synchronized provider and bundled assets against the Cursor native-read
+  baseline and bumped the five public packages to `0.1.77`.
+- Reconciled rebase-era docs validation and autonomy inventory drift.
+
+**Verification:**
+
+- 148 targeted tests and 3,414 full-workspace tests passed.
+- Format, lint, type-check, build, docs build, source-sync reproducibility, and
+  release validation passed.
 
 ### Task p03-t01: Document implementation exit-gate ordering and state
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9e1c06e1`
 
 ---
 
 ### Task p03-t02: Synchronize shipped assets and validate the release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8222c1e2`
 
 ---
 
@@ -133,21 +150,47 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 3: Phase p03 and final verification {#run-3}
+
+**Completed:** 2026-07-18T22:04:00Z
+**Branch:** `fix/implement-final-gate-enforcement`
+**Tier:** 1
+**Dispatch policy:** managed `high`
+**Phase base:** `5cde4690`
+**Commit range:** `9e1c06e1..8222c1e2`
+
+| Phase | Outcome | Tasks | Root Review | Fix Iterations |
+| ----- | ------- | ----- | ----------- | -------------- |
+| p03   | passed  | 2/2   | fixes_added | 1 pending      |
+
+**Task commits:** `9e1c06e1`, `8222c1e2`
+**Integration commits:** `0ef83fc7`, `593129cf`
+**Implementation request:** `implement-final-gate-enforcement-p03-20260718T2052Z`
+**Review request:** `implement-final-gate-enforcement-final-review-20260718T2205Z`
+
+`Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+`Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
+
+**Optional nested dispatches:** None.
+**Outstanding items:** Final review fixes for fail-closed operational outcomes
+and the scaffolded crash-reconciliation state shape.
+
 ### Run 2: Phase p02 {#run-2}
 
 **Completed:** 2026-07-18T20:51:51Z
 **Branch:** `fix/implement-final-gate-enforcement`
 **Tier:** 1
 **Dispatch policy:** managed `high`
-**Phase base:** `91b2c3bb1a2a369953d3609e01721edb6baee03f`
-**Commit range:** `d969650a..4e09bdec`
+**Phase base:** `b0bdb5bf`
+**Commit range:** `5b961edc..7ff1f343`
 
 | Phase | Outcome | Tasks | Root Review | Fix Iterations |
 | ----- | ------- | ----- | ----------- | -------------- |
 | p02   | passed  | 2/2   | passed      | 2              |
 
-**Task commits:** `d969650a`, `ea3a2743`
-**Fix commits:** `809edfb1`, `4e09bdec`
+**Task commits:** `5b961edc`, `1350d890`
+**Fix commits:** `1325e680`, `7ff1f343`
 **Implementation request:** `implement-final-gate-enforcement-p02-20260718T2006Z`
 **Review requests:** `implement-final-gate-enforcement-p02-review-20260718T2022Z`,
 `implement-final-gate-enforcement-p02-review-2-20260718T2039Z`,
@@ -167,8 +210,8 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 **Branch:** `fix/implement-final-gate-enforcement`
 **Tier:** 1
 **Dispatch policy:** managed `high`
-**Phase base:** `7782aa91d93d7fcf0b3d378158acc86e275c498f`
-**Commit range:** `fed97e1c..6463aa4b`
+**Phase base:** `f99ddad1`
+**Commit range:** `883c7f47..943e9e41`
 
 | Phase | Outcome | Tasks | Root Review | Fix Iterations |
 | ----- | ------- | ----- | ----------- | -------------- |
@@ -210,7 +253,7 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 
 **Date:** 2026-07-18
 **Review artifact:** `reviews/archived/p01-review-2026-07-18T200353Z.md`
-**Commit range:** `7782aa91d93d7fcf0b3d378158acc86e275c498f..6463aa4b3fee402f615365f0f18d1b04e3d4f297`
+**Commit range:** `f99ddad1..943e9e41`
 
 **Findings:**
 
@@ -232,7 +275,7 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 - `reviews/archived/p02-review-2026-07-18T202655Z.md`
 - `reviews/archived/p02-review-2026-07-18T204358Z.md`
 
-**Commit range:** `91b2c3bb1a2a369953d3609e01721edb6baee03f..4e09bdec25d4ed80670540bcdffce732ef4a2d19`
+**Commit range:** `b0bdb5bf..7ff1f343`
 
 **Final findings:**
 
@@ -242,6 +285,26 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 - Minor: 0
 
 **Disposition:** Passed after two bounded fix iterations.
+
+---
+
+## Review Received: final
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T221139Z.md`
+**Commit range:** `917d210f..8222c1e2`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 1
+- Minor: 0
+
+**Disposition:** Fixes added. The bookkeeping finding was resolved in the
+closeout-baseline commit; fail-closed operational outcomes and the scaffolded
+crash-reconciliation state shape were routed to the original Phase 3
+implementer for a bounded fix iteration.
 
 ---
 
@@ -283,9 +346,9 @@ Chronological log of implementation progress.
 ### 2026-07-18 — Phase 1
 
 - [x] p01-t01: Register the implementation exit-gate state contract -
-      `fed97e1c`
+      `883c7f47`
 - [x] p01-t02: Prioritize unresolved exit gates in lifecycle routing -
-      `6463aa4b`
+      `943e9e41`
 
 **Outcome:** Phase verification and independent root-owned review passed with no
 findings. Continuing to `p02-t01`.
@@ -297,10 +360,10 @@ findings. Continuing to `p02-t01`.
 ### 2026-07-18 — Phase 2
 
 - [x] p02-t01: Move the configured gate into authoritative closeout order -
-      `d969650a`
-- [x] p02-t02: Add resumable outcome and freshness enforcement - `ea3a2743`
-- [x] Review fix 1: close launch/receive crash windows - `809edfb1`
-- [x] Review fix 2: admit canonical structured gate invocation - `4e09bdec`
+      `5b961edc`
+- [x] p02-t02: Add resumable outcome and freshness enforcement - `1350d890`
+- [x] Review fix 1: close launch/receive crash windows - `1325e680`
+- [x] Review fix 2: admit canonical structured gate invocation - `7ff1f343`
 
 **Outcome:** Phase verification and independent review passed after two bounded
 fix iterations. Continuing to `p03-t01`.
@@ -310,46 +373,88 @@ before final gate execution.
 
 ---
 
+### 2026-07-18 — Phase 3
+
+- [x] p03-t01: Document implementation exit-gate ordering and state -
+      `9e1c06e1`
+- [x] Rebase integration: align canonical global-JSON docs validation -
+      `0ef83fc7`
+- [x] Autonomy integration: refresh implementation prompt-site inventory -
+      `593129cf`
+- [x] p03-t02: Synchronize shipped assets and validate the release - `8222c1e2`
+
+**Outcome:** All six plan tasks and the complete repository quality/release
+chain passed. Final review identified two implementation fixes and one stale
+bookkeeping baseline; fixes are in progress.
+
+**Blockers:** Final review must pass before configured exit-gate execution,
+approval-aware sequencing, final HiLL, or implementation completion.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review   | Source Artifact         | Planned / Documented                                                                       | Actual / Accepted                                                                             | Reason                             | Source of Truth                           | Follow-up   |
+| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------- | ----------- |
+| p03 integration | `origin/main` / PR #159 | Cursor skill symlink views listed as tracked                                               | Cursor skills are native-read and remain absent                                               | Main changed after planning        | Current source CLI and release validation | Complete    |
+| p03 integration | Full test gate          | No autonomy inventory task                                                                 | Refreshed canonical implementation prompt-site mappings                                       | Rebase changed gate-sensitive text | `.agents/docs/autonomy-contract.md`       | Complete    |
+| final review    | Final review artifact   | Operational failures and validated blocking findings shared generic nonzero policy wording | Operational/validation/correlation/receive failures remain blocked regardless of `on_failure` | Fail-closed review finding         | Closeout contract and regression tests    | In progress |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                          | Passed       | Failed | Coverage                                                   |
-| ----- | ---------------------------------- | ------------ | ------ | ---------------------------------------------------------- |
-| 1     | 40 focused + type-check + format   | 40 + checks  | 0      | State registry, legacy absence, and router priority        |
-| 2     | 118 focused + skill/version/format | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness |
-| 3     | -                                  | -            | -      | -                                                          |
+| Phase | Tests Run                           | Passed       | Failed | Coverage                                                         |
+| ----- | ----------------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
+| 1     | 40 focused + type-check + format    | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
+| 2     | 118 focused + skill/version/format  | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
+| 3     | 148 targeted + 3,414 full + release | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- An independent, mandatory configured implementation exit gate that runs after
+  final lifecycle review and before approval-aware sequencing or completion.
+- Durable launch, receive, disposition, and freshness state for safe
+  interruption/resume and stale-HEAD invalidation.
+- Lifecycle routing, regression coverage, documentation, synchronized assets,
+  and public package release metadata for the contract.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Disabling optional phase review gates no longer affects a configured
+  implementation exit gate.
+- Manual or ordinary review without matching gate provenance cannot satisfy the
+  configured boundary.
+- Operational gate failures fail closed; only validated blocking findings may
+  apply configured `block`, `prompt`, or `warn` policy.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/oat-project-implement/references/completion-and-closeout.md` -
+  authoritative final gate state machine and ordering.
+- `.agents/skills/oat-project-next/SKILL.md` - resume routing for unresolved or
+  stale gate state.
+- `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts` -
+  closeout ordering and state regression coverage.
+- `apps/oat-docs/docs/cli-utilities/workflow-gates.md` - user-facing configured
+  gate contract.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 148 targeted tests and 3,414 full-workspace tests.
+- Skill and version validation, format, lint, type-check, build, docs build,
+  source-sync/bundle reproducibility, and `pnpm release:validate`.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Rebased onto merged PR #156 and current main before release validation.
+- Used the current repository source CLI because the installed global CLI was
+  stale and predated Cursor native-read skill mappings.
+- Added canonical autonomy inventory maintenance required by full validation.
 
 ## References
 
