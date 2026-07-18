@@ -1,8 +1,7 @@
 ---
 oat_current_task: p04-t09
-oat_last_commit: 0e52c735
-oat_blockers:
-  - Phase 4 review found six critical and two important issues requiring a bounded fix loop before Phase 5.
+oat_last_commit: a3369e68
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T17:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T18:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 4 bounded review-fix loop
+Implementation - Phase 4 fixes complete; re-review pending
 
 ## Artifacts
 
@@ -91,14 +90,15 @@ Implementation - Phase 4 bounded review-fix loop
 - ✓ Phase 4 tasks `p04-t01` through `p04-t09` completed
 - ✓ Release validation and the full workspace test suite pass
 - ✓ Retained RC builder verified after provider authentication recovery
-- ⚠ Phase 4 review found 6 critical, 2 important, and 1 medium finding
-- ⧗ All findings accepted for a bounded fix and re-review loop
+- ✓ Phase 4 review fixes committed in `086f2885` and `a3369e68`
+- ✓ Actual retained RC → packaged core → bound acceptance flow passes
+- ✓ Full release/workspace gates and 65-measurement browser matrix pass
+- ⧗ Independent Phase 4 re-review pending
 
 ## Blockers
 
-- Phase 4 release integrity and visual-gate findings must pass re-review before
-  Phase 5 can freeze a candidate.
+None
 
 ## Next Milestone
 
-Apply the bounded Phase 4 fixes, rerun verification, and re-review.
+Run the independent Phase 4 re-review before Phase 5.

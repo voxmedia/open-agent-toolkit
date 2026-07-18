@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Phase 4 review found six critical and two important issues requiring a bounded fix loop before Phase 5.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t09
 oat_generated: false
@@ -855,20 +854,20 @@ stale version pins and unmapped Phase 3 lifecycle prompt sites.
 
 ---
 
-### Phase 4 Review — Fixes Added
+### Phase 4 Review — Fixes Completed
 
 **Canonical artifact:**
 `reviews/p04-review-2026-07-18T171004Z.md`
 
 **Findings:** 6 critical, 2 important, 1 medium, 0 minor.
 
-**Disposition:** Resolve all nine findings in a bounded append-only Phase 4 fix
-pass. The pass must unify RC identity/inventory contracts, make RC output
-ownership safe, bind packaged executions to accepted evidence, verify public
-artifact bytes, add a real fail-closed browser visual gate, harden AWS metadata
-operations and URL roots, and remove undocumented artifact discovery. Rerun the
-full Phase 4 matrix and release gates, then independently re-review. Phase 5
-remains blocked.
+**Disposition:** All nine findings were resolved in append-only commits
+`086f2885` and `a3369e68`. The follow-up handles tracked symlink inputs
+deterministically and fails closed for dangling, external, or undeclared
+targets. Full workspace/release gates, 65 real-browser measurements, public
+byte/hash probes, and an actual committed RC build → packaged core run → bound
+wrapper acceptance flow pass. Independent re-review is pending; Phase 5 remains
+blocked until it passes.
 
 ---
 
