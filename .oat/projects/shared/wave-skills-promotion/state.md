@@ -1,10 +1,7 @@
 ---
 oat_current_task: prev1-t01
 oat_last_commit: 17a56f39
-oat_blockers:
-  [
-    'p06 gated on packaged explainer-kit v1 RC (plan-declared gate; gate-open plan revision + re-review required before execution)',
-  ]
+oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -77,7 +74,7 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 - ✓ p03 Dispositions (review passed; 10 backlog dispositions durable)
 - ✓ p04 Docs (review passed; wave-workflow page + index)
 - ✓ p05 Validation + release readiness (review passed; dry-run green both legs; 0.2.0 lockstep; W6 runbook)
-- ⧗ p06 Explainer integration — BLOCKED on explainer-kit v1 RC
+- ⧗ p06 Explainer integration — RC gate OPEN; executes after PR #158 merges
 
 ## Blockers
 
@@ -95,5 +92,6 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 p05 HiLL checkpoint (operator approval), then final verification/review and
 PR for the phases 1–5 delta; stoa W6 handoff per
-`references/w6-handoff-runbook.md` after release. p06 executes when the RC
-ships.
+`references/w6-handoff-runbook.md` after release. After PR #158 merges, revise
+and re-review the p06 plan against the frozen RC, then coordinate its Phase 3
+merge order before execution.
