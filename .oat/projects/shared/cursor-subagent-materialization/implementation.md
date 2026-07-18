@@ -145,6 +145,7 @@ oat_generated: false
 - Documented materialized dispatch, evidence boundaries, availability, configured provenance, and silent fallback risk.
 - Added the review-command-only planning-producer identity bridge with precedence and child-environment stripping.
 - The first review found one Important remote-review contradiction; its bounded fix passed fresh re-review. A second reported finding was withdrawn after distinguishing initial tier selection from post-launch replacement.
+- Final-gate execution exposed a legacy-stamp gap after p06: an unclaimable `producer=unknown` hid the family of its configured implementation target. The authorized bounded fix lets final/range aggregation infer only a lower-confidence family exclusion from that target while preserving exact-scope behavior and known-producer precedence.
 
 ### Verification
 
@@ -152,6 +153,7 @@ oat_generated: false
 - Skills/docs verification: 58 skills and 8 version bumps validated; docs lint/build, type-check, lint, and formatting passed.
 - Two broken docs anchors were verified as pre-existing baseline debt.
 - Re-review: `reviews/code-p04-rereview-2026-07-18T123821Z.md` passed with zero findings after reassessment.
+- Final-gate aggregation fix: `d6e37c15`, `53208704`, and `31fdc951`; focused tests, CLI type-check/lint, skill validators, docs lint/build, formatting, and generated-view checks passed. Independent bounded re-review passed with zero findings.
 
 ---
 
@@ -194,6 +196,7 @@ oat_generated: false
 - Review: `reviews/code-p06-review-2026-07-18T142950Z.md`.
 - HiLL evidence commit: `f33742e5`.
 - The exact generated reviewer and phase-implementer native types launched serially in Cursor IDE, each reported `subagent_model: gpt-5.6-sol-high`, and both stopped `completed`.
+- After the bounded final-gate aggregation fix, CLI lint/type-check/test, workspace build/format, `pnpm release:validate`, all-scope sync dry-run, and generated asset/index cleanliness passed again.
 - The verification record preserves configured launch observation as the evidence boundary; generalized runtime model and effort remain `not-reported`.
 
 ---
@@ -273,6 +276,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **HiLL evidence:** `f33742e5`; both exact generated native types launched serially, returned their expected markers, reported `subagent_model: gpt-5.6-sol-high`, and stopped `completed`.
 - **Cleanup:** temporary hooks and event logs were removed before the evidence commit.
 - **Next:** final independent code review.
+
+### Run 6 — final-gate routing repair and p06 revalidation
+
+- **Status:** complete; final gate ready to rerun.
+- **Trigger:** two stopped final-review gate attempts selected an OpenAI reviewer because the relevant implementation stamp recorded `producer=unknown`; neither attempt produced a review artifact eligible for receipt.
+- **Operator authorization:** use configured implementation target family as a bounded fallback when final/range aggregation cannot claim the stamped producer.
+- **Fix commits:** `d6e37c15`, `53208704`, `31fdc951`.
+- **Behavior:** claimable known producers remain authoritative; otherwise a classifiable configured target contributes only an inferred family exclusion and never becomes producer runtime identity. Exact phase/task semantics remain unchanged.
+- **Review:** independent bounded review passed with zero Critical, Important, Medium, or Minor findings after two documentation/test refinements.
+- **Verification:** focused gate tests, CLI type-check/lint, skill validators, docs lint/build, formatting, all-scope sync dry-run, and generated cleanliness passed. The full p06 boundary then passed again: CLI lint/type-check/test, workspace build/format, and `pnpm release:validate`.
+- **Known baseline:** docs link checking still reports only the two pre-existing p04 anchor defects.
+- **Next:** rerun and receive the configured cross-family final code review.
 
 <!-- orchestration-runs-end -->
 

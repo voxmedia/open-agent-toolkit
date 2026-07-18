@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: f33742e57115b3f00378ffdcbb6a4fe895d23dc5
+oat_last_commit: 31fdc9510b5f33a89100975890ccd0d439ec593a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T15:36:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T16:39:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. Final review is next.
+All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. The bounded final-gate routing fix passed independent review and the full p06 release boundary again. Final review is next.
 
 ## Artifacts
 
@@ -74,6 +74,7 @@ All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE
 - ✓ Phases p02-p06 implemented and independently reviewed
 - ✓ Lockstep package version `0.1.73` passed `pnpm release:validate`
 - ✓ p06 HiLL checkpoint passed: generated reviewer and implementer variants launched with matching configured-model hook evidence
+- ✓ Final aggregate routing fix passed independent review and p06 revalidation
 - ◯ Final code review
 
 ## Blockers
