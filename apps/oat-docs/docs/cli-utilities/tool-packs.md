@@ -17,7 +17,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 
 - `core` - foundational diagnostics and docs access (`oat-doctor`, `oat-docs`)
 - `docs` - docs and agent-instructions governance workflows
-- `workflows` - project lifecycle skills, the project subagent-dispatch adapter, wrap-up reporting, reviewer agents, and core project templates
+- `workflows` - project lifecycle skills, wave-program orchestration (`oat-wave-program`, `oat-wave-execute`), the project subagent-dispatch adapter, wrap-up reporting, reviewer agents, and core project templates
 - `ideas` - lightweight ideation and promotion flows
 - `utility` - review and repo-maintenance helpers plus the provider-neutral subagent-dispatch engine
 - `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, file-per-record decision, and AGENTS-guide templates

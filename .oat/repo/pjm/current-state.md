@@ -30,6 +30,15 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- Wave-orchestration skills promoted from stoa (PR #158, release `0.2.0`):
+  `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 in the workflow pack
+  with genericized rule text and bundled assets, a mini-wave validation
+  fixture, and a W6 handoff runbook. Fresh installs now preserve nested
+  skill-script execute bits (`copyDirectory` mode fix), and
+  `oat project validate-plan` documents the singleton-group rule with the
+  ungrouped-phase alternative. Stoa's wave 6 on the packaged skills is the
+  pending zero-regression acceptance gate; explainer integration (p06)
+  follows against the frozen explainer-kit v1 RC.
 - CLI `0.1.73` adds an optional append-only `project-log.md` with
   create-on-first-append behavior, explicit scaffold controls, validated
   append/check/synthesize/rollup commands, and automatic structural entries at
