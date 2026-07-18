@@ -147,6 +147,34 @@ Summarize before archive.
     );
   });
 
+  it('targets the canonical synthesis section instead of marker-like entry text', async () => {
+    const { root, logPath } = await createRepo();
+    const pendingHeading =
+      '## End-of-run synthesis (pending — do not skip at project completion)';
+    const before = (await readFile(logPath, 'utf8')).replace(
+      'The gate returned the wrong exit code.',
+      `The entry discusses \`${pendingHeading}\` without recreating the section.`,
+    );
+    await writeFile(logPath, before, 'utf8');
+    const entriesBefore = before.slice(
+      before.indexOf('## Entries'),
+      before.lastIndexOf(`\n${pendingHeading}`),
+    );
+    const { command } = createHarness(root);
+
+    await runCommand(command, ['--body', 'Verdict: keep the safer workflow.']);
+
+    const after = await readFile(logPath, 'utf8');
+    const entriesAfter = after.slice(
+      after.indexOf('## Entries'),
+      after.indexOf('\n## End-of-run synthesis\n'),
+    );
+    expect(entriesAfter).toBe(entriesBefore);
+    expect(after).toContain(
+      '## End-of-run synthesis\n\nVerdict: keep the safer workflow.',
+    );
+  });
+
   it('errors when the project log is absent', async () => {
     const { root } = await createRepo(false);
     const { command, capture } = createHarness(root);
@@ -163,14 +191,17 @@ Summarize before archive.
   it('errors when synthesis is already written', async () => {
     const { root, logPath } = await createRepo();
     const content = await readFile(logPath, 'utf8');
+    const pendingHeading =
+      '## End-of-run synthesis (pending — do not skip at project completion)';
     await writeFile(
       logPath,
       content.replace(
-        '## End-of-run synthesis (pending — do not skip at project completion)',
-        '## End-of-run synthesis',
+        `${pendingHeading}\n\nSummarize before archive.`,
+        `## End-of-run synthesis\n\nThe completed synthesis discusses \`${pendingHeading}\` as marker-like text.`,
       ),
       'utf8',
     );
+    const before = await readFile(logPath, 'utf8');
     const { command, capture } = createHarness(root);
 
     await runCommand(command, ['--body', 'Replacement is not allowed.']);
@@ -180,6 +211,53 @@ Summarize before archive.
       message: expect.stringContaining('already written'),
     });
     expect(process.exitCode).toBe(1);
+    await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+    await expect(checkProjectLog({ repoRoot: root })).resolves.toMatchObject({
+      status: 'ok',
+      synthesisPending: false,
+    });
+  });
+
+  it('rejects synthesis content that recreates a command-owned marker', async () => {
+    const { root, logPath } = await createRepo();
+    const before = await readFile(logPath, 'utf8');
+    const pendingHeading =
+      '## End-of-run synthesis (pending — do not skip at project completion)';
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, [
+      '--body',
+      `Verdict: keep.\n${pendingHeading}\nThis must not become a section.`,
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('must not recreate'),
+    });
+    expect(process.exitCode).toBe(1);
+    await expect(readFile(logPath, 'utf8')).resolves.toBe(before);
+  });
+
+  it('rejects ambiguous duplicate canonical synthesis sections', async () => {
+    const { root, logPath } = await createRepo();
+    const content = await readFile(logPath, 'utf8');
+    const pendingHeading =
+      '## End-of-run synthesis (pending — do not skip at project completion)';
+    const ambiguous = content.replace(
+      'The gate returned the wrong exit code.',
+      `${pendingHeading}\n\nSpoofed section.\n\nThe gate returned the wrong exit code.`,
+    );
+    await writeFile(logPath, ambiguous, 'utf8');
+    const { command, capture } = createHarness(root);
+
+    await runCommand(command, ['--body', 'Replacement is unsafe.']);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'error',
+      message: expect.stringContaining('unique canonical'),
+    });
+    expect(process.exitCode).toBe(1);
+    await expect(readFile(logPath, 'utf8')).resolves.toBe(ambiguous);
   });
 
   it('preserves Entries bytes, flips check, and stays format-stable', async () => {

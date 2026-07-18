@@ -17,12 +17,27 @@ export const JUDGMENT_HEADING_RE =
 export const STRUCTURAL_HEADING_RE =
   /^### (\d{4}-\d{2}-\d{2}) · structural · ([^·\r\n]+) · ([^·\r\n]+)$/;
 
+export interface ProjectLogSection {
+  heading: string;
+  start: number;
+  end: number;
+}
+
 export function isProjectLogSectionMarker(line: string): boolean {
   return /^## .+$/.test(line);
 }
 
 export function isProjectLogEntryMarker(line: string): boolean {
   return /^### .+$/.test(line);
+}
+
+export function findProjectLogSections(content: string): ProjectLogSection[] {
+  const matches = [...content.matchAll(/^## [^\r\n]+/gm)];
+  return matches.map((match, index) => ({
+    heading: match[0],
+    start: match.index!,
+    end: matches[index + 1]?.index ?? content.length,
+  }));
 }
 
 export function composeJudgmentHeading(input: {

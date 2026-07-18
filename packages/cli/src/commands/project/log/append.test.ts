@@ -294,6 +294,32 @@ describe('oat project log append', () => {
     ],
     [
       [
+        '--structural',
+        '--producer',
+        'oat-project-implement',
+        '--ref',
+        'p01',
+        '--body',
+        '## Entries',
+      ],
+      '--body',
+      'level-two or level-three Markdown headings',
+    ],
+    [
+      [
+        '--structural',
+        '--producer',
+        'oat-project-implement',
+        '--ref',
+        'p01',
+        '--body',
+        '## End-of-run synthesis (pending — do not skip at project completion)',
+      ],
+      '--body',
+      'level-two or level-three Markdown headings',
+    ],
+    [
+      [
         ...judgmentArgs.slice(0, -1),
         'Observation recorded.\n## End-of-run synthesis',
       ],

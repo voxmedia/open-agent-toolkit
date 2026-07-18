@@ -189,6 +189,11 @@ function validateEntry(
         '--body for structural entries must be one line without newline characters.',
       );
     }
+    if (containsCommandOwnedMarker(body)) {
+      throw new Error(
+        '--body for structural entries must not contain command-owned level-two or level-three Markdown headings.',
+      );
+    }
     const producer = validateHeadingField(input.producer, '--producer');
     const ref = validateHeadingField(input.ref, '--ref');
     return {

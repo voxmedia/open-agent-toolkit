@@ -16,6 +16,7 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  findCanonicalProjectLogSynthesisSection,
   PROJECT_LOG_FILENAME,
   SYNTHESIS_COMPLETE_HEADING,
   SYNTHESIS_PENDING_HEADING,
@@ -99,6 +100,19 @@ export async function synthesizeProjectLog(
   if (!body) {
     throw new Error('--body is required and must contain non-whitespace text.');
   }
+  if (
+    body
+      .split(/\r?\n/)
+      .some(
+        (line) =>
+          line === SYNTHESIS_PENDING_HEADING ||
+          line === SYNTHESIS_COMPLETE_HEADING,
+      )
+  ) {
+    throw new Error(
+      '--body must not recreate command-owned project-log synthesis markers.',
+    );
+  }
 
   const projectPath = await resolveTargetProject(input, dependencies);
   const logPath = join(projectPath, PROJECT_LOG_FILENAME);
@@ -109,22 +123,28 @@ export async function synthesizeProjectLog(
   }
 
   const content = await readFile(logPath, 'utf8');
-  const pendingIndex = content.indexOf(SYNTHESIS_PENDING_HEADING);
-  if (pendingIndex < 0) {
-    if (content.includes(`${SYNTHESIS_COMPLETE_HEADING}\n`)) {
-      throw new Error(
-        'End-of-run synthesis is already written; append a correction judgment instead of replacing it.',
-      );
-    }
+  const synthesis = findCanonicalProjectLogSynthesisSection(content);
+  if (synthesis.status === 'complete') {
+    throw new Error(
+      'End-of-run synthesis is already written; append a correction judgment instead of replacing it.',
+    );
+  }
+  if (synthesis.status === 'ambiguous') {
+    throw new Error(
+      'Project log must contain one unique canonical end-of-run synthesis section and cannot be synthesized safely.',
+    );
+  }
+  if (synthesis.status === 'missing') {
     throw new Error(
       'Project log is missing the pending synthesis marker and cannot be synthesized safely.',
     );
   }
 
+  const suffix = content.slice(synthesis.section.end);
   const nextContent = `${content.slice(
     0,
-    pendingIndex,
-  )}${SYNTHESIS_COMPLETE_HEADING}\n\n${body}\n`;
+    synthesis.section.start,
+  )}${SYNTHESIS_COMPLETE_HEADING}\n\n${body}\n${suffix ? '\n' : ''}${suffix}`;
   await writeFile(logPath, nextContent, 'utf8');
   return { status: 'synthesized', logPath };
 }

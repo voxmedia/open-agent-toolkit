@@ -16,11 +16,12 @@ import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
 import {
+  findProjectLogSections,
   isProjectLogEntryMarker,
-  isProjectLogSectionMarker,
   JUDGMENT_HEADING_RE,
   PROJECT_LOG_TYPES,
   STRUCTURAL_HEADING_RE,
+  type ProjectLogSection,
   type ProjectLogScope,
   type ProjectLogType,
 } from './grammar';
@@ -67,6 +68,22 @@ export interface ParsedProjectLog {
   grammarViolations: string[];
 }
 
+export type ProjectLogSynthesisSection =
+  | {
+      status: 'pending';
+      section: ProjectLogSection;
+    }
+  | {
+      status: 'complete';
+      section: ProjectLogSection;
+    }
+  | {
+      status: 'missing';
+    }
+  | {
+      status: 'ambiguous';
+    };
+
 export interface CheckProjectLogInput {
   repoRoot: string;
   project?: string;
@@ -110,18 +127,35 @@ function emptyCounts(): Pick<
 }
 
 function entriesSection(content: string): string {
-  const lines = content.split(/\r?\n/);
-  const markerIndex = lines.findIndex(
-    (line) => line.trimEnd() === '## Entries',
+  const section = findProjectLogSections(content).find(
+    ({ heading }) => heading === '## Entries',
   );
-  if (markerIndex < 0) {
+  if (!section) {
     return '';
   }
-  const remainder = lines.slice(markerIndex + 1);
-  const nextSectionIndex = remainder.findIndex(isProjectLogSectionMarker);
-  return (
-    nextSectionIndex < 0 ? remainder : remainder.slice(0, nextSectionIndex)
-  ).join('\n');
+  return content.slice(section.start + section.heading.length, section.end);
+}
+
+export function findCanonicalProjectLogSynthesisSection(
+  content: string,
+): ProjectLogSynthesisSection {
+  const candidates = findProjectLogSections(content).filter(
+    ({ heading }) =>
+      heading === SYNTHESIS_PENDING_HEADING ||
+      heading === SYNTHESIS_COMPLETE_HEADING,
+  );
+  if (candidates.length === 0) {
+    return { status: 'missing' };
+  }
+  if (candidates.length !== 1) {
+    return { status: 'ambiguous' };
+  }
+  const section = candidates[0]!;
+  return {
+    status:
+      section.heading === SYNTHESIS_PENDING_HEADING ? 'pending' : 'complete',
+    section,
+  };
 }
 
 export function parseProjectLogEntries(content: string): ParsedProjectLog {
@@ -237,7 +271,9 @@ export async function checkProjectLog(
       counts.scopeCounts[entry.scope] += 1;
     }
   }
-  const synthesisPending = content.includes(SYNTHESIS_PENDING_HEADING);
+  const synthesisPending = findProjectLogSections(content).some(
+    ({ heading }) => heading === SYNTHESIS_PENDING_HEADING,
+  );
 
   return {
     status: synthesisPending ? 'synthesis_pending' : 'ok',
