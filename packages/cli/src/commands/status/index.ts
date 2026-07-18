@@ -68,6 +68,8 @@ import {
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
+import type { AdoptionSource } from '@providers/shared/adapter.types';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import {
   type ConcreteScope,
   type ContentType,
@@ -115,6 +117,10 @@ interface StatusDependencies {
     scopeRoot: string,
   ) => Promise<ProviderAdapter[]>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
+  getAdoptionSources: (
+    adapter: ProviderAdapter,
+    scope: Scope,
+  ) => AdoptionSource[];
   detectDrift: (
     entry: Manifest['entries'][number],
     scopeRoot: string,
@@ -125,7 +131,10 @@ interface StatusDependencies {
     providerDir: string,
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
-    mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
+    mapping?: Pick<
+      PathMapping,
+      'contentType' | 'nativeRead' | 'providerExtension'
+    >,
   ) => Promise<DriftReport[]>;
   detectCodexRoleStrays: (
     scopeRoot: string,
@@ -205,6 +214,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   },
   getActiveAdapters,
   getSyncMappings,
+  getAdoptionSources,
   detectDrift,
   detectStrays,
   detectCodexRoleStrays,
@@ -343,6 +353,7 @@ async function collectScopeReports(
 
   for (const adapter of activeAdapters) {
     const mappings = dependencies.getSyncMappings(adapter, scope);
+    const adoptionSources = dependencies.getAdoptionSources(adapter, scope);
     const mappingContentTypes = new Set(
       mappings.map((mapping) => mapping.contentType),
     );
@@ -405,14 +416,14 @@ async function collectScopeReports(
       }
     }
 
-    for (const mapping of mappings) {
-      const providerDir = join(scopeRoot, mapping.providerDir);
+    for (const source of adoptionSources) {
+      const providerDir = join(scopeRoot, source.directory);
       const strays = await dependencies.detectStrays(
         adapter.name,
         providerDir,
         manifest,
         canonicalEntries,
-        mapping,
+        source.mapping,
       );
       reports.push(...strays);
       for (const stray of strays) {
@@ -422,7 +433,7 @@ async function collectScopeReports(
         strayCandidates.push({
           provider: adapter.name,
           report: stray,
-          mapping,
+          mapping: source.mapping,
         });
       }
     }

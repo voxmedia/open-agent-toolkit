@@ -90,10 +90,10 @@ import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
-  getSyncMappings,
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
@@ -278,15 +278,15 @@ async function collectStraysDefault(
   const candidates: InitStrayCandidate[] = [];
 
   for (const adapter of adaptersToScan) {
-    const mappings = getSyncMappings(adapter, scope);
-    for (const mapping of mappings) {
-      const providerDir = join(scopeRoot, mapping.providerDir);
+    const adoptionSources = getAdoptionSources(adapter, scope);
+    for (const source of adoptionSources) {
+      const providerDir = join(scopeRoot, source.directory);
       const strays = await detectStrays(
         adapter.name,
         providerDir,
         manifest,
         canonicalEntries,
-        mapping,
+        source.mapping,
       );
       for (const report of strays) {
         if (report.state.status !== 'stray') {
@@ -295,7 +295,7 @@ async function collectStraysDefault(
         candidates.push({
           provider: adapter.name,
           report,
-          mapping,
+          mapping: source.mapping,
         });
       }
     }

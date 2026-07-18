@@ -23,6 +23,10 @@ import {
   type CodexExtensionPlan,
 } from '@providers/codex/codec/sync-extension';
 import type { ProviderAdapter } from '@providers/shared';
+import {
+  getAdoptionSources,
+  getSyncMappings,
+} from '@providers/shared/adapter.utils';
 import { OAT_VERSION } from '@shared/oat-version';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
@@ -127,6 +131,25 @@ function createCodexAdapter(): ProviderAdapter {
   };
 }
 
+function createCursorAdapter(): ProviderAdapter {
+  const skillMapping = {
+    contentType: 'skill' as const,
+    canonicalDir: '.agents/skills',
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.cursor/skills'],
+  };
+
+  return {
+    name: 'cursor',
+    displayName: 'Cursor',
+    defaultStrategy: 'symlink',
+    projectMappings: [skillMapping],
+    userMappings: [skillMapping],
+    detect: async () => true,
+  };
+}
+
 function createManifest(entries: ManifestEntry[]): Manifest {
   return {
     version: 1,
@@ -162,6 +185,7 @@ function createHarness(options: TestHarnessOptions = {}): {
   scanCanonical: ReturnType<typeof vi.fn>;
   scanBundledManagedCodexAgents: ReturnType<typeof vi.fn>;
   computeCodexProjectExtensionPlan: ReturnType<typeof vi.fn>;
+  detectStrays: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [createAdapter()];
@@ -231,6 +255,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     failed: 0,
     skipped: 0,
   }));
+  const detectStrays = vi.fn(async () => strayReports);
   let driftIndex = 0;
 
   const command = createStatusCommand({
@@ -257,15 +282,14 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
     getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
-    getSyncMappings: vi.fn(
-      (adapter: ProviderAdapter) => adapter.projectMappings,
-    ),
+    getSyncMappings: vi.fn(getSyncMappings),
+    getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {
       const report = driftReports[driftIndex] ?? driftReports.at(-1);
       driftIndex += 1;
       return report ?? driftReports[0]!;
     }),
-    detectStrays: vi.fn(async () => strayReports),
+    detectStrays,
     detectCodexRoleStrays,
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
@@ -285,6 +309,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanCanonical,
     scanBundledManagedCodexAgents,
     computeCodexProjectExtensionPlan,
+    detectStrays,
   };
 }
 
@@ -395,6 +420,39 @@ describe('createStatusCommand', () => {
 
     expect(capture.info[0]).toContain('missing');
     expect(process.exitCode).toBe(1);
+  });
+
+  it('scans Cursor adoption sources without reporting native-read skills as missing views', async () => {
+    const { capture, command, detectStrays } = createHarness({
+      adapters: [createCursorAdapter()],
+      interactive: false,
+      manifestEntries: [],
+      driftReports: [],
+      canonicalEntries: [createCanonicalEntry('cursor-skill')],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/cursor-local',
+          state: { status: 'stray' },
+        },
+      ],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(detectStrays).toHaveBeenCalledWith(
+      'cursor',
+      join('/tmp/workspace', '.cursor/skills'),
+      expect.any(Object),
+      expect.any(Array),
+      expect.objectContaining({
+        providerDir: '.agents/skills',
+        nativeRead: true,
+      }),
+    );
+    expect(capture.info[0]).toContain('cursor:stray');
+    expect(capture.info[0]).not.toContain('missing');
   });
 
   it('reports strays with remediation text', async () => {

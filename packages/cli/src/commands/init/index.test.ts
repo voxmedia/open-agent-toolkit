@@ -608,6 +608,54 @@ describe('createInitCommand', () => {
     expect(adoptStray).not.toHaveBeenCalled();
   });
 
+  it('discovers Cursor-local skills through native-read adoption sources', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-init-cursor-stray-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.cursor', 'skills', 'cursor-local'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.cursor', 'skills', 'cursor-local', 'SKILL.md'),
+      '# Cursor local\n',
+      'utf8',
+    );
+    const skillMapping = {
+      contentType: 'skill' as const,
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    };
+    const cursorOnlyAdapter: ProviderAdapter = {
+      name: 'cursor',
+      displayName: 'Cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [skillMapping],
+      userMappings: [skillMapping],
+      detect: async () => true,
+    };
+    const { command, selectManyWithAbort } = createHarness({
+      interactive: true,
+      scopeRootByScope: { project: root },
+      useDefaultCollectStrays: true,
+      adapters: [cursorOnlyAdapter],
+      configAwareActiveAdapterNames: ['cursor'],
+      providerSelectResponses: [['cursor']],
+      hookInstalled: true,
+      selectResponses: [[]],
+    });
+
+    await runInitCommand(command, { globalArgs: ['--scope', 'project'] });
+
+    const choices = selectManyWithAbort.mock.calls[0]?.[1] as Array<{
+      label: string;
+      description?: string;
+    }>;
+    expect(choices).toHaveLength(1);
+    expect(choices[0]?.label).toContain('cursor-local (cursor)');
+    expect(choices[0]?.description).toContain('.cursor/skills/cursor-local');
+  });
+
   it('detects codex role strays via default collector and includes codex adoption metadata', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-init-codex-stray-'));
     tempDirs.push(root);

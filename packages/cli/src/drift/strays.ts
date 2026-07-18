@@ -200,7 +200,10 @@ export async function detectStrays(
   providerDir: string,
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
-  mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
+  mapping?: Pick<
+    PathMapping,
+    'contentType' | 'nativeRead' | 'providerExtension'
+  >,
 ): Promise<DriftReport[]> {
   const contentType = mapping?.contentType ?? inferContentType(providerDir);
   const scopeRoot = inferScopeRoot(providerDir);
@@ -243,7 +246,10 @@ export async function detectStrays(
         ? canonicalRuleNameForProviderEntry(entry.name, mapping)
         : entry.name;
 
-    if (isCanonicalEntry(canonicalName, contentType, canonicalEntries)) {
+    if (
+      !mapping?.nativeRead &&
+      isCanonicalEntry(canonicalName, contentType, canonicalEntries)
+    ) {
       continue;
     }
 
