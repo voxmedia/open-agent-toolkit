@@ -362,7 +362,7 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | pending         | -          | -                                                           |
+| p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md           |
 | p02    | code     | pending         | -          | -                                                           |
 | p03    | code     | pending         | -          | -                                                           |
 | final  | code     | pending         | -          | -                                                           |
