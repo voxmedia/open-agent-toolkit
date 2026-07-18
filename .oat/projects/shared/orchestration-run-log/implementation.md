@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_current_task_id: p03-t10
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 6     | 6/6       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 9     | 9/9       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 6     | 6/6       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 11    | 9/11      |
 
-**Total:** 17/17 tasks completed
+**Total:** 17/19 tasks completed
 
 ---
 
@@ -155,9 +155,10 @@ oat_generated: false
 
 ## Phase 2: Scaffold and gate integration
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-07-18
 **Completed:** 2026-07-18
+**Reopened for review fixes:** 2026-07-18
 
 ### Phase Summary
 
@@ -261,6 +262,16 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 26fd475b
+
+### Task p03-t10: Prevent project-log section-marker spoofing
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t11: Correct the quick-mode spec reference
+
+**Status:** pending
+**Commit:** -
 
 ## Orchestration Runs
 
@@ -408,6 +419,32 @@ Chronological log of implementation progress.
 **Post-phase verification fix:** refreshed CLI help snapshots and the canonical autonomy prompt-site coverage table in 56097949; the complete workspace gate then passed.
 
 **Blockers:** none.
+
+---
+
+### Review Received: final (manual full-range review)
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T141653Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**Finding disposition map:**
+
+- I1 → p03-t10: reject command-owned section markers in structural bodies and make synthesis target only the canonical section while preserving entry bytes.
+- m1 → p03-t11: replace the nonexistent quick-mode `spec.md` reference with `N/A (quick mode)`.
+
+**New tasks added:** p03-t10, p03-t11
+
+**Deferred Medium findings:** none.
+**Minor disposition:** m1 converted to p03-t11 by explicit operator choice.
+
+**Next:** execute p03-t10 and p03-t11 via `oat-project-implement`, then run a focused final re-review.
 
 ---
 

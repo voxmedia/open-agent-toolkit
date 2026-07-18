@@ -651,6 +651,66 @@ git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
 
 ---
 
+### Task p03-t10: (review) Prevent project-log section-marker spoofing
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/log/append.ts`
+- Modify: `packages/cli/src/commands/project/log/synthesize.ts`
+- Modify: `packages/cli/src/commands/project/log/append.test.ts`
+- Modify: `packages/cli/src/commands/project/log/synthesize.test.ts`
+- Modify: shared project-log grammar/parser modules and tests as required
+
+**Step 1: Understand the issue**
+
+Review finding I1: structural bodies reject newlines but can still equal command-owned `##`/`###` markers. Those accepted values can terminate entry parsing early or cause synthesis to target the spoofed body rather than the canonical synthesis section, violating append-only and byte-preservation guarantees.
+
+**Step 2: Implement fix**
+
+Apply the command-owned marker boundary to structural bodies as well as judgment bodies. Make synthesis locate and validate the unique canonical top-level synthesis section structurally instead of using the first matching substring, and reject synthesis content that recreates the pending marker. Preserve all existing entry bytes during synthesis.
+
+**Step 3: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/log/append.test.ts src/commands/project/log/synthesize.test.ts src/commands/project/log/check.test.ts src/commands/project/log/rollup.test.ts`
+Expected: structural bodies equal to `## Entries` or the pending-synthesis heading are rejected; synthesis preserves entry bytes, rejects marker recreation, and updates only the canonical synthesis section.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/project/log/
+git commit -m "fix(p03-t10): prevent project-log marker spoofing"
+```
+
+---
+
+### Task p03-t11: (review) Correct the quick-mode spec reference
+
+**Files:**
+
+- Modify: `.oat/projects/shared/orchestration-run-log/implementation.md`
+
+**Step 1: Understand the issue**
+
+Review finding m1: the implementation References section links to `spec.md`, but this quick-mode project intentionally has no spec and state correctly records it as N/A.
+
+**Step 2: Implement fix**
+
+Replace the broken spec link with `N/A (quick mode)` while preserving the plan and design references.
+
+**Step 3: Verify**
+
+Run: `pnpm format`
+Expected: formatting passes and the implementation References section no longer points to a nonexistent file.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/orchestration-run-log/implementation.md
+git commit -m "docs(p03-t11): correct quick-mode spec reference"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -664,7 +724,7 @@ git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
 | p03    | code     | pending         | -          | -                                                           |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md         |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T125009Z.md         |
-| final  | code     | received        | 2026-07-18 | reviews/final-review-2026-07-18T141653Z.md                  |
+| final  | code     | fixes_added     | 2026-07-18 | reviews/archived/final-review-2026-07-18T141653Z.md         |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | received        | 2026-07-13 | reviews/archived/artifact-plan-review-2026-07-14T010828Z.md |
@@ -688,11 +748,11 @@ git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
 
 - Phase 1: 6 tasks - CLI foundation (config keys, template + bundling manifests, `append`, `check`, `synthesize`, `rollup`)
 - Phase 2: 2 tasks - Scaffold flags and gate-internal structural append (all terminal outcomes)
-- Phase 3: 9 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test, and four final-review fixes
+- Phase 3: 11 tasks - Skill integrations (implement/summary/complete), docs + lockstep version bumps, end-to-end lifecycle integration test, and six final-review fixes
 
-**Total: 17 tasks**
+**Total: 19 tasks**
 
-Ready for code review and merge.
+Ready to execute the queued final-review fixes.
 
 ---
 

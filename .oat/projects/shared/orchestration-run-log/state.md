@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p03-t10
 oat_last_commit: 26fd475b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/156' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T13:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T14:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete — Final HiLL approved; PR open.
+Implementation reopened for final-review fixes; PR remains open.
 
 ## Artifacts
 
@@ -69,7 +69,7 @@ Implementation complete — Final HiLL approved; PR open.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (complete; 17/17 tasks)
+- **Implementation:** `implementation.md` (in progress; 17/19 tasks)
 
 ## Progress
 
@@ -83,7 +83,8 @@ Implementation complete — Final HiLL approved; PR open.
 - ✓ Configured pre-approval sequence complete: summary → document → PR
 - ✓ PR created
 - ✓ Final HiLL checkpoint approved
-- ⧗ Awaiting PR review and merge
+- ✓ Manual full-range final review received
+- ⧗ Execute p03-t10 and p03-t11, then run focused final re-review
 
 ## Blockers
 
@@ -91,8 +92,4 @@ None
 
 ## Next Milestone
 
-PR #156 is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Execute review-fix task p03-t10.
