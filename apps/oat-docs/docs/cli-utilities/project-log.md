@@ -85,6 +85,28 @@ instead.
 
 Run `oat project log append --help` for the complete entry contract.
 
+## Automatic workflow integration
+
+When project logging is enabled, OAT lifecycle surfaces append structural
+entries without asking agents to edit `project-log.md`:
+
+- `oat-project-implement` records accepted subagent dispatches, STOP or park
+  events, phase outcomes, and parallel-group merge results. These entries point
+  to the corresponding `implementation.md` record instead of copying it.
+- `oat gate review` records exactly one entry for every terminal outcome,
+  including successful and blocking verdicts, child failure, timeout,
+  targeting-correlation failure, and artifact-validation failure. A log append
+  failure produces a warning but never changes the gate result.
+- `oat-project-summary` checks for entries, offers append-only promotion of
+  reusable project judgments, and invokes `rollup` after authoring
+  `summary.md`.
+- `oat-project-complete` warns when synthesis is pending, requires a successful
+  roll-up for a populated log, and appends the final seal entry before archive.
+  No project-log entry may follow the seal.
+
+With the default `auto` setting, the first of these append points creates the
+log. With `false` and no existing artifact, automatic appends are no-ops.
+
 ## Inspect status
 
 ```bash
