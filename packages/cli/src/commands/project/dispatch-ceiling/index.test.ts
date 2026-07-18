@@ -1109,6 +1109,70 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
   );
 
+  it('preserves configured model provenance for a bare Cursor target', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchCeiling: {
+          providers: {
+            cursor: 'gpt-5.6-sol-high',
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'cursor',
+      '--role',
+      'reviewer',
+      '--report-scope',
+      'final-review',
+      '--report-action',
+      'review',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      provider: 'cursor',
+      providers: {
+        cursor: {
+          dispatchArgs: {
+            variant: 'oat-reviewer-gpt-5-6-sol-high',
+          },
+          modelAxis: 'selected:gpt-5.6-sol-high',
+          effortAxis: 'not-applicable',
+          selection: {
+            selectedValue: 'gpt-5.6-sol-high',
+            target: null,
+          },
+        },
+      },
+      dispatchReport: {
+        route: {
+          target: 'oat-reviewer-gpt-5-6-sol-high',
+        },
+        requestedControls: {
+          model: {
+            value: 'gpt-5.6-sol-high',
+            mechanism: 'materialized-role',
+          },
+        },
+        runtimeIdentity: {
+          producer: null,
+          model: null,
+          effort: null,
+          provenance: 'unknown',
+          confidence: 'not-reported',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('matches the coordinator review envelope and rejects source or target drift', async () => {
     const { root, home } = await setup();
     const target = 'gpt-5.6-sol-high';

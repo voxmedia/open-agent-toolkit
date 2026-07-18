@@ -1744,7 +1744,7 @@ function selectDispatchValue(
   };
 }
 
-function hasCodexVariantDispatchArgs(
+function hasVariantDispatchArgs(
   dispatchArgs: CeilingDispatchArgs,
 ): dispatchArgs is { variant: string } {
   return (
@@ -1767,6 +1767,7 @@ function hasModelDispatchArgs(
 }
 
 function modelAxis(
+  provider: DispatchCeilingProvider,
   selection: DispatchSelection,
   dispatchArgs: CeilingDispatchArgs,
 ): string {
@@ -1776,6 +1777,15 @@ function modelAxis(
 
   if (hasModelDispatchArgs(dispatchArgs)) {
     return `selected:${dispatchArgs.model}`;
+  }
+
+  if (
+    provider === 'cursor' &&
+    hasVariantDispatchArgs(dispatchArgs) &&
+    selection.target === null &&
+    selection.selectedValue
+  ) {
+    return `selected:${selection.selectedValue}`;
   }
 
   if (selection.selectionMode === 'inherit-default') {
@@ -1789,7 +1799,7 @@ function codexEffortAxis(
   selection: DispatchSelection,
   dispatchArgs: CeilingDispatchArgs,
 ): string {
-  if (hasCodexVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
+  if (hasVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
     return `selected:${selection.target.effort}`;
   }
 
@@ -1874,7 +1884,7 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
-    modelAxis: modelAxis(selection, dispatchArgs),
+    modelAxis: modelAxis(provider, selection, dispatchArgs),
     effortAxis:
       provider === 'codex'
         ? codexEffortAxis(selection, dispatchArgs)
