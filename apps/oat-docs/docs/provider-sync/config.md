@@ -90,10 +90,11 @@ The common Cursor-only skill case is a good fit: the skill may intentionally
 exist in `.cursor/skills/cloud-environment-setup` while remaining outside the
 canonical `.agents/skills` inventory.
 
-Earlier releases stored user `knownStrays` in `~/.oat/config.json`. On the next
-user-scope config load, OAT normalizes and unions those entries into
-`~/.oat/sync/config.json`, writes the sync config first, then removes only the
-legacy key. Repeating the migration is safe, including after interruption.
+Earlier releases stored user `knownStrays` in `~/.oat/config.json`. Before OAT
+resolves user sync config or writes any general user-config change, it
+normalizes and unions those entries into `~/.oat/sync/config.json`, writes the
+sync config first, then removes only the legacy key. Repeating the migration is
+safe, including after interruption.
 
 ## Behavior notes
 

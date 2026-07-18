@@ -638,7 +638,8 @@ Use:
 
 Known provider strays follow sync ownership: repo-wide `knownStrays` entries
 live in `.oat/sync/config.json`, while personal entries live in
-`~/.oat/sync/config.json`. OAT migrates legacy
+`~/.oat/sync/config.json`. Before resolving user sync settings or writing any
+general user-config change, OAT migrates legacy
 `~/.oat/config.json#knownStrays` by writing the normalized union to the user
 sync config first, then deleting only the legacy key. The migration is
 idempotent.
