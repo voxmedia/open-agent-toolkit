@@ -737,21 +737,22 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status  | Date       | Artifact                                           |
-| ------ | -------- | ------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending | -          | -                                                  |
-| p02    | code     | pending | -          | -                                                  |
-| p03    | code     | pending | -          | -                                                  |
-| p04    | code     | pending | -          | -                                                  |
-| p05    | code     | pending | -          | -                                                  |
-| p06    | code     | pending | -          | -                                                  |
-| final  | code     | pending | -          | -                                                  |
-| spec   | artifact | pending | -          | -                                                  |
-| design | artifact | passed  | 2026-07-18 | -                                                  |
-| plan   | artifact | passed  | 2026-07-18 | -                                                  |
-| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md |
-| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md |
-| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T150023Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                             |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-07-18 | reviews/code-p01-review-2026-07-18T164109Z.md        |
+| p01    | code     | passed          | 2026-07-18 | reviews/code-p01-review-round2-2026-07-18T165109Z.md |
+| p02    | code     | pending         | -          | -                                                    |
+| p03    | code     | pending         | -          | -                                                    |
+| p04    | code     | pending         | -          | -                                                    |
+| p05    | code     | pending         | -          | -                                                    |
+| p06    | code     | pending         | -          | -                                                    |
+| final  | code     | pending         | -          | -                                                    |
+| spec   | artifact | pending         | -          | -                                                    |
+| design | artifact | passed          | 2026-07-18 | -                                                    |
+| plan   | artifact | passed          | 2026-07-18 | -                                                    |
+| plan   | artifact | passed          | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md   |
+| plan   | artifact | passed          | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md   |
+| plan   | artifact | passed          | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T150023Z.md   |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
 
