@@ -512,7 +512,7 @@ describe('review skill contracts', () => {
     );
   });
 
-  it('pins project-log roll-up before completion seal and archive', () => {
+  it('pins project-log roll-up and seal before lifecycle completion and archive', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-complete/SKILL.md',
     );
@@ -525,6 +525,9 @@ describe('review skill contracts', () => {
     const sealIndex = content.indexOf(
       '--producer oat-project-complete \\\n  --ref seal',
     );
+    const completeStateIndex = content.indexOf(
+      'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
+    );
     const archiveIndex = content.indexOf(
       'ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1)',
     );
@@ -532,7 +535,8 @@ describe('review skill contracts', () => {
     expect(checkIndex).toBeGreaterThanOrEqual(0);
     expect(rollupIndex).toBeGreaterThan(checkIndex);
     expect(sealIndex).toBeGreaterThan(rollupIndex);
-    expect(archiveIndex).toBeGreaterThan(sealIndex);
+    expect(completeStateIndex).toBeGreaterThan(sealIndex);
+    expect(archiveIndex).toBeGreaterThan(completeStateIndex);
     expect(content).toMatch(
       /synthesisPending: true[\s\S]*?Warning:[\s\S]*?do not block completion/i,
     );

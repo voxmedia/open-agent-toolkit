@@ -297,6 +297,22 @@ Do not set lifecycle complete, seal, or archive unless the structured
   error: stop and surface the roll-up failure. Never continue to seal or
   archive.
 
+When the status probe found an existing project log, append the completion seal
+as the final project-log entry before any lifecycle-complete mutation:
+
+```bash
+oat project log append \
+  --project "$PROJECT_PATH" \
+  --structural \
+  --producer oat-project-complete \
+  --ref seal \
+  --body "Completion sealed at $(date -u +%Y-%m-%dT%H:%M:%SZ); project-log roll-up status: ok."
+```
+
+Only append this seal after Step 3.6 has either confirmed there are no entries
+to roll up or obtained `status: "ok"`. If the append fails for an existing log,
+stop before setting lifecycle complete or archiving. No project-log append may follow the seal.
+
 ### Step 4: Archive Residual Active Review Artifacts
 
 Detect any leftover active review artifacts in the top level of `"$PROJECT_PATH/reviews/"`:
@@ -394,28 +410,10 @@ Anti-pattern: do not "rescue" a dropped artifact by linking to its archived path
 
 ### Step 8: Archive Project (Conditional)
 
-First, when Step 3.6 found an existing project log, append the completion seal
-as the final project-log entry:
-
-```bash
-oat project log append \
-  --project "$PROJECT_PATH" \
-  --structural \
-  --producer oat-project-complete \
-  --ref seal \
-  --body "Completion sealed at $(date -u +%Y-%m-%dT%H:%M:%SZ); project-log roll-up status: ok."
-```
-
-Only append this seal after Step 3.6 has either confirmed there are no entries
-to roll up or obtained `status: "ok"`. If the append fails for an existing log,
-stop before archive. No project-log append may follow the seal.
-
-After the seal append:
-
 **Skip if `SHOULD_ARCHIVE` is false or `IS_SHARED_PROJECT` is false.**
 
-This conditional skips archive movement only; it does not skip the seal append
-for an existing project log.
+This conditional skips archive movement only; it does not skip the Step 3.6
+seal append for an existing project log.
 
 Archive happens after PR description generation (so artifacts are readable at tracked paths) but before commit+push (so the archive deletion is included in the commit).
 
