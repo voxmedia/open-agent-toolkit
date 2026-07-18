@@ -501,7 +501,7 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick mode)
 
 ## Gate Feedback (plan artifact gate — attempts exhausted, escalated 2026-07-13)
 
