@@ -182,6 +182,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Optional nested dispatches:** None.
 **Final review fix commits:** `54d6edad`, `9f859165`
+**User-authorized artifact alignment:** `f799b635`
 **Outstanding items:** Final whole-project re-review.
 
 ### Run 2: Phase p02 {#run-2}

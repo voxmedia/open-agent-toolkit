@@ -104,6 +104,10 @@ Final re-review found 1 Important autonomy-policy inconsistency and 1 Medium ver
 
 Final review round 2 findings were resolved in 9f859165; final whole-project re-review is pending.
 
+### 2026-07-18 · structural · oat-project-implement · user-authorized-artifact-fix
+
+User explicitly authorized one artifact-only correction after automatic retry exhaustion. Commit f799b635 aligns design schema and exact verification evidence; final re-review is pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
