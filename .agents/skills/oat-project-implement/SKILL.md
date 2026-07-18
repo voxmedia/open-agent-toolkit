@@ -1,12 +1,12 @@
 ---
 name: oat-project-implement
-version: 2.1.3
+version: 2.1.4
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat gate:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 ---
 
 # Implementation Phase
@@ -204,4 +204,6 @@ Rules:
 - Implementation.md tracks all progress
 - Final verification passes
 - Final review passes (no Critical/Important findings)
+- The configured implementation exit gate has an allowed and fresh disposition
+  before approval-aware sequencing, completion state, or success output
 - No unresolved blockers

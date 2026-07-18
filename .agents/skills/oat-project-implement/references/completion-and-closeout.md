@@ -35,7 +35,7 @@ Options:
 3. Modify plan to address blocker
 ```
 
-### Step 11: Mark Implementation Complete
+### Step 11: Prepare Final Closeout Baseline
 
 When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` task):
 
@@ -48,11 +48,11 @@ When all plan tasks are complete (i.e., there is no next incomplete `pNN-tNN` ta
   - Design deltas (if any)
 - This should reflect **what was actually implemented**, including any deviations from design and any review-fix work.
 
-Update frontmatter:
+Keep implementation in progress while clearing the completed task pointer:
 
 ```yaml
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: { today }
@@ -60,11 +60,13 @@ oat_current_task_id: null
 ---
 ```
 
-**Important:** `oat_current_task_id` should never point at an already-completed task. If all tasks are done, set it to `null` and proceed to the final review gate.
+**Important:** `oat_current_task_id` should never point at an already-completed
+task. If all tasks are done, set it to `null`, but do not mark implementation
+complete before final verification, final review, the configured implementation
+exit gate, and the approval-aware closeout sequence finish.
 
-### Step 12: Update Project State
-
-Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and review gating:
+Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion while
+closeout remains in progress:
 
 **Frontmatter updates:**
 
@@ -72,11 +74,9 @@ Update `"$PROJECT_PATH/state.md"` so other skills reflect task completion and re
 - `oat_last_commit: {final_commit_sha}`
 - `oat_blockers: []`
 - `oat_phase: implement`
-- `oat_phase_status: in_progress` (until final review passes)
+- `oat_phase_status: in_progress` (until all closeout boundaries pass)
 - `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
-- **If** `"implement"` is in `oat_hill_checkpoints`: append `"implement"` to `oat_hill_completed` array
-
-**Note:** Only append to `oat_hill_completed` when the phase is configured as a HiLL gate.
+- Do not append `"implement"` to `oat_hill_completed` yet.
 
 Update content:
 
@@ -95,21 +95,23 @@ Implementation - Tasks complete; awaiting final review.
 - ⧗ Awaiting final review
 ```
 
-**Bookkeeping commit (required):**
+**Baseline bookkeeping commit (required):**
 
 **DO NOT SKIP.** This commit prevents state drift across sessions.
 
-After updating state.md to reflect implementation completion, refresh the repo dashboard when available and commit all modified project tracking files:
+After updating state.md to reflect task completion and pending closeout, refresh
+the repo dashboard when available and commit all modified project tracking
+files:
 
 ```bash
 oat state refresh
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
-git diff --cached --quiet || git commit -m "chore(oat): update tracking artifacts for implementation complete"
+git diff --cached --quiet || git commit -m "chore(oat): prepare final implementation closeout"
 ```
 
 Do not use `git add -A` or glob patterns. Only commit the three project artifacts listed above; `.oat/state.md` is a generated, gitignored dashboard.
 
-### Step 13: Final Verification
+### Step 12: Final Verification
 
 Run project-wide verification:
 
@@ -129,7 +131,7 @@ pnpm build
 
 All must pass before proceeding.
 
-### Step 14: Trigger Final Review
+### Step 13: Trigger Final Review
 
 **At the final plan phase boundary, a code review is required before PR.**
 
@@ -167,7 +169,7 @@ filename and never move its status backward.
   echo "$FINAL_ROW" | grep -qE "^\\|\\s*final\\s*\\|.*\\|\\s*passed\\s*\\|" && echo "passed"
   ```
 
-  - Continue to Step 15 (final closeout)
+  - Continue to Step 14 (configured implementation exit gate)
 
 **If final review is not marked `passed`:**
 
@@ -183,7 +185,7 @@ highest target-preserving route before launch, and run
 
 - If receive creates fix tasks, return through the normal bounded implement and
   re-review loop.
-- Continue to Step 15 only when the final Reviews row is `passed`.
+- Continue to Step 14 only when the final Reviews row is `passed`.
 - A failed blocking review, unresolved Critical finding, exhausted route, or
   missing credential with no adequate fallback is an autonomy boundary. Persist
   the review state and report the exact resume action instead of falling
@@ -282,7 +284,90 @@ To run in a separate session use: oat-project-review-provide code final
 - Record the passed final review and keep the project in implementation closeout.
 - Do not append `"implement"` to `oat_hill_completed`, set
   `oat_phase_status: complete`, or offer the normal next-step prompt yet.
-- Continue to **Final HiLL Closeout Sequence**.
+- Continue to **Gate Execution**.
+
+### Step 14: Gate Execution
+
+The configured implementation exit gate is independent from the optional
+`oat_phase_review_gate`, the root-owned phase reviews, and the mandatory final
+lifecycle review. A missing, disabled, or unconfigured phase gate never disables
+or satisfies this configured exit gate.
+
+Before approval-aware sequencing, final HiLL approval, implementation
+completion, or success output, run the configured gate:
+
+1. Resolve the gate for this skill:
+
+   ```bash
+   oat gate resolve oat-project-implement --json
+   ```
+
+   If the command returns JSON `null`, no gate is configured; proceed directly
+   to the completion steps in Step 15 below.
+
+2. Export the resolved project path into the command shell:
+
+   ```bash
+   export PROJECT_PATH
+   ```
+
+   If the resolved command invokes `oat gate review`, the configured review
+   command must already include `--project "$PROJECT_PATH"` and must not include
+   `--target <id>`. A valid reusable shape is
+   `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is
+   missing, stop and migrate the stored gate command; do not inject or append
+   arguments at execution time.
+
+3. Execute the resolved command exactly as configured. Capture stdout, stderr,
+   the exit code, and the structured JSON result. A zero exit code means the
+   review passed its threshold, but it does not by itself authorize artifact
+   receipt or complete the handoff.
+
+4. Review-artifact handoff:
+   - Parse the structured gate result. An exit code or artifact path alone never
+     authorizes `oat-project-review-receive`.
+   - Invoke receive only when all three conditions hold: `status` is `ok` or
+     `blocked`, the envelope explicitly sets `receiveEligible: true`, and a
+     non-null `handoff` confirms the artifact was corroborated.
+   - `receiveEligible: false` is a hard stop even when `artifactPath` is present.
+     Never receive `targeting_correlation_failed`; correct the project/run
+     routing and run a new gate.
+   - Keep `artifact_validation_failed` outside receive until the artifact is
+     corrected and the gate successfully revalidates it. Treat `review_failed`,
+     unknown statuses, null handoffs, and contradictory eligibility fields as
+     operational failures.
+   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still
+     requires durable receive disposition. Route by structured status and
+     eligibility, not by exit code.
+
+5. If the command exits nonzero, use `description` to orient the next steps and
+   handle `onFailure`:
+   - `block`: read gate feedback, remediate, and re-run the gate up to
+     `maxAttempts` attempts (default `2`). If the gate ends in `block` after
+     attempts are exhausted, escalate to the human with accumulated feedback
+     and append that feedback to `implementation.md`. Treat a launch failure,
+     missing CLI, or no eligible runtime as escalation-biased and do not spend
+     it as a remediation attempt.
+   - `prompt`: surface the gate failure and ask the human how to proceed.
+   - `warn`: record the gate failure and continue.
+
+   When the gate ends in `block` after attempts are exhausted or remains at an
+   unresolved `prompt` boundary, the completion steps below MUST NOT run. The
+   project stays `in_progress` and resumable through `oat-project-implement`.
+
+6. Runtime selection note: the step runs the gate `command` as-is and reads no
+   OAT runtime env var. By default, `oat gate review` avoids the resolved
+   producer family. Exact review scopes use a claimable producer identity from
+   the matching dispatch stamp. Final/range reviews aggregate in-scope
+   implementer/fix stamps; when a stamp's producer is not claimable or has an
+   unknown family, its launcher-owned configured target may contribute a
+   lower-confidence family exclusion without becoming runtime identity. If no
+   claimable family remains, selection degrades to same-runtime avoidance.
+   Reusable lifecycle skill-gate commands must not include `--target <id>` so
+   independent review stays provider-neutral. Use explicit targets only for
+   manual/debug commands or deliberate local/user-specific overrides; do not
+   hardcode provider/model targets in bundled skill guidance or shared
+   lifecycle gate examples.
 
 ### Step 15: Final HiLL Closeout Sequence
 
@@ -296,7 +381,8 @@ exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly
 contains that final phase ID. Defer only a checkpoint on the final implementation
 phase; non-final checkpoint behavior remains unchanged.
 
-Run final verification (Step 13). Final review must be `passed` before any
+Run final verification (Step 12). Final review must be `passed` and the
+configured implementation exit gate in Step 14 must be allowed before any
 pre-approval dispatch. If final checkpoint auto-review is enabled, Step 8 has
 already run `oat-project-review-provide code final`; do not run a duplicate
 final review here.
@@ -407,7 +493,51 @@ snapshot. Retain the existing next-step prompt only after final approval when a
 final checkpoint is configured. Under autonomy, the default snapshot above
 always resolves the unset case.
 
-### Step 16: Prompt for Next Steps
+### Step 16: Mark Implementation Complete
+
+Run this step only after the configured gate passes or resolves to an allowed
+no-gate outcome and the Step 15 closeout sequence has reached its terminal
+allowed state. A configured gate that is blocked, unresolved, malformed, or
+stale leaves implementation in progress.
+
+Update `"$PROJECT_PATH/implementation.md"` frontmatter:
+
+```yaml
+---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: { today }
+oat_current_task_id: null
+---
+```
+
+Update `"$PROJECT_PATH/state.md"`:
+
+- `oat_current_task: null`
+- `oat_last_commit: {final_commit_sha}`
+- `oat_blockers: []`
+- `oat_phase: implement`
+- `oat_phase_status: complete`
+- `oat_project_state_updated: "{ISO 8601 UTC timestamp}"`
+- If `"implement"` is in `oat_hill_checkpoints`, append `"implement"` to
+  `oat_hill_completed`; otherwise leave it unchanged.
+
+Update the current phase and progress content to record that implementation,
+final review, the configured exit gate, and closeout sequencing are complete.
+Then refresh the dashboard and create the required completion bookkeeping
+commit:
+
+```bash
+oat state refresh
+git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+git diff --cached --quiet || git commit -m "chore(oat): mark implementation complete"
+```
+
+Do not use `git add -A` or glob patterns. Only commit the three project
+artifacts listed above; `.oat/state.md` is a generated, gitignored dashboard.
+
+### Step 17: Prompt for Next Steps
 
 Run the standard next-step prompt only when `OAT_AUTONOMOUS` is not `1`,
 `workflow.postImplementSequence` was unset, and no sequence snapshot was
@@ -449,7 +579,7 @@ Do not route directly to `oat-project-complete`. The `pr_open` status set by pr-
 
 Tell user: "Run the skills individually when ready: oat-project-summary → oat-project-document → oat-project-pr-final"
 
-### Step 17: Output Summary
+### Step 18: Output Summary
 
 ```
 Implementation complete for {project-name}.
@@ -471,39 +601,3 @@ Final review:
 
 Next: Create PR or run the oat-project-pr-final skill (when available)
 ```
-
-### Gate Execution
-
-Before reporting this skill as complete, run the configured gate as the final step:
-
-1. Resolve the gate for this skill:
-
-   ```bash
-   oat gate resolve <this-skill> --json
-   ```
-
-   If the command returns JSON `null`, no gate is configured; the skill is complete.
-
-2. Export the resolved project path into the command shell:
-
-   ```bash
-   export PROJECT_PATH
-   ```
-
-   If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
-
-3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
-
-4. Review-artifact handoff:
-   - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
-   - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
-   - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
-   - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
-   - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
-
-5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
-   - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
-   - `prompt`: surface the gate failure and ask the human how to proceed.
-   - `warn`: record the gate failure and continue.
-
-6. Runtime selection note: the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` avoids the resolved producer family. Exact review scopes use a claimable producer identity from the matching dispatch stamp. Final/range reviews aggregate in-scope implementer/fix stamps; when a stamp's producer is not claimable or has an unknown family, its launcher-owned configured target may contribute a lower-confidence family exclusion without becoming runtime identity. If no claimable family remains, selection degrades to same-runtime avoidance. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.

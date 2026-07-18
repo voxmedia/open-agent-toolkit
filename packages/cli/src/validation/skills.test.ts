@@ -901,6 +901,14 @@ describe('validateOatSkills', () => {
           '### Step 3.7: Record Review Disposition and Mark Plan Complete',
         noGateNextStep: 'Step 3.7',
       },
+      {
+        skillName: 'oat-project-implement',
+        version: '2.1.4',
+        finalizedHeading: '### Step 13: Trigger Final Review',
+        gateHeading: '### Step 14: Gate Execution',
+        completionHeading: '### Step 16: Mark Implementation Complete',
+        noGateNextStep: 'Step 15',
+      },
     ] as const) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -970,6 +978,23 @@ describe('validateOatSkills', () => {
     expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
   });
 
+  it('declares the implementation exit gate as a required top-level closeout capability', async () => {
+    const implement = await readRawRepoFile(implementSkillPath);
+    const composedImplement = await readRepoFile(implementSkillPath);
+    const allowedTools = implement.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+    const successCriteria = composedImplement.slice(
+      composedImplement.indexOf('## Success Criteria'),
+    );
+
+    expect(allowedTools).toContain('Bash(oat gate:*)');
+    expect(successCriteria).toMatch(
+      /configured implementation exit gate[\s\S]{0,240}allowed[\s\S]{0,120}fresh/i,
+    );
+    expect(successCriteria).toMatch(
+      /before[\s\S]{0,180}approval-aware[\s\S]{0,180}completion[\s\S]{0,180}success output/i,
+    );
+  });
+
   it('routes lifecycle gate handoff only for receive-eligible corroborated results', async () => {
     for (const skillName of [
       'oat-project-plan',
@@ -980,9 +1005,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
 
       expect(gateSection, `${skillName} positive statuses`).toMatch(
         /status.*`ok`.*`blocked`/is,
@@ -1006,7 +1029,7 @@ describe('validateOatSkills', () => {
         /`artifact_validation_failed`.*correct.*revalidat/is,
       );
       expect(gateSection, `${skillName} no artifact-path shortcut`).toMatch(
-        /artifact path.*never authorizes|never authorize.*artifact path/is,
+        /artifact path.*never\s+authorizes|never\s+authorize.*artifact path/is,
       );
       expect(
         gateSection,
@@ -1084,9 +1107,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
 
       expect(gateSection, `${skillName} exports PROJECT_PATH`).toContain(
         'export PROJECT_PATH',
@@ -1098,7 +1119,7 @@ describe('validateOatSkills', () => {
         gateSection,
         `${skillName} validates stored review commands`,
       ).toMatch(
-        /configured review command[\s\S]{0,300}must (?:already )?(?:contain|include)[\s\S]{0,120}--project/i,
+        /configured review\s+command[\s\S]{0,300}must (?:already )?(?:contain|include)[\s\S]{0,120}--project/i,
       );
       expect(
         gateSection,
@@ -1211,7 +1232,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1226,7 +1247,7 @@ describe('validateOatSkills', () => {
       'Reviewers receive only the bounded review scope, commit range, allowed files',
     );
     expect(entry).not.toContain('### Step 5: Per-Phase Execution');
-    expect(entry).not.toContain('### Step 14: Trigger Final Review');
+    expect(entry).not.toContain('### Step 13: Trigger Final Review');
   });
 
   it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
@@ -1428,7 +1449,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1481,8 +1502,8 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Optional External Phase Review Gate'),
     );
     const finalReview = implement.slice(
-      implement.indexOf('### Step 14: Trigger Final Review'),
-      implement.indexOf('### Step 15: Prompt for Next Steps'),
+      implement.indexOf('### Step 13: Trigger Final Review'),
+      implement.indexOf('### Step 14: Gate Execution'),
     );
 
     expect(phaseAgent).toMatch(
@@ -1839,9 +1860,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
       expect(gateSection, `${skillName} lifecycle target neutrality`).toMatch(
         /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
       );
@@ -1859,7 +1878,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2107,7 +2126,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.3.21'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.3'],
+      ['oat-project-implement', '2.1.4'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.3'],
@@ -3196,7 +3215,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.3'],
+      ['oat-project-implement', '2.1.4'],
       ['oat-project-review-provide', '1.3.21'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;

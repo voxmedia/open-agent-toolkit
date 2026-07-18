@@ -78,6 +78,37 @@ describe('post-implementation sequence contracts', () => {
     expect(closeout).toContain('awaiting_approval');
   });
 
+  it('enforces the configured implementation exit gate before every completion boundary', () => {
+    const skill = readImplementSkill();
+    const normalized = normalizeWhitespace(skill);
+    const verificationIndex = skill.indexOf('### Step 12: Final Verification');
+    const reviewIndex = skill.indexOf('### Step 13: Trigger Final Review');
+    const gateIndex = skill.indexOf('### Step 14: Gate Execution');
+    const sequenceIndex = skill.indexOf(
+      '### Step 15: Final HiLL Closeout Sequence',
+    );
+    const completionIndex = skill.indexOf(
+      '### Step 16: Mark Implementation Complete',
+    );
+    const promptIndex = skill.indexOf('### Step 17: Prompt for Next Steps');
+    const outputIndex = skill.indexOf('### Step 18: Output Summary');
+
+    expect(verificationIndex).toBeGreaterThanOrEqual(0);
+    expect(reviewIndex).toBeGreaterThan(verificationIndex);
+    expect(gateIndex).toBeGreaterThan(reviewIndex);
+    expect(sequenceIndex).toBeGreaterThan(gateIndex);
+    expect(completionIndex).toBeGreaterThan(sequenceIndex);
+    expect(promptIndex).toBeGreaterThan(completionIndex);
+    expect(outputIndex).toBeGreaterThan(promptIndex);
+    expect(normalized).toContain(
+      'The configured implementation exit gate is independent from the optional `oat_phase_review_gate`',
+    );
+    expect(normalized).toContain(
+      'A missing, disabled, or unconfigured phase gate never disables or satisfies this configured exit gate.',
+    );
+    expect(skill.slice(outputIndex)).not.toContain('### Gate Execution');
+  });
+
   it('uses one immutable snapshot and its stored order across every closeout boundary', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);
