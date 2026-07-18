@@ -59,7 +59,8 @@ Add a dedicated semantic contract test that reads the canonical reviewer and ass
 - one bounded, read-only, non-recursive round of disjoint lanes;
 - compact reports with coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty;
 - `Task` is present in the canonical reviewer tool allowlist;
-- delegated reconnaissance requires loading `.agents/skills/oat-dispatch-subagents/SKILL.md` plus exactly one active-provider reference, maps workers to the `recon` role class, and leaves model/route selection to that shared contract;
+- delegated reconnaissance requires loading `.agents/skills/oat-dispatch-subagents/SKILL.md` plus exactly one active-provider reference, maps workers to the `recon` role class, and leaves capability, catalog, model, effort, route, authorization, and launch evidence to that shared contract;
+- reviewer-local reconnaissance does not load or depend on `.agents/skills/oat-project-dispatch-subagents/SKILL.md`, which is reserved for project lifecycle phase/task policy;
 - cheaper/faster worker preference only when the host reliably exposes that control;
 - primary-only source validation, reconciliation, synthesis, severity, validation decisions, artifact writing, and `StructuredFindings`;
 - capability/authorization/failure fallback with no checklist or output-contract downgrade.
@@ -81,7 +82,8 @@ Update `.agents/agents/oat-reviewer.md` and both existing exact-version assertio
 - add `Task` to the canonical reviewer tool allowlist so hosts that enforce agent tools can expose nested dispatch;
 - add a provider-neutral bounded-reconnaissance policy after dispatch control;
 - require the reviewer to read `.agents/skills/oat-dispatch-subagents/SKILL.md` before delegated reconnaissance, resolve the active provider, and read exactly one matching provider reference;
-- map reconnaissance workers to the shared `recon` role class so the dispatch contract selects an explicit economical target and never silently inherits the primary reviewer's model;
+- map reconnaissance workers to the shared `recon` role class and leave capability, catalog, model, effort, route, authorization, and launch evidence to the generic dispatch contract, including explicit economical target selection that never silently inherits the primary reviewer's model;
+- forbid loading or depending on `.agents/skills/oat-project-dispatch-subagents/SKILL.md` for reviewer-local reconnaissance because that adapter owns project lifecycle phase/task policy;
 - make the primary reviewer establish authoritative scope before considering delegation;
 - define a compact lane prompt/return contract requiring coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty, with a one-level fan-out limit;
 - require direct re-verification of load-bearing positive and negative claims;
@@ -146,7 +148,8 @@ Expand the existing `Subagent Compatibility` section to distinguish:
 - eligible broad-review examples and the expected wall-clock/cost benefit;
 - the one-round, read-only, non-recursive lane boundary;
 - worker-report coverage, checks performed, exact evidence, gaps, and uncertainty requirements;
-- shared `oat-dispatch-subagents` ownership of nested capability, economical model/route selection, authorization, launch evidence, and provider-specific mechanics;
+- shared `oat-dispatch-subagents` ownership of nested capability, catalog, model, effort, route, authorization, launch evidence, and provider-specific mechanics;
+- reviewer-local use of the generic `oat-dispatch-subagents` contract, contrasted with `oat-project-dispatch-subagents`, which remains reserved for lifecycle phase/task dispatch;
 - primary-reviewer ownership of verification, synthesis, severity, and final findings;
 - inline fallback when nested workers or explicit cheaper-tier controls are unavailable.
 
