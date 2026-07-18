@@ -277,6 +277,7 @@ Chronological log of implementation progress.
 | Task / Review | Source Artifact | Planned / Documented                | Actual / Accepted                                 | Reason                                               | Source of Truth | Follow-up |
 | ------------- | --------------- | ----------------------------------- | ------------------------------------------------- | ---------------------------------------------------- | --------------- | --------- |
 | HiLL config   | plan.md         | `final` = literal final phase (p06) | `['p05','p06']` — final phase per mergeable delta | p06 is RC-gated; literal reading = 0 pauses this run | plan.md         | none      |
+| p02-t09       | plan.md         | re-sync commits wave-view changes   | verified no-op (symlinked views; sync idempotent) | text edits flow through symlinked views              | Phase 2 notes   | none      |
 
 ## Test Results
 
@@ -298,6 +299,7 @@ explainer-kit v1 RC exists._
 
 - `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 as canonical workflow-pack skills (`.agents/skills/`), promoted from stoa's dogfooded 1.4.0/1.0.0 with all six §2 queue items applied (one traceable commit each) and stoa-isms genericized under a 69-row behavioral-equivalence checklist — no rule deleted or weakened.
 - Toolkit integration: pack manifest + bundle registration (bundle-consistency-tested), provider views for claude/cursor, codex native-read.
+- Also in this branch (disclosed): 24 oat-managed cursor dispatch-variant agent roles (`.cursor/agents/oat-{phase-implementer,reviewer}-*`, ~9k generated lines, commit `08d7b205`) — supported-catalogue materializations produced by `oat sync --scope all` on CLI 0.1.73 during p02, committed root-side as managed sync state (siblings of the already-tracked base roles; sync is idempotent-clean after tracking them). Verification: `oat sync` re-run reports "No changes required"; these are generated managed views, not hand-authored code.
 - Installer bug fix exposed by the port: `copyDirectory` now preserves file modes (fresh installs previously stripped the execute bit from nested skill scripts); 2 regression tests.
 - validate-plan now documents the singleton-group rule + ungrouped-phase alternative (message + help, TDD).
 - 12 durable backlog dispositions: every packet §3 row traceable (wave CLI family, artifact-format contract, bootstrap-group TS rewrite, post-W6 watch removal, tracked-config guard archived `wont_do` with root cause); upstream triage (2 closed-as-fixed, verified; 3 filed with fresh evidence); 2 docs-CLI defects found live during p04.
