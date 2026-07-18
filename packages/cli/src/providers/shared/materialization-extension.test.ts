@@ -4,12 +4,18 @@ import {
   hasMaterializationChanges,
   summarizeMaterializationPlan,
   toMaterializationOperations,
+  type MaterializationContext,
+  type MaterializationExtension,
   type MaterializationPlan,
   type MaterializationWriteOperation,
 } from './materialization-extension';
 
 type TestMetadata = {
   configPath: string;
+};
+
+type TestOptions = {
+  enabled: boolean;
 };
 
 function plan(
@@ -27,6 +33,36 @@ function plan(
 }
 
 describe('materialization extension contract', () => {
+  it('provides typed provider-neutral compute and apply hooks', async () => {
+    type TestPlan = MaterializationPlan<'test-provider', 'role', TestMetadata>;
+    type TestContext = MaterializationContext<TestOptions>;
+    const extension: MaterializationExtension<TestPlan, TestContext> = {
+      provider: 'test-provider',
+      async computePlan(context) {
+        expect(context.options.enabled).toBe(true);
+        return plan([]);
+      },
+      async applyPlan(scopeRoot, materializationPlan) {
+        expect(scopeRoot).toBe('/scope');
+        expect(materializationPlan.provider).toBe('test-provider');
+        return { applied: 0, failed: 0, skipped: 0 };
+      },
+    };
+    const context: TestContext = {
+      scopeRoot: '/scope',
+      canonicalEntries: [],
+      options: { enabled: true },
+    };
+    const computed = await extension.computePlan(context);
+
+    expectTypeOf(extension.provider).toEqualTypeOf<'test-provider'>();
+    await expect(extension.applyPlan('/scope', computed)).resolves.toEqual({
+      applied: 0,
+      failed: 0,
+      skipped: 0,
+    });
+  });
+
   it('preserves provider-tagged lifecycle operations and private metadata', () => {
     const materializationPlan = plan([
       {

@@ -10,7 +10,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/index';
-import { afterEach, describe, expect, it } from 'vitest';
+import type {
+  MaterializationContext,
+  MaterializationExtension,
+} from '@providers/shared';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
 import {
   CURSOR_MODEL_PIN_MAPPINGS,
@@ -20,6 +24,9 @@ import {
 import {
   applyCursorProjectExtensionPlan,
   computeCursorProjectExtensionPlan,
+  cursorMaterializationExtension,
+  type CursorExtensionPlan,
+  type CursorMaterializationTargetOptions,
 } from './sync-extension';
 
 function canonicalAgentFileContent(name: string): string {
@@ -63,6 +70,15 @@ function configWithCursorCandidates(candidates: unknown[]): string {
 
 describe('cursor sync extension', () => {
   const tempDirs: string[] = [];
+
+  it('satisfies the provider-neutral extension hook contract', () => {
+    expectTypeOf(cursorMaterializationExtension).toMatchTypeOf<
+      MaterializationExtension<
+        CursorExtensionPlan,
+        MaterializationContext<CursorMaterializationTargetOptions>
+      >
+    >();
+  });
 
   afterEach(async () => {
     await Promise.all(
@@ -180,6 +196,34 @@ describe('cursor sync extension', () => {
           !content || content.includes('# oat-owner: user-config'),
       ),
     ).toBe(true);
+  });
+
+  it('fails closed before full user cleanup when canonical base definitions are unavailable', async () => {
+    const home = await mkdtemp(join(tmpdir(), 'oat-cursor-home-'));
+    tempDirs.push(home);
+    await mkdir(join(home, '.oat'), { recursive: true });
+    await writeFile(
+      join(home, '.oat', 'config.json'),
+      configWithCursorCandidates(['claude-fable-5-xhigh']),
+    );
+    const agentsDir = join(home, '.cursor', 'agents');
+    await mkdir(agentsDir, { recursive: true });
+    const stalePath = join(agentsDir, 'stale-user.md');
+    await writeFile(
+      stalePath,
+      '---\n# oat-managed: true\n# oat-role: stale-user\n# oat-owner: user-config\nname: stale-user\ndescription: stale\nmodel: composer-2.5[fast=true]\n---\n',
+    );
+
+    await expect(
+      computeCursorProjectExtensionPlan(home, [], undefined, {
+        userConfigDir: join(home, '.oat'),
+      }),
+    ).rejects.toThrow(
+      /managed Cursor role definitions.*unavailable.*oat-phase-implementer.*oat-reviewer.*Refusing stale user-role cleanup/i,
+    );
+    await expect(readFile(stalePath, 'utf8')).resolves.toContain(
+      '# oat-owner: user-config',
+    );
   });
 
   it('collects an active project-state candidate', async () => {
@@ -328,11 +372,65 @@ describe('cursor sync extension', () => {
 
     await expect(
       computeCursorProjectExtensionPlan(root, canonicalEntries),
-    ).rejects.toThrow(/\.claude\/agents.*unmanaged/i);
+    ).rejects.toThrow(/symbolic link.*\.claude\/agents/i);
     await expect(
       readFile(
         join(root, '.cursor', 'agents', 'oat-reviewer-gpt-5-6-sol-high.md'),
       ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+  });
+
+  it('rejects a managed definition symlink whose target escapes the scope', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-cursor-extension-'));
+    const external = await mkdtemp(join(tmpdir(), 'oat-cursor-external-'));
+    tempDirs.push(root, external);
+    const canonicalEntries = await createCanonicalEntries(root, [
+      'oat-reviewer',
+    ]);
+    const roleName = 'oat-reviewer-gpt-5-6-sol-high';
+    await mkdir(join(root, '.cursor', 'agents'), { recursive: true });
+    const externalRole = join(external, `${roleName}.md`);
+    await writeFile(
+      externalRole,
+      `---\n# oat-managed: true\n# oat-role: ${roleName}\n# oat-owner: supported-catalogue\nname: ${roleName}\ndescription: stale\nmodel: gpt-5.6-sol[reasoning=high]\n---\n\nstale`,
+    );
+    await symlink(
+      externalRole,
+      join(root, '.cursor', 'agents', `${roleName}.md`),
+    );
+
+    await expect(
+      computeCursorProjectExtensionPlan(root, canonicalEntries),
+    ).rejects.toThrow(/symbolic link.*\.cursor\/agents/i);
+    await expect(readFile(externalRole, 'utf8')).resolves.toContain('\nstale');
+  });
+
+  it('refuses apply when the Cursor agent directory becomes an external symlink', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-cursor-extension-'));
+    const external = await mkdtemp(join(tmpdir(), 'oat-cursor-external-'));
+    tempDirs.push(root, external);
+    const canonicalEntries = await createCanonicalEntries(root, [
+      'oat-reviewer',
+    ]);
+    const target = SUPPORTED_CURSOR_ROLE_TARGETS.find(
+      ({ ladderModelId }) => ladderModelId === 'gpt-5.6-sol-high',
+    )!;
+    const plan = await computeCursorProjectExtensionPlan(
+      root,
+      canonicalEntries,
+      undefined,
+      { supportedTargets: [target] },
+    );
+    await mkdir(join(root, '.cursor'), { recursive: true });
+    await symlink(external, join(root, '.cursor', 'agents'), 'dir');
+
+    await expect(applyCursorProjectExtensionPlan(root, plan)).resolves.toEqual({
+      applied: 0,
+      failed: 1,
+      skipped: 0,
+    });
+    await expect(
+      readFile(join(external, 'oat-reviewer-gpt-5-6-sol-high.md'), 'utf8'),
     ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });

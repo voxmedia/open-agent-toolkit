@@ -125,10 +125,41 @@ describe('cursor markdown materializer', () => {
       await rm(join(root, directory, `${roleName}.md`));
     }
 
+    for (const directory of [
+      '.cursor/agents',
+      '.claude/agents',
+      '.codex/agents',
+    ]) {
+      await mkdir(join(root, directory), { recursive: true });
+      const collisionPath = join(root, directory, 'different-file.md');
+      await writeFile(
+        collisionPath,
+        `---\nname: ${roleName}\ndescription: declared collision\nmodel: inherit\n---\n`,
+      );
+      await expect(
+        assertNoUnmanagedCursorAgentCollisions(root, [roleName]),
+      ).rejects.toThrow(/declares colliding name/i);
+      await rm(collisionPath);
+    }
+
     await mkdir(join(root, '.codex', 'agents'), { recursive: true });
     await writeFile(
       join(root, '.codex', 'agents', `${roleName}.toml`),
       'developer_instructions = "not cursor markdown"\n',
+    );
+    await expect(
+      assertNoUnmanagedCursorAgentCollisions(root, [roleName]),
+    ).resolves.toBeUndefined();
+
+    await mkdir(join(root, '.agents', 'agents'), { recursive: true });
+    const canonicalBase = join(root, '.agents', 'agents', 'oat-reviewer.md');
+    await writeFile(
+      canonicalBase,
+      '---\nname: oat-reviewer\ndescription: canonical base\n---\n',
+    );
+    await symlink(
+      canonicalBase,
+      join(root, '.claude', 'agents', 'oat-reviewer.md'),
     );
     await expect(
       assertNoUnmanagedCursorAgentCollisions(root, [roleName]),

@@ -20,6 +20,8 @@ export {
 export type {
   MaterializationAction,
   MaterializationApplyResult,
+  MaterializationContext,
+  MaterializationExtension,
   MaterializationOperation,
   MaterializationPlan,
   MaterializationPlanSummary,

@@ -1,6 +1,14 @@
 import { createHash } from 'node:crypto';
-import { readdir, readFile, rm, writeFile } from 'node:fs/promises';
-import { basename, dirname, join, relative, resolve } from 'node:path';
+import { lstat, readdir, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  basename,
+  dirname,
+  isAbsolute,
+  join,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 
 import { parseCanonicalAgentFile } from '@agents/canonical';
 import {
@@ -20,6 +28,8 @@ import {
   summarizeMaterializationPlan,
   toMaterializationOperations,
   type MaterializationApplyResult,
+  type MaterializationContext,
+  type MaterializationExtension,
   type MaterializationOperation,
   type MaterializationPlan,
   type MaterializationWriteOperation,
@@ -466,6 +476,25 @@ export async function computeCursorProjectExtensionPlan(
     return emptyPlan(true, cleanupOwners);
   }
   const targets = await readCursorMaterializationTargets(scopeRoot, options);
+  if (
+    !isPartialSync &&
+    isUserCursorScope(scopeRoot, options) &&
+    targets.length > 0
+  ) {
+    const canonicalBaseRoles = new Set(
+      canonicalEntries
+        .filter((entry) => entry.type === 'agent' && entry.isFile)
+        .map((entry) => entry.name.replace(/\.md$/i, '')),
+    );
+    const missingBaseRoles = SUPPORTED_CURSOR_BASE_ROLES.filter(
+      (role) => !canonicalBaseRoles.has(role),
+    );
+    if (missingBaseRoles.length > 0) {
+      throw new CliError(
+        `Bundled managed Cursor role definitions are unavailable for user sync: ${missingBaseRoles.join(', ')}. Refusing stale user-role cleanup.`,
+      );
+    }
+  }
   const desiredRoles = await desiredRolesFromCanonical(
     scopedCanonicalEntries,
     targets,
@@ -547,6 +576,65 @@ export async function computeCursorProjectExtensionPlan(
   };
 }
 
+async function readMutationPathStats(path: string) {
+  try {
+    return await lstat(path);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      return null;
+    }
+    throw error;
+  }
+}
+
+async function assertSafeCursorMutationPath(
+  scopeRoot: string,
+  absolutePath: string,
+): Promise<void> {
+  const resolvedScopeRoot = resolve(scopeRoot);
+  const relativePath = relative(resolvedScopeRoot, absolutePath);
+  if (
+    relativePath === '..' ||
+    relativePath.startsWith(`..${sep}`) ||
+    isAbsolute(relativePath) ||
+    resolve(resolvedScopeRoot, relativePath) !== absolutePath
+  ) {
+    throw new CliError(
+      `Cursor materialization path escapes the sync scope: ${absolutePath}`,
+    );
+  }
+
+  let currentPath = resolvedScopeRoot;
+  const parentParts = relativePath
+    .replaceAll('\\', '/')
+    .split('/')
+    .slice(0, -1);
+  for (const part of parentParts) {
+    currentPath = join(currentPath, part);
+    const stats = await readMutationPathStats(currentPath);
+    if (!stats) {
+      break;
+    }
+    if (stats.isSymbolicLink()) {
+      throw new CliError(
+        `Cursor materialization parent is a symbolic link: ${toRelativePath(resolvedScopeRoot, currentPath)}`,
+      );
+    }
+    if (!stats.isDirectory()) {
+      throw new CliError(
+        `Cursor materialization parent is not a directory: ${toRelativePath(resolvedScopeRoot, currentPath)}`,
+      );
+    }
+  }
+
+  const targetStats = await readMutationPathStats(absolutePath);
+  if (targetStats?.isSymbolicLink()) {
+    throw new CliError(
+      `Cursor materialization target is a symbolic link: ${relativePath.replaceAll('\\', '/')}`,
+    );
+  }
+}
+
 export async function applyCursorProjectExtensionPlan(
   scopeRoot: string,
   plan: CursorExtensionPlan,
@@ -563,6 +651,7 @@ export async function applyCursorProjectExtensionPlan(
     }
     const absolutePath = resolve(scopeRoot, operation.path);
     try {
+      await assertSafeCursorMutationPath(scopeRoot, absolutePath);
       if (operation.action === 'remove') {
         await rm(absolutePath, { force: true });
       } else {
@@ -597,3 +686,19 @@ export function toCursorExtensionOperations(
     roleName: plan.operations[index]?.roleName,
   }));
 }
+
+export const cursorMaterializationExtension: MaterializationExtension<
+  CursorExtensionPlan,
+  MaterializationContext<CursorMaterializationTargetOptions>
+> = {
+  provider: 'cursor',
+  computePlan(context) {
+    return computeCursorProjectExtensionPlan(
+      context.scopeRoot,
+      context.canonicalEntries,
+      context.allowedCanonicalPaths,
+      context.options,
+    );
+  },
+  applyPlan: applyCursorProjectExtensionPlan,
+};

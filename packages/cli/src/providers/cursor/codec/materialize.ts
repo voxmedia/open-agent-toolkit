@@ -1,14 +1,16 @@
-import { lstat, readFile } from 'node:fs/promises';
+import { lstat, readFile, readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import type { CanonicalAgentDocument } from '@agents/canonical';
 import { CliError } from '@errors/index';
+import { validateRealPathWithinScope } from '@fs/paths';
 import YAML from 'yaml';
 
 import type { CursorModelPinMapping } from './catalog';
 import {
   buildCursorMaterializedRoleName,
   isOatManagedCursorRoleFile,
+  normalizeCursorRoleName,
   renderCursorManagedComments,
   type CursorRoleOwner,
 } from './shared';
@@ -126,15 +128,38 @@ export function materializeCursorAgents(options: {
   );
 }
 
-async function pathExists(path: string): Promise<boolean> {
+async function readPathStats(path: string) {
   try {
-    await lstat(path);
-    return true;
+    return await lstat(path);
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
-      return false;
+      return null;
     }
     throw error;
+  }
+}
+
+function readDeclaredCursorAgentName(content: string): string | null {
+  const normalized = content.startsWith('\uFEFF') ? content.slice(1) : content;
+  const match = /^---\n([\s\S]*?)\n---(?:\n|$)/.exec(normalized);
+  if (!match?.[1]) {
+    return null;
+  }
+  try {
+    const frontmatter = YAML.parse(match[1]) as unknown;
+    if (
+      !frontmatter ||
+      typeof frontmatter !== 'object' ||
+      Array.isArray(frontmatter)
+    ) {
+      return null;
+    }
+    const name = (frontmatter as Record<string, unknown>)['name'];
+    return typeof name === 'string' && name.trim()
+      ? normalizeCursorRoleName(name)
+      : null;
+  } catch {
+    return null;
   }
 }
 
@@ -142,14 +167,47 @@ export async function assertNoUnmanagedCursorAgentCollisions(
   scopeRoot: string,
   desiredRoleNames: Iterable<string>,
 ): Promise<void> {
-  for (const roleName of new Set(desiredRoleNames)) {
-    for (const directory of CURSOR_AGENT_DISCOVERY_DIRECTORIES) {
-      const relativePath = `${directory}/${roleName}.md`;
-      const absolutePath = join(scopeRoot, relativePath);
-      if (!(await pathExists(absolutePath))) {
+  const desiredNames = new Set(desiredRoleNames);
+  for (const directory of CURSOR_AGENT_DISCOVERY_DIRECTORIES) {
+    const directoryPath = join(scopeRoot, directory);
+    const directoryStats = await readPathStats(directoryPath);
+    if (!directoryStats) {
+      continue;
+    }
+    if (directoryStats.isSymbolicLink()) {
+      throw new CliError(
+        `Cursor agent discovery directory is a symbolic link: ${directory}. Refusing unsafe materialization.`,
+      );
+    }
+    if (!directoryStats.isDirectory()) {
+      throw new CliError(
+        `Cursor agent discovery path is not a directory: ${directory}.`,
+      );
+    }
+
+    for (const fileName of await readdir(directoryPath)) {
+      if (!fileName.endsWith('.md')) {
         continue;
       }
-
+      const relativePath = `${directory}/${fileName}`;
+      const absolutePath = join(directoryPath, fileName);
+      const filenameRoleName = normalizeCursorRoleName(fileName);
+      const fileStats = await readPathStats(absolutePath);
+      if (!fileStats) {
+        continue;
+      }
+      if (fileStats.isSymbolicLink()) {
+        try {
+          await validateRealPathWithinScope(absolutePath, scopeRoot);
+        } catch {
+          throw new CliError(
+            `Cursor agent definition is a symbolic link at ${relativePath} whose target escapes the sync scope.`,
+          );
+        }
+      }
+      if (!fileStats.isFile() && !fileStats.isSymbolicLink()) {
+        continue;
+      }
       let content: string;
       try {
         content = await readFile(absolutePath, 'utf8');
@@ -158,9 +216,26 @@ export async function assertNoUnmanagedCursorAgentCollisions(
           `Cursor role name collision at ${relativePath}: existing Markdown definition cannot be verified as OAT-managed.`,
         );
       }
-      if (!isOatManagedCursorRoleFile(content, roleName)) {
+      const declaredRoleName = readDeclaredCursorAgentName(content);
+      const filenameCollision = desiredNames.has(filenameRoleName);
+      const declaredCollision =
+        declaredRoleName !== null && desiredNames.has(declaredRoleName);
+      if (!filenameCollision && !declaredCollision) {
+        continue;
+      }
+      if (fileStats.isSymbolicLink()) {
         throw new CliError(
-          `Cursor role name collision at ${relativePath}: existing Markdown definition is unmanaged.`,
+          `Cursor agent definition is a symbolic link at ${relativePath} with a colliding role name. Refusing unsafe materialization.`,
+        );
+      }
+      const collidingRoleName = declaredCollision
+        ? declaredRoleName
+        : filenameRoleName;
+      if (!isOatManagedCursorRoleFile(content, collidingRoleName)) {
+        throw new CliError(
+          declaredCollision && !filenameCollision
+            ? `Unmanaged Cursor definition at ${relativePath} declares colliding name ${collidingRoleName}.`
+            : `Cursor role name collision at ${relativePath}: existing Markdown definition is unmanaged.`,
         );
       }
     }

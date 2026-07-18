@@ -1,3 +1,5 @@
+import type { CanonicalEntry } from '@engine/index';
+
 export type MaterializationAction = 'create' | 'update' | 'remove' | 'skip';
 
 export interface MaterializationOperation<
@@ -35,6 +37,26 @@ export interface MaterializationApplyResult {
   applied: number;
   failed: number;
   skipped: number;
+}
+
+export interface MaterializationContext<TOptions = undefined> {
+  scopeRoot: string;
+  canonicalEntries: CanonicalEntry[];
+  allowedCanonicalPaths?: string[];
+  options: TOptions;
+}
+
+export interface MaterializationExtension<
+  TPlan extends MaterializationPlan = MaterializationPlan,
+  TContext extends MaterializationContext<unknown> =
+    MaterializationContext<unknown>,
+> {
+  provider: TPlan['provider'];
+  computePlan(context: TContext): Promise<TPlan>;
+  applyPlan(
+    scopeRoot: string,
+    plan: TPlan,
+  ): Promise<MaterializationApplyResult>;
 }
 
 export interface MaterializationPlanSummary {

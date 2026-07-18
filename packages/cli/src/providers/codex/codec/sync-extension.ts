@@ -24,10 +24,10 @@ import TOML from '@iarna/toml';
 import {
   hasMaterializationChanges,
   summarizeMaterializationPlan,
-  toMaterializationOperations,
   type MaterializationAction,
   type MaterializationApplyResult,
-  type MaterializationOperation,
+  type MaterializationContext,
+  type MaterializationExtension,
   type MaterializationPlan,
   type MaterializationWriteOperation,
 } from '@providers/shared';
@@ -54,10 +54,11 @@ import {
 export type CodexExtensionAction = MaterializationAction;
 export type CodexExtensionTarget = 'role' | 'config';
 
-export interface CodexExtensionOperation extends MaterializationOperation<
-  'codex',
-  CodexExtensionTarget
-> {
+export interface CodexExtensionOperation {
+  action: CodexExtensionAction;
+  target: CodexExtensionTarget;
+  path: string;
+  reason: string;
   roleName?: string;
 }
 
@@ -99,7 +100,7 @@ interface CodexMaterializationTarget {
   owner: CodexRoleOwner;
 }
 
-interface CodexMaterializationTargetOptions {
+export interface CodexMaterializationTargetOptions {
   userConfigDir?: string;
   projectPath?: string | null;
   env?: NodeJS.ProcessEnv;
@@ -885,9 +886,27 @@ export function summarizeCodexExtension(plan: CodexExtensionPlan): {
 export function toCodexExtensionOperations(
   plan: CodexExtensionPlan,
 ): CodexExtensionOperation[] {
-  const operations = toMaterializationOperations(plan);
-  return operations.map((operation, index) => ({
-    ...operation,
-    roleName: plan.operations[index]?.roleName,
+  return plan.operations.map((operation) => ({
+    action: operation.action,
+    target: operation.target,
+    path: operation.path,
+    reason: operation.reason,
+    roleName: operation.roleName,
   }));
 }
+
+export const codexMaterializationExtension: MaterializationExtension<
+  CodexExtensionPlan,
+  MaterializationContext<CodexMaterializationTargetOptions>
+> = {
+  provider: 'codex',
+  computePlan(context) {
+    return computeCodexProjectExtensionPlan(
+      context.scopeRoot,
+      context.canonicalEntries,
+      context.allowedCanonicalPaths,
+      context.options,
+    );
+  },
+  applyPlan: applyCodexProjectExtensionPlan,
+};
