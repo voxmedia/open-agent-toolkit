@@ -101,14 +101,15 @@ ls -d "$PROJECTS_ROOT"/*/ 2>/dev/null
 
 Read `"$PROJECT_PATH/state.md"` frontmatter and extract:
 
-| Field                  | Used For                                                                     |
-| ---------------------- | ---------------------------------------------------------------------------- |
-| `oat_phase`            | Current lifecycle position (discovery, spec, design, plan, implement)        |
-| `oat_phase_status`     | Phase completion state (in_progress, complete, pr_open)                      |
-| `oat_workflow_mode`    | Routing table selection (spec-driven, quick, import). Default: `spec-driven` |
-| `oat_hill_checkpoints` | Which phases require HiLL approval                                           |
-| `oat_hill_completed`   | Which HiLL gates have been passed                                            |
-| `oat_blockers`         | Informational warnings (not routing gates)                                   |
+| Field                     | Used For                                                                     |
+| ------------------------- | ---------------------------------------------------------------------------- |
+| `oat_phase`               | Current lifecycle position (discovery, spec, design, plan, implement)        |
+| `oat_phase_status`        | Phase completion state (in_progress, complete, pr_open)                      |
+| `oat_workflow_mode`       | Routing table selection (spec-driven, quick, import). Default: `spec-driven` |
+| `oat_hill_checkpoints`    | Which phases require HiLL approval                                           |
+| `oat_hill_completed`      | Which HiLL gates have been passed                                            |
+| `oat_blockers`            | Informational warnings (not routing gates)                                   |
+| `oat_implement_exit_gate` | Whether the implementation exit gate is allowed and fresh                    |
 
 **If state.md is missing or unreadable:** Report error and suggest running the relevant phase skill directly. STOP.
 
@@ -261,26 +262,41 @@ Entry condition: `oat_phase == "implement"` AND (`oat_phase_status == "complete"
 
 Apply the following checks in priority order. Stop at the first match:
 
-**5.0: Incomplete approval-aware post-implementation sequence**
+**5.0: Unresolved implementation exit gate**
+
+Before every other post-implementation route, inspect
+`oat_implement_exit_gate` in project state. If
+`oat_implement_exit_gate` is absent, `pending`, `blocked`, `stale`, malformed,
+or not fresh, route to `oat-project-implement`.
+
+This override applies even when `oat_phase_status` is `complete` or `pr_open`,
+and before the summary, document, PR, or `oat-project-complete` routes. Announce
+exactly: "Implementation exit gate unresolved or stale — resume with
+`oat-project-implement` before post-implementation routing."
+
+Only an `allowed` and fresh exit-gate disposition falls through to the normal
+post-implementation checks.
+
+**5.1: Incomplete approval-aware post-implementation sequence**
 
 Before every other post-implementation route, inspect `oat_post_implement_sequence`
 in project state. When the snapshot exists and is incomplete, route to
 `oat-project-implement`. This applies even when `oat_phase_status` is `pr_open`
 or a summary exists. A completed snapshot falls through to the normal router.
 
-**5.1: Incomplete revision tasks**
+**5.2: Incomplete revision tasks**
 
 Grep plan.md for `p-revN` phases. If any `p-revN` tasks exist with status != completed in implementation.md:
 → Route to `oat-project-implement`
 → Announce: "Revision tasks pending — continuing implementation"
 
-**5.2: Unprocessed reviews**
+**5.3: Unprocessed reviews**
 
 Run the Review Safety Check (Step 4 above). If unprocessed reviews exist:
 → Route to `oat-project-review-receive`
 → Announce: "Unprocessed review feedback detected"
 
-**5.3: Final code review not passed**
+**5.4: Final code review not passed**
 
 Extract only the exact level-two `## Reviews` ledger, stopping before the next
 level-two heading, then select its latest appended event with `Scope="final"`
@@ -305,14 +321,14 @@ Ignore matching rows outside `REVIEWS_SECTION`; they are not review events.
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Review fixes implemented — triggering re-review"
 
-- If `FINAL_ROW` has another non-passed status (e.g., `"received"`, `"fixes_added"`) and Step 5.2 did not find an active top-level review artifact:
+- If `FINAL_ROW` has another non-passed status (e.g., `"received"`, `"fixes_added"`) and Step 5.3 did not find an active top-level review artifact:
   → Route to `oat-project-review-provide` (with scope hint: "code final")
   → Announce: "Final review is not passed and no active review artifact exists — rerunning final review"
 
 - If `FINAL_ROW` has `Status="passed"`:
-  → Continue to 5.4
+  → Continue to 5.5
 
-**5.4: Summary not done**
+**5.5: Summary not done**
 
 Read `{PROJECT_PATH}/summary.md`:
 
@@ -320,13 +336,13 @@ Read `{PROJECT_PATH}/summary.md`:
   → Route to `oat-project-summary`
   → Announce: "Final review passed — generating project summary"
 
-**5.5: PR not created**
+**5.6: PR not created**
 
 If `oat_phase_status != "pr_open"`:
 → Route to `oat-project-pr-final`
 → Announce: "Summary complete — creating final PR"
 
-**5.6: PR is open**
+**5.7: PR is open**
 
 If `oat_phase_status == "pr_open"`:
 → Route to `oat-project-complete`

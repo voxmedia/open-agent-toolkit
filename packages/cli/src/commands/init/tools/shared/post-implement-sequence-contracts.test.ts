@@ -23,6 +23,16 @@ function readImplementSkill(): string {
   ].join('\n\n');
 }
 
+function readNextSkill(): string {
+  return readFileSync(
+    join(
+      import.meta.dirname,
+      '../../../../../../../.agents/skills/oat-project-next/SKILL.md',
+    ),
+    'utf8',
+  );
+}
+
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
 }
@@ -132,13 +142,7 @@ describe('post-implementation sequence contracts', () => {
   });
 
   it('preserves incomplete sequence routing and PR state integration', () => {
-    const next = readFileSync(
-      join(
-        import.meta.dirname,
-        '../../../../../../../.agents/skills/oat-project-next/SKILL.md',
-      ),
-      'utf8',
-    );
+    const next = readNextSkill();
     const prFinal = readFileSync(
       join(
         import.meta.dirname,
@@ -152,5 +156,38 @@ describe('post-implementation sequence contracts', () => {
     expect(next).toContain('route to\n`oat-project-implement`');
     expect(prFinal).toContain('Reuse a\ncompleted `summary` step');
     expect(prFinal).toContain('merge with, never replace');
+  });
+
+  it('routes unresolved implementation exit gates before every normal closeout route', () => {
+    const next = readNextSkill();
+    const normalized = normalizeWhitespace(next);
+    const gateCheckIndex = next.indexOf(
+      '**5.0: Unresolved implementation exit gate**',
+    );
+    const sequenceIndex = next.indexOf(
+      '**5.1: Incomplete approval-aware post-implementation sequence**',
+    );
+
+    expect(gateCheckIndex).toBeGreaterThanOrEqual(0);
+    expect(sequenceIndex).toBeGreaterThan(gateCheckIndex);
+    expect(gateCheckIndex).toBeLessThan(
+      next.indexOf('**5.5: Summary not done**'),
+    );
+    expect(gateCheckIndex).toBeLessThan(
+      next.indexOf('**5.6: PR not created**'),
+    );
+    expect(gateCheckIndex).toBeLessThan(next.indexOf('**5.7: PR is open**'));
+    expect(normalized).toContain(
+      '`oat_implement_exit_gate` is absent, `pending`, `blocked`, `stale`, malformed, or not fresh',
+    );
+    expect(normalized).toContain(
+      'This override applies even when `oat_phase_status` is `complete` or `pr_open`, and before the summary, document, PR, or `oat-project-complete` routes.',
+    );
+    expect(normalized).toContain(
+      'Implementation exit gate unresolved or stale — resume with `oat-project-implement` before post-implementation routing.',
+    );
+    expect(normalized).toContain(
+      'Only an `allowed` and fresh exit-gate disposition falls through',
+    );
   });
 });
