@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p06] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p06] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -34,23 +34,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/157' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T19:01:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T19:30:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Implementation Complete — Re-review Waived
+**Status:** PR Open — Awaiting Review
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-All 14 implementation tasks are complete. The sole Important final-review finding was fixed in `133b1c23`, current `origin/main` was merged, the lockstep public package set was reconciled at `0.1.74`, and the full release boundary passed. The operator explicitly waived another final re-review.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -80,6 +80,9 @@ All 14 implementation tasks are complete. The sole Important final-review findin
 - ✓ Current `origin/main` merged and conflict contracts reconciled
 - ✓ Lockstep package version `0.1.74` passed post-merge `pnpm release:validate`
 - ✓ Focused final re-review explicitly waived by operator
+- ✓ Project summary generated and key decisions promoted
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -87,4 +90,8 @@ None
 
 ## Next Milestone
 
-Ready for project summary, documentation reconciliation, and final PR when requested.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
