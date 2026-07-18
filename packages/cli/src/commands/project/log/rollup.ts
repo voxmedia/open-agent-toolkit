@@ -218,7 +218,15 @@ async function rollupLedger(
       (entry): entry is Extract<ParsedProjectLogEntry, { class: 'judgment' }> =>
         entry.class === 'judgment' && entry.scope === 'general',
     );
-    const additions = candidates.filter((entry) => !keys.has(ledgerKey(entry)));
+    const additions: typeof candidates = [];
+    for (const entry of candidates) {
+      const key = ledgerKey(entry);
+      if (keys.has(key)) {
+        continue;
+      }
+      keys.add(key);
+      additions.push(entry);
+    }
     if (additions.length === 0) {
       return 'deduplicated';
     }

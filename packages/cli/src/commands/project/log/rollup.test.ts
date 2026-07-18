@@ -208,6 +208,46 @@ Verdict: adopt the task commit discipline.
     expect(ledger.match(/review retries/g)).toHaveLength(1);
   });
 
+  it('preserves only the first same-key candidate in the initial ledger batch', async () => {
+    const { root, logPath, ledgerPath } = await createRepo();
+    await writeFile(
+      logPath,
+      `# Project Log: demo
+
+## Entries
+
+### 2026-07-17 · general · friction · duplicate area
+
+First candidate is authoritative.
+
+### 2026-07-17 · general · feedback · duplicate area
+
+Second candidate must be omitted.
+
+## End-of-run synthesis
+
+Complete.
+`,
+      'utf8',
+    );
+
+    const first = await rollupProjectLog({
+      repoRoot: root,
+      home: join(root, 'home'),
+    });
+    const second = await rollupProjectLog({
+      repoRoot: root,
+      home: join(root, 'home'),
+    });
+
+    expect(first.ledgerOutcome).toBe('appended');
+    expect(second.ledgerOutcome).toBe('deduplicated');
+    const ledger = await readFile(ledgerPath, 'utf8');
+    expect(ledger.match(/· duplicate area/g)).toHaveLength(1);
+    expect(ledger).toContain('First candidate is authoritative.');
+    expect(ledger).not.toContain('Second candidate must be omitted.');
+  });
+
   it('rolls up complete safe multiline judgment bodies', async () => {
     const { root, logPath, summaryPath, ledgerPath } = await createRepo();
     await writeFile(
