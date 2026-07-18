@@ -53,6 +53,7 @@ export interface OatArchiveConfig {
 }
 
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
+export type WorkflowProjectLog = true | false | 'auto';
 export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
 export type WorkflowPostImplementLegacySequence =
   | 'wait'
@@ -167,6 +168,8 @@ export interface OatWorkflowConfig {
   autoReviewAtHillCheckpoints?: boolean;
   autoNarrowReReviewScope?: boolean;
   autoArtifactReview?: WorkflowAutoArtifactReview;
+  projectLog?: WorkflowProjectLog;
+  projectLogLedgerPath?: string;
   designMode?: WorkflowDesignMode;
   dispatchPolicy?: WorkflowDispatchPolicy;
   dispatchCeiling?: WorkflowDispatchCeiling;
@@ -545,6 +548,15 @@ function normalizeWorkflowConfig(
     if (Object.keys(autoArtifactReview).length > 0) {
       next.autoArtifactReview = autoArtifactReview;
     }
+  }
+
+  if (typeof parsed.projectLog === 'boolean' || parsed.projectLog === 'auto') {
+    next.projectLog = parsed.projectLog;
+  }
+
+  const projectLogLedgerPath = trimNonEmptyString(parsed.projectLogLedgerPath);
+  if (projectLogLedgerPath !== undefined) {
+    next.projectLogLedgerPath = projectLogLedgerPath;
   }
 
   if (
