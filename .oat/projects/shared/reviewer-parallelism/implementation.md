@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,10 +27,10 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | in_progress | 1     | 0/1       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | in_progress | 2     | 0/2       |
 
-**Total:** 1/4 tasks completed
+**Total:** 2/4 tasks completed
 
 ---
 
@@ -98,24 +98,66 @@ oat_generated: false
 
 ## Phase 2: Review Workflow Documentation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Review workflow documentation now distinguishes outer primary-reviewer dispatch from optional reviewer-local reconnaissance.
+- The page documents eligible broad-review benefits, bounded worker lanes, provider-neutral dispatch ownership, primary-only judgment, and inline fallback.
+
+**Key files touched:**
+
+- `apps/oat-docs/docs/workflows/projects/reviews.md` - documents reviewer reconnaissance behavior and boundaries.
+
+**Verification:**
+
+- Run: docs build, scoped formatting, diff hygiene, and repository link checking.
+- Result: build, formatting, and diff checks pass; the link checker reports two independently confirmed pre-existing fragment failures outside the changed page.
+
+**Notes / Decisions:**
+
+- The documentation adds no links or navigation/index changes.
+- Root-owned review passed with no findings.
 
 ### Task p02-t01: Document broad-review latency benefit and safety boundary
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 86582f5ebbd02cac16af2a967132f65073322bb4
+
+**Outcome (required when completed):**
+
+- Users can distinguish lifecycle reviewer dispatch from optional local reconnaissance and understand its safety/capability boundaries.
+
+**Files changed:**
+
+- `apps/oat-docs/docs/workflows/projects/reviews.md` - focused authored documentation update.
+
+**Verification:**
+
+- Run: `pnpm build:docs`, scoped formatting, `git diff --check`, and `pnpm docs:check-links`.
+- Result: all changed-surface checks pass; the link checker retains two unrelated baseline fragment failures.
+
+**Notes / Decisions:**
+
+- Provider-specific model promises remain outside the reviewer documentation.
+
+**Issues Encountered:**
+
+- Repository-wide link checking is not fully green due to two pre-existing fragment failures in unchanged source/target pages.
 
 ---
 
 ## Phase 3: Provider Sync and Shipped Release Validation
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-18
 
 ### Task p03-t01: Regenerate provider views and finalize lockstep release metadata
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -162,6 +204,28 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Medium `p01-M1` is deferred to final review: add targeted semantic assertions for no hard-coded models, one-time capability checking, and worker prohibition on writing either final output sink.
 
+### Run 2
+
+**Timestamp:** 2026-07-18T23:02:18Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome | Task commits | Root review | Fix iterations |
+| ----- | ------- | ------------ | ----------- | -------------- |
+| p02   | passed  | `86582f5e`   | passed      | 0              |
+
+**Dispatch notes:**
+
+- `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- Optional nested dispatches: none.
+
+**Outstanding items:**
+
+- Repository link checking retains two unrelated, pre-existing fragment failures; Phase p02 introduced no link regression.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -175,7 +239,8 @@ Chronological log of implementation progress.
 **Session Start:** quick-start initialization
 
 - [x] p01-t01: Add bounded reconnaissance behavior with semantic regression coverage - `2977bb19`
-- [ ] p02-t01: Document broad-review latency benefit and safety boundary - next
+- [x] p02-t01: Document broad-review latency benefit and safety boundary - `86582f5e`
+- [ ] p03-t01: Regenerate provider views and finalize lockstep release metadata - next
 
 **What changed (high level):**
 
@@ -221,7 +286,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage                             |
 | ----- | --------- | ------ | ------ | ------------------------------------ |
 | 1     | 124       | 124    | 0      | Focused reviewer/canonical contracts |
-| 2     | -         | -      | -      | -                                    |
+| 2     | 5         | 4      | 1\*    | \*Unrelated baseline link-check gate |
 | 3     | -         | -      | -      | -                                    |
 
 ## Final Summary (for PR/docs)
