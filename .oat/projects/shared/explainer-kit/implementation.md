@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Phase 3 review requires a bounded fix loop before Phase 4.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -453,7 +452,7 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
   checks — pass.
 - Phase 3 code review pending.
 
-### Phase 3 Review — Fixes Added
+### Phase 3 Review — Fixes Completed
 
 **Artifact:** `reviews/p03-review-2026-07-18T035042Z.md`
 
@@ -466,8 +465,12 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 - Validate complete v1 recap manifests and immutable hash coverage before
   archive export.
 
-**Disposition:** Resolve all four findings in one bounded append-only Phase 3
-fix commit, rerun the complete matrix and direct probes, then re-review.
+**Disposition:** All four findings were resolved in append-only commit
+`205bd030`. Adapter tests passed 45/45, archive/lifecycle tests passed 99/99,
+direct real-core and malformed-attestation probes passed, and skill validation,
+CLI type-check/lint, format, and whitespace checks were clean. Release
+validation remains intentionally deferred to the planned Phase 4 lockstep
+version task. Reviewer re-review is pending.
 
 ### Task p03-t01: Resolve adapter config and canonical output roots
 
@@ -782,7 +785,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | ------------------------------------------ |
 | 1     | 491       | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
 | 2     | 102       | 102    | 0      | Full post-review-fix Phase 2 suite passes  |
-| 3     | 235       | 235    | 0      | Full root Phase 3 matrix passes            |
+| 3     | 144       | 144    | 0      | Full post-review-fix Phase 3 matrix passes |
 
 ## Final Summary (for PR/docs)
 
