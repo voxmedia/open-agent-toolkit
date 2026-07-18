@@ -162,7 +162,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Implementer dispatch:** `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 - **Review round 1:** failed with 5 Important findings; artifact `reviews/code-p02-review-2026-07-18T002439Z.md`.
 - **Reviewer dispatch:** `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
-- **Fix continuation:** iteration 1 pending on the original p02 implementer handle, bounded to the five review findings.
+- **Fix continuation:** iteration 1 completed in `e30361ba`; all five Important findings were addressed on the original p02 implementer handle.
+- **Fix verification:** root reran 79 focused p02 and sync-command tests; all passed. Implementer also reported type-check, lint, and format passed.
+- **Re-review:** pending against `7d1dd7fa3c6dd219fa4cd79baf1f3c554d5afe06..e30361babc8129d77c9a6c8d137dcc08c3a73ed5`.
 - **Optional nested dispatches:** none.
 - **Outstanding:** p03 remains blocked by the p02 fix and re-review loop.
 
