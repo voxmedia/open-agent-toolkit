@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: null
+oat_last_commit: 5237cd57
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,9 +9,9 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -34,7 +34,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T00:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T13:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -46,30 +46,33 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery complete — all five open questions plus §4 shape resolved with
-the operator. Ready for design (`oat-project-design` produces spec.md +
-design.md).
+Design complete — reviewed by the stoa-side packet author (relayed by the
+operator), approved with amendments applied (versioning lineage, W6
+mini-runbook, fixture unhappy-path leg, B3 regression-guard framing,
+row-5 closed rejection, tenth backlog item). Ready for implementation
+planning.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
-- **Design:** `design.md` (scaffolded template — not started)
+- **Spec:** `spec.md` (complete — 10 FRs + 4 NFRs, authored inline by `oat-project-design`)
+- **Design:** `design.md` (complete — approved with amendments 2026-07-18)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Downstream lifecycle files scaffolded
-- ✓ Five open questions + §4 shape resolved with operator
-- ✓ Discovery HiLL checkpoint approved
+- ✓ Discovery complete (HiLL approved)
+- ✓ Specification complete (folded into design)
+- ✓ Design complete (HiLL approved with amendments)
+- ⧗ Awaiting implementation plan
 
 ## Blockers
 
-None
+None (Phase 6 of the design is gated on the explainer-kit v1 RC, but
+planning and phases 1–5 are unblocked)
 
 ## Next Milestone
 
-Design phase: spec.md + design.md via `oat-project-design` (design is the
-remaining HiLL checkpoint)
+Implementation plan via `oat-project-plan` (6 design phases → task
+breakdown; Phase 6 tasks written as blocked/gated)
