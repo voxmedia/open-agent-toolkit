@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Final review fixes must pass before configured exit-gate execution.
+  - Final re-review must pass before configured exit-gate execution.
 oat_last_updated: 2026-07-18
 oat_current_task_id: null
 oat_generated: false
@@ -159,9 +159,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Phase base:** `5cde4690`
 **Commit range:** `9e1c06e1..8222c1e2`
 
-| Phase | Outcome | Tasks | Root Review | Fix Iterations |
-| ----- | ------- | ----- | ----------- | -------------- |
-| p03   | passed  | 2/2   | fixes_added | 1 pending      |
+| Phase | Outcome | Tasks | Root Review     | Fix Iterations |
+| ----- | ------- | ----- | --------------- | -------------- |
+| p03   | passed  | 2/2   | fixes_completed | 1              |
 
 **Task commits:** `9e1c06e1`, `8222c1e2`
 **Integration commits:** `0ef83fc7`, `593129cf`
@@ -173,8 +173,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
 **Optional nested dispatches:** None.
-**Outstanding items:** Final review fixes for fail-closed operational outcomes
-and the scaffolded crash-reconciliation state shape.
+**Final review fix commit:** `54d6edad`
+**Outstanding items:** Fresh final whole-project re-review.
 
 ### Run 2: Phase p02 {#run-2}
 
@@ -301,10 +301,10 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 - Medium: 1
 - Minor: 0
 
-**Disposition:** Fixes added. The bookkeeping finding was resolved in the
-closeout-baseline commit; fail-closed operational outcomes and the scaffolded
-crash-reconciliation state shape were routed to the original Phase 3
-implementer for a bounded fix iteration.
+**Disposition:** Fixes completed. The bookkeeping finding was resolved in
+`ecdf3c29`; fail-closed operational outcomes and the complete scaffolded
+crash-reconciliation state shape were resolved in `54d6edad`. Awaiting fresh
+whole-project re-review.
 
 ---
 
@@ -382,10 +382,12 @@ before final gate execution.
 - [x] Autonomy integration: refresh implementation prompt-site inventory -
       `593129cf`
 - [x] p03-t02: Synchronize shipped assets and validate the release - `8222c1e2`
+- [x] Final review bookkeeping baseline - `ecdf3c29`
+- [x] Final review fix: fail closed and complete the state template - `54d6edad`
 
 **Outcome:** All six plan tasks and the complete repository quality/release
 chain passed. Final review identified two implementation fixes and one stale
-bookkeeping baseline; fixes are in progress.
+bookkeeping baseline; all findings are fixed and awaiting re-review.
 
 **Blockers:** Final review must pass before configured exit-gate execution,
 approval-aware sequencing, final HiLL, or implementation completion.
@@ -396,21 +398,21 @@ approval-aware sequencing, final HiLL, or implementation completion.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact         | Planned / Documented                                                                       | Actual / Accepted                                                                             | Reason                             | Source of Truth                           | Follow-up   |
-| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------- | ----------- |
-| p03 integration | `origin/main` / PR #159 | Cursor skill symlink views listed as tracked                                               | Cursor skills are native-read and remain absent                                               | Main changed after planning        | Current source CLI and release validation | Complete    |
-| p03 integration | Full test gate          | No autonomy inventory task                                                                 | Refreshed canonical implementation prompt-site mappings                                       | Rebase changed gate-sensitive text | `.agents/docs/autonomy-contract.md`       | Complete    |
-| final review    | Final review artifact   | Operational failures and validated blocking findings shared generic nonzero policy wording | Operational/validation/correlation/receive failures remain blocked regardless of `on_failure` | Fail-closed review finding         | Closeout contract and regression tests    | In progress |
+| Task / Review   | Source Artifact         | Planned / Documented                                                                       | Actual / Accepted                                                                             | Reason                             | Source of Truth                           | Follow-up |
+| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------- | --------- |
+| p03 integration | `origin/main` / PR #159 | Cursor skill symlink views listed as tracked                                               | Cursor skills are native-read and remain absent                                               | Main changed after planning        | Current source CLI and release validation | Complete  |
+| p03 integration | Full test gate          | No autonomy inventory task                                                                 | Refreshed canonical implementation prompt-site mappings                                       | Rebase changed gate-sensitive text | `.agents/docs/autonomy-contract.md`       | Complete  |
+| final review    | Final review artifact   | Operational failures and validated blocking findings shared generic nonzero policy wording | Operational/validation/correlation/receive failures remain blocked regardless of `on_failure` | Fail-closed review finding         | Closeout contract and regression tests    | Complete  |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run                           | Passed       | Failed | Coverage                                                         |
-| ----- | ----------------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
-| 1     | 40 focused + type-check + format    | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
-| 2     | 118 focused + skill/version/format  | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
-| 3     | 148 targeted + 3,414 full + release | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
+| Phase | Tests Run                          | Passed       | Failed | Coverage                                                         |
+| ----- | ---------------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
+| 1     | 40 focused + type-check + format   | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
+| 2     | 118 focused + skill/version/format | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
+| 3     | 153 focused + full + release       | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
 
 ## Final Summary (for PR/docs)
 

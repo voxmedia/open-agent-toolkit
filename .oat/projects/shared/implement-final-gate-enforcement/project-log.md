@@ -92,6 +92,10 @@ Entries are chronological and append-only.
 
 Final review found 2 Important and 1 Medium findings; tasks are complete and bounded fixes are in progress. See implementation.md#review-received-final.
 
+### 2026-07-18 · structural · oat-project-implement · final-review-fixes-completed
+
+Final review findings were resolved in ecdf3c29 and 54d6edad; final whole-project re-review is pending.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
