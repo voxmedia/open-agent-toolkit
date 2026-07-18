@@ -48,6 +48,7 @@ oat_template: true
 
 - Modify: `.agents/agents/oat-reviewer.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 
 **Step 1: Write the contract test (RED)**
 
@@ -71,10 +72,10 @@ Expected: the new assertions fail because the orchestration contract is not yet 
 
 **Step 2: Implement the canonical reviewer contract (GREEN)**
 
-Update `.agents/agents/oat-reviewer.md` and the existing exact-version assertion in `packages/cli/src/validation/skills.test.ts`:
+Update `.agents/agents/oat-reviewer.md` and both existing exact-version assertions:
 
 - bump the canonical reviewer `version` from `1.1.7` to `1.1.8`;
-- update the existing reviewer version assertion from `1.1.7` to `1.1.8`;
+- update the reviewer version assertions in `packages/cli/src/validation/skills.test.ts` and `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts` from `1.1.7` to `1.1.8`;
 - add a provider-neutral bounded-reconnaissance policy after dispatch control;
 - make the primary reviewer establish authoritative scope before considering delegation;
 - define a compact lane prompt/return contract and one-level fan-out limit;
@@ -98,8 +99,15 @@ Expected: all focused reviewer and canonical-agent contract tests pass.
 Run:
 
 ```bash
+pnpm exec oxfmt --write \
+  .agents/agents/oat-reviewer.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
-pnpm exec oxfmt --check .agents/agents/oat-reviewer.md packages/cli/src/validation/skills.test.ts
+pnpm exec oxfmt --check \
+  .agents/agents/oat-reviewer.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git diff --check
 ```
 
@@ -108,7 +116,10 @@ Expected: tests and formatting pass; the diff changes no review payload schema, 
 **Step 4: Commit**
 
 ```bash
-git add .agents/agents/oat-reviewer.md packages/cli/src/validation/skills.test.ts
+git add \
+  .agents/agents/oat-reviewer.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
 git commit -m "feat(p01-t01): add bounded reviewer reconnaissance"
 ```
 
@@ -140,6 +151,7 @@ Do not add a new page or modify generated navigation; this is a focused edit to 
 Run:
 
 ```bash
+pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/reviews.md
 pnpm docs:check-links
 pnpm build:docs
 pnpm exec oxfmt --check apps/oat-docs/docs/workflows/projects/reviews.md
@@ -169,7 +181,8 @@ git commit -m "docs(p02-t01): explain reviewer reconnaissance boundaries"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Regenerate: `packages/cli/assets/public-package-versions.json`
-- Regenerate: `.codex/agents/oat-reviewer.toml`
+- Regenerate: `.codex/agents/oat-reviewer*.toml` (base role and all tracked materialized variants)
+- Regenerate as applicable: `.codex/config.toml`
 - Regenerate as applicable: `.oat/sync/manifest.json`
 - Verify symlink-backed views: `.claude/agents/oat-reviewer.md`, `.cursor/agents/oat-reviewer.md`
 
@@ -194,25 +207,43 @@ pnpm run cli -- sync --scope all
 pnpm run cli -- sync --scope project --dry-run
 ```
 
-Expected: the tracked Codex reviewer view contains the finalized canonical contract; Claude and Cursor symlinks still resolve to the canonical agent; the project-scope dry run reports no remaining drift. Stage only the tracked repository outputs for this task.
+Expected: the tracked Codex base reviewer and every materialized `oat-reviewer*.toml` variant contain the finalized canonical contract; Claude and Cursor symlinks still resolve to the canonical agent; the project-scope dry run reports no remaining drift. Include `.codex/config.toml` only if sync changes it.
 
 **Step 3: Run focused distribution checks**
 
 Run:
 
 ```bash
+pnpm exec oxfmt --write \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json
 pnpm --filter @open-agent-toolkit/cli exec vitest run   src/validation/skills.test.ts   src/agents/canonical/parse.test.ts   src/commands/init/tools/shared/review-skill-contracts.test.ts   src/providers/codex/codec/sync-extension.test.ts
 pnpm release:check-versions
 pnpm format
+git status --short
 git diff --check
 ```
 
-Expected: reviewer contracts, provider generation, version checks, and formatting pass.
+Expected: reviewer contracts, provider generation, version checks, and formatting pass; status contains only the intended package, generated reviewer, and sync outputs for this task.
 
 **Step 4: Commit the shipped surface**
 
 ```bash
-git add   packages/cli/package.json   packages/control-plane/package.json   packages/docs-config/package.json   packages/docs-theme/package.json   packages/docs-transforms/package.json   packages/cli/assets/public-package-versions.json   .codex/agents/oat-reviewer.toml   .oat/sync/manifest.json
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .codex/agents/oat-reviewer*.toml \
+  .oat/sync/manifest.json
+[ ! -e .codex/config.toml ] || git add .codex/config.toml
 git commit -m "chore(p03-t01): finalize reviewer orchestration release"
 ```
 
@@ -230,9 +261,10 @@ pnpm build
 pnpm build:docs
 pnpm release:check-versions
 pnpm release:validate
+git status --short
 ```
 
-Expected: all repository and publishable-package checks pass. If a correction is required, fix it within this task and amend the task commit before continuing.
+Expected: all repository and publishable-package checks pass and no generated provider drift remains. If a correction is required, fix it within this task and amend the task commit before continuing.
 
 ---
 
@@ -246,10 +278,19 @@ Expected: all repository and publishable-package checks pass. If a correction is
 
 **Step 1: Archive the completed backlog item**
 
-After the implementation and release validation satisfy the item acceptance criteria, run:
+After the implementation and release validation satisfy the item acceptance criteria:
+
+1. Remove the instantiated item's template-only `oat_template` and `oat_template_name` frontmatter entries.
+2. Format the active item before archival:
+
+   ```bash
+   pnpm exec oxfmt --write .oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md
+   ```
+
+3. Run the archive through the repository source CLI:
 
 ```bash
-oat backlog archive BL-260708-enable-oat-reviewer-subagent --summary "Enabled bounded reviewer-local reconnaissance for faster broad reviews while preserving primary-reviewer judgment and evidence validation."
+pnpm run cli:source -- backlog archive BL-260708-enable-oat-reviewer-subagent --summary "Enabled bounded reviewer-local reconnaissance for faster broad reviews while preserving primary-reviewer judgment and evidence validation."
 ```
 
 Expected: the item is marked closed, moved to `backlog/archived/`, recorded in `backlog/completed.md`, and removed from the active generated index.
@@ -259,7 +300,16 @@ Expected: the item is marked closed, moved to `backlog/archived/`, recorded in `
 Run:
 
 ```bash
-oat pjm doctor
+test ! -e .oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md
+test -f .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md
+! rg -n '^oat_template(_name)?:' .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md
+rg -n 'BL-260708-enable-oat-reviewer-subagent' .oat/repo/pjm/backlog/completed.md
+! rg -n 'BL-260708-enable-oat-reviewer-subagent' .oat/repo/pjm/backlog/index.md
+pnpm run cli:source -- pjm doctor --json || test $? -eq 2
+pnpm exec oxfmt --write \
+  .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
+  .oat/repo/pjm/backlog/completed.md \
+  .oat/repo/pjm/backlog/index.md
 pnpm exec oxfmt --check \
   .oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md \
   .oat/repo/pjm/backlog/completed.md \
@@ -267,7 +317,7 @@ pnpm exec oxfmt --check \
 git diff --check
 ```
 
-Expected: PJM state is consistent, generated backlog files are current, and formatting passes.
+Expected: this item exists only in the archive, has no template markers, appears in the completed ledger, and is absent from the active index. The doctor may retain its pre-existing unrelated template-frontmatter failure (exit `2`), but it must no longer name this item or report any new failure introduced by this task.
 
 **Step 3: Commit**
 
@@ -284,15 +334,15 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | pending  | -          | -                                                  |
-| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T194838Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| spec   | artifact | pending         | -          | -                                                           |
+| design | artifact | pending         | -          | -                                                           |
+| plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -317,7 +367,7 @@ Ready for code review and merge after all tasks and required reviews pass.
 ## References
 
 - Discovery: `discovery.md`
-- Backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
+- Backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — current: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md`; after `p03-t02`: `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
 - Current reviewer: `.agents/agents/oat-reviewer.md`
 - Review workflow docs: `apps/oat-docs/docs/workflows/projects/reviews.md`
 - Project summary follow-up: `.oat/repo/reference/project-summaries/20260709-codex-family-subagents.md`
