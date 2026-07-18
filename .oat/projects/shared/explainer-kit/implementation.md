@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t07
+oat_current_task_id: p02-t08
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 6/10      |
+| Phase 2 | in_progress | 10    | 7/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 12/38 tasks completed
+**Total:** 13/38 tasks completed
 
 ---
 
@@ -313,6 +313,25 @@ oat_generated: false
 **Verification:**
 
 - Renderer, recipe, theme, and template suites — pass (32/32).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p02-t07: Add structural, accessibility, and leak QA
+
+**Status:** completed
+**Commit:** `52645538`
+
+**Outcome:**
+
+- Added structural, accessibility, leak, overflow, reduced-motion, keyboard,
+  responsive-width, and cross-artifact cohesion checks.
+- Added a provider-independent browser probe contract without making browser
+  tooling a core dependency.
+
+**Verification:**
+
+- QA, renderer, and template suites — pass (27/27).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
