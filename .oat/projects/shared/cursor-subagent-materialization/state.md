@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: 283d60a0cc802d49164c94d94637e8dbc8bc4c28
+oat_current_task: null
+oat_last_commit: 9b6f57bf4c4c0076b569bd7cc8c32d26b76c27e9
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: [p06] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [p06] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -38,27 +38,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T18:27:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T19:01:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Final Review Fix Ready — p07-t01
+**Status:** Implementation Complete — Re-review Waived
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-The manual final review was received with one Important finding and no other findings. Task `p07-t01` is ready to repair configured-model provenance for the documented bare Cursor provider target, rerun release verification, and proceed to focused final re-review.
+All 14 implementation tasks are complete. The sole Important final-review finding was fixed in `133b1c23`, current `origin/main` was merged, the lockstep public package set was reconciled at `0.1.74`, and the full release boundary passed. The operator explicitly waived another final re-review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (14 tasks; p07-t01 pending)
-- **Implementation:** `implementation.md` (13/14 tasks complete)
+- **Plan:** `plan.md` (14 tasks complete)
+- **Implementation:** `implementation.md` (14/14 tasks complete)
 
 ## Progress
 
@@ -72,12 +72,14 @@ The manual final review was received with one Important finding and no other fin
 - ✓ Configured quick-start exit-gate rerun explicitly skipped by operator
 - ✓ Pre-implementation gate g01 passed: 15 mappings approved
 - ✓ Phases p02-p06 implemented and independently reviewed
-- ✓ Lockstep package version `0.1.73` passed `pnpm release:validate`
+- ✓ Initial lockstep package version `0.1.73` passed `pnpm release:validate`
 - ✓ p06 HiLL checkpoint passed: generated reviewer and implementer variants launched with matching configured-model hook evidence
 - ✓ Final aggregate routing fix passed independent review and p06 revalidation
 - ✓ Manual final code review received: 0 Critical, 1 Important, 0 Medium, 0 Minor
-- ◯ p07-t01 final-review fix
-- ◯ Focused final re-review
+- ✓ p07-t01 fixed bare Cursor configured-model provenance
+- ✓ Current `origin/main` merged and conflict contracts reconciled
+- ✓ Lockstep package version `0.1.74` passed post-merge `pnpm release:validate`
+- ✓ Focused final re-review explicitly waived by operator
 
 ## Blockers
 
@@ -85,4 +87,4 @@ None
 
 ## Next Milestone
 
-Execute `p07-t01` through `oat-project-implement`, then run and receive a focused final re-review.
+Ready for project summary, documentation reconciliation, and final PR when requested.

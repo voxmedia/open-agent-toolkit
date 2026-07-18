@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-17
+oat_last_updated: 2026-07-18
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: [['p03', 'p04']]
@@ -786,6 +786,7 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 
 ### Task p07-t01: Preserve configured model provenance for bare Cursor targets
 
+**Status:** complete (`133b1c23`)
 **Review finding:** `I1` from `final-review-2026-07-18T180150Z.md`
 
 **Files:**
@@ -827,7 +828,7 @@ pnpm run --silent cli:source -- sync --scope all --dry-run --json
 git diff --exit-code -- apps/oat-docs/index.md packages/cli/assets
 ```
 
-Expected: package version `0.1.73` remains the single PR-scoped lockstep bump, all release checks pass, the sync dry-run plans zero operations, and generated assets remain clean.
+Expected: reconcile the single PR-scoped lockstep bump against current `origin/main`, all release checks pass, the sync dry-run plans zero operations, and generated assets remain clean. After integration, `origin/main` had already consumed `0.1.73`, so this branch advanced the public set to `0.1.74`.
 
 **Step 5: Commit**
 
@@ -850,7 +851,7 @@ git commit -m "fix(p07-t01): preserve bare cursor model provenance"
 | p04    | code     | passed          | 2026-07-18 | reviews/code-p04-rereview-2026-07-18T123821Z.md               |
 | p05    | code     | passed          | 2026-07-18 | reviews/code-p05-review-2026-07-18T133600Z.md                 |
 | p06    | code     | passed          | 2026-07-18 | reviews/code-p06-review-2026-07-18T142950Z.md                 |
-| final  | code     | fixes_added     | 2026-07-18 | reviews/archived/final-review-2026-07-18T180150Z.md           |
+| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T180150Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |
 | design | artifact | passed          | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T194141Z.md |
@@ -876,7 +877,7 @@ git commit -m "fix(p07-t01): preserve bare cursor model provenance"
 
 **Total: 14 implementation tasks plus 1 completed pre-implementation gate**
 
-Ready for final re-review and merge after p07-t01 passes implementation and release verification.
+Implementation and `origin/main` integration are complete. The operator explicitly waived another final re-review after p07-t01 and the post-merge release boundary passed.
 
 ---
 

@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -61,9 +61,9 @@ oat_generated: false
 | p04   | complete | 4     | 4/4       |
 | p05   | complete | 1     | 1/1       |
 | p06   | complete | 1     | 1/1       |
-| p07   | pending  | 1     | 0/1       |
+| p07   | complete | 1     | 1/1       |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/14 tasks completed
 
 ---
 
@@ -204,8 +204,25 @@ oat_generated: false
 
 ## Phase p07: Final Review Fixes
 
-**Status:** pending
-**Current task:** `p07-t01`
+**Status:** complete
+**Task commit:** `133b1c23`
+**Integration merge:** `76bf9bab`
+**Release reconciliation:** `9b6f57bf`
+
+### Phase Summary
+
+- Added a command-level regression for the documented bare Cursor target form and preserved `modelAxis: selected:gpt-5.6-sol-high` plus `materialized-role` control evidence after successful variant compilation.
+- Limited the fallback to Cursor variant dispatches with no concrete route target; Codex semantics and `not-reported` runtime identity remain unchanged.
+- Merged current `origin/main`, reconciled the three overlapping autonomy/sync/skill-validation contracts, and preserved both Cursor materialization and the new project-log lifecycle.
+- Bumped the five lockstep public packages from `0.1.73` to `0.1.74` because `origin/main` had independently consumed `0.1.73`.
+
+### Verification
+
+- The focused bare-Cursor regression passed.
+- The merged autonomy inventory and skill validation suites passed: 102 tests.
+- After rebuilding newly merged bundled assets, the complete CLI test, type-check, and lint suites passed; workspace build and format passed; `pnpm release:validate` passed.
+- All-scope sync dry-run reported zero planned operations and generated docs/assets remained clean.
+- The operator explicitly waived another final re-review after the bounded finding fix; the final review event remains accurately recorded as `fixes_completed`, not `passed`.
 
 ### Review Received: final
 
@@ -227,7 +244,7 @@ oat_generated: false
 
 **Deferred Medium ledger:** empty; the final review and prior implementation notes contain no deferred Medium findings.
 
-**Next:** Execute `p07-t01` through `oat-project-implement`, rerun its release boundary, and perform a focused final re-review before closeout.
+**Disposition:** `p07-t01` completed in `133b1c23`; the operator explicitly waived another final re-review and directed implementation closeout after integration with `origin/main`.
 
 ---
 
@@ -320,6 +337,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Final gate attempts:** run IDs `3c7bf80a-fd73-42a2-9757-267d395d7410` and `50deb7cf-f62e-4175-80ee-e243c6695b58` both selected `cursor-fable-5-xhigh`, confirming cross-family routing. Each reviewer completed substantive inspection and passing verification in its transcript, then hit the `1800000ms` scope-default budget immediately before artifact creation. Neither run produced a canonical review artifact, so neither is receive-eligible.
 - **Next:** operator decision required after the configured `maxAttempts: 2` were exhausted: authorize one extended-budget operational retry or choose an explicit alternative final-review disposition.
 
+### Run 7 — p07 final-review fix and origin/main integration
+
+- **Status:** complete; final re-review explicitly waived by the operator.
+- **Phase base / task commit:** `d9fd60da..133b1c23`; one bounded task commit changed only the dispatch-ceiling implementation and regression test.
+- **Implementer route:** the exact native variant was absent from the session catalogue, so the policy-resolved Cursor CLI fallback used `gpt-5.6-sol-high`.
+- **Dispatch:** `Dispatch: scope=p07 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+- **Main integration:** merged `origin/main` in `76bf9bab`; a bounded conflict-resolution child reconciled the autonomy contract, sync manifest, and skill-version validation without widening scope.
+- **Release reconciliation:** `9b6f57bf` bumped all five public packages and the bundled version inventory to `0.1.74`.
+- **Verification:** focused regression, 102 merge-focused validations, complete CLI tests/type-check/lint, workspace build/format, `pnpm release:validate`, zero-operation sync dry-run, and generated cleanliness all passed.
+- **Review disposition:** the received final review had 1 Important finding, now fixed. Per explicit operator instruction, no additional re-review was launched; the event is `fixes_completed`.
+- **Outcome:** all 14 implementation tasks are complete and the branch contains current `origin/main`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -367,9 +396,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review      | Source Artifact         | Planned / Documented                                                  | Actual / Accepted                                                       | Reason                                                                      | Source of Truth                       | Follow-up |
+| ------------------ | ----------------------- | --------------------------------------------------------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- | ------------------------------------- | --------- |
+| p07 / final review | `plan.md`; final review | Re-run focused final review after fixing I1; retain lockstep `0.1.73` | I1 fixed; operator waived re-review; main integration required `0.1.74` | Explicit operator direction and `origin/main` had already consumed `0.1.73` | Implementation and release validation | None      |
 
 ## Test Results
 
@@ -384,24 +413,37 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Provider-neutral materialization-extension orchestration with provider-owned Codex TOML and Cursor Markdown codecs.
+- Fifteen live-verified Cursor model mappings, deterministic pinned reviewer/implementer variants, ownership-aware sync/init/status/doctor behavior, and dispatch audit provenance.
+- Multi-family Cursor dispatch recommendations and canonical workflow guidance, including family-aware gate producer routing and configured-target fallback for aggregate reviews.
+- Legacy bare Cursor target compatibility now retains launcher-owned configured model provenance after successful materialized-role compilation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Managed Cursor dispatch resolves opaque ladder IDs to generated native variant names and reports configured controls without claiming unobserved runtime identity.
+- Final/range gate routing can exclude a classifiable configured target family when producer identity is not claimable, while known producers remain authoritative.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/providers/shared/materialization-extension.ts` and `packages/cli/src/providers/cursor/` - shared lifecycle and Cursor catalogue/codec.
+- `packages/cli/src/commands/sync/`, `init/`, `status/`, and `doctor/` - owner-aware CLI lifecycle integration.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - Cursor pinned-variant compilation and configured dispatch reporting.
+- `packages/cli/src/commands/gate/index.ts` - declared and aggregate producer-family routing.
+- `.agents/skills/` and `apps/oat-docs/docs/` - provider-neutral dispatch and workflow-gate guidance.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Complete CLI tests, lint, and type-check; workspace build and format; `pnpm release:validate`.
+- All-scope sync dry-runs with zero planned operations and generated docs/assets cleanliness checks.
+- Cursor IDE hook verification for all 15 mapping pins and final generated reviewer/implementer launches.
+- Post-merge autonomy inventory and skill-contract validation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Cursor IDE hooks, not Cursor CLI hooks, supplied one-time pin evidence; production correctness does not depend on undocumented conversation IDs.
+- Aggregate final/range routing may infer only a family exclusion from configured stamp targets when producer identity is unavailable.
+- `origin/main` integration advanced the lockstep public-package version from the planned `0.1.73` to `0.1.74`.
+- The operator explicitly waived a second final re-review after the sole Important finding was fixed and the full post-merge release boundary passed.
 
 ## References
 
