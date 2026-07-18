@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p06-t01 # blocked on explainer-kit RC gate
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -213,6 +213,15 @@ oat_generated: false
 Tasks: p06-t01 (recipe), p06-t02 (close-callers), p06-t03 (personal-wrapper migration), p06-t04 (Phase 6 release choreography).
 
 ---
+
+### Revision Received: GitHub PR #158 Bugbot Review
+
+**Date:** 2026-07-18
+**Source:** PR #158 Bugbot comments (4 Medium: 3609070068 fixture grep, 3609072481 sync-commit status, 3609072482 unquoted FILES, 3609163349 stale p06 state)
+
+**New tasks added:** prev1-t01..t03 (Phase p-rev1)
+
+**Next:** Execute revision tasks via oat-project-implement.
 
 ## Orchestration Runs
 

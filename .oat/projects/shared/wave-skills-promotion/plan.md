@@ -776,6 +776,69 @@ _First plan-row provenance: in-session structured review (`oat-reviewer` subagen
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: GitHub PR #158 Bugbot review comments (2026-07-18; 4 Medium findings)
+
+### Task prev1-t01: (revision) Fix fixture program-row coverage grep
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md`
+
+**Step 1:** Both PROGRAM_COUNT sites (~L53-57, ~L214-216): match template-correct link-style rows AND plain rows, e.g. `grep -cE '^\| \[?mini-p0[123]'`. Bugbot comment 3609070068.
+
+**Step 2: Verify**
+Run: `printf '| [mini-p01](./x.md) |\n| mini-p02 |\n' | grep -cE '^\| \[?mini-p0[123]'`
+Expected: 2
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-wave-execute/tests/mini-wave-fixture/README.md
+git commit -m "fix(prev1-t01): fixture coverage grep matches link-style program rows"
+```
+
+### Task prev1-t02: (revision) Honest sync-commit failure in bootstrap script
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wave-execute/scripts/bootstrap-group.sh`
+
+**Step 1:** Drop the unquoted `$FILES` args from the sync commit (the set is already staged; commit the staged set). Bugbot 3609072482.
+
+**Step 2:** On sync-commit failure, mark the phase failed: STATUS line emits `status=failed reason=sync-commit` (not success) and the script's exit code reflects the failure, per the bootstrap-auto contract. Keep bash-3.2 (`/bin/bash -n`, no bash-4 constructs). Bugbot 3609072481.
+
+**Step 3: Verify**
+Run: `/bin/bash -n .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh && rg -n 'FILES=' .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh | wc -l`
+Expected: syntax OK; 0 (variable removed). Re-run the fixture happy leg to confirm STATUS unchanged on success.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh
+git commit -m "fix(prev1-t02): sync-commit failure fails bootstrap status honestly"
+```
+
+### Task prev1-t03: (revision) Align state.md p06 gate frontmatter + prose
+
+**Files:**
+
+- Modify: `.oat/projects/shared/wave-skills-promotion/state.md`
+
+**Step 1:** Frontmatter `oat_blockers` (now a multi-line YAML list after oxfmt) → `[]` with the RC-opened comment; Progress line "⧗ p06 ... BLOCKED on explainer-kit v1 RC" → "⧗ p06 ... RC gate OPEN; executes after PR #158 merges"; Next Milestone drops "when the RC ships" phrasing. Bugbot 3609163349. Use anchored regex + substitution-count assert (rule-9 discipline — the prior edit no-opped on oxfmt re-formatting).
+
+**Step 2: Verify**
+Run: `rg -n "BLOCKED on explainer" .oat/projects/shared/wave-skills-promotion/state.md | wc -l`
+Expected: 0; `oat project status --project-path .oat/projects/shared/wave-skills-promotion --json` shows no p06-RC blocker.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/wave-skills-promotion/state.md
+git commit -m "fix(prev1-t03): align p06 RC-gate state frontmatter with prose"
+```
+
 ## Implementation Complete
 
 **Summary:**
@@ -786,8 +849,9 @@ _First plan-row provenance: in-session structured review (`oat-reviewer` subagen
 - Phase 4: 2 tasks - Docs
 - Phase 5: 5 tasks - Validation + release readiness
 - Phase 6: 4 tasks - §4 explainer integration + its own release choreography (RC-gated)
+- Phase p-rev1: 3 tasks - PR #158 Bugbot revision
 
-**Total: 27 tasks** (23 unblocked; 4 gated on explainer-kit RC)
+**Total: 30 tasks** (26 unblocked; 4 gated on explainer-kit RC)
 
 Ready for code review and merge.
 

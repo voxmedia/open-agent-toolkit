@@ -1,5 +1,5 @@
 ---
-oat_current_task: p06-t01 # blocked on explainer-kit RC gate; p05 complete
+oat_current_task: prev1-t01
 oat_last_commit: 17a56f39
 oat_blockers:
   [
