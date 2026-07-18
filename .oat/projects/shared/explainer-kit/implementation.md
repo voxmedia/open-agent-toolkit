@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - Phase 2 review requires a bounded fix loop before Phase 3.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -212,7 +213,22 @@ oat_generated: false
 - Root full core suite — pass (98/98).
 - Scoped lint and format — pass with zero warnings/errors.
 - Phase range whitespace check — pass.
-- Phase 2 code review pending.
+- Phase 2 review found three critical and two important issues.
+
+### Phase 2 Review — Fixes Added
+
+**Artifact:** `reviews/p02-review-2026-07-18T012116Z.md`
+
+**Accepted findings:**
+
+- Confine all rendered/content writes against nested symlink escapes.
+- Enforce recipe source-role cardinality in production core invocation.
+- Require the complete immutable retained package for commit durability.
+- Make `user-switchable` themes operable and keyboard-accessible.
+- Preserve no-JS deck x-axis inner-content containment.
+
+**Disposition:** Resolve all five findings in one bounded append-only Phase 2
+fix commit, rerun the full core matrix, and request reviewer re-review.
 
 ### Task p02-t01: Normalize run requests and create atomic run records
 
