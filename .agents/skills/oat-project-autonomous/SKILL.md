@@ -234,6 +234,27 @@ a product-judgment boundary.
 Invoke `oat-project-new` for spec-driven mode or `oat-project-quick-start` for
 quick mode. Existing projects retain their persisted workflow mode.
 
+### Step 2.5: Persist Autonomous Explainer Intent
+
+As soon as the selected creation skill has created a new project, or after an
+existing project is resolved, use the `oat-explainer-kit` lifecycle intent
+resolver and persistence helper against that project's `state.md`.
+
+Resolve and persist `projectRecap` as `generate` with source `autonomous_policy` after project creation or resolution.
+Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.
+The autonomous mode policy has precedence over project state and workflow
+preference, so `never` does not suppress the recap.
+
+Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.
+A general autonomous goal, project creation, or normal planning does not count as an explainer request.
+When no explicit kickoff explainer request exists, do not persist a project-explainer intent record.
+Do not infer this request from the presence of a plan, from the selected
+workflow mode, or from a generic request to run through PR.
+
+Use the state content hash expected by the adapter persistence contract. On a
+stale-write conflict, re-read `state.md`, rerun autonomous resolution, and
+persist only the newly returned record; never retry a stale record blindly.
+
 ### Step 3: Perform External-Integration Research
 
 Before planning, extensively research every integrated system, service,

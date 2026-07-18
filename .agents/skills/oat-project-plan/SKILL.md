@@ -155,6 +155,20 @@ Read for implementation context:
 - `.oat/repo/knowledge/testing.md` - Testing patterns
 - `.oat/repo/knowledge/stack.md` - Available tools and dependencies
 
+### Step 4.5: Resolve Project-Explainer Intent
+
+Resolve `projectExplainer` intent before drafting the plan. Use the
+`oat-explainer-kit` lifecycle intent resolver with interactive mode, the current
+`oat_project_explainer` state value, and the source-aware
+`workflow.explainers.projectExplainer` preference.
+
+When resolution returns `needsPrompt: true`, ask exactly once whether to generate the project explainer, then resolve again with the answer and persist the returned `interactive` record.
+A valid persisted `oat_project_explainer` decision prevents another prompt.
+Persist through the adapter's optimistic-concurrency helper; on a stale write,
+re-read state and resolve precedence again instead of retrying the old record.
+Do not persist decisions derived only from `always` or `never` workflow
+preferences.
+
 ### Step 4.9: Snapshot Explicit Phase-Review Setting Before Plan Overwrite
 
 Before Step 5 can replace an existing `plan.md`, inspect the source text and
@@ -613,6 +627,20 @@ Total: {N} tasks
 
 Ready for implementation"
 ```
+
+### Step 15.5: Generate the Project Explainer When Selected
+
+Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.
+When the resolved project-explainer decision is `generate`, invoke
+`oat-explainer-kit` for the `project-explainer` recipe using the approved
+project artifacts and report its outcome and run path. A `skip` decision ends
+this step without invoking the adapter.
+
+Explainer failure must not roll back, amend, or invalidate the valid committed plan.
+Preserve the adapter's failure outcome and recovery guidance, warn the user,
+and continue to the planning summary. This post-plan product does not replace
+or reorder plan artifact review, dispatch resolution, the configured plan gate,
+or HiLL handling.
 
 ### Step 16: Output Summary
 

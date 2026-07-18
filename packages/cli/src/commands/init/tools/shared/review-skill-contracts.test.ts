@@ -133,6 +133,48 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('gates interactive plan explainers with ask-once persisted intent', () => {
+    const content = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+
+    expect(content).toContain(
+      'Resolve `projectExplainer` intent before drafting the plan.',
+    );
+    expect(content).toContain(
+      'When resolution returns `needsPrompt: true`, ask exactly once whether to generate the project explainer, then resolve again with the answer and persist the returned `interactive` record.',
+    );
+    expect(content).toContain(
+      'A valid persisted `oat_project_explainer` decision prevents another prompt.',
+    );
+    expect(content).toContain(
+      'Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.',
+    );
+    expect(content).toContain(
+      'Explainer failure must not roll back, amend, or invalidate the valid committed plan.',
+    );
+  });
+
+  it('persists autonomous explainer policy without broadening kickoff intent', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'Resolve and persist `projectRecap` as `generate` with source `autonomous_policy` after project creation or resolution.',
+    );
+    expect(content).toContain(
+      'Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.',
+    );
+    expect(content).toContain(
+      'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
+    );
+    expect(content).toContain(
+      'A general autonomous goal, project creation, or normal planning does not count as an explainer request.',
+    );
+    expect(content).toContain(
+      'When no explicit kickoff explainer request exists, do not persist a project-explainer intent record.',
+    );
+  });
+
   it('allows quick/import design artifact reviews without spec.md', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-provide/SKILL.md',
