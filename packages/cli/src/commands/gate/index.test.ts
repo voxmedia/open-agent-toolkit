@@ -2495,6 +2495,49 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('uses the configured target when a concrete aggregate producer is not claimable', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol-high provenance=unknown model_axis=selected:claude-fable-5-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=claude-fable-5-xhigh target=claude-fable-5-xhigh',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'final',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'final', '--target', 'codex-default', 'Review'],
+    });
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        producer: {
+          value: 'unknown',
+          family: 'unknown',
+          source: 'aggregated-stamps',
+          avoidFamilies: ['claude'],
+          contributingScopes: ['p02'],
+          contributingStampCount: 1,
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
   it('aggregates every producer stamp in a contiguous review range in document order', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
