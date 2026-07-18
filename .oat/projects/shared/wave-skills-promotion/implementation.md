@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01 # blocked on explainer-kit RC gate
 oat_generated: false
 ---
 
@@ -37,10 +37,10 @@ oat_generated: false
 | Phase 2: §2 queue + genericization     | completed | 9     | 9/9       |
 | Phase 3: Dispositions                  | completed | 3     | 3/3       |
 | Phase 4: Docs                          | completed | 2     | 2/2       |
-| Phase 5: Validation + release          | pending   | 5     | 0/5       |
+| Phase 5: Validation + release          | completed | 5     | 5/5       |
 | Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
 
-**Total:** 18/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 23/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
 
 ---
 
@@ -170,10 +170,38 @@ oat_generated: false
 
 ## Phase 5: Validation + release readiness
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
 
-Tasks: p05-t01 (fixture), p05-t02 (dry-run README), p05-t03 (execute dry-run), p05-t04 (lockstep bumps + release validation), p05-t05 (W6 mini-runbook).
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Mini-wave fixture shipped (`5d06bdb9`, 16 files): throwaway-repo materializer under `$TMPDIR`, 3 toy plans + index (p01+p02 write-disjoint, p03 ungrouped finale), DoD gate toggleable via `FIXTURE_GATE_FAIL=1`; bash-3.2 verified; bundle-excluded.
+- Dry-run procedure README (`dbdb8631`): six stages with pass criteria, happy + unhappy legs.
+- Dry-run EXECUTED against the promoted skills (`2b36ddd3`) — record below.
+- Lockstep release bumps 0.1.73 → 0.2.0 across all five public packages + regenerated `public-package-versions.json` (`7f16bc02`); `release:validate` + full gates green (implementer AND reviewer runs).
+- W6 handoff mini-runbook (`c05982d9`): pins `@open-agent-toolkit/cli@0.2.0`, migration sequence (delete repo-local copies → `oat tools update` → `oat sync --scope all`), row-stomp observation task closing `BL-260718-remove-post-w6-reviews-row`, regression protocol via equivalence checklist + lockstep patch.
+
+### Dry-Run Record (p05-t03, executed 2026-07-18)
+
+- Setup: clean fixture under `$TMPDIR`; gate executable.
+- Program `new`: coverage invariant 3 indexed plans ↔ 3 program rows — PASS.
+- Composition: p01+p02 write-disjoint group; p03 ungrouped — PASS.
+- Bootstrap: bash 3.2; both lanes `view-parity=ok`, `git_clean=pass` — PASS.
+- Happy leg: 6 task commits, 3 asserted `--no-ff` merges with pre-merge pwd/branch asserts, rebase choreography, both fan-in gates — PASS.
+- Unhappy leg: `FIXTURE_GATE_FAIL=1` → gate exit 1 → closeout parked → stored verification record written (B5 discipline) → rerun passed and unparked — PASS.
+- Wave-close: 3 rows → `done`; ledger records merged status, fixture PR, SHA, completion record — PASS.
+- Findings dispositioned: (1) fixture pnpm hygiene — node_modules ignore + normalized lockfile committed (fixture-scoped); (2) README formatter-resolution + bootstrap assertions clarified (`git_clean=pass` required); (3) **zero promoted-skill-text or bootstrap-group.sh defects found**.
+
+### Tasks
+
+- p05-t01: **completed**, `5d06bdb9` — fixture + toggleable gate
+- p05-t02: **completed**, `dbdb8631` — procedure README
+- p05-t03: **completed**, `2b36ddd3` — dry-run executed; fixture-only fixes; checklist outcome appended (69 prior rows byte-preserved)
+- p05-t04: **completed**, `7f16bc02` — 5×0.2.0 + version asset; release:validate green
+- p05-t05: **completed**, `c05982d9` — W6 runbook (lowercase `w6` in subject: commitlint constraint, verified no lost commit)
 
 ---
 
@@ -251,13 +279,13 @@ Chronological log of implementation progress.
 
 ## Test Results
 
-| Phase | Tests Run                                                                   | Passed | Failed | Coverage |
-| ----- | --------------------------------------------------------------------------- | ------ | ------ | -------- |
-| 1     | CLI suite 3001 tests (250 files) + 2 new regression tests; lint; type-check | all    | 0      | n/a      |
-| 2     | lint + type-check + bash-3.2 + citation-set + asset byte-diffs              | all    | 0      | n/a      |
-| 3     | CLI suite 3002 tests + lint + type-check + pjm lifecycle checks             | all    | 0      | n/a      |
-| 4     | docs build (build:docs) x3 runs + content rg checks                         | all    | 0      | n/a      |
-| 5     | -                                                                           | -      | -      | -        |
+| Phase | Tests Run                                                                                                | Passed | Failed | Coverage |
+| ----- | -------------------------------------------------------------------------------------------------------- | ------ | ------ | -------- |
+| 1     | CLI suite 3001 tests (250 files) + 2 new regression tests; lint; type-check                              | all    | 0      | n/a      |
+| 2     | lint + type-check + bash-3.2 + citation-set + asset byte-diffs                                           | all    | 0      | n/a      |
+| 3     | CLI suite 3002 tests + lint + type-check + pjm lifecycle checks                                          | all    | 0      | n/a      |
+| 4     | docs build (build:docs) x3 runs + content rg checks                                                      | all    | 0      | n/a      |
+| 5     | release:validate + lint + type-check + tests (123 smoke) + fixture both legs ×2 (implementer + reviewer) | all    | 0      | n/a      |
 
 ## Final Summary (for PR/docs)
 
