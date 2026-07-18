@@ -345,6 +345,13 @@ describe('review skill contracts', () => {
         'Cursor: explicit invocation `/oat-reviewer`',
       );
     }
+
+    expect(
+      remote,
+      'malformed output remains terminal after acceptance',
+    ).not.toMatch(
+      /malformed (?:structured )?output[\s\S]{0,160}(?:fall through|fallback|proceed|continue|route)[\s\S]{0,80}Tier [23]/i,
+    );
   });
 
   it('documents codex dispatch through resolver-returned materialized roles', () => {

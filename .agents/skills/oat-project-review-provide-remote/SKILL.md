@@ -275,7 +275,13 @@ Build the dispatch payload and spawn the reviewer in structured-output mode. Thi
 - For Cursor concrete managed dispatch, invoke
   `providers.cursor.dispatchArgs.variant` as the exact native agent type. Do
   not substitute base `oat-reviewer` or add a concrete model argument.
-- The reviewer returns `StructuredFindings` (summary + findings array + `verification_commands`). On a dispatcher error, do NOT retry at Tier 1 — fall through to Tier 2/3. On malformed structured output, surface the validation error and fall through to Tier 2/3.
+- The reviewer returns `StructuredFindings` (summary + findings array +
+  `verification_commands`). Tier 2/3 is eligible only when dispatch is
+  unavailable before launch or the exact native role is explicitly rejected
+  before any reviewer starts; record that pre-start outcome and do not retry
+  at Tier 1. Once a reviewer is accepted, malformed structured output is a
+  terminal validation failure: surface the error, block the review, and do not
+  launch another reviewer.
 
 **Step 5c: Tier 2 — Fresh session (recommended fallback).** If subagent dispatch is unavailable and the user is not already in a fresh session, provide fresh-session instructions and exit. (If Codex reported `authorization required` and the user later authorizes, return to Tier 1.)
 
@@ -386,7 +392,9 @@ At completion, report:
 - OAT project resolved from the diff (or `--project` override) and validated; project artifacts read read-only for mode-aware context.
 - PR content acquired via ephemeral worktree (or diff-only fallback) without mutating the caller's working tree.
 - Prior provide-remote reviews detected and filtered to this `(project, scope)`; re-review narrowing applied only after the stale-SHA guard passes.
-- Review executed via Tier 1 (`oat-reviewer` structured-output, NO artifact) / Tier 2 (fresh session) / Tier 3 (inline), with graceful fallthrough.
+- Review executed via Tier 1 (`oat-reviewer` structured-output, NO artifact) /
+  Tier 2 (fresh session) / Tier 3 (inline), with fallthrough limited to
+  dispatch unavailability or explicit pre-start native role rejection.
 - Findings produced with consistent 4-tier severities and file:line references.
 - Inline comments mapped to in-diff positions; out-of-diff findings downgraded to the body, never dropped.
 - Posted-review body carries the marker block first (with `oat_project` + `oat_review_scope`), correct severity counts, and the minor-fix nudge when minors are present.
