@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t07
+oat_current_task_id: p03-t08
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 6/9       |
+| Phase 3 | in_progress | 9     | 7/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 22/38 tasks completed
+**Total:** 23/38 tasks completed
 
 ---
 
@@ -556,6 +556,27 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 - Root combined contract and skill validation — pass (118/118); the worker's
   reported metadata blocker was not reproducible in the committed tree.
 - Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t07: Export the selected recap during archive
+
+**Status:** completed
+**Commit:** `586d135b`
+
+**Outcome:**
+
+- Added optional selected project-recap export to the dated durable reference
+  root with recipe/containment/hash verification and atomic non-overwriting
+  rename.
+- Preserved existing summary/S3 archive behavior and prevents active deletion
+  when recap export fails.
+
+**Verification:**
+
+- Archive suite RED: 12 failed / 60 passed; GREEN: 72/72 passed.
+- CLI type-check and lint — pass.
+- Scoped formatting and whitespace checks — pass.
 
 ---
 
