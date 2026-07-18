@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p06-t01 # RC gate open; executes after PR 158 merge + gate-open plan revision
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 

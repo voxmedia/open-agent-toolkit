@@ -1,5 +1,5 @@
 ---
-oat_current_task: p06-t01
+oat_current_task: prev2-t01
 oat_last_commit: 17a56f39
 oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -80,8 +80,8 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 ## Blockers
 
 - None hard. p06's RC gate OPENED 2026-07-18: explainer-kit v1 RC frozen at
-  sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348
-  (code commit c485b784; record: explainer-kit workspace
+  sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854 (SUPERSEDES a7f90d1c, 2026-07-18)
+  (frozen code commit 534a408e; tarballs under dist/explainer-kit-rc; record: explainer-kit workspace
   `.oat/repo/reference/explainer-kit-acceptance/v1/rc.json`). p06 execution
   starts after PR #158 merges, per the gate-open contract (p06 plan revision
   against frozen RC schemas + phase re-review + merge-order coordination with
