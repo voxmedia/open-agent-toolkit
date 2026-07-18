@@ -142,6 +142,37 @@ test('keeps failed verification built-not-durable and allows later attestation',
   assert.equal(later.evidenceCommit.parent, EVIDENCE_SHA);
 });
 
+test('rejects missing, empty, malformed, and unknown attestation observations', async () => {
+  const fixture = await createRun();
+  const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
+    repoRoot: fixture.repoRoot,
+    project: 'demo',
+  });
+
+  for (const attestation of [
+    undefined,
+    {},
+    { durable: 'yes', outcome: 'built-durable', errors: [] },
+    { durable: true, outcome: 'built-durable' },
+    { durable: true, outcome: 'unknown', errors: [] },
+    { durable: false, outcome: 'failed', errors: [] },
+  ]) {
+    const observation = successfulObservation(fixture);
+    if (attestation === undefined) {
+      delete observation.attestation;
+    } else {
+      observation.attestation = attestation;
+    }
+
+    const checked = verifyTrackedRunFinalization(plan, observation);
+    assert.equal(checked.ok, false);
+    assert.equal(checked.pushAllowed, false);
+    assert.ok(
+      checked.errors.some(({ code }) => code === 'attestation-outcome'),
+    );
+  }
+});
+
 test('terminates idempotently when the same commit evidence is already durable', async () => {
   const fixture = await createRun({
     outcome: 'built-durable',

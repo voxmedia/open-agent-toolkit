@@ -176,13 +176,18 @@ export function verifyTrackedRunFinalization(plan, observation) {
   const outcome = attestation?.outcome;
   if (
     !attestation ||
-    (attestation.durable === true && outcome !== 'built-durable') ||
-    (attestation.durable === false && outcome !== 'built-not-durable')
+    typeof attestation !== 'object' ||
+    typeof attestation.durable !== 'boolean' ||
+    !Array.isArray(attestation.errors) ||
+    !(
+      (attestation.durable === true && outcome === 'built-durable') ||
+      (attestation.durable === false && outcome === 'built-not-durable')
+    )
   ) {
     errors.push(
       error(
         'attestation-outcome',
-        'Core attestation durability and outcome do not agree.',
+        'Core attestation must include boolean durability, the corresponding exact terminal outcome, and an errors array.',
       ),
     );
   }

@@ -65,9 +65,13 @@ federation and is passed through as `factBase.mode: supplied`.
 
 Unattended project runs pass `approved-oat-artifacts` provenance to the core's
 content-approval seam and never prompt. Federated runs still require an
-explicit provider-neutral critic callback in `coreOptions`; approval provenance
-does not bypass fact reconciliation. Do not read private presets, vault files,
-provider configuration, or ambient destination configuration.
+explicit provider-neutral critic callback. In-process callers may supply
+`critic` (or `coreOptions.critic` for compatibility); JSON/CLI callers supply
+`criticModulePath` naming a module whose `critic` export implements the same
+provider-neutral request/result contract. Supply exactly one critic seam.
+Approval provenance does not bypass fact reconciliation. Do not read private
+presets, vault files, provider configuration, or ambient destination
+configuration.
 
 ## Progress Indicators (User-Facing)
 

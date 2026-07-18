@@ -635,6 +635,7 @@ When the resolved project-explainer decision is `generate`, invoke
 `oat-explainer-kit` for the `project-explainer` recipe using the approved
 project artifacts and report its outcome and run path. A `skip` decision ends
 this step without invoking the adapter.
+Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
 
 Explainer failure must not roll back, amend, or invalidate the valid committed plan.
 Preserve the adapter's failure outcome and recovery guidance, warn the user,

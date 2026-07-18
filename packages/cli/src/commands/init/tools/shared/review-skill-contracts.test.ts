@@ -149,6 +149,9 @@ describe('review skill contracts', () => {
       'Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.',
     );
     expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    );
+    expect(content).toContain(
       'Explainer failure must not roll back, amend, or invalidate the valid committed plan.',
     );
   });
@@ -194,6 +197,9 @@ describe('review skill contracts', () => {
     );
     expect(content).toContain(
       'Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval.',
+    );
+    expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
     );
 
     const normalizedContent = content.replace(/\s+/g, ' ');
@@ -516,6 +522,9 @@ describe('review skill contracts', () => {
     );
     expect(content).toContain(
       'A valid persisted `oat_project_recap` decision prevents another prompt.',
+    );
+    expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
     );
 
     const resolveIndex = normalizedContent.indexOf(

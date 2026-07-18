@@ -282,6 +282,7 @@ When `SHOULD_GENERATE_RECAP="true"`, inspect manifests under
 `{PROJECT_PATH}/explainers/` before generating. A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs, including the refreshed summary when present.
 
 If no fresh recap exists, invoke `scripts/run.mjs#runOatExplainer` exactly once with recipe `project-recap`, project invocation, the active project, and unattended lifecycle mode so approved OAT artifacts do not trigger a second content prompt. A failed adapter run warns but does not block completion. Use a returned valid terminal `project-recap` manifest as the selected run; do not rerun to improve its outcome.
+Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
 
 Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run. The value must be project-relative in the form `explainers/<run-slug>` so it can be passed safely to the archive CLI. An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap.
 

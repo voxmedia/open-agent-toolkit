@@ -59,11 +59,18 @@ describe('archive utils', () => {
       recipeId?: string;
       runName?: string;
     } = {},
-  ): Promise<{ relativeRunPath: string; runRoot: string }> {
+  ): Promise<{
+    relativeRunPath: string;
+    runRoot: string;
+    manifestPath: string;
+  }> {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
     const files = {
+      'source/fact-base.json': '{"claims":[]}\n',
+      'source/fact-base.md': '# Facts\n',
       'source/content/recap.md': `# ${runName}\n`,
+      'theme.resolved.json': '{"name":"neutral"}\n',
       'site/index.html': `<h1>${runName}</h1>\n`,
     };
 
@@ -79,18 +86,50 @@ describe('archive utils', () => {
         `sha256:${createHash('sha256').update(contents).digest('hex')}`,
       ]),
     );
+    const manifestPath = join(runRoot, 'manifest.json');
     await writeFile(
-      join(runRoot, 'manifest.json'),
+      manifestPath,
       `${JSON.stringify({
         schemaVersion: 'explainer-kit.manifest/v1',
+        runId: `run-${runName}`,
+        slug: runName,
         recipe: { id: recipeId, version: '1' },
+        createdAt: '2026-04-01T12:34:56.000Z',
+        source: {
+          factBasePath: 'source/fact-base.json',
+          factBaseHash: immutableHashes['source/fact-base.json'],
+          inputHashes: {},
+        },
+        theme: {
+          path: 'theme.resolved.json',
+          hash: immutableHashes['theme.resolved.json'],
+          derived: false,
+        },
+        artifacts: [
+          {
+            id: 'recap',
+            type: 'explainer',
+            contentPath: 'source/content/recap.md',
+            renderedPath: 'site/index.html',
+            mediaType: 'text/html',
+            status: 'built',
+            hash: immutableHashes['site/index.html'],
+            rebuildable: false,
+          },
+        ],
         outcome,
         immutableHashes,
+        buildRecord: {
+          path: 'build-record.json',
+          hash: `sha256:${'a'.repeat(64)}`,
+        },
+        warnings: [],
       })}\n`,
       'utf8',
     );
+    await writeFile(join(runRoot, 'build-record.json'), '{}\n', 'utf8');
 
-    return { relativeRunPath, runRoot };
+    return { relativeRunPath, runRoot, manifestPath };
   }
 
   it('builds a repo-scoped remote archive URI', () => {
@@ -324,7 +363,7 @@ describe('archive utils', () => {
         exportRoot,
         manifest: {
           relativePath: 'manifest.json',
-          verifiedArtifactCount: 2,
+          verifiedArtifactCount: 5,
         },
       });
       await expect(
@@ -511,6 +550,102 @@ describe('archive utils', () => {
       'project-recaps',
     );
     expect(await readdir(exportParent)).toEqual([]);
+  });
+
+  it.each([
+    {
+      name: 'wrong schema version',
+      mutate: (manifest: Record<string, unknown>) => {
+        manifest.schemaVersion = 'explainer-kit.manifest/v2';
+      },
+    },
+    {
+      name: 'empty immutable hash map',
+      mutate: (manifest: Record<string, unknown>) => {
+        manifest.immutableHashes = {};
+      },
+    },
+    {
+      name: 'omitted immutable artifact',
+      mutate: (manifest: Record<string, unknown>) => {
+        const hashes = manifest.immutableHashes as Record<string, string>;
+        delete hashes['theme.resolved.json'];
+      },
+    },
+  ])('rejects a selected recap manifest with $name', async ({ mutate }) => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const manifest = JSON.parse(
+      await readFile(recap.manifestPath, 'utf8'),
+    ) as Record<string, unknown>;
+    mutate(manifest);
+    await writeFile(
+      recap.manifestPath,
+      `${JSON.stringify(manifest)}\n`,
+      'utf8',
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/manifest|immutable/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('rolls back only its recap export when the later archive copy fails', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    let copyCount = 0;
+    const copyDirectory = vi.fn(async (source: string, destination: string) => {
+      copyCount += 1;
+      if (copyCount === 2) {
+        throw new Error('injected second copy failure');
+      }
+      await cp(source, destination, { recursive: true });
+    });
+    const exportRoot = join(
+      repoRoot,
+      '.oat',
+      'repo',
+      'reference',
+      'project-recaps',
+      '20260401-demo',
+    );
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        {
+          copyDirectory,
+          timestamp: () => '2026-04-01T12:34:56Z',
+        },
+      ),
+    ).rejects.toThrow('injected second copy failure');
+
+    expect(copyDirectory).toHaveBeenCalledTimes(2);
+    await expect(access(projectPath)).resolves.toBeUndefined();
+    await expect(access(exportRoot)).rejects.toThrow();
   });
 
   it('uploads the archived project to S3 when completion sync is enabled and configured', async () => {

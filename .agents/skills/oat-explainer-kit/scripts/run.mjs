@@ -32,6 +32,8 @@ export async function runOatExplainer({
   defaultMode,
   renderStrategy,
   retainRawArtDirection = false,
+  critic,
+  criticModulePath,
   coreOptions = {},
 }) {
   const compatibility = await checkCoreCompatibility({
@@ -106,11 +108,24 @@ export async function runOatExplainer({
     throw error;
   }
 
+  const lifecycleCritic = await resolveLifecycleCritic({
+    critic,
+    criticModulePath,
+    coreOptions,
+  });
   const result = await core.runExplainer(request, {
     ...coreOptions,
+    ...(lifecycleCritic && { critic: lifecycleCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
     reviewedSource: bound.reviewedSource,
   });
+  const criticContractError = result?.errors?.find(
+    ({ message }) =>
+      typeof message === 'string' && message.includes('critic result contract'),
+  );
+  if (criticContractError) {
+    throw new Error(criticContractError.message);
+  }
   const manifest = await readManifest(result, request);
   return {
     compatibility,
@@ -118,6 +133,81 @@ export async function runOatExplainer({
     manifest,
     result,
     outputRoot,
+  };
+}
+
+async function resolveLifecycleCritic({
+  critic,
+  criticModulePath,
+  coreOptions,
+}) {
+  const candidates = [
+    typeof critic === 'function' ? critic : null,
+    typeof coreOptions?.critic === 'function' ? coreOptions.critic : null,
+    criticModulePath ? criticModulePath : null,
+  ].filter(Boolean);
+  if (candidates.length > 1) {
+    throw new Error(
+      'Supply only one provider-neutral critic callback or critic module entry point.',
+    );
+  }
+  if (critic !== undefined && typeof critic !== 'function') {
+    throw new TypeError('critic must be a function when supplied.');
+  }
+  if (
+    coreOptions?.critic !== undefined &&
+    typeof coreOptions.critic !== 'function'
+  ) {
+    throw new TypeError('coreOptions.critic must be a function when supplied.');
+  }
+
+  let callback = critic ?? coreOptions?.critic;
+  if (criticModulePath !== undefined) {
+    if (
+      typeof criticModulePath !== 'string' ||
+      criticModulePath.trim().length === 0
+    ) {
+      throw new TypeError('criticModulePath must be a non-empty path.');
+    }
+    let criticModule;
+    try {
+      criticModule = await import(
+        pathToFileURL(resolve(criticModulePath)).href
+      );
+    } catch (cause) {
+      throw new Error(
+        `Unable to load provider-neutral critic module at ${criticModulePath}.`,
+        { cause },
+      );
+    }
+    if (typeof criticModule.critic !== 'function') {
+      throw new TypeError(
+        'Provider-neutral critic module must export a critic function.',
+      );
+    }
+    callback = criticModule.critic;
+  }
+
+  if (!callback) {
+    return null;
+  }
+  return async (request) => {
+    const result = await callback(request);
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      typeof result.criticId !== 'string' ||
+      !/^[a-z0-9][a-z0-9._-]*$/.test(result.criticId) ||
+      !Array.isArray(result.findings) ||
+      (result.executedAt !== undefined &&
+        (typeof result.executedAt !== 'string' ||
+          Number.isNaN(Date.parse(result.executedAt))))
+    ) {
+      throw new Error(
+        'Provider-neutral critic result does not match the critic result contract.',
+      );
+    }
+    return result;
   };
 }
 

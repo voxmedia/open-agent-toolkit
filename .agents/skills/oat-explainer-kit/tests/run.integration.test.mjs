@@ -8,13 +8,20 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const tempDirs = [];
+const SOURCE_SKILLS_ROOT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
+);
+const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
 
 afterEach(async () => {
   await Promise.all(
@@ -234,6 +241,111 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     locator: canonicalProjectRoot,
   });
   assert.equal(basename(adapterResult.compatibility.coreRoot), 'explainer-kit');
+});
+
+test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
+  const fixture = await createFixture();
+  const criticModulePath = join(fixture.root, 'lifecycle-critic.mjs');
+  await writeFile(
+    criticModulePath,
+    `
+      const calls = [];
+      export async function critic(request) {
+        calls.push(request);
+        return {
+          criticId: 'lifecycle-test-critic',
+          executedAt: '2026-07-18T00:00:00.000Z',
+          findings: [],
+        };
+      }
+      export function getCalls() {
+        return calls;
+      }
+    `,
+  );
+
+  const adapterResult = await runOatExplainer({
+    adapterRoot: SOURCE_ADAPTER_ROOT,
+    userSkillsRoot: SOURCE_SKILLS_ROOT,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'actual-core-recap',
+    criticModulePath,
+    getConfig,
+    mode: 'unattended',
+  });
+  const criticModule = await import(pathToFileURL(criticModulePath).href);
+  const factBase = JSON.parse(
+    await readFile(
+      join(adapterResult.result.runRoot, 'source', 'fact-base.json'),
+      'utf8',
+    ),
+  );
+
+  assert.equal(adapterResult.result.outcome, 'built-not-durable');
+  assert.equal(
+    adapterResult.manifest.schemaVersion,
+    'explainer-kit.manifest/v1',
+  );
+  assert.equal(criticModule.getCalls().length, 1);
+  assert.ok(
+    factBase.sources.some(({ id }) => id === 'critic:lifecycle-test-critic'),
+  );
+});
+
+test('rejects invalid critic module and callback contracts at the adapter boundary', async () => {
+  const fixture = await createFixture();
+  const invalidModulePath = join(fixture.root, 'invalid-critic.mjs');
+  const invalidResultModulePath = join(
+    fixture.root,
+    'invalid-result-critic.mjs',
+  );
+  await writeFile(
+    invalidModulePath,
+    'export const critic = "not-a-function";\n',
+  );
+  await writeFile(
+    invalidResultModulePath,
+    'export async function critic() { return { findings: [] }; }\n',
+  );
+  const context = {
+    adapterRoot: SOURCE_ADAPTER_ROOT,
+    userSkillsRoot: SOURCE_SKILLS_ROOT,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-explainer',
+    slug: 'critic-contract',
+    getConfig,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer({ ...context, criticModulePath: invalidModulePath }),
+    /critic.*export.*function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      slug: 'critic-result-contract',
+      criticModulePath: invalidResultModulePath,
+    }),
+    /critic.*result.*contract/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      slug: 'critic-conflict',
+      critic: async () => ({
+        criticId: 'direct',
+        findings: [],
+      }),
+      criticModulePath: invalidResultModulePath,
+    }),
+    /only one.*critic/i,
+  );
 });
 
 test('passes a supplied fact base through the normalized adapter request', async () => {
