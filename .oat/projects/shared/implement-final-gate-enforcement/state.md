@@ -2,7 +2,7 @@
 oat_current_task: null
 oat_last_commit: 54d6edadbee856239a0da8fffeb3665cb73c65bb
 oat_blockers:
-  - Final re-review must pass before configured exit-gate execution.
+  - Final review round 2 fixes must pass before configured exit-gate execution.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -51,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - All plan tasks and review fixes complete; awaiting final re-review
+Implementation - All plan tasks complete; final review round 2 fixes in progress
 
 ## Artifacts
 
@@ -76,12 +76,12 @@ Implementation - All plan tasks and review fixes complete; awaiting final re-rev
 - ✓ Phase 2 implementation and independent review
 - ✓ Phase 3 implementation and full verification
 - ✓ Final review fixes
-- ⧗ Final whole-project re-review
+- ⧗ Final review round 2 fixes and re-review
 
 ## Blockers
 
-- Final re-review must pass before configured exit-gate execution.
+- Final review round 2 fixes must pass before configured exit-gate execution.
 
 ## Next Milestone
 
-Pass the final whole-project re-review
+Resolve round 2 findings and pass the final whole-project re-review

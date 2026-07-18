@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Final re-review must pass before configured exit-gate execution.
+  - Final review round 2 fixes must pass before configured exit-gate execution.
 oat_last_updated: 2026-07-18
 oat_current_task_id: null
 oat_generated: false
@@ -159,9 +159,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Phase base:** `5cde4690`
 **Commit range:** `9e1c06e1..8222c1e2`
 
-| Phase | Outcome | Tasks | Root Review     | Fix Iterations |
-| ----- | ------- | ----- | --------------- | -------------- |
-| p03   | passed  | 2/2   | fixes_completed | 1              |
+| Phase | Outcome | Tasks | Root Review | Fix Iterations |
+| ----- | ------- | ----- | ----------- | -------------- |
+| p03   | passed  | 2/2   | fixes_added | 2 pending      |
 
 **Task commits:** `9e1c06e1`, `8222c1e2`
 **Integration commits:** `0ef83fc7`, `593129cf`
@@ -173,8 +173,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
 **Optional nested dispatches:** None.
-**Final review fix commit:** `54d6edad`
-**Outstanding items:** Fresh final whole-project re-review.
+**Final review fix commits:** `54d6edad`; round 2 pending.
+**Outstanding items:** Align autonomous `warn` semantics with the fail-closed
+closeout contract and refresh exact verification evidence.
 
 ### Run 2: Phase p02 {#run-2}
 
@@ -305,6 +306,25 @@ legacy non-global-JSON command and must be migrated before final gate execution.
 `ecdf3c29`; fail-closed operational outcomes and the complete scaffolded
 crash-reconciliation state shape were resolved in `54d6edad`. Awaiting fresh
 whole-project re-review.
+
+---
+
+## Review Received: final (round 2)
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T223459Z.md`
+**Commit range:** `917d210f..6a21d282`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Disposition:** Fixes added. The remaining autonomous `warn` policy ambiguity
+was routed to the original Phase 3 implementer. Exact verification counts will
+be refreshed from the final fix run before re-review.
 
 ---
 
