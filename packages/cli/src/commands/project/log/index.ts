@@ -4,13 +4,21 @@ import {
   createProjectLogAppendCommand,
   type ProjectLogAppendCommandDependencies,
 } from './append';
+import {
+  createProjectLogCheckCommand,
+  type ProjectLogCheckCommandDependencies,
+} from './check';
 
-export type ProjectLogCommandDependencies = ProjectLogAppendCommandDependencies;
+export interface ProjectLogCommandDependencies
+  extends
+    ProjectLogAppendCommandDependencies,
+    ProjectLogCheckCommandDependencies {}
 
 export function createProjectLogCommand(
   overrides: Partial<ProjectLogCommandDependencies> = {},
 ): Command {
   return new Command('log')
     .description('Manage the append-only project observation log')
-    .addCommand(createProjectLogAppendCommand(overrides));
+    .addCommand(createProjectLogAppendCommand(overrides))
+    .addCommand(createProjectLogCheckCommand(overrides));
 }
