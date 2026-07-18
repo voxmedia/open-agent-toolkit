@@ -11,6 +11,10 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p04] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [p04] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
