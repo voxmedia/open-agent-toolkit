@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 9/9       |
-| Phase 4 | pending     | 9     | 0/9       |
-| Phase 5 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 10    | 10/10     |
+| Phase 3 | complete | 9     | 9/9       |
+| Phase 4 | pending  | 9     | 0/9       |
+| Phase 5 | pending  | 4     | 0/4       |
 
 **Total:** 25/38 tasks completed
 
@@ -433,7 +433,7 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 ## Phase 3: OAT adapter and lifecycle integration
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
 
 ### Phase Summary
@@ -470,7 +470,8 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 direct real-core and malformed-attestation probes passed, and skill validation,
 CLI type-check/lint, format, and whitespace checks were clean. Release
 validation remains intentionally deferred to the planned Phase 4 lockstep
-version task. Reviewer re-review is pending.
+version task. Re-review passed with zero findings; canonical artifact:
+`reviews/p03-review-2026-07-18T120653Z.md`.
 
 ### Task p03-t01: Resolve adapter config and canonical output roots
 

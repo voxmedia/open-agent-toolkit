@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: 205bd030
+oat_last_commit: ada3aff2
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T12:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T12:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 fixes complete; re-review pending
+Implementation - Phase 3 passed; Phase 4 starting at `p04-t01`
 
 ## Artifacts
 
@@ -86,7 +86,8 @@ Implementation - Phase 3 fixes complete; re-review pending
 - ✓ Phase 3 root verification passed (235 tests plus type-check, lint, skill validation, and format)
 - ✓ Phase 3 fix commit `205bd030` resolves all four review findings
 - ✓ Post-fix matrix passed (144 tests plus real-core and attestation probes)
-- ⧗ Phase 3 reviewer re-review pending
+- ✓ Phase 3 reviewer re-review passed with zero findings
+- ⧗ Phase 4 begins at `p04-t01`
 
 ## Blockers
 
@@ -94,4 +95,4 @@ None
 
 ## Next Milestone
 
-Run the Phase 3 reviewer re-review before starting Phase 4.
+Complete Phase 4 tasks `p04-t01` through `p04-t09` with per-task bookkeeping.
