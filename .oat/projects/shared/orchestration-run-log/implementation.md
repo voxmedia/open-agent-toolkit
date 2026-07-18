@@ -213,8 +213,8 @@ oat_generated: false
 
 **Verification:**
 
-- Run: skill validation; format; focused tests; lint; type-check; `pnpm release:validate`; `pnpm build:docs`.
-- Result: all passed; 157 focused tests and 64 generated docs pages.
+- Run: skill validation; format; focused tests; lint; type-check; `pnpm release:validate`; `pnpm build:docs`; full `pnpm test`; `pnpm build`.
+- Result: all passed; 157 focused tests, 3,073 CLI tests, and 64 generated docs pages.
 
 ### Task p03-t01: Add implement append points
 
@@ -235,6 +235,7 @@ oat_generated: false
 
 **Status:** completed
 **Commit:** 6cc70ed4
+**Verification fix:** 56097949
 
 ### Task p03-t05: Add lifecycle integration test
 
@@ -340,6 +341,8 @@ Chronological log of implementation progress.
 
 **Decision:** Workflow Observations remains the complete command-owned project-log roll-up. Autonomous Execution Learnings cross-references overlapping Workflow Observations rather than requiring unsupported roll-up filtering.
 
+**Post-phase verification fix:** refreshed CLI help snapshots and the canonical autonomy prompt-site coverage table in 56097949; the complete workspace gate then passed.
+
 **Blockers:** none.
 
 ---
@@ -360,7 +363,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 343       | 343    | 0      | Targeted |
 | 2     | 310       | 310    | 0      | Targeted |
-| 3     | 157       | 157    | 0      | Targeted |
+| 3     | 3,073     | 3,073  | 0      | Full CLI |
 
 ## Final Summary (for PR/docs)
 
@@ -386,7 +389,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase suites, skill validation, formatting, lint, type-check, release validation, CLI/workspace builds, and docs production build.
+- Phase suites, 3,073 CLI tests, skill validation, formatting, lint, type-check, release validation, full workspace build, and docs production build.
 
 **Design deltas (if any):**
 
