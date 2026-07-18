@@ -113,17 +113,31 @@ how data flows.
      rule ("Integration gates after every fan-in") to the rules list;
      item 5 adds the stored-verification-record requirement to the fix
      loop; item 6 adds the resumed-handle docs note.
+     **B3 framing (design-review amendment, root cause now known):** the
+     sync-drift class (27-file `.codex/agents` deletions; tracked-config
+     reverts) was root-caused post-packet to a stale locally-resolved CLI
+     shadowing the global one (consuming repo's `node_modules/.bin/oat`
+     at 0.1.1 vs global 0.1.7x; pnpm scripts prepend `.bin` to PATH;
+     desired-state sync under two tool versions thrashes managed files).
+     Write B3's rule text as a **regression guard for this named failure
+     class**, not mitigation of a mystery — and give the check a concrete
+     on-fire diagnostic: compare `node_modules/.bin/oat --version` vs
+     `oat --version`. The promoted skill must not imply the toolkit has
+     an unexplained corruption bug.
   3. Commit C: genericization pass (see component 2).
   4. Commit D: toolkit-convention alignment — remove "repo-local dogfood
      draft" status prose, drop the stoa decision-record slugs from
      frontmatter description, keep them in body text as evidence
-     citations, set final frontmatter versions.
-- **Versioning (flagged open question):** continue stoa's lineage —
-  `oat-wave-execute` lands at **1.5.0** (queue items 1–2 = the planned
-  1.4.1; items 3–5 = the planned 1.5.0; applied together),
-  `oat-wave-program` lands at **1.1.0** (genericization + promoted
-  status). Alternative: reset both to 1.0.0 as new toolkit skills.
-  Continuing lineage keeps the signal ledger's version history readable.
+     citations, set final frontmatter versions. **Record the
+     release-collapse explicitly** in the changelog/commit message: the
+     ledger's queued items were tagged "1.4.1" (items 1–2) and "1.5.0"
+     (items 3–5); both land together as 1.5.0, so ledger citations still
+     resolve.
+- **Versioning (RESOLVED at design review):** continue stoa's lineage —
+  `oat-wave-execute` lands at **1.5.0**, `oat-wave-program` at **1.1.0**.
+  The signal ledger cites version numbers in nearly every ruling; a reset
+  to 1.0.0 would orphan every citation, while toolkit consumers never
+  installed 1.x so arriving at 1.5.0 costs nothing and is semver-honest.
 - Cross-references between the skills (`oat-wave-execute` closeout step 8
   invokes `oat-wave-program wave-close`) stay by-name — names are kept,
   so no edits needed.
@@ -204,19 +218,28 @@ change (already rejects singletons).
 
 **Purpose:** §3 rows dispositioned durably.
 
-**Nine items**, per `oat-pjm-add-backlog-item` conventions in
+**Ten items**, per `oat-pjm-add-backlog-item` conventions in
 `.oat/repo/pjm/backlog/`:
 
 Deferred-work (FR7): wave CLI family (`oat wave new/refresh/close`;
 grouped with →), artifact-format-as-contract (grouped with ←; trigger =
 second consumer), `oat worktree bootstrap-group` TS command, post-W6
 reviews-row-watch removal (trigger = W6 clean observation), tracked-config
-guard (blocked on stoa BL-260715).
+guard — **rejected near-permanently** (design-review amendment): the
+revert class is root-caused to a stale local binary in the consuming
+repo; the cure is dependency hygiene there, and a CLI-level guard is
+unnecessary. Filed as a closed disposition record, not a pending item.
 
 Triage (FR6): configurable per-target gate timeout; runbook
 verify-commands pass; `--scope all` flag-placement drift; resolver
 `--candidate-model`/`--preferred` conflict. Each triaged first — if
 already fixed on current main, closed with rationale instead of filed.
+
+New upstream candidate (design-review amendment, accepted): `oat sync`
+warns when the invoking binary's version differs from the version that
+produced the last sync (stamp the CLI version in the sync manifest) —
+the general fix for the stale-tool thrash class, now evidence-backed and
+cheap to detect.
 
 ### 6. Validation fixture + dry-run (FR9)
 
@@ -226,13 +249,18 @@ already fixed on current main, closed with rationale instead of filed.
 containing: `setup-fixture.sh` (materializes a throwaway git repo under
 `$TMPDIR` with a tiny source tree, 3 toy plans + a plan index under
 `.oat/repo/reference/external-plans/`, minimal OAT scaffolding, and a
-no-op DoD gate script) plus the fixture file tree it copies. The dry-run
-is **agent-executed** (the skills are prose): a documented procedure in
+no-op DoD gate script) plus the fixture file tree it copies. The DoD
+gate script is **toggleable to fail via env var** (design-review
+amendment) so the unhappy path is exercisable. The dry-run is
+**agent-executed** (the skills are prose): a documented procedure in
 the fixture's README walks `oat-wave-program new` (coverage invariant),
 one wave = one 2-lane write-disjoint group + 1 ungrouped lane,
 `oat-wave-execute` (bootstrap via the ported script, briefs, merge
 choreography with the new pre-merge asserts and sync-commit inspection),
-and `wave-close` (ledger flip).
+`wave-close` (ledger flip), and one **unhappy-path leg**: toggle the DoD
+gate to fail → verify fix-loop bookkeeping / park semantics — the
+choreography branch most likely to regress silently, and it stays purely
+mechanical.
 
 **Design Decisions:**
 
@@ -320,22 +348,22 @@ alter exit semantics.
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification         | Key Scenarios                                                                                                    |
-| ---- | -------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| FR1  | integration          | bundle-consistency test green; fresh install materializes both skills w/ executable script; sync views generated |
-| FR2  | manual               | per-item commit ↔ queue-item traceability table in implementation.md; 6/6 accounted                              |
-| FR3  | manual               | equivalence-checklist rows all "intent preserved" or justified                                                   |
-| FR4  | manual               | ownership-boundary sections intact; closeout synthesis-before-archive order intact                               |
-| FR5  | unit                 | validate-plan rejection message names ungrouped-phase alternative; help text updated                             |
-| FR6  | manual               | 4 items triaged (filed or closed-with-rationale) in backlog                                                      |
-| FR7  | manual               | 5 items filed with owner/trigger/groupings                                                                       |
-| FR8  | integration          | docs build green; index regenerated; "not a contract" note present                                               |
-| FR9  | e2e (agent-executed) | fixture dry-run: coverage invariant, group+ungrouped wave, merge asserts fire, wave-close flips ledger           |
-| FR10 | e2e (operator)       | personal-wrapper E2E green vs frozen RC (gated)                                                                  |
-| NFR1 | e2e + manual         | fixture dry-run + completed equivalence checklist pre-W6-handoff                                                 |
-| NFR2 | integration          | `pnpm release:validate`, lint, type-check, tests green                                                           |
-| NFR3 | manual + e2e         | scripts pass bash-3.2 review (no mapfile/assoc arrays); dry-run on macOS system bash                             |
-| NFR4 | integration          | `oat sync --scope all` produces valid views for all providers                                                    |
+| ID   | Verification         | Key Scenarios                                                                                                                                                      |
+| ---- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| FR1  | integration          | bundle-consistency test green; fresh install materializes both skills w/ executable script; sync views generated                                                   |
+| FR2  | manual               | per-item commit ↔ queue-item traceability table in implementation.md; 6/6 accounted                                                                                |
+| FR3  | manual               | equivalence-checklist rows all "intent preserved" or justified                                                                                                     |
+| FR4  | manual               | ownership-boundary sections intact; closeout synthesis-before-archive order intact                                                                                 |
+| FR5  | unit                 | validate-plan rejection message names ungrouped-phase alternative; help text updated                                                                               |
+| FR6  | manual               | 4 items triaged (filed or closed-with-rationale) in backlog                                                                                                        |
+| FR7  | manual               | 5 items filed with owner/trigger/groupings                                                                                                                         |
+| FR8  | integration          | docs build green; index regenerated; "not a contract" note present                                                                                                 |
+| FR9  | e2e (agent-executed) | fixture dry-run: coverage invariant, group+ungrouped wave, merge asserts fire, wave-close flips ledger; unhappy leg: toggled gate-fail → fix-loop/park bookkeeping |
+| FR10 | e2e (operator)       | personal-wrapper E2E green vs frozen RC (gated)                                                                                                                    |
+| NFR1 | e2e + manual         | fixture dry-run + completed equivalence checklist pre-W6-handoff                                                                                                   |
+| NFR2 | integration          | `pnpm release:validate`, lint, type-check, tests green                                                                                                             |
+| NFR3 | manual + e2e         | scripts pass bash-3.2 review (no mapfile/assoc arrays); dry-run on macOS system bash                                                                               |
+| NFR4 | integration          | `oat sync --scope all` produces valid views for all providers                                                                                                      |
 
 ### Unit Tests
 
@@ -363,9 +391,19 @@ migration (delete repo-local copies, install packaged, run W6) is
 operator-coordinated after release. Rollback = stoa's repo-local copies,
 which stay authoritative until W6 passes.
 
-**Open question (W6 handoff shape):** whether stoa consumes a normal npm
-release or needs a pre-release channel. Proposed: normal release — the
-skills are additive assets, and stoa controls when it migrates.
+**W6 handoff (RESOLVED at design review): normal npm release** — no
+pre-release channel; additive-asset risk doesn't justify the machinery,
+and stoa's repo-local copies are the rollback. Phase 5 produces a **W6
+handoff mini-runbook** (not just a note) containing:
+
+1. The exact released package version, to be pinned in stoa's W6 program
+   artifact for provenance.
+2. The migration sequence: delete repo-local skill copies →
+   `oat tools update` → `oat sync`.
+3. The row-stomp observation task: the §3 row 4 trigger fires FROM W6
+   (one more clean final-gate observation closes it) — W6's operator
+   must log that observation and report it back so the deferred
+   watch-removal backlog item can close.
 
 ## Migration Plan
 
@@ -374,11 +412,15 @@ operator-owned, and reversible (its copies remain until W6 passes).
 
 ## Open Questions
 
-- **Versioning:** continue lineage (execute 1.5.0 / program 1.1.0 —
-  proposed) vs reset to 1.0.0. Operator call at design review.
-- **W6 handoff:** normal npm release (proposed) vs pre-release channel.
 - **§4 detail design:** deferred until the explainer-kit RC freezes
   (fixed boundaries above).
+
+Resolved at design review (2026-07-18): versioning (continue lineage —
+execute 1.5.0 / program 1.1.0, with the 1.4.1+1.5.0 release-collapse
+recorded); W6 handoff (normal npm release + Phase 5 mini-runbook);
+fixture honesty bar (mechanical-only confirmed; toggleable-fail DoD gate
+
+- unhappy-path leg added as the one accepted upgrade).
 
 ## Implementation Phases
 
@@ -401,9 +443,11 @@ bash-3.2 clean.
 ### Phase 3: Dispositions (FR5, FR6, FR7)
 
 **Goal:** every §3 row dispositioned durably.
-**Tasks:** validate-plan message/help + tests; 5 deferred backlog items;
-4 triage items (file or close-with-rationale).
-**Verification:** CLI tests green; 9 items accounted for in backlog.
+**Tasks:** validate-plan message/help + tests; 5 deferred/disposition
+items (tracked-config guard filed as a closed rejection per the
+root-cause amendment); 4 triage items (file or close-with-rationale);
+1 new upstream candidate (sync version-stamp warning).
+**Verification:** CLI tests green; 10 items accounted for in backlog.
 
 ### Phase 4: Docs (FR8)
 
