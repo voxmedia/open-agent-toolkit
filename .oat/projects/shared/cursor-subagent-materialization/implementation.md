@@ -137,6 +137,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Optional nested dispatches:** none.
 - **Outcome:** p02 passed and the p03/p04 parallel group is next.
 
+### Run 2 — p03/p04 parallel group attempt 1
+
+- **Status:** `INVALID_RUN_ABORT`
+- **Expected base:** `55f283525ede74655f29f5efd27d728925cee10a`
+- **Invalidating evidence:** p03 began with `.oat/sync/manifest.json` modified by bootstrap provider sync (`oatVersion: 0.1.71` → `0.1.72`) despite the bootstrap wrapper's final clean assertion.
+- **p03 outcome:** no implementation edits, tests, commits, or children; worktree preserved at `.worktrees/cursor-subagent-materialization/p03`.
+- **p04 outcome:** its already accepted handle is ineligible for merge or replacement under this invalid run. Any eventual output is excluded and the worktree is preserved at `.worktrees/cursor-subagent-materialization/p04`.
+- **Containment:** no sequential degradation and no replacement launch.
+- **Recovery boundary:** requires explicit operator authorization for a new parallel run after diagnosing and cleaning or recreating the worktrees.
+
 <!-- orchestration-runs-end -->
 
 ---
