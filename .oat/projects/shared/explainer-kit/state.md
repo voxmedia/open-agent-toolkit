@@ -1,8 +1,7 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: bf712c21
-oat_blockers:
-  - Phase 2 review found three critical and two important issues requiring a bounded fix loop.
+oat_last_commit: bcfba605
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T01:24:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T01:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 2 bounded review-fix loop
+Implementation - Phase 2 fixes complete; re-review pending
 
 ## Artifacts
 
@@ -79,14 +78,14 @@ Implementation - Phase 2 bounded review-fix loop
 - ✓ Phase 1 reviewer re-review passed with zero findings
 - ✓ Phase 2 tasks `p02-t01` through `p02-t10` completed
 - ✓ Phase 2 root verification passed (98 tests, lint, format, whitespace)
-- ⚠ Phase 2 review found 3 critical and 2 important issues
-- ⧗ All five findings accepted for a bounded fix loop
+- ✓ Phase 2 fix commit `bcfba605` resolves all five review findings
+- ✓ Full post-fix suite passed (102 tests plus direct probes, lint, and format)
+- ⧗ Phase 2 reviewer re-review pending
 
 ## Blockers
 
-- Nested-symlink write confinement, source cardinality, immutable durability
-  evidence, operable theme switching, and no-JS deck overflow must be fixed.
+None
 
 ## Next Milestone
 
-Apply the bounded Phase 2 fixes, rerun verification, and re-review.
+Run the Phase 2 reviewer re-review before starting Phase 3.

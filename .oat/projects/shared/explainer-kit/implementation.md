@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Phase 2 review requires a bounded fix loop before Phase 3.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p03-t01
 oat_generated: false
@@ -215,7 +214,7 @@ oat_generated: false
 - Phase range whitespace check — pass.
 - Phase 2 review found three critical and two important issues.
 
-### Phase 2 Review — Fixes Added
+### Phase 2 Review — Fixes Completed
 
 **Artifact:** `reviews/p02-review-2026-07-18T012116Z.md`
 
@@ -227,8 +226,10 @@ oat_generated: false
 - Make `user-switchable` themes operable and keyboard-accessible.
 - Preserve no-JS deck x-axis inner-content containment.
 
-**Disposition:** Resolve all five findings in one bounded append-only Phase 2
-fix commit, rerun the full core matrix, and request reviewer re-review.
+**Disposition:** All five findings were resolved in append-only commit
+`bcfba605`. Full core verification passed 102/102 tests; direct symlink,
+source-set, durability, theme-toggle, no-JS, and print probes passed; and lint,
+format, and whitespace checks were clean. Reviewer re-review is pending.
 
 ### Task p02-t01: Normalize run requests and create atomic run records
 
@@ -550,7 +551,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage                                   |
 | ----- | --------- | ------ | ------ | ------------------------------------------ |
 | 1     | 491       | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
-| 2     | 98        | 98     | 0      | Full root Phase 2 core suite passes        |
+| 2     | 102       | 102    | 0      | Full post-review-fix Phase 2 suite passes  |
 
 ## Final Summary (for PR/docs)
 
