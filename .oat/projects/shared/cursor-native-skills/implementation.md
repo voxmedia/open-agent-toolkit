@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,14 +14,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 2     | 2/2       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | in_progress | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 2     | 2/2       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ## Phase 1: Native-Read Mapping and Adoption Sources
 
@@ -129,17 +129,33 @@ abort, and retain the existing non-Cursor checklist behavior.
 
 ## Phase 4: Documentation, Release Metadata, and Final Validation
 
-**Status:** in_progress
+**Status:** complete
+
+### Phase Summary
+
+- Provider, migration, configuration, and file-location documentation now
+  describes Cursor native-read skills and provider-local adoption behavior.
+- The canonical skills guide and bundled skill reference are aligned, with the
+  required skill version bump.
+- All five public packages are versioned at `0.1.73`.
+- Reviewed sync reconciliation removed 72 project and 55 user Cursor skill
+  symlinks, with no detach or unverified operations.
+- A post-apply dry-run reports no remaining provider mutations.
 
 ### Task p04-t01: Update provider and configuration documentation
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `bf47c23c`
+
+Documentation and canonical skill references now reflect the shipped behavior.
 
 ### Task p04-t02: Bump public packages and run release validation
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `fdd4ad98`
+
+Release metadata, project manifest cleanup, and provider-view deletions are
+committed after full validation and reviewed all-scope sync.
 
 ## Orchestration Runs
 
@@ -153,7 +169,8 @@ abort, and retain the existing non-Cursor checklist behavior.
 - Phase p01: complete
 - Phase p02: complete
 - Phase p03: complete
-- Phase p04: next
+- Phase p04: complete
+- HiLL checkpoint: reached
 
 <!-- orchestration-runs-end -->
 
@@ -168,7 +185,8 @@ abort, and retain the existing non-Cursor checklist behavior.
 - [x] p03-t01: Canonicalize user known-stray configuration — `95422e22`
 - [x] p03-t02: Support native-read adopt and keep-local actions — `a6d1dfd9`
 - [x] p03-t03: Wire individual choices into init and status — `3fb2ea22`
-- [ ] p04-t01: Update provider and configuration documentation
+- [x] p04-t01: Update provider and configuration documentation — `bf47c23c`
+- [x] p04-t02: Bump public packages and run release validation — `fdd4ad98`
 
 **Decisions:**
 
@@ -192,11 +210,33 @@ abort, and retain the existing non-Cursor checklist behavior.
 | p01   | 173       | 173    | 0      | Format, type-check, lint pass |
 | p02   | 74        | 74     | 0      | Format, type-check, lint pass |
 | p03   | 375       | 375    | 0      | Format, type-check, lint pass |
-| p04   | -         | -      | -      | Pending                       |
+| p04   | 537       | 537    | 0      | Full workspace gates passed   |
 
 ## Final Summary (for PR/docs)
 
-Pending implementation completion.
+**What shipped:**
+
+- Cursor reads canonical project and user skills directly from `.agents/skills`.
+- Existing Cursor skills can be individually adopted or retained as
+  provider-local skills with durable known-stray recording.
+- Legacy user known-stray config migrates to `~/.oat/sync/config.json`.
+- Obsolete managed Cursor views retire safely without deleting modified or
+  unmanaged content.
+
+**Behavioral changes:**
+
+- Sync no longer creates `.cursor/skills` mirrors.
+- Interactive init/status require a decision for each unresolved Cursor skill.
+- Same-name canonical/provider-local collisions must be renamed before
+  keep-local can be recorded.
+
+**Verification performed:**
+
+- 537 focused regression tests passed.
+- 3,257 full workspace tests passed, including 123 smoke tests.
+- Lint, format, type-check, build, docs build, canonical skill validation, and
+  `pnpm release:validate` passed.
+- Post-apply all-scope sync dry-run reports no remaining mutations.
 
 ## References
 
