@@ -4,6 +4,12 @@
 
 ## Curated Overview
 
+- Workflow-integrity (high, evidence-backed 2026-07-18): lifecycle text that
+  names another skill as an execution step needs a mandatory-load clause —
+  the wave-skills-promotion closeout showed "dispatch X" degrading to
+  outcome-from-memory, silently skipping newer skill steps
+  (`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for
+  lifecycle steps that name skills).
 - Upstream wave-program feedback now tracks generated-runbook command
   validation, sync producer-version warnings, and the remaining full-surface
   gate budget/recursive-dispatch hazards. Current main already fixes sync
@@ -55,6 +61,7 @@
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
 | BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews    | open   | high     | feature | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
+| BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
