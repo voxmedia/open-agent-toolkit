@@ -229,8 +229,12 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   ROOT checkout `reviews/` + `pnpm format:fix`.
 - **Merge choreography:** after all group verdicts — serialized `git merge
 --no-ff` in plan order, rebasing each phase branch on the updated tip first
-  (rules 2–3); integration DoD gates after fan-in run TO COMPLETION BEFORE any
-  group bookkeeping edits start (DR-260714-integration-gates-run-before);
+  (rules 2–3). Immediately before EVERY `git merge`, run `pwd` and
+  `git branch --show-current` and assert that they identify the intended repo
+  root and integration branch; stop on either mismatch. This closes the
+  cwd-persistence wrong-branch failure observed in wave 5. Integration DoD gates
+  after fan-in run TO COMPLETION BEFORE any group bookkeeping edits start
+  (DR-260714-integration-gates-run-before);
   then the group bookkeeping commit. **Conflict-resolution contract
   (DR-260715-conflict-resolution-contract):** on rebase/merge conflicts —
   keep-both where lanes appended to shared surfaces; then in-worktree BUILD +
