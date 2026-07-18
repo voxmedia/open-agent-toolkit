@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t06
+oat_current_task_id: p02-t07
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 5/10      |
+| Phase 2 | in_progress | 10    | 6/10      |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 11/38 tasks completed
+**Total:** 12/38 tasks completed
 
 ---
 
@@ -294,6 +294,26 @@ oat_generated: false
 
 - Template, recipe, and theme suites — pass (24/24).
 - Scoped formatting, lint, and whitespace checks — pass.
+
+---
+
+### Task p02-t06: Implement typed-path rendering
+
+**Status:** completed
+**Commit:** `942b3286`
+
+**Outcome:**
+
+- Added validated recipe/theme/template rendering to typed site paths with
+  escaped substitution, explicit index URLs, cross-links, and separate render
+  strategy handling.
+- Preserved deck horizontal paging, no-JS flow, and print behavior through
+  rendering.
+
+**Verification:**
+
+- Renderer, recipe, theme, and template suites — pass (32/32).
+- Scoped lint, formatting, and whitespace checks — pass.
 
 ---
 
