@@ -14,12 +14,19 @@ import {
   detectCodexRoleStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
+import {
+  applyCursorSkillDisposition,
+  isCursorSkillCandidate,
+  type CursorSkillDisposition,
+} from '@commands/shared/cursor-skill-disposition';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type MultiSelectChoice,
   type PromptContext,
+  type SelectChoice,
   selectManyWithAbort,
+  selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import {
   readGlobalOptions,
@@ -30,7 +37,7 @@ import {
   loadSyncConfig,
   type SyncConfig,
 } from '@config/index';
-import { readUserConfig, type UserConfig } from '@config/oat-config';
+import { resolveUserSyncConfig } from '@config/user-sync-config';
 import {
   type CopyTransform,
   type DriftReport,
@@ -104,7 +111,7 @@ interface StatusDependencies {
   ) => Promise<string>;
   loadManifest: (manifestPath: string) => Promise<Manifest>;
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
-  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
+  resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
   saveManifest: (manifestPath: string, manifest: Manifest) => Promise<void>;
   scanCanonical: (
     scopeRoot: string,
@@ -156,11 +163,24 @@ interface StatusDependencies {
     choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T[] | null>;
+  selectWithAbort: <T extends string>(
+    message: string,
+    choices: SelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T | null>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   adoptStray: (
     scopeRoot: string,
     stray: StatusStrayCandidate,
     manifest: Manifest,
+    options?: { replaceCanonical?: boolean },
+  ) => Promise<Manifest>;
+  applyCursorSkillDisposition: (
+    scopeRoot: string,
+    stray: StatusStrayCandidate,
+    manifest: Manifest,
+    disposition: CursorSkillDisposition,
+    syncConfigPath: string,
     options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   formatStatusTable: (reports: DriftReport[]) => string;
@@ -181,6 +201,7 @@ interface ScopeReportCollection {
   scope: ConcreteScope;
   scopeRoot: string;
   manifestPath: string;
+  syncConfigPath: string;
   manifest: Manifest;
   reports: DriftReport[];
   strayCandidates: StatusStrayCandidate[];
@@ -199,7 +220,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   async loadSyncConfig(configPath) {
     return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
   },
-  readUserConfig,
+  resolveUserSyncConfig,
   saveManifest,
   scanCanonical,
   scanBundledManagedCodexAgents,
@@ -221,8 +242,10 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   computeCodexProjectExtensionPlan,
   applyCodexProjectExtensionPlan,
   selectManyWithAbort,
+  selectWithAbort,
   confirmAction,
   adoptStray: adoptStrayDefault,
+  applyCursorSkillDisposition,
   formatStatusTable,
 };
 
@@ -330,12 +353,12 @@ async function collectScopeReports(
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
   const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
   const userConfigDir = join(context.home, '.oat');
-  const [manifest, canonicalEntries, syncConfig, userConfig] =
+  const [manifest, canonicalEntries, syncConfig, userSyncConfig] =
     await Promise.all([
       dependencies.loadManifest(manifestPath),
       dependencies.scanCanonical(scopeRoot, scope),
       dependencies.loadSyncConfig(syncConfigPath),
-      dependencies.readUserConfig(userConfigDir),
+      dependencies.resolveUserSyncConfig(userConfigDir),
     ]);
   const adapters = dependencies.getAdapters();
   const activeAdapters = await dependencies.getActiveAdapters(
@@ -516,7 +539,7 @@ async function collectScopeReports(
     candidates: strayCandidates,
     knownStrays: {
       project: syncConfig.knownStrays,
-      user: userConfig.knownStrays,
+      user: userSyncConfig.knownStrays,
     },
   });
 
@@ -524,6 +547,7 @@ async function collectScopeReports(
     scope,
     scopeRoot,
     manifestPath,
+    syncConfigPath,
     manifest,
     reports: filtered.reports,
     strayCandidates: filtered.candidates,
@@ -580,55 +604,76 @@ async function runStatusCommand(
 
   if (summary.stray > 0) {
     if (context.interactive) {
+      let migrationAborted = false;
       for (const scopeCollection of scopeCollections) {
         if (scopeCollection.strayCandidates.length === 0) {
           continue;
         }
 
         let manifestChanged = false;
-
-        const selectedValues = await dependencies.selectManyWithAbort(
-          `Select stray entries to adopt [${scopeCollection.scope}]`,
-          scopeCollection.strayCandidates.map((strayCandidate, index) => ({
-            label: formatStrayChoiceLabel(
-              scopeCollection.scope,
-              strayCandidate.report.providerPath,
-              strayCandidate.provider,
-            ),
-            value: String(index),
-            description: formatPathForScope(
-              scopeCollection.scope,
-              strayCandidate.report.providerPath,
-            ),
-          })),
-          { interactive: context.interactive },
-        );
-        const selectedIndices = new Set(
-          (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
-        );
         let adoptedCount = 0;
         let codexStrayAdopted = false;
+        const cursorSkillStrays = scopeCollection.strayCandidates.filter(
+          isCursorSkillCandidate,
+        );
+        const ordinaryStrays = scopeCollection.strayCandidates.filter(
+          (stray) => !isCursorSkillCandidate(stray),
+        );
 
-        for (const [
-          index,
-          strayCandidate,
-        ] of scopeCollection.strayCandidates.entries()) {
-          if (!selectedIndices.has(index)) {
-            continue;
+        for (const strayCandidate of cursorSkillStrays) {
+          const disposition = await dependencies.selectWithAbort(
+            `Migrate Cursor skill [${scopeCollection.scope}]: ${formatPathForScope(
+              scopeCollection.scope,
+              strayCandidate.report.providerPath,
+            )}`,
+            [
+              {
+                label: 'Adopt into canonical',
+                value: 'adopt',
+                description: `Move to ${strayCandidate.mapping.canonicalDir}.`,
+              },
+              {
+                label: 'Keep Cursor-only',
+                value: 'keep',
+                description:
+                  'Leave in .cursor/skills and remember this choice.',
+              },
+            ],
+            { interactive: context.interactive },
+          );
+          if (disposition === null) {
+            migrationAborted = true;
+            break;
           }
 
           try {
-            scopeCollection.manifest = await dependencies.adoptStray(
-              scopeCollection.scopeRoot,
-              strayCandidate,
-              scopeCollection.manifest,
-            );
-            adoptedCount += 1;
-            manifestChanged = true;
-            codexStrayAdopted =
-              codexStrayAdopted || strayCandidate.provider === 'codex';
+            scopeCollection.manifest =
+              await dependencies.applyCursorSkillDisposition(
+                scopeCollection.scopeRoot,
+                strayCandidate,
+                scopeCollection.manifest,
+                disposition,
+                scopeCollection.syncConfigPath,
+              );
+            if (disposition === 'adopt') {
+              adoptedCount += 1;
+            } else {
+              context.logger.success(
+                `Kept Cursor-only [${scopeCollection.scope}]: ${formatPathForScope(
+                  scopeCollection.scope,
+                  strayCandidate.report.providerPath,
+                )}.`,
+              );
+            }
           } catch (error) {
-            if (!isAdoptionConflictError(error)) {
+            if (
+              error instanceof Error &&
+              error.message.startsWith('Cannot keep ')
+            ) {
+              context.logger.warn(error.message);
+              continue;
+            }
+            if (!isAdoptionConflictError(error) || disposition !== 'adopt') {
               throw error;
             }
 
@@ -642,7 +687,7 @@ async function runStatusCommand(
 
             if (!shouldReplace) {
               context.logger.warn(
-                `Skipped adopting conflicting stray [${scopeCollection.scope}] ${formatPathForScope(
+                `Skipped adopting conflicting Cursor skill [${scopeCollection.scope}] ${formatPathForScope(
                   scopeCollection.scope,
                   strayCandidate.report.providerPath,
                 )}.`,
@@ -650,16 +695,92 @@ async function runStatusCommand(
               continue;
             }
 
-            scopeCollection.manifest = await dependencies.adoptStray(
-              scopeCollection.scopeRoot,
-              strayCandidate,
-              scopeCollection.manifest,
-              { replaceCanonical: true },
-            );
+            scopeCollection.manifest =
+              await dependencies.applyCursorSkillDisposition(
+                scopeCollection.scopeRoot,
+                strayCandidate,
+                scopeCollection.manifest,
+                disposition,
+                scopeCollection.syncConfigPath,
+                { replaceCanonical: true },
+              );
             adoptedCount += 1;
-            manifestChanged = true;
-            codexStrayAdopted =
-              codexStrayAdopted || strayCandidate.provider === 'codex';
+          }
+        }
+
+        if (!migrationAborted && ordinaryStrays.length > 0) {
+          const selectedValues = await dependencies.selectManyWithAbort(
+            `Select stray entries to adopt [${scopeCollection.scope}]`,
+            ordinaryStrays.map((strayCandidate, index) => ({
+              label: formatStrayChoiceLabel(
+                scopeCollection.scope,
+                strayCandidate.report.providerPath,
+                strayCandidate.provider,
+              ),
+              value: String(index),
+              description: formatPathForScope(
+                scopeCollection.scope,
+                strayCandidate.report.providerPath,
+              ),
+            })),
+            { interactive: context.interactive },
+          );
+          if (selectedValues === null) {
+            migrationAborted = true;
+          } else {
+            const selectedIndices = new Set(
+              selectedValues.map((value) => Number.parseInt(value, 10)),
+            );
+            for (const [index, strayCandidate] of ordinaryStrays.entries()) {
+              if (!selectedIndices.has(index)) {
+                continue;
+              }
+
+              try {
+                scopeCollection.manifest = await dependencies.adoptStray(
+                  scopeCollection.scopeRoot,
+                  strayCandidate,
+                  scopeCollection.manifest,
+                );
+                adoptedCount += 1;
+                manifestChanged = true;
+                codexStrayAdopted =
+                  codexStrayAdopted || strayCandidate.provider === 'codex';
+              } catch (error) {
+                if (!isAdoptionConflictError(error)) {
+                  throw error;
+                }
+
+                const shouldReplace = await dependencies.confirmAction(
+                  `Conflict detected for ${formatPathForScope(
+                    scopeCollection.scope,
+                    strayCandidate.report.providerPath,
+                  )}. Replace canonical with stray content?`,
+                  { interactive: context.interactive },
+                );
+
+                if (!shouldReplace) {
+                  context.logger.warn(
+                    `Skipped adopting conflicting stray [${scopeCollection.scope}] ${formatPathForScope(
+                      scopeCollection.scope,
+                      strayCandidate.report.providerPath,
+                    )}.`,
+                  );
+                  continue;
+                }
+
+                scopeCollection.manifest = await dependencies.adoptStray(
+                  scopeCollection.scopeRoot,
+                  strayCandidate,
+                  scopeCollection.manifest,
+                  { replaceCanonical: true },
+                );
+                adoptedCount += 1;
+                manifestChanged = true;
+                codexStrayAdopted =
+                  codexStrayAdopted || strayCandidate.provider === 'codex';
+              }
+            }
           }
         }
 
@@ -681,15 +802,20 @@ async function runStatusCommand(
             scopeCollection.manifestPath,
             scopeCollection.manifest,
           );
+        }
+        if (adoptedCount > 0) {
           context.logger.success(
             `Adopted ${adoptedCount} stray entr${
               adoptedCount === 1 ? 'y' : 'ies'
             } [${scopeCollection.scope}].`,
           );
-        } else {
+        } else if (!migrationAborted) {
           context.logger.info(
             `No stray entries adopted [${scopeCollection.scope}].`,
           );
+        }
+        if (migrationAborted) {
+          break;
         }
       }
     } else if (!context.json) {

@@ -9,7 +9,6 @@ import {
 } from '@commands/__tests__/helpers';
 import type { CodexRoleStray } from '@commands/shared/codex-strays';
 import { DEFAULT_SYNC_CONFIG, type SyncConfig } from '@config/index';
-import type { UserConfig } from '@config/oat-config';
 import type { DriftReport } from '@drift/index';
 import {
   scanBundledManagedCodexAgents as scanBundledManagedCodexAgentsFromDisk,
@@ -51,6 +50,7 @@ interface TestHarnessOptions {
   useDiskBundledCodexAgents?: boolean;
   interactive?: boolean;
   selectManyResponses?: Array<string[] | null>;
+  singleSelectResponses?: Array<string | null>;
 }
 
 const REMEDIATION_TEXT = 'Run "oat init" to adopt stray entries.';
@@ -179,8 +179,10 @@ function createHarness(options: TestHarnessOptions = {}): {
   capture: LoggerCapture;
   command: Command;
   selectManyWithAbort: ReturnType<typeof vi.fn>;
+  selectWithAbort: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   adoptStray: ReturnType<typeof vi.fn>;
+  applyCursorSkillDisposition: ReturnType<typeof vi.fn>;
   saveManifest: ReturnType<typeof vi.fn>;
   scanCanonical: ReturnType<typeof vi.fn>;
   scanBundledManagedCodexAgents: ReturnType<typeof vi.fn>;
@@ -212,23 +214,28 @@ function createHarness(options: TestHarnessOptions = {}): {
   const canonicalEntries = options.canonicalEntries ?? [];
   const interactive = options.interactive ?? true;
   const selectManyResponses = [...(options.selectManyResponses ?? [])];
+  const singleSelectResponses = [...(options.singleSelectResponses ?? [])];
   const selectManyWithAbort = vi.fn(
     async () => selectManyResponses.shift() ?? [],
+  );
+  const selectWithAbort = vi.fn(
+    async () => singleSelectResponses.shift() ?? null,
   );
   const confirmAction = vi.fn(async () => false);
   const adoptStray = vi.fn(async (_scopeRoot, _stray, manifest: Manifest) => {
     return manifest;
   });
+  const applyCursorSkillDisposition = vi.fn(
+    async (_scopeRoot, _stray, manifest: Manifest) => manifest,
+  );
   const saveManifest = vi.fn(async () => undefined);
   const syncConfig: SyncConfig = {
     ...DEFAULT_SYNC_CONFIG,
     knownStrays: options.syncConfigKnownStrays ?? [],
   };
-  const userConfig: UserConfig = {
-    version: 1,
-    ...(options.userKnownStrays
-      ? { knownStrays: options.userKnownStrays }
-      : {}),
+  const userSyncConfig: SyncConfig = {
+    ...DEFAULT_SYNC_CONFIG,
+    knownStrays: options.userKnownStrays ?? [],
   };
   const detectCodexRoleStrays = vi.fn(
     async () => options.codexRoleStrays ?? [],
@@ -276,7 +283,7 @@ function createHarness(options: TestHarnessOptions = {}): {
     ),
     loadManifest: vi.fn(async () => createManifest(manifestEntries)),
     loadSyncConfig: vi.fn(async () => syncConfig),
-    readUserConfig: vi.fn(async () => userConfig),
+    resolveUserSyncConfig: vi.fn(async () => userSyncConfig),
     saveManifest,
     scanCanonical,
     scanBundledManagedCodexAgents,
@@ -294,8 +301,10 @@ function createHarness(options: TestHarnessOptions = {}): {
     computeCodexProjectExtensionPlan,
     applyCodexProjectExtensionPlan,
     selectManyWithAbort,
+    selectWithAbort,
     confirmAction,
     adoptStray,
+    applyCursorSkillDisposition,
     formatStatusTable: formatReports,
   });
 
@@ -303,8 +312,10 @@ function createHarness(options: TestHarnessOptions = {}): {
     capture,
     command,
     selectManyWithAbort,
+    selectWithAbort,
     confirmAction,
     adoptStray,
+    applyCursorSkillDisposition,
     saveManifest,
     scanCanonical,
     scanBundledManagedCodexAgents,
@@ -513,6 +524,149 @@ describe('createStatusCommand', () => {
     expect(choices[1]?.description).toContain('.claude/skills/stray-two');
     expect(adoptStray).toHaveBeenCalledTimes(1);
     expect(saveManifest).toHaveBeenCalledTimes(1);
+  });
+
+  it('prompts for each Cursor skill with only adopt and keep choices', async () => {
+    const {
+      command,
+      selectWithAbort,
+      selectManyWithAbort,
+      applyCursorSkillDisposition,
+    } = createHarness({
+      adapters: [createCursorAdapter()],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/adopt-me',
+          state: { status: 'stray' },
+        },
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/keep-me',
+          state: { status: 'stray' },
+        },
+      ],
+      singleSelectResponses: ['adopt', 'keep'],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    for (const call of selectWithAbort.mock.calls) {
+      expect(call[1]).toEqual([
+        expect.objectContaining({
+          label: 'Adopt into canonical',
+          value: 'adopt',
+        }),
+        expect.objectContaining({
+          label: 'Keep Cursor-only',
+          value: 'keep',
+        }),
+      ]);
+      expect(call[1]).toHaveLength(2);
+    }
+    expect(
+      applyCursorSkillDisposition.mock.calls.map((call) => call[3]),
+    ).toEqual(['adopt', 'keep']);
+    expect(applyCursorSkillDisposition.mock.calls[1]?.[4]).toBe(
+      '/tmp/workspace/.oat/sync/config.json',
+    );
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('stops current and remaining status migration processing on abort', async () => {
+    const {
+      command,
+      selectWithAbort,
+      selectManyWithAbort,
+      applyCursorSkillDisposition,
+    } = createHarness({
+      adapters: [createCursorAdapter()],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/answered',
+          state: { status: 'stray' },
+        },
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/aborted',
+          state: { status: 'stray' },
+        },
+      ],
+      singleSelectResponses: ['keep', null],
+    });
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(selectWithAbort).toHaveBeenCalledTimes(2);
+    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
+    expect(selectManyWithAbort).not.toHaveBeenCalled();
+  });
+
+  it('uses project and user sync config paths for scope-all dispositions', async () => {
+    const { command, applyCursorSkillDisposition } = createHarness({
+      adapters: [createCursorAdapter()],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/local-only',
+          state: { status: 'stray' },
+        },
+      ],
+      singleSelectResponses: ['keep', 'keep'],
+    });
+
+    await runStatusCommand(command, ['--scope', 'all']);
+
+    expect(
+      applyCursorSkillDisposition.mock.calls.map((call) => call[4]),
+    ).toEqual([
+      '/tmp/workspace/.oat/sync/config.json',
+      '/tmp/home/.oat/sync/config.json',
+    ]);
+  });
+
+  it('reports keep-local name collisions without recording the choice', async () => {
+    const { command, capture, applyCursorSkillDisposition } = createHarness({
+      adapters: [createCursorAdapter()],
+      interactive: true,
+      manifestEntries: [],
+      driftReports: [],
+      strayReports: [
+        {
+          canonical: null,
+          provider: 'cursor',
+          providerPath: '.cursor/skills/local-only',
+          state: { status: 'stray' },
+        },
+      ],
+      singleSelectResponses: ['keep'],
+    });
+    applyCursorSkillDisposition.mockRejectedValueOnce(
+      new CliError(
+        'Cannot keep .cursor/skills/local-only Cursor-only because canonical skill .agents/skills/local-only has the same name. Rename one skill, then run the command again.',
+      ),
+    );
+
+    await runStatusCommand(command, ['--scope', 'project']);
+
+    expect(capture.warn.join('\n')).toContain('Rename one skill');
+    expect(applyCursorSkillDisposition).toHaveBeenCalledTimes(1);
   });
 
   it('outputs JSON when --json flag set', async () => {
