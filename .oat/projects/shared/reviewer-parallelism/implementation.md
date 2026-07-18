@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 1     | 0/1       |
-| Phase 2 | pending | 1     | 0/1       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 1     | 0/1       |
+| Phase 2 | pending     | 1     | 0/1       |
+| Phase 3 | pending     | 2     | 0/2       |
 
 **Total:** 0/4 tasks completed
 
@@ -36,8 +36,8 @@ oat_generated: false
 
 ## Phase 1: Canonical Reviewer Orchestration Contract
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-18
 
 ### Phase Summary (fill when phase is complete)
 
@@ -60,7 +60,7 @@ oat_generated: false
 
 ### Task p01-t01: Add bounded reconnaissance behavior with semantic regression coverage
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Outcome (required when completed):**

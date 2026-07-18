@@ -5,6 +5,8 @@ oat_ready_for: oat-project-implement
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p03']
+oat_auto_review_at_hill_checkpoints: true
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
@@ -32,7 +34,7 @@ oat_template: false
 - [x] Phases evaluated for parallelism
 - [x] `oat_plan_parallel_groups` set from dependency/write-set analysis
 - [x] Dispatch policy resolved before implementation readiness
-- [ ] Plan artifact review passed
+- [x] Plan artifact review passed
 
 ## Parallelism
 
