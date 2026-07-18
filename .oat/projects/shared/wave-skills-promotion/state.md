@@ -1,5 +1,5 @@
 ---
-oat_current_task: prev1-t01
+oat_current_task: p06-t01
 oat_last_commit: 17a56f39
 oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -51,8 +51,9 @@ oat_post_implement_sequence:
 Implementation in progress. Phases p01–p05 executed and passed root-owned
 review (each with one bounded fix round); p05 also carries the
 operator-configured cross-runtime phase gate. Phase p06 (explainer
-integration) is blocked on the packaged explainer-kit v1 RC and requires a
-gate-open plan revision + re-review before execution. This run's mergeable
+integration): the RC gate is OPEN (v1 RC frozen 2026-07-18); p06 awaits PR
+#158 merge followed by the mandatory RC-schema plan revision and phase
+re-review before execution. This run's mergeable
 delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 ## Artifacts
@@ -61,7 +62,7 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 - **Spec:** `spec.md` (complete — 10 FRs + 4 NFRs; aligned to design amendments at plan gate)
 - **Design:** `design.md` (complete — approved with amendments 2026-07-18)
 - **Plan:** `plan.md` (complete — 27 tasks; gate passed 2026-07-18)
-- **Implementation:** `implementation.md` (in progress — 23/27 tasks complete; p06 blocked)
+- **Implementation:** `implementation.md` (in progress — 26/30 tasks complete; p06 RC gate open, awaits PR #158 merge + gate-open revision)
 
 ## Progress
 
