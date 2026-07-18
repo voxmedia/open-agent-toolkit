@@ -30,6 +30,9 @@ export function createProjectValidatePlanCommand(
 
   return new Command('validate-plan')
     .description(
+      'Validate plan.md parallelism metadata against the plan phase list; singleton groups are not allowed — run a solo lane as an ungrouped phase (ungrouped phases execute sequentially in plan order)',
+    )
+    .summary(
       'Validate plan.md parallelism metadata against the plan phase list',
     )
     .option(

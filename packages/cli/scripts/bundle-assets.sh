@@ -76,6 +76,8 @@ SKILLS=(
   oat-review-receive-remote
   oat-worktree-bootstrap
   oat-worktree-bootstrap-auto
+  oat-wave-execute
+  oat-wave-program
   oat-wrap-up
   analyze
   compare

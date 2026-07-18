@@ -1,4 +1,5 @@
 import {
+  chmod,
   lstat,
   mkdir,
   mkdtemp,
@@ -6,6 +7,7 @@ import {
   readFile,
   readlink,
   rm,
+  stat,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -115,6 +117,26 @@ describe('fs/io', () => {
     expect(await readFile(join(destDir, 'nested', 'child.txt'), 'utf8')).toBe(
       'child',
     );
+  });
+
+  it('copyDirectory preserves executable mode on nested files', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-io-'));
+    tempDirs.push(root);
+    const srcDir = join(root, 'src');
+    const destDir = join(root, 'dest');
+    await mkdir(join(srcDir, 'scripts'), { recursive: true });
+    await writeFile(join(srcDir, 'plain.md'), 'plain', 'utf8');
+    await writeFile(
+      join(srcDir, 'scripts', 'run.sh'),
+      '#!/bin/sh\necho run\n',
+      'utf8',
+    );
+    await chmod(join(srcDir, 'scripts', 'run.sh'), 0o755);
+
+    await copyDirectory(srcDir, destDir);
+
+    const scriptStat = await stat(join(destDir, 'scripts', 'run.sh'));
+    expect(scriptStat.mode & 0o111).not.toBe(0);
   });
 
   it('atomicWriteJson writes to temp then renames', async () => {
