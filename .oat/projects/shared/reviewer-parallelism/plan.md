@@ -1,15 +1,16 @@
 ---
 oat_plan_source: quick
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_last_updated: 2026-07-10
+oat_last_updated: 2026-07-18
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: reviewer-parallelism

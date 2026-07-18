@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -42,15 +42,15 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-10T01:32:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T19:29:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Plan complete
+**Status:** Plan artifact review in progress
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-10
+**Last Updated:** 2026-07-18
 
 ## Current Phase
 
@@ -61,7 +61,7 @@ Plan - Execution plan complete; artifact review in progress
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (complete — artifact review in progress)
+- **Plan:** `plan.md` (in progress — artifact review pending)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -69,7 +69,7 @@ Plan - Execution plan complete; artifact review in progress
 - ✓ Discovery completed and requirements confirmed
 - ✓ Execution artifacts scaffolded
 - ✓ Dispatch policy set to High (Codex xhigh, Claude opus)
-- ✓ Execution plan finalized
+- ✓ Execution plan drafted
 - ⧗ Running plan artifact review
 
 ## Blockers
