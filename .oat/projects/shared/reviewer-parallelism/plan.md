@@ -358,13 +358,108 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 
 ---
 
+### Task p03-t03: Correct the release to the next unpublished lockstep version
+
+**Source Review:** `reviews/archived/p03-review-2026-07-18T231821Z.md` (Critical)
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Regenerate: `packages/cli/assets/public-package-versions.json`
+- Regenerate as applicable: `.oat/sync/manifest.json`
+- Regenerate as applicable: `.codex/agents/oat-reviewer*.toml`
+- Modify: `.oat/repo/pjm/current-state.md`
+
+**Step 1: Resolve the authoritative unpublished version**
+
+Fetch the current `origin/main`, read all five public package versions from that ref, and query npm versions for all five package names. Select the next shared patch version that:
+
+- is greater than the common upstream baseline;
+- is unpublished for every public package;
+- keeps all five manifests in lockstep; and
+- does not rewrite or rebase existing task history.
+
+Expected from review-time evidence: use `0.2.1` only if `origin/main` remains at `0.2.0` and npm confirms `0.2.1` is unused for every package.
+
+**Step 2: Regenerate release and provider surfaces**
+
+Update all five manifests together, align the release attribution in `.oat/repo/pjm/current-state.md`, then run sequentially:
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+pnpm run cli -- sync --scope all
+pnpm run cli -- sync --scope project --dry-run
+```
+
+Expected: bundled public versions and sync metadata match the selected unpublished version, all provider views remain synchronized, and the project dry run reports no drift.
+
+**Step 3: Verify uniqueness and the complete release**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/agents/canonical/parse.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/providers/codex/codec/sync-extension.test.ts
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
+pnpm build:docs
+pnpm release:check-versions
+pnpm format
+pnpm release:validate
+pnpm run cli -- sync --scope project --dry-run
+git diff --check
+git status --short
+```
+
+Also query npm immediately before commit and assert the selected version remains unpublished for each of the five public packages. If it has become occupied, select the next shared unused patch and repeat generation and validation.
+
+Expected: all checks pass, registry uniqueness is explicit, no provider drift remains, and status contains only the bounded release-correction surfaces.
+
+**Step 4: Commit**
+
+```bash
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+git add .codex/agents/oat-reviewer*.toml
+git commit -m "fix(p03-t03): use next unpublished release version"
+```
+
+If a listed generated file is unchanged, omit it from `git add`.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
 | p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md           |
 | p02    | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md           |
-| p03    | code     | pending         | -          | -                                                           |
+| p03    | code     | fixes_added     | 2026-07-18 | reviews/archived/p03-review-2026-07-18T231821Z.md           |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -386,9 +481,9 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
-- Phase 3: 2 tasks - Provider synchronization, lockstep release validation, and backlog closeout
+- Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
 
-**Total: 3 phases, 4 tasks**
+**Total: 3 phases, 5 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t03
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | in_progress | 2     | 0/2       |
+| Phase 3 | in_progress | 3     | 2/3       |
 
-**Total:** 2/4 tasks completed
+**Total:** 4/5 tasks completed
 
 ---
 
@@ -157,12 +157,49 @@ oat_generated: false
 
 ### Task p03-t01: Regenerate provider views and finalize lockstep release metadata
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 8a8d0b2f5dd34744f92580a0f8fae480d463b72f
+
+**Outcome (required when completed):**
+
+- Provider views and release surfaces were regenerated, but phase review found the selected `0.1.74` version was already published.
+
+**Files changed:**
+
+- Five public package manifests, bundled public versions, sync manifest, and all 14 tracked Codex reviewer roles.
+
+**Verification:**
+
+- Run: full repository, provider sync, and release validation suite.
+- Result: local checks pass; registry uniqueness fails for `0.1.74`.
+
+**Issues Encountered:**
+
+- The branch-local baseline was stale relative to npm and `origin/main`; correction is tracked as `p03-t03`.
 
 ---
 
 ### Task p03-t02: Close the shipped backlog item
+
+**Status:** completed
+**Commit:** 9772f01b48272078f2bd75fcd5e2154f78236f17
+
+**Outcome (required when completed):**
+
+- The shipped backlog item is archived and removed from active PJM surfaces.
+
+**Files changed:**
+
+- Backlog archive, completed ledger, active index, roadmap, and current state.
+
+**Verification:**
+
+- Run: archival postconditions, formatting, diff hygiene, and PJM doctor.
+- Result: postconditions pass; doctor retains only unrelated pre-existing diagnostics.
+
+---
+
+### Task p03-t03: Correct the release to the next unpublished lockstep version
 
 **Status:** pending
 **Commit:** -
