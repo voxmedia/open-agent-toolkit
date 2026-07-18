@@ -24,6 +24,9 @@ BL-260718-add-oat-wave-lifecycle-cli. Trigger: a second consumer, either the
 wave CLI family or the program-recap recipe. Evidence: discovery operator
 decision to keep current documentation descriptive only.
 
+**Owner:** the repo operator is the accountable owner for prioritizing and
+scheduling this deferred work.
+
 ## Acceptance Criteria
 
 - The execution-program format has a versioned, normative schema covering its

@@ -23,6 +23,9 @@ supplies one more clean final-gate observation reported through the W6 handoff
 runbook. Evidence: wave-skills promotion packet section 3 row 4 and ledger
 signal "2nd consecutive clean gate."
 
+**Owner:** the repo operator is the accountable owner for confirming the W6
+observation and removing the watch.
+
 ## Acceptance Criteria
 
 - The W6 handoff records one additional clean final-gate observation with no

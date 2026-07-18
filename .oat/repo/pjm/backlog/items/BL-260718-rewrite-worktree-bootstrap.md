@@ -23,6 +23,9 @@ proven portable bash implementation ships as-is for now; rewrite only after
 its workflow is established. Evidence: wave-skills promotion packet section 3
 row 3 and the project design decision.
 
+**Owner:** the repo operator is the accountable owner for prioritizing and
+scheduling this deferred work.
+
 ## Acceptance Criteria
 
 - The TypeScript command preserves the ported bash script's bootstrap,

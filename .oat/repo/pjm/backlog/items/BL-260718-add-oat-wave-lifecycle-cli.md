@@ -23,6 +23,9 @@ new/refresh/close command family. Group this work with
 BL-260718-document-execution-program. Trigger: operator prioritization after
 stoa W6 validation. Evidence: wave-skills promotion packet section 3 row 1.
 
+**Owner:** the repo operator is the accountable owner for prioritizing and
+scheduling this deferred work.
+
 ## Acceptance Criteria
 
 - `oat wave new`, `oat wave refresh`, and `oat wave close` expose the proven
