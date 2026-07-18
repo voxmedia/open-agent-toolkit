@@ -843,14 +843,14 @@ git commit -m "fix(p07-t01): preserve bare cursor model provenance"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p02    | code     | fixes_completed | 2026-07-18 | reviews/code-p02-review-2026-07-18T002439Z.md                 |
-| p02    | code     | passed          | 2026-07-18 | reviews/code-p02-rereview-2026-07-18T004240Z.md               |
-| p03    | code     | fixes_completed | 2026-07-18 | reviews/code-p03-review-2026-07-18T122306Z.md                 |
-| p03    | code     | passed          | 2026-07-18 | reviews/code-p03-rereview-2026-07-18T123721Z.md               |
-| p04    | code     | fixes_completed | 2026-07-18 | reviews/code-p04-review-2026-07-18T122620Z.md                 |
-| p04    | code     | passed          | 2026-07-18 | reviews/code-p04-rereview-2026-07-18T123821Z.md               |
-| p05    | code     | passed          | 2026-07-18 | reviews/code-p05-review-2026-07-18T133600Z.md                 |
-| p06    | code     | passed          | 2026-07-18 | reviews/code-p06-review-2026-07-18T142950Z.md                 |
+| p02    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p02-review-2026-07-18T002439Z.md        |
+| p02    | code     | passed          | 2026-07-18 | reviews/archived/code-p02-rereview-2026-07-18T004240Z.md      |
+| p03    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p03-review-2026-07-18T122306Z.md        |
+| p03    | code     | passed          | 2026-07-18 | reviews/archived/code-p03-rereview-2026-07-18T123721Z.md      |
+| p04    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p04-review-2026-07-18T122620Z.md        |
+| p04    | code     | passed          | 2026-07-18 | reviews/archived/code-p04-rereview-2026-07-18T123821Z.md      |
+| p05    | code     | passed          | 2026-07-18 | reviews/archived/code-p05-review-2026-07-18T133600Z.md        |
+| p06    | code     | passed          | 2026-07-18 | reviews/archived/code-p06-review-2026-07-18T142950Z.md        |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T180150Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-16 | reviews/archived/artifact-design-review-2026-07-16T111818Z.md |

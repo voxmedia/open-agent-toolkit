@@ -107,7 +107,7 @@ oat_generated: false
 
 - Root focused verification: 79/79 tests passed.
 - Implementer verification: type-check, lint, and formatting passed.
-- Re-review: `reviews/code-p02-rereview-2026-07-18T004240Z.md` passed with zero findings.
+- Re-review: `reviews/archived/code-p02-rereview-2026-07-18T004240Z.md` passed with zero findings.
 
 ---
 
@@ -129,7 +129,7 @@ oat_generated: false
 
 - Root focused verification after fixes: 424/424 tests passed.
 - Implementer verification: CLI type-check, lint, and formatting passed.
-- Re-review: `reviews/code-p03-rereview-2026-07-18T123721Z.md` passed with zero findings.
+- Re-review: `reviews/archived/code-p03-rereview-2026-07-18T123721Z.md` passed with zero findings.
 
 ---
 
@@ -153,7 +153,7 @@ oat_generated: false
 - Root focused verification after fixes: 434/434 tests passed.
 - Skills/docs verification: 58 skills and 8 version bumps validated; docs lint/build, type-check, lint, and formatting passed.
 - Two broken docs anchors were verified as pre-existing baseline debt.
-- Re-review: `reviews/code-p04-rereview-2026-07-18T123821Z.md` passed with zero findings after reassessment.
+- Re-review: `reviews/archived/code-p04-rereview-2026-07-18T123821Z.md` passed with zero findings after reassessment.
 - Final-gate aggregation fix: `d6e37c15`, `53208704`, and `31fdc951`; focused tests, CLI type-check/lint, skill validators, docs lint/build, formatting, and generated-view checks passed. Independent bounded re-review passed with zero findings.
 
 ---
@@ -174,7 +174,7 @@ oat_generated: false
 
 - Root focused verification: 50/50 tests passed.
 - All-scope sync dry-run: `plannedOperations=0`; generated paths clean.
-- Review: `reviews/code-p05-review-2026-07-18T133600Z.md` passed with zero findings.
+- Review: `reviews/archived/code-p05-review-2026-07-18T133600Z.md` passed with zero findings.
 
 ---
 
@@ -194,7 +194,7 @@ oat_generated: false
 
 ### Verification
 
-- Review: `reviews/code-p06-review-2026-07-18T142950Z.md`.
+- Review: `reviews/archived/code-p06-review-2026-07-18T142950Z.md`.
 - HiLL evidence commit: `f33742e5`.
 - The exact generated reviewer and phase-implementer native types launched serially in Cursor IDE, each reported `subagent_model: gpt-5.6-sol-high`, and both stopped `completed`.
 - After the bounded final-gate aggregation fix, CLI lint/type-check/test, workspace build/format, `pnpm release:validate`, all-scope sync dry-run, and generated asset/index cleanliness passed again.
@@ -267,11 +267,11 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Task commits:** `053e1488` (p02-t01), `fe2e9ef4` (p02-t02), `36dd02aa` (p02-t03)
 - **Verification:** 50 focused tests passed at root; implementer also reported the full 3,020-test CLI suite, lint, type-check, and format passed.
 - **Implementer dispatch:** `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
-- **Review round 1:** failed with 5 Important findings; artifact `reviews/code-p02-review-2026-07-18T002439Z.md`.
+- **Review round 1:** failed with 5 Important findings; artifact `reviews/archived/code-p02-review-2026-07-18T002439Z.md`.
 - **Reviewer dispatch:** `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 - **Fix continuation:** iteration 1 completed in `e30361ba`; all five Important findings were addressed on the original p02 implementer handle.
 - **Fix verification:** root reran 79 focused p02 and sync-command tests; all passed. Implementer also reported type-check, lint, and format passed.
-- **Re-review:** passed with zero findings; artifact `reviews/code-p02-rereview-2026-07-18T004240Z.md`.
+- **Re-review:** passed with zero findings; artifact `reviews/archived/code-p02-rereview-2026-07-18T004240Z.md`.
 - **Optional nested dispatches:** none.
 - **Outcome:** p02 passed and the p03/p04 parallel group is next.
 
@@ -307,7 +307,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Status:** complete
 - **Implementation:** `6f30fe7a`; one planned task commit from base `7fd32aff`.
 - **Dispatch:** native variant absent from the current session catalogue; policy-resolved pinned Cursor CLI fallback used with `gpt-5.6-sol-high`.
-- **Review:** passed with zero findings; artifact `reviews/code-p05-review-2026-07-18T133600Z.md`.
+- **Review:** passed with zero findings; artifact `reviews/archived/code-p05-review-2026-07-18T133600Z.md`.
 - **Verification:** 50 tests passed, sync dry-run planned zero operations, and generated paths were clean.
 - **Next:** p06-t01 release validation, followed by the configured p06 final-launch checkpoint.
 
@@ -319,7 +319,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Release-recovery fixes:** `213d99bd` refreshed the p04 autonomy inventory mapping; `5f1d354c` isolated the p03 healthy-doctor integration fixture from live Cursor catalogue probing.
 - **Task commit:** `da411582 chore(p06-t01): bump public package versions`.
 - **Verification:** CLI lint/type-check/test, workspace build/format, and `pnpm release:validate` passed; all-scope sync dry-run reported zero planned operations and generated surfaces were clean.
-- **Review:** passed with zero findings; artifact `reviews/code-p06-review-2026-07-18T142950Z.md`.
+- **Review:** passed with zero findings; artifact `reviews/archived/code-p06-review-2026-07-18T142950Z.md`.
 - **HiLL evidence:** `f33742e5`; both exact generated native types launched serially, returned their expected markers, reported `subagent_model: gpt-5.6-sol-high`, and stopped `completed`.
 - **Cleanup:** temporary hooks and event logs were removed before the evidence commit.
 - **Next:** final independent code review.
