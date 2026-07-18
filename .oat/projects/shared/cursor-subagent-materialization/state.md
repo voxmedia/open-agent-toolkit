@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: da411582032a17949d1fcb1b95dd3db197df1b4c
+oat_last_commit: f33742e57115b3f00378ffdcbb6a4fe895d23dc5
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p06] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p06] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -38,26 +38,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T01:32:14.171Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T14:29:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T15:36:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: cursor-subagent-materialization
 
-**Status:** Implementation Complete — Awaiting p06 HiLL Checkpoint
+**Status:** Implementation Tasks and HiLL Complete — Awaiting Final Review
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-All 13 implementation tasks and phase reviews passed. The p06 fresh-session Cursor IDE launch checkpoint is ready.
+All 13 implementation tasks, phase reviews, and the p06 fresh-session Cursor IDE launch checkpoint passed. Final review is next.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (implementation tasks complete; p06 HiLL pending)
+- **Plan:** `plan.md` (implementation tasks and p06 HiLL complete; final review pending)
 - **Implementation:** `implementation.md` (13/13 tasks complete)
 
 ## Progress
@@ -73,7 +73,8 @@ All 13 implementation tasks and phase reviews passed. The p06 fresh-session Curs
 - ✓ Pre-implementation gate g01 passed: 15 mappings approved
 - ✓ Phases p02-p06 implemented and independently reviewed
 - ✓ Lockstep package version `0.1.73` passed `pnpm release:validate`
-- ◯ p06 HiLL checkpoint: launch generated reviewer and implementer variants in a fresh Cursor IDE session
+- ✓ p06 HiLL checkpoint passed: generated reviewer and implementer variants launched with matching configured-model hook evidence
+- ◯ Final code review
 
 ## Blockers
 
@@ -81,4 +82,4 @@ None
 
 ## Next Milestone
 
-Complete the p06 final generated-role launch checkpoint in a fresh Cursor IDE session.
+Run the final independent code review.

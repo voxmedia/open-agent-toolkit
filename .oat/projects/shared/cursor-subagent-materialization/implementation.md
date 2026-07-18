@@ -177,7 +177,7 @@ oat_generated: false
 
 ## Phase p06: Release Validation
 
-**Status:** complete; awaiting HiLL checkpoint
+**Status:** complete; HiLL checkpoint passed
 **Task commit:** `da411582`
 **Release-recovery commits:** `213d99bd`, `5f1d354c`
 
@@ -192,7 +192,9 @@ oat_generated: false
 ### Verification
 
 - Review: `reviews/code-p06-review-2026-07-18T142950Z.md`.
-- The final generated-role native launches remain unperformed and are the configured p06 HiLL checkpoint.
+- HiLL evidence commit: `f33742e5`.
+- The exact generated reviewer and phase-implementer native types launched serially in Cursor IDE, each reported `subagent_model: gpt-5.6-sol-high`, and both stopped `completed`.
+- The verification record preserves configured launch observation as the evidence boundary; generalized runtime model and effort remain `not-reported`.
 
 ---
 
@@ -261,14 +263,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### Run 5 — p06 release validation and bounded recovery
 
-- **Status:** complete; awaiting HiLL checkpoint.
+- **Status:** complete; HiLL checkpoint passed.
 - **Initial dispatch:** accepted pinned Cursor CLI implementer terminated with `RetriableError: WritableIterable is closed` after applying the exact six-file version bump but before validation or commit.
 - **Operator authorization:** bounded recovery approved; the existing `0.1.73` changes were preserved.
 - **Release-recovery fixes:** `213d99bd` refreshed the p04 autonomy inventory mapping; `5f1d354c` isolated the p03 healthy-doctor integration fixture from live Cursor catalogue probing.
 - **Task commit:** `da411582 chore(p06-t01): bump public package versions`.
 - **Verification:** CLI lint/type-check/test, workspace build/format, and `pnpm release:validate` passed; all-scope sync dry-run reported zero planned operations and generated surfaces were clean.
 - **Review:** passed with zero findings; artifact `reviews/code-p06-review-2026-07-18T142950Z.md`.
-- **Next:** operator completes the p06 final generated-role launch checkpoint in a fresh Cursor IDE session.
+- **HiLL evidence:** `f33742e5`; both exact generated native types launched serially, returned their expected markers, reported `subagent_model: gpt-5.6-sol-high`, and stopped `completed`.
+- **Cleanup:** temporary hooks and event logs were removed before the evidence commit.
+- **Next:** final independent code review.
 
 <!-- orchestration-runs-end -->
 
