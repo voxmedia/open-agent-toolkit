@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Final review round 2 fixes must pass before configured exit-gate execution.
+  - Final re-review must pass before configured exit-gate execution.
 oat_last_updated: 2026-07-18
 oat_current_task_id: null
 oat_generated: false
@@ -120,7 +120,10 @@ oat_generated: false
 
 **Verification:**
 
-- 148 targeted tests and 3,414 full-workspace tests passed.
+- Exact three-file focused suite: 150/150 tests.
+- Autonomy inventory suite: 4/4 tests.
+- Workspace package suites: 3,294 tests; smoke suite: 123 tests; aggregate:
+  3,417 tests. Focused suites are subsets and are not added to this aggregate.
 - Format, lint, type-check, build, docs build, source-sync reproducibility, and
   release validation passed.
 
@@ -159,9 +162,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Phase base:** `5cde4690`
 **Commit range:** `9e1c06e1..8222c1e2`
 
-| Phase | Outcome | Tasks | Root Review | Fix Iterations |
-| ----- | ------- | ----- | ----------- | -------------- |
-| p03   | passed  | 2/2   | fixes_added | 2 pending      |
+| Phase | Outcome | Tasks | Root Review     | Fix Iterations |
+| ----- | ------- | ----- | --------------- | -------------- |
+| p03   | passed  | 2/2   | fixes_completed | 2              |
 
 **Task commits:** `9e1c06e1`, `8222c1e2`
 **Integration commits:** `0ef83fc7`, `593129cf`
@@ -173,9 +176,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 `Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
 **Optional nested dispatches:** None.
-**Final review fix commits:** `54d6edad`; round 2 pending.
-**Outstanding items:** Align autonomous `warn` semantics with the fail-closed
-closeout contract and refresh exact verification evidence.
+**Final review fix commits:** `54d6edad`, `9f859165`
+**Outstanding items:** Final whole-project re-review.
 
 ### Run 2: Phase p02 {#run-2}
 
@@ -322,9 +324,9 @@ whole-project re-review.
 - Medium: 1
 - Minor: 0
 
-**Disposition:** Fixes added. The remaining autonomous `warn` policy ambiguity
-was routed to the original Phase 3 implementer. Exact verification counts will
-be refreshed from the final fix run before re-review.
+**Disposition:** Fixes completed. The autonomous `warn` policy and
+`IMPLEMENT-18` now match the fail-closed closeout contract in `9f859165`.
+Verification evidence was refreshed from the same fix run.
 
 ---
 
@@ -404,6 +406,7 @@ before final gate execution.
 - [x] p03-t02: Synchronize shipped assets and validate the release - `8222c1e2`
 - [x] Final review bookkeeping baseline - `ecdf3c29`
 - [x] Final review fix: fail closed and complete the state template - `54d6edad`
+- [x] Final review fix: align autonomous exit-gate policy - `9f859165`
 
 **Outcome:** All six plan tasks and the complete repository quality/release
 chain passed. Final review identified two implementation fixes and one stale
@@ -428,11 +431,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                          | Passed       | Failed | Coverage                                                         |
-| ----- | ---------------------------------- | ------------ | ------ | ---------------------------------------------------------------- |
-| 1     | 40 focused + type-check + format   | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
-| 2     | 118 focused + skill/version/format | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
-| 3     | 153 focused + full + release       | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
+| Phase | Tests Run                                                    | Passed       | Failed | Coverage                                                         |
+| ----- | ------------------------------------------------------------ | ------------ | ------ | ---------------------------------------------------------------- |
+| 1     | 40 focused + type-check + format                             | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
+| 2     | 118 focused + skill/version/format                           | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
+| 3     | 150 focused + 4 autonomy; 3,294 package + 123 smoke; release | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
 
 ## Final Summary (for PR/docs)
 
@@ -467,7 +470,9 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- 148 targeted tests and 3,414 full-workspace tests.
+- Exact three-file focused suite: 150/150; autonomy inventory suite: 4/4.
+- Workspace package suites: 3,294; smoke suite: 123; aggregate: 3,417.
+  Focused suites are subsets and are not included in that aggregate.
 - Skill and version validation, format, lint, type-check, build, docs build,
   source-sync/bundle reproducibility, and `pnpm release:validate`.
 
