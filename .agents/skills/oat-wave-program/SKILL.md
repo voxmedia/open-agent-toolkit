@@ -10,10 +10,11 @@ allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 
 # Program a Corpus of External Plans into Waves
 
-Maintain the **program layer** above `oat-wave-execute`: turn N external plans
-(from one or more plan-generation runs) into an ordered sequence of waves, and
-keep that mapping durable and current as waves complete. `oat-wave-execute` runs
-ONE wave; this skill decides and records WHICH plans form each wave.
+Maintain the **program layer** above `oat-wave-execute`: record how N external
+plans (from one or more plan-generation runs) map into an ordered sequence of
+waves, and keep that mapping durable and current as waves complete.
+`oat-wave-execute` runs ONE wave; this skill records and maintains the
+orchestrator-composed, operator-approved mapping of WHICH plans form each wave.
 
 ## Ownership Boundary
 
