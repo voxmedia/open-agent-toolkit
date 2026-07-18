@@ -231,7 +231,11 @@ or contradictory handoffs. Verify that recognized closeout-only descendants
 (gate artifact/receipt, project tracking, PR #156 project log, summary/docs/PR
 sequence outputs, HiLL bookkeeping, and completion bookkeeping) preserve
 validity; unknown changed paths fail closed; substantive implementation changes
-become stale; and manual-review provenance is rejected.
+become stale; and manual-review provenance is rejected. Include retries below
+and at `maxAttempts`; operational/runtime launch failures that do not consume
+remediation attempts; prompt continue versus defer/no response; persisted warn
+allowance; in-flight reuse of the persisted resolved configuration; and
+fail-closed configuration-fingerprint drift.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts`
@@ -299,17 +303,17 @@ automated sequencing/final HiLL, persisted state/dispositions, resume and stale
 basis behavior, null resolution, failure policy, and manual-review provenance
 rule.
 
-**Step 3: Format and regenerate navigation/index**
+**Step 3: Format and regenerate the Fumadocs index**
 
 Run:
-`pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md && oat docs nav sync && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
-Expected: Authored pages are formatted, navigation is synchronized, and the
-generated index reflects the approved pages.
+`pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+Expected: Authored pages are formatted and the generated Fumadocs index
+reflects the approved pages.
 
 **Step 4: Verify**
 
 Run:
-`oat docs nav sync && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && pnpm build:docs`
+`pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && pnpm build:docs`
 Expected: Regeneration is deterministic and the documentation site builds.
 
 **Step 5: Commit**
@@ -332,12 +336,10 @@ git commit -m "docs(p03-t01): explain implementation exit gate closeout"
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `.oat/sync/manifest.json`
-- Modify: `.claude/skills/oat-project-implement/SKILL.md`
-- Modify: `.claude/skills/oat-project-implement/references/completion-and-closeout.md`
-- Modify: `.claude/skills/oat-project-next/SKILL.md`
-- Modify: `.cursor/skills/oat-project-implement/SKILL.md`
-- Modify: `.cursor/skills/oat-project-implement/references/completion-and-closeout.md`
-- Modify: `.cursor/skills/oat-project-next/SKILL.md`
+- Verify (tracked symlink root): `.claude/skills/oat-project-implement`
+- Verify (tracked symlink root): `.claude/skills/oat-project-next`
+- Verify (tracked symlink root): `.cursor/skills/oat-project-implement`
+- Verify (tracked symlink root): `.cursor/skills/oat-project-next`
 - Modify: `packages/cli/assets/skills/oat-project-implement/SKILL.md`
 - Modify: `packages/cli/assets/skills/oat-project-implement/references/completion-and-closeout.md`
 - Modify: `packages/cli/assets/skills/oat-project-next/SKILL.md`
@@ -384,12 +386,10 @@ git add \
   packages/docs-transforms/package.json \
   packages/cli/assets/public-package-versions.json \
   .oat/sync/manifest.json \
-  .claude/skills/oat-project-implement/SKILL.md \
-  .claude/skills/oat-project-implement/references/completion-and-closeout.md \
-  .claude/skills/oat-project-next/SKILL.md \
-  .cursor/skills/oat-project-implement/SKILL.md \
-  .cursor/skills/oat-project-implement/references/completion-and-closeout.md \
-  .cursor/skills/oat-project-next/SKILL.md \
+  .claude/skills/oat-project-implement \
+  .claude/skills/oat-project-next \
+  .cursor/skills/oat-project-implement \
+  .cursor/skills/oat-project-next \
   packages/cli/assets/skills/oat-project-implement/SKILL.md \
   packages/cli/assets/skills/oat-project-implement/references/completion-and-closeout.md \
   packages/cli/assets/skills/oat-project-next/SKILL.md \
@@ -401,7 +401,7 @@ git add \
 ```
 
 Run:
-`oat sync --scope all && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- .oat/sync/manifest.json .claude/skills/oat-project-implement .claude/skills/oat-project-next .cursor/skills/oat-project-implement .cursor/skills/oat-project-next packages/cli/assets/skills/oat-project-implement packages/cli/assets/skills/oat-project-next packages/cli/assets/templates/state.md packages/cli/assets/docs/cli-utilities/workflow-gates.md packages/cli/assets/docs/workflows/projects/lifecycle.md packages/cli/assets/docs/workflows/projects/implementation-execution.md packages/cli/assets/docs/workflows/projects/autonomy.md packages/cli/assets/public-package-versions.json`
+`oat sync --scope all && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- .oat/sync/manifest.json packages/cli/assets/skills/oat-project-implement packages/cli/assets/skills/oat-project-next packages/cli/assets/templates/state.md packages/cli/assets/docs/cli-utilities/workflow-gates.md packages/cli/assets/docs/workflows/projects/lifecycle.md packages/cli/assets/docs/workflows/projects/implementation-execution.md packages/cli/assets/docs/workflows/projects/autonomy.md packages/cli/assets/public-package-versions.json`
 Expected: Regeneration after staging produces no unstaged drift in any
 allowlisted synchronized or bundled output.
 
