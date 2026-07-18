@@ -93,7 +93,7 @@ for agent in oat-codebase-mapper.md oat-phase-implementer.md oat-reviewer.md ske
   cp "${REPO_ROOT}/.agents/agents/${agent}" "${ASSETS}/agents/"
 done
 
-for template in backlog-item.md roadmap.md current-state.md decision.md repo-agents.md pjm-agents.md reference-agents.md repo-readme.md pjm-handoffs-readme.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md; do
+for template in backlog-item.md roadmap.md current-state.md decision.md repo-agents.md pjm-agents.md reference-agents.md repo-readme.md pjm-handoffs-readme.md state.md discovery.md spec.md design.md plan.md implementation.md summary.md project-log.md; do
   cp "${REPO_ROOT}/.oat/templates/${template}" "${ASSETS}/templates/"
 done
 cp -R "${REPO_ROOT}/.oat/templates/ideas" "${ASSETS}/templates/"
