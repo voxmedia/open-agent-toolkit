@@ -1110,6 +1110,61 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('bridges dynamic planning producer identity only into review gates', async () => {
+    for (const skillName of [
+      'oat-project-plan',
+      'oat-project-quick-start',
+      'oat-project-import-plan',
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      const gateSection = content.slice(
+        content.lastIndexOf('### Gate Execution'),
+      );
+
+      expect(gateSection, `${skillName} dynamic producer variable`).toContain(
+        'OAT_GATE_PRODUCER_IDENTITY',
+      );
+      expect(gateSection, `${skillName} current parent identity`).toMatch(
+        /current planning parent[\s\S]{0,220}(?:model|identity)/i,
+      );
+      expect(gateSection, `${skillName} non-empty identity guard`).toMatch(
+        /non-empty[\s\S]{0,180}<model>:declared/i,
+      );
+      expect(
+        gateSection,
+        `${skillName} resolved configured command boundary`,
+      ).toContain('resolved configured command invokes');
+      expect(gateSection, `${skillName} review-only boundary`).toContain(
+        '`oat gate review`',
+      );
+      expect(gateSection, `${skillName} unchanged command execution`).toMatch(
+        /execute[\s\S]{0,180}(?:command )?(?:exactly |unchanged)/i,
+      );
+      expect(gateSection, `${skillName} non-review declaration absent`).toMatch(
+        /non-review[\s\S]{0,220}(?:unset|absent|remove)/i,
+      );
+      expect(gateSection, `${skillName} no static producer flag`).not.toContain(
+        '--producer-identity',
+      );
+    }
+
+    const workflowGates = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
+    );
+    expect(workflowGates).toContain('OAT_GATE_PRODUCER_IDENTITY');
+    expect(workflowGates).toMatch(
+      /explicit `--producer-identity`[\s\S]{0,260}(?:dispatch stamp|stamped)[\s\S]{0,260}environment[\s\S]{0,260}unknown/i,
+    );
+    expect(workflowGates).toMatch(
+      /review-command-only[\s\S]{0,220}(?:non-review|other gate)/i,
+    );
+    expect(workflowGates).toMatch(
+      /producer-neutral[\s\S]{0,220}(?:shared|user)[\s\S]{0,220}config/i,
+    );
+  });
+
   it('documents lifecycle review-project migration without provider target pins', async () => {
     const workflowGates = await readRepoFile(
       'apps/oat-docs/docs/cli-utilities/workflow-gates.md',

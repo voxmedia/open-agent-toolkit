@@ -277,7 +277,7 @@ interface GateProducerIdentity {
   contributingScopes?: string[];
   contributingStampCount?: number;
   diversityClaimable: boolean;
-  source: 'flag' | 'stamp' | 'aggregated-stamps' | 'unknown';
+  source: 'flag' | 'stamp' | 'aggregated-stamps' | 'environment' | 'unknown';
 }
 
 interface GateDiversityMetadata {
@@ -1387,6 +1387,27 @@ function parseProducerIdentityOption(
   );
 }
 
+function parseEnvironmentProducerIdentity(
+  value: string | undefined,
+): GateProducerIdentity {
+  const trimmed = value?.trim();
+  if (!trimmed) {
+    return unknownProducerIdentity();
+  }
+
+  const separator = trimmed.lastIndexOf(':');
+  const producer = separator > 0 ? trimmed.slice(0, separator).trim() : '';
+  const provenance = separator > 0 ? trimmed.slice(separator + 1).trim() : '';
+  if (!producer || provenance !== 'declared') {
+    return unknownProducerIdentity();
+  }
+
+  return identityFromRecords(
+    [{ value: producer, provenance: 'declared' }],
+    'environment',
+  );
+}
+
 function identityFromStamp(
   stamp: ReturnType<typeof parseDispatchStamps>[number],
 ): GateProducerIdentity {
@@ -1509,6 +1530,7 @@ async function readStampedProducerIdentity(options: {
 }
 
 async function resolveReviewProducerIdentity(options: {
+  env: NodeJS.ProcessEnv;
   explicit?: string;
   repoRoot: string;
   projectPath: string;
@@ -1518,7 +1540,21 @@ async function resolveReviewProducerIdentity(options: {
     return parseProducerIdentityOption(options.explicit);
   }
 
-  return readStampedProducerIdentity(options);
+  const stamped = await readStampedProducerIdentity(options);
+  if (stamped.diversityClaimable) {
+    return stamped;
+  }
+
+  const environment = parseEnvironmentProducerIdentity(
+    options.env.OAT_GATE_PRODUCER_IDENTITY,
+  );
+  return environment.diversityClaimable ? environment : stamped;
+}
+
+function reviewerChildProcessEnv(env: NodeJS.ProcessEnv): NodeJS.ProcessEnv {
+  const childEnv = { ...env };
+  delete childEnv.OAT_GATE_PRODUCER_IDENTITY;
+  return childEnv;
 }
 
 function findPinnedModelArg(argv: readonly string[]): string | undefined {
@@ -3064,6 +3100,7 @@ async function runReviewGate(
     const projectPath = reviewProject.path;
     const targets = resolveExecTargets(effective);
     const producerIdentity = await resolveReviewProducerIdentity({
+      env: dependencies.processEnv,
       explicit: options.producerIdentity,
       repoRoot,
       projectPath,
@@ -3162,7 +3199,7 @@ async function runReviewGate(
       {
         ...dependencies,
         processEnv: {
-          ...dependencies.processEnv,
+          ...reviewerChildProcessEnv(dependencies.processEnv),
           OAT_GATE_HEADLESS: '1',
           OAT_NON_INTERACTIVE: '1',
           OAT_GATE_RUN_ID: runId,

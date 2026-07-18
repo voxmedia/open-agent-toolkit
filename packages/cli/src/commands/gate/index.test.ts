@@ -1942,6 +1942,217 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(0);
   });
 
+  it('uses declared producer identity from the review-only environment bridge', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({
+        version: 1,
+        workflow: {
+          gates: {
+            execTargets: {
+              'codex-default': null,
+              'claude-default': null,
+              'cursor-default': null,
+              'cursor-reviewer': {
+                runtime: 'cursor',
+                baseCommand: ['cursor-agent', '-p'],
+                models: ['gpt-5.6-sol-high', 'composer-2.5'],
+                priority: 150,
+              },
+            },
+          },
+        },
+      })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p04',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'gpt-5.6-sol-xhigh:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', 'Review'],
+    });
+
+    expect(runner.calls.at(-1)).toMatchObject({
+      command: 'cursor-agent',
+      args: ['-p', '--model', 'composer-2.5', expect.any(String)],
+      purpose: 'execute',
+    });
+    expect(runner.calls.at(-1)?.env).not.toHaveProperty(
+      'OAT_GATE_PRODUCER_IDENTITY',
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      diversity: {
+        achieved: 'different-family',
+        producer: {
+          value: 'gpt-5.6-sol-xhigh',
+          provenance: 'declared',
+          family: 'openai',
+          source: 'environment',
+          avoidFamilies: ['openai'],
+        },
+      },
+      dispatchReport: {
+        runtimeIdentity: {
+          producer: null,
+          confidence: 'not-reported',
+        },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    { name: 'absent', value: undefined },
+    { name: 'malformed', value: 'gpt-5.6-sol-xhigh' },
+    { name: 'non-declared provenance', value: 'gpt-5.6-sol-xhigh:observed' },
+  ])(
+    'preserves unknown producer behavior for an $name environment bridge',
+    async ({ value }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const runner = createProcessRunner({
+        onExecute: async () => {
+          await writeReviewArtifact({
+            root,
+            projectPath,
+            reviewScope: 'p04',
+            finding: 'clean',
+          });
+        },
+      });
+
+      const capture = await runReviewGate({
+        root,
+        home,
+        processEnv:
+          value === undefined ? {} : { OAT_GATE_PRODUCER_IDENTITY: value },
+        runProcess: runner.runProcess,
+        args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+      });
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        diversity: {
+          achieved: 'unknown-producer',
+          producer: {
+            value: 'unknown',
+            provenance: 'unknown',
+            family: 'unknown',
+            source: 'unknown',
+            avoidFamilies: [],
+          },
+        },
+      });
+      expect(process.exitCode).toBe(0);
+    },
+  );
+
+  it('keeps explicit and stamped producer evidence stronger than the environment bridge', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeImplementation(
+      root,
+      projectPath,
+      'Dispatch: scope=p04 action=implementation role=implementer producer=gpt-5.6-sol-xhigh provenance=declared model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=cursor',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          reviewScope: 'p04',
+          finding: 'clean',
+        });
+      },
+    });
+
+    const stamped = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'composer-2.5:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--review-scope', 'p04', '--target', 'codex-default', 'Review'],
+    });
+    expect(stamped.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.source',
+      'stamp',
+    );
+    expect(stamped.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.value',
+      'gpt-5.6-sol-xhigh',
+    );
+
+    const explicit = await runReviewGate({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'composer-2.5:declared',
+      },
+      runProcess: runner.runProcess,
+      args: [
+        '--review-scope',
+        'p04',
+        '--producer-identity',
+        'claude-fable-5-thinking-high:declared',
+        '--target',
+        'codex-default',
+        'Review',
+      ],
+    });
+    expect(explicit.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.source',
+      'flag',
+    );
+    expect(explicit.jsonPayloads[0]).toHaveProperty(
+      'diversity.producer.value',
+      'claude-fable-5-thinking-high',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not consume the review-only producer environment in generic execution', async () => {
+    const { root, home } = await setup();
+    const runner = createProcessRunner();
+
+    const capture = await runCrossProviderExec({
+      root,
+      home,
+      processEnv: {
+        OAT_GATE_PRODUCER_IDENTITY: 'gpt-5.6-sol-xhigh:declared',
+      },
+      runProcess: runner.runProcess,
+      args: ['--target', 'codex-default', 'Run'],
+      globalArgs: [],
+    });
+
+    expect(capture.info.join('\n')).toContain(
+      'achieved=unknown-producer producer=unknown',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
   it.each([
     {
       name: 'legacy',

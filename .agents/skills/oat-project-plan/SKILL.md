@@ -529,21 +529,40 @@ the last check before the completion boundary:
 
    If the resolved command invokes `oat gate review`, the configured review command must already include `--project "$PROJECT_PATH"` and must not include `--target <id>`. A valid reusable shape is `oat gate review --project "$PROJECT_PATH" ...`. If the declaration is missing, stop and migrate the stored gate command; do not inject or append arguments at execution time.
 
-3. Execute the resolved command exactly as configured. Capture stdout, stderr, the exit code, and the structured JSON result. A zero exit code means the review passed its threshold, but it does not by itself authorize artifact receipt or complete the handoff.
+3. Resolve the current planning parent's model identity from session context.
+   When that identity is non-empty and the resolved configured command invokes
+   `oat gate review`, export
+   `OAT_GATE_PRODUCER_IDENTITY=<model>:declared` for that command invocation.
+   For a non-review configured command or unavailable current identity, ensure
+   `OAT_GATE_PRODUCER_IDENTITY` is unset. Do not persist the value or alter the
+   configured command.
 
-4. Review-artifact handoff:
+4. Execute the resolved command exactly as configured and unchanged. Capture
+   stdout, stderr, the exit code, and the structured JSON result. A zero exit
+   code means the review passed its threshold, but it does not by itself
+   authorize artifact receipt or complete the handoff.
+
+5. Review-artifact handoff:
    - Parse the structured gate result. An exit code or artifact path alone never authorizes `oat-project-review-receive`.
    - Invoke receive only when all three conditions hold: `status` is `ok` or `blocked`, the envelope explicitly sets `receiveEligible: true`, and a non-null `handoff` confirms the artifact was corroborated.
    - `receiveEligible: false` is a hard stop even when `artifactPath` is present. Never receive `targeting_correlation_failed`; correct the project/run routing and run a new gate.
    - Keep `artifact_validation_failed` outside receive until the artifact is corrected and the gate successfully revalidates it. Treat `review_failed`, unknown statuses, null handoffs, and contradictory eligibility fields as operational failures.
    - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still requires durable receive disposition. Route by structured status and eligibility, not by exit code.
 
-5. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
+6. If the command exits nonzero, use `description` to orient the next steps and handle `onFailure`:
    - `block`: read gate feedback, remediate, and re-run the gate up to `maxAttempts` attempts (default `2`). If attempts are exhausted, escalate to the human with accumulated feedback and append that feedback to `implementation.md`. Treat a launch failure, missing CLI, or no eligible runtime as escalation-biased and do not spend it as a remediation attempt.
    - `prompt`: surface the gate failure and ask the human how to proceed.
    - `warn`: record the gate failure and continue.
 
-6. Runtime selection note (V1): the step runs the gate `command` as-is and reads no OAT runtime env var. By default, `oat gate review` and `oat gate cross-provider-exec` resolve the current host from built-in `hostDetectionCommand`s and avoid the same runtime when no exact target is supplied. Reusable lifecycle skill-gate commands must not include `--target <id>` so independent review stays provider-neutral. Use explicit targets only for manual/debug commands or deliberate local/user-specific overrides; do not hardcode provider/model targets in bundled skill guidance or shared lifecycle gate examples.
+7. Runtime selection note: the review-only declaration carries producer
+   identity, not reviewer runtime identity. By default, `oat gate review` and
+   `oat gate cross-provider-exec` resolve the current host from built-in
+   `hostDetectionCommand`s and avoid the same runtime when no exact target is
+   supplied. Reusable lifecycle skill-gate commands must not include
+   `--target <id>` so independent review stays provider-neutral. Use explicit
+   targets only for manual/debug commands or deliberate local/user-specific
+   overrides; do not hardcode provider/model targets in bundled skill guidance
+   or shared lifecycle gate examples.
 
 A gate that ends in `block` after attempts are exhausted, or at an unresolved
 `prompt` boundary, means the completion steps below MUST NOT run; the phase
