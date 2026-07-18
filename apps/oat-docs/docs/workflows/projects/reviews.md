@@ -216,7 +216,7 @@ Final review `passed` gate requires:
 
 ## Subagent Compatibility
 
-`oat-project-review-provide` uses provider-aware subagent dispatch when available:
+`oat-project-review-provide` uses provider-aware subagent dispatch when available. This outer dispatch starts the primary `oat-reviewer`; it is separate from any optional reconnaissance workers that the reviewer may launch after resolving its authoritative review scope:
 
 - Claude Code: dispatch `oat-reviewer` with `subagent_type` (resolved from `.claude/agents/oat-reviewer.md`).
 - Cursor: dispatch `oat-reviewer` via explicit `/oat-reviewer` invocation or natural mention (resolved from `.cursor/agents/oat-reviewer.md`; `.claude/agents/oat-reviewer.md` is also supported for compatibility).
@@ -245,6 +245,52 @@ Final review `passed` gate requires:
   the existing fallback path (fresh session preferred, inline reset as
   fallback). This generic fallback does not override managed exact-target
   rules: a managed reviewer that cannot be launched exactly blocks the review.
+
+### Reviewer-local reconnaissance
+
+After the outer dispatch, the primary reviewer may use reviewer-local workers
+when a broad review has multiple independent evidence lanes. Examples include
+final code reviews, broad phase or phase-range reviews, documentation sweeps,
+and provider-view audits. Running disjoint searches concurrently can reduce
+wall-clock review time, and an explicitly selected economical worker can reduce
+cost, but only when the active host reliably exposes nested dispatch and
+cheaper/faster target controls. Narrow task and artifact reviews remain inline
+when coordination would cost as much as direct inspection.
+
+Reviewer-local fan-out is limited to one bounded, read-only, non-recursive
+round. Each worker receives a disjoint scope, cannot modify files or spawn more
+workers, and returns a compact advisory report containing:
+
+- coverage and checks performed;
+- exact `file:line` evidence;
+- gaps in the assigned scope; and
+- explicit uncertainty, including uncertainty about absence claims.
+
+Before launching these lanes, the reviewer loads the generic
+`oat-dispatch-subagents` contract and exactly one active-provider reference.
+That shared contract owns nested capability checks, worker catalog resolution,
+model and effort selection, routing, authorization, launch evidence, and
+provider-specific mechanics. It maps these workers to the `recon` role class
+without hard-coding a provider model or assuming that they inherit the primary
+reviewer's target.
+
+This generic reviewer-local use is distinct from
+`oat-project-dispatch-subagents`, which is reserved for OAT lifecycle phase and
+task dispatch policy. Reviewer-local lanes do not load or depend on that
+lifecycle adapter.
+
+Worker reports are candidate observations, not findings. The primary reviewer
+reopens authoritative sources, verifies load-bearing positive and negative
+claims, reconciles overlap and disagreement, fills cross-lane gaps, performs
+synthesis, assigns severity, decides validation, and alone writes the review
+artifact or final `StructuredFindings`.
+
+If nested workers are unsupported, unauthorized, fail, or return empty or
+malformed reports, the primary reviewer covers those lanes inline. It also
+stays inline when the host cannot explicitly select the intended economical
+worker. Fallback preserves the same checklist, verification depth, severity
+policy, and final output contract; it does not promise provider behavior or
+silently inherit the primary reviewer's model.
 
 ## Reference artifacts
 
