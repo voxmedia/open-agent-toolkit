@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { createProjectValidatePlanCommand } from './index';
 import {
   extractPhaseIdsFromPlan,
   parseFrontmatterFromContent,
@@ -60,6 +61,7 @@ describe('validateParallelGroups', () => {
       expect(result.errors.some((e) => /singleton|at least 2/i.test(e))).toBe(
         true,
       );
+      expect(result.errors[0]).toMatch(/run a solo lane as an ungrouped phase/);
     }
   });
 
@@ -87,6 +89,15 @@ describe('validateParallelGroups', () => {
   it('rejects non-array group', () => {
     const result = validateParallelGroups(['p02'], phaseIds);
     expect(result.valid).toBe(false);
+  });
+});
+
+describe('validate-plan help', () => {
+  it('states the singleton-group rule and ungrouped alternative', () => {
+    const help = createProjectValidatePlanCommand().helpInformation();
+
+    expect(help).toMatch(/singleton\s+groups are not allowed/i);
+    expect(help).toMatch(/run a solo lane as an ungrouped\s+phase/i);
   });
 });
 
