@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/156' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T15:06:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T15:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation complete after focused final re-review; PR remains open.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -86,7 +86,8 @@ Implementation complete after focused final re-review; PR remains open.
 - ✓ Manual full-range final review received
 - ✓ Review-fix tasks p03-t10 and p03-t11 completed and verified
 - ✓ Authorized focused final re-review passed
-- ⧗ Awaiting PR review and merge
+- ✓ Project-log synthesis and repository-ledger roll-up complete
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -94,4 +95,8 @@ None
 
 ## Next Milestone
 
-PR #156 is open for review. The manual independent review is complete; the skipped configured lifecycle gate remains a separately tracked workflow defect.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
