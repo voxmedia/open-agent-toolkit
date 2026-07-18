@@ -290,7 +290,44 @@ Chronological log of implementation progress.
 
 ## Final Summary (for PR/docs)
 
-_To be filled at completion._
+_Covers the phases 1–5 mergeable delta. Phase 6 (explainer integration) is
+RC-gated and ships as a separate, separately-versioned PR when the
+explainer-kit v1 RC exists._
+
+**What shipped:**
+
+- `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 as canonical workflow-pack skills (`.agents/skills/`), promoted from stoa's dogfooded 1.4.0/1.0.0 with all six §2 queue items applied (one traceable commit each) and stoa-isms genericized under a 69-row behavioral-equivalence checklist — no rule deleted or weakened.
+- Toolkit integration: pack manifest + bundle registration (bundle-consistency-tested), provider views for claude/cursor, codex native-read.
+- Installer bug fix exposed by the port: `copyDirectory` now preserves file modes (fresh installs previously stripped the execute bit from nested skill scripts); 2 regression tests.
+- validate-plan now documents the singleton-group rule + ungrouped-phase alternative (message + help, TDD).
+- 12 durable backlog dispositions: every packet §3 row traceable (wave CLI family, artifact-format contract, bootstrap-group TS rewrite, post-W6 watch removal, tracked-config guard archived `wont_do` with root cause); upstream triage (2 closed-as-fixed, verified; 3 filed with fresh evidence); 2 docs-CLI defects found live during p04.
+- Wave-workflow docs page with authored navigation and a descriptive (explicitly non-contract) execution-program artifact format section.
+- Mini-wave validation fixture (bash-3.2, toggleable-fail DoD gate) + documented dry-run procedure; dry-run EXECUTED green on both legs against the promoted skills with zero skill defects.
+- Lockstep release bumps 0.1.73 → 0.2.0 across the five public packages + regenerated version asset; W6 handoff mini-runbook (version pin, migration sequence, row-stomp observation task, regression protocol).
+
+**Behavioral changes (user-facing):**
+
+- Workflow pack installs two new skills; installed nested skill scripts retain execute permissions; validate-plan singleton rejection message/help expanded.
+
+**Key files / modules:**
+
+- `.agents/skills/oat-wave-execute/**`, `.agents/skills/oat-wave-program/**` — the promoted skills
+- `packages/cli/src/fs/io.ts` — mode-preservation fix
+- `packages/cli/src/commands/project/validate-plan/**` — singleton guidance
+- `packages/cli/src/commands/init/tools/shared/skill-manifest.ts`, `packages/cli/scripts/bundle-assets.sh` — registration
+- `apps/oat-docs/docs/**` wave-workflow page; `.oat/repo/pjm/backlog/**` dispositions
+
+**Verification performed:**
+
+- Per-phase: root-owned reviews (each phase 1 bounded fix round → pass); p05 cross-runtime gate (codex, 2 rounds → pass).
+- Fixture dry-run: happy + unhappy legs, twice (implementer + reviewer re-execution).
+- Repo gates: `pnpm release:validate`, tests (CLI 3002 + workspace suites + 123 smoke), lint, type-check, build, docs build — all green; origin/main merged mid-run with green fan-in gates.
+
+**Design deltas:**
+
+- p02-t09 re-sync was a verified no-op (provider views are symlinks) — recorded in Deviations.
+- HiLL `final` interpreted per mergeable delta (`['p05','p06']`) — recorded in Deviations.
+- Fixture-only hygiene fixes during dry-run (node_modules ignore, lockfile normalization); no repo-behavior drift.
 
 ## References
 
