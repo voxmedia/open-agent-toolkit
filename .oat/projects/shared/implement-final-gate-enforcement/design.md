@@ -118,7 +118,132 @@ complete state --> success output
 
 ## Component Design
 
-Pending collaborative review.
+### Implementation Closeout Contract
+
+**Purpose:** Make the configured exit gate an unavoidable implementation
+boundary before automated sequencing, final HiLL approval, completion, and
+success output.
+
+**Responsibilities:**
+
+- Add exit-gate handling to the numbered authoritative closeout sequence rather
+  than leaving it as a trailing appendix.
+- Persist `pending` before gate launch and a terminal disposition before
+  continuing or stopping.
+- Keep lifecycle final review, optional phase review, and configured exit-gate
+  provenance independent.
+- Require a fresh allowed gate disposition before entering the automated
+  sequence and again before completion/output.
+- Permit the implementation skill to invoke the existing gate CLI explicitly.
+
+**Interfaces:**
+
+- `oat gate resolve oat-project-implement --json`
+- Configured gate command executed unchanged with `PROJECT_PATH` exported.
+- Existing structured gate envelope and `oat-project-review-receive` handoff.
+- Project `state.md` exit-gate state described below.
+
+**Dependencies:**
+
+- Existing final verification and final lifecycle review contracts.
+- Existing approval-aware `oat_post_implement_sequence`.
+- Existing workflow gate configuration and command implementation.
+
+**Design Decisions:**
+
+- Gate configuration is re-resolved only when starting a new closeout
+  generation; an in-flight persisted run remains authoritative for resume.
+- A normal `final | code | passed` review row cannot satisfy this component.
+- A manual independent review is insufficient unless its artifact carries the
+  configured gate invocation and run provenance.
+
+### Exit-Gate State and Freshness
+
+**Purpose:** Provide restart-safe state for gate launch, policy disposition,
+receive completion, and implementation-basis freshness.
+
+**Responsibilities:**
+
+- Store the state machine as a sibling of `oat_post_implement_sequence` in
+  project state.
+- Preserve the exact resolved policy inputs needed for deterministic resume.
+- Bind configured review success to the implementation basis and gate run.
+- Distinguish expected closeout-only descendants from substantive
+  implementation changes.
+- Record a concise human-readable audit event in `implementation.md` without
+  making that prose the routing source of truth.
+
+**Interfaces:**
+
+- `state.md` frontmatter field `oat_implement_exit_gate`.
+- Shared frontmatter recognized-field registry.
+- Git revision and changed-path checks used by the closeout orchestrator.
+
+**Dependencies:**
+
+- Existing project-state frontmatter parsing.
+- Git history for basis/freshness verification.
+- Gate envelope run ID, status, artifact, and handoff metadata.
+
+**Design Decisions:**
+
+- Persist explicit `allowed/no_gate` state for null resolution rather than using
+  absence, so resume can distinguish “not resolved” from “resolved with no
+  configured gate.”
+- Map success, warn-continuation, and explicit prompt-continuation to `allowed`
+  with distinct dispositions.
+- Map fail-closed, exhausted block, unresolved prompt, invalid envelope, and
+  receive failures to `blocked` until remediation or explicit policy handling.
+
+### Lifecycle Router
+
+**Purpose:** Prevent a resumed project from escaping through normal
+post-implementation routing while gate work is unresolved or stale.
+
+**Responsibilities:**
+
+- Check exit-gate state before summary, documentation, PR, revision-completion,
+  or project-completion routes.
+- Route `pending`, `blocked`, malformed, or stale state to
+  `oat-project-implement`.
+- Allow normal routing only when the gate disposition is allowed/fresh and the
+  approval-aware sequence is complete.
+
+**Interfaces:**
+
+- Reads project `state.md`; performs no mutations.
+- Announces the exact gate boundary and resume action.
+
+**Dependencies:**
+
+- Existing post-implementation router ordering.
+- Exit-gate state and freshness contract.
+
+**Design Decisions:**
+
+- Exit-gate enforcement is a higher-priority router check than
+  `oat_phase_status: complete` or `pr_open`.
+
+### Contract Tests and Documentation
+
+**Purpose:** Make lifecycle ordering and mechanism independence mechanically
+reviewable.
+
+**Responsibilities:**
+
+- Add implementation to lifecycle exit-gate ordering validation.
+- Assert that completion/output and automated sequencing cannot precede exit
+  gate allowance.
+- Cover disabled phase gate plus configured exit gate, null resolution,
+  success, block, prompt, warn, interruption/resume, and stale-basis behavior.
+- Register and test the new frontmatter field.
+- Document ordering, persisted state, freshness, and review-mechanism
+  independence in bundled workflow guidance.
+
+**Dependencies:**
+
+- Existing skill validation and post-implementation contract test suites.
+- Existing docs and provider-sync/release validation.
 
 ## Data Models
 
