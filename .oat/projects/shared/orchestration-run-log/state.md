@@ -17,6 +17,17 @@ oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p03
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -38,7 +49,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T12:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T12:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review fixes complete; awaiting re-review
+Implementation closeout - Final review passed; pre-approval summary pending
 
 ## Artifacts
 
@@ -68,7 +79,8 @@ Implementation - Final review fixes complete; awaiting re-review
 - ✓ Phase 2 scaffold and gate integration complete and verified
 - ✓ Phase 3 original tasks complete and verified
 - ✓ Four final-review fix tasks complete and verified
-- ⧗ Awaiting focused final re-review
+- ✓ Final re-review passed
+- ⧗ Running configured pre-approval sequence: summary → document → PR
 
 ## Blockers
 
@@ -76,4 +88,4 @@ None
 
 ## Next Milestone
 
-Pass focused final re-review
+Complete pre-approval summary, documentation, and PR steps

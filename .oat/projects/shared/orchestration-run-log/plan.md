@@ -663,6 +663,7 @@ git commit -m "fix(p03-t09): deduplicate first-batch ledger entries"
 | p02    | code     | pending         | -          | -                                                   |
 | p03    | code     | pending         | -          | -                                                   |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T122856Z.md |
+| final  | code     | passed          | 2026-07-18 | reviews/final-review-2026-07-18T125009Z.md          |
 | spec   | artifact | pending         | -          | -                                                   |
 | design | artifact | pending         | -          | -                                                   |
 | plan   | artifact | received        | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md  |
