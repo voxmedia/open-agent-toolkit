@@ -501,6 +501,43 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('pins project-log roll-up before completion seal and archive', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const checkIndex = content.indexOf(
+      'oat project log check --project "$PROJECT_PATH" --json',
+    );
+    const rollupIndex = content.indexOf(
+      'oat project log rollup --project "$PROJECT_PATH" --json',
+    );
+    const sealIndex = content.indexOf(
+      '--producer oat-project-complete \\\n  --ref seal',
+    );
+    const archiveIndex = content.indexOf(
+      'ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1)',
+    );
+
+    expect(checkIndex).toBeGreaterThanOrEqual(0);
+    expect(rollupIndex).toBeGreaterThan(checkIndex);
+    expect(sealIndex).toBeGreaterThan(rollupIndex);
+    expect(archiveIndex).toBeGreaterThan(sealIndex);
+    expect(content).toMatch(
+      /synthesisPending: true[\s\S]*?Warning:[\s\S]*?do not block completion/i,
+    );
+    expect(content).toContain('Synthesis is warn-only');
+    expect(content).toMatch(
+      /Do not set lifecycle complete, seal, or archive unless[\s\S]*?status: "ok"/,
+    );
+    expect(content).toMatch(
+      /ledgerOutcome: "skipped_permitted"[\s\S]*?proceed and report/,
+    );
+    expect(content).toMatch(
+      /status: "failed"[\s\S]*?stop and surface the roll-up failure[\s\S]*?Never continue to seal or\s+archive/,
+    );
+    expect(content).toContain('No project-log append may follow the seal');
+  });
+
   it('delegates project completion archive side effects to the CLI command', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',

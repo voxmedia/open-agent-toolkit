@@ -1991,7 +1991,7 @@ describe('validateOatSkills', () => {
       ['oat-project-implement', '2.1.3'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
-      ['oat-project-complete', '1.5.2'],
+      ['oat-project-complete', '1.5.3'],
       ['oat-project-next', '1.0.9'],
     ] as const;
 
