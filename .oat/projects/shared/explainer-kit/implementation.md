@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - Phase 4 re-review found two critical execution-evidence defects requiring a second bounded fix pass.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t09
 oat_generated: false
@@ -868,6 +869,22 @@ targets. Full workspace/release gates, 65 real-browser measurements, public
 byte/hash probes, and an actual committed RC build → packaged core run → bound
 wrapper acceptance flow pass. Independent re-review is pending; Phase 5 remains
 blocked until it passes.
+
+### Phase 4 Re-review — Second Fix Pass
+
+**Canonical artifact:**
+`reviews/p04-rereview-2026-07-18T185004Z.md`
+
+**Findings:** 2 critical, 0 important, 0 medium, 0 minor. Eight baseline
+findings are independently resolved; the packaged-execution binding finding
+remains open.
+
+**Disposition:** Parse the real core's complete machine JSON result and add a
+real builder → packaged core → execution-record integration test. Remove
+wrapper-owned post-run receipt assertion from the core runner; validate the
+complete wrapper receipt separately against the immutable core execution
+record, manifest hash, and run ID. Update the extension sequence and reject
+foreign receipts even when caller-authored hashes agree. Re-run and re-review.
 
 ---
 

@@ -1638,7 +1638,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p01    | code     | passed          | 2026-07-17 | reviews/p01-review-2026-07-17T230548Z.md                    |
 | p02    | code     | passed          | 2026-07-18 | reviews/p02-review-2026-07-18T015729Z.md                    |
 | p03    | code     | passed          | 2026-07-18 | reviews/p03-review-2026-07-18T120653Z.md                    |
-| p04    | code     | fixes_completed | 2026-07-18 | reviews/p04-review-2026-07-18T171004Z.md                    |
+| p04    | code     | fixes_added     | 2026-07-18 | reviews/p04-rereview-2026-07-18T185004Z.md                  |
 | p05    | code     | pending         | -          | -                                                           |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
