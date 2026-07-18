@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260718-append-based-ledger-graduation | 2026-07-18 | accepted | Append-based ledger graduation                                          | -      |
+| DR-260718-automatic-create-on-first      | 2026-07-18 | accepted | Automatic create-on-first-append                                        | -      |
+| DR-260718-cli-owned-log-mutations        | 2026-07-18 | accepted | CLI-owned log mutations                                                 | -      |
+| DR-260718-general-purpose-project-log    | 2026-07-18 | accepted | General-purpose project log                                             | -      |
+| DR-260718-roll-up-before-archive         | 2026-07-18 | accepted | Roll-up before archive                                                  | -      |
 | DR-260716-mechanical-headless-routing    | 2026-07-16 | accepted | Mechanical headless routing                                             | -      |
 | DR-260716-resolver-owned-policy          | 2026-07-16 | accepted | Resolver-owned policy and ladder diagnosis                              | -      |
 | DR-260716-scope-aware-hard-budgets       | 2026-07-16 | accepted | Scope-aware hard budgets                                                | -      |

@@ -25,6 +25,7 @@ import { UTILITY_SKILLS } from '../utility/install-utility';
 import {
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
+  WORKFLOW_TEMPLATES,
 } from '../workflows/install-workflows';
 import { BRAINSTORM_SKILLS, RESEARCH_AGENTS } from './skill-manifest';
 
@@ -282,6 +283,17 @@ describe('bundle-assets.sh consistency', () => {
       missing,
       `Templates listed in bundle-assets.sh but missing from .oat/templates: ${missing.join(', ')}`,
     ).toEqual([]);
+  });
+
+  it('bundles every workflow template, including the project log', () => {
+    const missing = WORKFLOW_TEMPLATES.filter(
+      (template) => !bundleTemplates.includes(template),
+    );
+    expect(
+      missing,
+      `Missing workflow templates from bundle-assets.sh: ${missing.join(', ')}`,
+    ).toEqual([]);
+    expect(WORKFLOW_TEMPLATES).toContain('project-log.md');
   });
 
   it('does not bundle skills that belong to no pack', () => {

@@ -24,6 +24,8 @@ interface ProjectNewCommandOptions {
   setActive: boolean;
   dashboard: boolean;
   commit: boolean;
+  withProjectLog?: boolean;
+  projectLog?: boolean;
 }
 
 interface ProjectNewDependencies {
@@ -36,6 +38,7 @@ interface ProjectNewDependencies {
     setActive: boolean;
     refreshDashboard: boolean;
     commit: boolean;
+    projectLog?: boolean;
   }) => Promise<ScaffoldProjectResult>;
 }
 
@@ -106,6 +109,12 @@ async function runProjectNew(
       setActive: options.setActive,
       refreshDashboard: options.dashboard,
       commit: options.commit,
+      projectLog:
+        options.withProjectLog === true
+          ? true
+          : options.projectLog === false
+            ? false
+            : undefined,
     });
 
     reportSuccess(context, projectName, result);
@@ -141,6 +150,14 @@ export function createProjectNewCommand(
     .option('--no-set-active', 'Do not update active project in local config')
     .option('--no-dashboard', 'Do not refresh .oat/state.md after scaffold')
     .option('--no-commit', 'Do not git-commit the scaffolded project directory')
+    .option(
+      '--with-project-log',
+      'Create project-log.md regardless of workflow.projectLog config',
+    )
+    .option(
+      '--no-project-log',
+      'Do not create project-log.md during scaffolding',
+    )
     .action(
       async (
         name: string,

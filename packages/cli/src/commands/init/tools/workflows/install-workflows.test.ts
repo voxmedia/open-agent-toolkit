@@ -92,6 +92,10 @@ describe('installWorkflows', () => {
     expect(result.copiedTemplates).toHaveLength(WORKFLOW_TEMPLATES.length);
     expect(result.copiedScripts).toHaveLength(3);
     expect(result.projectsRootInitialized).toBe(true);
+    expect(WORKFLOW_TEMPLATES).toContain('project-log.md');
+    await expect(
+      readFile(join(targetRoot, '.oat', 'templates', 'project-log.md'), 'utf8'),
+    ).resolves.toBe('# project-log.md\n');
   });
 
   it('installs all four asset classes at user scope without project scaffolding', async () => {
