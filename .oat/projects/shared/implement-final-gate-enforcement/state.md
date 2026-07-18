@@ -2,7 +2,7 @@
 oat_current_task: null
 oat_last_commit: f799b6356eab6c41bce93b2e2756a5b4a443894e
 oat_blockers:
-  - Final re-review must pass before configured exit-gate execution.
+  - Configured implementation exit gate is pending.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T23:52:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T23:57:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - User-authorized artifact alignment complete; awaiting final re-review
+Implementation - Final review passed; awaiting configured implementation exit gate
 
 ## Artifacts
 
@@ -77,12 +77,13 @@ Implementation - User-authorized artifact alignment complete; awaiting final re-
 - ✓ Phase 3 implementation and full verification
 - ✓ Final review fixes
 - ✓ Final review round 2 fixes
-- ⧗ Final whole-project re-review
+- ✓ Final whole-project review
+- ⧗ Configured implementation exit gate
 
 ## Blockers
 
-- Final re-review must pass before configured exit-gate execution.
+- Configured implementation exit gate must pass or be allowed by policy.
 
 ## Next Milestone
 
-Pass the final whole-project re-review
+Resolve and execute the configured implementation exit gate
