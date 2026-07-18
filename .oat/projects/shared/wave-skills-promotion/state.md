@@ -1,7 +1,10 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 1e336990
-oat_blockers: []
+oat_current_task: p06-t01 # blocked on explainer-kit RC gate; p05 complete
+oat_last_commit: 17a56f39
+oat_blockers:
+  [
+    'p06 gated on packaged explainer-kit v1 RC (plan-declared gate; gate-open plan revision + re-review required before execution)',
+  ]
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -18,19 +21,6 @@ oat_dispatch_policy:
   policy: high
   source: project-state
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
-#   matrix: # optional sparse project override; full dispatch matrix lives in layered config
-#     cursor:
-#       high:
-#         - composer-2.5
-#         - { harness: cursor, model: gpt-5.5-xhigh }
-#   source: project-state
-# oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
@@ -38,23 +28,24 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T18:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T18:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: wave-skills-promotion
 
-**Status:** Discovery
+**Status:** Implementation — phases p01–p05 complete (23/27 tasks); p06 RC-gated
 **Started:** 2026-07-17
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Planning complete — 27 tasks / 6 phases, sequential, dispatch policy
-managed/high, phase gate review at p05. Plan passed the in-session
-structured review (3 attempts → clean) and the cross-family gate
-(2 full reviews + 18 findings remediated + delta re-run verdict ok).
-Ready for implementation.
+Implementation in progress. Phases p01–p05 executed and passed root-owned
+review (each with one bounded fix round); p05 also carries the
+operator-configured cross-runtime phase gate. Phase p06 (explainer
+integration) is blocked on the packaged explainer-kit v1 RC and requires a
+gate-open plan revision + re-review before execution. This run's mergeable
+delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 ## Artifacts
 
@@ -62,7 +53,7 @@ Ready for implementation.
 - **Spec:** `spec.md` (complete — 10 FRs + 4 NFRs; aligned to design amendments at plan gate)
 - **Design:** `design.md` (complete — approved with amendments 2026-07-18)
 - **Plan:** `plan.md` (complete — 27 tasks; gate passed 2026-07-18)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Implementation:** `implementation.md` (in progress — 23/27 tasks complete; p06 blocked)
 
 ## Progress
 
@@ -70,14 +61,24 @@ Ready for implementation.
 - ✓ Specification complete (folded into design)
 - ✓ Design complete (HiLL approved with amendments)
 - ✓ Plan complete (artifact review + cross-family gate passed)
-- ⧗ Awaiting implementation
+- ✓ p01 Port + toolkit integration (review passed; installer mode-fix shipped)
+- ✓ p02 §2 queue + genericization (review passed; versions 1.5.0/1.1.0)
+- ✓ p03 Dispositions (review passed; 10 backlog dispositions durable)
+- ✓ p04 Docs (review passed; wave-workflow page + index)
+- ✓ p05 Validation + release readiness (review passed; dry-run green both legs; 0.2.0 lockstep; W6 runbook)
+- ⧗ p06 Explainer integration — BLOCKED on explainer-kit v1 RC
 
 ## Blockers
 
-None (plan Phase 6 is gated on the explainer-kit v1 RC; phases 1–5 are
-unblocked — 23 of 27 tasks executable now)
+- p06 gated on the packaged explainer-kit v1 RC (plan-declared; project at
+  scaffold stage on this repo's `explainer-kit` branch). Gate-open contract:
+  refine p06 task bodies against frozen RC schemas via plan revision, re-run
+  plan artifact review for the phase, coordinate merge order with
+  explainer-kit Phase 3.
 
 ## Next Milestone
 
-Implementation via `oat-project-implement` (confirms HiLL checkpoint
-selection at start; phases p01–p05 sequential; p06 blocked on RC)
+p05 HiLL checkpoint (operator approval), then final verification/review and
+PR for the phases 1–5 delta; stoa W6 handoff per
+`references/w6-handoff-runbook.md` after release. p06 executes when the RC
+ships.
