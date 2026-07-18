@@ -468,6 +468,7 @@ git commit -m "docs(p05-t02): align implementation completion summary"
 | p03    | code     | pending         | -          | -                                                     |
 | p04    | code     | pending         | -          | -                                                     |
 | final  | code     | fixes_completed | 2026-07-18 | `reviews/archived/final-review-2026-07-18T180043Z.md` |
+| final  | code     | received        | 2026-07-18 | `reviews/final-review-2026-07-18T185705Z.md`          |
 | spec   | artifact | n/a             | 2026-07-18 | quick mode                                            |
 | design | artifact | passed          | 2026-07-18 | `design.md`                                           |
 
