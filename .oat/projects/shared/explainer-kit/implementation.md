@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t08
+oat_current_task_id: p03-t09
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 7/9       |
+| Phase 3 | in_progress | 9     | 8/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 23/38 tasks completed
+**Total:** 24/38 tasks completed
 
 ---
 
@@ -580,6 +580,30 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 ---
 
+### Task p03-t08: Integrate interactive completion policy
+
+**Status:** completed
+**Commit:** `0bde665c`
+**Structural Fix Commit:** `93c24886`
+
+**Outcome:**
+
+- Added batched completion intent, recap reuse/selection, archive argument
+  plumbing, no-recap flow, plan-explainer exclusion, and local-scope
+  non-export semantics.
+- Completed mandatory adapter skill metadata discovered by the canonical
+  validator.
+
+**Verification:**
+
+- Completion integration suite — pass (5/5).
+- Lifecycle contract suite — pass (23/23).
+- Canonical `oat:validate-skills` — pass (59 skills).
+- Combined skill tests — pass (121/121).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -687,12 +711,13 @@ remaining blocker. Re-review passed with zero findings; canonical artifact:
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact               | Planned / Documented                                               | Actual / Accepted                                                               | Reason                                                                                                                   | Source of Truth                     | Follow-up                                                   |
-| ------------- | ----------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------- |
-| p01-t03       | `plan.md`                     | Commit subject `feat(p01-t03): register typed explainer config`    | Commit `24a7bf72` uses `feat(config): register explainer settings`              | User accepted the non-behavioral subject deviation; files and verification remained task-bounded                         | Commit `24a7bf72`                   | None                                                        |
-| p01-t04       | `plan.md`                     | State intent task omitted `packages/control-plane/src/project.ts`  | Added `project.ts` to the task boundary before implementation                   | `getProjectState()` manually constructs the public `ProjectState`, so the design cannot be implemented without this file | Updated `plan.md`                   | Resume p01-t04 in the original phase session                |
-| bookkeeping   | Implementation workflow       | Separate root-owned tracking commit after every code commit        | Six task commits landed without interleaved tracking commits                    | Root delegated the full phase without a per-task return boundary                                                         | Git history and this reconciliation | Enforce per-task return and bookkeeping from Phase 2 onward |
-| p01-t05       | `plan.md` / p01-t01 invariant | New skill family remains at `1.0.0` until centralized release bump | p01-t05 changed `oat-explainer-kit` to `1.1.0`; fix `e7742119` restored `1.0.0` | Implementer applied the general changed-skill bump rule despite this project's centralized bump plan                     | Fix commit `e7742119`               | None                                                        |
+| Task / Review | Source Artifact               | Planned / Documented                                               | Actual / Accepted                                                                  | Reason                                                                                                                   | Source of Truth                     | Follow-up                                                   |
+| ------------- | ----------------------------- | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- | ----------------------------------------------------------- |
+| p01-t03       | `plan.md`                     | Commit subject `feat(p01-t03): register typed explainer config`    | Commit `24a7bf72` uses `feat(config): register explainer settings`                 | User accepted the non-behavioral subject deviation; files and verification remained task-bounded                         | Commit `24a7bf72`                   | None                                                        |
+| p01-t04       | `plan.md`                     | State intent task omitted `packages/control-plane/src/project.ts`  | Added `project.ts` to the task boundary before implementation                      | `getProjectState()` manually constructs the public `ProjectState`, so the design cannot be implemented without this file | Updated `plan.md`                   | Resume p01-t04 in the original phase session                |
+| bookkeeping   | Implementation workflow       | Separate root-owned tracking commit after every code commit        | Six task commits landed without interleaved tracking commits                       | Root delegated the full phase without a per-task return boundary                                                         | Git history and this reconciliation | Enforce per-task return and bookkeeping from Phase 2 onward |
+| p01-t05       | `plan.md` / p01-t01 invariant | New skill family remains at `1.0.0` until centralized release bump | p01-t05 changed `oat-explainer-kit` to `1.1.0`; fix `e7742119` restored `1.0.0`    | Implementer applied the general changed-skill bump rule despite this project's centralized bump plan                     | Fix commit `e7742119`               | None                                                        |
+| p03-t08       | Repository skill validator    | Task boundary excluded `.agents/skills/oat-explainer-kit/SKILL.md` | Append-only fix `93c24886` added required invocation metadata and progress heading | Canonical `oat:validate-skills` exposed mandatory structure missed by narrower Vitest validation                         | Fix commit `93c24886`               | None                                                        |
 
 ## Test Results
 

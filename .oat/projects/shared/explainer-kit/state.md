@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t08
-oat_last_commit: 586d135b
+oat_current_task: p03-t09
+oat_last_commit: 93c24886
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T03:14:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T03:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 in progress at `p03-t08`
+Implementation - Phase 3 in progress at `p03-t09`
 
 ## Artifacts
 
@@ -81,8 +81,9 @@ Implementation - Phase 3 in progress at `p03-t08`
 - ✓ Phase 2 fix commit `bcfba605` resolves all five review findings
 - ✓ Full post-fix suite passed (102 tests plus direct probes, lint, and format)
 - ✓ Phase 2 reviewer re-review passed with zero findings
-- ✓ Phase 3 tasks `p03-t01` through `p03-t07` completed
-- ⧗ Phase 3 continues at `p03-t08`
+- ✓ Phase 3 tasks `p03-t01` through `p03-t08` completed
+- ✓ Canonical skill validation fixed and passing in `93c24886`
+- ⧗ Phase 3 continues at `p03-t09`
 
 ## Blockers
 
@@ -90,4 +91,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 3 tasks `p03-t08` and `p03-t09` with per-task bookkeeping.
+Complete Phase 3 task `p03-t09`, then run Phase 3 verification and review.
