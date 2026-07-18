@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 2     | 0/2       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
 **Total:** 0/6 tasks completed
 
@@ -36,8 +36,8 @@ oat_generated: false
 
 ## Phase 1: Durable State and Resume Routing
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-18
 
 ### Task p01-t01: Register the implementation exit-gate state contract
 
