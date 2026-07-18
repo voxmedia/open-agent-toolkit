@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t09
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 8/9       |
+| Phase 3 | in_progress | 9     | 9/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 24/38 tasks completed
+**Total:** 25/38 tasks completed
 
 ---
 
@@ -436,6 +436,18 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 **Status:** in_progress
 **Started:** 2026-07-18
 
+### Phase Summary
+
+**Outcome:**
+
+- Added OAT config/source binding, lifecycle intent, lifecycle entry points,
+  recap generation/finalization, archive export, and archive-safe
+  re-attestation/linking.
+
+**Verification:**
+
+- Phase task suites pass; root phase verification and review pending.
+
 ### Task p03-t01: Resolve adapter config and canonical output roots
 
 **Status:** completed
@@ -601,6 +613,28 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 - Canonical `oat:validate-skills` — pass (59 skills).
 - Combined skill tests — pass (121/121).
 - Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t09: Finalize recap durability and archive-aware links
+
+**Status:** completed
+**Commit:** `39c5dbe6`
+
+**Outcome:**
+
+- Added completion-time archive export consumption, lifecycle bookkeeping,
+  exported-recap re-attestation, active-path evidence supersession, and final
+  evidence commit.
+- Rewrites summary/PR links to tracked reference roots and treats attestation
+  failure as a recorded warning without failing completion.
+
+**Verification:**
+
+- Completion suite RED: 5/10 failed; GREEN: 10/10 passed.
+- Finalizer suite — pass (5/5).
+- Archive and skill contract suites — pass (95/95).
+- Canonical skill validation, scoped lint, formatting, and whitespace — pass.
 
 ---
 
