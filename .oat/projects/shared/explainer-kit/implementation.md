@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t05
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 4/9       |
+| Phase 3 | in_progress | 9     | 5/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 20/38 tasks completed
+**Total:** 21/38 tasks completed
 
 ---
 
@@ -512,6 +512,27 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
   with 119 relevant tests.
 - Root rerun of full skill validation — pass (98/98); the worker's reported
   metadata blocker was not reproducible in the committed tree.
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t05: Centralize tracked-run commit finalization
+
+**Status:** completed
+**Commit:** `256e9eb6`
+
+**Outcome:**
+
+- Added bounded two-commit planning/verification for immutable artifact
+  durability followed by mutable evidence attestation.
+- Supports dedicated and completion-bookkeeping modes, exact unrelated-change
+  isolation, recoverable verification failure, later attestation, and
+  push-together guidance.
+
+**Verification:**
+
+- Finalizer suite — pass (5/5).
+- Adapter and durability regression suites — pass (38/38).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
