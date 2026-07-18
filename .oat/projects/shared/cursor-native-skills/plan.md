@@ -378,15 +378,15 @@ pnpm release:validate
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact    |
-| ------ | -------- | ------- | ---------- | ----------- |
-| p01    | code     | pending | -          | -           |
-| p02    | code     | pending | -          | -           |
-| p03    | code     | pending | -          | -           |
-| p04    | code     | pending | -          | -           |
-| final  | code     | pending | -          | -           |
-| spec   | artifact | n/a     | 2026-07-18 | quick mode  |
-| design | artifact | passed  | 2026-07-18 | `design.md` |
+| Scope  | Type     | Status   | Date       | Artifact                                     |
+| ------ | -------- | -------- | ---------- | -------------------------------------------- |
+| p01    | code     | pending  | -          | -                                            |
+| p02    | code     | pending  | -          | -                                            |
+| p03    | code     | pending  | -          | -                                            |
+| p04    | code     | pending  | -          | -                                            |
+| final  | code     | received | 2026-07-18 | `reviews/final-review-2026-07-18T180043Z.md` |
+| spec   | artifact | n/a      | 2026-07-18 | quick mode                                   |
+| design | artifact | passed   | 2026-07-18 | `design.md`                                  |
 
 ## Implementation Complete
 
