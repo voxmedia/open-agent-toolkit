@@ -943,7 +943,7 @@ describe('validateOatSkills', () => {
         `${skillName} no-gate path continues into completion`,
       ).toMatch(
         new RegExp(
-          `no gate is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
+          `no gate\\s+is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
         ),
       );
       expect(
@@ -2130,7 +2130,7 @@ describe('validateOatSkills', () => {
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.3'],
-      ['oat-project-next', '1.0.9'],
+      ['oat-project-next', '1.0.10'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3018,7 +3018,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {

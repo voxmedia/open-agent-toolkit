@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.9
+version: 1.0.10
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -276,6 +276,31 @@ exactly: "Implementation exit gate unresolved or stale — resume with
 
 Only an `allowed` and fresh exit-gate disposition falls through to the normal
 post-implementation checks.
+
+Validate freshness from the complete persisted transition, not from `status`
+alone:
+
+- `allowed/no_gate` is valid only with `disposition: no_gate`, null gate-run and
+  artifact provenance, and current `reviewed_head` and implementation
+  fingerprint fields.
+- `allowed/configured` is valid only with `disposition: passed`, `warned`, or
+  `prompt_approved`; matching `config_fingerprint`, `reviewed_head`,
+  `implementation_fingerprint`, and configured gate-run provenance; and any
+  eligible receive durably completed.
+- `pending`, `blocked`, malformed, contradictory, or legacy-absent state never
+  falls through. Pending and blocked generations resume their persisted
+  configuration; configuration-fingerprint mismatch fails closed.
+- Recognized closeout-only descendants preserve a fresh allowed result; unknown
+  paths and substantive changes route as stale. The recognized set is limited
+  to configured gate artifacts and receipts, project tracking and
+  `project-log.md` appends, summary/documentation/PR sequence outputs, final
+  HiLL bookkeeping, and completion bookkeeping.
+- Any implementation, test, skill, template, workflow configuration, or other
+  unrecognized change after `reviewed_head` invalidates the implementation
+  fingerprint and routes to `oat-project-implement`.
+
+Routing is read-only: announce stale or malformed state, but leave transition
+repair, gate execution, receive, and persistence to `oat-project-implement`.
 
 **5.1: Incomplete approval-aware post-implementation sequence**
 

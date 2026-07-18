@@ -109,6 +109,100 @@ describe('post-implementation sequence contracts', () => {
     expect(skill.slice(outputIndex)).not.toContain('### Gate Execution');
   });
 
+  it('persists every implementation exit-gate outcome and resumes without duplicate work', () => {
+    const skill = readImplementSkill();
+    const normalized = normalizeWhitespace(skill);
+
+    for (const field of [
+      'status',
+      'resolution',
+      'disposition',
+      'config_fingerprint',
+      'resolved_command',
+      'resolved_description',
+      'on_failure',
+      'max_attempts',
+      'attempts_completed',
+      'reviewed_head',
+      'implementation_fingerprint',
+      'gate_run_id',
+      'envelope_status',
+      'artifact',
+      'handoff',
+      'receive_eligible',
+      'receive_completed',
+      'failure',
+      'updated_at',
+    ]) {
+      expect(skill, `persisted gate field ${field}`).toContain(`${field}:`);
+    }
+    expect(normalized).toContain(
+      'A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`',
+    );
+    expect(normalized).toContain(
+      '`block` outcomes consume remediation attempts only after a valid configured gate result',
+    );
+    expect(normalized).toContain(
+      'At `maxAttempts`, persist `blocked` and stop without another gate launch.',
+    );
+    expect(normalized).toContain(
+      'Launch failures, missing CLIs, unavailable runtimes, and transport failures do not increment `attempts_completed`.',
+    );
+    expect(normalized).toContain(
+      'An explicit prompt continuation persists `allowed/prompt_approved`; defer or no response persists `blocked` and stops.',
+    );
+    expect(normalized).toContain(
+      'A warn continuation persists `allowed/warned` before closeout proceeds.',
+    );
+    expect(normalized).toContain(
+      'Resume `pending` or `blocked` from the persisted transition without replacing its generation.',
+    );
+    expect(normalized).toContain(
+      'A fresh `allowed` result resumes after the gate without executing the gate or receive a second time.',
+    );
+  });
+
+  it('enforces structured receive provenance and fail-closed freshness', () => {
+    const skill = readImplementSkill();
+    const next = readNextSkill();
+    const normalized = normalizeWhitespace(skill);
+    const normalizedNext = normalizeWhitespace(next);
+
+    expect(normalized).toContain(
+      'Receive is eligible only for `ok` or `blocked` with `receiveEligible: true` and a corroborated non-null `handoff`.',
+    );
+    expect(normalized).toContain(
+      'Persist `receive_completed: true` before continuing; an already-completed receive is idempotent and must not run again.',
+    );
+    expect(normalized).toContain(
+      'A receive failure persists `blocked` and cannot become an allowed disposition.',
+    );
+    expect(normalized).toContain(
+      'Manual review provenance is rejected: only `oat_review_invocation: gate` with the matching `oat_gate_run_id` may satisfy the configured gate.',
+    );
+    expect(normalized).toContain(
+      'Closeout-only descendants include configured gate artifacts and receipts, project tracking, `project-log.md` appends, summary/documentation/PR sequence outputs, final HiLL bookkeeping, and completion bookkeeping.',
+    );
+    expect(normalized).toContain(
+      'An unknown changed path fails closed as substantive implementation change.',
+    );
+    expect(normalized).toContain(
+      'Implementation, test, skill, template, or workflow configuration changes make the prior result `stale`.',
+    );
+    expect(normalized).toContain(
+      'An in-flight `pending` or `blocked` generation reuses its persisted resolved configuration and never re-resolves it.',
+    );
+    expect(normalized).toContain(
+      'If the persisted resolved configuration does not reproduce `config_fingerprint`, mark the generation `stale` and fail closed.',
+    );
+    expect(normalizedNext).toContain(
+      'Recognized closeout-only descendants preserve a fresh allowed result; unknown paths and substantive changes route as stale.',
+    );
+    expect(normalizedNext).toContain(
+      'Pending and blocked generations resume their persisted configuration; configuration-fingerprint mismatch fails closed.',
+    );
+  });
+
   it('uses one immutable snapshot and its stored order across every closeout boundary', () => {
     const skill = readImplementSkill();
     const normalized = normalizeWhitespace(skill);

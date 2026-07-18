@@ -293,17 +293,129 @@ The configured implementation exit gate is independent from the optional
 lifecycle review. A missing, disabled, or unconfigured phase gate never disables
 or satisfies this configured exit gate.
 
+**Persisted transition contract:**
+
+`"$PROJECT_PATH/state.md"` is the routing source of truth. Store one closeout
+generation as a sibling of `oat_post_implement_sequence`:
+
+```yaml
+oat_implement_exit_gate:
+  status: pending # pending | allowed | blocked | stale
+  resolution: configured # configured | no_gate
+  disposition: null # null | passed | warned | prompt_approved | no_gate
+  config_fingerprint: '<stable hash of the resolved declaration>'
+  resolved_command: null
+  resolved_description: null
+  on_failure: block # block | prompt | warn | null
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: null
+  implementation_fingerprint: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-07-18T00:00:00Z'
+```
+
+At the start of a new closeout generation, require a current passed final
+lifecycle review, capture `reviewed_head`, and compute a deterministic
+`implementation_fingerprint` from the gate-reviewed basis. Resolve
+`workflow.gates.skills.oat-project-implement` once. Canonically serialize the
+resolved command, description, `onFailure`, and `maxAttempts` to derive
+`config_fingerprint`; persist the complete resolved inputs with `status:
+pending` before any gate launch. Missing state means unresolved, never no gate.
+A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`,
+null run/artifact/receive provenance, and the current implementation basis.
+
+An in-flight `pending` or `blocked` generation reuses its persisted resolved
+configuration and never re-resolves it. Recompute the fingerprint from those
+persisted inputs before resume. If the persisted resolved configuration does
+not reproduce `config_fingerprint`, mark the generation `stale` and fail
+closed. External configuration changes are considered only when a new
+generation starts; they never rewrite an in-flight snapshot.
+
+Persist and commit every state transition before crossing its launch, receive,
+stop, approval-aware sequence, completion, or output boundary. Append a concise
+audit event to `implementation.md`; that prose and review ledger rows are
+evidence, not routing state.
+
+**Structured outcomes, receive, and policy:**
+
+- Accept only a complete structured envelope whose status and correlation
+  fields are internally consistent. Receive is eligible only for `ok` or
+  `blocked` with `receiveEligible: true` and a corroborated non-null `handoff`.
+  Ineligible, null, or contradictory handoffs, unknown statuses,
+  `review_failed`, `artifact_validation_failed`, and
+  `targeting_correlation_failed` persist `blocked`, remain outside receive, and
+  cannot produce an allowed disposition.
+- Manual review provenance is rejected: only `oat_review_invocation: gate` with
+  the matching `oat_gate_run_id` may satisfy the configured gate. A normal
+  final review, phase review, or manually produced independent-review artifact
+  cannot populate configured-gate provenance.
+- For a receive-eligible `ok` or `blocked` envelope, invoke
+  `oat-project-review-receive` only when `receive_completed` is false and the
+  handoff matches the persisted `gate_run_id` and artifact. Persist
+  `receive_completed: true` before continuing; an already-completed receive is
+  idempotent and must not run again. A receive failure persists `blocked` and
+  cannot become an allowed disposition.
+- After successful receive, `ok` persists `allowed/passed`. A `blocked`
+  envelope applies the persisted `on_failure` policy.
+- `block` outcomes consume remediation attempts only after a valid configured
+  gate result and its eligible receive disposition are durably processed.
+  Increment `attempts_completed` before remediation/rerun. Below
+  `maxAttempts`, remediate, mark the changed implementation basis `stale`, rerun
+  Steps 12-13 for that basis, and return to `pending` with updated
+  `reviewed_head` and `implementation_fingerprint` while preserving the
+  persisted configuration and consumed attempt count. At `maxAttempts`,
+  persist `blocked` and stop without another gate launch.
+- Launch failures, missing CLIs, unavailable runtimes, and transport failures
+  do not increment `attempts_completed`. Persist failure context and stop or
+  escalate without treating infrastructure recovery as a remediation attempt.
+- An explicit prompt continuation persists `allowed/prompt_approved`; defer or
+  no response persists `blocked` and stops. A warn continuation persists
+  `allowed/warned` before closeout proceeds.
+
+**Interruption, resume, and freshness:**
+
+- Resume `pending` or `blocked` from the persisted transition without replacing
+  its generation. Continue from the first incomplete launch, envelope, receive,
+  policy, or persistence boundary.
+- A fresh `allowed` result resumes after the gate without executing the gate or
+  receive a second time. Reuse requires a valid disposition, complete
+  configured-gate provenance when configured, an unchanged implementation
+  fingerprint, and any eligible receive marked complete.
+- Closeout-only descendants include configured gate artifacts and receipts,
+  project tracking, `project-log.md` appends, summary/documentation/PR sequence
+  outputs, final HiLL bookkeeping, and completion bookkeeping. Classify
+  gate-owned `oat project log append` mutations introduced with PR #156 as
+  closeout-only; they do not invalidate the reviewed implementation basis.
+- Determine freshness from every path changed after `reviewed_head`, and require
+  each descendant commit to contain only recognized closeout work. An unknown
+  changed path fails closed as substantive implementation change.
+  Implementation, test, skill, template, or workflow configuration changes
+  make the prior result `stale`. Preserve its provenance for audit, require a
+  current final lifecycle review for the new basis, and start a new generation.
+
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:
 
-1. Resolve the gate for this skill:
+1. Classify persisted state. A fresh allowed generation proceeds to Step 15
+   without duplicate gate or receive execution. A valid `pending` or `blocked`
+   generation resumes its first incomplete boundary with its persisted
+   configuration. For absent or stale state, start a new generation and resolve
+   the gate for this skill:
 
    ```bash
    oat gate resolve oat-project-implement --json
    ```
 
-   If the command returns JSON `null`, no gate is configured; proceed directly
-   to the completion steps in Step 15 below.
+   Persist the resolution and configuration fingerprint before launch. If the
+   command returns JSON `null`, persist the allowed no-gate transition; no gate
+   is configured; proceed directly to the completion steps in Step 15 below.
 
 2. Export the resolved project path into the command shell:
 
@@ -321,7 +433,9 @@ completion, or success output, run the configured gate:
 3. Execute the resolved command exactly as configured. Capture stdout, stderr,
    the exit code, and the structured JSON result. A zero exit code means the
    review passed its threshold, but it does not by itself authorize artifact
-   receipt or complete the handoff.
+   receipt or complete the handoff. Persist the run ID, envelope status,
+   artifact, eligibility, handoff correlation, and failure details before
+   receive or policy handling.
 
 4. Review-artifact handoff:
    - Parse the structured gate result. An exit code or artifact path alone never
@@ -339,17 +453,22 @@ completion, or success output, run the configured gate:
    - `blocked` exits nonzero but is receive-eligible; `ok` exits zero and still
      requires durable receive disposition. Route by structured status and
      eligibility, not by exit code.
+   - After eligible receive succeeds, persist `receive_completed: true` before
+     applying the terminal disposition. Never invoke receive again for that
+     persisted run.
 
 5. If the command exits nonzero, use `description` to orient the next steps and
-   handle `onFailure`:
+   handle the persisted `on_failure` and `max_attempts`:
    - `block`: read gate feedback, remediate, and re-run the gate up to
-     `maxAttempts` attempts (default `2`). If the gate ends in `block` after
-     attempts are exhausted, escalate to the human with accumulated feedback
-     and append that feedback to `implementation.md`. Treat a launch failure,
-     missing CLI, or no eligible runtime as escalation-biased and do not spend
-     it as a remediation attempt.
-   - `prompt`: surface the gate failure and ask the human how to proceed.
-   - `warn`: record the gate failure and continue.
+     `maxAttempts` attempts (default `2`). Persist each consumed remediation
+     attempt. If the gate ends in `block` after attempts are exhausted,
+     escalate to the human with accumulated feedback and append that feedback
+     to `implementation.md`. Treat a launch failure, missing CLI, or no eligible
+     runtime as escalation-biased and do not spend it as a remediation attempt.
+   - `prompt`: persist the blocked boundary, surface the gate failure, and ask
+     the human how to proceed. Continue only after an explicit persisted
+     approval.
+   - `warn`: persist the warned allowance and failure details before continuing.
 
    When the gate ends in `block` after attempts are exhausted or remains at an
    unresolved `prompt` boundary, the completion steps below MUST NOT run. The
@@ -375,6 +494,12 @@ The final-closeout orchestrator owns this sequence after the phase implementer
 and root-owned phase review have finished. Do not move lifecycle sequencing
 into phase or optional nested workers or weaken exact target selection for
 child dispatches.
+
+Before creating or resuming `oat_post_implement_sequence`, and again before
+every dispatch, final HiLL transition, completion mutation, and success output,
+require `oat_implement_exit_gate` to remain allowed and fresh. If it becomes
+stale, malformed, pending, or blocked, persist/retain that state, stop the
+sequence, and resume through `oat-project-implement`.
 
 Identify the final implementation phase from the plan. A final HiLL checkpoint
 exists when `oat_plan_hill_phases` is `[]` (every phase) or when it explicitly
@@ -495,10 +620,11 @@ always resolves the unset case.
 
 ### Step 16: Mark Implementation Complete
 
-Run this step only after the configured gate passes or resolves to an allowed
-no-gate outcome and the Step 15 closeout sequence has reached its terminal
-allowed state. A configured gate that is blocked, unresolved, malformed, or
-stale leaves implementation in progress.
+Run this step only after the configured gate passes or resolves to a
+policy-allowed disposition, including an allowed no-gate outcome, and the Step
+15 closeout sequence has reached its terminal allowed state. A configured gate
+that is blocked, unresolved, malformed, or stale leaves implementation in
+progress.
 
 Update `"$PROJECT_PATH/implementation.md"` frontmatter:
 
