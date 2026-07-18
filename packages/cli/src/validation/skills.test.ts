@@ -796,6 +796,82 @@ describe('validateOatSkills', () => {
     expect(content).toMatch(/`oat gate review`/);
   });
 
+  it('keeps reviewer-local reconnaissance bounded and advisory', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.8');
+    expect(tools).toContain('Task');
+    for (const broadReview of [
+      'final code reviews',
+      'broad phase/range reviews',
+      'docs sweeps',
+      'provider-view audits',
+    ]) {
+      expect(content, broadReview).toContain(broadReview);
+    }
+    expect(content).toMatch(
+      /narrow[\s\S]{0,120}(?:stay|keep)[\s\S]{0,80}inline/i,
+    );
+    expect(content).toMatch(
+      /one bounded[\s\S]{0,120}read-only[\s\S]{0,120}non-recursive[\s\S]{0,160}disjoint/i,
+    );
+    for (const laneField of [
+      'coverage',
+      'checks performed',
+      'exact `file:line` evidence',
+      'gaps',
+      'explicit uncertainty',
+    ]) {
+      expect(content, `lane report ${laneField}`).toContain(laneField);
+    }
+
+    expect(content).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
+    expect(content).toMatch(
+      /read exactly one[\s\S]{0,180}active-provider[\s\S]{0,180}oat-dispatch-subagents\/references/i,
+    );
+    expect(content).toMatch(/shared `recon` role class/i);
+    expect(content).toMatch(
+      /capability[\s\S]{0,180}catalog[\s\S]{0,180}model[\s\S]{0,180}effort[\s\S]{0,180}route[\s\S]{0,180}authorization[\s\S]{0,180}launch evidence/i,
+    );
+    expect(content).toMatch(
+      /cheaper\/faster[\s\S]{0,180}only when the host reliably exposes/i,
+    );
+    expect(content).toMatch(
+      /never silently inherit[\s\S]{0,120}primary reviewer's model/i,
+    );
+    expect(content).toMatch(
+      /must not (?:read|load)[\s\S]{0,160}\.agents\/skills\/oat-project-dispatch-subagents\/SKILL\.md[\s\S]{0,200}project lifecycle phase\/task policy/i,
+    );
+
+    expect(content).toMatch(
+      /authoritative scope[\s\S]{0,160}before considering delegation/i,
+    );
+    expect(content).toMatch(
+      /directly re-verify[\s\S]{0,180}positive and negative/i,
+    );
+    for (const primaryOnly of [
+      'source validation',
+      'reconciliation',
+      'synthesis',
+      'severity',
+      'validation decisions',
+      'artifact writing',
+      '`StructuredFindings`',
+    ]) {
+      expect(content, `primary-only ${primaryOnly}`).toContain(primaryOnly);
+    }
+    expect(content).toMatch(
+      /workers[\s\S]{0,200}(?:must not|never)[\s\S]{0,220}mutate files[\s\S]{0,220}(?:final findings|assign severity)/i,
+    );
+    expect(content).toMatch(
+      /unsupported[\s\S]{0,120}unauthorized[\s\S]{0,120}failed[\s\S]{0,120}empty[\s\S]{0,120}malformed[\s\S]{0,220}inline/i,
+    );
+    expect(content).toMatch(
+      /without (?:weakening|downgrading)[\s\S]{0,140}(?:checklist|review coverage)[\s\S]{0,140}output contract/i,
+    );
+  });
+
   it('requires gate review guidance to copy configured invocation metadata without inference', async () => {
     for (const path of [
       '.agents/agents/oat-reviewer.md',
@@ -1546,7 +1622,7 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
-      ['.agents/agents/oat-reviewer.md', '1.1.7'],
+      ['.agents/agents/oat-reviewer.md', '1.1.8'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.20'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.3'],

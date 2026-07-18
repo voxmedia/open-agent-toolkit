@@ -1,8 +1,8 @@
 ---
 name: oat-reviewer
-version: 1.1.7
+version: 1.1.8
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
-tools: Read, Bash, Grep, Glob, Write
+tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
 ---
 
@@ -72,6 +72,22 @@ The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile r
 For Codex, deterministic review dispatch under a capped managed policy uses the materialized Codex role name returned by `providers.codex.dispatchArgs.variant`; the orchestrator also supplies `providers.codex.selection.target` context when available and should derive `model_axis` and `effort_axis` from resolver output. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used only when the resolver returns no `dispatchArgs.variant`, as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`.
 
 For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
+
+## Bounded Reviewer Reconnaissance
+
+The primary reviewer must establish the authoritative scope from the supplied commit range and artifacts before considering delegation. Delegation is optional and useful only when that resolved scope has multiple independent evidence lanes. Eligible broad reviews include final code reviews, broad phase/range reviews, docs sweeps, and provider-view audits. Narrow task or artifact reviews stay inline when coordination would cost as much as direct inspection.
+
+When delegation is eligible:
+
+1. Use one bounded, read-only, non-recursive reconnaissance round with disjoint lane scopes. This is a one-level fan-out limit: lane workers must not spawn additional workers.
+2. Before launching any lane, read `.agents/skills/oat-dispatch-subagents/SKILL.md`, resolve the active provider, and read exactly one matching active-provider reference under `.agents/skills/oat-dispatch-subagents/references/`. Reviewer-local reconnaissance must not read or load `.agents/skills/oat-project-dispatch-subagents/SKILL.md`; that adapter is reserved for project lifecycle phase/task policy.
+3. Map every lane worker to the shared `recon` role class. The generic dispatch contract owns capability, catalog, model, effort, route, authorization, and launch evidence. Select an explicit economical target that prefers a cheaper/faster worker only when the host reliably exposes that control; never silently inherit the primary reviewer's model or hard-code provider model names.
+4. Give each lane an exact scope and a compact return contract: coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty. Reports are advisory candidate observations, not accepted findings.
+5. Workers must not mutate files, emit final findings, assign severity, make validation decisions, write review artifacts or `StructuredFindings`, or otherwise write either output sink.
+
+The primary reviewer owns source validation, reconciliation, synthesis, severity, validation decisions, artifact writing, and the final findings or `StructuredFindings`. Reopen authoritative sources and directly re-verify every load-bearing positive and negative claim; repeat relevant searches for absence claims before promotion to a finding. Reconcile overlap, disagreement, and cross-lane gaps before deduplicating and assigning severity.
+
+Capability-check reviewer-local delegation once. If nested dispatch is unsupported, unauthorized, failed, empty, or malformed, cover the affected lane inline without weakening review coverage, the checklist, or the output contract. The inline and delegated paths preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged.
 
 ## Mode Contract
 
