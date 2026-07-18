@@ -70,3 +70,44 @@ that content hash with the chosen record. Persistence:
 On a stale-write conflict, the caller must re-read state, resolve precedence
 again, and decide whether a write is still required. It must not retry the old
 record blindly.
+
+## Tracked-run finalization
+
+`planTrackedRunFinalization(request, context)` is the shared command planner for
+tracked project explainer and recap runs. The request contains `runRoot`,
+`manifestPath`, `commitMode`, and optional `relocatedFrom`. Context supplies the
+repository root, project name, and, for `completion-bookkeeping`, the existing
+full artifact commit SHA.
+
+The returned stages must run in order:
+
+1. In `dedicated` mode, commit exactly the manifest-declared immutable package
+   with `docs(oat): persist <recipe> for <project>`. In
+   `completion-bookkeeping` mode, reuse the caller's existing lifecycle commit.
+2. Replace `$ARTIFACT_COMMIT` with the created full SHA when present, then pass
+   the planned durability request to the compatible core's
+   `recordDurability(...)`. The core verifies commit blobs and updates records;
+   it never invokes Git or creates commits.
+3. Commit only `manifest.json` and `build-record.json` as the evidence update.
+4. Call `verifyTrackedRunFinalization(...)`, then push once so the artifact and
+   evidence commits travel together.
+
+Artifact evidence contains retained fact-base, content, theme, and rendered
+paths. It always excludes mutable `manifest.json` and `build-record.json`.
+Generated Git commands use explicit pathspecs and `commit --only`; callers must
+also snapshot unrelated working-tree changes before execution and supply the
+before/after lists to the verifier. A mismatch prevents pushing.
+
+An evidence-verification failure is a successful finalizer termination with
+run outcome `built-not-durable`: commit the warning-bearing mutable records and
+push them with the artifact commit. It does not block project completion. A
+later attempt reuses the same artifact commit, supplies the current HEAD as
+`currentHead`, invokes core verification again, and appends a new evidence
+commit. If the manifest already contains matching durable commit evidence, the
+planner returns `complete` with no commands, making repeat termination
+idempotent.
+
+For archive relocation, `relocatedFrom` identifies the prior active run for
+caller reporting. The current run's immutable paths and the export bookkeeping
+commit are submitted to the core; core evidence supersession remains the
+authoritative relocation record.
