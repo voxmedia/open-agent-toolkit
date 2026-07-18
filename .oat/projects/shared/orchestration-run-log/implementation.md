@@ -443,6 +443,7 @@ Chronological log of implementation progress.
 
 **Deferred Medium findings:** none.
 **Minor disposition:** m1 converted to p03-t11 by explicit operator choice.
+**Review-cycle override:** the operator authorized one focused final re-review after p03-t10 and p03-t11, despite the standard three-cycle cap.
 
 **Next:** execute p03-t10 and p03-t11 via `oat-project-implement`, then run a focused final re-review.
 
