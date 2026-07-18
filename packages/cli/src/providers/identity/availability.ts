@@ -76,6 +76,13 @@ export interface CursorCatalogResult {
   diagnostic: string | null;
 }
 
+export interface CursorMaterializedModelDiagnostic {
+  ladderModelId: string;
+  availability: 'available' | 'missing' | 'unvalidated';
+  evidence: 'broad-cli-catalog';
+  message: string;
+}
+
 interface CursorCatalogEntry {
   slug: string;
 }
@@ -546,6 +553,34 @@ export async function resolveCursorModelCatalog(
     sourceCommand: null,
     diagnostic: cursorCatalogDiagnostic(attempts),
   };
+}
+
+export async function diagnoseCursorMaterializedModels(
+  ladderModelIds: readonly string[],
+  options: ValidateMatrixCellOptions,
+): Promise<CursorMaterializedModelDiagnostic[]> {
+  const catalog = await resolveCursorModelCatalog(options);
+  return unique([...ladderModelIds]).map((ladderModelId) => {
+    if (catalog.status !== 'resolved') {
+      return {
+        ladderModelId,
+        availability: 'unvalidated',
+        evidence: 'broad-cli-catalog',
+        message:
+          `Cursor broad CLI catalog availability for '${ladderModelId}' could not be checked; ` +
+          'definition-pin behavior and runtime identity were not tested.',
+      };
+    }
+    const available = catalog.candidates.includes(ladderModelId);
+    return {
+      ladderModelId,
+      availability: available ? 'available' : 'missing',
+      evidence: 'broad-cli-catalog',
+      message: available
+        ? `Cursor broad CLI catalog lists '${ladderModelId}'; this does not verify the materialized definition pin or runtime identity.`
+        : `Cursor broad CLI catalog no longer lists '${ladderModelId}'; refresh the mapping or remove the stale materialized target. Definition-pin behavior and runtime identity were not tested.`,
+    };
+  });
 }
 
 export async function validateCursorSubagentModel(

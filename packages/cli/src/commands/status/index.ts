@@ -12,6 +12,7 @@ import {
 import {
   type CodexRoleStray,
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
 import { withScopeOption } from '@commands/shared/scope-option';
@@ -42,7 +43,7 @@ import {
   type CanonicalEntry,
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
-  scanBundledManagedCodexAgents,
+  scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
 import {
@@ -61,11 +62,17 @@ import {
 } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import {
+  applyCursorProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+  type CursorExtensionPlan,
+} from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   getActiveAdapters,
   getSyncMappings,
   type PathMapping,
+  type MaterializationPlan,
   type ProviderAdapter,
 } from '@providers/shared';
 import {
@@ -108,7 +115,7 @@ interface StatusDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedCodexAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getActiveAdapters: (
     adapters: ProviderAdapter[],
@@ -141,6 +148,16 @@ interface StatusDependencies {
   applyCodexProjectExtensionPlan: (
     scopeRoot: string,
     plan: CodexExtensionPlan,
+  ) => Promise<unknown>;
+  computeCursorProjectExtensionPlan: (
+    scopeRoot: string,
+    canonicalEntries: CanonicalEntry[],
+    allowedCanonicalPaths?: string[],
+    options?: { userConfigDir?: string; env?: NodeJS.ProcessEnv },
+  ) => Promise<CursorExtensionPlan>;
+  applyCursorProjectExtensionPlan: (
+    scopeRoot: string,
+    plan: CursorExtensionPlan,
   ) => Promise<unknown>;
   selectManyWithAbort: <T extends string>(
     message: string,
@@ -175,6 +192,7 @@ interface ScopeReportCollection {
   manifest: Manifest;
   reports: DriftReport[];
   strayCandidates: StatusStrayCandidate[];
+  activeAdapterNames: string[];
 }
 
 const DEFAULT_DEPENDENCIES: StatusDependencies = {
@@ -193,7 +211,7 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   readUserConfig,
   saveManifest,
   scanCanonical,
-  scanBundledManagedCodexAgents,
+  scanBundledManagedAgents,
   getAdapters() {
     return [
       claudeAdapter,
@@ -210,6 +228,8 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   detectCodexRoleStrays,
   computeCodexProjectExtensionPlan,
   applyCodexProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+  applyCursorProjectExtensionPlan,
   selectManyWithAbort,
   confirmAction,
   adoptStray: adoptStrayDefault,
@@ -340,6 +360,51 @@ async function collectScopeReports(
         `${entry.provider}|${normalizeToPosixPath(entry.canonicalPath)}`,
     ),
   );
+  const activeProviderNames = new Set(
+    activeAdapters.map((adapter) => adapter.name),
+  );
+  const extensionCanonicalEntries =
+    scope === 'user' &&
+    (activeProviderNames.has('codex') || activeProviderNames.has('cursor'))
+      ? [
+          ...canonicalEntries,
+          ...(await dependencies.scanBundledManagedAgents()),
+        ]
+      : canonicalEntries;
+  const codexExtensionPlan = activeProviderNames.has('codex')
+    ? await dependencies.computeCodexProjectExtensionPlan(
+        scopeRoot,
+        extensionCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const cursorExtensionPlan = activeProviderNames.has('cursor')
+    ? await dependencies.computeCursorProjectExtensionPlan(
+        scopeRoot,
+        extensionCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const materializationPlans: MaterializationPlan[] = [
+    ...(codexExtensionPlan
+      ? [
+          {
+            provider: 'codex',
+            operations: codexExtensionPlan.operations.map((operation) => ({
+              ...operation,
+              provider: 'codex',
+              entryName: operation.roleName,
+            })),
+            managedEntries: codexExtensionPlan.managedRoles,
+            aggregateHash: codexExtensionPlan.aggregateConfigHash,
+            metadata: codexExtensionPlan.metadata,
+          },
+        ]
+      : []),
+    ...(cursorExtensionPlan ? [cursorExtensionPlan] : []),
+  ];
 
   for (const adapter of activeAdapters) {
     const mappings = dependencies.getSyncMappings(adapter, scope);
@@ -407,13 +472,18 @@ async function collectScopeReports(
 
     for (const mapping of mappings) {
       const providerDir = join(scopeRoot, mapping.providerDir);
-      const strays = await dependencies.detectStrays(
-        adapter.name,
-        providerDir,
-        manifest,
-        canonicalEntries,
-        mapping,
-      );
+      const strays = filterMaterializationManagedStrays(
+        (
+          await dependencies.detectStrays(
+            adapter.name,
+            providerDir,
+            manifest,
+            canonicalEntries,
+            mapping,
+          )
+        ).map((report) => ({ provider: adapter.name, report })),
+        materializationPlans,
+      ).map((candidate) => candidate.report);
       reports.push(...strays);
       for (const stray of strays) {
         if (stray.state.status !== 'stray') {
@@ -428,31 +498,17 @@ async function collectScopeReports(
     }
   }
 
-  if (activeAdapters.some((adapter) => adapter.name === 'codex')) {
-    const codexCanonicalEntries =
-      scope === 'user'
-        ? [
-            ...canonicalEntries,
-            ...(await dependencies.scanBundledManagedCodexAgents()),
-          ]
-        : canonicalEntries;
-    const codexExtensionPlan =
-      await dependencies.computeCodexProjectExtensionPlan(
-        scopeRoot,
-        codexCanonicalEntries,
-        undefined,
-        { userConfigDir: join(context.home, '.oat') },
-      );
-    for (const operation of codexExtensionPlan.operations) {
+  for (const extensionPlan of materializationPlans) {
+    for (const operation of extensionPlan.operations) {
       if (operation.action === 'skip') {
         continue;
       }
       if (operation.target === 'role') {
         reports.push({
-          canonical: operation.roleName
-            ? `.agents/agents/${operation.roleName}.md`
+          canonical: operation.entryName
+            ? `.agents/agents/${operation.entryName}.md`
             : null,
-          provider: 'codex',
+          provider: extensionPlan.provider,
           providerPath: operation.path,
           state:
             operation.action === 'create'
@@ -462,13 +518,15 @@ async function collectScopeReports(
       } else {
         reports.push({
           canonical: null,
-          provider: 'codex',
+          provider: extensionPlan.provider,
           providerPath: operation.path,
           state: { status: 'drifted', reason: 'modified' },
         });
       }
     }
+  }
 
+  if (codexExtensionPlan) {
     const codexStrays = await dependencies.detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
@@ -516,6 +574,7 @@ async function collectScopeReports(
     manifest,
     reports: filtered.reports,
     strayCandidates: filtered.candidates,
+    activeAdapterNames: activeAdapters.map((adapter) => adapter.name),
   };
 }
 
@@ -663,6 +722,23 @@ async function runStatusCommand(
             computeExtensionPlan: dependencies.computeCodexProjectExtensionPlan,
             applyExtensionPlan: dependencies.applyCodexProjectExtensionPlan,
           });
+          if (scopeCollection.activeAdapterNames.includes('cursor')) {
+            const canonicalEntries = await dependencies.scanCanonical(
+              scopeCollection.scopeRoot,
+              scopeCollection.scope,
+            );
+            const cursorPlan =
+              await dependencies.computeCursorProjectExtensionPlan(
+                scopeCollection.scopeRoot,
+                canonicalEntries,
+                undefined,
+                { userConfigDir: join(context.home, '.oat') },
+              );
+            await dependencies.applyCursorProjectExtensionPlan(
+              scopeCollection.scopeRoot,
+              cursorPlan,
+            );
+          }
         }
 
         if (manifestChanged) {

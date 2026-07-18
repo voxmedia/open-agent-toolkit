@@ -194,7 +194,7 @@ describe('oat project dispatch-ceiling resolve', () => {
                       ]
                     : provider === 'claude'
                       ? ['sonnet']
-                      : ['model'],
+                      : ['composer-2.5'],
               },
             ]),
         ),
@@ -225,7 +225,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         status: 'unresolved',
         unresolvedReason: 'policy',
         ladderCompleteness: { complete: true, missingCells: [] },
-        matrix: { cursor: { high: { candidates: ['model'] } } },
+        matrix: { cursor: { high: { candidates: ['composer-2.5'] } } },
       });
     });
 
@@ -523,7 +523,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '          model: gpt-5.3-codex-high',
         '          effort: high',
         '          ignored: true',
-        '      high: glm-5.2-max',
+        '      high: gpt-5.6-sol-high',
         '      experimental: ignored',
         '    codex:',
         '      high: xhigh',
@@ -552,7 +552,7 @@ describe('oat project dispatch-ceiling resolve', () => {
               effort: 'high',
             },
           ],
-          high: 'glm-5.2-max',
+          high: 'gpt-5.6-sol-high',
         },
         codex: {
           high: 'xhigh',
@@ -831,7 +831,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         '  policy: high',
         '  matrix:',
         '    cursor:',
-        '      high: glm-5.2-max',
+        '      high: gpt-5.6-sol-high',
         '  source: project-state',
         '---',
         '',
@@ -847,20 +847,22 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'resolved',
       provider: 'cursor',
-      value: 'glm-5.2-max',
+      value: 'gpt-5.6-sol-high',
       providers: {
         cursor: {
-          value: 'glm-5.2-max',
+          value: 'gpt-5.6-sol-high',
           mode: 'enforced',
-          mechanism: 'model-arg',
-          dispatchArgs: { model: 'glm-5.2-max' },
-          modelAxis: 'selected:glm-5.2-max',
+          mechanism: 'pinned-variant',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-sol-high',
+          },
+          modelAxis: 'selected:gpt-5.6-sol-high',
           effortAxis: 'not-applicable',
           cellSource: 'project-state',
           selection: {
-            selectedValue: 'glm-5.2-max',
+            selectedValue: 'gpt-5.6-sol-high',
             selectionBranch: 'matrix-pinned',
-            family: 'glm',
+            family: 'openai',
             cellSource: 'project-state',
           },
         },
@@ -945,7 +947,7 @@ describe('oat project dispatch-ceiling resolve', () => {
             cursor: {
               high: [
                 'composer-2.5',
-                { harness: 'cursor', model: 'gpt-5.5-xhigh' },
+                { harness: 'cursor', model: 'gpt-5.6-sol-max' },
               ],
             },
           },
@@ -986,7 +988,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       providers: {
         cursor: {
           value: 'composer-2.5',
-          dispatchArgs: { model: 'composer-2.5' },
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-composer-2-5',
+          },
           selection: {
             selectedValue: 'composer-2.5',
             selectionBranch: 'matrix-pinned',
@@ -1004,18 +1008,20 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[1]).toMatchObject({
       status: 'resolved',
       provider: 'cursor',
-      value: 'gpt-5.5-xhigh',
+      value: 'gpt-5.6-sol-max',
       providers: {
         cursor: {
-          value: 'gpt-5.5-xhigh',
-          dispatchArgs: { model: 'gpt-5.5-xhigh' },
+          value: 'gpt-5.6-sol-max',
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-sol-max',
+          },
           selection: {
-            selectedValue: 'gpt-5.5-xhigh',
+            selectedValue: 'gpt-5.6-sol-max',
             selectionBranch: 'escalation-target',
             family: 'openai',
             target: {
               harness: 'cursor',
-              model: 'gpt-5.5-xhigh',
+              model: 'gpt-5.6-sol-max',
               routeIndex: 1,
               routeLength: 2,
             },
@@ -1028,7 +1034,7 @@ describe('oat project dispatch-ceiling resolve', () => {
 
   it.each([
     ['economy', 'gpt-5.6-luna-high'],
-    ['balanced', 'gpt-5.6-terra-xhigh'],
+    ['balanced', 'gpt-5.6-terra-high'],
     ['high', 'gpt-5.6-sol-high'],
     ['frontier', 'gpt-5.6-sol-max'],
   ] as const)(
@@ -1043,7 +1049,7 @@ describe('oat project dispatch-ceiling resolve', () => {
             providers: {
               cursor: {
                 economy: ['gpt-5.6-luna-high'],
-                balanced: ['gpt-5.6-terra-xhigh'],
+                balanced: ['gpt-5.6-terra-high'],
                 high: ['gpt-5.6-sol-high'],
                 frontier: ['gpt-5.6-sol-max'],
               },
@@ -1077,7 +1083,9 @@ describe('oat project dispatch-ceiling resolve', () => {
       expect(reviewerArgs).not.toContain('--ceiling-tier');
       await runCommand(command, reviewerArgs);
 
-      for (const payload of capture.jsonPayloads) {
+      for (const [index, payload] of capture.jsonPayloads.entries()) {
+        const role = index === 0 ? 'oat-phase-implementer' : 'oat-reviewer';
+        const variant = `${role}-${model.replaceAll('.', '-').replaceAll('_', '-')}`;
         expect(payload).toMatchObject({
           status: 'resolved',
           provider: 'cursor',
@@ -1086,7 +1094,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           providers: {
             cursor: {
               mode: 'enforced',
-              dispatchArgs: { model },
+              dispatchArgs: { variant },
               modelAxis: `selected:${model}`,
               effortAxis: 'not-applicable',
               selection: {
@@ -1103,7 +1111,7 @@ describe('oat project dispatch-ceiling resolve', () => {
 
   it('matches the coordinator review envelope and rejects source or target drift', async () => {
     const { root, home } = await setup();
-    const target = 'gpt-5.6-sol-xhigh';
+    const target = 'gpt-5.6-sol-high';
     await writeFile(
       join(root, '.oat', 'projects', 'shared', 'demo', 'state.md'),
       [
@@ -1153,7 +1161,7 @@ describe('oat project dispatch-ceiling resolve', () => {
         routeLength: 1,
         model: target,
       },
-      dispatchArgs: { model: target },
+      dispatchArgs: { variant: 'oat-reviewer-gpt-5-6-sol-high' },
       modelAxis: `selected:${target}`,
       effortAxis: 'not-applicable',
     };
@@ -1228,7 +1236,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           providers: {
             cursor: {
               high: [
-                { harness: 'cursor', model: 'gpt-5.5-xhigh' },
+                { harness: 'cursor', model: 'gpt-5.6-sol-max' },
                 'composer-2.5',
               ],
             },
@@ -1266,12 +1274,14 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[0]).toMatchObject({
       providers: {
         cursor: {
-          dispatchArgs: { model: 'gpt-5.5-xhigh' },
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-gpt-5-6-sol-max',
+          },
           selection: {
-            selectedValue: 'gpt-5.5-xhigh',
+            selectedValue: 'gpt-5.6-sol-max',
             target: {
               harness: 'cursor',
-              model: 'gpt-5.5-xhigh',
+              model: 'gpt-5.6-sol-max',
               crossHarness: false,
             },
           },
@@ -1281,7 +1291,9 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.jsonPayloads[1]).toMatchObject({
       providers: {
         cursor: {
-          dispatchArgs: { model: 'composer-2.5' },
+          dispatchArgs: {
+            variant: 'oat-phase-implementer-composer-2-5',
+          },
           selection: {
             selectedValue: 'composer-2.5',
             target: {
@@ -2358,12 +2370,12 @@ describe('oat project dispatch-ceiling resolve', () => {
     },
     {
       provider: 'cursor',
-      model: 'opaque:model/balanced [v2]',
+      model: 'gpt-5.6-terra-high',
       matrix: {
-        economy: { candidates: ['opaque:model/economy [v1]'] },
-        balanced: { candidates: ['opaque:model/balanced [v2]'] },
-        high: { candidates: ['opaque:model/high [v3]'] },
-        frontier: { candidates: ['opaque:model/frontier [v4]'] },
+        economy: { candidates: ['gpt-5.6-luna-high'] },
+        balanced: { candidates: ['gpt-5.6-terra-high'] },
+        high: { candidates: ['gpt-5.6-sol-high'] },
+        frontier: { candidates: ['gpt-5.6-sol-max'] },
       },
     },
   ])(
@@ -2398,7 +2410,10 @@ describe('oat project dispatch-ceiling resolve', () => {
         providers: {
           [provider]: {
             cellSource: 'repo-config',
-            dispatchArgs: { model },
+            dispatchArgs:
+              provider === 'cursor'
+                ? { variant: 'oat-phase-implementer-gpt-5-6-terra-high' }
+                : { model },
             modelAxis: `selected:${model}`,
             selection: {
               ceilingTier: 'high',
@@ -2427,13 +2442,13 @@ describe('oat project dispatch-ceiling resolve', () => {
       policy: 'high',
       matrix: {
         economy: {
-          candidates: ['opaque:model/lower [v1]'],
+          candidates: ['gpt-5.6-luna-high'],
         },
         high: {
-          candidates: ['opaque:model/high [v2]'],
+          candidates: ['gpt-5.6-sol-high'],
         },
       },
-      model: 'opaque:model/lower [v1]',
+      model: 'gpt-5.6-luna-high',
       tier: 'economy',
     },
   ] as const)(
@@ -2461,15 +2476,17 @@ describe('oat project dispatch-ceiling resolve', () => {
         status: 'resolved',
         providers: {
           [provider]: {
-            dispatchArgs: { model },
+            dispatchArgs:
+              provider === 'cursor'
+                ? { variant: 'oat-phase-implementer-gpt-5-6-luna-high' }
+                : { model },
             modelAxis: `selected:${model}`,
             selection: {
               requestedCandidate: { model },
               candidateTier: tier,
               ceilingTier: 'high',
               ceilingTarget: {
-                model:
-                  provider === 'claude' ? 'opus' : 'opaque:model/high [v2]',
+                model: provider === 'claude' ? 'opus' : 'gpt-5.6-sol-high',
               },
               selectedValue: model,
               target: { model },
@@ -4786,7 +4803,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           cursor: {
             value: null,
             mode: 'advisory',
-            mechanism: 'model-arg',
+            mechanism: 'pinned-variant',
             dispatchArgs: null,
             selection: {
               selectedValue: null,
