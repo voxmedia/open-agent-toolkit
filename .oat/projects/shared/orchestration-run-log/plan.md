@@ -541,7 +541,7 @@ git commit -m "test(p03-t05): add project-log end-to-end lifecycle integration t
 | p01    | code     | pending  | -          | -                                                  |
 | p02    | code     | pending  | -          | -                                                  |
 | p03    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
+| final  | code     | received | 2026-07-18 | reviews/final-review-2026-07-18T122856Z.md         |
 | spec   | artifact | pending  | -          | -                                                  |
 | design | artifact | pending  | -          | -                                                  |
 | plan   | artifact | received | 2026-07-13 | reviews/artifact-plan-review-2026-07-14T010828Z.md |
