@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 8/9       |
-| Phase 5 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 10    | 10/10     |
+| Phase 3 | complete | 9     | 9/9       |
+| Phase 4 | complete | 9     | 9/9       |
+| Phase 5 | pending  | 4     | 0/4       |
 
-**Total:** 33/38 tasks completed
+**Total:** 34/38 tasks completed
 
 ---
 
@@ -665,7 +665,7 @@ version task. Re-review passed with zero findings; canonical artifact:
 
 ## Phase 4: Publishing, compatibility, documentation, and release validation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
 
 ### Task p04-t01: Implement sentinel-first additive S3 publishing
@@ -831,6 +831,26 @@ stale version pins and unmapped Phase 3 lifecycle prompt sites.
 - RC runner suite — pass (7/7).
 - Combined RC builder, packaged-layout, and wrapper suites — pass (16/16).
 - Actual packed CLI probe, scoped lint, formatting, and whitespace — pass.
+
+---
+
+### Task p04-t09: Validate external acceptance evidence
+
+**Status:** completed
+**Commit:** `0e52c735`
+
+**Outcome:**
+
+- Added fail-closed wrapper, publish, and combined acceptance validation against
+  one unchanged retained RC.
+- Validates packaged execution, verdicts, receipt/artifact hashes, sentinel
+  lifecycle, evidence completeness, and changed-candidate rejection.
+
+**Verification:**
+
+- Acceptance suite — pass (10/10).
+- Phase RC/runner/layout/wrapper/S3 matrix — pass (35/35).
+- Scoped lint, formatting, and whitespace checks — pass.
 
 ---
 

@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t09
-oat_last_commit: e9d045fe
+oat_last_commit: 0e52c735
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T16:38:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T16:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 4 in progress at `p04-t09`
+Implementation - Phase 4 complete; review pending
 
 ## Artifacts
 
@@ -87,10 +87,10 @@ Implementation - Phase 4 in progress at `p04-t09`
 - ✓ Phase 3 fix commit `205bd030` resolves all four review findings
 - ✓ Post-fix matrix passed (144 tests plus real-core and attestation probes)
 - ✓ Phase 3 reviewer re-review passed with zero findings
-- ✓ Phase 4 tasks `p04-t01` through `p04-t08` completed
+- ✓ Phase 4 tasks `p04-t01` through `p04-t09` completed
 - ✓ Release validation and the full workspace test suite pass
 - ✓ Retained RC builder verified after provider authentication recovery
-- ⧗ Phase 4 continues at `p04-t09`
+- ⧗ Mandatory Phase 4 reviewer pass pending
 
 ## Blockers
 
@@ -98,4 +98,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 4 task `p04-t09`, verify the phase, and run Phase 4 review.
+Run the Phase 4 reviewer and resolve any findings before Phase 5.
