@@ -986,7 +986,8 @@ describe('validateOatSkills', () => {
       composedImplement.indexOf('## Success Criteria'),
     );
 
-    expect(allowedTools).toContain('Bash(oat gate:*)');
+    expect(allowedTools).toContain('Bash(oat:*)');
+    expect(allowedTools).not.toContain('Bash(oat gate:*)');
     expect(successCriteria).toMatch(
       /configured implementation exit gate[\s\S]{0,240}allowed[\s\S]{0,120}fresh/i,
     );
