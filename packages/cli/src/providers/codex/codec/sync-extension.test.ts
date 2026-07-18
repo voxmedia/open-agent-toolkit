@@ -56,6 +56,18 @@ describe('codex sync extension', () => {
       root,
       canonicalEntries,
     );
+    expect(firstPlan).toMatchObject({
+      provider: 'codex',
+      managedEntries: firstPlan.managedRoles,
+      aggregateHash: firstPlan.aggregateConfigHash,
+      metadata: {
+        managedRoles: firstPlan.managedRoles,
+        aggregateConfigHash: firstPlan.aggregateConfigHash,
+      },
+    });
+    expect(
+      firstPlan.operations.every((operation) => operation.provider === 'codex'),
+    ).toBe(true);
     expect(firstPlan.operations.some((op) => op.action === 'create')).toBe(
       true,
     );

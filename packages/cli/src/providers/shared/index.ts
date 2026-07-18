@@ -17,3 +17,16 @@ export {
   exportMarkdownAgentRecord,
   importMarkdownAgentRecord,
 } from './markdown-agent-codec';
+export type {
+  MaterializationAction,
+  MaterializationApplyResult,
+  MaterializationOperation,
+  MaterializationPlan,
+  MaterializationPlanSummary,
+  MaterializationWriteOperation,
+} from './materialization-extension';
+export {
+  hasMaterializationChanges,
+  summarizeMaterializationPlan,
+  toMaterializationOperations,
+} from './materialization-extension';

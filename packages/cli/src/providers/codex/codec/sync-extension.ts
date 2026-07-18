@@ -21,6 +21,16 @@ import { CliError } from '@errors/index';
 import { ensureDir, fileExists } from '@fs/io';
 import { validateRealPathWithinScope } from '@fs/paths';
 import TOML from '@iarna/toml';
+import {
+  hasMaterializationChanges,
+  summarizeMaterializationPlan,
+  toMaterializationOperations,
+  type MaterializationAction,
+  type MaterializationApplyResult,
+  type MaterializationOperation,
+  type MaterializationPlan,
+  type MaterializationWriteOperation,
+} from '@providers/shared';
 import YAML from 'yaml';
 
 import {
@@ -41,32 +51,39 @@ import {
   type CodexRoleOwner,
 } from './shared';
 
-export type CodexExtensionAction = 'create' | 'update' | 'remove' | 'skip';
+export type CodexExtensionAction = MaterializationAction;
 export type CodexExtensionTarget = 'role' | 'config';
 
-export interface CodexExtensionOperation {
-  action: CodexExtensionAction;
-  target: CodexExtensionTarget;
-  path: string;
-  reason: string;
+export interface CodexExtensionOperation extends MaterializationOperation<
+  'codex',
+  CodexExtensionTarget
+> {
   roleName?: string;
 }
 
-export interface CodexExtensionWriteOperation extends CodexExtensionOperation {
-  content?: string;
+export interface CodexExtensionWriteOperation extends MaterializationWriteOperation<
+  'codex',
+  CodexExtensionTarget
+> {
+  roleName?: string;
 }
 
-export interface CodexExtensionPlan {
+export interface CodexExtensionPlan extends MaterializationPlan<
+  'codex',
+  CodexExtensionTarget,
+  CodexExtensionPlanMetadata
+> {
   operations: CodexExtensionWriteOperation[];
   managedRoles: string[];
   aggregateConfigHash: string;
 }
 
-export interface CodexExtensionApplyResult {
-  applied: number;
-  failed: number;
-  skipped: number;
+export interface CodexExtensionPlanMetadata {
+  managedRoles: string[];
+  aggregateConfigHash: string;
 }
+
+export type CodexExtensionApplyResult = MaterializationApplyResult;
 
 interface DesiredCodexRole {
   roleName: string;
@@ -678,10 +695,18 @@ export async function computeCodexProjectExtensionPlan(
   const existingConfigContent = await readOptionalFile(existingConfigPath);
 
   if (isPartialSync && desiredRoles.length === 0) {
+    const aggregateConfigHash = hashContent(existingConfigContent ?? '');
     return {
+      provider: 'codex',
       operations: [],
+      managedEntries: [],
+      aggregateHash: aggregateConfigHash,
+      metadata: {
+        managedRoles: [],
+        aggregateConfigHash,
+      },
       managedRoles: [],
-      aggregateConfigHash: hashContent(existingConfigContent ?? ''),
+      aggregateConfigHash,
     };
   }
 
@@ -705,10 +730,12 @@ export async function computeCodexProjectExtensionPlan(
     const existingRoleContent = await readOptionalFile(role.rolePath);
     if (existingRoleContent === null) {
       operations.push({
+        provider: 'codex',
         action: 'create',
         target: 'role',
         path: toRelativePath(scopeRoot, role.rolePath),
         reason: 'managed role file missing',
+        entryName: role.roleName,
         roleName: role.roleName,
         content: role.content,
       });
@@ -717,10 +744,12 @@ export async function computeCodexProjectExtensionPlan(
 
     if (existingRoleContent.trimEnd() !== role.content.trimEnd()) {
       operations.push({
+        provider: 'codex',
         action: 'update',
         target: 'role',
         path: toRelativePath(scopeRoot, role.rolePath),
         reason: 'managed role file differs from canonical export',
+        entryName: role.roleName,
         roleName: role.roleName,
         content: role.content,
       });
@@ -728,10 +757,12 @@ export async function computeCodexProjectExtensionPlan(
     }
 
     operations.push({
+      provider: 'codex',
       action: 'skip',
       target: 'role',
       path: toRelativePath(scopeRoot, role.rolePath),
       reason: 'managed role file already in sync',
+      entryName: role.roleName,
       roleName: role.roleName,
     });
   }
@@ -750,10 +781,12 @@ export async function computeCodexProjectExtensionPlan(
       isOatManagedCodexRoleFile(staleRoleContent, staleRole)
     ) {
       operations.push({
+        provider: 'codex',
         action: 'remove',
         target: 'role',
         path: toRelativePath(scopeRoot, staleRolePath),
         reason: 'stale managed role removed',
+        entryName: staleRole,
         roleName: staleRole,
       });
     }
@@ -767,6 +800,7 @@ export async function computeCodexProjectExtensionPlan(
   });
 
   operations.push({
+    provider: 'codex',
     action:
       existingConfigContent === null
         ? 'create'
@@ -784,10 +818,22 @@ export async function computeCodexProjectExtensionPlan(
     content: configMerge.mergedContent,
   });
 
+  const managedRoles = [
+    ...desiredRoles.map((role) => role.roleName),
+    ...staleRoles,
+  ];
+  const aggregateConfigHash = hashContent(configMerge.mergedContent);
   return {
+    provider: 'codex',
     operations,
-    managedRoles: [...desiredRoles.map((role) => role.roleName), ...staleRoles],
-    aggregateConfigHash: hashContent(configMerge.mergedContent),
+    managedEntries: managedRoles,
+    aggregateHash: aggregateConfigHash,
+    metadata: {
+      managedRoles,
+      aggregateConfigHash,
+    },
+    managedRoles,
+    aggregateConfigHash,
   };
 }
 
@@ -826,35 +872,22 @@ export async function applyCodexProjectExtensionPlan(
 }
 
 export function hasCodexExtensionChanges(plan: CodexExtensionPlan): boolean {
-  return plan.operations.some((operation) => operation.action !== 'skip');
+  return hasMaterializationChanges(plan);
 }
 
 export function summarizeCodexExtension(plan: CodexExtensionPlan): {
   plannedOperations: number;
   skipped: number;
 } {
-  let plannedOperations = 0;
-  let skipped = 0;
-
-  for (const operation of plan.operations) {
-    if (operation.action === 'skip') {
-      skipped += 1;
-      continue;
-    }
-    plannedOperations += 1;
-  }
-
-  return { plannedOperations, skipped };
+  return summarizeMaterializationPlan(plan);
 }
 
 export function toCodexExtensionOperations(
   plan: CodexExtensionPlan,
 ): CodexExtensionOperation[] {
-  return plan.operations.map((operation) => ({
-    action: operation.action,
-    target: operation.target,
-    path: operation.path,
-    reason: operation.reason,
-    roleName: operation.roleName,
+  const operations = toMaterializationOperations(plan);
+  return operations.map((operation, index) => ({
+    ...operation,
+    roleName: plan.operations[index]?.roleName,
   }));
 }
