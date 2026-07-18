@@ -64,7 +64,7 @@ oat_generated: false
 **Notes / Decisions:**
 
 - Roll-up sends every entry to the project summary and only `general`-scoped judgments to the repository ledger.
-- The design also names “graduated” project-scoped ledger entries but defines no machine-readable graduation marker. Resolve that contract before p03-t02; it does not block Phase 2.
+- Graduation semantics were confirmed on 2026-07-18: append a new `general` judgment referencing the original `project` entry before roll-up. This preserves append-only history and requires no new metadata or command.
 
 ### Task p01-t01: Add project-log config keys
 
@@ -230,7 +230,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | ----- | ------------------ | ------------------------ | ------------ |
 | p01   | DONE_WITH_CONCERNS | `2eb0a6fc..4d1321e2` (6) | passed       |
 
-**Outstanding:** define whether and how project-scoped entries are marked as graduated for repository-ledger inclusion before p03-t02.
+**Outstanding:** resolved 2026-07-18 — ledger graduation uses a new referencing `general` entry.
 
 ### Run 2 — 2026-07-18
 
@@ -264,7 +264,7 @@ Chronological log of implementation progress.
 
 **What changed:** completed the six-task CLI foundation and advanced the next task to p02-t01.
 
-**Follow-up:** settle graduated-entry representation before the summary skill integration in p03.
+**Follow-up:** implement append-based ledger graduation in the p03 summary skill contract.
 
 **Blockers:** none.
 
@@ -277,7 +277,7 @@ Chronological log of implementation progress.
 
 **What changed:** completed scaffold and gate integration and advanced the next task to p03-t01.
 
-**Blocker before p03-t02:** choose the v1 meaning of “graduated” project-scoped ledger entries.
+**Decision before p03-t02:** ledger graduation appends a new `general` judgment referencing the original project-scoped entry.
 
 ---
 

@@ -412,7 +412,7 @@ git commit -m "feat(p03-t01): add project-log append points to oat-project-imple
 
 **Step 1: Implement**
 
-Add a roll-up step per design: run `oat project log check --json`; when entries exist, run `oat project log rollup --json` after summary.md is authored — the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically — and route on the structured `ProjectLogRollupResult` (surface `status: 'failed'` to the user; `skipped_permitted` proceeds with a note). Offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. The skill never hand-implements the roll-up writes. Honor the same-file coordination contract above. Bump the skill version.
+Add a roll-up step per design: run `oat project log check --json`; when entries exist, offer ledger graduation **before roll-up** for reusable `project`-scoped observations by invoking `oat project log append --scope general` with a body that references the original entry heading — never mutate the original or add side metadata. After summary.md is authored, run `oat project log rollup --json`; the command writes the `## Workflow Observations` section and performs the ledger append/dedup mechanically. Route on the structured `ProjectLogRollupResult` (surface `status: 'failed'` to the user; `skipped_permitted` proceeds with a note). Separately offer backlog graduation for follow-up-marked entries via `oat-pjm-add-backlog-item`. The skill never hand-implements append or roll-up writes. Honor the same-file coordination contract above. Bump the skill version.
 
 **Files (additional):**
 
@@ -421,7 +421,7 @@ Add a roll-up step per design: run `oat project log check --json`; when entries 
 **Step 2: Verify**
 
 Run: `pnpm oat:validate-skills && pnpm format && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts`
-Expected: Skill validates; format passes; contract assertions pin the roll-up step's presence and its ledger warn-and-skip rule.
+Expected: Skill validates; format passes; contract assertions pin append-based ledger graduation before roll-up, the roll-up step's presence, and its ledger warn-and-skip rule.
 
 **Step 3: Commit**
 
@@ -498,9 +498,9 @@ One integration test driving the complete lifecycle in a temp repo fixture, asse
 
 1. Scaffold a quick project with config `auto` → no log exists.
 2. First structural append (simulating the first dispatch) → log created from the real bundled template with header contract.
-3. Gate-style structural append + judgment appends land under `## Entries`.
+3. Gate-style structural append + judgment appends land under `## Entries`; append one `project` judgment, then promote it by appending a new `general` judgment whose body references the original heading.
 4. `check` reports `synthesisPending: true` in its JSON envelope (the datum complete's warning routes on; v1 skills do not use `--require-synthesis`).
-5. Roll-up via `oat project log rollup --json`: `## Workflow Observations` written to summary.md; ledger outcomes covered as **four cases** — `appended` (reference layer present), `deduplicated` (same date+area re-run), the explicitly-permitted `skipped_permitted` (reference layer absent, key unset; `status: 'ok'`), and the **negative case**: key explicitly set to an unwritable path → `status: 'failed'` — asserting this is the signal on which completion must refuse to seal (the archival step below is only exercised on the `ok` paths, mirroring the enforcement contract).
+5. Roll-up via `oat project log rollup --json`: `## Workflow Observations` written to summary.md; the ledger contains the promoted `general` entry but not the original project-scoped entry; ledger outcomes covered as **four cases** — `appended` (reference layer present), `deduplicated` (same date+area re-run), the explicitly-permitted `skipped_permitted` (reference layer absent, key unset; `status: 'ok'`), and the **negative case**: key explicitly set to an unwritable path → `status: 'failed'` — asserting this is the signal on which completion must refuse to seal (the archival step below is only exercised on the `ok` paths, mirroring the enforcement contract).
 6. `synthesize` completes the synthesis; `check` flips `synthesisPending: false`.
 7. Seal entry appended last; after archival (move to archive dir) on the `ok` path, the summary section and ledger content remain durable in the tracked tree.
 
