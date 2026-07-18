@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: design
 oat_blockers: []
 oat_last_updated: 2026-07-18
 oat_generated: false
@@ -17,126 +17,143 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Cursor now discovers skills directly from `.agents/skills` at project and user
+scope. Stop maintaining redundant generated skill views under `.cursor/skills`
+while preserving `.cursor/skills` as an intentional home for Cursor-only skills
+and as a migration source for users who have existing Cursor skills.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Existing Cursor skills
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should unmanaged Cursor skills simply be treated as permanently local?
+**A:** No. Users may be migrating from Cursor-specific skills and must still be
+able to adopt them into the canonical inventory.
+**Decision:** Preserve adoption as a first-class migration action.
 
-## Solution Space
+### Question 2: Migration selection
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+**Q:** Can adoption be selected in bulk, with unselected skills implicitly kept
+local?
+**A:** No. Each Cursor skill needs an explicit, individual disposition.
+**Decision:** Every discovered Cursor skill must offer an explicit choice between
+canonical adoption and remaining Cursor-only.
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+### Question 3: Remembering Cursor-only choices
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**Q:** How should OAT avoid asking about the same intentionally local skill on
+every run?
+**A:** Record the skill as a known stray when the user chooses to keep it
+Cursor-only.
+**Decision:** Persist each keep-local choice immediately as an exact known-stray
+path.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+### Question 4: User sync configuration
 
-### Approach 2: {Strategy Name}
+**Q:** Should user-level known strays remain in `~/.oat/config.json` while the
+user sync manifest lives under `~/.oat/sync/`?
+**A:** No. That split is unnecessarily inconsistent.
+**Decision:** Make the user sync config the canonical owner and migrate the
+legacy setting.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+## Chosen Direction
 
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
-
-## Options Considered
-
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+Treat canonical Cursor skills as native-read assets. Retain the provider-local
+directory as a supported Cursor-only extension and migration surface. During
+interactive migration, require one explicit decision for every discovered
+Cursor skill. Canonical adoption removes the redundant provider-local instance;
+keeping it local records an exact known-stray path in the applicable sync
+config.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Canonical loading:** Cursor skills use `.agents/skills` directly at both
+   project and user scope.
+2. **Provider-local support:** `.cursor/skills` remains supported for genuinely
+   Cursor-only skills.
+3. **Explicit migration:** Each Cursor skill receives its own adopt-or-keep
+   decision; an unchecked bulk list is not sufficient.
+4. **Durable choice:** Keep-local records an exact known-stray path so the prompt
+   is one-time.
+5. **Configuration ownership:** User sync settings, including known strays,
+   belong under `~/.oat/sync/`, with compatibility migration from the legacy
+   user config.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Existing manifest-managed Cursor skill views must be retired safely without
+  deleting unrelated Cursor-only skills.
+- Cursor agents and rules retain their current provider-specific synchronization
+  behavior.
+- Project and user scopes must use equivalent migration behavior and write to
+  their respective sync configuration.
+- Non-interactive operation must not make adoption or keep-local decisions on a
+  user's behalf.
+- Existing canonical-name conflicts must remain explicit and non-destructive.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- Sync no longer creates project- or user-level Cursor skill mirrors.
+- A sync upgrade removes obsolete manifest-managed Cursor skill views and their
+  manifest entries while preserving unmanaged entries.
+- Each unmanaged Cursor skill is individually selectable as canonical or
+  Cursor-only.
+- Adopting a Cursor skill leaves one canonical skill and no redundant generated
+  Cursor view.
+- Keeping a Cursor skill local preserves it and prevents repeat prompts.
+- Legacy user known-stray settings migrate without losing unrelated user
+  configuration.
+- Tests cover both scopes, mixed per-skill decisions, conflicts, interrupted
+  migration safety, and non-interactive behavior.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
-
-## Deferred Ideas
-
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Changing Cursor agent synchronization.
+- Changing Cursor rule rendering or synchronization.
+- Changing other providers' skill loading behavior.
+- Automatically converting Cursor-specific skill content to a portable format
+  beyond relocating the skill package.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Legacy config precedence:** Define deterministic behavior if both legacy and
+  canonical user sync configs contain known-stray entries.
+- **Migration entry points:** Confirm which interactive commands perform the
+  per-skill migration and which only report pending action.
+- **Native-read adoption seam:** Preserve scanning of `.cursor/skills` even
+  though that directory is no longer a synchronization target.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- Cursor's documented loading of `.agents/skills` applies equally to project and
+  user scopes.
+- Known-stray paths remain exact normalized paths rather than globs.
+- Cursor-only skills are intentional provider-local assets, even though the
+  existing drift vocabulary calls them strays.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Accidental provider-local deletion:** Obsolete managed links and intentional
+  Cursor-only skills share the same directory.
+  - **Likelihood:** Medium
+  - **Impact:** High
+  - **Mitigation Ideas:** Delete only manifest-owned legacy views and cover
+    mixed-directory upgrades in tests.
+- **Lost migration visibility:** Native-read mappings are excluded from current
+  sync and stray scanning.
+  - **Likelihood:** High
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Separate synchronization targets from provider-local
+    adoption sources.
+- **Partial config migration:** Moving a setting between two files cannot be one
+  filesystem-atomic operation.
+  - **Likelihood:** Low
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Write the merged canonical config first, make retries
+    idempotent, then remove the legacy key.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Produce a lightweight draft design that resolves the configuration migration,
+native-read adoption seam, command behavior, and verification strategy before
+planning.
