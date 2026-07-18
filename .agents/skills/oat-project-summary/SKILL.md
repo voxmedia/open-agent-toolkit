@@ -193,6 +193,23 @@ For each section, synthesize content from the relevant artifacts. Apply these ru
 | Follow-up Items                | implementation.md deferred findings, plan.md deferred items            |
 | Associated Issues              | state.md `associated_issues` field                                     |
 | Autonomous Execution Learnings | oat-execution-learnings.md dated entries                               |
+| Explainer Outcome              | project-recap `manifest.json` and `build-record.json`                  |
+
+**Explainer Outcome (conditional):**
+
+When a project-recap attempt exists, render this section:
+
+```markdown
+## Explainer Outcome
+
+- **project-recap:** {outcome} — `{run path}`{optional warning or recovery note}
+```
+
+When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.
+
+Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.
+
+Omit `Explainer Outcome` when no project-recap attempt exists. A failed or non-durable recap remains visible as its product outcome; do not reinterpret it as project implementation failure.
 
 **Autonomous Execution Learnings (conditional):**
 
@@ -362,3 +379,5 @@ Summary tracks: last task {task_id}, {N} revision phases
   Learnings section is rendered and normal summary behavior is unchanged
 - When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
 - When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt
+- A project-recap attempt appears once in a concise Explainer Outcome section
+  sourced from its manifest and build record

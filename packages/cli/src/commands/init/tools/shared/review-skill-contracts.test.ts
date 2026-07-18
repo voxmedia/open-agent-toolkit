@@ -175,6 +175,56 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('runs one non-blocking implementation-tail recap before final HiLL approval', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again.',
+    );
+    expect(content).toContain(
+      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt.',
+    );
+    expect(content).toContain(
+      'Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build.',
+    );
+    expect(content).toContain(
+      'Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.',
+    );
+    expect(content).toContain(
+      'Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval.',
+    );
+
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const finalReviewIndex = normalizedContent.indexOf(
+      'Final review must be `passed` before any pre-approval dispatch.',
+    );
+    const preApprovalIndex = normalizedContent.indexOf(
+      'Dispatch incomplete `pre_approval` steps in stored order.',
+    );
+    expect(finalReviewIndex).toBeGreaterThanOrEqual(0);
+    expect(preApprovalIndex).toBeGreaterThan(finalReviewIndex);
+    expect(content).toMatch(
+      /If final checkpoint auto-review is enabled, Step 8 has\s+already run `oat-project-review-provide code final`; do not run a duplicate\s+final review here\./,
+    );
+  });
+
+  it('surfaces a concise explainer outcome in project summaries', () => {
+    const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
+
+    expect(content).toContain('## Explainer Outcome');
+    expect(content).toContain(
+      'When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.',
+    );
+    expect(content).toContain(
+      'Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.',
+    );
+    expect(content).toContain(
+      'Omit `Explainer Outcome` when no project-recap attempt exists.',
+    );
+  });
+
   it('allows quick/import design artifact reviews without spec.md', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-provide/SKILL.md',
