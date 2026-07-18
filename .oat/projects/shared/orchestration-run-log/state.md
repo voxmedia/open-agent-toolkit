@@ -8,17 +8,17 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
   source: project-state
 oat_post_implement_sequence:
-  status: post_approval
+  status: complete
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/156' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T13:49:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T13:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation closeout — PR open; awaiting final HiLL approval.
+Implementation complete — Final HiLL approved; PR open.
 
 ## Artifacts
 
@@ -82,7 +82,8 @@ Implementation closeout — PR open; awaiting final HiLL approval.
 - ✓ Final re-review passed
 - ✓ Configured pre-approval sequence complete: summary → document → PR
 - ✓ PR created
-- ⧗ Awaiting final HiLL approval
+- ✓ Final HiLL checkpoint approved
+- ⧗ Awaiting PR review and merge
 
 ## Blockers
 
@@ -90,4 +91,8 @@ None
 
 ## Next Milestone
 
-Approve, decline, or defer the final implementation checkpoint.
+PR #156 is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
