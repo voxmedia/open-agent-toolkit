@@ -9,10 +9,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['discovery'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -34,7 +34,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T00:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -46,11 +46,13 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery - Gathering requirements and understanding the problem space
+Discovery complete — all five open questions plus §4 shape resolved with
+the operator. Ready for design (`oat-project-design` produces spec.md +
+design.md).
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (scaffolded template — authored inline by `oat-project-design`)
 - **Design:** `design.md` (scaffolded template — not started)
 - **Plan:** `plan.md` (scaffolded template — not started)
@@ -60,7 +62,8 @@ Discovery - Gathering requirements and understanding the problem space
 
 - ✓ Discovery started
 - ✓ Downstream lifecycle files scaffolded
-- ⧗ Awaiting user input
+- ✓ Five open questions + §4 shape resolved with operator
+- ✓ Discovery HiLL checkpoint approved
 
 ## Blockers
 
@@ -68,4 +71,5 @@ None
 
 ## Next Milestone
 
-Complete discovery and move to design phase
+Design phase: spec.md + design.md via `oat-project-design` (design is the
+remaining HiLL checkpoint)
