@@ -227,12 +227,13 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Branch: `wave-skills-promotion`; Tier 1 (Cursor-native subagents); policy managed/high → `gpt-5.6-sol-high` (enforced, model arg); retry limit 2 (default).
 - Phase Outcomes:
 
-| Phase | Implementer                                              | Tasks | Review                                                          | Fix loops                                   | Result |
-| ----- | -------------------------------------------------------- | ----- | --------------------------------------------------------------- | ------------------------------------------- | ------ |
-| p01   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0) | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
-| p02   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)             | 1 (provenance citation restore, `7601d2d6`) | pass   |
-| p03   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)              | 1 (owner lines, `2d889c19`)                 | pass   |
-| p04   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS          | 1 (ownership wording, `1a6359ec`)           | pass   |
+| Phase | Implementer                                              | Tasks | Review                                                           | Fix loops                                   | Result |
+| ----- | -------------------------------------------------------- | ----- | ---------------------------------------------------------------- | ------------------------------------------- | ------ |
+| p01   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0)  | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
+| p02   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)              | 1 (provenance citation restore, `7601d2d6`) | pass   |
+| p03   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)               | 1 (owner lines, `2d889c19`)                 | pass   |
+| p04   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS           | 1 (ownership wording, `1a6359ec`)           | pass   |
+| p05   | oat-phase-implementer-gpt-5-6-sol-high                   | 5/5   | round 1 FAIL (1 Important — root bookkeeping gap) → round 2 PASS | 1 root-side (`1e336990`, impl record)       | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
