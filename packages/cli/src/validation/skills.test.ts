@@ -1896,8 +1896,10 @@ describe('validateOatSkills', () => {
     );
     expect(providers).toMatch(/optional nested/i);
     expect(providers).toContain('providers.claude.dispatchArgs.model');
-    expect(providers).toContain('providers.cursor.dispatchArgs.model');
-    expect(providers).toMatch(/Cursor[\s\S]{0,220}(?:opaque|byte-for-byte)/i);
+    expect(providers).toContain('providers.cursor.dispatchArgs.variant');
+    expect(providers).toMatch(
+      /Cursor[\s\S]{0,300}(?:materialized|native)[\s\S]{0,240}variant/i,
+    );
 
     expect(execution).toMatch(/root[\s\S]{0,160}phase implementer/i);
     expect(execution).toMatch(/one exact\s+phase implementer target/i);
@@ -1911,7 +1913,7 @@ describe('validateOatSkills', () => {
     expect(execution).toContain('--ceiling-tier');
     expect(execution).toContain('providers.codex.dispatchArgs.variant');
     expect(execution).toContain('providers.claude.dispatchArgs.model');
-    expect(execution).toContain('providers.cursor.dispatchArgs.model');
+    expect(execution).toContain('providers.cursor.dispatchArgs.variant');
 
     for (const [name, content] of [
       ['dispatch policy', dispatch],
@@ -1922,6 +1924,68 @@ describe('validateOatSkills', () => {
       );
       expect(content, `${name} root-owned phase execution`).toMatch(
         /phase implementer[\s\S]{0,300}(?:executes|implements)[\s\S]{0,200}tasks?/i,
+      );
+    }
+  });
+
+  it('documents Cursor materialization, ownership, and evidence boundaries', async () => {
+    const providers = await readRepoFile(
+      'apps/oat-docs/docs/provider-sync/providers.md',
+    );
+    const dispatch = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md',
+    );
+    const execution = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/implementation-execution.md',
+    );
+    const lifecycle = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/lifecycle.md',
+    );
+    const artifacts = await readRepoFile(
+      'apps/oat-docs/docs/workflows/projects/artifacts.md',
+    );
+    const configuration = await readRepoFile(
+      'apps/oat-docs/docs/cli-utilities/configuration.md',
+    );
+
+    for (const [name, content] of [
+      ['providers', providers],
+      ['dispatch', dispatch],
+      ['execution', execution],
+      ['lifecycle', lifecycle],
+      ['artifacts', artifacts],
+      ['configuration', configuration],
+    ] as const) {
+      expect(content, `${name} Cursor native variant`).toContain(
+        'providers.cursor.dispatchArgs.variant',
+      );
+      expect(content, `${name} no stale Cursor model argument`).not.toContain(
+        'providers.cursor.dispatchArgs.model',
+      );
+    }
+
+    for (const [name, content] of [
+      ['providers', providers],
+      ['dispatch', dispatch],
+      ['configuration', configuration],
+    ] as const) {
+      expect(content, `${name} flat ladder ID`).toMatch(/flat(?: ladder)? ID/i);
+      expect(content, `${name} bracket frontmatter mapping`).toMatch(
+        /bracket-form[\s\S]{0,160}(?:frontmatter|model)/i,
+      );
+      expect(content, `${name} supported ownership`).toContain(
+        'supported-catalogue',
+      );
+      expect(content, `${name} project ownership`).toContain('project-config');
+      expect(content, `${name} user ownership`).toContain('user-config');
+      expect(content, `${name} silent fallback risk`).toMatch(
+        /silent(?:ly)? fallback/i,
+      );
+      expect(content, `${name} doctor availability`).toMatch(
+        /oat doctor[\s\S]{0,180}(?:catalogue|catalog|availability)/i,
+      );
+      expect(content, `${name} configured provenance`).toMatch(
+        /configured[\s\S]{0,220}(?:not-reported|runtime identity)/i,
       );
     }
   });
@@ -3008,9 +3072,9 @@ describe('validateOatSkills', () => {
     );
     expect(
       execution,
-      'implementation execution docs retain pre-doc-task wording',
+      'implementation execution docs use Cursor native variants',
     ).toMatch(
-      /Cursor[\s\S]{0,320}opaque[\s\S]{0,240}enforced[\s\S]{0,200}model arg/i,
+      /Cursor[\s\S]{0,360}dispatchArgs\.variant[\s\S]{0,260}(?:native|agent type)/i,
     );
 
     for (const [name, content] of [
