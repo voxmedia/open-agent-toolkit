@@ -5,12 +5,19 @@ export interface PathMapping {
   canonicalDir: string;
   providerDir: string;
   nativeRead: boolean;
+  adoptionSourceDirs?: string[];
   providerExtension?: string;
   transformCanonical?: (
     canonicalContent: string,
     canonicalPath?: string,
   ) => string;
   parseToCanonical?: (providerContent: string, providerPath?: string) => string;
+}
+
+export interface AdoptionSource {
+  contentType: ContentType;
+  directory: string;
+  mapping: PathMapping;
 }
 
 export interface ProviderAdapter {

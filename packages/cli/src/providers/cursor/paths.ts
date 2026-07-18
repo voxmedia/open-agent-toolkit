@@ -9,8 +9,9 @@ export const CURSOR_PROJECT_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.cursor/skills',
-    nativeRead: false,
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.cursor/skills'],
   },
   {
     contentType: 'agent',
@@ -33,8 +34,9 @@ export const CURSOR_USER_MAPPINGS: PathMapping[] = [
   {
     contentType: 'skill',
     canonicalDir: '.agents/skills',
-    providerDir: '.cursor/skills',
-    nativeRead: false,
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.cursor/skills'],
   },
   {
     contentType: 'agent',
