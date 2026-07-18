@@ -16,8 +16,12 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
 
 === "Cursor"
 
-    - Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`, `.agents/rules` -> `.cursor/rules`
-    - User: `~/.agents/skills` -> `~/.cursor/skills`, `~/.agents/agents` -> `~/.cursor/agents`
+    - Project skills are native-read from `.agents/skills`; agents and rules still sync to `.cursor/agents` and `.cursor/rules`
+    - User skills are native-read from `~/.agents/skills`; agents still sync to `~/.cursor/agents`
+    - `.cursor/skills` and `~/.cursor/skills` remain supported Cursor-only extension and adoption surfaces. OAT does not generate skill views there.
+    - Interactive `oat init` and `oat status` ask for an individual disposition for each unresolved Cursor-local skill: adopt it into `.agents/skills` or keep it Cursor-only and remember the exact path in sync config
+    - Keep-local is blocked when a canonical skill has the same name because Cursor does not document a safe duplicate-resolution order
+    - During upgrades, OAT removes only verified clean legacy managed skill views. Changed or replaced views are preserved, detached from manifest ownership, and offered for migration.
     - Subagent invocation in Cursor is prompt-driven (`/name` or natural mention), not `subagent_type`
     - OAT-controlled Cursor dispatch uses the generic `.cursor/agents/<name>.md` file plus the exact `providers.cursor.dispatchArgs.model` value selected from the candidate ladder. OAT passes it byte-for-byte as the actual Task-level `model`; a `model` frontmatter value is only a default/fallback mechanism.
     - Cursor model strings are opaque. OAT does not infer family, effort, cost, or capability from their spelling; the configured candidate position owns the named tier meaning.
@@ -109,6 +113,8 @@ or a base role.
 
 - Stray adoption is available in `oat init` and `oat status`.
 - Adoption reconciles canonical plus the adopted provider first.
+- Native-read Cursor skill adoption moves the provider-local skill into `.agents/skills` without recreating a `.cursor/skills` view or manifest entry.
+- Choosing Keep Cursor-only leaves the skill in place and records its exact normalized path in the project or user sync config.
 - Rule adoption normalizes provider filenames back to canonical `.agents/rules/*.md` entries before cross-provider fanout.
 - Cross-provider fanout is explicit via `oat sync --scope all`.
 
