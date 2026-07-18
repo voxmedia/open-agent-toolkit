@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - Phase 4 re-review found two critical execution-evidence defects requiring a second bounded fix pass.
+oat_blockers: []
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t09
 oat_generated: false
@@ -885,6 +884,16 @@ wrapper-owned post-run receipt assertion from the core runner; validate the
 complete wrapper receipt separately against the immutable core execution
 record, manifest hash, and run ID. Update the extension sequence and reject
 foreign receipts even when caller-authored hashes agree. Re-run and re-review.
+
+**Fix outcome:** Resolved in append-only commit `519df4c3`. The actual clean
+retained RC now completes packaged core execution, separate wrapper post-run
+receipt creation, and acceptance for the same immutable run; a foreign receipt
+is rejected. Phase 4 suites pass 67/67, full workspace/release/docs/browser
+gates pass, and 65 browser measurements are retained. The moving
+`origin/main` now makes the skill-version delta validator report three
+lifecycle versions that passed against the branch's original base
+`69d5fe0c`; no out-of-scope version change was made. Independent re-review is
+pending.
 
 ---
 

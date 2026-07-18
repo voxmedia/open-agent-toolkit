@@ -1,8 +1,7 @@
 ---
 oat_current_task: p04-t09
-oat_last_commit: ba576c85
-oat_blockers:
-  - Phase 4 re-review found two critical execution-evidence defects requiring a second bounded fix pass.
+oat_last_commit: 519df4c3
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T18:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T19:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 4 second bounded review-fix pass
+Implementation - Phase 4 second fix complete; re-review pending
 
 ## Artifacts
 
@@ -94,15 +93,16 @@ Implementation - Phase 4 second bounded review-fix pass
 - ✓ Phase 4 review fixes committed in `086f2885` and `a3369e68`
 - ✓ Actual retained RC → packaged core → bound acceptance flow passes
 - ✓ Full release/workspace gates and 65-measurement browser matrix pass
-- ⚠ Phase 4 re-review resolved 8/9 baseline findings but found 2 critical
-  execution-evidence defects
-- ⧗ Second bounded fix pass required
+- ✓ Second Phase 4 fix commit `519df4c3` resolves real-result framing and
+  wrapper receipt provenance
+- ✓ Actual clean RC pre/core/post acceptance flow and foreign-receipt negative
+  pass
+- ⧗ Independent Phase 4 re-review pending
 
 ## Blockers
 
-- Real packaged core result framing and wrapper receipt provenance must pass
-  re-review before Phase 5.
+None
 
 ## Next Milestone
 
-Fix the two execution-evidence findings and run another Phase 4 re-review.
+Run the independent Phase 4 re-review before Phase 5.
