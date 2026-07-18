@@ -222,8 +222,10 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   way). Every fix disposition, including a root-verified bounded fix, must
   produce a minimal stored verification record stating what was verified, how
   it was verified, and where the evidence is recorded; the wave-5 final gate
-  blocked on exactly this audit gap. Rename/refactor-class revision reviews get
-  a PURITY BAR: diff the
+  blocked on exactly this audit gap. For a fix continuation, prefer resuming the
+  original implementer handle while it is alive: this is cheaper and retains
+  design context. Launch a fresh same-target agent only when that handle is
+  gone. Rename/refactor-class revision reviews get a PURITY BAR: diff the
   changed handler bodies against the ORIGINAL at base — tests alone are silent
   on migrated-behavior drift (wave-3 p-rev1 Critical was caught only by this).
   LOGIC-BEARING lanes' reviewers must design ≥1 adversarial probe of their own
