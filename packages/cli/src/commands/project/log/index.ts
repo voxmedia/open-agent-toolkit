@@ -8,11 +8,16 @@ import {
   createProjectLogCheckCommand,
   type ProjectLogCheckCommandDependencies,
 } from './check';
+import {
+  createProjectLogSynthesizeCommand,
+  type ProjectLogSynthesizeCommandDependencies,
+} from './synthesize';
 
 export interface ProjectLogCommandDependencies
   extends
     ProjectLogAppendCommandDependencies,
-    ProjectLogCheckCommandDependencies {}
+    ProjectLogCheckCommandDependencies,
+    ProjectLogSynthesizeCommandDependencies {}
 
 export function createProjectLogCommand(
   overrides: Partial<ProjectLogCommandDependencies> = {},
@@ -20,5 +25,6 @@ export function createProjectLogCommand(
   return new Command('log')
     .description('Manage the append-only project observation log')
     .addCommand(createProjectLogAppendCommand(overrides))
-    .addCommand(createProjectLogCheckCommand(overrides));
+    .addCommand(createProjectLogCheckCommand(overrides))
+    .addCommand(createProjectLogSynthesizeCommand(overrides));
 }
