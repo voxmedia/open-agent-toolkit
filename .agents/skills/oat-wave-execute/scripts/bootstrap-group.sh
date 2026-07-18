@@ -115,6 +115,7 @@ BASELINE_CMD="${OAT_WAVE_BASELINE_CMD:-}"
 if [[ -z "$BASELINE_CMD" ]] && has_pnpm_script "type-check"; then
   BASELINE_CMD="pnpm type-check"
 fi
+GROUP_STATUS=0
 
 # Guard: the full SHA must resolve to an actual commit in this repo
 if ! git -C "$REPO" cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
@@ -165,11 +166,23 @@ for P in "${PHASES[@]}"; do
     echo "STATUS $P: baseline=skipped reason=no-baseline-hook (set OAT_WAVE_BASELINE_CMD)"
   fi
   # Sync-commit if scoped paths dirty (bootstrap-auto step 4)
-  (cd "$TP" && git add -A -- .oat/sync/manifest.json .claude .cursor .codex 2>/dev/null
-   if ! git diff --cached --quiet 2>/dev/null; then
-     FILES=$(git diff --cached --name-only --no-renames)
-     git -c core.hooksPath=/dev/null commit -q -m "chore: run sync" $FILES && echo "  sync_commit: committed" || echo "  sync_commit: FAILED"
-   else echo "  sync_commit: skip"; fi)
+  if ! (
+    cd "$TP" && git add -A -- .oat/sync/manifest.json .claude .cursor .codex 2>/dev/null
+    if ! git diff --cached --quiet 2>/dev/null; then
+      if git -c core.hooksPath=/dev/null commit -q -m "chore: run sync"; then
+        echo "  sync_commit: committed"
+      else
+        echo "  sync_commit: FAILED"
+        exit 1
+      fi
+    else
+      echo "  sync_commit: skip"
+    fi
+  ); then
+    echo "STATUS $P: status=failed reason=sync-commit"
+    GROUP_STATUS=1
+    continue
+  fi
   # Relocate bootstrap logs out of the worktree (1.3.0: script-owned; callers
   # previously forgot this step)
   LOGDIR="${TMPDIR:-/tmp}/oat-bootstrap-logs/$WAVE_PREFIX-$P"
@@ -179,3 +192,4 @@ for P in "${PHASES[@]}"; do
   echo "STATUS $P: status=success worktree=$TP branch=$BR base=$BASE_SHA observed=$OBS git_clean=$([[ $DIRTY == 0 ]] && echo pass || echo "fail($DIRTY)")"
 done
 echo "=== group bootstrap done ==="
+exit "$GROUP_STATUS"
