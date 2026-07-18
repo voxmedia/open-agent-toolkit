@@ -39,6 +39,13 @@ copying their content here. -->
   ungrouped-phase alternative. Stoa's wave 6 on the packaged skills is the
   pending zero-regression acceptance gate; explainer integration (p06)
   follows against the frozen explainer-kit v1 RC.
+- CLI `0.1.76` makes Cursor skills native-read from project and user
+  `.agents/skills` roots while retaining `.cursor/skills` as an explicit
+  Cursor-only extension and migration surface. Interactive `init` and `status`
+  require an adopt-or-keep decision per local skill, keep-local choices persist
+  in scope-owned sync config, legacy user `knownStrays` migrate safely to
+  `~/.oat/sync/config.json`, and obsolete managed views are removed only when
+  verified clean.
 - CLI `0.1.73` adds an optional append-only `project-log.md` with
   create-on-first-append behavior, explicit scaffold controls, validated
   append/check/synthesize/rollup commands, and automatic structural entries at

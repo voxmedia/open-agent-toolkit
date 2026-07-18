@@ -61,9 +61,12 @@ Before each phase:
 
 Codex first uses the resolver-returned materialized implementer variant as
 native `agent_type`; only explicit pre-start role rejection permits the exact
-pinned fresh-child route. Claude and Cursor pass the exact resolver model
-argument. After acceptance, missing telemetry, timeout, `BLOCKED`, or any other
-terminal outcome cannot trigger fallback or replacement.
+pinned fresh-child route. Claude passes the exact resolver model argument.
+Cursor launches the exact `providers.cursor.dispatchArgs.variant` native agent
+type first; only explicit pre-start native role-selection rejection permits
+another target-preserving route. After acceptance, missing telemetry, timeout,
+`BLOCKED`, or any other terminal outcome cannot trigger fallback or
+replacement.
 
 Tier 2 inline execution is allowed only under the existing verified-equivalent
 controls or documented inherit/default exception. Inline mode executes the
@@ -118,8 +121,11 @@ artifact under the project's `reviews/` directory.
 For a managed capped review, bind the exact provider argument to the actual
 invocation: `providers.codex.dispatchArgs.variant`,
 `providers.claude.dispatchArgs.model`, or
-`providers.cursor.dispatchArgs.model`. If the root cannot apply, pass, or bind
-the required model or role control, fail closed before launch.
+`providers.cursor.dispatchArgs.variant`. Cursor must launch that exact
+resolver-selected native reviewer variant first and must not normalize its
+mapped model or attach a Task-level model argument. If the root cannot apply,
+pass, or bind the required model, variant, or role control, fail closed before
+launch.
 
 After acceptance, poll, nudge, or continue only through the accepted reviewer
 handle. Only explicit pre-start rejection allows another route. Timeout,

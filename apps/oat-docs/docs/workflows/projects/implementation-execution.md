@@ -126,10 +126,13 @@ needed, OAT does not probe or require third-tier capacity.
 
 Provider controls remain exact: Codex uses
 `providers.codex.dispatchArgs.variant`, Claude uses
-`providers.claude.dispatchArgs.model`, and Cursor treats
-`providers.cursor.dispatchArgs.model` as an opaque, byte-for-byte enforced model
-argument.
-For Cursor, opaque selection is enforced as a byte-for-byte model arg.
+`providers.claude.dispatchArgs.model`, and Cursor uses
+`providers.cursor.dispatchArgs.variant`. Cursor launches that exact
+resolver-selected native agent type first; the flat ID and bracket-form pin
+remain inside the explicit mapping and are never normalized by workflow prose.
+The launcher records this selection as `configured`, while runtime identity
+remains `not-reported` without independent observation. Only a pre-start native
+role-selection rejection permits another target-preserving route.
 
 See [Dispatch Policy](dispatch-ceiling.md) for configuration and
 [Orchestration Model](orchestration-model.md) for the complete role map.

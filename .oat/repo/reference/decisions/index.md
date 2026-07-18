@@ -13,12 +13,21 @@
 | DR-260718-append-based-ledger-graduation | 2026-07-18 | accepted | Append-based ledger graduation                                          | -      |
 | DR-260718-automatic-create-on-first      | 2026-07-18 | accepted | Automatic create-on-first-append                                        | -      |
 | DR-260718-cli-owned-log-mutations        | 2026-07-18 | accepted | CLI-owned log mutations                                                 | -      |
+| DR-260718-configured-cursor-provenance   | 2026-07-18 | accepted | Configured Cursor provenance                                            | -      |
+| DR-260718-explicit-cursor-pin-mapping    | 2026-07-18 | accepted | Explicit Cursor pin mapping                                             | -      |
+| DR-260718-family-aware-gate-exclusions   | 2026-07-18 | accepted | Family-aware gate exclusions                                            | -      |
 | DR-260718-general-purpose-project-log    | 2026-07-18 | accepted | General-purpose project log                                             | -      |
 | DR-260718-hill-final-checkpoint-applies  | 2026-07-18 | accepted | HiLL final checkpoint applies per mergeable delta                       | -      |
+| DR-260718-keep-sync-state-in-sync-config | 2026-07-18 | accepted | Keep sync state in sync config                                          | -      |
+| DR-260718-native-cursor-variant-dispatch | 2026-07-18 | accepted | Native Cursor variant dispatch                                          | -      |
 | DR-260718-neutral-phrasing               | 2026-07-18 | accepted | Neutral-phrasing genericization for promoted skills                     | -      |
 | DR-260718-port-first-defer-heavy-wave    | 2026-07-18 | accepted | Port-first defer-heavy wave-skill promotion                             | -      |
+| DR-260718-preserve-uncertain-legacy      | 2026-07-18 | accepted | Preserve uncertain legacy content                                       | -      |
 | DR-260718-promoted-skills-continue       | 2026-07-18 | accepted | Promoted skills continue source version lineage                         | -      |
+| DR-260718-provider-neutral-extensions    | 2026-07-18 | accepted | Provider-neutral extensions                                             | -      |
+| DR-260718-require-an-explicit-decision   | 2026-07-18 | accepted | Require an explicit decision per Cursor skill                           | -      |
 | DR-260718-roll-up-before-archive         | 2026-07-18 | accepted | Roll-up before archive                                                  | -      |
+| DR-260718-separate-native-read-mappings  | 2026-07-18 | accepted | Separate native-read mappings from adoption sources                     | -      |
 | DR-260718-tracked-config-guard-rejected  | 2026-07-18 | accepted | Tracked-config guard rejected after root cause                          | -      |
 | DR-260718-wave-skills-keep-the-oat-wave  | 2026-07-18 | accepted | Wave skills keep the oat-wave naming domain                             | -      |
 | DR-260716-mechanical-headless-routing    | 2026-07-16 | accepted | Mechanical headless routing                                             | -      |

@@ -58,12 +58,16 @@ Project scope is used for project workflows and repo-local sync state. User scop
 | Path                      | Purpose                                                           |
 | ------------------------- | ----------------------------------------------------------------- |
 | `.oat/sync/manifest.json` | Records sync-managed provider entries and drift contract state    |
-| `.oat/sync/config.json`   | Sync behavior config (default strategy + provider-level settings) |
+| `.oat/sync/config.json`   | Project sync behavior, provider settings, and known-stray choices |
+
+The equivalent user files are `~/.oat/sync/manifest.json` and
+`~/.oat/sync/config.json`.
 
 `config.json` currently includes:
 
 - `version`
 - `defaultStrategy`
+- `knownStrays` (optional exact provider-local paths)
 - `providers.<provider>.enabled`
 - `providers.<provider>.strategy` (optional override)
 
@@ -79,7 +83,10 @@ Current config ownership:
 - `.oat/config.json` owns shared non-sync repo settings (including `worktrees.root`, `projects.root`, and `documentation.*`).
 - `.oat/config.local.json` owns per-developer project lifecycle state (`activeProject`, `lastPausedProject`, `activeIdea`).
 - `~/.oat/config.json` owns user-level state (`activeIdea` at global scope).
-- `.oat/sync/config.json` continues to own sync/provider behavior.
+- `.oat/sync/config.json` owns project sync/provider behavior and project known strays.
+- `~/.oat/sync/config.json` owns user sync/provider behavior and personal known
+  strays. OAT migrates legacy `~/.oat/config.json#knownStrays` entries here
+  without removing unrelated user config.
 
 CLI discovery surfaces:
 
@@ -255,13 +262,14 @@ Common user-scope entries:
   config.json
   ideas/
   sync/
+    config.json
     manifest.json
 ```
 
 User scope is primarily for:
 
 - User-level ideas
-- User-level provider sync state where applicable
+- User-level provider sync state and personal known-stray choices
 
 ## Practical guidance
 

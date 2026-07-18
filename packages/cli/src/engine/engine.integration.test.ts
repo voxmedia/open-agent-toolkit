@@ -13,6 +13,8 @@ import { join } from 'node:path';
 import { DEFAULT_SYNC_CONFIG } from '@config/sync-config';
 import { createSymlink } from '@fs/io';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
+import { cursorAdapter } from '@providers/cursor/adapter';
+import type { ProviderAdapter } from '@providers/shared/adapter.types';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { computeSyncPlan } from './compute-plan';
@@ -38,6 +40,34 @@ async function seedCanonical(root: string): Promise<void> {
     '# agent\n',
     'utf8',
   );
+}
+
+function createLegacyCursorAdapter(
+  defaultStrategy: ProviderAdapter['defaultStrategy'] = 'symlink',
+): ProviderAdapter {
+  const legacySkillMapping = {
+    contentType: 'skill' as const,
+    canonicalDir: '.agents/skills',
+    providerDir: '.cursor/skills',
+    nativeRead: false,
+  };
+
+  return {
+    ...cursorAdapter,
+    defaultStrategy,
+    projectMappings: [
+      legacySkillMapping,
+      ...cursorAdapter.projectMappings.filter(
+        (mapping) => mapping.contentType !== 'skill',
+      ),
+    ],
+    userMappings: [
+      legacySkillMapping,
+      ...cursorAdapter.userMappings.filter(
+        (mapping) => mapping.contentType !== 'skill',
+      ),
+    ],
+  };
 }
 
 describe('sync engine integration', () => {
@@ -454,5 +484,186 @@ describe('sync engine integration', () => {
     await expect(
       lstat(join(root, '.claude', 'agents', 'agent-one')),
     ).rejects.toThrow();
+  });
+
+  it('retires project Cursor skill copies without affecting active mappings or local skills', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.cursor'), { recursive: true });
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      '# skill two\n',
+      'utf8',
+    );
+    await mkdir(join(root, '.agents', 'rules'), { recursive: true });
+    await writeFile(
+      join(root, '.agents', 'rules', 'rule-one.md'),
+      '---\ndescription: Rule one\nactivation: always\n---\n\n# Rule One\n',
+      'utf8',
+    );
+
+    const canonical = await scanCanonical(root, 'project');
+    const legacyAdapter = createLegacyCursorAdapter('copy');
+    const legacyPlan = await computeSyncPlan({
+      canonical,
+      adapters: [legacyAdapter],
+      manifest: createEmptyManifest(),
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(legacyPlan, createEmptyManifest(), manifestPath);
+
+    const modifiedPath = join(root, '.cursor', 'skills', 'skill-two');
+    await writeFile(
+      join(modifiedPath, 'SKILL.md'),
+      '# user-modified skill two\n',
+      'utf8',
+    );
+    const unmanagedPath = join(root, '.cursor', 'skills', 'cursor-only');
+    await mkdir(unmanagedPath, { recursive: true });
+    await writeFile(join(unmanagedPath, 'SKILL.md'), '# cursor only\n', 'utf8');
+
+    const legacyManifest = await loadManifest(manifestPath);
+    const retirementPlan = await computeSyncPlan({
+      canonical,
+      adapters: [cursorAdapter],
+      manifest: legacyManifest,
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+
+    expect(
+      retirementPlan.removals.find(
+        (entry) => entry.canonical.name === 'skill-one',
+      ),
+    ).toMatchObject({ operation: 'remove' });
+    expect(
+      retirementPlan.removals.find(
+        (entry) => entry.canonical.name === 'skill-two',
+      ),
+    ).toMatchObject({ operation: 'detach' });
+
+    await executeSyncPlan(retirementPlan, legacyManifest, manifestPath);
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(join(modifiedPath, 'SKILL.md'), 'utf8'),
+    ).resolves.toBe('# user-modified skill two\n');
+    await expect(
+      readFile(join(unmanagedPath, 'SKILL.md'), 'utf8'),
+    ).resolves.toBe('# cursor only\n');
+    await expect(
+      lstat(join(root, '.cursor', 'agents', 'agent-one')),
+    ).resolves.toBeDefined();
+    await expect(
+      lstat(join(root, '.cursor', 'rules', 'rule-one.mdc')),
+    ).resolves.toBeDefined();
+
+    const updatedManifest = await loadManifest(manifestPath);
+    expect(
+      updatedManifest.entries.filter(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toEqual([]);
+    expect(
+      updatedManifest.entries.some(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'agent',
+      ),
+    ).toBe(true);
+    expect(
+      updatedManifest.entries.some(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'rule',
+      ),
+    ).toBe(true);
+
+    const subsequentPlan = await computeSyncPlan({
+      canonical,
+      adapters: [cursorAdapter],
+      manifest: updatedManifest,
+      scope: 'project',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    expect(
+      [...subsequentPlan.entries, ...subsequentPlan.removals].filter(
+        (entry) => entry.canonical.type === 'skill',
+      ),
+    ).toEqual([]);
+  });
+
+  it('retires user Cursor skill symlinks while preserving replaced content', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await mkdir(join(root, '.cursor'), { recursive: true });
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+      '# skill one\n',
+      'utf8',
+    );
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      '# skill two\n',
+      'utf8',
+    );
+
+    const canonical = await scanCanonical(root, 'user');
+    const legacyAdapter = createLegacyCursorAdapter();
+    const legacyPlan = await computeSyncPlan({
+      canonical,
+      adapters: [legacyAdapter],
+      manifest: createEmptyManifest(),
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(legacyPlan, createEmptyManifest(), manifestPath);
+
+    const replacedPath = join(root, '.cursor', 'skills', 'skill-two');
+    await rm(replacedPath, { recursive: true, force: true });
+    await mkdir(replacedPath, { recursive: true });
+    await writeFile(
+      join(replacedPath, 'SKILL.md'),
+      '# user replacement\n',
+      'utf8',
+    );
+
+    const legacyManifest = await loadManifest(manifestPath);
+    const retirementPlan = await computeSyncPlan({
+      canonical,
+      adapters: [cursorAdapter],
+      manifest: legacyManifest,
+      scope: 'user',
+      config: DEFAULT_SYNC_CONFIG,
+      scopeRoot: root,
+    });
+    await executeSyncPlan(retirementPlan, legacyManifest, manifestPath);
+
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(join(replacedPath, 'SKILL.md'), 'utf8'),
+    ).resolves.toBe('# user replacement\n');
+    const updatedManifest = await loadManifest(manifestPath);
+    expect(
+      updatedManifest.entries.filter(
+        (entry) => entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toEqual([]);
   });
 });

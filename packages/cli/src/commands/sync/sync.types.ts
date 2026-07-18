@@ -7,11 +7,11 @@ import type { SyncConfig } from '@config/index';
 import type { CanonicalEntry, SyncPlan, SyncResult } from '@engine/index';
 import type { Manifest } from '@manifest/index';
 import type {
-  CodexExtensionApplyResult,
-  CodexExtensionPlan,
-} from '@providers/codex/codec/sync-extension';
-import type {
   ConfigAwareAdaptersResult,
+  MaterializationApplyResult,
+  MaterializationExtension,
+  MaterializationOperation,
+  MaterializationPlan,
   ProviderAdapter,
 } from '@providers/shared';
 import type { ConcreteScope, Scope } from '@shared/types';
@@ -30,8 +30,8 @@ export interface ScopeSyncPlan {
   canonical?: CanonicalEntry[];
   activeAdapterNames?: string[];
   providerMismatches?: SyncProviderMismatches;
-  codexExtensionPlan?: CodexExtensionPlan;
-  codexExtension?: CodexExtensionSummary;
+  materializationExtensionPlans: MaterializationPlan[];
+  materializationExtensions: MaterializationExtensionSummary[];
 }
 
 export interface SyncSummary {
@@ -47,6 +47,8 @@ export interface SyncJsonPayload {
   plans: SyncPlan[];
   summary: SyncSummary;
   providerMismatches?: SyncProviderMismatches[];
+  materializationExtensions?: MaterializationExtensionSummary[];
+  /** Retained for compatibility with existing Codex JSON consumers. */
   codexExtensions?: CodexExtensionSummary[];
 }
 
@@ -70,6 +72,29 @@ export interface CodexExtensionSummary {
   skipped?: number;
 }
 
+export interface MaterializationExtensionSummary {
+  provider: string;
+  operations: MaterializationOperation[];
+  managedEntries: string[];
+  aggregateHash: string;
+  applied?: number;
+  failed?: number;
+  skipped?: number;
+}
+
+export type SyncMaterializationExtension = MaterializationExtension<
+  MaterializationPlan,
+  {
+    scopeRoot: string;
+    canonicalEntries: CanonicalEntry[];
+    allowedCanonicalPaths?: string[];
+    options: {
+      userConfigDir?: string;
+      env?: NodeJS.ProcessEnv;
+    };
+  }
+>;
+
 export interface SyncCommandDependencies {
   buildCommandContext: (options: GlobalOptions) => CommandContext;
   resolveScopeRoot: (
@@ -86,7 +111,7 @@ export interface SyncCommandDependencies {
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedCodexAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getConfigAwareAdapters: (
     adapters: ProviderAdapter[],
@@ -112,18 +137,11 @@ export interface SyncCommandDependencies {
     manifest: Manifest,
     manifestPath: string,
   ) => Promise<SyncResult>;
-  computeCodexProjectExtensionPlan: (
+  getMaterializationExtensions: () => SyncMaterializationExtension[];
+  applyMaterializationExtensionPlan: (
+    extension: SyncMaterializationExtension,
     scopeRoot: string,
-    canonicalEntries: CanonicalEntry[],
-    allowedCanonicalPaths?: string[],
-    options?: { userConfigDir?: string; env?: NodeJS.ProcessEnv },
-  ) => Promise<CodexExtensionPlan>;
-  toCodexExtensionOperations: (
-    plan: CodexExtensionPlan,
-  ) => CodexExtensionOperation[];
-  applyCodexProjectExtensionPlan: (
-    scopeRoot: string,
-    plan: CodexExtensionPlan,
-  ) => Promise<CodexExtensionApplyResult>;
+    plan: MaterializationPlan,
+  ) => Promise<MaterializationApplyResult>;
   formatSyncPlan: (plan: SyncPlan, applied: boolean) => string;
 }

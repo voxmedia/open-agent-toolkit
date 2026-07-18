@@ -611,6 +611,8 @@ describe('oat config', () => {
     expect(capture.info[0]).toContain('Repo Local (.oat/config.local.json)');
     expect(capture.info[0]).toContain('User (~/.oat/config.json)');
     expect(capture.info[0]).toContain('Sync/Provider (.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('User Sync (~/.oat/sync/config.json)');
+    expect(capture.info[0]).toContain('sync.knownStrays');
     expect(capture.info[0]).toContain('sync.providers.<name>.enabled');
     expect(process.exitCode).toBe(0);
   });
@@ -661,6 +663,19 @@ describe('oat config', () => {
     expect(capture.info[0]).toContain('Key: sync.providers.<name>.enabled');
     expect(capture.info[0]).toContain('File: .oat/sync/config.json');
     expect(capture.info[0]).toContain('Owning command: oat providers set');
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('describe shows project and user ownership for sync known strays', async () => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, ['describe', 'sync.knownStrays']);
+
+    expect(capture.info[0]).toContain('File: .oat/sync/config.json');
+    expect(capture.info[0]).toContain('Scope: project sync');
+    expect(capture.info[0]).toContain('File: ~/.oat/sync/config.json');
+    expect(capture.info[0]).toContain('Scope: user sync');
     expect(process.exitCode).toBe(0);
   });
 
@@ -1737,7 +1752,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-07-10.2');
+      expect(recommendation.version).toBe('2026-07-11.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -1779,29 +1794,25 @@ describe('oat config', () => {
         cursor: {
           economy: {
             candidates: [
-              'gpt-5.6-luna-low',
-              'gpt-5.6-luna-medium',
+              'composer-2.5',
+              'claude-sonnet-5-high',
               'gpt-5.6-luna-high',
+              'gpt-5.6-luna-xhigh',
             ],
           },
           balanced: {
-            candidates: [
-              'gpt-5.6-luna-xhigh',
-              'gpt-5.6-terra-low',
-              'gpt-5.6-terra-medium',
-              'gpt-5.6-terra-high',
-              'gpt-5.6-terra-xhigh',
-            ],
+            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
           },
           high: {
-            candidates: [
-              'gpt-5.6-sol-low',
-              'gpt-5.6-sol-medium',
-              'gpt-5.6-sol-high',
-            ],
+            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
           },
           frontier: {
-            candidates: ['gpt-5.6-sol-xhigh', 'gpt-5.6-sol-max'],
+            candidates: [
+              'claude-fable-5-thinking-high',
+              'claude-fable-5-thinking-xhigh',
+              'gpt-5.6-sol-xhigh',
+              'gpt-5.6-sol-max',
+            ],
           },
         },
       });

@@ -48,9 +48,12 @@ import { codexAdapter } from '@providers/codex';
 import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { CURSOR_MODEL_PIN_MAPPINGS } from '@providers/cursor/codec/catalog';
 import { geminiAdapter } from '@providers/gemini';
 import {
+  diagnoseCursorMaterializedModels,
   validateMatrixCell,
+  type CursorMaterializedModelDiagnostic,
   type MatrixCellAvailability,
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
@@ -89,6 +92,10 @@ interface DoctorDependencies {
     value: string,
     options: ValidateMatrixCellOptions,
   ) => Promise<MatrixCellAvailabilityResponse>;
+  diagnoseCursorMaterializedModels: (
+    ladderModelIds: readonly string[],
+    options: ValidateMatrixCellOptions,
+  ) => Promise<CursorMaterializedModelDiagnostic[]>;
   createDispatchValidationPassContext: typeof createDispatchValidationPassContext;
   validateDispatchMatrixRefs: typeof validateDispatchMatrixRefs;
   processEnv: NodeJS.ProcessEnv;
@@ -269,6 +276,7 @@ function createDependencies(): DoctorDependencies {
     readOatLocalConfig,
     readUserConfig,
     validateMatrixCell,
+    diagnoseCursorMaterializedModels,
     createDispatchValidationPassContext,
     validateDispatchMatrixRefs,
     processEnv: process.env,
@@ -281,6 +289,50 @@ function createDependencies(): DoctorDependencies {
       pathExists = pathExistsDefault,
     ) => checkSkillVersionsDefault(scopeRoot, assetsRoot, pathExists),
     checkStaleInvocations,
+  };
+}
+
+async function createCursorMaterializedModelsCheck(
+  scopeRoot: string,
+  dependencies: DoctorDependencies,
+): Promise<DoctorCheck> {
+  const diagnostics = await dependencies.diagnoseCursorMaterializedModels(
+    CURSOR_MODEL_PIN_MAPPINGS.map((mapping) => mapping.ladderModelId),
+    { cwd: scopeRoot, env: dependencies.processEnv },
+  );
+  const missing = diagnostics.filter(
+    (diagnostic) => diagnostic.availability === 'missing',
+  );
+  const unvalidated = diagnostics.filter(
+    (diagnostic) => diagnostic.availability === 'unvalidated',
+  );
+  if (missing.length > 0) {
+    return {
+      name: 'project:cursor_materialized_models',
+      description: 'Cursor materialized target catalog availability',
+      status: 'warn',
+      message:
+        `Broad Cursor CLI catalog no longer lists: ${missing.map((entry) => entry.ladderModelId).join(', ')}. ` +
+        'This availability check does not verify definition pins or runtime identity.',
+      fix: 'Refresh Cursor model mappings and rerun `oat sync --scope project`.',
+    };
+  }
+  if (unvalidated.length > 0) {
+    return {
+      name: 'project:cursor_materialized_models',
+      description: 'Cursor materialized target catalog availability',
+      status: 'warn',
+      message:
+        'Cursor broad CLI catalog could not be checked. Definition pins and runtime identity were not tested.',
+    };
+  }
+  return {
+    name: 'project:cursor_materialized_models',
+    description: 'Cursor materialized target catalog availability',
+    status: 'pass',
+    message:
+      `All ${diagnostics.length} mapped flat Cursor IDs remain listed in the broad CLI catalog. ` +
+      'This does not verify definition pins or runtime identity.',
   };
 }
 
@@ -777,6 +829,17 @@ async function runChecksForScope(
         ? undefined
         : 'Install or enable a provider directory (e.g. .claude, .cursor, .codex).',
   });
+
+  if (
+    scope === 'project' &&
+    providers.some(
+      (provider) => provider.name === 'cursor' && provider.detected,
+    )
+  ) {
+    checks.push(
+      await createCursorMaterializedModelsCheck(scopeRoot, dependencies),
+    );
+  }
 
   checks.push(
     ...(await runCodexChecksForScope(

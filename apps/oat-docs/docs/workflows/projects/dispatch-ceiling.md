@@ -194,8 +194,10 @@ candidate in each tier:
   `max`.
 - **Claude:** `haiku`, `sonnet`, `opus`, and `fable` across the ordered named
   tiers.
-- **Cursor:** opaque strings corresponding to the same 13 configured positions.
-  OAT does not parse those strings to infer family, effort, cost, or capability.
+- **Cursor:** 12 verified multi-family flat IDs across Composer, Claude, GPT,
+  and Grok. The explicit materialization catalogue maps each flat ladder ID to
+  a separate bracket-form frontmatter model; OAT does not derive or normalize
+  either value.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -240,7 +242,7 @@ oat project dispatch-ceiling resolve \
   --provider cursor \
   --role implementer \
   --ceiling-tier high \
-  --candidate-model 'opaque:model/balanced [v2]' \
+  --candidate-model gpt-5.6-sol-high \
   --json
 ```
 
@@ -280,45 +282,39 @@ branch replaces, rather than supplements, preferred selection.
 | -------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | Codex    | Use `providers.codex.dispatchArgs.variant` as `agent_type`; otherwise launch a fresh child pinned to the returned model and effort | Block if neither exact route is usable    |
 | Claude   | Pass `providers.claude.dispatchArgs.model` as the actual Task `model`                                                              | Block if the model cannot be applied      |
-| Cursor   | Pass `providers.cursor.dispatchArgs.model` byte-for-byte as the actual invocation model; treat it as opaque                        | Block rather than normalize or substitute |
+| Cursor   | Launch `providers.cursor.dispatchArgs.variant` as the exact native agent type first                                                | Block rather than normalize or substitute |
 | Other    | Use a registered provider adapter when it can compile exact controls                                                               | Unsupported providers remain advisory     |
 
-Materialized Codex roles exist before phase dispatch after project/user sync.
-The supported catalogue is committed project output; custom Codex candidates
-materialize according to config ownership. Workflow correctness still keeps a
-fresh pinned-child fallback and does not require provider restart or hot reload.
+Materialized Codex and Cursor roles exist before phase dispatch after
+project/user sync. Cursor definitions carry `supported-catalogue`,
+`project-config`, or `user-config` ownership. Project and supported variants
+are tracked under `.cursor/agents`; user variants live under
+`~/.cursor/agents`. Cleanup stays within the current owner boundary.
 
 Reviewers use the final candidate at the configured review ceiling. Managed
 `Uncapped` and explicit inherit/default behavior retain their documented base
 reviewer behavior. A timeout retry preserves the same exact role or complete
-Claude/Cursor model payload.
+Claude model payload or Cursor native variant.
 
 ### Cursor evidence authority
 
-Cursor resolution and runtime evidence answer different questions. Resolution
-proves which opaque candidate OAT requested. A stream-JSON Task start and
-correlated completion prove launcher behavior only when the model argument is
-preserved byte-for-byte. An accepted Task plus the child sentinel establishes
-argument eligibility for that account and client; a structured rejection can
-establish `unknown-value`. Runtime producer identity remains `not-reported`
-unless trusted Cursor telemetry or Cursor support independently confirms it.
+Cursor selection, pin mapping, catalogue availability, and runtime identity are
+separate evidence layers:
 
-The [2026-07-11 GPT-5.6 evidence record](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md)
-ran positive and negative controls before candidate probes. Neither control
-emitted a Task event, so the harness stopped without probing the 13 recommended
-arguments or exploratory `gpt-5.6-sol-high-fast`. This is a harness/account
-boundary, not model rejection, and it supports no recommendation change.
+- The candidate ladder and resolver use an opaque flat ID.
+- The materialized definition uses the mapping's explicit bracket-form
+  frontmatter model.
+- Mapping-specific native-launch evidence authorizes the shipped mapping data.
+- `oat doctor` checks current flat-ID catalogue availability, which can detect
+  drift but cannot prove a definition pin.
+- The launcher records the selected variant and mapped model with `configured`
+  provenance. Runtime identity remains `not-reported` without an independent
+  observation.
 
-The tracked artifact's structured second-pass block exposes only an allowlisted
-event projection and non-reversible identifier hashes. Exact
-request/session/tool-call IDs and credential-redacted unprojected streams from
-that pass stay in gitignored local project storage for support diagnosis.
-
-The same public artifact intentionally preserves the sanitized historical v1
-text-mode record for provenance. That older section includes command arguments
-and prompts, stdout and stderr, exit and duration data, and capture-environment
-details such as user-specific binary paths; it is not limited to the structured
-second-pass projection.
+Cursor can silently fallback when account, plan, or administration constraints
+prevent a requested definition pin. Native variant acceptance is therefore not
+runtime-model verification, and skills must not promote self-report or
+catalogue presence into observed identity.
 
 ## Phase and Optional-Worker Layers
 

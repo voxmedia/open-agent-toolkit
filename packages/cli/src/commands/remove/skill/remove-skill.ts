@@ -32,6 +32,8 @@ import {
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
+import type { AdoptionSource } from '@providers/shared/adapter.types';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
@@ -81,6 +83,10 @@ export interface RemoveSkillDependencies {
     config: SyncConfig,
   ) => Promise<ConfigAwareAdaptersResult>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
+  getAdoptionSources: (
+    adapter: ProviderAdapter,
+    scope: Scope,
+  ) => AdoptionSource[];
   pathExists: (path: string) => Promise<boolean>;
   removeDirectory: (path: string) => Promise<void>;
 }
@@ -110,6 +116,7 @@ export function createDefaultRemoveSkillDependencies(): RemoveSkillDependencies 
     },
     getConfigAwareAdapters,
     getSyncMappings,
+    getAdoptionSources,
     async pathExists(path) {
       return (await fileExists(path)) || (await dirExists(path));
     },
@@ -162,11 +169,11 @@ async function buildScopePlan(
   const unmanagedProviderViews: ProviderView[] = [];
 
   for (const adapter of activeAdapters) {
-    const mappings = dependencies
+    const syncMappings = dependencies
       .getSyncMappings(adapter, scope)
       .filter((mapping) => mapping.contentType === 'skill');
 
-    for (const mapping of mappings) {
+    for (const mapping of syncMappings) {
       const relativePath = join(mapping.providerDir, skillName);
       const absolutePath = join(scopeRoot, relativePath);
       const hasManifestEntry = manifest.entries.some(
@@ -186,6 +193,29 @@ async function buildScopePlan(
       }
 
       if (providerPathExists) {
+        unmanagedProviderViews.push({
+          provider: adapter.name,
+          absolutePath,
+          relativePath,
+        });
+      }
+    }
+
+    const syncProviderDirs = new Set(
+      syncMappings.map((mapping) => mapping.providerDir),
+    );
+    const localAdoptionSources = dependencies
+      .getAdoptionSources(adapter, scope)
+      .filter(
+        (source) =>
+          source.contentType === 'skill' &&
+          !syncProviderDirs.has(source.directory),
+      );
+
+    for (const source of localAdoptionSources) {
+      const relativePath = join(source.directory, skillName);
+      const absolutePath = join(scopeRoot, relativePath);
+      if (await dependencies.pathExists(absolutePath)) {
         unmanagedProviderViews.push({
           provider: adapter.name,
           absolutePath,

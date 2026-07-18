@@ -12,14 +12,22 @@ import {
 import {
   type CodexRoleStray,
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
+import {
+  applyCursorSkillDisposition,
+  isCursorSkillCandidate,
+  type CursorSkillDisposition,
+} from '@commands/shared/cursor-skill-disposition';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
   confirmAction,
   type MultiSelectChoice,
   type PromptContext,
+  type SelectChoice,
   selectManyWithAbort,
+  selectWithAbort,
 } from '@commands/shared/shared.prompts';
 import {
   readGlobalOptions,
@@ -30,7 +38,7 @@ import {
   loadSyncConfig,
   type SyncConfig,
 } from '@config/index';
-import { readUserConfig, type UserConfig } from '@config/oat-config';
+import { resolveUserSyncConfig } from '@config/user-sync-config';
 import {
   type CopyTransform,
   type DriftReport,
@@ -42,7 +50,7 @@ import {
   type CanonicalEntry,
   HOOK_DRIFT_WARNING,
   HOOK_STRAY_INFO,
-  scanBundledManagedCodexAgents,
+  scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
 import {
@@ -61,13 +69,21 @@ import {
 } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import {
+  applyCursorProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+  type CursorExtensionPlan,
+} from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   getActiveAdapters,
   getSyncMappings,
   type PathMapping,
+  type MaterializationPlan,
   type ProviderAdapter,
 } from '@providers/shared';
+import type { AdoptionSource } from '@providers/shared/adapter.types';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import {
   type ConcreteScope,
   type ContentType,
@@ -102,19 +118,23 @@ interface StatusDependencies {
   ) => Promise<string>;
   loadManifest: (manifestPath: string) => Promise<Manifest>;
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
-  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
+  resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
   saveManifest: (manifestPath: string, manifest: Manifest) => Promise<void>;
   scanCanonical: (
     scopeRoot: string,
     scope: ConcreteScope,
   ) => Promise<CanonicalEntry[]>;
-  scanBundledManagedCodexAgents: () => Promise<CanonicalEntry[]>;
+  scanBundledManagedAgents: () => Promise<CanonicalEntry[]>;
   getAdapters: () => ProviderAdapter[];
   getActiveAdapters: (
     adapters: ProviderAdapter[],
     scopeRoot: string,
   ) => Promise<ProviderAdapter[]>;
   getSyncMappings: (adapter: ProviderAdapter, scope: Scope) => PathMapping[];
+  getAdoptionSources: (
+    adapter: ProviderAdapter,
+    scope: Scope,
+  ) => AdoptionSource[];
   detectDrift: (
     entry: Manifest['entries'][number],
     scopeRoot: string,
@@ -125,7 +145,10 @@ interface StatusDependencies {
     providerDir: string,
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
-    mapping?: Pick<PathMapping, 'contentType' | 'providerExtension'>,
+    mapping?: Pick<
+      PathMapping,
+      'contentType' | 'nativeRead' | 'providerExtension'
+    >,
   ) => Promise<DriftReport[]>;
   detectCodexRoleStrays: (
     scopeRoot: string,
@@ -142,16 +165,39 @@ interface StatusDependencies {
     scopeRoot: string,
     plan: CodexExtensionPlan,
   ) => Promise<unknown>;
+  computeCursorProjectExtensionPlan: (
+    scopeRoot: string,
+    canonicalEntries: CanonicalEntry[],
+    allowedCanonicalPaths?: string[],
+    options?: { userConfigDir?: string; env?: NodeJS.ProcessEnv },
+  ) => Promise<CursorExtensionPlan>;
+  applyCursorProjectExtensionPlan: (
+    scopeRoot: string,
+    plan: CursorExtensionPlan,
+  ) => Promise<unknown>;
   selectManyWithAbort: <T extends string>(
     message: string,
     choices: MultiSelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T[] | null>;
+  selectWithAbort: <T extends string>(
+    message: string,
+    choices: SelectChoice<T>[],
+    ctx: PromptContext,
+  ) => Promise<T | null>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   adoptStray: (
     scopeRoot: string,
     stray: StatusStrayCandidate,
     manifest: Manifest,
+    options?: { replaceCanonical?: boolean },
+  ) => Promise<Manifest>;
+  applyCursorSkillDisposition: (
+    scopeRoot: string,
+    stray: StatusStrayCandidate,
+    manifest: Manifest,
+    disposition: CursorSkillDisposition,
+    syncConfigPath: string,
     options?: { replaceCanonical?: boolean },
   ) => Promise<Manifest>;
   formatStatusTable: (reports: DriftReport[]) => string;
@@ -172,9 +218,11 @@ interface ScopeReportCollection {
   scope: ConcreteScope;
   scopeRoot: string;
   manifestPath: string;
+  syncConfigPath: string;
   manifest: Manifest;
   reports: DriftReport[];
   strayCandidates: StatusStrayCandidate[];
+  activeAdapterNames: string[];
 }
 
 const DEFAULT_DEPENDENCIES: StatusDependencies = {
@@ -190,10 +238,10 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   async loadSyncConfig(configPath) {
     return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
   },
-  readUserConfig,
+  resolveUserSyncConfig,
   saveManifest,
   scanCanonical,
-  scanBundledManagedCodexAgents,
+  scanBundledManagedAgents,
   getAdapters() {
     return [
       claudeAdapter,
@@ -205,14 +253,19 @@ const DEFAULT_DEPENDENCIES: StatusDependencies = {
   },
   getActiveAdapters,
   getSyncMappings,
+  getAdoptionSources,
   detectDrift,
   detectStrays,
   detectCodexRoleStrays,
   computeCodexProjectExtensionPlan,
   applyCodexProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+  applyCursorProjectExtensionPlan,
   selectManyWithAbort,
+  selectWithAbort,
   confirmAction,
   adoptStray: adoptStrayDefault,
+  applyCursorSkillDisposition,
   formatStatusTable,
 };
 
@@ -320,12 +373,12 @@ async function collectScopeReports(
   const manifestPath = join(scopeRoot, '.oat', 'sync', 'manifest.json');
   const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
   const userConfigDir = join(context.home, '.oat');
-  const [manifest, canonicalEntries, syncConfig, userConfig] =
+  const [manifest, canonicalEntries, syncConfig, userSyncConfig] =
     await Promise.all([
       dependencies.loadManifest(manifestPath),
       dependencies.scanCanonical(scopeRoot, scope),
       dependencies.loadSyncConfig(syncConfigPath),
-      dependencies.readUserConfig(userConfigDir),
+      dependencies.resolveUserSyncConfig(userConfigDir),
     ]);
   const adapters = dependencies.getAdapters();
   const activeAdapters = await dependencies.getActiveAdapters(
@@ -340,9 +393,55 @@ async function collectScopeReports(
         `${entry.provider}|${normalizeToPosixPath(entry.canonicalPath)}`,
     ),
   );
+  const activeProviderNames = new Set(
+    activeAdapters.map((adapter) => adapter.name),
+  );
+  const extensionCanonicalEntries =
+    scope === 'user' &&
+    (activeProviderNames.has('codex') || activeProviderNames.has('cursor'))
+      ? [
+          ...canonicalEntries,
+          ...(await dependencies.scanBundledManagedAgents()),
+        ]
+      : canonicalEntries;
+  const codexExtensionPlan = activeProviderNames.has('codex')
+    ? await dependencies.computeCodexProjectExtensionPlan(
+        scopeRoot,
+        extensionCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const cursorExtensionPlan = activeProviderNames.has('cursor')
+    ? await dependencies.computeCursorProjectExtensionPlan(
+        scopeRoot,
+        extensionCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const materializationPlans: MaterializationPlan[] = [
+    ...(codexExtensionPlan
+      ? [
+          {
+            provider: 'codex',
+            operations: codexExtensionPlan.operations.map((operation) => ({
+              ...operation,
+              provider: 'codex',
+              entryName: operation.roleName,
+            })),
+            managedEntries: codexExtensionPlan.managedRoles,
+            aggregateHash: codexExtensionPlan.aggregateConfigHash,
+            metadata: codexExtensionPlan.metadata,
+          },
+        ]
+      : []),
+    ...(cursorExtensionPlan ? [cursorExtensionPlan] : []),
+  ];
 
   for (const adapter of activeAdapters) {
     const mappings = dependencies.getSyncMappings(adapter, scope);
+    const adoptionSources = dependencies.getAdoptionSources(adapter, scope);
     const mappingContentTypes = new Set(
       mappings.map((mapping) => mapping.contentType),
     );
@@ -405,15 +504,20 @@ async function collectScopeReports(
       }
     }
 
-    for (const mapping of mappings) {
-      const providerDir = join(scopeRoot, mapping.providerDir);
-      const strays = await dependencies.detectStrays(
-        adapter.name,
-        providerDir,
-        manifest,
-        canonicalEntries,
-        mapping,
-      );
+    for (const source of adoptionSources) {
+      const providerDir = join(scopeRoot, source.directory);
+      const strays = filterMaterializationManagedStrays(
+        (
+          await dependencies.detectStrays(
+            adapter.name,
+            providerDir,
+            manifest,
+            canonicalEntries,
+            source.mapping,
+          )
+        ).map((report) => ({ provider: adapter.name, report })),
+        materializationPlans,
+      ).map((candidate) => candidate.report);
       reports.push(...strays);
       for (const stray of strays) {
         if (stray.state.status !== 'stray') {
@@ -422,37 +526,23 @@ async function collectScopeReports(
         strayCandidates.push({
           provider: adapter.name,
           report: stray,
-          mapping,
+          mapping: source.mapping,
         });
       }
     }
   }
 
-  if (activeAdapters.some((adapter) => adapter.name === 'codex')) {
-    const codexCanonicalEntries =
-      scope === 'user'
-        ? [
-            ...canonicalEntries,
-            ...(await dependencies.scanBundledManagedCodexAgents()),
-          ]
-        : canonicalEntries;
-    const codexExtensionPlan =
-      await dependencies.computeCodexProjectExtensionPlan(
-        scopeRoot,
-        codexCanonicalEntries,
-        undefined,
-        { userConfigDir: join(context.home, '.oat') },
-      );
-    for (const operation of codexExtensionPlan.operations) {
+  for (const extensionPlan of materializationPlans) {
+    for (const operation of extensionPlan.operations) {
       if (operation.action === 'skip') {
         continue;
       }
       if (operation.target === 'role') {
         reports.push({
-          canonical: operation.roleName
-            ? `.agents/agents/${operation.roleName}.md`
+          canonical: operation.entryName
+            ? `.agents/agents/${operation.entryName}.md`
             : null,
-          provider: 'codex',
+          provider: extensionPlan.provider,
           providerPath: operation.path,
           state:
             operation.action === 'create'
@@ -462,13 +552,15 @@ async function collectScopeReports(
       } else {
         reports.push({
           canonical: null,
-          provider: 'codex',
+          provider: extensionPlan.provider,
           providerPath: operation.path,
           state: { status: 'drifted', reason: 'modified' },
         });
       }
     }
+  }
 
+  if (codexExtensionPlan) {
     const codexStrays = await dependencies.detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
@@ -505,7 +597,7 @@ async function collectScopeReports(
     candidates: strayCandidates,
     knownStrays: {
       project: syncConfig.knownStrays,
-      user: userConfig.knownStrays,
+      user: userSyncConfig.knownStrays,
     },
   });
 
@@ -513,9 +605,11 @@ async function collectScopeReports(
     scope,
     scopeRoot,
     manifestPath,
+    syncConfigPath,
     manifest,
     reports: filtered.reports,
     strayCandidates: filtered.candidates,
+    activeAdapterNames: activeAdapters.map((adapter) => adapter.name),
   };
 }
 
@@ -569,55 +663,76 @@ async function runStatusCommand(
 
   if (summary.stray > 0) {
     if (context.interactive) {
+      let migrationAborted = false;
       for (const scopeCollection of scopeCollections) {
         if (scopeCollection.strayCandidates.length === 0) {
           continue;
         }
 
         let manifestChanged = false;
-
-        const selectedValues = await dependencies.selectManyWithAbort(
-          `Select stray entries to adopt [${scopeCollection.scope}]`,
-          scopeCollection.strayCandidates.map((strayCandidate, index) => ({
-            label: formatStrayChoiceLabel(
-              scopeCollection.scope,
-              strayCandidate.report.providerPath,
-              strayCandidate.provider,
-            ),
-            value: String(index),
-            description: formatPathForScope(
-              scopeCollection.scope,
-              strayCandidate.report.providerPath,
-            ),
-          })),
-          { interactive: context.interactive },
-        );
-        const selectedIndices = new Set(
-          (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
-        );
         let adoptedCount = 0;
         let codexStrayAdopted = false;
+        const cursorSkillStrays = scopeCollection.strayCandidates.filter(
+          isCursorSkillCandidate,
+        );
+        const ordinaryStrays = scopeCollection.strayCandidates.filter(
+          (stray) => !isCursorSkillCandidate(stray),
+        );
 
-        for (const [
-          index,
-          strayCandidate,
-        ] of scopeCollection.strayCandidates.entries()) {
-          if (!selectedIndices.has(index)) {
-            continue;
+        for (const strayCandidate of cursorSkillStrays) {
+          const disposition = await dependencies.selectWithAbort(
+            `Migrate Cursor skill [${scopeCollection.scope}]: ${formatPathForScope(
+              scopeCollection.scope,
+              strayCandidate.report.providerPath,
+            )}`,
+            [
+              {
+                label: 'Adopt into canonical',
+                value: 'adopt',
+                description: `Move to ${strayCandidate.mapping.canonicalDir}.`,
+              },
+              {
+                label: 'Keep Cursor-only',
+                value: 'keep',
+                description:
+                  'Leave in .cursor/skills and remember this choice.',
+              },
+            ],
+            { interactive: context.interactive },
+          );
+          if (disposition === null) {
+            migrationAborted = true;
+            break;
           }
 
           try {
-            scopeCollection.manifest = await dependencies.adoptStray(
-              scopeCollection.scopeRoot,
-              strayCandidate,
-              scopeCollection.manifest,
-            );
-            adoptedCount += 1;
-            manifestChanged = true;
-            codexStrayAdopted =
-              codexStrayAdopted || strayCandidate.provider === 'codex';
+            scopeCollection.manifest =
+              await dependencies.applyCursorSkillDisposition(
+                scopeCollection.scopeRoot,
+                strayCandidate,
+                scopeCollection.manifest,
+                disposition,
+                scopeCollection.syncConfigPath,
+              );
+            if (disposition === 'adopt') {
+              adoptedCount += 1;
+            } else {
+              context.logger.success(
+                `Kept Cursor-only [${scopeCollection.scope}]: ${formatPathForScope(
+                  scopeCollection.scope,
+                  strayCandidate.report.providerPath,
+                )}.`,
+              );
+            }
           } catch (error) {
-            if (!isAdoptionConflictError(error)) {
+            if (
+              error instanceof Error &&
+              error.message.startsWith('Cannot keep ')
+            ) {
+              context.logger.warn(error.message);
+              continue;
+            }
+            if (!isAdoptionConflictError(error) || disposition !== 'adopt') {
               throw error;
             }
 
@@ -631,7 +746,7 @@ async function runStatusCommand(
 
             if (!shouldReplace) {
               context.logger.warn(
-                `Skipped adopting conflicting stray [${scopeCollection.scope}] ${formatPathForScope(
+                `Skipped adopting conflicting Cursor skill [${scopeCollection.scope}] ${formatPathForScope(
                   scopeCollection.scope,
                   strayCandidate.report.providerPath,
                 )}.`,
@@ -639,16 +754,92 @@ async function runStatusCommand(
               continue;
             }
 
-            scopeCollection.manifest = await dependencies.adoptStray(
-              scopeCollection.scopeRoot,
-              strayCandidate,
-              scopeCollection.manifest,
-              { replaceCanonical: true },
-            );
+            scopeCollection.manifest =
+              await dependencies.applyCursorSkillDisposition(
+                scopeCollection.scopeRoot,
+                strayCandidate,
+                scopeCollection.manifest,
+                disposition,
+                scopeCollection.syncConfigPath,
+                { replaceCanonical: true },
+              );
             adoptedCount += 1;
-            manifestChanged = true;
-            codexStrayAdopted =
-              codexStrayAdopted || strayCandidate.provider === 'codex';
+          }
+        }
+
+        if (!migrationAborted && ordinaryStrays.length > 0) {
+          const selectedValues = await dependencies.selectManyWithAbort(
+            `Select stray entries to adopt [${scopeCollection.scope}]`,
+            ordinaryStrays.map((strayCandidate, index) => ({
+              label: formatStrayChoiceLabel(
+                scopeCollection.scope,
+                strayCandidate.report.providerPath,
+                strayCandidate.provider,
+              ),
+              value: String(index),
+              description: formatPathForScope(
+                scopeCollection.scope,
+                strayCandidate.report.providerPath,
+              ),
+            })),
+            { interactive: context.interactive },
+          );
+          if (selectedValues === null) {
+            migrationAborted = true;
+          } else {
+            const selectedIndices = new Set(
+              selectedValues.map((value) => Number.parseInt(value, 10)),
+            );
+            for (const [index, strayCandidate] of ordinaryStrays.entries()) {
+              if (!selectedIndices.has(index)) {
+                continue;
+              }
+
+              try {
+                scopeCollection.manifest = await dependencies.adoptStray(
+                  scopeCollection.scopeRoot,
+                  strayCandidate,
+                  scopeCollection.manifest,
+                );
+                adoptedCount += 1;
+                manifestChanged = true;
+                codexStrayAdopted =
+                  codexStrayAdopted || strayCandidate.provider === 'codex';
+              } catch (error) {
+                if (!isAdoptionConflictError(error)) {
+                  throw error;
+                }
+
+                const shouldReplace = await dependencies.confirmAction(
+                  `Conflict detected for ${formatPathForScope(
+                    scopeCollection.scope,
+                    strayCandidate.report.providerPath,
+                  )}. Replace canonical with stray content?`,
+                  { interactive: context.interactive },
+                );
+
+                if (!shouldReplace) {
+                  context.logger.warn(
+                    `Skipped adopting conflicting stray [${scopeCollection.scope}] ${formatPathForScope(
+                      scopeCollection.scope,
+                      strayCandidate.report.providerPath,
+                    )}.`,
+                  );
+                  continue;
+                }
+
+                scopeCollection.manifest = await dependencies.adoptStray(
+                  scopeCollection.scopeRoot,
+                  strayCandidate,
+                  scopeCollection.manifest,
+                  { replaceCanonical: true },
+                );
+                adoptedCount += 1;
+                manifestChanged = true;
+                codexStrayAdopted =
+                  codexStrayAdopted || strayCandidate.provider === 'codex';
+              }
+            }
           }
         }
 
@@ -663,6 +854,23 @@ async function runStatusCommand(
             computeExtensionPlan: dependencies.computeCodexProjectExtensionPlan,
             applyExtensionPlan: dependencies.applyCodexProjectExtensionPlan,
           });
+          if (scopeCollection.activeAdapterNames.includes('cursor')) {
+            const canonicalEntries = await dependencies.scanCanonical(
+              scopeCollection.scopeRoot,
+              scopeCollection.scope,
+            );
+            const cursorPlan =
+              await dependencies.computeCursorProjectExtensionPlan(
+                scopeCollection.scopeRoot,
+                canonicalEntries,
+                undefined,
+                { userConfigDir: join(context.home, '.oat') },
+              );
+            await dependencies.applyCursorProjectExtensionPlan(
+              scopeCollection.scopeRoot,
+              cursorPlan,
+            );
+          }
         }
 
         if (manifestChanged) {
@@ -670,15 +878,20 @@ async function runStatusCommand(
             scopeCollection.manifestPath,
             scopeCollection.manifest,
           );
+        }
+        if (adoptedCount > 0) {
           context.logger.success(
             `Adopted ${adoptedCount} stray entr${
               adoptedCount === 1 ? 'y' : 'ies'
             } [${scopeCollection.scope}].`,
           );
-        } else {
+        } else if (!migrationAborted) {
           context.logger.info(
             `No stray entries adopted [${scopeCollection.scope}].`,
           );
+        }
+        if (migrationAborted) {
+          break;
         }
       }
     } else if (!context.json) {

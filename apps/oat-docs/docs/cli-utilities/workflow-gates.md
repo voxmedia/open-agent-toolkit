@@ -94,6 +94,37 @@ model that ran, and the reviewer must not replace them with self-identification.
 The CLI compares the copied values with its gate-owned record before it applies
 the severity threshold.
 
+### Review producer identity
+
+Dynamic planning workflows can declare their current parent model to a review
+gate without writing a provider or model into shared/user config:
+
+```bash
+OAT_GATE_PRODUCER_IDENTITY='<model>:declared' oat gate review ...
+```
+
+This is a review-command-only bridge. `oat gate review` accepts it only when
+the value is non-empty and its provenance suffix is exactly `declared`. The
+gate removes the variable from the child reviewer's environment, and non-review
+commands such as `oat gate cross-provider-exec` ignore it.
+
+Producer evidence precedence is explicit `--producer-identity`, then a
+qualifying implementation dispatch stamp, then the review-only environment
+declaration, and finally unknown producer behavior. The environment bridge does
+not replace stronger explicit or stamped evidence and does not establish
+observed runtime identity.
+
+For final and contiguous-range reviews, each in-scope implementer/fix stamp
+contributes its claimable producer family. If that producer is not claimable or
+has an unknown family, the gate may infer only a family exclusion from the
+stamp's launcher-owned configured target. The target does not become producer
+runtime identity, and generic or unclassifiable targets contribute no family.
+
+Keep reusable gate commands producer-neutral in shared and user config.
+Planning skills attach the ephemeral declaration only while executing a
+resolved configured command that invokes `oat gate review`; they leave it
+absent for every other gate command.
+
 ### Headless completion safety
 
 Every `oat gate review` child receives the same headless contract through two
@@ -492,7 +523,9 @@ By default the dispatcher:
 4. Resolves producer identity from `--producer-identity` or dispatch stamps when
    available. Exact phase/task scopes use the matching stamp. `final` and
    contiguous ranges such as `p02-p03` aggregate every in-range implementer/fix
-   stamp.
+   stamp. A stamp whose producer is not claimable or has an unknown family may
+   contribute its classifiable configured target family to aggregate avoidance
+   at lower confidence.
 5. Applies `--avoid same-family`.
 6. Checks candidate availability in descending priority order, with target id as
    the tie-breaker.
@@ -537,7 +570,10 @@ single stamp or when no stamp has a claimable family. Their producer record uses
 an unknown representative instead of presenting the latest stamp as aggregate
 truth:
 
-- `avoidFamilies` is the stable deduplicated union of claimable known families.
+- `avoidFamilies` is the stable deduplicated union of claimable known producer
+  families plus classifiable configured target families from stamps whose
+  producer is not claimable or has an unknown family. A known, claimable
+  producer remains authoritative over a conflicting target.
 - `contributingScopes` is the stable document-order list of distinct scopes from
   every relevant stamp.
 - `contributingStampCount` counts every relevant stamp, including unknown or

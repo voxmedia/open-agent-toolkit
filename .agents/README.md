@@ -6,12 +6,12 @@ Canonical home for agent skills, subagents, and supporting documentation used by
 
 ```
 .agents/
-├── skills/          # Canonical shared skills (synced to provider views)
+├── skills/          # Canonical shared skills (native-read or synced as needed)
 │   ├── <skill>/
 │   │   ├── SKILL.md
 │   │   └── references/   # (optional) Templates, examples
 │   └── ...
-├── agents/          # Subagent definitions (Claude Code only)
+├── agents/          # Canonical subagent definitions materialized per provider
 │   ├── oat-codebase-mapper.md
 │   └── oat-reviewer.md
 ├── docs/            # Detailed agent guidance
@@ -25,7 +25,9 @@ Canonical home for agent skills, subagents, and supporting documentation used by
 
 ## Skills
 
-Skills live in `.agents/skills/<skill-name>/SKILL.md` and sync to provider-specific views via:
+Skills live in `.agents/skills/<skill-name>/SKILL.md`. Cursor, Codex, and Gemini
+read canonical skills directly; OAT sync creates provider-specific views only
+where a provider requires them:
 
 ```bash
 oat sync --scope all
@@ -37,7 +39,9 @@ For guidance on creating new skills, see [`.agents/docs/skills-guide.md`](docs/s
 
 ## Subagents
 
-Subagent definitions live in `.agents/agents/` and are available in Claude Code only.
+Subagent definitions live in `.agents/agents/`. OAT renders or materializes
+provider-specific definitions for Claude, Cursor, and Codex according to each
+provider's runtime format.
 
 For details on available subagents and how to use them, see [`.agents/docs/subagents-guide.md`](docs/subagents-guide.md).
 

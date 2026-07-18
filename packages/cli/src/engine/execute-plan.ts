@@ -154,6 +154,10 @@ async function applyEntry(
       const { canonicalPath } = resolveManifestPaths(planEntry);
       return removeEntry(manifest, canonicalPath, planEntry.provider);
     }
+    case 'detach': {
+      const { canonicalPath } = resolveManifestPaths(planEntry);
+      return removeEntry(manifest, canonicalPath, planEntry.provider);
+    }
     case 'skip': {
       return manifest;
     }

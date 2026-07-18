@@ -33,6 +33,15 @@ Key behavior:
 
 - Scope support (`project`, `user`, `all`)
 - Optional interactive stray adoption
+- Cursor-local skills are handled individually: Adopt moves the skill into the
+  matching canonical `.agents/skills` directory, while Keep Cursor-only
+  preserves it and records its exact path in the applicable sync config
+- Aborting a Cursor migration preserves completed choices and leaves the
+  current and remaining skills unresolved
+- Keep Cursor-only is blocked when a canonical skill has the same name; rename
+  one skill before retrying
+- Non-interactive and JSON modes report unresolved Cursor skill actions without
+  choosing or mutating a disposition
 - JSON output for automation
 
 ## `oat sync`
@@ -46,6 +55,20 @@ Key behavior:
 - Mutates by default; use `--dry-run` to preview
 - Strategy-aware operations (`symlink`, `copy`, `auto`)
 - Provider enable/disable honored via sync config
+- Cursor skills are native-read from canonical `.agents/skills`; sync does not
+  create `.cursor/skills` mirrors
+- Upgrade cleanup removes only verified clean legacy Cursor skill views.
+  Changed or unverified views are preserved and detached from obsolete manifest
+  ownership.
+
+Preview project and user cleanup before applying it:
+
+```bash
+oat sync --scope all --dry-run
+```
+
+Review every planned `remove` and `detach` operation before running the same
+command without `--dry-run`.
 
 ## `oat providers list`
 
@@ -102,6 +125,9 @@ Key behavior:
 ## Notes
 
 - `oat init --scope project` is commonly used before provider-interop commands because it initializes `.oat/sync/config.json`.
+- User-scope known-stray choices are stored in `~/.oat/sync/config.json`.
+  Legacy `~/.oat/config.json#knownStrays` entries migrate automatically before
+  user-scope stray filtering.
 - `oat doctor` complements interop workflows by surfacing environment and bundled-skill version issues before or after sync operations.
 
 ## Adjacent Instruction Integrity Commands

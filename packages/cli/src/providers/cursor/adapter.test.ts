@@ -2,6 +2,10 @@ import { mkdir, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import {
+  getAdoptionSources,
+  getSyncMappings,
+} from '@providers/shared/adapter.utils';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { cursorAdapter } from './adapter';
@@ -23,12 +27,17 @@ describe('cursorAdapter', () => {
     expect(cursorAdapter.displayName).toBe('Cursor');
   });
 
-  it('project skills map to .cursor/skills (not .claude/skills)', () => {
+  it('project skills are native-read with .cursor/skills as an adoption source', () => {
     const skillMapping = cursorAdapter.projectMappings.find(
       (mapping) => mapping.contentType === 'skill',
     );
 
-    expect(skillMapping?.providerDir).toBe('.cursor/skills');
+    expect(skillMapping).toMatchObject({
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    });
   });
 
   it('project agents map to .cursor/agents', () => {
@@ -47,13 +56,14 @@ describe('cursorAdapter', () => {
     expect(ruleMapping?.providerDir).toBe('.cursor/rules');
   });
 
-  it('user mappings: skills → .cursor/skills, agents → .cursor/agents', () => {
+  it('user mappings mix native-read skills with mirrored agents', () => {
     expect(cursorAdapter.userMappings).toEqual([
       {
         contentType: 'skill',
         canonicalDir: '.agents/skills',
-        providerDir: '.cursor/skills',
-        nativeRead: false,
+        providerDir: '.agents/skills',
+        nativeRead: true,
+        adoptionSourceDirs: ['.cursor/skills'],
       },
       {
         contentType: 'agent',
@@ -64,14 +74,41 @@ describe('cursorAdapter', () => {
     ]);
   });
 
-  it('all mappings have nativeRead: false', () => {
-    const allMappings = [
-      ...cursorAdapter.projectMappings,
-      ...cursorAdapter.userMappings,
-    ];
-    expect(allMappings.every((mapping) => mapping.nativeRead === false)).toBe(
-      true,
-    );
+  it.each(['project', 'user'] as const)(
+    '%s sync mappings exclude skills while adoption sources include .cursor/skills',
+    (scope) => {
+      expect(
+        getSyncMappings(cursorAdapter, scope).map(
+          (mapping) => mapping.contentType,
+        ),
+      ).not.toContain('skill');
+      expect(getAdoptionSources(cursorAdapter, scope)).toEqual(
+        expect.arrayContaining([
+          expect.objectContaining({
+            contentType: 'skill',
+            directory: '.cursor/skills',
+          }),
+        ]),
+      );
+    },
+  );
+
+  it('preserves project agent and rule mappings exactly', () => {
+    expect(cursorAdapter.projectMappings.slice(1)).toEqual([
+      {
+        contentType: 'agent',
+        canonicalDir: '.agents/agents',
+        providerDir: '.cursor/agents',
+        nativeRead: false,
+      },
+      expect.objectContaining({
+        contentType: 'rule',
+        canonicalDir: '.agents/rules',
+        providerDir: '.cursor/rules',
+        nativeRead: false,
+        providerExtension: '.mdc',
+      }),
+    ]);
   });
 
   it('detect returns true when .cursor/ exists', async () => {

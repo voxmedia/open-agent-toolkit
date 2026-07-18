@@ -13,7 +13,8 @@ This capability is intentionally independent from OAT workflow artifacts. Teams 
 
 - Canonical directories: `.agents/skills`, `.agents/agents`, `.agents/rules`
 - Managed provider views: `.claude/*`, `.cursor/*`, `.github/*`, `.copilot/*`, `.codex/*` (where applicable)
-- Native-read providers may use canonical `.agents/*` directly without mirrored provider directories (for example, Gemini and Codex canonical mappings)
+- Native-read mappings use canonical `.agents/*` directly without mirrored provider directories. Cursor skills, Gemini skills and agents, and Codex canonical mappings use this model.
+- Cursor's `.cursor/skills` and `~/.cursor/skills` directories are provider-local extension and adoption surfaces, not managed output directories.
 - Manifest tracking: `.oat/sync/manifest.json` (project) and `~/.oat/sync/manifest.json` (user)
 
 Rules are currently project-scoped canonical content. Unlike skills and agents, synced rule files for Claude, Cursor, and Copilot are rendered copies with provider-specific frontmatter and filename extensions.
@@ -24,6 +25,8 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Explicit `--dry-run` for safe preview of mutations
 - Scoped destructive actions only for manifest-tracked entries
 - Cross-provider compatibility via adapters
+- Native-read assets stay canonical while provider-local adoption sources remain discoverable independently
+- Obsolete managed mappings are deleted only when their provider paths are verified clean; changed or unverified paths are preserved and detached from manifest ownership
 - Canonical `.agents/agents` is source of truth for subagents; provider views are derived
 - Canonical `.agents/rules` is source of truth for rules; provider rule files are derived rendered copies
 
@@ -47,6 +50,7 @@ Rules are currently project-scoped canonical content. Unlike skills and agents, 
 - Project provider enablement is stored in `.oat/sync/config.json` (`providers.<name>.enabled`).
 - `oat init --scope project` (interactive) prompts for supported providers and persists explicit true/false values.
 - `oat sync --scope project` uses config-aware provider activation and can prompt to remediate detected mismatches.
+- Cursor provider enablement still controls agents, rules, migration discovery, and legacy cleanup even though Cursor reads canonical skills without a generated skill view.
 - Codex project-scope subagent sync writes `.codex/config.toml` and `.codex/agents/*.toml` at command layer after path-mapping sync. Every generated project Codex variant and registration is repository-owned, version-controlled provider output. OAT provides no automatic ignore mechanism for this project output; collaborators review and commit it like other project configuration.
 - Default Codex execution requires `root (0) → phase implementer (1)`. Sync and direct materialization continue to apply an `agents.max_depth` floor of `2` as optional nested-work capability without lowering a higher target value. A project write may read a higher lower-precedence user value and preserves it in project configuration; it writes only project `.codex/config.toml`. User scope writes only `~/.codex/config.toml` and does not read or change project configuration.
 - Missing depth or depth `1` does not block default phase execution. Invalid values or explicit values below `1` fail managed implementation preflight. `oat doctor` reports whether optional depth-two nesting is available and gives a scope-specific repair when the configured value is unusable.
