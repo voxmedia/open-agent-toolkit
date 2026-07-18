@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t09
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | complete | 10    | 10/10     |
-| Phase 3 | complete | 9     | 9/9       |
-| Phase 4 | complete | 9     | 9/9       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 6     | 6/6       |
+| Phase 2 | complete    | 10    | 10/10     |
+| Phase 3 | complete    | 9     | 9/9       |
+| Phase 4 | complete    | 9     | 9/9       |
+| Phase 5 | in_progress | 4     | 1/4       |
 
-**Total:** 34/38 tasks completed
+**Total:** 35/38 tasks completed
 
 ---
 
@@ -915,6 +915,33 @@ overlapping skills advanced to `1.5.4` / `2.1.4` / `1.3.4`, and all five
 public packages advanced together to `0.1.74`. Final reconciliation review
 passed with zero findings:
 `reviews/p04-reconciliation-review-2026-07-18T200037Z.md`.
+
+---
+
+## Phase 5: Release-candidate acceptance
+
+**Status:** in_progress
+**Started:** 2026-07-18
+
+### Task p05-t01: Produce and identify the frozen packaged RC
+
+**Status:** completed
+**Commit:** `24ffdac7`
+**Frozen code commit:** `c485b784`
+**RC ID:** `sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
+
+**Outcome:**
+
+- Retained all five `0.1.74` package tarballs and recorded the two `1.0.0`
+  explainer skills, schemas, recipes, and artifact hashes.
+- A second pre-commit build produced byte-identical RC identity; all retained
+  tarball hashes match the tracked record.
+
+**Verification:**
+
+- Release validation, formatting, and whitespace checks — pass.
+- Commit contains exactly `rc.json` and `rc.md`; retained tarballs stay under
+  untracked `dist/explainer-kit-rc/`.
 
 ---
 
