@@ -40,6 +40,40 @@ test('normalizes corresponding roots and maps site-relative paths', () => {
   );
 });
 
+test('rejects credential-bearing and ambiguous public roots before network use', async () => {
+  for (const publicRoot of [
+    'https://user:secret@cdn.example.com/published',
+    'https://cdn.example.com/published?token=secret',
+    'https://cdn.example.com/published#fragment',
+  ]) {
+    assert.throws(
+      () => normalizePublishRoots('s3://example-bucket', publicRoot),
+      (error) => error.code === 'E_PUBLISH_ROOTS',
+    );
+  }
+
+  const fixture = await createFixture();
+  fixture.request.publicBaseUrl =
+    'https://user:secret@cdn.example.com/published';
+  let networkCalled = false;
+  await assert.rejects(
+    publishS3Static(fixture.request, {
+      approved: true,
+      command: async () => {
+        networkCalled = true;
+      },
+      httpGet: async () => {
+        networkCalled = true;
+      },
+    }),
+    (error) =>
+      error.code === 'E_PUBLISH_ROOTS' &&
+      !error.message.includes('user') &&
+      !error.message.includes('secret'),
+  );
+  assert.equal(networkCalled, false);
+});
+
 test('creates run-unique sentinel paths with unguessable suffixes', () => {
   const first = createSentinelRelativePath('run/with spaces', () =>
     Buffer.from('0123456789abcdeffedcba9876543210', 'hex'),
@@ -219,6 +253,127 @@ test('uses explicit index URLs, writes receipt hashes, and records sentinel clea
   assert.deepEqual(
     JSON.parse(await readFile(fixture.receiptPath, 'utf8')),
     receipt,
+  );
+});
+
+test('rejects a successful public response whose bytes do not match the manifest', async () => {
+  const fixture = await createFixture();
+  const harness = fakeDestination();
+  const httpGet = async (url) => {
+    const response = await harness.dependencies.httpGet(url);
+    if (!url.includes('sentinel')) {
+      return { ...response, body: Buffer.from('stale cached payload') };
+    }
+    return response;
+  };
+
+  await assert.rejects(
+    publishS3Static(fixture.request, {
+      approved: true,
+      ...harness.dependencies,
+      httpGet,
+    }),
+    (error) => error.code === 'E_PUBLISH_VERIFY',
+  );
+  await assert.rejects(readFile(fixture.receiptPath), { code: 'ENOENT' });
+});
+
+test('hash-verifies binary public payloads without text coercion', async () => {
+  const fixture = await createFixture();
+  const binary = Buffer.from([0x00, 0xff, 0x89, 0x50, 0x4e, 0x47]);
+  const binaryPath = join(fixture.siteRoot, 'initiatives/demo/pixel.png');
+  await writeFile(binaryPath, binary);
+  const binaryHash = await fileHash(binaryPath);
+  fixture.manifest.artifacts.push({
+    id: 'pixel',
+    type: 'diagram',
+    contentPath: 'source/content/pixel.md',
+    status: 'built',
+    renderedPath: 'site/initiatives/demo/pixel.png',
+    mediaType: 'image/png',
+    hash: binaryHash,
+    rebuildable: false,
+  });
+  fixture.manifest.immutableHashes['source/content/pixel.md'] =
+    `sha256:${'f'.repeat(64)}`;
+  fixture.manifest.immutableHashes['site/initiatives/demo/pixel.png'] =
+    binaryHash;
+  await writeFile(
+    fixture.request.manifestPath,
+    `${JSON.stringify(fixture.manifest, null, 2)}\n`,
+  );
+  const harness = fakeDestination();
+  const bodies = new Map([
+    [
+      'https://cdn.example.com/published/initiatives/demo/index.html',
+      await readFile(join(fixture.siteRoot, 'initiatives/demo/index.html')),
+    ],
+    [
+      'https://cdn.example.com/published/initiatives/demo/catalog.json',
+      await readFile(join(fixture.siteRoot, 'initiatives/demo/catalog.json')),
+    ],
+    ['https://cdn.example.com/published/initiatives/demo/pixel.png', binary],
+  ]);
+
+  const receipt = await publishS3Static(fixture.request, {
+    approved: true,
+    ...harness.dependencies,
+    httpGet: async (url) =>
+      url.includes('sentinel')
+        ? harness.dependencies.httpGet(url)
+        : {
+            status: 200,
+            headers: {
+              'content-type': url.endsWith('.png')
+                ? 'image/png'
+                : url.endsWith('.json')
+                  ? 'application/json'
+                  : 'text/html; charset=utf-8',
+            },
+            body: bodies.get(url),
+          },
+  });
+
+  assert.equal(
+    receipt.artifacts.find(({ relativePath }) =>
+      relativePath.endsWith('pixel.png'),
+    ).hash,
+    binaryHash,
+  );
+});
+
+test('forces JSON metadata output and retries transient metadata reads', async () => {
+  const fixture = await createFixture();
+  const harness = fakeDestination();
+  let transientFailures = 0;
+  const command = async (file, args) => {
+    if (
+      args[1] === 'head-object' &&
+      !argument([file, ...args], '--key').includes('sentinel') &&
+      transientFailures < 2
+    ) {
+      transientFailures += 1;
+      throw Object.assign(new Error('Service Unavailable'), {
+        stderr: '503 Service Unavailable',
+      });
+    }
+    return harness.dependencies.command(file, args);
+  };
+
+  await publishS3Static(fixture.request, {
+    approved: true,
+    ...harness.dependencies,
+    command,
+    sleep: async () => {},
+  });
+
+  assert.equal(transientFailures, 2);
+  const parsedMetadataCalls = harness.calls.filter(
+    (call) => call[1] === 's3api' && call[2] === 'head-object',
+  );
+  assert.ok(parsedMetadataCalls.length > 0);
+  assert.ok(
+    parsedMetadataCalls.every((call) => argument(call, '--output') === 'json'),
   );
 });
 
@@ -414,9 +569,15 @@ function fakeDestination({
       headers: {
         'content-type': url.endsWith('.json')
           ? 'application/json'
-          : 'text/html; charset=utf-8',
+          : url.endsWith('.png')
+            ? 'image/png'
+            : 'text/html; charset=utf-8',
       },
-      body: sentinel ? 'explainer-kit sentinel\n' : '',
+      body: sentinel
+        ? Buffer.from('explainer-kit sentinel\n')
+        : url.endsWith('.json')
+          ? Buffer.from('{"title":"Demo"}\n')
+          : Buffer.from('<!doctype html><title>Demo</title>\n'),
     };
   };
   return { calls, urls, dependencies: { command, httpGet } };

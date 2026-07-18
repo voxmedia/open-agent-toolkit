@@ -1,21 +1,38 @@
 #!/usr/bin/env node
 
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import {
   cp,
+  lstat,
   mkdir,
   mkdtemp,
   readFile,
   readdir,
+  realpath,
   rename,
   rm,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { basename, dirname, join, relative, resolve } from 'node:path';
+import {
+  basename,
+  dirname,
+  join,
+  parse,
+  relative,
+  resolve,
+  sep,
+} from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
+
+import { releaseCandidatePathspecGroups } from '../../packages/cli/scripts/bundle-inputs.mjs';
+import {
+  RC_SCHEMA_VERSION,
+  SKILL_NAMES,
+  hashBytes,
+  hashCanonicalJson,
+} from './explainer-rc-contract.mjs';
 
 const execFileAsync = promisify(execFile);
 const PACKAGE_DIRECTORIES = new Map([
@@ -25,17 +42,10 @@ const PACKAGE_DIRECTORIES = new Map([
   ['@open-agent-toolkit/docs-theme', 'packages/docs-theme'],
   ['@open-agent-toolkit/docs-transforms', 'packages/docs-transforms'],
 ]);
-const SKILL_NAMES = ['explainer-kit', 'oat-explainer-kit'];
-const CANDIDATE_ROOTS = [
-  ...PACKAGE_DIRECTORIES.values(),
-  ...SKILL_NAMES.map((name) => `.agents/skills/${name}`),
-];
-const CANDIDATE_PATHSPECS = [
-  ...CANDIDATE_ROOTS,
-  ':(exclude)packages/cli/assets',
-  ':(exclude)packages/*/dist',
-  ':(exclude)packages/*/tsconfig.tsbuildinfo',
-];
+const RC_OWNER_MARKER = '.explainer-kit-rc-owned.json';
+const RC_OWNER = Object.freeze({
+  schemaVersion: 'explainer-kit.rc-output-owner/v1',
+});
 
 class RcBuildError extends Error {
   constructor(code, message, changedCandidates = undefined) {
@@ -53,6 +63,7 @@ export async function buildExplainerRc({
   const root = resolve(repoRoot);
   const outputRoot = resolve(root, output);
   const recordPath = resolve(root, record);
+  await validateRcOutputPath(root, outputRoot, recordPath);
   const changedCandidates = await listChangedCandidates(root);
   if (changedCandidates.length > 0) {
     throw new RcBuildError(
@@ -136,7 +147,7 @@ export async function buildExplainerRc({
       const schemas = await loadSchemas(coreRoot);
       const recipes = await loadRecipes(coreRoot);
       const identity = {
-        schemaVersion: 'explainer-kit.release-candidate/v1',
+        schemaVersion: RC_SCHEMA_VERSION,
         commit,
         packages,
         skills: skills.sort(byName),
@@ -144,7 +155,7 @@ export async function buildExplainerRc({
         recipes,
         changedCandidates: [],
       };
-      const rcId = hashBytes(Buffer.from(JSON.stringify(identity)));
+      const rcId = hashCanonicalJson(identity);
       const rcRecord = {
         schemaVersion: identity.schemaVersion,
         rcId,
@@ -156,9 +167,11 @@ export async function buildExplainerRc({
         changedCandidates: [],
       };
 
-      await rm(outputRoot, { recursive: true, force: true });
-      await mkdir(dirname(outputRoot), { recursive: true });
-      await rename(stagingRoot, outputRoot);
+      await writeFile(
+        join(stagingRoot, RC_OWNER_MARKER),
+        `${JSON.stringify(RC_OWNER, null, 2)}\n`,
+      );
+      await replaceOwnedOutput(stagingRoot, outputRoot);
       await writeJsonAtomic(recordPath, rcRecord);
       return rcRecord;
     } catch (error) {
@@ -208,42 +221,53 @@ async function loadRecipes(coreRoot) {
 }
 
 async function listChangedCandidates(repoRoot) {
-  const output = await run(
-    'git',
-    [
-      'status',
-      '--porcelain=v1',
-      '-z',
-      '--untracked-files=all',
-      '--',
-      ...CANDIDATE_PATHSPECS,
-    ],
-    repoRoot,
-  );
-  const tokens = output.split('\0').filter(Boolean);
   const paths = [];
-  for (let index = 0; index < tokens.length; index += 1) {
-    const entry = tokens[index];
-    const status = entry.slice(0, 2);
-    let path = entry.slice(3);
-    if (/[RC]/.test(status) && tokens[index + 1]) {
-      path = tokens[index + 1];
-      index += 1;
+  for (const pathspecs of releaseCandidatePathspecGroups()) {
+    const output = await run(
+      'git',
+      [
+        'status',
+        '--porcelain=v1',
+        '-z',
+        '--untracked-files=all',
+        '--',
+        ...pathspecs,
+      ],
+      repoRoot,
+    );
+    const tokens = output.split('\0').filter(Boolean);
+    for (let index = 0; index < tokens.length; index += 1) {
+      const entry = tokens[index];
+      const status = entry.slice(0, 2);
+      let path = entry.slice(3);
+      if (/[RC]/.test(status) && tokens[index + 1]) {
+        path = tokens[index + 1];
+        index += 1;
+      }
+      paths.push(path);
     }
-    paths.push(path);
   }
   return sorted(new Set(paths));
 }
 
 async function snapshotTrackedCandidates(repoRoot) {
-  const output = await run(
-    'git',
-    ['ls-files', '-z', '--', ...CANDIDATE_PATHSPECS],
-    repoRoot,
-  );
-  const paths = sorted(output.split('\0').filter(Boolean));
+  const paths = new Set();
+  for (const pathspecs of releaseCandidatePathspecGroups()) {
+    const output = await run(
+      'git',
+      ['ls-files', '-z', '--', ...pathspecs],
+      repoRoot,
+    );
+    output
+      .split('\0')
+      .filter(Boolean)
+      .forEach((path) => paths.add(path));
+  }
   const entries = await Promise.all(
-    paths.map(async (path) => [path, await hashFile(join(repoRoot, path))]),
+    sorted(paths).map(async (path) => [
+      path,
+      await hashFile(join(repoRoot, path)),
+    ]),
   );
   return new Map(entries);
 }
@@ -289,13 +313,148 @@ async function hashFile(path) {
   return hashBytes(await readFile(path));
 }
 
-function hashBytes(value) {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
-}
-
 async function createStagingDirectory(outputRoot) {
   await mkdir(dirname(outputRoot), { recursive: true });
   return mkdtemp(join(dirname(outputRoot), `.${basename(outputRoot)}-`));
+}
+
+export async function validateRcOutputPath(repoRoot, outputRoot, recordPath) {
+  const rawRoot = resolve(repoRoot);
+  const rawOutput = resolve(outputRoot);
+  const rawRecord = resolve(recordPath);
+  let outputStats;
+  try {
+    outputStats = await lstat(rawOutput);
+  } catch (error) {
+    if (error.code !== 'ENOENT') {
+      throw new RcBuildError(
+        'E_OUTPUT_UNSAFE',
+        'RC output could not be inspected safely.',
+      );
+    }
+  }
+  if (outputStats?.isSymbolicLink()) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNSAFE',
+      'RC output must not be a symlink.',
+    );
+  }
+
+  const root = await canonicalProspectivePath(rawRoot);
+  const output = await canonicalProspectivePath(rawOutput);
+  const record = await canonicalProspectivePath(rawRecord);
+  const filesystemRoot = parse(output).root;
+  if (
+    output === filesystemRoot ||
+    output === root ||
+    root.startsWith(`${output}${sep}`)
+  ) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNSAFE',
+      'RC output must not be a filesystem root, repository root, or repository ancestor.',
+    );
+  }
+  if (record === output || record.startsWith(`${output}${sep}`)) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNSAFE',
+      'RC identity record must be outside the retained artifact directory.',
+    );
+  }
+
+  const sourcePaths = [
+    ...new Set([
+      ...PACKAGE_DIRECTORIES.values(),
+      ...releaseCandidatePathspecGroups()
+        .flat()
+        .filter((path) => !path.startsWith(':(exclude)')),
+    ]),
+  ].map((path) => resolve(root, path));
+  if (
+    sourcePaths.some(
+      (source) =>
+        output === source ||
+        output.startsWith(`${source}${sep}`) ||
+        source.startsWith(`${output}${sep}`),
+    )
+  ) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNSAFE',
+      'RC output must not overlap a release candidate source.',
+    );
+  }
+
+  if (!outputStats) return;
+  if (!outputStats.isDirectory()) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNSAFE',
+      'RC output must not be a symlink or non-directory filesystem entry.',
+    );
+  }
+
+  let marker;
+  try {
+    const markerPath = join(output, RC_OWNER_MARKER);
+    const markerStats = await lstat(markerPath);
+    if (!markerStats.isFile() || markerStats.isSymbolicLink()) {
+      throw new Error('invalid marker');
+    }
+    marker = JSON.parse(await readFile(markerPath, 'utf8'));
+  } catch {
+    throw new RcBuildError(
+      'E_OUTPUT_UNOWNED',
+      'Existing RC output is not owned by the release candidate builder.',
+    );
+  }
+  if (
+    Object.keys(marker).length !== 1 ||
+    marker.schemaVersion !== RC_OWNER.schemaVersion
+  ) {
+    throw new RcBuildError(
+      'E_OUTPUT_UNOWNED',
+      'Existing RC output has an invalid ownership marker.',
+    );
+  }
+}
+
+async function canonicalProspectivePath(path) {
+  const missing = [];
+  let candidate = path;
+  while (true) {
+    try {
+      const canonical = await realpath(candidate);
+      return resolve(canonical, ...missing.reverse());
+    } catch (error) {
+      if (error.code !== 'ENOENT') throw error;
+      const parent = dirname(candidate);
+      if (parent === candidate) throw error;
+      missing.push(basename(candidate));
+      candidate = parent;
+    }
+  }
+}
+
+async function replaceOwnedOutput(stagingRoot, outputRoot) {
+  let existing = false;
+  try {
+    await lstat(outputRoot);
+    existing = true;
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
+  }
+  if (!existing) {
+    await rename(stagingRoot, outputRoot);
+    return;
+  }
+
+  const previous = `${outputRoot}.previous-${process.pid}-${Date.now()}`;
+  await rename(outputRoot, previous);
+  try {
+    await rename(stagingRoot, outputRoot);
+  } catch (error) {
+    await rename(previous, outputRoot);
+    throw error;
+  }
+  await rm(previous, { recursive: true, force: true });
 }
 
 async function backupDirectory(source) {

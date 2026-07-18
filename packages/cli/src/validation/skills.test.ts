@@ -664,33 +664,22 @@ describe('validateOatSkills', () => {
 
   it('requires bundled oat skill files to include valid semver versions', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
-    const bundleScriptPath = join(
+    const bundleInventoryPath = join(
       repoRoot,
       'packages',
       'cli',
       'scripts',
-      'bundle-assets.sh',
+      'bundle-inputs.mjs',
     );
-    const bundleScript = await readFile(bundleScriptPath, 'utf8');
-    const lines = bundleScript.split('\n');
-
-    const bundledSkills: string[] = [];
-    let inSkillsBlock = false;
-    for (const line of lines) {
-      if (line.trim() === 'SKILLS=(') {
-        inSkillsBlock = true;
-        continue;
-      }
-      if (inSkillsBlock && line.trim() === ')') {
-        break;
-      }
-      if (inSkillsBlock) {
-        const name = line.trim();
-        if (name.startsWith('oat-')) {
-          bundledSkills.push(name);
-        }
-      }
-    }
+    const { stdout } = await execFileAsync(
+      process.execPath,
+      [bundleInventoryPath, '--json'],
+      { encoding: 'utf8' },
+    );
+    const inventory = JSON.parse(stdout) as { skills: string[] };
+    const bundledSkills = inventory.skills.filter((name) =>
+      name.startsWith('oat-'),
+    );
 
     expect(bundledSkills.length).toBeGreaterThan(0);
 

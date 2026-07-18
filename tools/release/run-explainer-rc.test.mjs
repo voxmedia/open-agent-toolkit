@@ -47,10 +47,14 @@ test('verifies every tarball, runs an allowlisted packaged entry, records exit e
   });
 
   assert.equal(await readFile(marker, 'utf8'), 'packaged\n');
-  assert.deepEqual(JSON.parse(stdout), {
-    source: 'packaged',
-    args: ['--marker', marker, '--value', 'safe'],
-  });
+  const childResult = JSON.parse(stdout);
+  assert.equal(childResult.source, 'packaged');
+  assert.deepEqual(childResult.args.slice(-4), [
+    '--marker',
+    marker,
+    '--value',
+    'safe',
+  ]);
   const record = JSON.parse(await readFile(recordPath, 'utf8'));
   assert.deepEqual(record, {
     schemaVersion: 'explainer-kit.packaged-execution/v1',
@@ -69,6 +73,21 @@ test('verifies every tarball, runs an allowlisted packaged entry, records exit e
     verifiedTarballs: fixture.manifest.packages.map(
       ({ name, artifact, sha256 }) => ({ name, artifact, sha256 }),
     ),
+    request: {
+      schemaVersion: 'explainer-kit.publish-request/v1',
+      sha256: await hashJsonFile(fixture.publishRequestPath),
+    },
+    outputs: {
+      manifest: {
+        schemaVersion: 'explainer-kit.manifest/v1',
+        sha256: await hashJsonFile(fixture.publishManifestPath),
+      },
+      receipt: {
+        schemaVersion: 'explainer-kit.publish-receipt/v1',
+        sha256: await hashJsonFile(fixture.receiptPath),
+      },
+    },
+    coreRunId: 'run-publish-123',
     exit: { code: 0, signal: null },
   });
   assert.deepEqual(await extractionDirectories(fixture.tempRoot), []);
@@ -184,6 +203,62 @@ await writeFile(${JSON.stringify(sourceMarker)}, 'source\\n');
   await assert.rejects(readFile(sourceMarker), { code: 'ENOENT' });
 });
 
+test('requires one explicit artifacts directory and never searches cwd fallbacks', async () => {
+  const fixture = await createFixture();
+  const fallback = join(fixture.root, 'dist/explainer-kit-rc');
+  const explicit = join(fixture.root, 'retained-elsewhere');
+  await mkdir(explicit, { recursive: true });
+  for (const pkg of fixture.manifest.packages) {
+    await writeFile(join(explicit, pkg.artifact), 'wrong explicit bytes');
+  }
+
+  const explicitFailure = await runFailure(fixture, {
+    entry: 'scripts/publish.mjs',
+    artifactsDir: explicit,
+  });
+  assert.equal(explicitFailure.code, 'E_HASH_MISMATCH');
+
+  const missingArgument = await runFailure(fixture, {
+    entry: 'scripts/publish.mjs',
+    omitArtifactsDir: true,
+  });
+  assert.equal(missingArgument.code, 'E_USAGE');
+  assert.ok(fallback.endsWith('dist/explainer-kit-rc'));
+});
+
+test('binds execution evidence to canonical request, declared outputs, and core run ID', async () => {
+  const fixture = await createFixture();
+  const recordPath = join(fixture.root, 'bound-execution.json');
+  await writeJson(fixture.receiptPath, {
+    schemaVersion: 'explainer-kit.publish-receipt/v1',
+    coreRunId: 'run-core-123',
+  });
+
+  await run(fixture, {
+    entry: 'scripts/run.mjs',
+    recordPath,
+    receipt: fixture.receiptPath,
+  });
+
+  const record = JSON.parse(await readFile(recordPath, 'utf8'));
+  assert.deepEqual(record.request, {
+    schemaVersion: 'explainer-kit.run-request/v1',
+    sha256: await hashJsonFile(fixture.coreRequestPath),
+  });
+  assert.deepEqual(record.outputs, {
+    manifest: {
+      schemaVersion: 'explainer-kit.manifest/v1',
+      sha256: await hashJsonFile(fixture.coreManifestPath),
+    },
+    receipt: {
+      schemaVersion: 'explainer-kit.publish-receipt/v1',
+      sha256: await hashJsonFile(fixture.receiptPath),
+    },
+  });
+  assert.equal(record.coreRunId, 'run-core-123');
+  assert.doesNotMatch(JSON.stringify(record), new RegExp(fixture.root));
+});
+
 test('records packaged child failures and emits one sanitized structured error', async () => {
   const fixture = await createFixture();
   const recordPath = join(fixture.root, 'failed-execution.json');
@@ -215,6 +290,11 @@ async function createFixture({
   tempRoots.push(root);
   const artifactsRoot = join(root, 'dist/explainer-kit-rc');
   const manifestPath = join(root, 'acceptance/rc.json');
+  const publishManifestPath = join(root, 'run-publish/manifest.json');
+  const publishRequestPath = join(root, 'publish-request.json');
+  const receiptPath = join(root, 'publish-receipt.json');
+  const coreRequestPath = join(root, 'core-request.json');
+  const coreManifestPath = join(root, 'run-core/manifest.json');
   const tempRoot = join(root, 'tmp');
   await Promise.all([
     mkdir(artifactsRoot, { recursive: true }),
@@ -317,26 +397,87 @@ async function createFixture({
     recipes: identity.recipes,
     changedCandidates: [],
   };
-  await writeJson(manifestPath, manifest);
+  await Promise.all([
+    writeJson(manifestPath, manifest),
+    writeJson(publishManifestPath, {
+      schemaVersion: 'explainer-kit.manifest/v1',
+      runId: 'run-publish-123',
+      artifacts: [],
+    }),
+    writeJson(publishRequestPath, {
+      schemaVersion: 'explainer-kit.publish-request/v1',
+      provider: 's3-static',
+      s3Uri: 's3://example/published',
+      publicBaseUrl: 'https://example.com/published',
+      awsRegion: 'us-east-1',
+      siteRoot: join(root, 'run-publish/site'),
+      manifestPath: publishManifestPath,
+    }),
+    writeJson(coreRequestPath, {
+      schemaVersion: 'explainer-kit.run-request/v1',
+      recipe: { id: 'project-explainer', version: '1' },
+      slug: 'run-core',
+      outputRoot: root,
+      factBase: {
+        mode: 'supplied',
+        path: join(root, 'fact-base.json'),
+        freshnessPolicy: 'live-wins',
+      },
+      durability: { strategy: 'none' },
+      privacy: { retainRawArtDirection: false },
+      mode: 'unattended',
+    }),
+  ]);
 
-  return { root, artifactsRoot, manifestPath, manifest, tempRoot };
+  return {
+    root,
+    artifactsRoot,
+    manifestPath,
+    manifest,
+    tempRoot,
+    publishManifestPath,
+    publishRequestPath,
+    receiptPath,
+    coreRequestPath,
+    coreManifestPath,
+  };
 }
 
 async function run(
   fixture,
-  { entry, recordPath = join(fixture.root, 'execution.json'), args = [] },
+  {
+    entry,
+    recordPath = join(fixture.root, 'execution.json'),
+    artifactsDir = fixture.artifactsRoot,
+    omitArtifactsDir = false,
+    receipt,
+    args = [],
+  },
 ) {
+  const evidenceArgs =
+    entry === 'scripts/publish.mjs'
+      ? [
+          '--request',
+          fixture.publishRequestPath,
+          '--receipt',
+          fixture.receiptPath,
+          '--confirm-publish',
+        ]
+      : ['--request', fixture.coreRequestPath];
   return execFileAsync(
     process.execPath,
     [
       RUNNER,
       '--rc-manifest',
       fixture.manifestPath,
+      ...(!omitArtifactsDir ? ['--artifacts-dir', artifactsDir] : []),
       '--entry',
       entry,
       '--record',
       recordPath,
+      ...(receipt ? ['--receipt', receipt] : []),
       '--',
+      ...evidenceArgs,
       ...args,
     ],
     {
@@ -366,7 +507,8 @@ async function extractionDirectories(tempRoot) {
 }
 
 function packagedEntry() {
-  return `import { writeFile } from 'node:fs/promises';
+  return `import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 const args = process.argv.slice(2);
 const markerIndex = args.indexOf('--marker');
 if (markerIndex >= 0) await writeFile(args[markerIndex + 1], 'packaged\\n');
@@ -375,7 +517,47 @@ if (exitIndex >= 0) {
   process.stderr.write(\`fixture secret: \${args.join(' ')}\\n\`);
   process.exitCode = Number(args[exitIndex + 1]);
 } else {
-  process.stdout.write(\`\${JSON.stringify({ source: 'packaged', args })}\\n\`);
+  const requestPath = args[args.indexOf('--request') + 1];
+  const request = JSON.parse(await readFile(requestPath, 'utf8'));
+  if (request.schemaVersion === 'explainer-kit.publish-request/v1') {
+    const receiptPath = args[args.indexOf('--receipt') + 1];
+    const receipt = {
+      schemaVersion: 'explainer-kit.publish-receipt/v1',
+      provider: 's3-static',
+      publishedAt: '2026-07-18T12:00:00.000Z',
+      roots: { s3Uri: request.s3Uri, publicBaseUrl: request.publicBaseUrl },
+      sentinel: {
+        relativePath: '.explainer-kit-sentinel/run-publish-123-0123456789abcdeffedcba9876543210.txt',
+        uploadVerified: true,
+        publicVerified: true,
+        deleted: true,
+      },
+      artifacts: [],
+    };
+    await writeFile(receiptPath, JSON.stringify(receipt));
+    process.stdout.write(JSON.stringify({
+      ok: true,
+      receiptPath,
+      receipt,
+      source: 'packaged',
+      args,
+    }) + '\\n');
+  } else {
+    const manifestPath = join(request.outputRoot, request.slug, 'manifest.json');
+    await mkdir(dirname(manifestPath), { recursive: true });
+    await writeFile(manifestPath, JSON.stringify({
+      schemaVersion: 'explainer-kit.manifest/v1',
+      runId: 'run-core-123',
+      artifacts: [],
+    }));
+    process.stdout.write(JSON.stringify({
+      runId: 'run-core-123',
+      manifestPath,
+      outcome: 'built-not-durable',
+      source: 'packaged',
+      args,
+    }) + '\\n');
+  }
 }
 `;
 }
@@ -422,6 +604,12 @@ async function walkFiles(root) {
 
 async function hashFile(path) {
   return hashBytes(await readFile(path));
+}
+
+async function hashJsonFile(path) {
+  return hashBytes(
+    Buffer.from(JSON.stringify(JSON.parse(await readFile(path, 'utf8')))),
+  );
 }
 
 function hashBytes(value) {

@@ -7,6 +7,7 @@ import {
   readFile,
   readdir,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -87,7 +88,10 @@ test('builds retained tarballs and a stable timestamp-free RC identity', async (
   const retained = (await readdir(first.output)).sort();
   assert.deepEqual(
     retained,
-    first.record.packages.map(({ artifact }) => artifact).sort(),
+    [
+      '.explainer-kit-rc-owned.json',
+      ...first.record.packages.map(({ artifact }) => artifact),
+    ].sort(),
   );
   assert.match(await readFile(fixture.commandLog, 'utf8'), /^build$/m);
   assert.doesNotMatch(await readFile(fixture.commandLog, 'utf8'), /publish/i);
@@ -125,6 +129,98 @@ test('rejects candidate hashes that change during the build', async () => {
   assert.deepEqual(failure.changedCandidates, [
     '.agents/skills/explainer-kit/schemas/manifest.schema.json',
   ]);
+});
+
+test('tracks every retained CLI bundle source before and during the build', async () => {
+  const cases = [
+    {
+      path: 'apps/oat-docs/docs/release.md',
+      dirtyPath: 'apps/oat-docs/docs/untracked-release.md',
+    },
+    {
+      path: '.agents/skills/oat-project-plan/SKILL.md',
+      dirtyPath: '.agents/skills/oat-project-plan/UNTRACKED.md',
+    },
+    {
+      path: '.agents/agents/oat-reviewer.md',
+      dirtyPath: '.agents/agents/oat-reviewer.md',
+    },
+    {
+      path: '.oat/templates/ideas/example.md',
+      dirtyPath: '.oat/templates/ideas/UNTRACKED.md',
+    },
+    {
+      path: '.oat/scripts/generate-oat-state.sh',
+      dirtyPath: '.oat/scripts/generate-oat-state.sh',
+    },
+  ];
+
+  for (const { path, dirtyPath } of cases) {
+    const dirtyFixture = await createFixture();
+    await writeText(join(dirtyFixture.root, dirtyPath), 'dirty\n');
+    const dirtyFailure = await runBuilderFailure(dirtyFixture);
+    assert.equal(dirtyFailure.code, 'E_CHANGED_CANDIDATES', path);
+    assert.deepEqual(dirtyFailure.changedCandidates, [dirtyPath], path);
+
+    const racingFixture = await createFixture();
+    const racingFailure = await runBuilderFailure(racingFixture, {
+      MUTATE_PATH: path,
+    });
+    assert.equal(racingFailure.code, 'E_CANDIDATE_HASH_CHANGED', path);
+    assert.deepEqual(racingFailure.changedCandidates, [path], path);
+  }
+});
+
+test('rejects destructive, linked, and unowned RC output destinations', async () => {
+  const repoFixture = await createFixture();
+  const preservedRepoFile = join(
+    repoFixture.root,
+    '.agents/skills/explainer-kit/SKILL.md',
+  );
+  await assertBuilderFailure(repoFixture, repoFixture.root, 'E_OUTPUT_UNSAFE');
+  assert.match(await readFile(preservedRepoFile, 'utf8'), /explainer-kit/);
+
+  const packageFixture = await createFixture();
+  const packageRoot = join(packageFixture.root, 'packages/cli');
+  await assertBuilderFailure(packageFixture, packageRoot, 'E_OUTPUT_UNSAFE');
+  await readFile(join(packageRoot, 'package.json'), 'utf8');
+
+  const symlinkFixture = await createFixture();
+  const unrelated = join(symlinkFixture.root, 'unrelated');
+  const linkedOutput = join(symlinkFixture.root, 'linked-output');
+  await mkdir(unrelated);
+  await writeFile(join(unrelated, 'keep.txt'), 'keep\n');
+  await symlink(unrelated, linkedOutput);
+  await assertBuilderFailure(symlinkFixture, linkedOutput, 'E_OUTPUT_UNSAFE');
+  assert.equal(await readFile(join(unrelated, 'keep.txt'), 'utf8'), 'keep\n');
+
+  const populatedFixture = await createFixture();
+  const populated = join(populatedFixture.root, 'unowned-output');
+  await mkdir(populated);
+  await writeFile(join(populated, 'keep.txt'), 'keep\n');
+  await assertBuilderFailure(populatedFixture, populated, 'E_OUTPUT_UNOWNED');
+  assert.equal(await readFile(join(populated, 'keep.txt'), 'utf8'), 'keep\n');
+});
+
+test('atomically replaces only an RC output carrying the ownership marker', async () => {
+  const fixture = await createFixture();
+  const first = await runBuilder(fixture, 'owned');
+  await writeFile(join(first.output, 'stale.tgz'), 'stale');
+  const recordPath = join(fixture.root, 'owned-replacement.json');
+
+  await execFileAsync(
+    process.execPath,
+    [BUILDER, '--output', first.output, '--record', recordPath],
+    { cwd: fixture.root, env: fixture.env },
+  );
+
+  await assert.rejects(readFile(join(first.output, 'stale.tgz')), {
+    code: 'ENOENT',
+  });
+  const marker = JSON.parse(
+    await readFile(join(first.output, '.explainer-kit-rc-owned.json'), 'utf8'),
+  );
+  assert.equal(marker.schemaVersion, 'explainer-kit.rc-output-owner/v1');
 });
 
 async function createFixture() {
@@ -175,6 +271,18 @@ async function createFixture() {
         version: '1',
       },
     ),
+    writeText(join(root, 'apps/oat-docs/docs/release.md'), '# Release\n'),
+    writeText(
+      join(root, '.agents/skills/oat-project-plan/SKILL.md'),
+      skill('oat-project-plan'),
+    ),
+    writeText(join(root, '.agents/agents/oat-reviewer.md'), '# Reviewer\n'),
+    writeText(join(root, '.oat/templates/plan.md'), '# Plan\n'),
+    writeText(join(root, '.oat/templates/ideas/example.md'), '# Idea\n'),
+    writeText(
+      join(root, '.oat/scripts/generate-oat-state.sh'),
+      '#!/usr/bin/env bash\n',
+    ),
   ]);
   await mkdir(bin, { recursive: true });
   await writeFile(
@@ -199,6 +307,12 @@ if (args[0] === 'build') {
     await writeFile(
       join(process.cwd(), '.agents/skills/explainer-kit/schemas/manifest.schema.json'),
       '{"$id":"explainer-kit.manifest/v2"}\\n',
+    );
+  }
+  if (process.env.MUTATE_PATH) {
+    await writeFile(
+      join(process.cwd(), process.env.MUTATE_PATH),
+      'changed during build\\n',
     );
   }
   process.exit(0);
@@ -271,6 +385,27 @@ async function runBuilderFailure(fixture, extraEnv = {}) {
   } catch (error) {
     assert.equal(error.code, 1);
     return JSON.parse(error.stderr);
+  }
+}
+
+async function assertBuilderFailure(fixture, output, expectedCode) {
+  try {
+    await execFileAsync(
+      process.execPath,
+      [
+        BUILDER,
+        '--output',
+        output,
+        '--record',
+        join(fixture.root, 'unsafe-record.json'),
+      ],
+      { cwd: fixture.root, env: fixture.env },
+    );
+    assert.fail('Expected unsafe RC output to fail.');
+  } catch (error) {
+    assert.equal(error.code, 1);
+    const failure = JSON.parse(error.stderr);
+    assert.equal(failure.code, expectedCode);
   }
 }
 

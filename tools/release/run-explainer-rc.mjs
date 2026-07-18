@@ -1,7 +1,6 @@
 #!/usr/bin/env node
 
 import { execFile } from 'node:child_process';
-import { createHash } from 'node:crypto';
 import {
   lstat,
   mkdir,
@@ -14,36 +13,24 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import {
-  basename,
-  dirname,
-  isAbsolute,
-  join,
-  relative,
-  resolve,
-  sep,
-} from 'node:path';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
+import {
+  CLI_PACKAGE,
+  EXECUTION_SCHEMA_VERSION,
+  assertReleaseCandidate,
+  hashBytes,
+  hashCanonicalJson,
+} from './explainer-rc-contract.mjs';
+
 const execFileAsync = promisify(execFile);
-const RC_SCHEMA_VERSION = 'explainer-kit.release-candidate/v1';
-const EXECUTION_SCHEMA_VERSION = 'explainer-kit.packaged-execution/v1';
-const CLI_PACKAGE = '@open-agent-toolkit/cli';
-const PACKAGE_NAMES = [
-  '@open-agent-toolkit/cli',
-  '@open-agent-toolkit/control-plane',
-  '@open-agent-toolkit/docs-config',
-  '@open-agent-toolkit/docs-theme',
-  '@open-agent-toolkit/docs-transforms',
-];
 const SKILL_LAYOUTS = new Map([
   ['explainer-kit', 'package/assets/skills/explainer-kit'],
   ['oat-explainer-kit', 'package/assets/skills/oat-explainer-kit'],
 ]);
 const ALLOWED_ENTRIES = new Set(['scripts/publish.mjs', 'scripts/run.mjs']);
-const HASH_PATTERN = /^sha256:[a-f0-9]{64}$/;
-const COMMIT_PATTERN = /^[a-f0-9]{40}$/;
 
 class RcRunError extends Error {
   constructor(code, message, details = undefined) {
@@ -55,17 +42,27 @@ class RcRunError extends Error {
 
 export async function runExplainerRc({
   rcManifest,
+  artifactsDir,
   entry,
   record,
+  receipt,
   entryArgs = [],
   cwd = process.cwd(),
   env = process.env,
 }) {
   const manifestPath = resolve(cwd, rcManifest);
+  const artifactsRoot = await resolveArtifactsDirectory(cwd, artifactsDir);
   const recordPath = resolve(cwd, record);
   validateEntry(entry);
+  if (entry === 'scripts/publish.mjs' && receipt) {
+    throw new RcRunError(
+      'E_USAGE',
+      'Top-level --receipt is only valid for packaged core runs.',
+    );
+  }
   const manifest = await loadManifest(manifestPath);
-  const artifacts = await verifyArtifacts(manifest, manifestPath, cwd);
+  const artifacts = await verifyArtifacts(manifest, artifactsRoot);
+  const request = await readRequestBinding(entry, entryArgs, cwd);
   const temporaryRoot = await mkdtemp(join(tmpdir(), 'explainer-rc-run-'));
 
   try {
@@ -77,6 +74,21 @@ export async function runExplainerRc({
     const packagedEntry = await resolvePackagedEntry(temporaryRoot, entry);
     await validatePackageLayout(temporaryRoot, manifest, cliPackage);
     const exit = await executeEntry(packagedEntry, entryArgs, cwd, env);
+    const bindings =
+      exit.code === 0 && exit.signal === null
+        ? await readOutputBindings({
+            entry,
+            entryArgs,
+            exit,
+            request,
+            declaredReceipt: receipt,
+            cwd,
+          })
+        : {
+            request: request.binding,
+            outputs: { manifest: null, receipt: null },
+            coreRunId: null,
+          };
     const executionRecord = {
       schemaVersion: EXECUTION_SCHEMA_VERSION,
       rcId: manifest.rcId,
@@ -92,6 +104,7 @@ export async function runExplainerRc({
         artifact,
         sha256,
       })),
+      ...bindings,
       exit: { code: exit.code, signal: exit.signal },
     };
     await writeJsonAtomic(recordPath, executionRecord);
@@ -120,153 +133,22 @@ async function loadManifest(path) {
       'Release candidate manifest is missing or malformed.',
     );
   }
-  validateManifest(manifest);
-  const identity = {
-    schemaVersion: manifest.schemaVersion,
-    commit: manifest.commit,
-    packages: manifest.packages,
-    skills: manifest.skills,
-    schemas: manifest.schemas,
-    recipes: manifest.recipes,
-    changedCandidates: manifest.changedCandidates,
-  };
-  if (hashBytes(Buffer.from(JSON.stringify(identity))) !== manifest.rcId) {
+  assertReleaseCandidate(manifest, (message, identityMismatch = false) => {
     throw new RcRunError(
-      'E_RC_IDENTITY',
-      'Release candidate identity does not match its manifest.',
+      identityMismatch ? 'E_RC_IDENTITY' : 'E_RC_MANIFEST',
+      identityMismatch
+        ? 'Release candidate identity does not match its manifest.'
+        : message,
     );
-  }
+  });
   return manifest;
 }
 
-function validateManifest(manifest) {
-  assertObject(manifest, 'release candidate');
-  assertExactKeys(manifest, [
-    'schemaVersion',
-    'rcId',
-    'commit',
-    'packages',
-    'skills',
-    'schemas',
-    'recipes',
-    'changedCandidates',
-  ]);
-  if (manifest.schemaVersion !== RC_SCHEMA_VERSION) invalidManifest();
-  requiredPattern(manifest.rcId, HASH_PATTERN);
-  requiredPattern(manifest.commit, COMMIT_PATTERN);
-  if (
-    !Array.isArray(manifest.changedCandidates) ||
-    manifest.changedCandidates.length !== 0
-  ) {
-    invalidManifest();
-  }
-
-  validatePackages(manifest.packages);
-  validateSkills(manifest.skills);
-  validateSchemas(manifest.schemas);
-  validateRecipes(manifest.recipes);
-}
-
-function validatePackages(packages) {
-  if (!Array.isArray(packages) || packages.length !== PACKAGE_NAMES.length) {
-    invalidManifest();
-  }
-  packages.forEach((pkg) => {
-    assertObject(pkg, 'package');
-    assertExactKeys(pkg, ['name', 'version', 'artifact', 'sha256']);
-    requiredString(pkg.name);
-    requiredString(pkg.version);
-    requiredPattern(pkg.sha256, HASH_PATTERN);
-    if (
-      typeof pkg.artifact !== 'string' ||
-      !pkg.artifact.endsWith('.tgz') ||
-      pkg.artifact !== basename(pkg.artifact) ||
-      pkg.artifact.includes('\\')
-    ) {
-      invalidManifest();
-    }
-  });
-  if (
-    JSON.stringify(packages.map(({ name }) => name)) !==
-    JSON.stringify(PACKAGE_NAMES)
-  ) {
-    invalidManifest();
-  }
-  if (
-    new Set(packages.map(({ artifact }) => artifact)).size !== packages.length
-  ) {
-    invalidManifest();
-  }
-}
-
-function validateSkills(skills) {
-  if (!Array.isArray(skills) || skills.length !== SKILL_LAYOUTS.size) {
-    invalidManifest();
-  }
-  skills.forEach((skill) => {
-    assertObject(skill, 'skill');
-    assertExactKeys(skill, ['name', 'version', 'package', 'path', 'sha256']);
-    requiredString(skill.name);
-    requiredString(skill.version);
-    requiredPattern(skill.sha256, HASH_PATTERN);
-    if (
-      skill.package !== CLI_PACKAGE ||
-      SKILL_LAYOUTS.get(skill.name) !== skill.path
-    ) {
-      invalidManifest();
-    }
-  });
-  if (
-    JSON.stringify(skills.map(({ name }) => name)) !==
-    JSON.stringify([...SKILL_LAYOUTS.keys()])
-  ) {
-    invalidManifest();
-  }
-}
-
-function validateSchemas(schemas) {
-  if (!Array.isArray(schemas) || schemas.length === 0) invalidManifest();
-  schemas.forEach((schema) => {
-    assertObject(schema, 'schema');
-    assertExactKeys(schema, ['id', 'path', 'sha256']);
-    requiredString(schema.id);
-    requiredRelativePath(schema.path);
-    requiredPattern(schema.sha256, HASH_PATTERN);
-  });
-  assertUnique(schemas.map(({ id }) => id));
-  assertSorted(schemas.map(({ id }) => id));
-}
-
-function validateRecipes(recipes) {
-  if (!Array.isArray(recipes) || recipes.length === 0) invalidManifest();
-  recipes.forEach((recipe) => {
-    assertObject(recipe, 'recipe');
-    assertExactKeys(recipe, [
-      'id',
-      'version',
-      'schemaVersion',
-      'path',
-      'sha256',
-    ]);
-    requiredString(recipe.id);
-    requiredString(recipe.version);
-    requiredString(recipe.schemaVersion);
-    requiredRelativePath(recipe.path);
-    requiredPattern(recipe.sha256, HASH_PATTERN);
-  });
-  assertUnique(recipes.map(({ id }) => id));
-  assertSorted(recipes.map(({ id }) => id));
-}
-
-async function verifyArtifacts(manifest, manifestPath, cwd) {
-  const roots = [
-    dirname(manifestPath),
-    resolve(cwd, 'dist/explainer-kit-rc'),
-  ].filter((root, index, values) => values.indexOf(root) === index);
+async function verifyArtifacts(manifest, artifactsRoot) {
   const verified = new Map();
 
   for (const pkg of manifest.packages) {
-    const path = await findArtifact(pkg.artifact, roots);
+    const path = await findArtifact(pkg.artifact, artifactsRoot);
     const actual = await hashFile(path);
     if (actual !== pkg.sha256) {
       throw new RcRunError(
@@ -280,20 +162,18 @@ async function verifyArtifacts(manifest, manifestPath, cwd) {
   return verified;
 }
 
-async function findArtifact(artifact, roots) {
-  for (const root of roots) {
-    const candidate = join(root, artifact);
-    try {
-      const stats = await lstat(candidate);
-      if (stats.isFile()) return candidate;
-      throw new RcRunError(
-        'E_ARTIFACT_TYPE',
-        'A retained release candidate artifact is not a regular file.',
-        { artifact },
-      );
-    } catch (error) {
-      if (error.code !== 'ENOENT') throw error;
-    }
+async function findArtifact(artifact, root) {
+  const candidate = join(root, artifact);
+  try {
+    const stats = await lstat(candidate);
+    if (stats.isFile() && !stats.isSymbolicLink()) return candidate;
+    throw new RcRunError(
+      'E_ARTIFACT_TYPE',
+      'A retained release candidate artifact is not a regular file.',
+      { artifact },
+    );
+  } catch (error) {
+    if (error.code !== 'ENOENT') throw error;
   }
   throw new RcRunError(
     'E_ARTIFACT_MISSING',
@@ -432,6 +312,173 @@ async function executeEntry(entry, args, cwd, env) {
   }
 }
 
+async function resolveArtifactsDirectory(cwd, artifactsDir) {
+  if (typeof artifactsDir !== 'string' || artifactsDir.length === 0) {
+    throw new RcRunError('E_USAGE', 'An explicit --artifacts-dir is required.');
+  }
+  const candidate = resolve(cwd, artifactsDir);
+  try {
+    const stats = await lstat(candidate);
+    if (!stats.isDirectory() || stats.isSymbolicLink()) {
+      throw new Error('invalid artifacts directory');
+    }
+    return await realpath(candidate);
+  } catch {
+    throw new RcRunError(
+      'E_ARTIFACTS_DIR',
+      'The explicit retained artifacts directory is unavailable or unsafe.',
+    );
+  }
+}
+
+async function readRequestBinding(entry, entryArgs, cwd) {
+  const requestArgument = requiredEntryOption(entryArgs, '--request');
+  const path = resolve(cwd, requestArgument);
+  let value;
+  try {
+    value = JSON.parse(await readFile(path, 'utf8'));
+  } catch {
+    throw new RcRunError(
+      'E_EXECUTION_BINDING',
+      'The packaged request could not be read for provenance binding.',
+    );
+  }
+  const expectedSchema =
+    entry === 'scripts/publish.mjs'
+      ? 'explainer-kit.publish-request/v1'
+      : 'explainer-kit.run-request/v1';
+  if (value?.schemaVersion !== expectedSchema) {
+    throw new RcRunError(
+      'E_EXECUTION_BINDING',
+      'The packaged request schema does not match the selected entry.',
+    );
+  }
+  return {
+    value,
+    binding: {
+      schemaVersion: value.schemaVersion,
+      sha256: hashCanonicalJson(value),
+    },
+  };
+}
+
+async function readOutputBindings({
+  entry,
+  entryArgs,
+  exit,
+  request,
+  declaredReceipt,
+  cwd,
+}) {
+  let manifestPath;
+  let receiptPath;
+  let reportedRunId;
+  if (entry === 'scripts/publish.mjs') {
+    manifestPath = resolve(cwd, request.value.manifestPath);
+    receiptPath = resolve(cwd, requiredEntryOption(entryArgs, '--receipt'));
+  } else {
+    const result = parseEntryResult(exit.stdout);
+    if (typeof result.manifestPath !== 'string') {
+      throw new RcRunError(
+        'E_EXECUTION_BINDING',
+        'The packaged core did not declare its manifest output.',
+      );
+    }
+    manifestPath = resolve(cwd, result.manifestPath);
+    receiptPath =
+      declaredReceipt !== undefined
+        ? resolve(cwd, declaredReceipt)
+        : typeof result.publishReceiptPath === 'string'
+          ? resolve(cwd, result.publishReceiptPath)
+          : undefined;
+    reportedRunId = result.runId;
+  }
+
+  const manifest = await readBoundJson(
+    manifestPath,
+    'explainer-kit.manifest/v1',
+    'manifest',
+  );
+  if (
+    typeof manifest.runId !== 'string' ||
+    manifest.runId.length === 0 ||
+    (reportedRunId !== undefined && reportedRunId !== manifest.runId)
+  ) {
+    throw new RcRunError(
+      'E_EXECUTION_BINDING',
+      'The packaged manifest does not match the reported core run.',
+    );
+  }
+  const receipt = receiptPath
+    ? await readBoundJson(
+        receiptPath,
+        'explainer-kit.publish-receipt/v1',
+        'receipt',
+      )
+    : null;
+  return {
+    request: request.binding,
+    outputs: {
+      manifest: {
+        schemaVersion: manifest.schemaVersion,
+        sha256: hashCanonicalJson(manifest),
+      },
+      receipt: receipt
+        ? {
+            schemaVersion: receipt.schemaVersion,
+            sha256: hashCanonicalJson(receipt),
+          }
+        : null,
+    },
+    coreRunId: manifest.runId,
+  };
+}
+
+async function readBoundJson(path, schemaVersion, label) {
+  try {
+    const value = JSON.parse(await readFile(path, 'utf8'));
+    if (value?.schemaVersion !== schemaVersion) throw new Error();
+    return value;
+  } catch {
+    throw new RcRunError(
+      'E_EXECUTION_BINDING',
+      `The packaged ${label} output could not be bound.`,
+    );
+  }
+}
+
+function parseEntryResult(stdout) {
+  for (const line of String(stdout).trim().split('\n').reverse()) {
+    try {
+      const value = JSON.parse(line);
+      if (value && typeof value === 'object') return value;
+    } catch {
+      // Structured output may follow non-JSON progress lines.
+    }
+  }
+  throw new RcRunError(
+    'E_EXECUTION_BINDING',
+    'The packaged entry did not emit a structured result.',
+  );
+}
+
+function requiredEntryOption(args, option) {
+  const indexes = args
+    .map((value, index) => (value === option ? index : -1))
+    .filter((index) => index >= 0);
+  if (
+    indexes.length !== 1 ||
+    !args[indexes[0] + 1] ||
+    args[indexes[0] + 1].startsWith('--')
+  ) {
+    throw new RcRunError(
+      'E_EXECUTION_BINDING',
+      `Packaged entry requires exactly one ${option} value.`,
+    );
+  }
+  return args[indexes[0] + 1];
+}
+
 function validateEntry(entry) {
   if (
     typeof entry !== 'string' ||
@@ -492,10 +539,6 @@ async function hashFile(path) {
   return hashBytes(await readFile(path));
 }
 
-function hashBytes(value) {
-  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
-}
-
 async function readRequiredJson(path, code) {
   try {
     return JSON.parse(await readFile(path, 'utf8'));
@@ -519,55 +562,6 @@ function assertContained(root, candidate, code) {
   if (candidate !== root && !candidate.startsWith(`${root}${sep}`)) {
     throw new RcRunError(code, 'Packaged path escapes its declared root.');
   }
-}
-
-function assertObject(value) {
-  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
-    invalidManifest();
-  }
-}
-
-function assertExactKeys(value, expected) {
-  const actual = Object.keys(value).sort();
-  const wanted = [...expected].sort();
-  if (JSON.stringify(actual) !== JSON.stringify(wanted)) invalidManifest();
-}
-
-function assertUnique(values) {
-  if (new Set(values).size !== values.length) invalidManifest();
-}
-
-function assertSorted(values) {
-  const sorted = [...values].sort();
-  if (JSON.stringify(values) !== JSON.stringify(sorted)) invalidManifest();
-}
-
-function requiredString(value) {
-  if (typeof value !== 'string' || value.length === 0) invalidManifest();
-}
-
-function requiredPattern(value, pattern) {
-  if (typeof value !== 'string' || !pattern.test(value)) invalidManifest();
-}
-
-function requiredRelativePath(value) {
-  requiredString(value);
-  if (
-    isAbsolute(value) ||
-    value.includes('\\') ||
-    value
-      .split('/')
-      .some((part) => part === '' || part === '.' || part === '..')
-  ) {
-    invalidManifest();
-  }
-}
-
-function invalidManifest() {
-  throw new RcRunError(
-    'E_RC_MANIFEST',
-    'Release candidate manifest does not match the closed v1 schema.',
-  );
 }
 
 async function writeJsonAtomic(path, value) {
@@ -596,8 +590,10 @@ function parseArguments(argv) {
     const argument = runnerArgs[index];
     if (
       argument !== '--rc-manifest' &&
+      argument !== '--artifacts-dir' &&
       argument !== '--entry' &&
-      argument !== '--record'
+      argument !== '--record' &&
+      argument !== '--receipt'
     ) {
       throw new RcRunError('E_USAGE', 'Unknown runner argument.');
     }
@@ -605,17 +601,27 @@ function parseArguments(argv) {
     if (!value || value === '--') {
       throw new RcRunError('E_USAGE', 'A required runner value is missing.');
     }
-    const key = argument === '--rc-manifest' ? 'rcManifest' : argument.slice(2);
+    const key =
+      argument === '--rc-manifest'
+        ? 'rcManifest'
+        : argument === '--artifacts-dir'
+          ? 'artifactsDir'
+          : argument.slice(2);
     if (options[key] !== undefined) {
       throw new RcRunError('E_USAGE', 'Runner arguments may be supplied once.');
     }
     options[key] = value;
     index += 1;
   }
-  if (!options.rcManifest || !options.entry || !options.record) {
+  if (
+    !options.rcManifest ||
+    !options.artifactsDir ||
+    !options.entry ||
+    !options.record
+  ) {
     throw new RcRunError(
       'E_USAGE',
-      'Usage: run-explainer-rc.mjs --rc-manifest <json> --entry <path> --record <json> -- <entry args>',
+      'Usage: run-explainer-rc.mjs --rc-manifest <json> --artifacts-dir <dir> --entry <path> --record <json> [--receipt <json>] -- <entry args>',
     );
   }
   return { ...options, entryArgs };

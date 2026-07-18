@@ -60,7 +60,18 @@ neutral fixture.
 
 ## Release-candidate sequence
 
-1. Build and retain the packaged RC; record its immutable RC identity.
+1. Build and retain the packaged RC in a dedicated builder-owned directory;
+   record its immutable RC identity:
+
+   ```bash
+   node tools/release/build-explainer-rc.mjs \
+     --output dist/explainer-kit-rc \
+     --record .oat/repo/reference/explainer-kit-acceptance/v1/rc.json
+   ```
+
+   The builder rejects repository/source roots, symlinks, and unowned existing
+   directories. Reuse only an output carrying its ownership marker.
+
 2. Run packaged direct-core and OAT-adapter build-only smoke tests.
 3. Migrate the real private wrapper against that exact RC.
 4. Run the operator-owned wrapper E2E with the private request held outside the
@@ -69,6 +80,25 @@ neutral fixture.
 5. Run the live S3/CDN acceptance against the same unchanged RC.
 6. Promote only when both retained acceptance records pass and reference the
    same RC identity.
+
+Every packaged invocation supplies the retained artifacts explicitly; there is
+no current-working-directory fallback:
+
+```bash
+node tools/release/run-explainer-rc.mjs \
+  --rc-manifest .oat/repo/reference/explainer-kit-acceptance/v1/rc.json \
+  --artifacts-dir dist/explainer-kit-rc \
+  --entry scripts/publish.mjs \
+  --record .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-result.json \
+  -- \
+  --request .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-request.json \
+  --receipt .oat/repo/reference/explainer-kit-acceptance/v1/publish-receipt.json \
+  --confirm-publish
+```
+
+Retain the execution record produced by that command. Acceptance binds it to
+the canonical request, manifest, receipt, and core run ID and rejects stale
+cross-run evidence.
 
 The in-repository compatibility fixture is a development guard. It does not
 satisfy the operator-owned real-wrapper gate.

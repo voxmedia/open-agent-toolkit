@@ -36,3 +36,23 @@ The compatibility smoke fixture at
 `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` proves this sequence
 with the actual core. It uses sanitized private-wrapper inputs and is not a
 substitute for the operator-owned release-candidate gate.
+
+Release-candidate execution requires the retained tarball directory explicitly:
+
+```bash
+node tools/release/run-explainer-rc.mjs \
+  --rc-manifest /path/to/acceptance/rc.json \
+  --artifacts-dir /path/to/retained/explainer-kit-rc \
+  --entry scripts/run.mjs \
+  --record /path/to/acceptance/private-wrapper-execution.json \
+  --receipt /path/to/acceptance/private-wrapper-publish-receipt.json \
+  -- --request /path/to/private/request.json
+```
+
+When the wrapper creates receipt evidence after the core invocation, it
+declares that path with the runner's top-level `--receipt`; the option is not
+forwarded to the packaged core. The sanitized execution record stores canonical
+request, manifest, and optional receipt hashes plus the core run ID. It does not
+store request paths, argument values, credentials, or private content.
+Acceptance rejects evidence from a different request or run even when its RC ID
+is valid.

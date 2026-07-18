@@ -47,12 +47,19 @@ export function normalizePublishRoots(s3Uri, publicBaseUrl) {
   } catch {
     throw publishError('E_PUBLISH_ROOTS', 'Public root must be a valid URL.');
   }
-  if (publicUrl.protocol !== 'https:') {
-    throw publishError('E_PUBLISH_ROOTS', 'Public root must use HTTPS.');
+  if (
+    publicUrl.protocol !== 'https:' ||
+    publicUrl.username ||
+    publicUrl.password ||
+    publicUrl.search ||
+    publicUrl.hash
+  ) {
+    throw publishError(
+      'E_PUBLISH_ROOTS',
+      'Public root must be credential-free HTTPS without query or fragment.',
+    );
   }
   publicUrl.pathname = publicUrl.pathname.replace(/\/+$/, '');
-  publicUrl.search = '';
-  publicUrl.hash = '';
   const normalizedPublic = publicUrl.toString().replace(/\/$/, '');
   const normalizedS3 = `s3://${bucket}${keyPrefix ? `/${keyPrefix}` : ''}`;
   return {
@@ -156,7 +163,7 @@ export async function publishS3Static(request, dependencies = {}) {
     if (
       sentinelResponse.status < 200 ||
       sentinelResponse.status > 299 ||
-      sentinelResponse.body !== SENTINEL_BODY
+      !responseBytes(sentinelResponse.body).equals(Buffer.from(SENTINEL_BODY))
     ) {
       throw publishError(
         'E_PUBLISH_ROOTS',
@@ -176,6 +183,7 @@ export async function publishS3Static(request, dependencies = {}) {
       const metadata = await readExistingMetadata(
         command,
         headObjectArgs(roots, artifact.publishPath, awsOptions),
+        { sleep },
       );
       if (!matchesPublishedArtifact(metadata, artifact)) {
         await runAws(
@@ -210,6 +218,12 @@ export async function publishS3Static(request, dependencies = {}) {
         throw publishError(
           'E_PUBLISH_VERIFY',
           `Public content type mismatch for ${artifact.manifestPath}.`,
+        );
+      }
+      if (fileHash(responseBytes(response.body)) !== artifact.hash) {
+        throw publishError(
+          'E_PUBLISH_VERIFY',
+          `Public bytes do not match the manifest for ${artifact.manifestPath}.`,
         );
       }
       receiptArtifacts.push({
@@ -370,6 +384,8 @@ function headObjectArgs(roots, relativePath, awsOptions) {
       roots.bucket,
       '--key',
       objectKey(roots, relativePath),
+      '--output',
+      'json',
       '--no-cli-pager',
     ],
     awsOptions,
@@ -399,7 +415,11 @@ function withAwsOptions(args, { region, profile }) {
   return result;
 }
 
-async function runAws(command, args, { sleep, attempts = 3 } = {}) {
+async function runAws(
+  command,
+  args,
+  { sleep = defaultSleep, attempts = 3, allowNotFound = false } = {},
+) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     try {
       return await command('aws', args);
@@ -411,6 +431,9 @@ async function runAws(command, args, { sleep, attempts = 3 } = {}) {
           'AWS authentication failed; refresh the configured credential chain and retry.',
         );
       }
+      if (allowNotFound && NOT_FOUND_PATTERN.test(diagnostic)) {
+        return null;
+      }
       if (!TRANSIENT_PATTERN.test(diagnostic) || attempt === attempts) {
         throw publishError('E_PUBLISH_AWS', 'AWS object operation failed.');
       }
@@ -419,22 +442,19 @@ async function runAws(command, args, { sleep, attempts = 3 } = {}) {
   }
 }
 
-async function readExistingMetadata(command, args) {
+async function readExistingMetadata(command, args, { sleep }) {
+  const result = await runAws(command, args, {
+    sleep,
+    allowNotFound: true,
+  });
+  if (result === null) return null;
   try {
-    const result = await command('aws', args);
     return JSON.parse(result.stdout || '{}');
-  } catch (caught) {
-    const diagnostic = `${caught?.message ?? ''}\n${caught?.stderr ?? ''}`;
-    if (NOT_FOUND_PATTERN.test(diagnostic)) {
-      return null;
-    }
-    if (AUTH_PATTERN.test(diagnostic)) {
-      throw publishError(
-        'E_PUBLISH_AUTH',
-        'AWS authentication failed; refresh the configured credential chain and retry.',
-      );
-    }
-    throw publishError('E_PUBLISH_AWS', 'AWS object metadata check failed.');
+  } catch {
+    throw publishError(
+      'E_PUBLISH_VERIFY',
+      'AWS returned invalid object metadata.',
+    );
   }
 }
 
@@ -542,8 +562,20 @@ async function defaultHttpGet(url) {
   return {
     status: response.status,
     headers: response.headers,
-    body: await response.text(),
+    body: Buffer.from(await response.arrayBuffer()),
   };
+}
+
+function responseBytes(body) {
+  if (Buffer.isBuffer(body)) return body;
+  if (body instanceof Uint8Array) {
+    return Buffer.from(body.buffer, body.byteOffset, body.byteLength);
+  }
+  if (typeof body === 'string') return Buffer.from(body);
+  throw publishError(
+    'E_PUBLISH_VERIFY',
+    'Public verification returned an unreadable response body.',
+  );
 }
 
 function defaultSleep(milliseconds) {

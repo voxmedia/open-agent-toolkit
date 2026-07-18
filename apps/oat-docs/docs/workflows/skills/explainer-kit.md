@@ -64,8 +64,33 @@ The core verifies caller-supplied commit or publish evidence; it never creates
 Git commits. Publishing is always explicitly requested and human-gated. The
 public `s3-static` connector validates corresponding S3 and HTTPS roots with a
 run-unique sentinel, uploads only manifest-declared `site/` files, verifies the
-public URLs, and writes `publish-receipt.json`. It is additive and does not run
-a root-wide destructive sync.
+content type and SHA-256 response bytes at public URLs, and writes
+`publish-receipt.json`. Public roots cannot contain credentials, queries, or
+fragments. Publishing is additive and does not run a root-wide destructive
+sync.
+
+Release validation drives the bounded palette/profile/template matrix in a real
+installed Chromium browser and retains machine-readable viewport, clipping,
+motion, keyboard, no-JavaScript, and print measurements. The gate fails closed
+when no supported browser executable is available.
+
+Frozen RC runs require both the identity record and the explicit retained
+tarball directory:
+
+```bash
+node tools/release/run-explainer-rc.mjs \
+  --rc-manifest .oat/repo/reference/explainer-kit-acceptance/v1/rc.json \
+  --artifacts-dir dist/explainer-kit-rc \
+  --entry scripts/run.mjs \
+  --record /path/to/sanitized-execution.json \
+  --receipt /path/to/private-wrapper-publish-receipt.json \
+  -- --request /path/to/request.json
+```
+
+The resulting execution record binds the canonical request and declared
+manifest/receipt outputs to the core run ID without retaining private argument
+values. The top-level `--receipt` declares wrapper-created receipt evidence to
+the runner and is not forwarded to the packaged core.
 
 ## OAT lifecycle policy
 

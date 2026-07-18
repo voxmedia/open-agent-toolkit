@@ -167,6 +167,66 @@ test('requires successful run-explainer-rc evidence with exact tarball hashes', 
   assert.equal(failedExitFailure.gate, 'publish');
 });
 
+test('rejects packaged evidence reused with a different request or run output', async () => {
+  const staleRequest = await createFixture();
+  staleRequest.publishExecution.request.sha256 = HASH('0');
+  await writeJson(
+    join(staleRequest.root, 'live-publish-result.json'),
+    staleRequest.publishExecution,
+  );
+  assert.equal(
+    (await runFailure(staleRequest.root, 'publish')).code,
+    'E_EXECUTION_BINDING',
+  );
+
+  const staleReceipt = await createFixture();
+  staleReceipt.publishExecution.outputs.receipt.sha256 = HASH('0');
+  await writeJson(
+    join(staleReceipt.root, 'live-publish-result.json'),
+    staleReceipt.publishExecution,
+  );
+  assert.equal(
+    (await runFailure(staleReceipt.root, 'publish')).code,
+    'E_EXECUTION_BINDING',
+  );
+
+  const staleWrapper = await createFixture();
+  staleWrapper.wrapper.packagedExecution.coreRunId = 'another-run';
+  await writeJson(
+    join(staleWrapper.root, 'private-wrapper-result.json'),
+    staleWrapper.wrapper,
+  );
+  assert.equal(
+    (await runFailure(staleWrapper.root, 'wrapper')).code,
+    'E_EXECUTION_BINDING',
+  );
+});
+
+test('rejects public roots containing userinfo, query, or fragment evidence', async () => {
+  for (const publicBaseUrl of [
+    'https://user:secret@cdn.example.com/published',
+    'https://cdn.example.com/published?token=secret',
+    'https://cdn.example.com/published#fragment',
+  ]) {
+    const fixture = await createFixture();
+    fixture.publishRequest.publicBaseUrl = publicBaseUrl;
+    fixture.publishExecution.request.sha256 = hashJson(fixture.publishRequest);
+    await Promise.all([
+      writeJson(
+        join(fixture.root, 'live-publish-request.json'),
+        fixture.publishRequest,
+      ),
+      writeJson(
+        join(fixture.root, 'live-publish-result.json'),
+        fixture.publishExecution,
+      ),
+    ]);
+    const failure = await runFailure(fixture.root, 'publish');
+    assert.equal(failure.code, 'E_EVIDENCE_INCOMPLETE');
+    assert.doesNotMatch(JSON.stringify(failure), /user|secret|token/);
+  }
+});
+
 test('requires complete receipt hashes and run-unique verified sentinel cleanup', async () => {
   for (const mutate of [
     (receipt) => {
@@ -293,8 +353,9 @@ async function createFixture() {
     schemaVersion: 'explainer-kit.wrapper-acceptance/v1',
     rcId: rc.rcId,
     candidate: candidateIdentity(rc),
+    coreRunId: 'wrapper-run-123',
     verdict: 'passed',
-    packagedExecution: packagedExecution(rc, 'scripts/run.mjs'),
+    packagedExecution: null,
     command: {
       sanitized: true,
       argv: ['acceptance.mjs', '--rc-manifest', 'rc.json'],
@@ -304,6 +365,7 @@ async function createFixture() {
       credentialsPersisted: false,
     },
     hashes: {
+      request: HASH('a'),
       manifest: HASH('e'),
       publishReceipt: HASH('f'),
     },
@@ -320,7 +382,6 @@ async function createFixture() {
       rollbackReady: true,
     },
   };
-  const publishExecution = packagedExecution(rc, 'scripts/publish.mjs');
   const manifestPath = join(root, 'runs/run-123/manifest.json');
   const publishRequest = {
     schemaVersion: 'explainer-kit.publish-request/v1',
@@ -371,6 +432,40 @@ async function createFixture() {
       ),
     ],
   };
+  wrapper.packagedExecution = packagedExecution(rc, 'scripts/run.mjs', {
+    request: {
+      schemaVersion: 'explainer-kit.run-request/v1',
+      sha256: HASH('a'),
+    },
+    outputs: {
+      manifest: {
+        schemaVersion: 'explainer-kit.manifest/v1',
+        sha256: wrapper.hashes.manifest,
+      },
+      receipt: {
+        schemaVersion: 'explainer-kit.publish-receipt/v1',
+        sha256: wrapper.hashes.publishReceipt,
+      },
+    },
+    coreRunId: wrapper.coreRunId,
+  });
+  const publishExecution = packagedExecution(rc, 'scripts/publish.mjs', {
+    request: {
+      schemaVersion: publishRequest.schemaVersion,
+      sha256: hashJson(publishRequest),
+    },
+    outputs: {
+      manifest: {
+        schemaVersion: manifest.schemaVersion,
+        sha256: hashJson(manifest),
+      },
+      receipt: {
+        schemaVersion: receipt.schemaVersion,
+        sha256: hashJson(receipt),
+      },
+    },
+    coreRunId: manifest.runId,
+  });
   await Promise.all([
     writeJson(join(root, 'rc.json'), rc),
     writeJson(join(root, 'private-wrapper-result.json'), wrapper),
@@ -389,7 +484,7 @@ async function createFixture() {
   };
 }
 
-function packagedExecution(rc, entry) {
+function packagedExecution(rc, entry, bindings) {
   const cliPackage = rc.packages.find(
     ({ name }) => name === '@open-agent-toolkit/cli',
   );
@@ -403,12 +498,14 @@ function packagedExecution(rc, entry) {
       artifact,
       sha256,
     })),
+    ...bindings,
     exit: { code: 0, signal: null },
   };
 }
 
 function candidateIdentity(rc) {
   return {
+    schemaVersion: rc.schemaVersion,
     commit: rc.commit,
     packages: rc.packages,
     skills: rc.skills,
@@ -419,8 +516,12 @@ function candidateIdentity(rc) {
 }
 
 function rcId(rc) {
+  return hashJson(candidateIdentity(rc));
+}
+
+function hashJson(value) {
   return `sha256:${createHash('sha256')
-    .update(JSON.stringify(candidateIdentity(rc)))
+    .update(JSON.stringify(value))
     .digest('hex')}`;
 }
 

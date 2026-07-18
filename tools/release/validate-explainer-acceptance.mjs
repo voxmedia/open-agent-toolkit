@@ -1,21 +1,18 @@
 #!/usr/bin/env node
 
-import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { basename, isAbsolute, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { isDeepStrictEqual } from 'node:util';
 
-const PACKAGE_NAMES = [
-  '@open-agent-toolkit/cli',
-  '@open-agent-toolkit/control-plane',
-  '@open-agent-toolkit/docs-config',
-  '@open-agent-toolkit/docs-theme',
-  '@open-agent-toolkit/docs-transforms',
-];
-const SKILL_NAMES = ['explainer-kit', 'oat-explainer-kit'];
-const HASH_PATTERN = /^sha256:[a-f0-9]{64}$/;
-const COMMIT_PATTERN = /^[a-f0-9]{40}$/;
+import {
+  EXECUTION_SCHEMA_VERSION,
+  HASH_PATTERN,
+  assertReleaseCandidate,
+  hashCanonicalJson,
+  releaseCandidateIdentity,
+} from './explainer-rc-contract.mjs';
+
 const SENTINEL_SUFFIX_PATTERN = /^[a-f0-9]{32}$/;
 const GATES = new Set(['wrapper', 'publish', 'all']);
 const FILES = {
@@ -85,49 +82,20 @@ export async function validateExplainerAcceptance({
 }
 
 function validateReleaseCandidate(rc) {
-  requireObject(rc, FILES.rc);
-  requireExactKeys(
-    rc,
-    [
-      'schemaVersion',
-      'rcId',
-      'commit',
-      'packages',
-      'skills',
-      'schemas',
-      'recipes',
-      'changedCandidates',
-    ],
-    FILES.rc,
-  );
-  if (
-    rc.schemaVersion !== 'explainer-kit.release-candidate/v1' ||
-    !HASH_PATTERN.test(rc.rcId) ||
-    !COMMIT_PATTERN.test(rc.commit)
-  ) {
-    incomplete(FILES.rc, 'Release candidate identity fields are incomplete.');
-  }
-  validatePackages(rc.packages, FILES.rc);
-  validateSkills(rc.skills, FILES.rc);
-  validateSchemas(rc.schemas, FILES.rc);
-  validateRecipes(rc.recipes, FILES.rc);
-  if (
-    !Array.isArray(rc.changedCandidates) ||
-    !rc.changedCandidates.every(nonEmptyString)
-  ) {
-    incomplete(FILES.rc, 'changedCandidates must be an array of paths.');
-  }
+  assertReleaseCandidate(rc, (message, identityMismatch = false) => {
+    if (identityMismatch) {
+      throw new AcceptanceError(
+        'E_RC_IDENTITY',
+        'The frozen release candidate identity does not match its contents.',
+      );
+    }
+    incomplete(FILES.rc, message);
+  });
   if (rc.changedCandidates.length > 0) {
     throw new AcceptanceError(
       'E_CHANGED_CANDIDATES',
       'The release candidate contains changed candidate inputs.',
       { changedCandidates: rc.changedCandidates },
-    );
-  }
-  if (hashIdentity(candidateIdentity(rc)) !== rc.rcId) {
-    throw new AcceptanceError(
-      'E_RC_IDENTITY',
-      'The frozen release candidate identity does not match its contents.',
     );
   }
 }
@@ -140,6 +108,7 @@ function validateWrapperEvidence(wrapper, rc) {
       'schemaVersion',
       'rcId',
       'candidate',
+      'coreRunId',
       'verdict',
       'packagedExecution',
       'command',
@@ -152,12 +121,13 @@ function validateWrapperEvidence(wrapper, rc) {
   );
   if (
     wrapper.schemaVersion !== 'explainer-kit.wrapper-acceptance/v1' ||
-    !HASH_PATTERN.test(wrapper.rcId)
+    !HASH_PATTERN.test(wrapper.rcId) ||
+    !nonEmptyString(wrapper.coreRunId)
   ) {
     incomplete(FILES.wrapper, 'Wrapper identity fields are incomplete.');
   }
   requireRcMatch(wrapper.rcId, rc.rcId, FILES.wrapper);
-  if (!isDeepStrictEqual(wrapper.candidate, candidateIdentity(rc))) {
+  if (!isDeepStrictEqual(wrapper.candidate, releaseCandidateIdentity(rc))) {
     throw new AcceptanceError(
       'E_RC_MISMATCH',
       'Wrapper evidence does not contain the exact frozen candidate.',
@@ -176,6 +146,12 @@ function validateWrapperEvidence(wrapper, rc) {
     'scripts/run.mjs',
     FILES.wrapper,
     'wrapper',
+    {
+      request: wrapper.hashes.request,
+      manifest: wrapper.hashes.manifest,
+      receipt: wrapper.hashes.publishReceipt,
+      coreRunId: wrapper.coreRunId,
+    },
   );
   if (wrapper.verdict !== 'passed') {
     if (wrapper.verdict !== 'failed') {
@@ -198,13 +174,6 @@ async function validatePublishEvidence({
   cwd,
 }) {
   const roots = validatePublishRequest(request);
-  validatePackagedExecution(
-    execution,
-    rc,
-    'scripts/publish.mjs',
-    FILES.publishExecution,
-    'publish',
-  );
   const manifestPath = resolve(cwd, request.manifestPath);
   const manifestEvidence = `manifestPath:${request.manifestPath}`;
   const manifest = await readEvidence(manifestPath, manifestEvidence);
@@ -219,6 +188,19 @@ async function validatePublishEvidence({
     roots,
     manifest,
     manifestArtifacts,
+  );
+  validatePackagedExecution(
+    execution,
+    rc,
+    'scripts/publish.mjs',
+    FILES.publishExecution,
+    'publish',
+    {
+      request: hashCanonicalJson(request),
+      manifest: hashCanonicalJson(manifest),
+      receipt: hashCanonicalJson(receipt),
+      coreRunId: manifest.runId,
+    },
   );
   return {
     status: 'passed',
@@ -236,15 +218,32 @@ async function validatePublishEvidence({
   };
 }
 
-function validatePackagedExecution(execution, rc, entry, evidence, gate) {
+function validatePackagedExecution(
+  execution,
+  rc,
+  entry,
+  evidence,
+  gate,
+  expected,
+) {
   requireObject(execution, evidence);
   requireExactKeys(
     execution,
-    ['schemaVersion', 'rcId', 'entry', 'package', 'verifiedTarballs', 'exit'],
+    [
+      'schemaVersion',
+      'rcId',
+      'entry',
+      'package',
+      'verifiedTarballs',
+      'request',
+      'outputs',
+      'coreRunId',
+      'exit',
+    ],
     evidence,
   );
   if (
-    execution.schemaVersion !== 'explainer-kit.packaged-execution/v1' ||
+    execution.schemaVersion !== EXECUTION_SCHEMA_VERSION ||
     !HASH_PATTERN.test(execution.rcId)
   ) {
     incomplete(evidence, 'Packaged execution identity is incomplete.');
@@ -279,11 +278,64 @@ function validatePackagedExecution(execution, rc, entry, evidence, gate) {
       { evidence },
     );
   }
+  validateExecutionBindings(execution, expected, evidence);
   requireObject(execution.exit, evidence);
   requireExactKeys(execution.exit, ['code', 'signal'], evidence);
   if (execution.exit.code !== 0 || execution.exit.signal !== null) {
     failedVerdict(gate);
   }
+}
+
+function validateExecutionBindings(execution, expected, evidence) {
+  requireObject(execution.request, evidence);
+  requireExactKeys(execution.request, ['schemaVersion', 'sha256'], evidence);
+  const expectedRequestSchema =
+    execution.entry === 'scripts/publish.mjs'
+      ? 'explainer-kit.publish-request/v1'
+      : 'explainer-kit.run-request/v1';
+  if (
+    execution.request.schemaVersion !== expectedRequestSchema ||
+    execution.request.sha256 !== expected.request
+  ) {
+    executionBindingError(evidence);
+  }
+
+  requireObject(execution.outputs, evidence);
+  requireExactKeys(execution.outputs, ['manifest', 'receipt'], evidence);
+  validateExecutionOutput(
+    execution.outputs.manifest,
+    'explainer-kit.manifest/v1',
+    expected.manifest,
+    evidence,
+  );
+  validateExecutionOutput(
+    execution.outputs.receipt,
+    'explainer-kit.publish-receipt/v1',
+    expected.receipt,
+    evidence,
+  );
+  if (
+    execution.coreRunId !== expected.coreRunId ||
+    !nonEmptyString(execution.coreRunId)
+  ) {
+    executionBindingError(evidence);
+  }
+}
+
+function validateExecutionOutput(output, schemaVersion, sha256, evidence) {
+  requireObject(output, evidence);
+  requireExactKeys(output, ['schemaVersion', 'sha256'], evidence);
+  if (output.schemaVersion !== schemaVersion || output.sha256 !== sha256) {
+    executionBindingError(evidence);
+  }
+}
+
+function executionBindingError(evidence) {
+  throw new AcceptanceError(
+    'E_EXECUTION_BINDING',
+    'Packaged execution is not bound to the accepted request and outputs.',
+    { evidence },
+  );
 }
 
 function validatePublishRequest(request) {
@@ -527,8 +579,13 @@ function validateWrapperContext(context) {
 
 function validateWrapperHashes(hashes) {
   requireObject(hashes, FILES.wrapper);
-  requireExactKeys(hashes, ['manifest', 'publishReceipt'], FILES.wrapper);
+  requireExactKeys(
+    hashes,
+    ['request', 'manifest', 'publishReceipt'],
+    FILES.wrapper,
+  );
   if (
+    !HASH_PATTERN.test(hashes.request) ||
     !HASH_PATTERN.test(hashes.manifest) ||
     !HASH_PATTERN.test(hashes.publishReceipt)
   ) {
@@ -563,109 +620,6 @@ function validateCapabilities(capabilities) {
   requireExactKeys(capabilities, keys, FILES.wrapper);
   if (!keys.every((key) => capabilities[key] === true)) {
     incomplete(FILES.wrapper, 'Every wrapper capability must pass.');
-  }
-}
-
-function validatePackages(packages, evidence) {
-  if (!Array.isArray(packages) || packages.length !== PACKAGE_NAMES.length) {
-    incomplete(evidence, 'The frozen package set is incomplete.');
-  }
-  packages.forEach((pkg) => {
-    requireObject(pkg, evidence);
-    requireExactKeys(pkg, ['name', 'version', 'artifact', 'sha256'], evidence);
-    if (
-      !nonEmptyString(pkg.name) ||
-      !nonEmptyString(pkg.version) ||
-      !nonEmptyString(pkg.artifact) ||
-      pkg.artifact !== basename(pkg.artifact) ||
-      !pkg.artifact.endsWith('.tgz') ||
-      !HASH_PATTERN.test(pkg.sha256)
-    ) {
-      incomplete(evidence, 'A frozen package entry is incomplete.');
-    }
-  });
-  if (
-    !isDeepStrictEqual(
-      packages.map(({ name }) => name),
-      PACKAGE_NAMES,
-    ) ||
-    new Set(packages.map(({ artifact }) => artifact)).size !== packages.length
-  ) {
-    incomplete(evidence, 'The frozen package set is not canonical.');
-  }
-}
-
-function validateSkills(skills, evidence) {
-  if (!Array.isArray(skills) || skills.length !== SKILL_NAMES.length) {
-    incomplete(evidence, 'The frozen skill set is incomplete.');
-  }
-  skills.forEach((skill) => {
-    requireObject(skill, evidence);
-    requireExactKeys(
-      skill,
-      ['name', 'version', 'package', 'path', 'sha256'],
-      evidence,
-    );
-    if (
-      !nonEmptyString(skill.name) ||
-      !nonEmptyString(skill.version) ||
-      skill.package !== '@open-agent-toolkit/cli' ||
-      skill.path !== `package/assets/skills/${skill.name}` ||
-      !HASH_PATTERN.test(skill.sha256)
-    ) {
-      incomplete(evidence, 'A frozen skill entry is incomplete.');
-    }
-  });
-  if (
-    !isDeepStrictEqual(
-      skills.map(({ name }) => name),
-      SKILL_NAMES,
-    )
-  ) {
-    incomplete(evidence, 'The frozen skill set is not canonical.');
-  }
-}
-
-function validateSchemas(schemas, evidence) {
-  validateIdentityEntries(schemas, ['id', 'path', 'sha256'], 'id', evidence);
-}
-
-function validateRecipes(recipes, evidence) {
-  validateIdentityEntries(
-    recipes,
-    ['id', 'version', 'schemaVersion', 'path', 'sha256'],
-    'id',
-    evidence,
-  );
-}
-
-function validateIdentityEntries(entries, keys, sortKey, evidence) {
-  if (!Array.isArray(entries) || entries.length === 0) {
-    incomplete(evidence, 'Frozen contract identity entries are required.');
-  }
-  entries.forEach((entry) => {
-    requireObject(entry, evidence);
-    requireExactKeys(entry, keys, evidence);
-    if (
-      !keys.every((key) =>
-        key === 'sha256'
-          ? HASH_PATTERN.test(entry[key])
-          : nonEmptyString(entry[key]),
-      ) ||
-      !safeRelativePath(entry.path)
-    ) {
-      incomplete(evidence, 'A frozen contract identity entry is incomplete.');
-    }
-  });
-  const identities = entries.map((entry) => entry[sortKey]);
-  if (
-    new Set(identities).size !== identities.length ||
-    !isDeepStrictEqual(identities, [...identities].sort())
-  ) {
-    incomplete(
-      evidence,
-      'Frozen contract identities must be unique and sorted.',
-    );
   }
 }
 
@@ -712,33 +666,23 @@ function normalizeRoots(s3Uri, publicBaseUrl, evidence) {
   } catch {
     incomplete(evidence, 'Publish request public root is invalid.');
   }
-  if (publicUrl.protocol !== 'https:') {
-    incomplete(evidence, 'Publish request public root must use HTTPS.');
+  if (
+    publicUrl.protocol !== 'https:' ||
+    publicUrl.username ||
+    publicUrl.password ||
+    publicUrl.search ||
+    publicUrl.hash
+  ) {
+    incomplete(
+      evidence,
+      'Publish request public root must be credential-free HTTPS without query or fragment.',
+    );
   }
   publicUrl.pathname = publicUrl.pathname.replace(/\/+$/, '');
-  publicUrl.search = '';
-  publicUrl.hash = '';
   return {
     s3Uri: s3UriNormalized,
     publicBaseUrl: publicUrl.toString().replace(/\/$/, ''),
   };
-}
-
-function candidateIdentity(rc) {
-  return {
-    commit: rc.commit,
-    packages: rc.packages,
-    skills: rc.skills,
-    schemas: rc.schemas,
-    recipes: rc.recipes,
-    changedCandidates: rc.changedCandidates,
-  };
-}
-
-function hashIdentity(identity) {
-  return `sha256:${createHash('sha256')
-    .update(JSON.stringify(identity))
-    .digest('hex')}`;
 }
 
 function requireRcMatch(actual, expected, evidence) {

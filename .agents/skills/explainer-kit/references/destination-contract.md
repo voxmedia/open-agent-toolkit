@@ -45,7 +45,8 @@ site-relative paths before network access. It then:
 3. fetches that exact sentinel through the public root;
 4. deletes only that sentinel;
 5. uploads or idempotently skips each declared artifact;
-6. verifies object metadata and each exact public artifact URL; and
+6. verifies object metadata, content type, and SHA-256 of the exact response
+   bytes from each public artifact URL; and
 7. atomically writes `explainer-kit.publish-receipt/v1`.
 
 If public sentinel verification fails, no artifact is uploaded. The connector
@@ -74,7 +75,9 @@ Every upload sets metadata explicitly:
 
 Artifacts use `Cache-Control: public, max-age=300`. The connector stores the
 SHA-256 digest as object metadata for idempotency and verifies content type,
-cache control, and digest after upload.
+cache control, and digest after upload. Public verification hashes response
+bytes without text decoding, so binary artifacts and stale wrong-byte 200
+responses are covered.
 
 ## Failures and retries
 
@@ -85,3 +88,7 @@ persist credentials. Refresh credentials separately and rerun after approval.
 Only transient individual object-operation failures receive bounded retries.
 Input, authorization, root-correspondence, metadata, and public-verification
 failures are not retried. A failed publish preserves the local package.
+
+Public roots must be credential-free HTTPS URLs with no username, password,
+query, or fragment. Invalid roots fail before AWS or HTTP operations and are
+never persisted in receipts.
