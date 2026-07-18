@@ -510,7 +510,7 @@ describe('review skill contracts', () => {
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.2');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.3');
     expect(content).toContain(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
     );
