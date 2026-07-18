@@ -1,10 +1,10 @@
 ---
 name: oat-wave-execute
-version: 1.4.0
-description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout. Repo-local dogfood draft pending upstreaming to OAT (DR-260713-extract-oat-wave-execute).
+version: 1.5.0
+description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
+argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
 user-invocable: true
-argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 ---
 
@@ -14,10 +14,8 @@ Run one **wave** of the external-plan program as a wrapper OAT project. This ski
 owns the **mechanical layer** — everything that waves 0–1 proved stable and that
 hand-re-derivation repeatedly broke. It deliberately does NOT own judgment.
 
-**Status: repo-local dogfood draft.** Extracted per
-`DR-260713-extract-oat-wave-execute` after waves 0–1; waves 2–5 are its hardening
-runs. Log every friction/deviation to the project's `orchestration-log.md` so the
-eventual OAT upstreaming inherits evidence, not anecdotes.
+Log every friction/deviation to the project's `orchestration-log.md` so later
+waves inherit evidence, not anecdotes.
 
 Historical `DR-*` and `BL-*` slugs below are evidence citations in the source
 program's repository; they are not required artifacts in the consuming repo.
@@ -309,4 +307,4 @@ archive anything first.
 - Orchestration log current at every group boundary; synthesis written before
   archive; follow-up ledger graduated.
 - Deviations from THIS skill logged with a skill-abstraction tag — that is the
-  dogfood signal for the upstream implementation.
+  evidence signal for future skill revisions.

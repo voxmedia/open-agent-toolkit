@@ -1,10 +1,10 @@
 ---
 name: oat-wave-program
-version: 1.0.0
-description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates. Repo-local dogfood draft pending upstreaming to OAT alongside oat-wave-execute.
+version: 1.1.0
+description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
+argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
 user-invocable: true
-argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Task
 ---
 
@@ -14,10 +14,6 @@ Maintain the **program layer** above `oat-wave-execute`: turn N external plans
 (from one or more plan-generation runs) into an ordered sequence of waves, and
 keep that mapping durable and current as waves complete. `oat-wave-execute` runs
 ONE wave; this skill decides and records WHICH plans form each wave.
-
-**Status: repo-local dogfood draft.** Motivated by the wave-2 lesson that the
-program map lived only in session context and had to be reconstructed from index
-dependency notes after compaction. The artifact this skill owns is the fix.
 
 ## Ownership Boundary
 

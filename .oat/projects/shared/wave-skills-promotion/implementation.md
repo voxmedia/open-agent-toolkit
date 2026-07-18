@@ -174,6 +174,17 @@ Chronological log of implementation progress.
 
 - Phase 6 blocked on explainer-kit v1 packaged RC (expected — plan-declared gate).
 
+### Phase 2 queue traceability (implementer-provided)
+
+| Item | Description                                                                     | Commit SHA                                 |
+| ---- | ------------------------------------------------------------------------------- | ------------------------------------------ |
+| 1    | Scaffold placeholder handling is verify-only on oat ≥0.1.65.                    | `52c59aa8bd4831ee9e106092da17f017b6c64dce` |
+| 2    | Every merge is preceded by mandatory cwd and branch assertions.                 | `98267802ec7ebbf2d0e074856c941e3dd9922cc9` |
+| 3    | Bootstrap verifies provider-view parity and choreography inspects sync commits. | `1ef49623f96a99800ac079fe6954469479d0e769` |
+| 4    | Integration gates after every fan-in are a named standing rule.                 | `db8b28a08506363a4252d6f2f6b0a0c2d3506491` |
+| 5    | Every fix disposition produces a stored verification record.                    | `d6440606a3384c6b08b36a2747c72c8296a8470a` |
+| 6    | Fix continuations prefer resuming the live original implementer handle.         | `4b32c611423fdbfcfe221f0594e408abcbefdf36` |
+
 ---
 
 ## Deviations from Plan / Design
