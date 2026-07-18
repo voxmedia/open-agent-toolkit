@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t02
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 6     | 6/6       |
-| Phase 2 | complete | 10    | 10/10     |
-| Phase 3 | complete | 9     | 9/9       |
-| Phase 4 | pending  | 9     | 0/9       |
-| Phase 5 | pending  | 4     | 0/4       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 6     | 6/6       |
+| Phase 2 | complete    | 10    | 10/10     |
+| Phase 3 | complete    | 9     | 9/9       |
+| Phase 4 | in_progress | 9     | 1/9       |
+| Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 25/38 tasks completed
+**Total:** 26/38 tasks completed
 
 ---
 
@@ -660,6 +660,30 @@ version task. Re-review passed with zero findings; canonical artifact:
 - Finalizer suite — pass (5/5).
 - Archive and skill contract suites — pass (95/95).
 - Canonical skill validation, scoped lint, formatting, and whitespace — pass.
+
+---
+
+## Phase 4: Publishing, compatibility, documentation, and release validation
+
+**Status:** in_progress
+**Started:** 2026-07-18
+
+### Task p04-t01: Implement sentinel-first additive S3 publishing
+
+**Status:** completed
+**Commit:** `2f38ee33`
+
+**Outcome:**
+
+- Added corresponding-root S3 publishing with run-unique sentinel-first public
+  verification, additive idempotent uploads, explicit metadata, receipts, and
+  sentinel cleanup.
+- Rejects duplicate paths, undeclared overwrites, and delete-oriented behavior.
+
+**Verification:**
+
+- Connector, schema, contract, and durability suites — pass (34/34).
+- Scoped lint, formatting, and whitespace checks — pass.
 
 ---
 
