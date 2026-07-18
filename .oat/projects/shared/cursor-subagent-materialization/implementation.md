@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 ---
 
@@ -59,10 +59,10 @@ oat_generated: false
 | p02   | complete | 3     | 3/3       |
 | p03   | complete | 4     | 4/4       |
 | p04   | complete | 4     | 4/4       |
-| p05   | pending  | 1     | 0/1       |
+| p05   | complete | 1     | 1/1       |
 | p06   | pending  | 1     | 0/1       |
 
-**Total:** 11/13 tasks completed
+**Total:** 12/13 tasks completed
 
 ---
 
@@ -155,6 +155,26 @@ oat_generated: false
 
 ---
 
+## Phase p05: Generated Views and Native Launch Gate
+
+**Status:** complete
+**Task commit:** `6f30fe7a`
+
+### Phase Summary
+
+- Generated 24 managed Cursor definitions: reviewer and phase-implementer variants for each of 12 supported catalogue mappings.
+- Verified deterministic names, approved bracket pins, owner markers, canonical body identity, exclusions, and generated-view parity.
+- Persisted the exact `gpt-5.6-sol-high` reviewer/implementer handoff with `status: awaiting-final-launch`; no native launch is claimed before p06.
+- The current session had not hot-loaded the new native types, so implementation and review used recorded target-preserving pinned CLI fallbacks after pre-start catalogue rejection.
+
+### Verification
+
+- Root focused verification: 50/50 tests passed.
+- All-scope sync dry-run: `plannedOperations=0`; generated paths clean.
+- Review: `reviews/code-p05-review-2026-07-18T133600Z.md` passed with zero findings.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -208,6 +228,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Post-fan-in verification:** 858 tests, CLI type-check, docs lint/build, and skill/version validators passed; root remained clean.
 - **Worktrees:** merged branches and worktrees removed.
 - **Next:** p05-t01.
+
+### Run 4 — p05 generated views
+
+- **Status:** complete
+- **Implementation:** `6f30fe7a`; one planned task commit from base `7fd32aff`.
+- **Dispatch:** native variant absent from the current session catalogue; policy-resolved pinned Cursor CLI fallback used with `gpt-5.6-sol-high`.
+- **Review:** passed with zero findings; artifact `reviews/code-p05-review-2026-07-18T133600Z.md`.
+- **Verification:** 50 tests passed, sync dry-run planned zero operations, and generated paths were clean.
+- **Next:** p06-t01 release validation, followed by the configured p06 final-launch checkpoint.
 
 <!-- orchestration-runs-end -->
 
