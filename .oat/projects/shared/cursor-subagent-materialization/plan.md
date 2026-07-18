@@ -788,8 +788,10 @@ After this evidence commit, record p06 in `oat_hill_completed` through the norma
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
 | p02    | code     | fixes_completed | 2026-07-18 | reviews/code-p02-review-2026-07-18T002439Z.md                 |
 | p02    | code     | passed          | 2026-07-18 | reviews/code-p02-rereview-2026-07-18T004240Z.md               |
-| p03    | code     | pending         | -          | -                                                             |
-| p04    | code     | pending         | -          | -                                                             |
+| p03    | code     | fixes_completed | 2026-07-18 | reviews/code-p03-review-2026-07-18T122306Z.md                 |
+| p03    | code     | passed          | 2026-07-18 | reviews/code-p03-rereview-2026-07-18T123721Z.md               |
+| p04    | code     | fixes_completed | 2026-07-18 | reviews/code-p04-review-2026-07-18T122620Z.md                 |
+| p04    | code     | passed          | 2026-07-18 | reviews/code-p04-rereview-2026-07-18T123821Z.md               |
 | p05    | code     | pending         | -          | -                                                             |
 | p06    | code     | pending         | -          | -                                                             |
 | final  | code     | pending         | -          | -                                                             |

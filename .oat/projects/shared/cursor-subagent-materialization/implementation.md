@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t01
+oat_last_updated: 2026-07-18
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
 # Implementation: cursor-subagent-materialization
 
 **Started:** 2026-07-16
-**Last Updated:** 2026-07-17
+**Last Updated:** 2026-07-18
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -57,12 +57,12 @@ oat_generated: false
 | Phase | Status   | Tasks | Completed |
 | ----- | -------- | ----- | --------- |
 | p02   | complete | 3     | 3/3       |
-| p03   | pending  | 4     | 0/4       |
-| p04   | pending  | 4     | 0/4       |
+| p03   | complete | 4     | 4/4       |
+| p04   | complete | 4     | 4/4       |
 | p05   | pending  | 1     | 0/1       |
 | p06   | pending  | 1     | 0/1       |
 
-**Total:** 3/13 tasks completed
+**Total:** 11/13 tasks completed
 
 ---
 
@@ -110,6 +110,51 @@ oat_generated: false
 
 ---
 
+## Phase p03: CLI Lifecycle, Resolver, and Audit Integration
+
+**Status:** complete
+**Task commits:** `c75954b0`, `b34cb9ea`, `8882a71e`, `ebd00a13`
+**Review fix:** `1cf380d6`
+
+### Phase Summary
+
+- Generalized sync orchestration to run Codex and Cursor materialization extensions with provider-tagged plans, results, failures, and partial filtering.
+- Integrated materialized ownership into status and init for project, user, and all scopes while preserving unmanaged adoption candidates.
+- Added availability-only diagnostics without promoting configuration into runtime identity.
+- Compiled Cursor dispatch to deterministic native variants with configured provenance.
+- The first review found two Important lifecycle/coverage gaps; bounded fixes resolved both and the fresh re-review passed with zero findings.
+
+### Verification
+
+- Root focused verification after fixes: 424/424 tests passed.
+- Implementer verification: CLI type-check, lint, and formatting passed.
+- Re-review: `reviews/code-p03-rereview-2026-07-18T123721Z.md` passed with zero findings.
+
+---
+
+## Phase p04: Canonical Guidance, Recommendation, and Documentation
+
+**Status:** complete
+**Task commits:** `53bd313c`, `9842e87f`, `33b5b496`, `a33cc943`
+**Review fix:** `7cf9683a`
+
+### Phase Summary
+
+- Migrated canonical Cursor workflows to resolver-selected native variants while preserving accepted-launch terminality and Claude behavior.
+- Promoted the g01-approved multi-family Cursor recommendation with source/asset parity.
+- Documented materialized dispatch, evidence boundaries, availability, configured provenance, and silent fallback risk.
+- Added the review-command-only planning-producer identity bridge with precedence and child-environment stripping.
+- The first review found one Important remote-review contradiction; its bounded fix passed fresh re-review. A second reported finding was withdrawn after distinguishing initial tier selection from post-launch replacement.
+
+### Verification
+
+- Root focused verification after fixes: 434/434 tests passed.
+- Skills/docs verification: 58 skills and 8 version bumps validated; docs lint/build, type-check, lint, and formatting passed.
+- Two broken docs anchors were verified as pre-existing baseline debt.
+- Re-review: `reviews/code-p04-rereview-2026-07-18T123821Z.md` passed with zero findings after reassessment.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -150,13 +195,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ### Run 3 — p03/p04 parallel group recovery
 
-- **Status:** in_progress
+- **Status:** complete
 - **Operator authorization:** bounded recovery approved on 2026-07-18.
 - **Root recovery base:** `43bf447a197a285c61e19e19027d889b71631ad4`
 - **Bootstrap commit:** `f052a8448d6ddb5f7a2a45ffd2990f5d67a78a15` in both branches; changes only `.oat/sync/manifest.json` from OAT version `0.1.71` to `0.1.72`.
 - **Worktrees:** `.worktrees/cursor-subagent-materialization/p03` and `.worktrees/cursor-subagent-materialization/p04`
 - **Preflight:** repository initialization, CLI type-check, provider sync, exact-base ancestry, and final cleanliness passed in both worktrees.
-- **Dispatch:** pending for the same `gpt-5.6-sol-high` p03 and p04 phase targets.
+- **Dispatch:** both phases used native Cursor `gpt-5.6-sol-high` targets with launcher-owned configured controls.
+- **p03:** four task commits plus bounded fix `1cf380d6`; first review had 2 Important findings and re-review passed with zero findings.
+- **p04:** four task commits plus bounded fix `7cf9683a`; first review had 1 Important finding and corrected re-review passed with zero findings.
+- **Merge commits:** `8655401d` (p03), `a01f8153` (p04), in plan order.
+- **Post-fan-in verification:** 858 tests, CLI type-check, docs lint/build, and skill/version validators passed; root remained clean.
+- **Worktrees:** merged branches and worktrees removed.
+- **Next:** p05-t01.
 
 <!-- orchestration-runs-end -->
 
