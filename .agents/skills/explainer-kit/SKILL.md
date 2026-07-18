@@ -46,10 +46,24 @@ persistence. It runs without OAT files or ambient configuration. Supplied fact
 bases receive only lightweight consistency/freshness checks. Federated inputs
 require a provider-neutral critic callback and invoke it exactly once.
 
-Unattended calls use explicit, already-approved source artifacts and never
-prompt. Interactive content approval and resume are a separate lifecycle step.
-See `references/contracts.md` for source formats, callback modules, retained
-intermediates, and result semantics.
+Unattended calls use explicit, already-approved source artifacts, persist their
+review provenance in `source/content-approval.json`, and never prompt.
+
+Interactive runs stop with an `incomplete` outcome after writing
+`source/content/*.md`. Review and correct that Markdown, then provide an
+explicit JSON decision and rerun the same request:
+
+```bash
+node scripts/run.mjs \
+  --request /path/to/request.json \
+  --reviewed-source /path/to/content-review.json
+```
+
+An approval decision resumes the existing run at theme/render; a rejection
+persists its correction list and leaves downstream stages pending. Approval
+does not authorize publishing: a publish request still requires the separate
+human-gated publisher callback. See `references/contracts.md` for source
+formats, callback modules, retained intermediates, and result semantics.
 
 Durability and publishing run only when the request selects them and the caller
 supplies the matching callback. The core does not create commits, discover

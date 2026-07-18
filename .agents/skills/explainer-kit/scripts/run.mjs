@@ -5,6 +5,7 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic } from './lib/fs-safe.mjs';
@@ -26,7 +27,8 @@ import { resolveTheme } from './lib/theme.mjs';
 export async function runExplainer(request, options = {}) {
   assertValidRequest(request);
   const recipe = loadRecipe(request.recipe.id, request.recipe.version);
-  const run = await initializeRun(request);
+  const resumed = await loadResumableRun(request);
+  const run = resumed ?? (await initializeRun(request));
   const now = options.now ?? (() => new Date().toISOString());
   const state = {
     run,
@@ -42,55 +44,74 @@ export async function runExplainer(request, options = {}) {
     artifacts: [],
     warnings: [],
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
+    approval: null,
   };
 
   try {
-    await executeStage(run, 'validate', options, async () => ({
-      outputPaths: ['run-request.json'],
-    }));
-    await executeStage(run, 'fact-base', options, async () => {
-      const processed = await buildFactBase(run.request.factBase, options, now);
-      state.factBase = processed.factBase;
-      state.warnings.push(...processed.checks.warnings);
-      state.inputHashes = inputHashes(processed.factBase);
-      state.factBaseHash = canonicalHash(processed.factBase);
-      await mkdir(join(run.runRoot, 'source'), { recursive: true });
-      await writeJsonAtomic(
-        run.runRoot,
-        'source/fact-base.json',
-        state.factBase,
-      );
-      await writeText(
-        join(run.runRoot, 'source/fact-base.md'),
-        factBaseMarkdown(state.factBase),
-      );
-      validateRecipeSources(recipe, state.factBase);
-      return {
-        outputPaths: ['source/fact-base.json', 'source/fact-base.md'],
-        warnings: processed.checks.warnings,
-        status: processed.checks.warnings.length > 0 ? 'warned' : 'passed',
-      };
-    });
-    await executeStage(run, 'content', options, async () => {
-      state.discovery = await runDiscovery(recipe, state.factBase, options);
-      state.contentModels = recipe.artifacts.map((artifact) =>
-        createContentModel(recipe, artifact, run.slug, state.factBase),
-      );
-      await mkdir(join(run.runRoot, 'source/content'), { recursive: true });
-      for (const model of state.contentModels) {
-        const validation = validateContentModel(recipe, model);
-        if (!validation.valid) {
-          throw codedError(
-            'E_CONTENT',
-            `Invalid content model: ${validation.errors.join('; ')}`,
-          );
+    if (resumed) {
+      await hydrateResumableState(state);
+    } else {
+      await executeStage(run, 'validate', options, async () => ({
+        outputPaths: ['run-request.json'],
+      }));
+      await executeStage(run, 'fact-base', options, async () => {
+        const processed = await buildFactBase(
+          run.request.factBase,
+          options,
+          now,
+        );
+        state.factBase = processed.factBase;
+        state.warnings.push(...processed.checks.warnings);
+        state.inputHashes = inputHashes(processed.factBase);
+        state.factBaseHash = canonicalHash(processed.factBase);
+        await mkdir(join(run.runRoot, 'source'), { recursive: true });
+        await writeJsonAtomic(
+          run.runRoot,
+          'source/fact-base.json',
+          state.factBase,
+        );
+        await writeText(
+          join(run.runRoot, 'source/fact-base.md'),
+          factBaseMarkdown(state.factBase),
+        );
+        validateRecipeSources(recipe, state.factBase);
+        return {
+          outputPaths: ['source/fact-base.json', 'source/fact-base.md'],
+          warnings: processed.checks.warnings,
+          status: processed.checks.warnings.length > 0 ? 'warned' : 'passed',
+        };
+      });
+      await executeStage(run, 'content', options, async () => {
+        state.discovery = await runDiscovery(recipe, state.factBase, options);
+        state.contentModels = recipe.artifacts.map((artifact) =>
+          createContentModel(recipe, artifact, run.slug, state.factBase),
+        );
+        await mkdir(join(run.runRoot, 'source/content'), { recursive: true });
+        for (const model of state.contentModels) {
+          const validation = validateContentModel(recipe, model);
+          if (!validation.valid) {
+            throw codedError(
+              'E_CONTENT',
+              `Invalid content model: ${validation.errors.join('; ')}`,
+            );
+          }
+          const path = `source/content/${model.artifactId}.md`;
+          await writeText(join(run.runRoot, path), contentMarkdown(model));
+          state.contentPaths.set(model.artifactId, path);
         }
-        const path = `source/content/${model.artifactId}.md`;
-        await writeText(join(run.runRoot, path), contentMarkdown(model));
-        state.contentPaths.set(model.artifactId, path);
-      }
-      return { outputPaths: [...state.contentPaths.values()] };
-    });
+        return { outputPaths: [...state.contentPaths.values()] };
+      });
+    }
+
+    state.approval = await resolveContentApproval(
+      run,
+      run.request.mode,
+      options.reviewedSource,
+    );
+    if (!state.approval.canResume) {
+      return resultFor(state);
+    }
+
     await executeStage(run, 'theme', options, async () => {
       const resolved = await resolveTheme(run.request.theme);
       state.theme = resolved.theme;
@@ -170,6 +191,96 @@ export async function runExplainer(request, options = {}) {
     }
     return resultFor(state, error);
   }
+}
+
+async function loadResumableRun(request) {
+  const normalized = structuredClone(request);
+  normalized.theme = {
+    ...(normalized.theme ?? {}),
+    renderStrategy: normalized.theme?.renderStrategy ?? 'default-only',
+  };
+  const runRoot = join(resolve(normalized.outputRoot), normalized.slug);
+  let approval;
+  let record;
+  let persistedRequest;
+  try {
+    [approval, record, persistedRequest] = await Promise.all([
+      readJson(join(runRoot, 'source/content-approval.json')),
+      readJson(join(runRoot, 'build-record.json')),
+      readJson(join(runRoot, 'run-request.json')),
+    ]);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+
+  const content = record.stages?.find(({ id }) => id === 'content');
+  const theme = record.stages?.find(({ id }) => id === 'theme');
+  if (
+    content?.status !== 'passed' ||
+    theme?.status !== 'pending' ||
+    approval.runId !== record.runId
+  ) {
+    return null;
+  }
+  if (
+    persistedRequest.slug !== normalized.slug ||
+    persistedRequest.recipe?.id !== normalized.recipe.id ||
+    persistedRequest.recipe?.version !== normalized.recipe.version ||
+    persistedRequest.mode !== normalized.mode
+  ) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'The resumable run does not match the current request identity.',
+    );
+  }
+
+  const canonicalRunRoot = join(persistedRequest.outputRoot, normalized.slug);
+  return {
+    runId: record.runId,
+    slug: normalized.slug,
+    outputRoot: persistedRequest.outputRoot,
+    runRoot: canonicalRunRoot,
+    requestPath: join(canonicalRunRoot, 'run-request.json'),
+    buildRecordPath: join(canonicalRunRoot, 'build-record.json'),
+    manifestPath: join(canonicalRunRoot, 'manifest.json'),
+    request: normalized,
+  };
+}
+
+async function hydrateResumableState(state) {
+  state.factBase = await readJson(
+    join(state.run.runRoot, 'source/fact-base.json'),
+  );
+  state.inputHashes = inputHashes(state.factBase);
+  state.factBaseHash = canonicalHash(state.factBase);
+  state.contentModels = [];
+  for (const artifact of state.recipe.artifacts) {
+    const base = createContentModel(
+      state.recipe,
+      artifact,
+      state.run.slug,
+      state.factBase,
+    );
+    const path = `source/content/${base.artifactId}.md`;
+    const model = contentModelFromMarkdown(
+      base,
+      await readFile(join(state.run.runRoot, path), 'utf8'),
+    );
+    const validation = validateContentModel(state.recipe, model);
+    if (!validation.valid) {
+      throw codedError(
+        'E_CONTENT',
+        `Reviewed content is invalid: ${validation.errors.join('; ')}`,
+      );
+    }
+    state.contentModels.push(model);
+    state.contentPaths.set(model.artifactId, path);
+  }
+}
+
+async function readJson(path) {
+  return JSON.parse(await readFile(path, 'utf8'));
 }
 
 export async function runExplainerCli(
@@ -487,6 +598,27 @@ function contentMarkdown(model) {
     .join('\n\n')}\n`;
 }
 
+function contentModelFromMarkdown(base, markdown) {
+  const title = markdown.match(/^# (.+)$/m)?.[1]?.trim();
+  const sections = [];
+  const headings = [...markdown.matchAll(/^## (.+)$/gm)];
+  for (const [index, heading] of headings.entries()) {
+    const start = heading.index + heading[0].length;
+    const end = headings[index + 1]?.index ?? markdown.length;
+    const sectionTitle = heading[1].trim();
+    sections.push({
+      id: slugify(sectionTitle),
+      title: sectionTitle,
+      content: markdown.slice(start, end).trim(),
+    });
+  }
+  return {
+    ...base,
+    ...(title && { title }),
+    sections,
+  };
+}
+
 async function writeText(path, value) {
   await mkdir(dirname(path), { recursive: true });
   await writeFile(path, value, { encoding: 'utf8', mode: 0o600 });
@@ -506,12 +638,23 @@ function assertValidRequest(request) {
 
 function resultFor(state, error) {
   return {
+    runId: state.run.runId,
     runRoot: state.run.runRoot,
     manifestPath: state.run.manifestPath,
     buildRecordPath: state.run.buildRecordPath,
-    outcome: error ? 'failed' : 'built-not-durable',
+    outcome: error
+      ? 'failed'
+      : state.approval?.canResume === false
+        ? 'incomplete'
+        : 'built-not-durable',
     warnings: [...new Set(state.warnings)],
     discovery: state.discovery,
+    ...(state.approval && {
+      approval: {
+        status: state.approval.status,
+        path: state.approval.path,
+      },
+    }),
     ...(error && {
       errors: [{ code: error.code ?? 'E_RUN', message: safeMessage(error) }],
     }),
@@ -525,6 +668,10 @@ async function parseCli(argv) {
     const value = argv[index];
     if (value === '--request') {
       requestPath = argv[++index];
+    } else if (value === '--reviewed-source') {
+      const path = argv[++index];
+      if (!path) throw new Error('--reviewed-source requires a JSON path.');
+      options.reviewedSource = JSON.parse(await readFile(path, 'utf8'));
     } else if (
       ['--critic-module', '--publish-module', '--durability-module'].includes(
         value,
@@ -544,7 +691,7 @@ async function parseCli(argv) {
   }
   if (!requestPath) {
     throw new Error(
-      'Usage: run.mjs --request <json> [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
+      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
     );
   }
   return { requestPath, options };
@@ -556,6 +703,14 @@ function hashBytes(value) {
 
 function safeId(value) {
   return value.replaceAll(/[^a-zA-Z0-9._-]/g, '-');
+}
+
+function slugify(value) {
+  return value
+    .toLowerCase()
+    .trim()
+    .replaceAll(/[^a-z0-9]+/g, '-')
+    .replaceAll(/^-+|-+$/g, '');
 }
 
 function humanize(value) {

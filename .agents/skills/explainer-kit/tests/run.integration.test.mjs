@@ -90,6 +90,136 @@ async function suppliedFixture(recipe = 'project-explainer') {
   };
 }
 
+test('interactive runs pause after Markdown and do no downstream work before approval', async () => {
+  const fixture = await suppliedFixture();
+  const publish = mock.fn(async () => {
+    throw new Error('publish must not run before content approval');
+  });
+  const durability = mock.fn(async () => {
+    throw new Error('durability must not run before content approval');
+  });
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+
+  const result = await runExplainer(interactiveRequest, {
+    now: () => NOW,
+    publish,
+    durability,
+  });
+
+  assert.equal(result.outcome, 'incomplete');
+  assert.equal(result.approval.status, 'pending');
+  assert.equal(publish.mock.callCount(), 0);
+  assert.equal(durability.mock.callCount(), 0);
+  await access(join(result.runRoot, 'source/content/project-explainer.md'));
+  await assert.rejects(access(join(result.runRoot, 'theme.resolved.json')));
+  await assert.rejects(access(join(result.runRoot, 'site')));
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(
+    record.stages.find(({ id }) => id === 'content').status,
+    'passed',
+  );
+  assert.equal(
+    record.stages.find(({ id }) => id === 'theme').status,
+    'pending',
+  );
+});
+
+test('rejection persists corrections and explicit approval resumes the same run', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = { ...fixture.request, mode: 'interactive' };
+
+  const rejected = await runExplainer(interactiveRequest, {
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Correct the implementation status.'],
+    },
+  });
+  assert.equal(rejected.outcome, 'incomplete');
+  assert.equal(rejected.approval.status, 'rejected');
+  const contentPath = join(
+    rejected.runRoot,
+    'source/content/project-explainer.md',
+  );
+  const draft = await readFile(contentPath, 'utf8');
+  await writeFile(
+    contentPath,
+    draft.replace(
+      'The system uses a config-blind core.',
+      'Corrected implementation status.',
+    ),
+  );
+
+  const resumed = await runExplainer(interactiveRequest, {
+    now: () => '2026-07-17T20:05:00Z',
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+      source: {
+        kind: 'human-review',
+        locator: 'source/content/project-explainer.md',
+      },
+    },
+  });
+
+  assert.equal(resumed.runRoot, rejected.runRoot);
+  assert.equal(resumed.runId, rejected.runId);
+  assert.equal(resumed.outcome, 'built-not-durable');
+  assert.equal(resumed.approval.status, 'approved');
+  const approval = JSON.parse(
+    await readFile(
+      join(resumed.runRoot, 'source/content-approval.json'),
+      'utf8',
+    ),
+  );
+  assert.deepEqual(approval.attempts[0].corrections, [
+    'Correct the implementation status.',
+  ]);
+  const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
+  const rendered = await readFile(
+    join(resumed.runRoot, manifest.artifacts[0].renderedPath),
+    'utf8',
+  );
+  assert.match(rendered, /Corrected implementation status\./);
+});
+
+test('unattended lifecycle sources persist review provenance without prompting', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const prompt = mock.fn(() => {
+    throw new Error('unattended runs must never prompt');
+  });
+  const reviewedSource = {
+    kind: 'lifecycle-artifacts',
+    locator: '.oat/projects/shared/demo/implementation.md',
+    revision: 'abc123',
+    reviewedAt: NOW,
+  };
+
+  const result = await runExplainer(fixture.request, {
+    now: () => NOW,
+    prompt,
+    reviewedSource,
+  });
+
+  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(prompt.mock.callCount(), 0);
+  const approval = JSON.parse(
+    await readFile(
+      join(result.runRoot, 'source/content-approval.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(approval.status, 'approved');
+  assert.deepEqual(approval.reviewedSource, reviewedSource);
+});
+
 test('runs both canonical recipes config-free from directories without .oat files', async () => {
   for (const recipe of ['project-explainer', 'project-recap']) {
     const fixture = await suppliedFixture(recipe);
