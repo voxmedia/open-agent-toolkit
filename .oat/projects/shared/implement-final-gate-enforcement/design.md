@@ -263,14 +263,29 @@ oat_implement_exit_gate:
   resolution: configured # configured | no_gate
   disposition: null # null | passed | warned | prompt_approved | no_gate
   config_fingerprint: '<stable hash of resolved gate declaration>'
+  resolved_command: null
+  resolved_description: null
   on_failure: block # block | prompt | warn | null
   max_attempts: 2
   attempts_completed: 0
   reviewed_head: null # commit reviewed by the configured gate
   implementation_fingerprint: null # implementation basis used for freshness
+  launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
   gate_run_id: null
   envelope_status: null # ok | blocked | review_failed | other terminal status
   artifact: null
+  handoff: null
+  receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
   receive_eligible: false
   receive_completed: false
   failure: null
@@ -279,18 +294,33 @@ oat_implement_exit_gate:
 
 **Validation Rules:**
 
-- `pending` is persisted before configured command execution. It must not carry
-  an allowed disposition.
+- `pending` is persisted with the exact resolved command, description, policy,
+  config fingerprint, reviewed HEAD, and implementation fingerprint before
+  configured command execution. It must not carry an allowed disposition.
+- Launch intent (`launch_attempt_id`, start time, expected receipt, and
+  `gate_run_marker`) is committed before execution. `launch_state: accepted`
+  identifies an in-flight launch that must be reconciled rather than duplicated;
+  `result_persisted` binds the returned envelope to that launch.
 - `allowed/configured` requires an allowed policy disposition, the reviewed
-  HEAD, implementation fingerprint, and configured-gate run provenance.
+  HEAD, implementation fingerprint, configured-gate run provenance, and a
+  durable receive when the validated envelope is receive-eligible.
 - `allowed/no_gate` requires `disposition: no_gate` and null run/artifact
   provenance.
-- `blocked` preserves the last envelope/failure details and retry count; it
-  cannot cross into automated sequencing without remediation or the configured
-  prompt/warn policy producing an allowed disposition.
+- `blocked` preserves launch, envelope, receive, failure, and retry evidence. It
+  cannot cross into automated sequencing. Configured `prompt`/`warn` policy may
+  produce an allowed disposition only for a validated, receive-eligible
+  `blocked` envelope after its eligible receive is durably completed;
+  operational, validation, correlation, malformed, launch, and receive failures
+  remain blocked regardless of policy.
 - `stale` preserves the prior provenance for audit but cannot satisfy closeout.
-- `receive_completed` may become true only after a corroborated handoff with
-  `receiveEligible: true` is durably processed.
+- Receive intent and correlation are committed before review-receive.
+  `receive_completed` may become true only after a corroborated handoff with
+  `receiveEligible: true` is durably processed. An interruption after receive
+  side effects uses the archived artifact, review event identity, pre-receive
+  HEAD, and receive commit to reconcile without duplicate receive.
+- Ambiguous launch or receive evidence sets `receive_state:
+reconciliation_required` or an equivalent blocked failure; it never
+  authorizes relaunch, re-receive, or completion.
 - Missing state means “not yet resolved,” never “no gate configured.”
 - A final lifecycle review artifact lacking `oat_review_invocation: gate` and
   the matching `oat_gate_run_id` cannot populate configured-gate fields.
@@ -321,10 +351,14 @@ is substantive and invalidates the gate.
 ```text
 absent/stale --new closeout generation--> pending
 pending --resolve null------------------> allowed/no_gate
-pending --validated success------------> allowed/passed
-pending --warn policy------------------> allowed/warned
-pending --explicit prompt continue-----> allowed/prompt_approved
-pending --blocking/invalid outcome-----> blocked
+pending --persist launch intent--------> pending/intent_persisted
+intent_persisted --launch accepted-----> pending/accepted
+accepted --persist correlated result---> pending/result_persisted
+result_persisted --persist receive intent--> pending/receive-intent
+receive-intent --durable receive of ok----> allowed/passed
+receive-intent --durable receive of blocked + warn--> allowed/warned
+receive-intent --durable receive of blocked + prompt approval--> allowed/prompt_approved
+pending/in-flight --operational or ambiguous outcome--> blocked
 blocked --remediation/new basis--------> stale --> pending
 allowed --substantive change-----------> stale
 allowed --closeout-only descendants----> allowed
@@ -355,8 +389,10 @@ allowed --closeout-only descendants----> allowed
 - `prompt` persists the unresolved boundary and waits. Explicit user
   continuation records `allowed/prompt_approved`; defer or no response remains
   blocked/pending.
-- `warn` records the failure details and continues only after persisting
-  `allowed/warned`.
+- `warn` records validated blocking findings and continues only after the
+  receive-eligible `blocked` envelope is durably received and
+  `allowed/warned` is persisted. It never converts an operational, validation,
+  correlation, malformed, launch, or receive failure into an allowed outcome.
 - An interruption resumes the persisted generation. It never launches a
   duplicate while a valid completed outcome exists.
 

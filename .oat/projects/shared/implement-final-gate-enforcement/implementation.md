@@ -120,10 +120,15 @@ oat_generated: false
 
 **Verification:**
 
-- Exact three-file focused suite: 150/150 tests.
-- Autonomy inventory suite: 4/4 tests.
-- Workspace package suites: 3,294 tests; smoke suite: 123 tests; aggregate:
-  3,417 tests. Focused suites are subsets and are not added to this aggregate.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/commands/shared/frontmatter.test.ts
+src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+src/validation/skills.test.ts`: 150/150 tests.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/validation/autonomy-gate-inventory.test.ts`: 4/4 tests.
+- `pnpm test`: CLI 3,199 + control-plane 54 + docs-config 10 +
+  docs-transforms 31 = 3,294 package tests; smoke 123; aggregate 3,417.
+  Focused suites are subsets and are not added to this aggregate.
 - Format, lint, type-check, build, docs build, source-sync reproducibility, and
   release validation passed.
 
@@ -330,6 +335,26 @@ Verification evidence was refreshed from the same fix run.
 
 ---
 
+## Review Received: final (round 3)
+
+**Date:** 2026-07-18
+**Review artifact:** `reviews/archived/final-review-2026-07-18T225059Z.md`
+**Commit range:** `917d210f..bbc13e93`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Disposition:** The automatic retry limit was exhausted. The user explicitly
+authorized one artifact-only correction and final re-review. The approved design
+schema was aligned with the shipped launch/receive reconciliation contract, and
+exact verification commands and package-level counts were recorded.
+
+---
+
 ## Implementation Log
 
 Chronological log of implementation progress.
@@ -421,11 +446,12 @@ approval-aware sequencing, final HiLL, or implementation completion.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact         | Planned / Documented                                                                       | Actual / Accepted                                                                             | Reason                             | Source of Truth                           | Follow-up |
-| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------- | --------- |
-| p03 integration | `origin/main` / PR #159 | Cursor skill symlink views listed as tracked                                               | Cursor skills are native-read and remain absent                                               | Main changed after planning        | Current source CLI and release validation | Complete  |
-| p03 integration | Full test gate          | No autonomy inventory task                                                                 | Refreshed canonical implementation prompt-site mappings                                       | Rebase changed gate-sensitive text | `.agents/docs/autonomy-contract.md`       | Complete  |
-| final review    | Final review artifact   | Operational failures and validated blocking findings shared generic nonzero policy wording | Operational/validation/correlation/receive failures remain blocked regardless of `on_failure` | Fail-closed review finding         | Closeout contract and regression tests    | Complete  |
+| Task / Review   | Source Artifact         | Planned / Documented                                                                       | Actual / Accepted                                                                             | Reason                             | Source of Truth                                 | Follow-up |
+| --------------- | ----------------------- | ------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------- | ---------------------------------- | ----------------------------------------------- | --------- |
+| p03 integration | `origin/main` / PR #159 | Cursor skill symlink views listed as tracked                                               | Cursor skills are native-read and remain absent                                               | Main changed after planning        | Current source CLI and release validation       | Complete  |
+| p03 integration | Full test gate          | No autonomy inventory task                                                                 | Refreshed canonical implementation prompt-site mappings                                       | Rebase changed gate-sensitive text | `.agents/docs/autonomy-contract.md`             | Complete  |
+| final review    | Final review artifact   | Operational failures and validated blocking findings shared generic nonzero policy wording | Operational/validation/correlation/receive failures remain blocked regardless of `on_failure` | Fail-closed review finding         | Closeout contract and regression tests          | Complete  |
+| final review    | Final review round 3    | Design schema retained the pre-reconciliation state model                                  | Design now records the complete resolved-input, launch, receive, and failure schema           | User-authorized artifact alignment | `design.md` and authoritative closeout contract | Complete  |
 
 ## Test Results
 
@@ -470,8 +496,14 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Exact three-file focused suite: 150/150; autonomy inventory suite: 4/4.
-- Workspace package suites: 3,294; smoke suite: 123; aggregate: 3,417.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/commands/shared/frontmatter.test.ts
+src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
+src/validation/skills.test.ts`: 150/150.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run
+src/validation/autonomy-gate-inventory.test.ts`: 4/4.
+- `pnpm test`: CLI 3,199 + control-plane 54 + docs-config 10 +
+  docs-transforms 31 = 3,294 package tests; smoke 123; aggregate 3,417.
   Focused suites are subsets and are not included in that aggregate.
 - Skill and version validation, format, lint, type-check, build, docs build,
   source-sync/bundle reproducibility, and `pnpm release:validate`.
@@ -482,6 +514,9 @@ Track test execution during implementation.
 - Used the current repository source CLI because the installed global CLI was
   stale and predated Cursor native-read skill mappings.
 - Added canonical autonomy inventory maintenance required by full validation.
+- Expanded the approved design's state schema during a user-authorized
+  artifact-only correction so it matches the shipped crash-reconciliation
+  contract.
 
 ## References
 
