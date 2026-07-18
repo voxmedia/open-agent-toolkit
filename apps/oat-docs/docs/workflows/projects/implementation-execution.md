@@ -20,6 +20,9 @@ and updates project state.
   phase report.
 - **Fix boundary:** blocking findings return to the original phase handle when
   possible.
+- **Final exit-gate boundary:** after final verification and final lifecycle
+  review, the root resolves the configured implementation gate before
+  approval-aware sequencing, final HiLL, completion, or success output.
 - **Optional nesting:** a phase agent may dispatch bounded recon, fanout, or
   specialist work when that materially helps. Ordinary tasks do not require a
   third tier.
@@ -83,6 +86,49 @@ The root sends the reviewer a fresh scope containing the authoritative phase
 commit range, task IDs and boundaries, project artifacts, and verification
 evidence. The review passes with zero Critical and zero Important findings.
 Medium and Minor findings are recorded without blocking the phase.
+
+## Final Exit-Gate Boundary
+
+After every planned phase and review round finishes, the project root runs final
+verification and the mandatory final lifecycle review. It then resolves
+`workflow.gates.skills.oat-project-implement` and persists the result in
+`oat_implement_exit_gate`. This configured gate is separate from the phase
+reviewer, final lifecycle reviewer, and optional phase gate; none can substitute
+for another.
+
+Resolution and policy outcomes are explicit:
+
+- A null resolution persists `allowed/no_gate` for the current implementation
+  basis.
+- A configured passing review persists `allowed/passed` after any eligible
+  review receive is durably completed.
+- `warn` persists `allowed/warned`; `prompt` proceeds only after explicit
+  approval persists `allowed/prompt_approved`.
+- `block`, an unresolved prompt, invalid or contradictory output, and
+  operational or receive failures remain blocked. Remediation retries follow
+  the persisted `maxAttempts` policy.
+
+Gate execution is resumable across both launch and receive. Before launch, OAT
+persists an attempt ID, start time, and result-receipt path. It correlates those
+with the gate run marker, structured envelope, and run-bound artifact before it
+accepts a result or relaunches. Before receive, it persists the handoff and
+source/archive correlation; resume verifies the archived artifact, Reviews
+event, and bookkeeping commit before marking receive complete. Missing,
+contradictory, or ambiguous correlation fails closed. A valid accepted run or
+completed receive is never duplicated.
+
+Freshness is bound to the reviewed HEAD and an implementation fingerprint.
+Recognized closeout-only descendants preserve a valid result: gate artifacts
+and receipts, project tracking and project-log appends,
+summary/documentation/PR sequence outputs, final HiLL bookkeeping, and
+completion bookkeeping. An implementation, test, skill, template, workflow
+configuration, or unknown path change is substantive. It makes the gate result
+stale, requires a current final lifecycle review for the new basis, and starts
+a new gate generation.
+
+Only an allowed and fresh gate disposition can enter the pre-approval sequence,
+cross final HiLL, run the post-approval sequence, mark implementation complete,
+or emit success.
 
 ## Phase Scope
 

@@ -33,7 +33,7 @@ Gate config lives under `workflow.gates.skills` and is keyed by skill name.
     "gates": {
       "skills": {
         "oat-project-implement": {
-          "command": "oat gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final \"Use oat-project-review-provide code final for the declared project\"",
+          "command": "oat --json gate review --project \"$PROJECT_PATH\" --review-type code --review-scope final \"Use oat-project-review-provide code final for the declared project\"",
           "description": "Run a fresh-runtime final review before implementation is considered done.",
           "onFailure": "block",
           "maxAttempts": 2
@@ -56,6 +56,51 @@ Fields:
 in skill frontmatter with `oat_gateable: true`, and
 `oat internal validate-oat-skills` warns when config targets a missing or
 non-gateable skill.
+
+### Implementation exit-gate closeout
+
+For `oat-project-implement`, the configured skill gate is a final, resumable
+closeout boundary. It is independent from the root-owned phase reviews, the
+mandatory final lifecycle review, and the optional `oat_phase_review_gate`.
+Passing or disabling one of those mechanisms never satisfies or disables the
+configured implementation gate.
+
+After final verification and the mandatory final lifecycle review pass, OAT
+persists `oat_implement_exit_gate` in project state before it launches the
+configured command. The state records:
+
+- `pending`, `allowed`, `blocked`, or `stale` status;
+- a `configured` or `no_gate` resolution;
+- `passed`, `warned`, `prompt_approved`, or `no_gate` allowed dispositions;
+- the resolved configuration fingerprint, reviewed HEAD, implementation
+  fingerprint, gate run, envelope, and receive provenance; and
+- launch and receive reconciliation data needed to resume without duplicating
+  an accepted run or completed receive.
+
+A `null` resolution is explicit success for that closeout generation:
+`allowed/no_gate` with `disposition: no_gate`. Configured success becomes
+`allowed/passed`; `warn` and an explicit `prompt` continuation persist their
+own allowed dispositions. Blocking, unresolved, malformed, contradictory, or
+operational outcomes remain blocked according to `onFailure` and
+`maxAttempts`.
+
+Resume correlates the persisted launch intent with the gate run marker, durable
+JSON result receipt, and run-bound artifact. Eligible receive similarly
+correlates the source and archived artifact, Reviews event, and bookkeeping
+commit. Missing or ambiguous evidence fails closed instead of launching or
+receiving again.
+
+An allowed result remains fresh only while every commit after `reviewed_head`
+contains recognized closeout-only work, such as gate receipts, project
+tracking, summary/documentation/PR sequencing, final HiLL, or completion
+bookkeeping. Implementation, test, skill, template, workflow configuration, or
+unknown changed paths make the result stale and require a current final review
+and a new gate generation.
+
+Only an artifact with `oat_review_invocation: gate` and the matching
+`oat_gate_run_id` can satisfy configured-gate provenance. A normal final
+review, phase review, or manually produced independent review cannot substitute
+for it.
 
 ## Review gates
 
@@ -424,7 +469,7 @@ Set or clear a skill gate:
 
 ```bash
 oat gate set oat-project-implement \
-  --command 'oat gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
+  --command 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
@@ -441,17 +486,18 @@ unset lets the dispatcher avoid the current runtime and choose the
 highest-priority available non-host target. Pin a target only for manual
 dispatch, debugging, or a deliberate local/user-specific override.
 
-### Migrate ambient lifecycle commands
+### Migrate legacy lifecycle commands
 
 Older user-level lifecycle commands often asked a reviewer to inspect the
-"current project" but omitted a machine-readable declaration. Migrate each
-stored `oat gate review` command by inserting `--project "$PROJECT_PATH"` and
-retaining provider-neutral target selection. For example:
+"current project", omitted a machine-readable project declaration, or emitted
+human-oriented output. Migrate each stored command to the canonical global-JSON
+shape `oat --json gate review --project "$PROJECT_PATH" ...` while retaining
+provider-neutral target selection. For example:
 
 ```bash
 export PROJECT_PATH
 oat gate set oat-project-implement \
-  --command 'oat gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
+  --command 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final "Use oat-project-review-provide code final for the declared project"' \
   --description "Run final review in another runtime" \
   --on-failure block \
   --max-attempts 2 \
@@ -462,6 +508,12 @@ Apply the same command shape to `oat-project-plan`,
 `oat-project-quick-start`, and `oat-project-import-plan` when those lifecycle
 skills have configured review gates. Do not add `--target`; explicit targets
 remain manual/debug or deliberate local/user-specific overrides.
+
+Implementation closeout rejects a stored review command without global
+`--json`, without `--project "$PROJECT_PATH"`, or with a shared `--target`
+before launch. It does not rewrite configuration or inject, reorder, or append
+arguments while executing. Migrate the declaration first; otherwise the
+project remains blocked and resumable through `oat-project-implement`.
 
 Set or clear an exec target:
 
