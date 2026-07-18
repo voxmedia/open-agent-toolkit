@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -28,9 +28,9 @@ oat_generated: false
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 6     | 6/6       |
 | Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | pending   | 5     | 0/5       |
+| Phase 3 | completed | 5     | 5/5       |
 
-**Total:** 8/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
@@ -199,13 +199,47 @@ oat_generated: false
 
 ## Phase 3: Skill integrations, docs, and release bookkeeping
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
 
-### Tasks p03-t01 through p03-t05
+### Phase Summary
 
-**Status:** pending
-**Commit:** -
+**Outcome:**
+
+- Integrated project-log appends, graduation, roll-up, synthesis checks, and archive enforcement into the three lifecycle skills.
+- Added command documentation, provider-synced views, bundled assets, and lockstep package version 0.1.73.
+- Added an end-to-end lifecycle test covering scaffold, append, promotion, roll-up outcomes, synthesis, seal, and archive durability.
+
+**Verification:**
+
+- Run: skill validation; format; focused tests; lint; type-check; `pnpm release:validate`; `pnpm build:docs`.
+- Result: all passed; 157 focused tests and 64 generated docs pages.
+
+### Task p03-t01: Add implement append points
+
+**Status:** completed
+**Commit:** 3d87bd36
+
+### Task p03-t02: Add summary roll-up and graduation
+
+**Status:** completed
+**Commit:** dea85f11
+
+### Task p03-t03: Enforce completion roll-up and seal
+
+**Status:** completed
+**Commit:** 5ce6251c
+
+### Task p03-t04: Docs, provider sync, and release bookkeeping
+
+**Status:** completed
+**Commit:** 6cc70ed4
+
+### Task p03-t05: Add lifecycle integration test
+
+**Status:** completed
+**Commit:** 526616d3
 
 ## Orchestration Runs
 
@@ -245,6 +279,19 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Outstanding:** none introduced.
 
+### Run 3 — 2026-07-18
+
+**Branch:** `orchestration-run-log`
+**Dispatch policy:** high
+**Resolved target:** `oat-phase-implementer` via Cursor (inherited current model)
+**Request:** `run-log-p03-2026-07-18`
+
+| Phase | Outcome            | Commits                  | Verification |
+| ----- | ------------------ | ------------------------ | ------------ |
+| p03   | DONE_WITH_CONCERNS | `3d87bd36..526616d3` (5) | passed       |
+
+**Outstanding:** overlap direction accepted and design-aligned before final review.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -281,13 +328,29 @@ Chronological log of implementation progress.
 
 ---
 
+### 2026-07-18 — Phase 3
+
+- [x] p03-t01: implement append points - 3d87bd36
+- [x] p03-t02: summary roll-up - dea85f11
+- [x] p03-t03: completion enforcement - 5ce6251c
+- [x] p03-t04: docs and release - 6cc70ed4
+- [x] p03-t05: lifecycle integration - 526616d3
+
+**What changed:** completed all implementation tasks and reached the final review boundary.
+
+**Decision:** Workflow Observations remains the complete command-owned project-log roll-up. Autonomous Execution Learnings cross-references overlapping Workflow Observations rather than requiring unsupported roll-up filtering.
+
+**Blockers:** none.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                                                                 | Actual / Accepted                                                                                            | Reason                                                                                   | Source of Truth                                                       | Follow-up |
+| ------------- | --------------- | ------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- | --------------------------------------------------------------------- | --------- |
+| p03-t02       | design.md       | Roll-up excludes observations already represented in Autonomous Execution Learnings. | Roll-up remains complete; Autonomous Execution Learnings cross-references overlapping Workflow Observations. | `rollup` intentionally writes every project-log entry and exposes no filtering contract. | `.agents/skills/oat-project-summary/SKILL.md` and aligned `design.md` | None      |
 
 ## Test Results
 
@@ -297,30 +360,37 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 343       | 343    | 0      | Targeted |
 | 2     | 310       | 310    | 0      | Targeted |
-| 3     | -         | -      | -      | -        |
+| 3     | 157       | 157    | 0      | Targeted |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A first-class append-only `project-log.md` with CLI-owned append, check, synthesize, and roll-up operations.
+- Automatic create-on-first-dispatch behavior, scaffold controls, and gate terminal-outcome entries.
+- Lifecycle integrations for dispatch observations, ledger graduation, summary roll-up, synthesis warning, hard roll-up-before-archive enforcement, and final sealing.
+- User documentation, provider-synced assets, and package release version 0.1.73.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- `workflow.projectLog` defaults to `auto`; projects incur no artifact until the first append point.
+- Reusable project observations graduate by appending a referencing `general` entry before roll-up.
+- Completion refuses to archive a populated log when required roll-up fails, while permitted missing-reference-layer skips remain non-blocking.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/project/log/` - project-log command implementations and lifecycle integration tests.
+- `packages/cli/src/commands/gate/index.ts` - once-only terminal-outcome logging.
+- `.agents/skills/oat-project-{implement,summary,complete}/` - lifecycle contracts.
+- `apps/oat-docs/docs/cli-utilities/project-log.md` - user-facing command documentation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Phase suites, skill validation, formatting, lint, type-check, release validation, CLI/workspace builds, and docs production build.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Autonomous Execution Learnings cross-references overlapping Workflow Observations because roll-up deliberately preserves every project-log entry; `design.md` was aligned to this executable contract.
 
 ## References
 
