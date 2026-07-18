@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t08
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 7/9       |
+| Phase 4 | in_progress | 9     | 8/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 32/38 tasks completed
+**Total:** 33/38 tasks completed
 
 ---
 
@@ -811,6 +811,26 @@ stale version pins and unmapped Phase 3 lifecycle prompt sites.
 - RC builder suite — pass (3/3), independently rerun after authentication
   recovery.
 - Commit contains exactly the two planned files.
+
+---
+
+### Task p04-t08: Run connector entry points from the retained RC
+
+**Status:** completed
+**Commit:** `e9d045fe`
+
+**Outcome:**
+
+- Added a fail-closed packaged RC runner that verifies manifest identity and
+  every tarball hash before contained entry-point execution.
+- Records packaged execution evidence and rejects traversal, symlink escape,
+  undeclared entries, malformed manifests, hash mismatch, and source fallback.
+
+**Verification:**
+
+- RC runner suite — pass (7/7).
+- Combined RC builder, packaged-layout, and wrapper suites — pass (16/16).
+- Actual packed CLI probe, scoped lint, formatting, and whitespace — pass.
 
 ---
 
