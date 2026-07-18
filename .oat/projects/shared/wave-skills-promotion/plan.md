@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-18
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: [] # confirmed sequential (operator declined p03/p04 parallel group)
 oat_phase_review_gate:
   enabled: true
@@ -735,25 +735,25 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| spec   | artifact | pending  | -          | -                                                  |
-| design | artifact | passed   | 2026-07-18 | -                                                  |
-| plan   | artifact | passed   | 2026-07-18 | -                                                  |
-| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md |
-| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md |
-| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T150023Z.md |
+| Scope  | Type     | Status  | Date       | Artifact                                           |
+| ------ | -------- | ------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending | -          | -                                                  |
+| p02    | code     | pending | -          | -                                                  |
+| p03    | code     | pending | -          | -                                                  |
+| p04    | code     | pending | -          | -                                                  |
+| p05    | code     | pending | -          | -                                                  |
+| p06    | code     | pending | -          | -                                                  |
+| final  | code     | pending | -          | -                                                  |
+| spec   | artifact | pending | -          | -                                                  |
+| design | artifact | passed  | 2026-07-18 | -                                                  |
+| plan   | artifact | passed  | 2026-07-18 | -                                                  |
+| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md |
+| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md |
+| plan   | artifact | passed  | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T150023Z.md |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
 
-_First plan-row provenance: in-session structured review (`oat-reviewer` subagent, inherited parent model, 3 attempts → clean, 2026-07-18); no artifact file — findings F1–F7 applied in the plan draft commits. The two `received` rows are the cross-family gate reviews (codex gpt-5.6-sol/max); their findings were applied directly during planning (see the gate-fix commit) — dispositions below._
+_First plan-row provenance: in-session structured review (`oat-reviewer` subagent, inherited parent model, 3 attempts → clean, 2026-07-18); no artifact file — findings F1–F7 applied in the plan draft commits. The next two rows are the cross-family gate reviews (codex gpt-5.6-sol/max); all 18 findings were remediated in commit `a634db1c`. The final row is the delta-scoped gate re-run that verified every remediation and returned 0 findings (verdict ok, run 87f67c9f) — advancing all three gate events to `passed`._
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

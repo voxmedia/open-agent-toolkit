@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 5237cd57
+oat_last_commit: 60a9ad9a
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T13:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T15:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,18 +50,18 @@ oat_generated: false
 
 ## Current Phase
 
-Design complete — reviewed by the stoa-side packet author (relayed by the
-operator), approved with amendments applied (versioning lineage, W6
-mini-runbook, fixture unhappy-path leg, B3 regression-guard framing,
-row-5 closed rejection, tenth backlog item). Ready for implementation
-planning.
+Planning complete — 27 tasks / 6 phases, sequential, dispatch policy
+managed/high, phase gate review at p05. Plan passed the in-session
+structured review (3 attempts → clean) and the cross-family gate
+(2 full reviews + 18 findings remediated + delta re-run verdict ok).
+Ready for implementation.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** `spec.md` (complete — 10 FRs + 4 NFRs, authored inline by `oat-project-design`)
+- **Spec:** `spec.md` (complete — 10 FRs + 4 NFRs; aligned to design amendments at plan gate)
 - **Design:** `design.md` (complete — approved with amendments 2026-07-18)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete — 27 tasks; gate passed 2026-07-18)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -69,14 +69,15 @@ planning.
 - ✓ Discovery complete (HiLL approved)
 - ✓ Specification complete (folded into design)
 - ✓ Design complete (HiLL approved with amendments)
-- ⧗ Awaiting implementation plan
+- ✓ Plan complete (artifact review + cross-family gate passed)
+- ⧗ Awaiting implementation
 
 ## Blockers
 
-None (Phase 6 of the design is gated on the explainer-kit v1 RC, but
-planning and phases 1–5 are unblocked)
+None (plan Phase 6 is gated on the explainer-kit v1 RC; phases 1–5 are
+unblocked — 23 of 27 tasks executable now)
 
 ## Next Milestone
 
-Implementation plan via `oat-project-plan` (6 design phases → task
-breakdown; Phase 6 tasks written as blocked/gated)
+Implementation via `oat-project-implement` (confirms HiLL checkpoint
+selection at start; phases p01–p05 sequential; p06 blocked on RC)
