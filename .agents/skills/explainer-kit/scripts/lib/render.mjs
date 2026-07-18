@@ -68,7 +68,9 @@ export async function renderArtifact({
     `<html lang="en" data-render-strategy="${renderStrategy}" data-theme-mode="${theme.defaultMode}">`,
   );
   if (renderStrategy === 'user-switchable') {
-    html = html.replace('</head>', `${switchableThemeStyle(theme)}\n  </head>`);
+    html = html
+      .replace('</head>', `${switchableThemeStyle(theme)}\n  </head>`)
+      .replace('</body>', `${switchableThemeControl(theme)}\n  </body>`);
   }
 
   return {
@@ -287,7 +289,51 @@ function switchableThemeStyle(theme) {
       :root[data-theme-mode="${oppositeMode(theme.defaultMode)}"] {
         ${themeDeclarations(theme.modes[oppositeMode(theme.defaultMode)], theme)}
       }
+      [data-theme-toggle] {
+        position: fixed;
+        z-index: 10;
+        inset: 1rem 1rem auto auto;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        color: var(--ink);
+        padding: 0.55rem 0.75rem;
+        font: 0.875rem var(--sans);
+        cursor: pointer;
+      }
+      [data-theme-toggle]:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
     </style>`;
+}
+
+function switchableThemeControl(theme) {
+  const defaultMode = theme.defaultMode;
+  const alternateMode = oppositeMode(defaultMode);
+  return `<button type="button" data-theme-toggle aria-pressed="${defaultMode === 'dark'}" aria-label="Switch color theme">Theme: ${humanize(defaultMode)}</button>
+    <script>
+      (() => {
+        const root = document.documentElement;
+        const toggle = document.querySelector('[data-theme-toggle]');
+        const storageKey = 'explainer-theme-mode:' + location.pathname;
+        const supported = new Set(['${defaultMode}', '${alternateMode}']);
+        const apply = (mode, persist = true) => {
+          root.dataset.themeMode = mode;
+          toggle.setAttribute('aria-pressed', String(mode === 'dark'));
+          toggle.textContent = 'Theme: ' + mode[0].toUpperCase() + mode.slice(1);
+          if (persist) {
+            try { localStorage.setItem(storageKey, mode); } catch {}
+          }
+        };
+        let saved;
+        try { saved = localStorage.getItem(storageKey); } catch {}
+        if (supported.has(saved)) apply(saved, false);
+        toggle.addEventListener('click', () =>
+          apply(root.dataset.themeMode === '${defaultMode}' ? '${alternateMode}' : '${defaultMode}')
+        );
+      })();
+    </script>`;
 }
 
 function assertRecipeArtifact(artifact) {

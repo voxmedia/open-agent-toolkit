@@ -145,6 +145,14 @@ test('deck supports both arrow pairs and readable no-JS and print layouts', asyn
   assert.match(html, /html:not\(\.js\) \.slide\s*\{[^}]*min-height:\s*auto/i);
   assert.match(
     html,
+    /html:not\(\.js\) \.slide__content\s*\{[^}]*overflow-x:\s*auto/i,
+  );
+  assert.match(
+    html,
+    /html:not\(\.js\) \.slide__content\s*\{[^}]*overflow-y:\s*visible/i,
+  );
+  assert.match(
+    html,
     /@media print\s*\{[\s\S]*\.deck\s*\{[^}]*display:\s*block/i,
   );
   assert.match(
@@ -154,6 +162,10 @@ test('deck supports both arrow pairs and readable no-JS and print layouts', asyn
   assert.match(
     html,
     /@media print\s*\{[\s\S]*\.slide\s*\{[^}]*min-height:\s*auto/i,
+  );
+  assert.match(
+    html,
+    /@media print\s*\{[\s\S]*\.slide__content\s*\{[^}]*overflow:\s*visible/i,
   );
 });
 

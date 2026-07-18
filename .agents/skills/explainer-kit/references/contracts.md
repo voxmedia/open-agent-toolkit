@@ -38,7 +38,10 @@ contract.
 - `factBase.mode: federated` names explicit source bindings. File locators
   contain JSON with a `claims` array of `{ "id", "text", "locator"? }`.
   Non-file bindings require a caller-supplied `sourceLoader(source)` callback.
-  The core reconciles the loaded claims and invokes the critic exactly once.
+  Every binding names its recipe `role` and `sourceSetId`. Multiple documents
+  may share one source-set ID; recipe cardinality counts distinct sets, not
+  documents. The core validates these bindings before loading facts, then
+  reconciles the loaded claims and invokes the critic exactly once.
 
 An unattended request asserts that its explicit source artifacts are already
 approved. It does not prompt. Interactive review and same-run approval/resume
@@ -73,7 +76,11 @@ Durability and publishing are never implicit.
 - `durability.strategy: none` invokes neither seam.
 - `durability.strategy: commit` invokes the explicit `durability` callback.
   Caller-created commit evidence is subsequently verified with
-  `record-durability.mjs`; the core never creates commits.
+  `record-durability.mjs`; the core never creates commits. The first evidence
+  commit must contain every path and byte hash in `manifest.immutableHashes`:
+  fact-base JSON and Markdown, all content Markdown, the resolved theme, and
+  every built artifact retained in the package. Mutable `manifest.json` and
+  `build-record.json` remain excluded for the separate evidence update.
 - `durability.strategy: publish` invokes the explicit `publish` callback with
   the complete publish request. A verified receipt is subsequently recorded as
   durability evidence.

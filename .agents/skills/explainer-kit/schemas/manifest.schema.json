@@ -13,6 +13,7 @@
     "source",
     "theme",
     "artifacts",
+    "immutableHashes",
     "outcome",
     "buildRecord",
     "warnings"
@@ -60,6 +61,7 @@
       "items": { "$ref": "#/$defs/artifactEntry" },
       "uniqueItems": true
     },
+    "immutableHashes": { "$ref": "#/$defs/hashMap" },
     "outcome": {
       "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
     },

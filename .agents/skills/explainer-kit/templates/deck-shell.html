@@ -131,7 +131,9 @@
         border-block-end: 1px solid var(--border);
       }
       html:not(.js) .slide__content {
-        overflow: visible;
+        max-height: none;
+        overflow-x: auto;
+        overflow-y: visible;
       }
       @media (prefers-reduced-motion: reduce) {
         .deck {

@@ -69,13 +69,15 @@
     "sourceBinding": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["id", "kind", "locator"],
+      "required": ["id", "kind", "locator", "role", "sourceSetId"],
       "properties": {
         "id": { "type": "string", "minLength": 1 },
         "kind": {
           "enum": ["file", "directory", "git", "github", "session", "other"]
         },
         "locator": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "sourceSetId": { "type": "string", "minLength": 1 },
         "revision": { "type": "string", "minLength": 1 },
         "authoritativeFor": {
           "type": "array",

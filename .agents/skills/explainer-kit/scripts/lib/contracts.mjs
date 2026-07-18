@@ -502,6 +502,36 @@ function validateCrossRecord(kind, value, context, errors) {
       );
     }
 
+    const expectedImmutable = new Set([
+      value.source?.factBasePath,
+      'source/fact-base.md',
+      value.theme?.path,
+      ...(Array.isArray(value.artifacts)
+        ? value.artifacts.flatMap((artifact) => [
+            artifact?.contentPath,
+            ...(artifact?.status === 'built' &&
+            typeof artifact?.renderedPath === 'string'
+              ? [artifact.renderedPath]
+              : []),
+          ])
+        : []),
+    ]);
+    expectedImmutable.delete(undefined);
+    const recordedImmutable = isObject(value.immutableHashes)
+      ? new Set(Object.keys(value.immutableHashes))
+      : new Set();
+    if (
+      expectedImmutable.size !== recordedImmutable.size ||
+      [...expectedImmutable].some((path) => !recordedImmutable.has(path))
+    ) {
+      add(
+        errors,
+        '$.immutableHashes',
+        'immutable-package-incomplete',
+        'Manifest immutable hashes must cover the complete retained fact-base, content, theme, and required built artifact package.',
+      );
+    }
+
     const record = context.buildRecord;
     if (isObject(record)) {
       if (value.runId !== record.runId || value.outcome !== record.outcome) {

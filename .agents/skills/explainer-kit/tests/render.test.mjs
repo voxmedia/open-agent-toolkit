@@ -95,9 +95,17 @@ test('renders only the default mode unless user-switchable mode is requested', a
   assert.match(defaultOnly.html, /data-render-strategy="default-only"/);
   assert.match(defaultOnly.html, /data-theme-mode="dark"/);
   assert.doesNotMatch(defaultOnly.html, /data-theme-mode="light"/);
+  assert.doesNotMatch(defaultOnly.html, /data-theme-toggle/);
   assert.match(switchable.html, /data-render-strategy="user-switchable"/);
   assert.match(switchable.html, /data-theme-mode="dark"/);
   assert.match(switchable.html, /data-theme-mode="light"/);
+  assert.match(
+    switchable.html,
+    /<button[^>]+data-theme-toggle[^>]+aria-pressed="true"/,
+  );
+  assert.match(switchable.html, /addEventListener\(['"]click['"]/);
+  assert.match(switchable.html, /setAttribute\(['"]aria-pressed['"]/);
+  assert.match(switchable.html, /localStorage/);
 });
 
 test('uses typed site paths and explicit index URLs for artifact cross-links', async () => {

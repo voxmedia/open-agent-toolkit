@@ -1,14 +1,14 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { readFile } from 'node:fs/promises';
+import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
-import { writeJsonAtomic } from './lib/fs-safe.mjs';
+import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { auditArtifactSet } from './lib/qa.mjs';
 import {
   loadRecipe,
@@ -51,6 +51,7 @@ export async function runExplainer(request, options = {}) {
     if (resumed) {
       await hydrateResumableState(state);
     } else {
+      validateRecipeSources(recipe, run.request.factBase);
       await executeStage(run, 'validate', options, async () => ({
         outputPaths: ['run-request.json'],
       }));
@@ -64,17 +65,16 @@ export async function runExplainer(request, options = {}) {
         state.warnings.push(...processed.checks.warnings);
         state.inputHashes = inputHashes(processed.factBase);
         state.factBaseHash = canonicalHash(processed.factBase);
-        await mkdir(join(run.runRoot, 'source'), { recursive: true });
         await writeJsonAtomic(
           run.runRoot,
           'source/fact-base.json',
           state.factBase,
         );
-        await writeText(
-          join(run.runRoot, 'source/fact-base.md'),
+        await writeTextAtomic(
+          run.runRoot,
+          'source/fact-base.md',
           factBaseMarkdown(state.factBase),
         );
-        validateRecipeSources(recipe, state.factBase);
         return {
           outputPaths: ['source/fact-base.json', 'source/fact-base.md'],
           warnings: processed.checks.warnings,
@@ -86,7 +86,6 @@ export async function runExplainer(request, options = {}) {
         state.contentModels = recipe.artifacts.map((artifact) =>
           createContentModel(recipe, artifact, run.slug, state.factBase),
         );
-        await mkdir(join(run.runRoot, 'source/content'), { recursive: true });
         for (const model of state.contentModels) {
           const validation = validateContentModel(recipe, model);
           if (!validation.valid) {
@@ -96,7 +95,7 @@ export async function runExplainer(request, options = {}) {
             );
           }
           const path = `source/content/${model.artifactId}.md`;
-          await writeText(join(run.runRoot, path), contentMarkdown(model));
+          await writeTextAtomic(run.runRoot, path, contentMarkdown(model));
           state.contentPaths.set(model.artifactId, path);
         }
         return { outputPaths: [...state.contentPaths.values()] };
@@ -138,8 +137,9 @@ export async function runExplainer(request, options = {}) {
             publicBaseUrl: run.request.publicBaseUrl,
           }),
         });
-        await writeText(
-          join(run.runRoot, rendered.renderedPath),
+        await writeTextAtomic(
+          run.runRoot,
+          rendered.renderedPath,
           rendered.html,
         );
         state.rendered.push(rendered);
@@ -483,7 +483,12 @@ async function executeDurabilityAndPublish(state, options, now) {
 
 async function persistManifest(state, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
-  const manifest = manifestFor(state, record, createdAt);
+  const manifest = manifestFor(
+    state,
+    record,
+    createdAt,
+    await immutableHashesFor(state),
+  );
   await writeManifestAtomic(state.run, manifest);
   return manifest;
 }
@@ -507,10 +512,13 @@ async function persistFailureManifest(state, error, createdAt) {
         },
       })),
   );
-  return writeManifestAtomic(state.run, manifestFor(state, record, createdAt));
+  return writeManifestAtomic(
+    state.run,
+    manifestFor(state, record, createdAt, await immutableHashesFor(state)),
+  );
 }
 
-function manifestFor(state, buildRecord, createdAt) {
+function manifestFor(state, buildRecord, createdAt, immutableHashes) {
   return {
     schemaVersion: 'explainer-kit.manifest/v1',
     runId: state.run.runId,
@@ -531,6 +539,7 @@ function manifestFor(state, buildRecord, createdAt) {
       derived: state.theme.provenance.derived,
     },
     artifacts: state.artifacts,
+    immutableHashes,
     outcome: buildRecord.outcome,
     buildRecord: {
       path: 'build-record.json',
@@ -564,16 +573,43 @@ function createContentModel(recipe, artifact, slug, factBase) {
   };
 }
 
-function validateRecipeSources(recipe, factBase) {
+function validateRecipeSources(recipe, binding) {
   const primaryRole = recipe.sourceRoles[0]?.role;
-  const bindings = factBase.sources
-    .filter(({ id }) => !id.startsWith('critic:'))
-    .slice(0, 1)
-    .map((source) => ({ role: primaryRole, kind: source.kind }));
+  const bindings =
+    binding.mode === 'supplied'
+      ? [{ role: primaryRole, kind: 'file', sourceSetId: 'supplied-fact-base' }]
+      : binding.sources.map((source) => ({
+          role: source.role,
+          kind: source.kind,
+          sourceSetId: source.sourceSetId,
+        }));
   const result = validateSourceBindings(recipe, bindings);
   if (!result.valid) {
     throw codedError('E_FACT_BASE', result.errors.join('; '));
   }
+}
+
+async function immutableHashesFor(state) {
+  const paths = [
+    'source/fact-base.json',
+    'source/fact-base.md',
+    ...state.contentPaths.values(),
+    ...(state.theme ? ['theme.resolved.json'] : []),
+    ...state.artifacts
+      .filter(
+        ({ status, renderedPath }) =>
+          status === 'built' && typeof renderedPath === 'string',
+      )
+      .map(({ renderedPath }) => renderedPath),
+  ];
+  return Object.fromEntries(
+    await Promise.all(
+      [...new Set(paths)].map(async (path) => [
+        path,
+        hashBytes(await readFile(join(state.run.runRoot, path))),
+      ]),
+    ),
+  );
 }
 
 function inputHashes(factBase) {
@@ -617,11 +653,6 @@ function contentModelFromMarkdown(base, markdown) {
     ...(title && { title }),
     sections,
   };
-}
-
-async function writeText(path, value) {
-  await mkdir(dirname(path), { recursive: true });
-  await writeFile(path, value, { encoding: 'utf8', mode: 0o600 });
 }
 
 function assertValidRequest(request) {

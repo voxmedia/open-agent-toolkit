@@ -105,10 +105,49 @@ test('verifies commit blobs at manifest hashes without creating a commit', async
     {
       kind: 'commit',
       ref: fixture.artifactCommit,
-      paths: [fixture.artifactRepoPath],
+      paths: fixture.immutableRepoPaths,
       attestedAt: NOW,
     },
   ]);
+});
+
+test('rejects commit evidence that omits or mismatches retained source, content, or theme files', async () => {
+  for (const omitted of [
+    'source/fact-base.json',
+    'source/fact-base.md',
+    'source/content/hub.md',
+    'theme.resolved.json',
+  ]) {
+    const fixture = await createCommittedRun();
+    const request = commitRequest(fixture, fixture.artifactCommit);
+    request.evidence.paths = request.evidence.paths.filter(
+      (path) => !path.endsWith(omitted),
+    );
+    const result = await recordDurability(request, { now: () => NOW });
+    assert.equal(result.durable, false, omitted);
+    assert.ok(
+      result.errors.some(
+        ({ code, message }) =>
+          code === 'missing-artifact' && message.includes(omitted),
+      ),
+      omitted,
+    );
+  }
+
+  const mismatched = await createCommittedRun();
+  mismatched.manifest.immutableHashes['source/content/hub.md'] =
+    `sha256:${'f'.repeat(64)}`;
+  await writeRecords(
+    mismatched.runRoot,
+    mismatched.manifest,
+    mismatched.buildRecord,
+  );
+  const result = await recordDurability(
+    commitRequest(mismatched, mismatched.artifactCommit),
+    { now: () => NOW },
+  );
+  assert.equal(result.durable, false);
+  assert.ok(result.errors.some(({ code }) => code === 'hash-mismatch'));
 });
 
 test('preserves built-not-durable when a commit blob hash does not match', async () => {
@@ -256,9 +295,16 @@ async function createRun() {
   const runRoot = await mkdtemp(join(tmpdir(), 'explainer-durability-'));
   tempDirs.push(runRoot);
   await mkdir(join(runRoot, 'site'), { recursive: true });
-  await mkdir(join(runRoot, 'source'), { recursive: true });
+  await mkdir(join(runRoot, 'source/content'), { recursive: true });
   await writeFile(join(runRoot, 'site/index.html'), 'stable output', 'utf8');
   await writeFile(join(runRoot, 'source/input.txt'), 'stable input', 'utf8');
+  await writeFile(join(runRoot, 'source/fact-base.json'), '{"facts":[]}\n');
+  await writeFile(join(runRoot, 'source/fact-base.md'), '# Fact base\n');
+  await writeFile(join(runRoot, 'source/content/hub.md'), '# Hub\n');
+  await writeFile(
+    join(runRoot, 'theme.resolved.json'),
+    '{"theme":"neutral"}\n',
+  );
 
   const buildRecord = {
     schemaVersion: 'explainer-kit.build-record/v1',
@@ -296,7 +342,7 @@ async function createRun() {
       {
         id: 'hub',
         type: 'hub',
-        contentPath: 'content/hub.json',
+        contentPath: 'source/content/hub.md',
         renderedPath: 'site/index.html',
         mediaType: 'text/html',
         status: 'built',
@@ -304,6 +350,13 @@ async function createRun() {
         rebuildable: false,
       },
     ],
+    immutableHashes: await hashesFor(runRoot, [
+      'source/fact-base.json',
+      'source/fact-base.md',
+      'source/content/hub.md',
+      'theme.resolved.json',
+      'site/index.html',
+    ]),
     outcome: 'built-not-durable',
     buildRecord: {
       path: 'build-record.json',
@@ -328,18 +381,20 @@ async function createCommittedRun() {
   const runRoot = join(repoRoot, 'runs/demo');
   await mkdir(join(repoRoot, 'runs'), { recursive: true });
   await execFile('cp', ['-R', fixture.runRoot, runRoot]);
-  const artifactRepoPath = 'runs/demo/site/index.html';
-  await execFile('git', ['add', artifactRepoPath], { cwd: repoRoot });
+  const records = await readRecords(runRoot);
+  const immutableRepoPaths = Object.keys(records.manifest.immutableHashes).map(
+    (path) => `runs/demo/${path}`,
+  );
+  await execFile('git', ['add', ...immutableRepoPaths], { cwd: repoRoot });
   await execFile('git', ['commit', '-q', '-m', 'artifact'], { cwd: repoRoot });
   const { stdout } = await execFile('git', ['rev-parse', 'HEAD'], {
     cwd: repoRoot,
   });
-  const records = await readRecords(runRoot);
   return {
     ...records,
     repoRoot,
     runRoot,
-    artifactRepoPath,
+    immutableRepoPaths,
     artifactCommit: stdout.trim(),
   };
 }
@@ -352,7 +407,7 @@ function commitRequest(fixture, commit) {
       kind: 'commit',
       repoRoot: fixture.repoRoot,
       commit,
-      paths: [fixture.artifactRepoPath],
+      paths: [...fixture.immutableRepoPaths],
     },
   };
 }
@@ -421,6 +476,14 @@ async function fileHash(path) {
   return `sha256:${createHash('sha256')
     .update(await readFile(path))
     .digest('hex')}`;
+}
+
+async function hashesFor(runRoot, paths) {
+  return Object.fromEntries(
+    await Promise.all(
+      paths.map(async (path) => [path, await fileHash(join(runRoot, path))]),
+    ),
+  );
 }
 
 async function commitCount(repoRoot) {

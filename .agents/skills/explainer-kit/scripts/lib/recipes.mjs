@@ -61,14 +61,16 @@ export function validateSourceBindings(recipe, bindings) {
   }
 
   const roles = new Map(recipe.sourceRoles.map((role) => [role.role, role]));
-  const counts = new Map();
+  const sourceSets = new Map();
   for (const binding of bindings) {
     const role = roles.get(binding?.role);
     if (!role) {
       errors.push(`Unknown source role: ${binding?.role}`);
       continue;
     }
-    counts.set(role.role, (counts.get(role.role) ?? 0) + 1);
+    const sets = sourceSets.get(role.role) ?? new Set();
+    sets.add(binding.sourceSetId ?? Symbol());
+    sourceSets.set(role.role, sets);
     if (!role.accepts.includes(binding.kind)) {
       errors.push(
         `Source role ${role.role} does not accept kind ${binding.kind}`,
@@ -77,7 +79,7 @@ export function validateSourceBindings(recipe, bindings) {
   }
 
   for (const role of recipe.sourceRoles) {
-    const count = counts.get(role.role) ?? 0;
+    const count = sourceSets.get(role.role)?.size ?? 0;
     if (role.required && count < role.minBindings) {
       errors.push(`Missing required source role: ${role.role}`);
     }

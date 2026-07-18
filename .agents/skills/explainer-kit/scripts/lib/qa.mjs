@@ -43,7 +43,16 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
   return {
     pageOverflowX: root.scrollWidth > root.clientWidth + 2,
     clippedX,
-    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches
+    reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    deckLayout: document.querySelector('.deck') ? {
+      flow: getComputedStyle(document.querySelector('.deck')).display === 'block' ?
+        'vertical' : 'horizontal',
+      overflowX: getComputedStyle(document.querySelector('.slide__content')).overflowX
+    } : null,
+    themeToggle: document.querySelector('[data-theme-toggle]') ? {
+      present: true,
+      initialMode: root.dataset.themeMode
+    } : null
   };
 })()`;
 
@@ -198,49 +207,114 @@ export async function runBrowserProbes({
   let probes = 0;
   for (const artifact of artifacts) {
     for (const width of widths) {
-      const request = {
-        artifact,
-        viewport: { width, height: representativeHeight(width) },
-        reducedMotion: 'reduce',
-        evaluate: BROWSER_PROBE_EVALUATE,
-        keyboard:
-          artifact.type === 'deck'
-            ? { tab: true, arrows: [...ARROW_KEYS] }
-            : { tab: true },
-      };
-      const result = await probe(request);
-      probes += 1;
-      validateProbeResult(result, artifact.id, width);
+      for (const scenario of browserScenarios(artifact)) {
+        const request = {
+          artifact,
+          scenario,
+          viewport: { width, height: representativeHeight(width) },
+          reducedMotion: 'reduce',
+          evaluate: BROWSER_PROBE_EVALUATE,
+          keyboard:
+            artifact.type === 'deck' && scenario === 'default'
+              ? { tab: true, arrows: [...ARROW_KEYS] }
+              : { tab: true },
+          ...(scenario === 'no-js' && { javascriptEnabled: false }),
+          ...(scenario === 'print' && { media: 'print' }),
+          ...(artifact.type === 'deck' &&
+            scenario !== 'default' && {
+              wideContent: {
+                containerSelector: '.slide__content',
+                width: 2048,
+              },
+            }),
+          ...(artifact.html.includes(
+            'data-render-strategy="user-switchable"',
+          ) &&
+            scenario === 'default' && {
+              themeToggle: {
+                selector: '[data-theme-toggle]',
+                activate: 'keyboard',
+                expectPersistence: true,
+              },
+            }),
+        };
+        const result = await probe(request);
+        probes += 1;
+        validateProbeResult(result, artifact.id, width, request);
 
-      const context = { artifactId: artifact.id, width };
-      if (result.pageOverflowX) {
-        issues.push({
-          ...context,
-          code: 'viewport-overflow',
-          message: 'Page exceeds the representative viewport width.',
-        });
-      }
-      if (result.clippedX.length > 0) {
-        issues.push({
-          ...context,
-          code: 'inner-x-overflow',
-          message: 'An inner container clips content on the x axis.',
-          details: result.clippedX,
-        });
-      }
-      if (!result.reducedMotion) {
-        issues.push({
-          ...context,
-          code: 'reduced-motion',
-          message: 'Browser did not observe reduced-motion mode.',
-        });
-      }
-      if (!keyboardPassed(artifact.type, result.keyboard)) {
-        issues.push({
-          ...context,
-          code: 'keyboard-navigation',
-          message: 'Browser keyboard navigation probe failed.',
-        });
+        const context = { artifactId: artifact.id, width, scenario };
+        if (result.pageOverflowX) {
+          issues.push({
+            ...context,
+            code: 'viewport-overflow',
+            message: 'Page exceeds the representative viewport width.',
+          });
+        }
+        if (result.clippedX.length > 0) {
+          issues.push({
+            ...context,
+            code: 'inner-x-overflow',
+            message: 'An inner container clips content on the x axis.',
+            details: result.clippedX,
+          });
+        }
+        if (!result.reducedMotion) {
+          issues.push({
+            ...context,
+            code: 'reduced-motion',
+            message: 'Browser did not observe reduced-motion mode.',
+          });
+        }
+        if (
+          !keyboardPassed(
+            artifact.type,
+            result.keyboard,
+            scenario === 'default',
+          )
+        ) {
+          issues.push({
+            ...context,
+            code: 'keyboard-navigation',
+            message: 'Browser keyboard navigation probe failed.',
+          });
+        }
+        if (
+          request.themeToggle &&
+          (!result.themeToggle.present ||
+            !result.themeToggle.keyboardOperable ||
+            result.themeToggle.initialMode === result.themeToggle.toggledMode ||
+            !result.themeToggle.persisted)
+        ) {
+          issues.push({
+            ...context,
+            code: 'theme-toggle',
+            message:
+              'Switchable theme control must operate by keyboard and persist the alternate mode.',
+          });
+        }
+        if (
+          scenario === 'no-js' &&
+          (result.deckLayout.flow !== 'vertical' ||
+            result.deckLayout.overflowX !== 'auto')
+        ) {
+          issues.push({
+            ...context,
+            code: 'deck-no-js-layout',
+            message:
+              'No-JS deck must use vertical flow with x-axis auto containment.',
+          });
+        }
+        if (
+          scenario === 'print' &&
+          (result.deckLayout.flow !== 'vertical' ||
+            result.deckLayout.overflowX !== 'visible')
+        ) {
+          issues.push({
+            ...context,
+            code: 'deck-print-layout',
+            message: 'Print deck must use its separate vertical print cascade.',
+          });
+        }
       }
     }
   }
@@ -390,7 +464,7 @@ function normalizeClaim(value) {
   throw new TypeError('Cohesion claims must be strings, numbers, or booleans.');
 }
 
-function validateProbeResult(result, artifactId, width) {
+function validateProbeResult(result, artifactId, width, request) {
   if (
     !isPlainObject(result) ||
     typeof result.pageOverflowX !== 'boolean' ||
@@ -402,15 +476,29 @@ function validateProbeResult(result, artifactId, width) {
       `Browser probe for ${artifactId} at ${width}px returned an invalid result.`,
     );
   }
+  if (request.themeToggle && !isPlainObject(result.themeToggle)) {
+    throw new TypeError(
+      `Browser theme probe for ${artifactId} at ${width}px returned an invalid result.`,
+    );
+  }
+  if (request.scenario !== 'default' && !isPlainObject(result.deckLayout)) {
+    throw new TypeError(
+      `Browser deck probe for ${artifactId} at ${width}px returned an invalid result.`,
+    );
+  }
 }
 
-function keyboardPassed(type, keyboard) {
+function keyboardPassed(type, keyboard, requireDeckArrows) {
   if (keyboard.tab !== true) return false;
-  if (type !== 'deck') return true;
+  if (type !== 'deck' || !requireDeckArrows) return true;
   return (
     isPlainObject(keyboard.arrows) &&
     ARROW_KEYS.every((key) => keyboard.arrows[key] === true)
   );
+}
+
+function browserScenarios(artifact) {
+  return artifact.type === 'deck' ? ['default', 'no-js', 'print'] : ['default'];
 }
 
 function representativeHeight(width) {

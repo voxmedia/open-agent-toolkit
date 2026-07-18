@@ -1,11 +1,11 @@
 import { execFile as execFileCallback } from 'node:child_process';
 import { createHash } from 'node:crypto';
-import { readFile, realpath, writeFile } from 'node:fs/promises';
+import { readFile, realpath } from 'node:fs/promises';
 import { dirname, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
 import { canonicalHash, validateContract } from './contracts.mjs';
-import { writeJsonAtomic } from './fs-safe.mjs';
+import { writeFileAtomic, writeJsonAtomic } from './fs-safe.mjs';
 import { validateSafeRelativePath } from './safe-paths.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -163,7 +163,7 @@ export async function verifyRebuildability(artifact, runRoot) {
         };
       }
     } finally {
-      await writeFile(outputPath, original);
+      await writeFileAtomic(runRoot, artifact.renderedPath, original);
     }
     return { verified: true, reason: null };
   } catch (error) {
@@ -239,11 +239,11 @@ async function verifyCommitEvidence(evidence, { runRoot, manifest }) {
     }
   }
 
-  const required = requiredArtifacts(manifest);
+  const required = immutablePackage(manifest);
   const requiredByPath = new Map(
-    required.map((artifact) => [
-      toRepoPath(repoRoot, joinWithin(runRoot, artifact.renderedPath)),
-      artifact,
+    required.map((file) => [
+      toRepoPath(repoRoot, joinWithin(runRoot, file.path)),
+      file,
     ]),
   );
   for (const [path] of requiredByPath) {
@@ -252,6 +252,18 @@ async function verifyCommitEvidence(evidence, { runRoot, manifest }) {
         error(
           'missing-artifact',
           `Commit evidence does not include required artifact ${path}.`,
+        ),
+      );
+    }
+  }
+
+  for (const file of required) {
+    const localPath = joinWithin(runRoot, file.path);
+    if ((await fileHash(localPath)) !== file.hash) {
+      errors.push(
+        error(
+          'hash-mismatch',
+          `Retained package hash does not match manifest hash for ${file.path}.`,
         ),
       );
     }
@@ -267,8 +279,8 @@ async function verifyCommitEvidence(evidence, { runRoot, manifest }) {
         ['cat-file', 'blob', `${commit}:${path}`],
         { cwd: repoRoot, encoding: 'buffer', maxBuffer: 50 * 1024 * 1024 },
       );
-      const artifact = requiredByPath.get(path);
-      if (artifact && bufferHash(blob) !== artifact.hash) {
+      const file = requiredByPath.get(path);
+      if (file && bufferHash(blob) !== file.hash) {
         errors.push(
           error(
             'hash-mismatch',
@@ -291,7 +303,7 @@ async function verifyCommitEvidence(evidence, { runRoot, manifest }) {
     : {
         verified: true,
         errors: [],
-        artifacts: required,
+        artifacts: requiredArtifacts(manifest),
         evidence: {
           kind: 'commit',
           ref: commit,
@@ -442,6 +454,25 @@ function requiredArtifacts(manifest) {
       artifact.rebuildable === false &&
       typeof artifact.renderedPath === 'string',
   );
+}
+
+function immutablePackage(manifest) {
+  const expectedPaths = [
+    manifest.source.factBasePath,
+    'source/fact-base.md',
+    ...manifest.artifacts.map(({ contentPath }) => contentPath),
+    manifest.theme.path,
+    ...manifest.artifacts
+      .filter(
+        ({ status, renderedPath }) =>
+          status === 'built' && typeof renderedPath === 'string',
+      )
+      .map(({ renderedPath }) => renderedPath),
+  ];
+  return [...new Set(expectedPaths)].map((path) => ({
+    path,
+    hash: manifest.immutableHashes[path],
+  }));
 }
 
 async function readJson(path) {

@@ -76,6 +76,8 @@ test('run request persists render strategy and complete durability input', async
     'commit',
     'publish',
   ]);
+  assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
+  assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
 });
 
 test('theme identity excludes render strategy', async () => {
@@ -108,6 +110,8 @@ test('manifest and build record share outcomes and evidence contracts', async ()
     manifest.$defs.artifactEntry.properties.renderedPath.pattern,
     '^site/',
   );
+  assert.ok(manifest.required.includes('immutableHashes'));
+  assert.equal(manifest.properties.immutableHashes.$ref, '#/$defs/hashMap');
 });
 
 test('durability request and publish receipt declare unique path evidence', async () => {

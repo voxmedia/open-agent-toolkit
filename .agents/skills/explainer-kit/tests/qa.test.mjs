@@ -238,7 +238,7 @@ test('browser probes require both deck arrow pairs', async () => {
   const report = await runBrowserProbes({
     artifacts: [{ id: 'deck', type: 'deck', html: deck() }],
     widths: [768],
-    probe: async () => ({
+    probe: async ({ scenario }) => ({
       pageOverflowX: false,
       clippedX: [],
       reducedMotion: true,
@@ -251,12 +251,91 @@ test('browser probes require both deck arrow pairs', async () => {
           ArrowDown: false,
         },
       },
+      ...(scenario !== 'default' && {
+        deckLayout: {
+          flow: 'vertical',
+          overflowX: scenario === 'print' ? 'visible' : 'auto',
+        },
+      }),
     }),
   });
 
   assert.ok(
     report.issues.some((issue) => issue.code === 'keyboard-navigation'),
   );
+});
+
+test('browser probes operate switchable themes and verify no-JS and print deck cascades separately', async () => {
+  const { theme } = await resolveTheme();
+  const rendered = await renderArtifact({
+    recipeArtifact: {
+      id: 'briefing',
+      type: 'deck',
+      template: 'deck-shell',
+      required: true,
+    },
+    content: {
+      artifactId: 'briefing',
+      slug: 'probe-demo',
+      title: 'Probe demo',
+      description: 'Probe behavior.',
+      sections: [{ id: 'wide', title: 'Wide', content: 'Wide content.' }],
+    },
+    theme,
+    renderStrategy: 'user-switchable',
+  });
+  const scenarios = [];
+  const report = await runBrowserProbes({
+    artifacts: [
+      {
+        id: 'briefing',
+        type: 'deck',
+        html: rendered.html,
+      },
+    ],
+    widths: [768],
+    probe: async (request) => {
+      scenarios.push(request.scenario);
+      if (request.scenario !== 'default') {
+        assert.deepEqual(request.wideContent, {
+          containerSelector: '.slide__content',
+          width: 2048,
+        });
+      }
+      return {
+        pageOverflowX: false,
+        clippedX: [],
+        reducedMotion: true,
+        keyboard: {
+          tab: true,
+          arrows: Object.fromEntries(
+            ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].map((key) => [
+              key,
+              true,
+            ]),
+          ),
+        },
+        ...(request.themeToggle && {
+          themeToggle: {
+            present: true,
+            keyboardOperable: true,
+            initialMode: 'light',
+            toggledMode: 'dark',
+            persisted: true,
+          },
+        }),
+        ...(request.scenario !== 'default' && {
+          deckLayout: {
+            flow: 'vertical',
+            overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+          },
+        }),
+      };
+    },
+  });
+
+  assert.equal(report.valid, true);
+  assert.deepEqual(scenarios, ['default', 'no-js', 'print']);
 });
 
 test('accepts cohesive terminology, numeric claims and statuses', () => {

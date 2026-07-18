@@ -56,6 +56,8 @@
           "enum": ["file", "directory", "git", "github", "session", "other"]
         },
         "locator": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "sourceSetId": { "type": "string", "minLength": 1 },
         "revision": { "type": "string", "minLength": 1 },
         "hash": { "$ref": "#/$defs/hash" },
         "observedAt": { "type": "string", "format": "date-time" },

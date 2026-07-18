@@ -1,4 +1,4 @@
-import { mkdir, readFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { writeJsonAtomic } from './fs-safe.mjs';
@@ -63,7 +63,6 @@ export async function resolveContentApproval(run, mode, reviewedSource) {
     }
   }
 
-  await mkdir(join(run.runRoot, 'source'), { recursive: true });
   await writeJsonAtomic(run.runRoot, APPROVAL_PATH, record);
   return {
     status: record.status,

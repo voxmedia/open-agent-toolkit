@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  readdir,
+  rm,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
@@ -286,7 +295,15 @@ test('federates explicit sources and invokes only the provider-neutral critic se
       factBase: {
         mode: 'federated',
         freshnessPolicy: 'live-wins',
-        sources: [{ id: 'project', kind: 'file', locator: sourcePath }],
+        sources: [
+          {
+            id: 'project',
+            kind: 'file',
+            locator: sourcePath,
+            role: 'project',
+            sourceSetId: 'project-demo',
+          },
+        ],
       },
     },
     { critic, now: () => NOW },
@@ -298,6 +315,122 @@ test('federates explicit sources and invokes only the provider-neutral critic se
   );
   assert.equal(factBase.mode, 'federated');
   assert.equal(factBase.sources.at(-1).id, 'critic:integration-critic');
+});
+
+test('enforces project-recap source-set cardinality while allowing multiple documents in one set', async () => {
+  const cwd = await temporaryDirectory();
+  const sourceLoader = async (source) => ({
+    claims: [{ id: source.id, text: `Claim from ${source.id}.` }],
+  });
+  const base = request({
+    outputRoot: join(cwd, 'output'),
+    factBasePath: join(cwd, 'unused.json'),
+    recipe: 'project-recap',
+  });
+  const source = (id, sourceSetId) => ({
+    id,
+    kind: 'file',
+    locator: join(cwd, `${id}.json`),
+    role: 'project',
+    sourceSetId,
+  });
+
+  const rejected = await runExplainer(
+    {
+      ...base,
+      factBase: {
+        mode: 'federated',
+        freshnessPolicy: 'live-wins',
+        sources: [source('plan-a', 'project-a'), source('plan-b', 'project-b')],
+      },
+    },
+    {
+      now: () => NOW,
+      sourceLoader,
+      critic: async () => ({
+        criticId: 'source-set-critic',
+        executedAt: NOW,
+        findings: [],
+      }),
+    },
+  );
+  assert.equal(rejected.outcome, 'failed');
+  assert.match(rejected.errors[0].message, /at most 1 binding/i);
+
+  const allowed = await runExplainer(
+    {
+      ...base,
+      slug: 'same-project-set',
+      factBase: {
+        mode: 'federated',
+        freshnessPolicy: 'live-wins',
+        sources: [
+          source('plan', 'project-a'),
+          source('implementation', 'project-a'),
+        ],
+      },
+    },
+    {
+      now: () => NOW,
+      sourceLoader,
+      critic: async () => ({
+        criticId: 'source-set-critic',
+        executedAt: NOW,
+        findings: [],
+      }),
+    },
+  );
+  assert.equal(allowed.outcome, 'built-not-durable');
+});
+
+test('confines atomic package writes from symlinked site, content, nested ancestors, and targets', async () => {
+  for (const scenario of ['site', 'source-content', 'nested-slug', 'target']) {
+    const fixture = await suppliedFixture();
+    const outside = await temporaryDirectory('explainer-run-outside-');
+    const runRoot = join(fixture.outputRoot, fixture.request.slug);
+
+    if (scenario === 'site') {
+      await mkdir(runRoot, { recursive: true });
+      await symlink(outside, join(runRoot, 'site'));
+    }
+
+    const result = await runExplainer(fixture.request, {
+      now: () => NOW,
+      hooks: {
+        async beforeStage(stage) {
+          if (scenario === 'source-content' && stage === 'content') {
+            await symlink(outside, join(runRoot, 'source/content'));
+          }
+          if (scenario === 'nested-slug' && stage === 'render') {
+            await mkdir(join(runRoot, 'site/initiatives'), { recursive: true });
+            await symlink(
+              outside,
+              join(runRoot, 'site/initiatives/project-explainer-demo'),
+            );
+          }
+          if (scenario === 'target' && stage === 'render') {
+            const targetParent = join(
+              runRoot,
+              'site/initiatives/project-explainer-demo',
+            );
+            await mkdir(targetParent, { recursive: true });
+            await symlink(
+              join(outside, 'escaped.html'),
+              join(targetParent, 'index.html'),
+            );
+          }
+        },
+      },
+    });
+
+    assert.equal(result.outcome, 'failed', scenario);
+    assert.match(
+      result.errors[0].message,
+      /symlink|confined|ancestor/i,
+      scenario,
+    );
+    assert.deepEqual(await readdir(outside), [], scenario);
+  }
 });
 
 test('retains successful intermediates and a privacy-safe failed record after a stage failure', async () => {

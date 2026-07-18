@@ -146,6 +146,13 @@ function manifest() {
         rebuildable: false,
       },
     ],
+    immutableHashes: {
+      'fact-base.json': HASH_A,
+      'source/fact-base.md': HASH_A,
+      'theme.resolved.json': HASH_A,
+      'content/hub.json': HASH_A,
+      'site/index.html': HASH_B,
+    },
     outcome: 'built-not-durable',
     buildRecord: { path: 'build-record.json', hash: HASH_A },
     warnings: [],

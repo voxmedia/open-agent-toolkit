@@ -70,6 +70,11 @@ function manifest(run, buildRecord, overrides = {}) {
       derived: true,
     },
     artifacts: [],
+    immutableHashes: {
+      'source/fact-base.json': HASH,
+      'source/fact-base.md': HASH,
+      'theme.resolved.json': HASH,
+    },
     outcome: buildRecord.outcome,
     buildRecord: {
       path: 'build-record.json',
