@@ -52,6 +52,10 @@ Dispatch accepted for request run-log-p03-review-fixes-2026-07-18 at target gpt-
 
 Observation: The root append performed after phase-worker launch disappeared while the same-worktree worker restored a clean checkout. Impact: The accepted-dispatch structural stamp had to be reconstructed after phase completion. Recommendation: Preserve root-owned project-log writes across same-worktree child cleanup or sequence the append before the child captures its clean baseline. (observed on open-agent-toolkit 0.1.73)
 
+### 2026-07-18 · structural · oat-project-implement · final
+
+Focused final re-review passed with 0 findings after p03-t10 and p03-t11; artifact: .oat/projects/shared/orchestration-run-log/reviews/archived/final-review-2026-07-18T150415Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

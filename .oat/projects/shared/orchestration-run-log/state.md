@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -49,7 +49,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/156' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-13T15:39:07.045Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T15:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T15:06:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -61,7 +61,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation fixes complete; awaiting authorized focused final re-review.
+Implementation complete after focused final re-review; PR remains open.
 
 ## Artifacts
 
@@ -69,7 +69,7 @@ Implementation fixes complete; awaiting authorized focused final re-review.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress; 19/19 tasks)
+- **Implementation:** `implementation.md` (complete; 19/19 tasks)
 
 ## Progress
 
@@ -85,7 +85,8 @@ Implementation fixes complete; awaiting authorized focused final re-review.
 - ✓ Final HiLL checkpoint approved
 - ✓ Manual full-range final review received
 - ✓ Review-fix tasks p03-t10 and p03-t11 completed and verified
-- ⧗ Run authorized focused final re-review
+- ✓ Authorized focused final re-review passed
+- ⧗ Awaiting PR review and merge
 
 ## Blockers
 
@@ -93,4 +94,4 @@ None
 
 ## Next Milestone
 
-Pass the focused final re-review of p03-t10 and p03-t11.
+PR #156 is open for review. The manual independent review is complete; the skipped configured lifecycle gate remains a separately tracked workflow defect.
