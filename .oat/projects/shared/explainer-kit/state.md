@@ -1,7 +1,8 @@
 ---
 oat_current_task: p04-t01
-oat_last_commit: d9ccbaff
-oat_blockers: []
+oat_last_commit: def4e4cb
+oat_blockers:
+  - Phase 3 review found one critical and three important issues requiring a bounded fix loop.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T03:44:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T03:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 verification passed; review pending
+Implementation - Phase 3 bounded review-fix loop
 
 ## Artifacts
 
@@ -84,12 +85,14 @@ Implementation - Phase 3 verification passed; review pending
 - ✓ Phase 3 tasks `p03-t01` through `p03-t09` completed
 - ✓ Canonical skill validation fixed and passing in `93c24886`
 - ✓ Phase 3 root verification passed (235 tests plus type-check, lint, skill validation, and format)
-- ⧗ Phase 3 code review pending
+- ⚠ Phase 3 review found 1 critical and 3 important issues
+- ⧗ All four findings accepted for a bounded fix loop
 
 ## Blockers
 
-None
+- Real-core critic integration, attestation shape validation, archive rollback,
+  and complete recap manifest verification require correction.
 
 ## Next Milestone
 
-Run the Phase 3 code review before starting Phase 4.
+Apply the bounded Phase 3 fixes, rerun verification, and re-review.

@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - Phase 3 review requires a bounded fix loop before Phase 4.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t01
 oat_generated: false
@@ -451,6 +452,22 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 - CLI type-check, lint, canonical skill validation, formatting, and whitespace
   checks — pass.
 - Phase 3 code review pending.
+
+### Phase 3 Review — Fixes Added
+
+**Artifact:** `reviews/p03-review-2026-07-18T035042Z.md`
+
+**Accepted findings:**
+
+- Provide a lifecycle-usable provider-neutral critic seam and test against the
+  real core.
+- Reject absent, malformed, or inconsistent finalizer attestation results.
+- Roll back newly created recap exports when later archive-copy work fails.
+- Validate complete v1 recap manifests and immutable hash coverage before
+  archive export.
+
+**Disposition:** Resolve all four findings in one bounded append-only Phase 3
+fix commit, rerun the complete matrix and direct probes, then re-review.
 
 ### Task p03-t01: Resolve adapter config and canonical output roots
 
