@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-07-18
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p04']
+oat_plan_hill_phases: ['p04', 'p05']
 oat_plan_parallel_groups: []
 oat_plan_source: quick
 oat_import_reference: null
@@ -376,23 +376,106 @@ pnpm release:validate
 
 ---
 
+## Phase 5: Final Review Fixes
+
+### Task p05-t01: (review) Preserve legacy known strays on every user-config write
+
+**Finding:** I1 — General user-config writes can erase legacy known-stray
+choices before migration.
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/user-sync-config.ts`
+- Modify: `packages/cli/src/config/user-sync-config.test.ts`
+- Modify additional user-config caller tests only where required
+
+**Step 1: Reproduce the data-loss window**
+
+Add a regression test that seeds `~/.oat/config.json#knownStrays`, performs an
+unrelated general user-config write, and verifies:
+
+- legacy paths are present in `~/.oat/sync/config.json`;
+- the requested unrelated update is preserved;
+- unrelated and unknown general-config fields are preserved; and
+- the legacy key is removed only after the canonical sync write succeeds.
+
+**Step 2: Fix the shared write boundary**
+
+Route every general user-config write through the idempotent legacy migration
+helper before normalization replaces `~/.oat/config.json`. Keep the ordering
+write-canonical-first, remove-legacy-second, and avoid caller-specific gaps.
+
+**Step 3: Verify**
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/config/oat-config.test.ts \
+  src/config/user-sync-config.test.ts \
+  src/commands/config/index.test.ts \
+  src/commands/gate/index.test.ts
+pnpm --filter @open-agent-toolkit/cli lint
+pnpm --filter @open-agent-toolkit/cli type-check
+```
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/config
+git commit -m "fix(p05-t01): preserve legacy strays on user config writes"
+```
+
+---
+
+### Task p05-t02: (review) Align the plan completion summary
+
+**Finding:** m1 — Plan completion summary remains in its pre-implementation
+state.
+
+**Files:**
+
+- Modify: `.oat/projects/shared/cursor-native-skills/plan.md`
+
+**Step 1: Align lifecycle records**
+
+After p05-t01 completes, update `## Implementation Complete` to report all five
+phases, eleven tasks, final verification, and readiness for re-review.
+
+**Step 2: Verify**
+
+```bash
+pnpm exec oxfmt --check .oat/projects/shared/cursor-native-skills/plan.md
+pnpm run cli -- project validate-plan \
+  --project-path .oat/projects/shared/cursor-native-skills --json
+```
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/cursor-native-skills/plan.md
+git commit -m "docs(p05-t02): align implementation completion summary"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                     |
-| ------ | -------- | -------- | ---------- | -------------------------------------------- |
-| p01    | code     | pending  | -          | -                                            |
-| p02    | code     | pending  | -          | -                                            |
-| p03    | code     | pending  | -          | -                                            |
-| p04    | code     | pending  | -          | -                                            |
-| final  | code     | received | 2026-07-18 | `reviews/final-review-2026-07-18T180043Z.md` |
-| spec   | artifact | n/a      | 2026-07-18 | quick mode                                   |
-| design | artifact | passed   | 2026-07-18 | `design.md`                                  |
+| Scope  | Type     | Status      | Date       | Artifact                                              |
+| ------ | -------- | ----------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending     | -          | -                                                     |
+| p02    | code     | pending     | -          | -                                                     |
+| p03    | code     | pending     | -          | -                                                     |
+| p04    | code     | pending     | -          | -                                                     |
+| final  | code     | fixes_added | 2026-07-18 | `reviews/archived/final-review-2026-07-18T180043Z.md` |
+| spec   | artifact | n/a         | 2026-07-18 | quick mode                                            |
+| design | artifact | passed      | 2026-07-18 | `design.md`                                           |
 
 ## Implementation Complete
 
-**Summary:** Pending implementation.
+**Summary:** Core implementation complete; final review fixes pending.
 
-**Total:** 9 tasks across 4 sequential phases.
+**Total:** 11 tasks across 5 sequential phases.
 
 ## References
 

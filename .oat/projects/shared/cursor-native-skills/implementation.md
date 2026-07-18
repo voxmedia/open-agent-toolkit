@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: review
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -14,14 +14,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 2     | 2/2       |
-| p02   | complete | 2     | 2/2       |
-| p03   | complete | 3     | 3/3       |
-| p04   | complete | 2     | 2/2       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 2     | 2/2       |
+| p02   | complete    | 2     | 2/2       |
+| p03   | complete    | 3     | 3/3       |
+| p04   | complete    | 2     | 2/2       |
+| p05   | in_progress | 2     | 0/2       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/11 tasks completed
 
 ## Phase 1: Native-Read Mapping and Adoption Sources
 
@@ -157,6 +158,20 @@ Documentation and canonical skill references now reflect the shipped behavior.
 Release metadata, project manifest cleanup, and provider-view deletions are
 committed after full validation and reviewed all-scope sync.
 
+## Phase 5: Final Review Fixes
+
+**Status:** in_progress
+
+### Task p05-t01: Preserve legacy known strays on every user-config write
+
+**Status:** pending  
+**Commit:** -
+
+### Task p05-t02: Align the plan completion summary
+
+**Status:** pending  
+**Commit:** -
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -197,6 +212,30 @@ committed after full validation and reviewed all-scope sync.
 
 **Blockers:** None.
 
+### Review Received: final
+
+**Date:** 2026-07-18  
+**Review artifact:** `reviews/archived/final-review-2026-07-18T180043Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 0
+- Minor: 1
+
+**New tasks added:** `p05-t01`, `p05-t02`
+
+**Finding dispositions:**
+
+- I1 → `p05-t01` (`code_fix_required`): route every general user-config write
+  through legacy known-stray migration before normalization can erase the
+  source key.
+- m1 → `p05-t02` (`artifact_alignment_required`): shipped implementation is
+  authoritative; align the stale plan completion summary after the code fix.
+
+**Next:** Execute phase p05, then re-review the final fix commits.
+
 ## Deviations from Plan / Design
 
 | Task    | Source Artifact | Planned / Documented                        | Actual / Accepted                                    | Reason                                              | Source of Truth                           | Follow-up |
@@ -211,6 +250,7 @@ committed after full validation and reviewed all-scope sync.
 | p02   | 74        | 74     | 0      | Format, type-check, lint pass |
 | p03   | 375       | 375    | 0      | Format, type-check, lint pass |
 | p04   | 537       | 537    | 0      | Full workspace gates passed   |
+| p05   | -         | -      | -      | Pending review fixes          |
 
 ## Final Summary (for PR/docs)
 
@@ -237,6 +277,8 @@ committed after full validation and reviewed all-scope sync.
 - Lint, format, type-check, build, docs build, canonical skill validation, and
   `pnpm release:validate` passed.
 - Post-apply all-scope sync dry-run reports no remaining mutations.
+
+**Review status:** Final review fixes are queued in phase p05.
 
 ## References
 
