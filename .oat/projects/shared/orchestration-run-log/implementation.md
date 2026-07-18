@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p03-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 6     | 6/6       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 9     | 5/9       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 6     | 6/6       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 9     | 9/9       |
 
-**Total:** 13/17 tasks completed
+**Total:** 17/17 tasks completed
 
 ---
 
@@ -214,7 +214,7 @@ oat_generated: false
 **Verification:**
 
 - Run: skill validation; format; focused tests; lint; type-check; `pnpm release:validate`; `pnpm build:docs`; full `pnpm test`; `pnpm build`.
-- Result: all passed; 157 focused tests, 3,073 CLI tests, and 64 generated docs pages.
+- Result: all passed; 73 focused review-fix tests, 3,083 CLI tests, and 64 generated docs pages.
 
 ### Task p03-t01: Add implement append points
 
@@ -244,23 +244,23 @@ oat_generated: false
 
 ### Task p03-t06: Harden helper-written entry serialization boundaries
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** a9e47cad
 
 ### Task p03-t07: Stage every summary roll-up mutation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 90ccc19e
 
 ### Task p03-t08: Authorize implement project-log appends
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** bb19004a
 
 ### Task p03-t09: Deduplicate first-batch ledger candidates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 26fd475b
 
 ## Orchestration Runs
 
@@ -361,7 +361,9 @@ Chronological log of implementation progress.
 
 **Deferred Medium findings:** none; M1 converted to p03-t09.
 
-**Next:** execute fix tasks, mark this artifact-identified event `fixes_completed`, then rerun final review.
+**Fix outcome:** p03-t06 through p03-t09 completed; 73 focused tests and the full 3,083-test CLI suite passed.
+
+**Next:** focused final re-review of the four fix commits.
 
 ---
 
@@ -410,7 +412,7 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 343       | 343    | 0      | Targeted |
 | 2     | 310       | 310    | 0      | Targeted |
-| 3     | 3,073     | 3,073  | 0      | Full CLI |
+| 3     | 3,083     | 3,083  | 0      | Full CLI |
 
 ## Final Summary (for PR/docs)
 
@@ -436,7 +438,7 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Phase suites, 3,073 CLI tests, skill validation, formatting, lint, type-check, release validation, full workspace build, and docs production build.
+- Phase suites, 3,083 CLI tests, skill validation, formatting, lint, type-check, release validation, full workspace build, and docs production build.
 
 **Design deltas (if any):**
 
