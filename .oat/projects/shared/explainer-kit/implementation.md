@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - p05-t02 awaits the operator-owned private-wrapper migration and E2E result from the wave project.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p05-t02
 oat_generated: false
@@ -922,6 +923,13 @@ passed with zero findings:
 
 **Status:** in_progress
 **Started:** 2026-07-18
+
+**Current external dependency:** The frozen RC handoff was sent to the active
+wave-promotion agent in Orca message `msg_15544b51e53d`. No installed
+`personal-explainer-kit/scripts/acceptance.mjs` exists on this machine yet.
+Resume `p05-t02` when the wave-owned migration supplies the executable and
+sanitized result; do not substitute the in-repo compatibility fixture for the
+required real private-wrapper gate.
 
 ### Task p05-t01: Produce and identify the frozen packaged RC
 
