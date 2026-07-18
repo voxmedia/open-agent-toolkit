@@ -54,90 +54,59 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----- | --------- |
-| p02   | fixes   | 3     | 3/3       |
-| p03   | pending | 4     | 0/4       |
-| p04   | pending | 4     | 0/4       |
-| p05   | pending | 1     | 0/1       |
-| p06   | pending | 1     | 0/1       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p02   | complete | 3     | 3/3       |
+| p03   | pending  | 4     | 0/4       |
+| p04   | pending  | 4     | 0/4       |
+| p05   | pending  | 1     | 0/1       |
+| p06   | pending  | 1     | 0/1       |
 
 **Total:** 3/13 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase p02: Materialization Foundation
 
-**Status:** in_progress
-**Started:** 2026-07-16
+**Status:** complete
+**Implementation range:** `7d1dd7fa3c6dd219fa4cd79baf1f3c554d5afe06..e30361babc8129d77c9a6c8d137dcc08c3a73ed5`
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
-**Outcome (what changed):**
+- Added the provider-neutral materialization-extension lifecycle while preserving provider-private codecs and Codex public behavior.
+- Added the 15-entry g01-approved Cursor mapping catalogue, Markdown codec, deterministic variant naming, and managed ownership markers.
+- Added owner-aware user/project target collection, fail-closed unknown mapping behavior, collision detection, cleanup guards, and symlink-safe apply behavior.
+- The first review found five Important safety/compatibility gaps; bounded fix `e30361ba` resolved all five, and the fresh re-review passed with zero findings.
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+### Task p02-t01: Extract the provider materialization-extension lifecycle
 
-**Key files touched:**
+**Status:** completed
+**Commit:** `053e1488`
+**Outcome:** Shared typed plan/result and compute/apply contracts now support provider-owned Codex and Cursor extensions without moving private behavior into shared code.
 
-- `{path}` - {why}
+### Task p02-t02: Implement the verified Cursor catalogue and Markdown codec
 
-**Verification:**
+**Status:** completed
+**Commit:** `fe2e9ef4`
+**Outcome:** Cursor variants render only approved bracket-form pins with deterministic names, managed markers, and byte-identical canonical bodies.
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+### Task p02-t03: Add owner-aware Cursor target collection and desired-state planning
 
-**Notes / Decisions:**
+**Status:** completed
+**Commit:** `36dd02aa`
+**Outcome:** Cursor desired-state planning now respects owner precedence and cleanup boundaries and fails closed for unsupported mappings.
 
-- {trade-offs or deviations discovered during implementation}
+### Review fixes
 
-### Task p01-t01: {Task Name}
+**Status:** completed
+**Commit:** `e30361ba`
+**Outcome:** Added extension-hook contracts, exact Codex serialization, missing-base cleanup refusal, declared-name collision scanning, and symlink containment.
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+### Verification
 
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
-
-**Status:** pending
-**Started:** -
-
-### Task p02-t01: {Task Name}
-
-**Status:** pending
-**Commit:** -
+- Root focused verification: 79/79 tests passed.
+- Implementer verification: type-check, lint, and formatting passed.
+- Re-review: `reviews/code-p02-rereview-2026-07-18T004240Z.md` passed with zero findings.
 
 ---
 
@@ -164,9 +133,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Reviewer dispatch:** `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=gpt-5.6-sol-high`
 - **Fix continuation:** iteration 1 completed in `e30361ba`; all five Important findings were addressed on the original p02 implementer handle.
 - **Fix verification:** root reran 79 focused p02 and sync-command tests; all passed. Implementer also reported type-check, lint, and format passed.
-- **Re-review:** pending against `7d1dd7fa3c6dd219fa4cd79baf1f3c554d5afe06..e30361babc8129d77c9a6c8d137dcc08c3a73ed5`.
+- **Re-review:** passed with zero findings; artifact `reviews/code-p02-rereview-2026-07-18T004240Z.md`.
 - **Optional nested dispatches:** none.
-- **Outstanding:** p03 remains blocked by the p02 fix and re-review loop.
+- **Outcome:** p02 passed and the p03/p04 parallel group is next.
 
 <!-- orchestration-runs-end -->
 
