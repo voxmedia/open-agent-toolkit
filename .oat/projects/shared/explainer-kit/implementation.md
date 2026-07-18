@@ -1,7 +1,8 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - Upstream overlap consumed the same lifecycle-skill and public-package versions; current-main reconciliation is required before Phase 5.
 oat_last_updated: 2026-07-17
 oat_current_task_id: p04-t09
 oat_generated: false
@@ -894,6 +895,20 @@ gates pass, and 65 browser measurements are retained. The moving
 lifecycle versions that passed against the branch's original base
 `69d5fe0c`; no out-of-scope version change was made. Independent re-review is
 pending.
+
+### Phase 4 Final Re-review — Upstream Reconciliation Required
+
+**Canonical artifact:**
+`reviews/p04-final-rereview-2026-07-18T192615Z.md`
+
+**Findings:** 0 critical, 1 important, 0 medium, 0 minor. All eleven
+implementation findings are resolved and the implementation verdict passes.
+
+**Remaining release blocker:** Current `origin/main` independently shipped
+overlapping project-log lifecycle changes and consumed the same three skill
+versions plus lockstep package version `0.1.73`. The branch validates against
+its original base but not current main. Reconcile both feature sets and advance
+versions from the resulting current-base diff before freezing the Phase 5 RC.
 
 ---
 
