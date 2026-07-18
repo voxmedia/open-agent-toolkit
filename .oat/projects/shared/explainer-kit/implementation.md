@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t06
+oat_current_task_id: p03-t07
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 5/9       |
+| Phase 3 | in_progress | 9     | 6/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 21/38 tasks completed
+**Total:** 22/38 tasks completed
 
 ---
 
@@ -533,6 +533,28 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 - Finalizer suite — pass (5/5).
 - Adapter and durability regression suites — pass (38/38).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t06: Integrate implementation-tail recap and summary visibility
+
+**Status:** completed
+**Commit:** `1734ec5a`
+
+**Outcome:**
+
+- Added deduplicated implementation-tail recap attempts, final-HiLL placement,
+  mandatory autonomous attempt, and non-blocking failure semantics.
+- Added concise recap outcome visibility to project summaries while preserving
+  existing implementation review sequencing.
+
+**Verification:**
+
+- Skill contract RED failed for the missing behaviors, then GREEN passed
+  (20/20).
+- Root combined contract and skill validation — pass (118/118); the worker's
+  reported metadata blocker was not reproducible in the committed tree.
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
