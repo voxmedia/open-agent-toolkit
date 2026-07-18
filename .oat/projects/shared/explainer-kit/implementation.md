@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p03-t03
+oat_current_task_id: p03-t04
 oat_generated: false
 ---
 
@@ -28,11 +28,11 @@ oat_generated: false
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | in_progress | 9     | 2/9       |
+| Phase 3 | in_progress | 9     | 3/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 18/38 tasks completed
+**Total:** 19/38 tasks completed
 
 ---
 
@@ -472,6 +472,26 @@ canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 - Adapter run, config/path, compatibility, and core integration suites — pass
   (36/36).
 - Scoped syntax, lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p03-t03: Implement lifecycle intent resolution
+
+**Status:** completed
+**Commit:** `81606e90`
+
+**Outcome:**
+
+- Added pure lifecycle intent precedence resolution and safe frontmatter
+  persistence with stale-write protection.
+- Enforced ask-once behavior, autonomous forced recap, kickoff-only autonomous
+  explainer intent, and invalid-skip rejection.
+
+**Verification:**
+
+- Adapter intent suites — pass (27/27).
+- Control-plane and CLI project-state suites — pass (64/64).
+- Scoped lint, formatting, and whitespace checks — pass.
 
 ---
 
