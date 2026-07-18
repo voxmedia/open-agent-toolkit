@@ -19,6 +19,9 @@ hand-re-derivation repeatedly broke. It deliberately does NOT own judgment.
 runs. Log every friction/deviation to the project's `orchestration-log.md` so the
 eventual OAT upstreaming inherits evidence, not anecdotes.
 
+Historical `DR-*` and `BL-*` slugs below are evidence citations in the source
+program's repository; they are not required artifacts in the consuming repo.
+
 ## Ownership Boundary
 
 **This skill owns (mechanical):** integration/phase branch naming, worktree
@@ -55,11 +58,12 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    waves (~6+ lanes), prefer per-phase gates over one monolithic final gate; if a
    final gate must cover the whole wave, scope its prompt to the integration
    diff plus the review-chain artifacts, not a re-review of every lane.
-7. **Every single-glob lint-staged task needs the ignore-filter guard:** oxfmt
-   exits non-zero when every staged file in a glob is oxfmt-ignored. Wave 2 hit
-   this via `*.md`, wave 3 via `*.json` (fixture-only commit). Byte-canonical
-   fixture trees need BOTH `.oxfmtrc.json` `ignorePatterns` AND the matching
-   `.lintstagedrc.mjs` filter — audit every glob task, not just `*.md`.
+7. **Guard every formatter-ignored-file × staged-glob interaction:** a
+   single-glob staged-file task can fail when every matched file is ignored by
+   the repo's formatter. Audit every glob task and pair canonical-file
+   exclusions with the staged-task's matching ignore filter (source-program
+   example: oxfmt exited non-zero for ignored `*.md`/`*.json`, requiring both
+   `.oxfmtrc.json` `ignorePatterns` and `.lintstagedrc.mjs` filtering).
 8. **Gate timeout diagnostics** (the upstream stdin-hang fix landed in oat
    0.1.65 — gate children now get `stdin: 'ignore'`; the historical
    `< /dev/null` workaround is retired and harmless if still present):
@@ -78,10 +82,13 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
     independently; the wave-5 embed-teardown defect was caught only after fan-in.
 
 Plus inherited invariants: commit-verification via `git log` before retrying after
-any ambiguous hook outcome; every agent runs `pnpm format:fix` on markdown it
-writes; `nvm use` before pnpm; `pnpm rebuild -r better-sqlite3` on
-NODE_MODULE_VERSION errors; rebuild edited workspace-package dist before running
-consumer tests (stale dist mimics real failures).
+any ambiguous hook outcome; every agent runs the repo's formatter on markdown it
+writes; follow the repo's runtime/environment setup before package commands;
+repair native-dependency ABI mismatches using the repo's documented rebuild
+procedure; rebuild edited workspace-package output before running consumer tests
+(stale output mimics real failures). Source-program examples were `pnpm
+format:fix`, `nvm use`, and `pnpm rebuild -r better-sqlite3` on
+`NODE_MODULE_VERSION` errors.
 
 ## Inputs
 
@@ -99,8 +106,10 @@ consumer tests (stale dist mimics real failures).
 ### Step 1: Preflight
 
 1. From the repo root on up-to-date `main`: `git checkout -b wave-N-execution`.
-2. Refresh deps + prove ground: `nvm use && pnpm install --frozen-lockfile`,
-   `pnpm rebuild -r better-sqlite3` if Node changed, then `pnpm build && pnpm type-check`.
+2. Follow the repo's runtime/environment setup, install dependencies, and run
+   its build/type baseline gates (source-program example: `nvm use && pnpm
+install --frozen-lockfile`, rebuild `better-sqlite3` if Node changed, then
+   `pnpm build && pnpm type-check`).
 3. Record `BASE_SHA=$(git rev-parse HEAD)`.
 
 ### Step 2: Wave-boundary drift refresh (recon dispatch)
@@ -160,8 +169,9 @@ reconciliation that waives a source-plan requirement is a plan-gate Important
    per-plan write surfaces mechanically, not just headline files (wave-3 g1
    missed a two-lane CLI-file overlap that merged conflict-free only by region
    luck).
-6. `oat project validate-plan --project-path <path>`, `pnpm format:fix` the
-   project dir, commit the scaffold.
+6. `oat project validate-plan --project-path <path>`, run the repo's formatter
+   over the project dir (source-program example: `pnpm format:fix`), and commit
+   the scaffold.
 
 ### Step 4: Plan gate
 
@@ -184,8 +194,9 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   `worktree:init`, verify provider-view parity with the root checkout,
   proportionate baseline, structured STATUS lines; as of 1.3.0 the script
   relocates its `.bootstrap-*.log` files into `$TMPDIR` itself).
-  Pre-trust new worktree paths in `~/.codex/config.toml` when lanes carry codex
-  review steps.
+  When lanes carry provider review steps that require worktree trust, pre-trust
+  the new paths using that provider's configuration (for Codex, the
+  source-program example is `~/.codex/config.toml`).
 - **Implementer briefs:** self-contained Phase Scope (resolver-stamped dispatch
   fields), the contract pointer ("your ENTIRE contract is <external plan>; nothing
   in the wrapper narrows it"), **region-level expected-churn pre-declaration**
@@ -196,24 +207,16 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   boundary (workers never touch `.oat/projects/`), and the structured PHASE
   REPORT format. Cross-model review steps in briefs name the RUNTIME-RESOLVED
   reviewer (the plan stays provider-neutral; dispatch resolves — currently
-  Codex per repo config). Lane-type addenda: on "background a previously-inline
-  step" lanes, tell the implementer to budget a full direct-caller audit (wave-2
-  p01: ~15 test files was the real cost); new shell scripts must stay bash-3.2
-  compatible (no mapfile/declare -A — macOS system bash); when disposal/wiring
-  targets a hook another phase restructures, prefer the framework teardown seam
-  (e.g. Fastify onClose) over editing the conflicted file (wave-2 p07 pattern).
-  Plan-author warning: a defaulted Zod field is a type-surface change, not a
-  contained edit — use `.optional()` or budget consumer-literal fixes.
-  MCP-lane checklist (proven 3× in wave 3): adding/renaming an MCP tool moves
-  FOUR pinned contract points together — `EXPECTED_MCP_TOOLS`, the snapshot
-  fixture (must stay purely additive for existing tools), the `mcp.test.ts`
-  tool-list arrays, and any skill-version-pin tests — name all four in the
-  brief.
-  Test-authoring warning: vitest fake timers are incompatible with Fastify
-  `inject()` and with real-HTTP round-trips (the event loop the fake clock
-  freezes is the one the request needs) — test time-driven behavior via an
-  injected seam (wave-2 `onCodeSweep` pattern) or real short timers, never
-  fake-timer + inject in one test.
+  Codex per the source repo's config). Adapt lane-type addenda to the consuming
+  repo. Worked source-program examples: "background a previously-inline step"
+  lanes budget a full direct-caller audit; new shell scripts honor the repo's
+  oldest supported shell; disposal/wiring prefers the framework teardown seam
+  (Fastify `onClose` in one lane) over a concurrently restructured file; a
+  defaulted schema field (Zod in one lane) budgets type-surface consumer fixes;
+  an MCP tool rename moves its expected-tool list, additive snapshot, tool-list
+  tests, and version-pin tests together; and time-driven HTTP tests avoid a fake
+  clock that freezes the request event loop. These are briefing patterns, not
+  requirements for Fastify, vitest, Zod, or MCP.
 - **Reviewer briefs:** read-only, per-phase; checklist = source plan
   `## Review focus`; implementer claims are inputs to VERIFY, not trust.
   Lanes with embedded cross-model reviews get DISPOSITION-VERIFICATION briefs:
@@ -234,9 +237,11 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   every gate and pinned test was green); runtime-
   probe ambiguous behavioral claims; on containment/security surfaces require a
   weaker-anywhere analysis (any input previously rejected that is now accepted is
-  Critical); checklist item: a new `DoctorJsonResponse` field must travel with
-  diagnostics.md + exact-match doctor JSON test updates; artifact written to the
-  ROOT checkout `reviews/` + `pnpm format:fix`.
+  Critical). Adapt contract-propagation checks to the lane type; the
+  source-program example required a new `DoctorJsonResponse` field to travel with
+  diagnostics docs and exact-match doctor JSON tests. Write the artifact to the
+  ROOT checkout `reviews/` and run the repo's formatter over it (source-program
+  example: `pnpm format:fix`).
 - **Merge choreography:** after all group verdicts — serialized `git merge
 --no-ff` in plan order, rebasing each phase branch on the updated tip first
   (rules 2–3). Immediately before EVERY `git merge`, run `pwd` and
@@ -258,12 +263,12 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   touched-package suites BEFORE amending (mechanical splices break seams:
   braces, stacked branches, duplicated keys — wave-4 evidence); then inspect
   the amended commit's file stat against the expected list; NEVER `git add -A`
-  in a worktree (stale synced local state gets swept). Config-integrity check
-  (tracked `.oat/config.json` keys present) at every merge/bookkeeping boundary
-  until the ambient-revert bug (BL-260715-investigate-oat-config-json) is
-  fixed
-  (canonical sections updated in place, run-entry table, review rows, state);
-  worktrees + branches removed after merge.
+  in a worktree (stale synced local state gets swept). At every
+  merge/bookkeeping boundary, run a standing config-integrity check that tracked
+  `.oat/config.json` keys remain present; this check originated with
+  `BL-260715-investigate-oat-config-json` in the source program's repo. Update
+  canonical sections in place, the run-entry table, review rows, and state;
+  remove worktrees + branches after merge.
 
 ### Step 6: Closeout
 

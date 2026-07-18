@@ -74,7 +74,8 @@ target (same disclaimer as the plan indexes).
 4. **Write the artifact** from the template; run the coverage check; present the
    wave map to the operator for approval BEFORE the first wave kicks off
    (program composition is an operator checkpoint, not a silent default).
-5. `pnpm format:fix` + commit (`docs(pjm): add execution program <date>`).
+5. Run the repo's formatter over the artifact and commit it (source-program
+   examples: `pnpm format:fix`; `docs(pjm): add execution program <date>`).
 
 ### Mode: `refresh` (new plan batch, or drift in a pending wave)
 
