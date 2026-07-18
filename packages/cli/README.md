@@ -35,6 +35,7 @@ Additional useful entry points:
 - `oat config dump --json`
 - `oat project status --json`
 - `oat project list --json`
+- `oat project log --help`
 - `oat project complete-state /path/to/project`
 - `oat project archive /path/to/project`
 - `oat repo archive sync`

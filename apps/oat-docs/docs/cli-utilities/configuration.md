@@ -486,6 +486,8 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
 - `workflow.autoArtifactReview.plan` — boolean, default `true`. Automatically run the bounded artifact-review loop for generated `plan.md` files before implementation handoff. Set to `false` only when you intentionally want to skip the plan artifact review.
 - `workflow.autoArtifactReview.analysis` — boolean, default `true`. Automatically run the bounded accuracy-review loop for generated docs and agent-instructions analysis artifacts before the matching apply workflow consumes them.
+- `workflow.projectLog` — `auto`, `true`, or `false`; default `auto`. `auto` creates the append-only `project-log.md` on the first lifecycle append, `true` also enables scaffold-time creation, and `false` skips appends when no log exists. An existing artifact remains enabled regardless of the current setting.
+- `workflow.projectLogLedgerPath` — repository-relative string; default `.oat/repo/reference/project-observations.md`. Sets the durable ledger target for `general` judgments written by `oat project log rollup`.
 - `workflow.dispatchPolicy.mode` — `managed` or `inherit`. `managed` means OAT selects model/effort controls from `workflow.dispatchPolicy.policy`; `inherit` means OAT leaves controls to host/provider defaults.
 - `workflow.dispatchPolicy.policy` — `economy`, `balanced`, `high`, `frontier`, or `uncapped`. `economy` through `frontier` are capped managed policies; `uncapped` keeps OAT-managed preferred selection without provider caps. It is distinct from `workflow.dispatchPolicy.mode=inherit`, which leaves controls to the host/provider.
 - `workflow.dispatchCeiling.preset` — legacy compatibility alias (`balanced`, `maximum`, or `cost-conscious`) for capped managed policy setup.
@@ -494,6 +496,9 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.dispatchCeiling.recommendationVersion` — version of the adopted recommended matrix.
 - `workflow.gates.skills` / `workflow.gates.execTargets` — structured per-skill final gate commands and exec-target registry. Use `oat gate set`, `oat gate target set`, `oat gate review`, and `oat gate cross-provider-exec`; do not use `oat config set` for these objects.
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — validated default gate-review budgets in milliseconds. Both resolve through `local > shared > user`.
+
+The two project-log keys use the standard workflow precedence:
+`local > shared > user > default`.
 
 ### HiLL plan-field semantics
 
@@ -568,6 +573,8 @@ oat config set workflow.designMode collaborative --shared
 oat config set workflow.dispatchCeiling.preset balanced --shared
 oat config set workflow.dispatchCeiling.providers.cursor.high composer-2.5 --shared
 oat config set workflow.autoArtifactReview.plan false --shared
+oat config set workflow.projectLog auto --shared
+oat config set workflow.projectLogLedgerPath .oat/repo/reference/project-observations.md --shared
 
 # Repo-local: personal override for this repo (default when no flag)
 oat config set workflow.hillCheckpointDefault every

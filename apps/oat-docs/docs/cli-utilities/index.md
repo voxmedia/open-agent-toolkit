@@ -15,6 +15,7 @@ Use this section when you want bootstrap guidance, tool-pack lifecycle details, 
 - [Tool Packs and Installed Assets](tool-packs.md) - Bundled packs and `oat tools` lifecycle commands.
 - [Configuration](configuration.md) - OAT configuration guidance across shared, local, user, and provider-sync surfaces.
 - [Config and Local State](config-and-local-state.md) - Utility command groups for config, local state, diagnostics, and related inspection flows.
+- [Project Log](project-log.md) - Append-only project observations, synthesis, inspection, and durable roll-up.
 - [Backlog Lifecycle](backlog-lifecycle.md) - Backlog item states, atomic close-out with `oat backlog archive`, and lifecycle drift detection in `oat pjm doctor`.
 - [Workflow Gates](workflow-gates.md) - Completion-safe headless reviews, budgets, liveness evidence, and cross-runtime dispatch with `oat gate`.
 

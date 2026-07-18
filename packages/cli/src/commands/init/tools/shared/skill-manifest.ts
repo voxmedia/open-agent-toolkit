@@ -91,6 +91,7 @@ export const WORKFLOW_TEMPLATES = [
   'plan.md',
   'implementation.md',
   'summary.md',
+  'project-log.md',
 ] as const;
 
 export const WORKFLOW_SCRIPTS = [

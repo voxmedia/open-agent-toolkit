@@ -16,8 +16,15 @@ import {
   createLoggerCapture,
   type LoggerCapture,
 } from '@commands/__tests__/helpers';
+import {
+  appendProjectLog as appendProjectLogFromDisk,
+  instantiateProjectLogTemplate,
+  type AppendProjectLogInput,
+  type ProjectLogAppendResult,
+} from '@commands/project/log/append';
 import { BUILTIN_EXEC_TARGETS, type ExecTarget } from '@config/oat-config';
 import { resolveEffectiveConfig, resolveExecTargets } from '@config/resolve';
+import { resolveAssetsRoot } from '@fs/assets';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -52,6 +59,9 @@ interface HarnessOptions {
     expectedCliRoot: string,
     expectedRuntime: string,
   ) => Promise<GateRouteReceipt>;
+  appendProjectLog?: (
+    input: AppendProjectLogInput,
+  ) => Promise<ProjectLogAppendResult>;
 }
 
 interface ProcessCall {
@@ -149,6 +159,9 @@ function createHarness(options: HarnessOptions): {
     ...(options.removeGateRunMarker
       ? { removeGateRunMarker: options.removeGateRunMarker }
       : {}),
+    appendProjectLog:
+      options.appendProjectLog ??
+      (async () => ({ status: 'skipped', reason: 'projectLog=false' })),
   } as Parameters<typeof createGateCommand>[0];
 
   const command = createGateCommand(overrides);
@@ -362,6 +375,7 @@ async function runReviewGate(options: {
   removeGateRunMarker?: HarnessOptions['removeGateRunMarker'];
   readGateRouteReceipt?: HarnessOptions['readGateRouteReceipt'];
   createGateActivityProbe?: HarnessOptions['createGateActivityProbe'];
+  appendProjectLog?: HarnessOptions['appendProjectLog'];
   args?: string[];
   globalArgs?: string[];
 }): Promise<LoggerCapture> {
@@ -377,6 +391,7 @@ async function runReviewGate(options: {
     removeGateRunMarker: options.removeGateRunMarker,
     readGateRouteReceipt: options.readGateRouteReceipt,
     createGateActivityProbe: options.createGateActivityProbe,
+    appendProjectLog: options.appendProjectLog,
   });
   await runCommand(
     command,
@@ -444,6 +459,24 @@ describe('oat gate', () => {
       `${JSON.stringify({ version: 1, activeProject: projectPath })}\n`,
       'utf8',
     );
+  }
+
+  async function writeExistingProjectLog(
+    root: string,
+    projectPath: string,
+  ): Promise<string> {
+    const assetsRoot = await resolveAssetsRoot();
+    const template = await readFile(
+      join(assetsRoot, 'templates', 'project-log.md'),
+      'utf8',
+    );
+    const logPath = join(root, projectPath, 'project-log.md');
+    await writeFile(
+      logPath,
+      instantiateProjectLogTemplate(template, 'demo', '2026-07-17'),
+      'utf8',
+    );
+    return logPath;
   }
 
   async function writeImplementation(
@@ -4179,6 +4212,262 @@ describe('oat gate', () => {
     // artifact's oat_generated_at so callers can correlate result to artifact.
     expect(capture.jsonPayloads[0]?.runId).toMatch(/[0-9a-f-]{8,}/i);
     expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      outcome: 'success',
+      childExitCode: 0,
+      finding: 'clean' as const,
+      expectedStatus: 'ok',
+      expectedExitCode: 0,
+      expectedArtifact: true,
+      expectedCounts: true,
+    },
+    {
+      outcome: 'blocking verdict',
+      childExitCode: 0,
+      finding: 'important' as const,
+      expectedStatus: 'blocked',
+      expectedExitCode: 1,
+      expectedArtifact: true,
+      expectedCounts: true,
+    },
+    {
+      outcome: 'child failure',
+      childExitCode: 3,
+      expectedStatus: 'review_failed',
+      expectedExitCode: 3,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'timeout',
+      childExitCode: 124,
+      timedOut: true,
+      expectedStatus: 'review_failed',
+      expectedExitCode: 124,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'targeting-correlation failure',
+      childExitCode: 0,
+      expectedStatus: 'targeting_correlation_failed',
+      expectedExitCode: 1,
+      expectedArtifact: false,
+      expectedCounts: false,
+    },
+    {
+      outcome: 'artifact-validation failure',
+      childExitCode: 0,
+      finding: 'clean' as const,
+      parseFailure: true,
+      expectedStatus: 'artifact_validation_failed',
+      expectedExitCode: 1,
+      expectedArtifact: true,
+      expectedCounts: false,
+    },
+  ])(
+    'appends exactly one project log structural entry after $outcome',
+    async ({
+      childExitCode,
+      expectedArtifact,
+      expectedCounts,
+      expectedExitCode,
+      expectedStatus,
+      finding,
+      parseFailure,
+      timedOut,
+    }) => {
+      const { root, home } = await setup();
+      const projectPath = await writeProject(root);
+      await writeActiveProject(root, projectPath);
+      const appendProjectLog = vi.fn(
+        async (
+          _input: AppendProjectLogInput,
+        ): Promise<ProjectLogAppendResult> => ({
+          status: 'appended',
+          logPath: join(root, projectPath, 'project-log.md'),
+          heading: '### 2026-07-17 · structural · oat gate review · p02',
+          created: false,
+        }),
+      );
+      const runner = createProcessRunner({
+        executeExitCode: childExitCode,
+        executeTimedOut: timedOut,
+        onExecute: finding
+          ? async () => {
+              await writeReviewArtifact({ root, projectPath, finding });
+            }
+          : undefined,
+      });
+
+      await runReviewGate({
+        root,
+        home,
+        runProcess: runner.runProcess,
+        appendProjectLog,
+        parseReviewGateVerdict: parseFailure
+          ? async () => {
+              throw new Error('invalid artifact');
+            }
+          : undefined,
+        args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+      });
+
+      expect(appendProjectLog).toHaveBeenCalledTimes(1);
+      const input = appendProjectLog.mock.calls[0]?.[0];
+      expect(input).toMatchObject({
+        repoRoot: root,
+        home,
+        project: projectPath,
+        structural: true,
+        producer: 'oat gate review',
+        ref: 'p02',
+      });
+      expect(input?.body).toContain('target=codex-default');
+      expect(input?.body).toContain('threshold=important');
+      expect(input?.body).toContain(`exit=${expectedExitCode}`);
+      expect(input?.body).toContain(`status=${expectedStatus}`);
+      if (expectedCounts) {
+        expect(input?.body).toContain('findings=critical:');
+      } else {
+        expect(input?.body).not.toContain('findings=');
+      }
+      if (expectedArtifact) {
+        expect(input?.body).toContain('artifact=');
+      } else {
+        expect(input?.body).not.toContain('artifact=');
+      }
+    },
+  );
+
+  it('honors config false when no project log exists', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ workflow: { projectLog: false } })}\n`,
+      'utf8',
+    );
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+    });
+
+    await expect(
+      readFile(join(root, projectPath, 'project-log.md'), 'utf8'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('appends once to an existing project log even when config is false', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ workflow: { projectLog: false } })}\n`,
+      'utf8',
+    );
+    const logPath = await writeExistingProjectLog(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    const content = await readFile(logPath, 'utf8');
+    expect(
+      content.match(
+        /^### \d{4}-\d{2}-\d{2} · structural · oat gate review · p02$/gm,
+      ),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('creates the project log on the first gate append under auto config', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    const content = await readFile(
+      join(root, projectPath, 'project-log.md'),
+      'utf8',
+    );
+    expect(content).toContain('# Project Log: demo');
+    expect(
+      content.match(
+        /^### \d{4}-\d{2}-\d{2} · structural · oat gate review · p02$/gm,
+      ),
+    ).toHaveLength(1);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns on project log append failure without changing the blocking gate result', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+        });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: async () => {
+        throw new Error('project log is unwritable');
+      },
+    });
+
+    expect(capture.warn).toEqual([
+      expect.stringContaining('project log is unwritable'),
+    ]);
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'blocked',
+      outcome: 'review_completed_blocking_findings',
+      receiveEligible: true,
+      handoff: expect.stringContaining('oat-project-review-receive'),
+    });
+    expect(process.exitCode).toBe(1);
   });
 
   it('injects headless context only into gate review children', async () => {
