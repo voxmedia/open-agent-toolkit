@@ -21,8 +21,8 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: merged # PR 158 squash-merged to main as 4578e261 (2026-07-18T22:29Z)
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/158' # tracked PR URL
+oat_pr_status: open # PR 160 (0.2.1 follow-up); PR 158 merged as 4578e261
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/160' # tracked PR URL (158 merged)
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-07-18T20:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
