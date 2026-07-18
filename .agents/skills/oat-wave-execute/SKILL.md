@@ -73,6 +73,9 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    count assertion + a post-state grep, every time. This discipline caught its
    own subsequent no-ops twice in wave 2; treat an assert failure as normal
    operation, not an incident.
+10. **Integration gates after every fan-in:** they are the only detector for
+    cumulative-timing defect classes. Never skip them because every lane passed
+    independently; the wave-5 embed-teardown defect was caught only after fan-in.
 
 Plus inherited invariants: commit-verification via `git log` before retrying after
 any ambiguous hook outcome; every agent runs `pnpm format:fix` on markdown it
