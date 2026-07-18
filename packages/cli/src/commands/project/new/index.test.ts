@@ -117,6 +117,7 @@ describe('createProjectNewCommand', () => {
       '--force',
       '--no-set-active',
       '--no-dashboard',
+      '--with-project-log',
     ]);
 
     expect(scaffoldProject).toHaveBeenCalledWith(
@@ -128,8 +129,31 @@ describe('createProjectNewCommand', () => {
         setActive: false,
         refreshDashboard: false,
         commit: true,
+        projectLog: true,
       }),
     );
+  });
+
+  it('forwards projectLog: false when --no-project-log is passed', async () => {
+    const { command, scaffoldProject } = createHarness();
+
+    await runCommand(command, ['demo', '--no-project-log']);
+
+    expect(scaffoldProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectName: 'demo',
+        projectLog: false,
+      }),
+    );
+  });
+
+  it('documents both project-log scaffold overrides in help', () => {
+    const { command } = createHarness();
+
+    const help = command.helpInformation();
+
+    expect(help).toContain('--with-project-log');
+    expect(help).toContain('--no-project-log');
   });
 
   it('forwards commit: false when --no-commit is passed', async () => {
