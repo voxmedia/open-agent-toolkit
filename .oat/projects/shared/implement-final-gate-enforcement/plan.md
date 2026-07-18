@@ -41,7 +41,7 @@ OAT CLI/provider sync, pnpm/Turborepo.
 - [x] Restacked onto merged PR #156 via current `origin/main`; confirmed the
       branch diff contains only this project's lifecycle artifacts before
       implementation
-- [ ] Confirm implementation-phase HiLL checkpoints when implementation starts
+- [x] Defer HiLL checkpoint confirmation to oat-project-implement
 
 ---
 
@@ -282,31 +282,40 @@ git commit -m "fix(p02-t02): persist implementation exit gate outcomes"
 - Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
 - Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
-- Modify: `apps/oat-docs/docs/workflows/projects/autonomy.md` when its closeout
-  ordering description requires alignment
+- Modify: `apps/oat-docs/docs/workflows/projects/autonomy.md`
+- Modify (generated): `apps/oat-docs/index.md`
 
-**Step 1: Implement**
+**Step 1: Analyze and approve the documentation delta**
+
+Compare the approved discovery/design and shipped implementation evidence
+against all four authored pages. Present the exact substantive content delta to
+the user and obtain approval before editing. Keep changes limited to final gate
+ordering/state behavior; do not restructure unrelated docs.
+
+**Step 2: Implement**
 
 Document the three independent mechanisms, configured gate ordering before
 automated sequencing/final HiLL, persisted state/dispositions, resume and stale
 basis behavior, null resolution, failure policy, and manual-review provenance
 rule.
 
-**Step 2: Format**
+**Step 3: Format and regenerate navigation/index**
 
 Run:
-`pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md`
-Expected: Only listed docs are formatted.
+`pnpm exec oxfmt --write apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md && oat docs nav sync && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`
+Expected: Authored pages are formatted, navigation is synchronized, and the
+generated index reflects the approved pages.
 
-**Step 3: Verify**
+**Step 4: Verify**
 
-Run: `pnpm build:docs`
-Expected: Documentation site and dependencies build successfully.
+Run:
+`oat docs nav sync && pnpm -w run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md && pnpm build:docs`
+Expected: Regeneration is deterministic and the documentation site builds.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
-git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md
+git add apps/oat-docs/docs/cli-utilities/workflow-gates.md apps/oat-docs/docs/workflows/projects/lifecycle.md apps/oat-docs/docs/workflows/projects/implementation-execution.md apps/oat-docs/docs/workflows/projects/autonomy.md apps/oat-docs/index.md
 git commit -m "docs(p03-t01): explain implementation exit gate closeout"
 ```
 
@@ -322,9 +331,21 @@ git commit -m "docs(p03-t01): explain implementation exit gate closeout"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
-- Modify: provider-synchronized skill views and `.oat/sync/manifest.json`
-- Modify: bundled CLI assets generated from final canonical skills, templates,
-  and docs
+- Modify: `.oat/sync/manifest.json`
+- Modify: `.claude/skills/oat-project-implement/SKILL.md`
+- Modify: `.claude/skills/oat-project-implement/references/completion-and-closeout.md`
+- Modify: `.claude/skills/oat-project-next/SKILL.md`
+- Modify: `.cursor/skills/oat-project-implement/SKILL.md`
+- Modify: `.cursor/skills/oat-project-implement/references/completion-and-closeout.md`
+- Modify: `.cursor/skills/oat-project-next/SKILL.md`
+- Modify: `packages/cli/assets/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/assets/skills/oat-project-implement/references/completion-and-closeout.md`
+- Modify: `packages/cli/assets/skills/oat-project-next/SKILL.md`
+- Modify: `packages/cli/assets/templates/state.md`
+- Modify: `packages/cli/assets/docs/cli-utilities/workflow-gates.md`
+- Modify: `packages/cli/assets/docs/workflows/projects/lifecycle.md`
+- Modify: `packages/cli/assets/docs/workflows/projects/implementation-execution.md`
+- Modify: `packages/cli/assets/docs/workflows/projects/autonomy.md`
 
 **Step 1: Implement**
 
@@ -338,8 +359,9 @@ Expected: Provider views, manifest, and bundled assets match canonical sources.
 
 **Step 2: Format**
 
-Run: `pnpm format:fix`
-Expected: Repository-supported formatting fixes are applied.
+Run:
+`pnpm exec oxfmt --write packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json`
+Expected: Only the task's authored/generated JSON files are formatted.
 
 **Step 3: Verify targeted and full quality gates**
 
@@ -353,15 +375,39 @@ tests, builds, docs build, and release validation all pass.
 Stage only the expected version, provider-sync, manifest, and bundled-asset
 outputs. Then rerun both generators before checking for unstaged drift.
 
+```bash
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .claude/skills/oat-project-implement/SKILL.md \
+  .claude/skills/oat-project-implement/references/completion-and-closeout.md \
+  .claude/skills/oat-project-next/SKILL.md \
+  .cursor/skills/oat-project-implement/SKILL.md \
+  .cursor/skills/oat-project-implement/references/completion-and-closeout.md \
+  .cursor/skills/oat-project-next/SKILL.md \
+  packages/cli/assets/skills/oat-project-implement/SKILL.md \
+  packages/cli/assets/skills/oat-project-implement/references/completion-and-closeout.md \
+  packages/cli/assets/skills/oat-project-next/SKILL.md \
+  packages/cli/assets/templates/state.md \
+  packages/cli/assets/docs/cli-utilities/workflow-gates.md \
+  packages/cli/assets/docs/workflows/projects/lifecycle.md \
+  packages/cli/assets/docs/workflows/projects/implementation-execution.md \
+  packages/cli/assets/docs/workflows/projects/autonomy.md
+```
+
 Run:
-`oat sync --scope all && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- packages/cli/assets .oat/sync/manifest.json`
-Expected: Regeneration after staging produces no unstaged manifest or bundled
-asset drift.
+`oat sync --scope all && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- .oat/sync/manifest.json .claude/skills/oat-project-implement .claude/skills/oat-project-next .cursor/skills/oat-project-implement .cursor/skills/oat-project-next packages/cli/assets/skills/oat-project-implement packages/cli/assets/skills/oat-project-next packages/cli/assets/templates/state.md packages/cli/assets/docs/cli-utilities/workflow-gates.md packages/cli/assets/docs/workflows/projects/lifecycle.md packages/cli/assets/docs/workflows/projects/implementation-execution.md packages/cli/assets/docs/workflows/projects/autonomy.md packages/cli/assets/public-package-versions.json`
+Expected: Regeneration after staging produces no unstaged drift in any
+allowlisted synchronized or bundled output.
 
 **Step 5: Commit**
 
 ```bash
-git add packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets .oat/sync/manifest.json .claude .cursor .codex
 git commit -m "chore(p03-t02): sync final gate assets and release versions"
 ```
 
