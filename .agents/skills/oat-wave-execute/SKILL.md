@@ -14,11 +14,15 @@ Run one **wave** of the external-plan program as a wrapper OAT project. This ski
 owns the **mechanical layer** — everything that waves 0–1 proved stable and that
 hand-re-derivation repeatedly broke. It deliberately does NOT own judgment.
 
+Provenance: extracted per `DR-260713-extract-oat-wave-execute` after the source
+program's waves 0–1 and hardened across its waves 2–5.
+
 Log every friction/deviation to the project's `orchestration-log.md` so later
 waves inherit evidence, not anecdotes.
 
-Historical `DR-*` and `BL-*` slugs below are evidence citations in the source
-program's repository; they are not required artifacts in the consuming repo.
+Historical `DR-*` and `BL-*` slugs in this skill (including the provenance
+record above) are evidence citations in the source program's repository; they
+are not required artifacts in the consuming repo.
 
 ## Ownership Boundary
 
