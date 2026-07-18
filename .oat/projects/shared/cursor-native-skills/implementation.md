@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: review
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -14,15 +14,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 2     | 2/2       |
-| p02   | complete    | 2     | 2/2       |
-| p03   | complete    | 3     | 3/3       |
-| p04   | complete    | 2     | 2/2       |
-| p05   | in_progress | 2     | 0/2       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 2     | 2/2       |
+| p02   | complete | 2     | 2/2       |
+| p03   | complete | 3     | 3/3       |
+| p04   | complete | 2     | 2/2       |
+| p05   | complete | 2     | 2/2       |
 
-**Total:** 9/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ## Phase 1: Native-Read Mapping and Adoption Sources
 
@@ -160,17 +160,33 @@ committed after full validation and reviewed all-scope sync.
 
 ## Phase 5: Final Review Fixes
 
-**Status:** in_progress
+**Status:** complete
+
+### Phase Summary
+
+- Every general user-config write now migrates legacy known-stray state before
+  normalization can erase the source key.
+- Regression coverage verifies canonical-write-first ordering, preservation of
+  requested/unrelated/unknown settings, and migration failure safety.
+- The plan completion summary now reflects all five phases and eleven tasks.
+
+**Verification:** 386 focused tests, CLI lint, CLI type-check, plan validation,
+and release validation passed.
 
 ### Task p05-t01: Preserve legacy known strays on every user-config write
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `0ffafcfc`
+
+The shared user-config write boundary now closes the reviewed data-loss window.
 
 ### Task p05-t02: Align the plan completion summary
 
-**Status:** pending  
-**Commit:** -
+**Status:** completed  
+**Commit:** `0d905bd9`
+
+The lifecycle plan now reports completed implementation and readiness for
+re-review.
 
 ## Orchestration Runs
 
@@ -202,6 +218,8 @@ committed after full validation and reviewed all-scope sync.
 - [x] p03-t03: Wire individual choices into init and status — `3fb2ea22`
 - [x] p04-t01: Update provider and configuration documentation — `bf47c23c`
 - [x] p04-t02: Bump public packages and run release validation — `fdd4ad98`
+- [x] p05-t01: Preserve legacy known strays on every user-config write — `0ffafcfc`
+- [x] p05-t02: Align the plan completion summary — `0d905bd9`
 
 **Decisions:**
 
@@ -234,7 +252,9 @@ committed after full validation and reviewed all-scope sync.
 - m1 → `p05-t02` (`artifact_alignment_required`): shipped implementation is
   authoritative; align the stale plan completion summary after the code fix.
 
-**Next:** Execute phase p05, then re-review the final fix commits.
+**Next:** Re-review the final fix commits.
+
+**Fix status:** completed; final review event is ready for re-review.
 
 ## Deviations from Plan / Design
 
@@ -244,13 +264,13 @@ committed after full validation and reviewed all-scope sync.
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Notes                         |
-| ----- | --------- | ------ | ------ | ----------------------------- |
-| p01   | 173       | 173    | 0      | Format, type-check, lint pass |
-| p02   | 74        | 74     | 0      | Format, type-check, lint pass |
-| p03   | 375       | 375    | 0      | Format, type-check, lint pass |
-| p04   | 537       | 537    | 0      | Full workspace gates passed   |
-| p05   | -         | -      | -      | Pending review fixes          |
+| Phase | Tests Run | Passed | Failed | Notes                          |
+| ----- | --------- | ------ | ------ | ------------------------------ |
+| p01   | 173       | 173    | 0      | Format, type-check, lint pass  |
+| p02   | 74        | 74     | 0      | Format, type-check, lint pass  |
+| p03   | 375       | 375    | 0      | Format, type-check, lint pass  |
+| p04   | 537       | 537    | 0      | Full workspace gates passed    |
+| p05   | 386       | 386    | 0      | Lint, type-check, release pass |
 
 ## Final Summary (for PR/docs)
 
@@ -278,7 +298,7 @@ committed after full validation and reviewed all-scope sync.
   `pnpm release:validate` passed.
 - Post-apply all-scope sync dry-run reports no remaining mutations.
 
-**Review status:** Final review fixes are queued in phase p05.
+**Review status:** Final review fixes are complete and ready for re-review.
 
 ## References
 

@@ -461,15 +461,15 @@ git commit -m "docs(p05-t02): align implementation completion summary"
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                              |
-| ------ | -------- | ----------- | ---------- | ----------------------------------------------------- |
-| p01    | code     | pending     | -          | -                                                     |
-| p02    | code     | pending     | -          | -                                                     |
-| p03    | code     | pending     | -          | -                                                     |
-| p04    | code     | pending     | -          | -                                                     |
-| final  | code     | fixes_added | 2026-07-18 | `reviews/archived/final-review-2026-07-18T180043Z.md` |
-| spec   | artifact | n/a         | 2026-07-18 | quick mode                                            |
-| design | artifact | passed      | 2026-07-18 | `design.md`                                           |
+| Scope  | Type     | Status          | Date       | Artifact                                              |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                     |
+| p02    | code     | pending         | -          | -                                                     |
+| p03    | code     | pending         | -          | -                                                     |
+| p04    | code     | pending         | -          | -                                                     |
+| final  | code     | fixes_completed | 2026-07-18 | `reviews/archived/final-review-2026-07-18T180043Z.md` |
+| spec   | artifact | n/a             | 2026-07-18 | quick mode                                            |
+| design | artifact | passed          | 2026-07-18 | `design.md`                                           |
 
 ## Implementation Complete
 
