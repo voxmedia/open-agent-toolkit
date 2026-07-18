@@ -1,7 +1,8 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 12c82fb4
-oat_blockers: []
+oat_current_task: p05-t02
+oat_last_commit: 7cb6fb18
+oat_blockers:
+  - p05-t02 awaits the operator-owned private-wrapper migration and real E2E against the post-wave frozen RC.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T23:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T23:25:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +51,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 5 replacing superseded RC after wave merge
+Implementation - Phase 5 waiting at `p05-t02`
 
 ## Artifacts
 
@@ -101,13 +102,14 @@ Implementation - Phase 5 replacing superseded RC after wave merge
 - ✓ Current-main reconciliation completed in merge commit `5c6ade31`
 - ✓ Reconciliation review passed with zero findings
 - ✓ Wave promotion #158 reconciled in merge commit `12c82fb4`
-- ⚠ Prior frozen RC superseded by the merged wave/package set
-- ⧗ Phase 5 restarted at `p05-t01`
+- ✓ Replacement frozen RC recorded in `7cb6fb18`
+- ⧗ Awaiting real private-wrapper migration and E2E
 
 ## Blockers
 
-None
+- No installed `personal-explainer-kit/scripts/acceptance.mjs` exists yet.
 
 ## Next Milestone
 
-Freeze a replacement RC from the reconciled `0.2.1` package set.
+Run the operator-owned private-wrapper acceptance against RC
+`sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`.

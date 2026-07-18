@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers: []
+oat_blockers:
+  - p05-t02 awaits the operator-owned private-wrapper migration and real E2E against the post-wave frozen RC.
 oat_last_updated: 2026-07-17
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t02
 oat_generated: false
 ---
 
@@ -30,9 +31,9 @@ oat_generated: false
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 0/4       |
+| Phase 5 | in_progress | 4     | 1/4       |
 
-**Total:** 34/38 tasks completed
+**Total:** 35/38 tasks completed
 
 ---
 
@@ -951,6 +952,28 @@ superseded and must not be used for either external acceptance gate.
 `sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
 predates merged wave promotion #158 and package version `0.2.1`. Task
 `p05-t01` is reopened to replace both tracked RC records and retained tarballs.
+
+### Task p05-t01 (replacement): Refreeze after wave merge
+
+**Status:** completed
+**Commit:** `7cb6fb18`
+**Frozen code commit:** `534a408e`
+**RC ID:** `sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`
+
+**Outcome:**
+
+- Replaced the tracked RC identity and five retained tarballs with the
+  reconciled `0.2.1` package set.
+- Recorded the superseded RC, explainer skill/schema/recipe identities, and
+  verified hashes.
+
+**Verification:**
+
+- Release validation passes.
+- Two pre-commit builds produced byte-identical records and tarballs; every
+  retained tarball matches `rc.json`.
+- The real private wrapper remains unavailable locally; `p05-t02` requires the
+  operator-owned migration and cannot use the in-repo fixture as a substitute.
 
 ---
 
