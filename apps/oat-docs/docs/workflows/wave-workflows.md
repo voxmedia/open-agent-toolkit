@@ -13,7 +13,7 @@ Use wave workflows when a plan corpus is too large to execute as one project and
 
 The workflow pack provides two complementary skills:
 
-- `oat-wave-program` 1.1.0 maintains the durable execution-program artifact over the full plan corpus. Its `new` mode inventories and composes the first program, `refresh` reconciles new plans or pending-wave drift, and `wave-close` records a completed wave.
+- `oat-wave-program` 1.1.0 maintains the durable execution-program artifact over the full plan corpus. Its `new` mode inventories the corpus, verifies the coverage invariant, and records the orchestrator-composed, operator-approved first program; `refresh` adds newly landed plans to the artifact and records the orchestrator's re-composition of waves not yet started; and `wave-close` records a completed wave. Composing waves is the orchestrating agent's judgment; the skill records the result.
 - `oat-wave-execute` 1.5.0 runs one wave. It owns the repeatable mechanical layer: wrapper-project scaffolding, branch conventions, worktree bootstrap, briefs, gates, merge choreography, bookkeeping cadence, and closeout order.
 
 `oat-wave-program` records which plans belong to each wave. `oat-wave-execute` consumes that mapping and executes one wave through the project lifecycle.
