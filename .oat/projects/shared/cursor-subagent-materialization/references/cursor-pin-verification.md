@@ -1,6 +1,6 @@
 # Cursor Pin Verification (Gate g01)
 
-status: awaiting-final-launch
+status: complete
 
 ## Outcome
 
@@ -54,14 +54,23 @@ Conversation `64f65057-f29c-4768-b3f1-95235a2c2496` successfully launched both c
 
 ## Final Generated Role Launch Handoff
 
-status: awaiting-final-launch
+status: complete
 
-The operator will launch these committed generated definitions from a fresh Cursor IDE Agent Chat after p06 release validation. This phase records configured native types and pins only; it does not perform or claim the final launches.
+Both committed generated definitions were launched serially from Cursor IDE Agent Chat (`cursor_version` `3.12.10`) through the native Task/subagent surface after p06 release validation. No `cursor-agent --model` override and no substituted native types were used.
 
 | role              | exact native type                        | exact bracket-form `model:` value |
 | ----------------- | ---------------------------------------- | --------------------------------- |
 | reviewer          | `oat-reviewer-gpt-5-6-sol-high`          | `gpt-5.6-sol[reasoning=high]`     |
 | phase implementer | `oat-phase-implementer-gpt-5-6-sol-high` | `gpt-5.6-sol[reasoning=high]`     |
+
+### Final launch evidence (2026-07-18)
+
+Parent conversation `39df47b7-6209-49e5-b9cd-c115aeebb746`. Hook evidence confirms the configured launch observation for each exact native type. Generalized runtime model and effort remain `not-reported`; successful completion and session hook payloads are not a general runtime identity guarantee.
+
+| role              | exact native type                        | configured frontmatter `model:` | `subagent_model`   | `conversation_id`                      | `subagent_id`                             | `parent_conversation_id`               | `tool_call_id`                            | stop status / `duration_ms` / transcript                                                                                                  |
+| ----------------- | ---------------------------------------- | ------------------------------- | ------------------ | -------------------------------------- | ----------------------------------------- | -------------------------------------- | ----------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| reviewer          | `oat-reviewer-gpt-5-6-sol-high`          | `gpt-5.6-sol[reasoning=high]`   | `gpt-5.6-sol-high` | `39df47b7-6209-49e5-b9cd-c115aeebb746` | `0\nfc_osdB3jQ-6SkKZu-4464858d-aws_ue1_0` | `39df47b7-6209-49e5-b9cd-c115aeebb746` | `0\nfc_osdB3jQ-6SkKZu-4464858d-aws_ue1_0` | `completed` (`duration_ms` 2592); parent transcript `.../39df47b7-6209-49e5-b9cd-c115aeebb746/39df47b7-6209-49e5-b9cd-c115aeebb746.jsonl` |
+| phase implementer | `oat-phase-implementer-gpt-5-6-sol-high` | `gpt-5.6-sol[reasoning=high]`   | `gpt-5.6-sol-high` | `39df47b7-6209-49e5-b9cd-c115aeebb746` | `4\nfc_osdB5dS-6SkKZu-b6bf1fee-aws_ue1_0` | `39df47b7-6209-49e5-b9cd-c115aeebb746` | `4\nfc_osdB5dS-6SkKZu-b6bf1fee-aws_ue1_0` | `completed` (`duration_ms` 2616); parent transcript `.../39df47b7-6209-49e5-b9cd-c115aeebb746/39df47b7-6209-49e5-b9cd-c115aeebb746.jsonl` |
 
 ## Mapping-Specific Evidence
 
