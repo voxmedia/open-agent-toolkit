@@ -51,7 +51,7 @@ Verify coverage mechanically before committing:
 ```bash
 INDEX_COUNT="$(grep -c '^| \[p0[123]' \
   .oat/repo/reference/external-plans/mini-plan-index.md)"
-PROGRAM_COUNT="$(grep -c '^| mini-p0[123]' \
+PROGRAM_COUNT="$(grep -cE '^\| \[?mini-p0[123]' \
   .oat/repo/reference/external-plans/2026-07-18-execution-program.md)"
 test "$INDEX_COUNT" -eq 3
 test "$PROGRAM_COUNT" -eq "$INDEX_COUNT"
@@ -214,6 +214,15 @@ Apply the promoted `oat-wave-program wave-close wave-1` process:
    SHA, and the wrapper `implementation.md` as the completion-record link.
 4. Re-run the three-index-row ↔ three-program-row coverage check from step 2,
    format, and commit the program artifact.
+
+```bash
+INDEX_COUNT="$(grep -c '^| \[p0[123]' \
+  .oat/repo/reference/external-plans/mini-plan-index.md)"
+PROGRAM_COUNT="$(grep -cE '^\| \[?mini-p0[123]' \
+  .oat/repo/reference/external-plans/2026-07-18-execution-program.md)"
+test "$INDEX_COUNT" -eq 3
+test "$PROGRAM_COUNT" -eq "$INDEX_COUNT"
+```
 
 Pass criteria: coverage remains 3 ↔ 3, every plan row is `done`, the ledger has
 the PR/SHA/completion provenance, and the final fixture tree is clean.
