@@ -247,7 +247,85 @@ reviewable.
 
 ## Data Models
 
-Pending collaborative review.
+### Implement Exit Gate State
+
+**Purpose:** Represent one resumable configured exit-gate generation without
+reusing lifecycle-review or phase-review state.
+
+**Schema:**
+
+```yaml
+oat_implement_exit_gate:
+  status: pending # pending | allowed | blocked | stale
+  resolution: configured # configured | no_gate
+  disposition: null # null | passed | warned | prompt_approved | no_gate
+  config_fingerprint: '<stable hash of resolved gate declaration>'
+  on_failure: block # block | prompt | warn | null
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: null # commit reviewed by the configured gate
+  implementation_fingerprint: null # implementation basis used for freshness
+  gate_run_id: null
+  envelope_status: null # ok | blocked | review_failed | other terminal status
+  artifact: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-07-18T00:00:00Z'
+```
+
+**Validation Rules:**
+
+- `pending` is persisted before configured command execution. It must not carry
+  an allowed disposition.
+- `allowed/configured` requires an allowed policy disposition, the reviewed
+  HEAD, implementation fingerprint, and configured-gate run provenance.
+- `allowed/no_gate` requires `disposition: no_gate` and null run/artifact
+  provenance.
+- `blocked` preserves the last envelope/failure details and retry count; it
+  cannot cross into automated sequencing without remediation or the configured
+  prompt/warn policy producing an allowed disposition.
+- `stale` preserves the prior provenance for audit but cannot satisfy closeout.
+- `receive_completed` may become true only after a corroborated handoff with
+  `receiveEligible: true` is durably processed.
+- Missing state means “not yet resolved,” never “no gate configured.”
+- A final lifecycle review artifact lacking `oat_review_invocation: gate` and
+  the matching `oat_gate_run_id` cannot populate configured-gate fields.
+
+**Storage:**
+
+- **Location:** `state.md` frontmatter as `oat_implement_exit_gate`.
+- **Persistence:** Commit every transition before crossing the corresponding
+  launch, stop, sequence, or completion boundary.
+
+### Freshness Model
+
+The configured gate records both the exact `reviewed_head` and a deterministic
+fingerprint of the implementation review basis. Expected gate artifacts,
+project tracking, project-log entries, summary/documentation/PR sequence
+outputs, HiLL bookkeeping, and completion bookkeeping are closeout-only
+descendants. They do not silently change the reviewed implementation basis.
+
+Any implementation, test, skill, template, config, or other gate-reviewed
+source change after `reviewed_head` changes the fingerprint and transitions the
+state to `stale`. New review-fix or revision tasks therefore require a new final
+lifecycle review and a new configured exit-gate generation. The exact
+closeout-only path/commit classification is fail-closed: an unrecognized change
+is substantive and invalidates the gate.
+
+### State Transitions
+
+```text
+absent/stale --new closeout generation--> pending
+pending --resolve null------------------> allowed/no_gate
+pending --validated success------------> allowed/passed
+pending --warn policy------------------> allowed/warned
+pending --explicit prompt continue-----> allowed/prompt_approved
+pending --blocking/invalid outcome-----> blocked
+blocked --remediation/new basis--------> stale --> pending
+allowed --substantive change-----------> stale
+allowed --closeout-only descendants----> allowed
+```
 
 ## Error Handling
 
