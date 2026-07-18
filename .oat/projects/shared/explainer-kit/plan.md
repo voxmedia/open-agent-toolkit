@@ -1291,6 +1291,9 @@ git commit -m "docs(p04-t04): document explainer kit"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `pnpm-lock.yaml`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `.agents/docs/autonomy-contract.md`
 
 **Step 1: Verify version delta (RED)**
 
@@ -1316,7 +1319,7 @@ Expected: Workspace, skill-version, and publishable-package release gates pass.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md .agents/skills/oat-project-autonomous/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-summary/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md .agents/skills/oat-project-autonomous/SKILL.md .agents/skills/oat-project-plan/SKILL.md .agents/skills/oat-project-implement/SKILL.md .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-summary/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json pnpm-lock.yaml packages/cli/src/validation/skills.test.ts packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts .agents/docs/autonomy-contract.md
 git commit -m "chore(p04-t05): prepare explainer release candidate"
 ```
 

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 4/9       |
+| Phase 4 | in_progress | 9     | 5/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 29/38 tasks completed
+**Total:** 30/38 tasks completed
 
 ---
 
@@ -750,6 +750,26 @@ authoring on 2026-07-18.
 - Browser link checker could not start because the local Playwright Chromium
   binary is not installed; this is an environment limitation, not a docs-build
   failure.
+
+---
+
+### Task p04-t05: Bump shipped versions and pass release validation
+
+**Status:** completed
+**Primary commit:** `b7cbfbd5`
+**Repair commit:** `11e0ef91`
+**Approved boundary correction:** Added
+`packages/cli/src/validation/skills.test.ts`,
+`packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`,
+and `.agents/docs/autonomy-contract.md` after the full workspace suite exposed
+stale version pins and unmapped Phase 3 lifecycle prompt sites.
+
+**Outcome:**
+
+- Skill-delta validation and lockstep public-package release validation pass.
+- Build, lint, format, type-check, and the full workspace test suite pass.
+- Focused repaired fixtures pass (124/124); full suites passed across CLI,
+  control plane, docs packages, and smoke tests.
 
 ---
 
