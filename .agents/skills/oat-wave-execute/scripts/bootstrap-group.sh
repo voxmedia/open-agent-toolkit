@@ -3,7 +3,13 @@
 # Wraps the oat-worktree-bootstrap-auto contract (normal mode, strict policy).
 # Usage: bootstrap-group.sh <wave-prefix> <base-sha> <phase>...
 #   e.g. bootstrap-group.sh wave-2 <full-sha> p01 p02 p03
-# Emits one "STATUS <phase>: ..." line per phase; caller parses those.
+# Emits one terminal "STATUS <phase>: status=..." line per phase (plus optional
+# "STATUS <phase>: <step>=skipped ..." informational lines); caller parses those.
+# Repo hooks (repo-neutral): OAT_WAVE_BOOTSTRAP_CMD runs repository bootstrap in
+# each worktree; OAT_WAVE_BASELINE_CMD runs the proportionate baseline check.
+# When unset, a pnpm-shaped repo (pnpm-lock.yaml + matching package.json script)
+# defaults to `pnpm run worktree:init` / `pnpm type-check`; otherwise the step
+# is skipped with a STATUS line.
 set -u
 
 usage() {
@@ -87,8 +93,28 @@ fi
 REPO="$(git rev-parse --show-toplevel)"
 ROOT_CFG="$(cd "$REPO" && oat config get worktrees.root 2>/dev/null || true)"
 ROOT="$REPO/${ROOT_CFG:-.worktrees}"
-source ~/.nvm/nvm.sh >/dev/null 2>&1
-cd "$REPO" && nvm use >/dev/null 2>&1
+# Optional node env setup: source nvm only when present; otherwise honor the
+# already-configured node environment (nvm is a repo convention, not required).
+if [[ -s "$HOME/.nvm/nvm.sh" ]]; then
+  source "$HOME/.nvm/nvm.sh" >/dev/null 2>&1
+  cd "$REPO" && nvm use >/dev/null 2>&1
+fi
+
+# Repo-hook resolution: explicit env hooks win; a pnpm-shaped repo (lockfile +
+# matching package.json script) falls back to its conventional commands;
+# anything else skips the step with a STATUS line.
+has_pnpm_script() {
+  [[ -f "$REPO/pnpm-lock.yaml" ]] || return 1
+  grep -q "\"$1\"" "$REPO/package.json" 2>/dev/null
+}
+BOOTSTRAP_CMD="${OAT_WAVE_BOOTSTRAP_CMD:-}"
+if [[ -z "$BOOTSTRAP_CMD" ]] && has_pnpm_script "worktree:init"; then
+  BOOTSTRAP_CMD="pnpm run worktree:init"
+fi
+BASELINE_CMD="${OAT_WAVE_BASELINE_CMD:-}"
+if [[ -z "$BASELINE_CMD" ]] && has_pnpm_script "type-check"; then
+  BASELINE_CMD="pnpm type-check"
+fi
 
 # Guard: the full SHA must resolve to an actual commit in this repo
 if ! git -C "$REPO" cat-file -e "${BASE_SHA}^{commit}" 2>/dev/null; then
@@ -110,25 +136,33 @@ for P in "${PHASES[@]}"; do
   if ! git -C "$REPO" worktree add "$TP" -b "$BR" "$BASE_SHA" >/dev/null 2>&1; then
     echo "STATUS $P: status=error reason=worktree-create-failed"; continue
   fi
-  # Local-only config propagation (bootstrap-auto step 2.5; worktree:init also
-  # covers these, but propagate before init so init's tooling sees them)
+  # Local-only config propagation (bootstrap-auto step 2.5; the bootstrap hook
+  # may also cover these, but propagate first so its tooling sees them). Other
+  # repo-local files belong in a consuming repo's own wrapper around this script.
   [[ -f "$REPO/.oat/config.local.json" && ! -f "$TP/.oat/config.local.json" ]] && cp "$REPO/.oat/config.local.json" "$TP/.oat/config.local.json"
-  [[ -f "$REPO/.stoa/operator-hosts.local.json" && ! -f "$TP/.stoa/operator-hosts.local.json" ]] && { mkdir -p "$TP/.stoa"; cp "$REPO/.stoa/operator-hosts.local.json" "$TP/.stoa/operator-hosts.local.json"; }
   (cd "$TP" && oat local sync "$TP" >/dev/null 2>&1) || true
   # Base verification (bootstrap-auto step 2.7)
   OBS=$(git -C "$TP" rev-parse HEAD)
   if ! git -C "$TP" merge-base --is-ancestor "$BASE_SHA" "$OBS"; then
     echo "STATUS $P: status=failed reason=base-mismatch expected=$BASE_SHA observed=$OBS"; continue
   fi
-  # Repository bootstrap (declared: worktree:init) + proportionate baseline
-  if ! (cd "$TP" && SKIP_S3_ARCHIVE_SYNC=1 pnpm run worktree:init >"$TP/.bootstrap-init.log" 2>&1); then
-    echo "STATUS $P: status=error reason=repository-bootstrap-failed (see $TP/.bootstrap-init.log)"; tail -5 "$TP/.bootstrap-init.log"; continue
+  # Repository bootstrap (hook-resolved) + proportionate baseline
+  if [[ -n "$BOOTSTRAP_CMD" ]]; then
+    if ! (cd "$TP" && /bin/bash -c "$BOOTSTRAP_CMD" >"$TP/.bootstrap-init.log" 2>&1); then
+      echo "STATUS $P: status=error reason=repository-bootstrap-failed (see $TP/.bootstrap-init.log)"; tail -5 "$TP/.bootstrap-init.log"; continue
+    fi
+  else
+    echo "STATUS $P: bootstrap=skipped reason=no-bootstrap-hook (set OAT_WAVE_BOOTSTRAP_CMD)"
   fi
   if ! verify_view_parity "$REPO" "$TP"; then
     echo "STATUS $P: status=error reason=provider-view-parity-mismatch"; continue
   fi
-  if ! (cd "$TP" && pnpm type-check >"$TP/.bootstrap-baseline.log" 2>&1); then
-    echo "STATUS $P: status=error reason=baseline-verification-failed (see $TP/.bootstrap-baseline.log)"; continue
+  if [[ -n "$BASELINE_CMD" ]]; then
+    if ! (cd "$TP" && /bin/bash -c "$BASELINE_CMD" >"$TP/.bootstrap-baseline.log" 2>&1); then
+      echo "STATUS $P: status=error reason=baseline-verification-failed (see $TP/.bootstrap-baseline.log)"; continue
+    fi
+  else
+    echo "STATUS $P: baseline=skipped reason=no-baseline-hook (set OAT_WAVE_BASELINE_CMD)"
   fi
   # Sync-commit if scoped paths dirty (bootstrap-auto step 4)
   (cd "$TP" && git add -A -- .oat/sync/manifest.json .claude .cursor .codex 2>/dev/null

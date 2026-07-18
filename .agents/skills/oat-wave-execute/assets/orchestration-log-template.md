@@ -18,7 +18,8 @@ results, STOP/park events, bootstrap statuses, disposition maps) are appended as
 one-liners referencing artifacts by path; judgment entries are agent-authored.
 Never delete entries; strike through with a correction note if one turns out
 wrong. Version-stamp tool-related observations. Keep entries short and factual.
-Run `pnpm format:fix` on this file after writing. Tag entries that bear on the
+Run { repo formatter write command } (source-program example: `pnpm format:fix`)
+on this file after writing. Tag entries that bear on the
 wave-skill's design with a **Skill signal (strengthens/contradicts/gap):** line —
 those drive the upstream implementation.
 

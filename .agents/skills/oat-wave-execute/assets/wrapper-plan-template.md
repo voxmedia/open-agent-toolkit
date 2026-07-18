@@ -42,9 +42,10 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
    re-check — the integration tip advances as groups merge.
 2. **Execute the source plan's `## Implementation steps`** in order with each
    step's embedded Verify gate; honor its `## STOP conditions` verbatim.
-3. **Confirm the source plan's `## Done criteria`**, then run the full DoD gates
-   (`nvm use` first; `pnpm rebuild -r better-sqlite3` if Node changed;
-   `pnpm test && pnpm lint && pnpm format && pnpm type-check`).
+3. **Confirm the source plan's `## Done criteria`**, then run the full DoD gates:
+   { repo env setup commands, then repo test/lint/format/type gates }
+   (source-program example: `nvm use` first; `pnpm rebuild -r better-sqlite3` if
+   Node changed; `pnpm test && pnpm lint && pnpm format && pnpm type-check`).
 4. **STOP → BLOCKED at phase level (bundle exception).** A source-plan STOP parks
    the phase (record in `state.md` `oat_blockers` + `implementation.md`); sibling
    phases continue. **Bundle phases:** a STOP parks only the stopped task; the
@@ -60,9 +61,9 @@ governs commit content and granularity; the wrapper adds the `pNN-tNN` scope.
 7. **Backlog archival is NOT part of any task** — once, serialized on the
    integration branch after all merges (DR-260713-shared-tracked-surfaces).
 8. **Phase review checklist = the source plan's `## Review focus`.**
-9. **Artifact hygiene:** every agent runs `pnpm format:fix` on markdown it writes
-   and reports observations for `orchestration-log.md` (workers report; the root
-   appends).
+9. **Artifact hygiene:** every agent runs { repo formatter write command }
+   (source-program example: `pnpm format:fix`) on markdown it writes and reports
+   observations for `orchestration-log.md` (workers report; the root appends).
 10. **Commit verification after ambiguous results:** inspect `git log`/HEAD before
     retrying; record the SHA in `implementation.md`.
 
@@ -106,7 +107,8 @@ notes, marked non-authoritative where recon-derived. }
 
 **Step 3: Verify (wrapper gate)**
 
-Run: the source plan's `## Done criteria` checks, then the four DoD gates
+Run: the source plan's `## Done criteria` checks, then the full DoD gates from
+the wrapper execution contract
 Expected: all green.
 
 { **Step 4: Cross-model review** — include for locking/security/containment/

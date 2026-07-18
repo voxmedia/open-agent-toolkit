@@ -192,10 +192,13 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   `scripts/bootstrap-group.sh <wave-prefix> <BASE_SHA> pNN...` — e.g.
   `scripts/bootstrap-group.sh wave-2 $(git rev-parse HEAD) p01 p02 p03`
   (wraps the `oat-worktree-bootstrap-auto` contract: create at explicit base,
-  propagate local config, verify base ancestry, repo bootstrap via
-  `worktree:init`, verify provider-view parity with the root checkout,
-  proportionate baseline, structured STATUS lines; as of 1.3.0 the script
-  relocates its `.bootstrap-*.log` files into `$TMPDIR` itself).
+  propagate local config, verify base ancestry, repo bootstrap and
+  proportionate baseline via the `OAT_WAVE_BOOTSTRAP_CMD` /
+  `OAT_WAVE_BASELINE_CMD` env hooks — a pnpm-shaped repo defaults to
+  `pnpm run worktree:init` / `pnpm type-check`, any other repo skips the step
+  with a STATUS line — verify provider-view parity with the root checkout,
+  structured STATUS lines; as of 1.3.0 the script relocates its
+  `.bootstrap-*.log` files into `$TMPDIR` itself).
   When lanes carry provider review steps that require worktree trust, pre-trust
   the new paths using that provider's configuration (for Codex, the
   source-program example is `~/.codex/config.toml`).
