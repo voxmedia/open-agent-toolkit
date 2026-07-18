@@ -1,0 +1,9 @@
+{
+  "name": "oat-mini-wave-fixture",
+  "private": true,
+  "scripts": {
+    "worktree:init": "node scripts/worktree-init.mjs",
+    "type-check": "node scripts/type-check.mjs",
+    "gate": "/bin/bash scripts/dod-gate.sh"
+  }
+}
