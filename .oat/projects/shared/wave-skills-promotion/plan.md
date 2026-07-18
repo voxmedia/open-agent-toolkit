@@ -749,6 +749,7 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 | plan   | artifact | passed   | 2026-07-18 | -                                                  |
 | plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T141952Z.md |
 | plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T142403Z.md |
+| plan   | artifact | received | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T150023Z.md |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
 
