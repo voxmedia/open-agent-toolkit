@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 10/10     |
-| Phase 3 | pending     | 9     | 0/9       |
-| Phase 4 | pending     | 9     | 0/9       |
-| Phase 5 | pending     | 4     | 0/4       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 6     | 6/6       |
+| Phase 2 | complete | 10    | 10/10     |
+| Phase 3 | pending  | 9     | 0/9       |
+| Phase 4 | pending  | 9     | 0/9       |
+| Phase 5 | pending  | 4     | 0/4       |
 
 **Total:** 16/38 tasks completed
 
@@ -194,7 +194,7 @@ oat_generated: false
 
 ## Phase 2: Core pipeline
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-17
 
 ### Phase Summary
@@ -229,7 +229,8 @@ oat_generated: false
 **Disposition:** All five findings were resolved in append-only commit
 `bcfba605`. Full core verification passed 102/102 tests; direct symlink,
 source-set, durability, theme-toggle, no-JS, and print probes passed; and lint,
-format, and whitespace checks were clean. Reviewer re-review is pending.
+format, and whitespace checks were clean. Re-review passed with zero findings;
+canonical artifact: `reviews/p02-review-2026-07-18T015729Z.md`.
 
 ### Task p02-t01: Normalize run requests and create atomic run records
 
