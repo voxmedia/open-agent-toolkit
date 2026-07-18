@@ -219,7 +219,11 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   Lanes with embedded cross-model reviews get DISPOSITION-VERIFICATION briefs:
   verify each fix and each rejection's parity claim against the cited siblings
   instead of re-reviewing (wave-3 caught a partially-false rejection claim this
-  way). Rename/refactor-class revision reviews get a PURITY BAR: diff the
+  way). Every fix disposition, including a root-verified bounded fix, must
+  produce a minimal stored verification record stating what was verified, how
+  it was verified, and where the evidence is recorded; the wave-5 final gate
+  blocked on exactly this audit gap. Rename/refactor-class revision reviews get
+  a PURITY BAR: diff the
   changed handler bodies against the ORIGINAL at base — tests alone are silent
   on migrated-behavior drift (wave-3 p-rev1 Critical was caught only by this).
   LOGIC-BEARING lanes' reviewers must design ≥1 adversarial probe of their own
