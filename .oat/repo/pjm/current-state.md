@@ -22,11 +22,21 @@ copying their content here. -->
   isolated nesting.
 - [Smoke Testing](../../../apps/oat-docs/docs/contributing/smoke-testing.md)
   defines deterministic verification and opt-in live-provider operator runs.
+- [Project Log](../../../apps/oat-docs/docs/cli-utilities/project-log.md)
+  defines append-only project observations, validated CLI mutations, and
+  roll-up-before-archive behavior.
 
 ## What's Implemented
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.1.73` adds an optional append-only `project-log.md` with
+  create-on-first-append behavior, explicit scaffold controls, validated
+  append/check/synthesize/rollup commands, and automatic structural entries at
+  implementation, gate-review, and completion boundaries. Project summary
+  roll-up preserves every observation, promotes reusable judgments through new
+  referencing `general` entries, and blocks archive when a populated log cannot
+  reach durable summary and ledger surfaces.
 - CLI `0.1.72` hardens headless gate execution with scope/target-aware timeout
   precedence, immutable runtime/model route inputs, checkout-local executable
   routing, strict route receipts, and current-child provider/model provenance.
@@ -125,5 +135,6 @@ interactive smoke matrix when operator capacity allows. Active backlog work
 also covers adaptive idle-kill and early-artifact semantics beyond the shipped
 gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
-eligibility by 2026-08-08, optional root-owned exact dispatch, reviewer
-reconnaissance, and avoiding redundant bookkeeping-only re-reviews.
+eligibility by 2026-08-08, optional root-owned exact dispatch, root-agent
+judgment logging for project observations, reviewer reconnaissance, and
+avoiding redundant bookkeeping-only re-reviews.
