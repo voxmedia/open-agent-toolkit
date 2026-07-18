@@ -45,6 +45,37 @@ present without the utility engine, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical
 skills can use the utility engine directly.
 
+### Cross-pack explainer dependency
+
+The public explainer family also spans two packs:
+
+- `utility` owns `explainer-kit`, the destination-neutral core with its
+  contracts, recipes, themes, templates, render QA, durability verifier, and
+  optional publishing connector.
+- `workflows` owns `oat-explainer-kit`, the adapter that resolves OAT config,
+  project artifacts, output paths, and lifecycle intent.
+
+Install the core at user scope before using the adapter:
+
+```bash
+oat tools install utility --scope user
+oat tools install workflows
+```
+
+The dependency is one-way: the adapter invokes the core, while the core remains
+usable without OAT. The adapter checks the installed canonical core path and
+minimum compatible version before reading config or running. If the core is
+missing it fails closed with the utility install command; if it is too old it
+reports:
+
+```bash
+oat tools update --pack utility --scope user
+```
+
+It never falls back to a source checkout or copies core logic into the
+workflows pack. See [Explainer Kit](../workflows/skills/explainer-kit.md) for
+the usage and lifecycle contract.
+
 ## `oat tools` command group
 
 The `oat tools` command group provides a unified interface for managing installed tools (skills and agents) across scopes.
