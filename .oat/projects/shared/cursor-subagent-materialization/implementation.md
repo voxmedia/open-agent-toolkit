@@ -148,6 +148,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Containment:** no sequential degradation and no replacement launch.
 - **Recovery boundary:** operator authorized a new bounded parallel run on 2026-07-18. Recovery recreates only the two invalid worktrees, commits bootstrap-owned sync metadata, verifies clean descendants of the current root, and relaunches the same pinned phase targets once.
 
+### Run 3 — p03/p04 parallel group recovery
+
+- **Status:** in_progress
+- **Operator authorization:** bounded recovery approved on 2026-07-18.
+- **Root recovery base:** `43bf447a197a285c61e19e19027d889b71631ad4`
+- **Bootstrap commit:** `f052a8448d6ddb5f7a2a45ffd2990f5d67a78a15` in both branches; changes only `.oat/sync/manifest.json` from OAT version `0.1.71` to `0.1.72`.
+- **Worktrees:** `.worktrees/cursor-subagent-materialization/p03` and `.worktrees/cursor-subagent-materialization/p04`
+- **Preflight:** repository initialization, CLI type-check, provider sync, exact-base ancestry, and final cleanliness passed in both worktrees.
+- **Dispatch:** pending for the same `gpt-5.6-sol-high` p03 and p04 phase targets.
+
 <!-- orchestration-runs-end -->
 
 ---
