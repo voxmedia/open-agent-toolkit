@@ -343,6 +343,7 @@ git commit -m "chore(p03-t02): close reviewer orchestration backlog item"
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md |
+| plan   | artifact | received        | 2026-07-18 | reviews/artifact-plan-review-2026-07-18T200447Z.md          |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
