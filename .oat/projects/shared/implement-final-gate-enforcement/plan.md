@@ -38,6 +38,9 @@ OAT CLI/provider sync, pnpm/Turborepo.
 - [x] Captured approved lightweight design
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` from dependency/write-set analysis
+- [x] Restacked onto merged PR #156 via current `origin/main`; confirmed the
+      branch diff contains only this project's lifecycle artifacts before
+      implementation
 - [ ] Confirm implementation-phase HiLL checkpoints when implementation starts
 
 ---
@@ -221,8 +224,14 @@ git commit -m "fix(p02-t01): enforce implementation exit gate ordering"
 
 Add contract scenarios for configured success, null resolution, `block`,
 `prompt`, `warn`, invalid/ineligible envelopes, pending interruption, blocked
-resume, unchanged valid resume without duplicate execution, stale
-implementation-basis invalidation, and manual-review provenance rejection.
+resume, and unchanged valid resume without duplicate execution. Cover
+receive-eligible `ok` and `blocked` handoffs, receive failure, already-completed
+receive resume without duplicate receive/gate execution, and ineligible, null,
+or contradictory handoffs. Verify that recognized closeout-only descendants
+(gate artifact/receipt, project tracking, PR #156 project log, summary/docs/PR
+sequence outputs, HiLL bookkeeping, and completion bookkeeping) preserve
+validity; unknown changed paths fail closed; substantive implementation changes
+become stale; and manual-review provenance is rejected.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts`
@@ -234,7 +243,9 @@ Define the complete `oat_implement_exit_gate` transition contract, persistence
 boundaries, configuration fingerprint, attempts, reviewed HEAD/run provenance,
 receive disposition, closeout-only descendant policy, and fail-closed stale
 handling. Ensure PR #156 project-log mutations are classified as gate-owned
-closeout work.
+closeout work. After the final `oat-project-next` edit, bump that canonical
+skill's frontmatter version exactly once and update any pinned-version assertion
+that exists on the merged baseline.
 
 Run:
 `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts`
@@ -249,8 +260,9 @@ Expected: Only task files are formatted.
 **Step 4: Verify**
 
 Run:
-`pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts`
-Expected: Skill validation and focused contracts pass.
+`pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts && pnpm run cli:source -- internal validate-skill-version-bumps --base-ref origin/main`
+Expected: Skill validation, focused contracts, and base-relative version-bump
+validation pass for both changed canonical skills.
 
 **Step 5: Commit**
 
@@ -332,16 +344,19 @@ Expected: Repository-supported formatting fixes are applied.
 **Step 3: Verify targeted and full quality gates**
 
 Run:
-`pnpm oat:validate-skills && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts && pnpm format && pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm build:docs && pnpm release:validate`
+`pnpm oat:validate-skills && pnpm run cli:source -- internal validate-skill-version-bumps --base-ref origin/main && pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/shared/frontmatter.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts && pnpm format && pnpm lint && pnpm type-check && pnpm test && pnpm build && pnpm build:docs && pnpm release:validate`
 Expected: Skill validation, targeted tests, formatting, lint, type-check, full
 tests, builds, docs build, and release validation all pass.
 
-**Step 4: Verify generated cleanliness**
+**Step 4: Stage expected generated outputs and verify reproducibility**
+
+Stage only the expected version, provider-sync, manifest, and bundled-asset
+outputs. Then rerun both generators before checking for unstaged drift.
 
 Run:
-`oat sync --scope all --dry-run && git diff --quiet -- packages/cli/assets`
-Expected: Sync preview reports no required changes and bundled assets have no
-unstaged drift.
+`oat sync --scope all && bash packages/cli/scripts/bundle-assets.sh && git diff --quiet -- packages/cli/assets .oat/sync/manifest.json`
+Expected: Regeneration after staging produces no unstaged manifest or bundled
+asset drift.
 
 **Step 5: Commit**
 
@@ -388,4 +403,5 @@ Ready for code review and merge.
 
 - Design: `design.md`
 - Discovery: `discovery.md`
-- Coordination base: PR #156 (`orchestration-run-log`) until merged
+- Baseline: PR #156 merged as `ce1c2b13`; this branch was restacked onto current
+  `origin/main` before implementation planning completed
