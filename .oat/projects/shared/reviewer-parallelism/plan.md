@@ -459,7 +459,7 @@ If a listed generated file is unchanged, omit it from `git add`.
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
 | p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md           |
 | p02    | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md           |
-| p03    | code     | fixes_completed | 2026-07-18 | reviews/archived/p03-review-2026-07-18T231821Z.md           |
+| p03    | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md           |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |

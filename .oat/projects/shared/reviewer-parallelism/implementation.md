@@ -152,8 +152,31 @@ oat_generated: false
 
 ## Phase 3: Provider Sync and Shipped Release Validation
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- The canonical reviewer contract is synchronized across all 14 tracked Codex roles while Claude and Cursor symlink views remain canonical.
+- All five public packages are lockstep at unpublished version `0.2.1`, with bundled/version metadata aligned and release tarballs validated.
+- The completed reviewer-orchestration backlog item is archived and PJM surfaces describe the capability as shipped.
+
+**Key files touched:**
+
+- Five public package manifests and `packages/cli/assets/public-package-versions.json` - lockstep release metadata.
+- `.codex/agents/oat-reviewer*.toml` and `.oat/sync/manifest.json` - synchronized provider outputs.
+- `.oat/repo/pjm/` backlog and current-state surfaces - completed capability history.
+
+**Verification:**
+
+- Run: focused contracts, full lint/type/test/build/docs suite, provider dry-run, npm uniqueness checks, PJM integrity checks, and `pnpm release:validate`.
+- Result: pass; Phase 3 focused re-review found no remaining findings.
+
+**Notes / Decisions:**
+
+- Initial `0.1.74` selection reused a published version; one bounded review-fix iteration corrected the release to upstream-derived unused version `0.2.1`.
 
 ### Task p03-t01: Regenerate provider views and finalize lockstep release metadata
 
@@ -280,6 +303,30 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - Repository link checking retains two unrelated, pre-existing fragment failures; Phase p02 introduced no link regression.
 
+### Run 3
+
+**Timestamp:** 2026-07-18T23:31:41Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome | Task commits                       | Root review | Fix iterations |
+| ----- | ------- | ---------------------------------- | ----------- | -------------- |
+| p03   | passed  | `8a8d0b2f`, `9772f01b`, `cde08669` | passed      | 1              |
+
+**Dispatch notes:**
+
+- `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- `Dispatch: scope=p03-fix1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+- `Dispatch: scope=p03-fix1 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+- The initial broad p03 review used two bounded reviewer-local reconnaissance lanes; primary review independently validated their claims.
+
+**Outstanding items:**
+
+- None for Phase 3.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -294,12 +341,14 @@ Chronological log of implementation progress.
 
 - [x] p01-t01: Add bounded reconnaissance behavior with semantic regression coverage - `2977bb19`
 - [x] p02-t01: Document broad-review latency benefit and safety boundary - `86582f5e`
-- [ ] p03-t01: Regenerate provider views and finalize lockstep release metadata - next
+- [x] p03-t01: Regenerate provider views and finalize lockstep release metadata - `8a8d0b2f`
+- [x] p03-t02: Close the shipped backlog item - `9772f01b`
+- [x] p03-t03: Correct the release to the next unpublished lockstep version - `cde08669`
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- Implementation tracking was initialized for four tasks across three sequential phases.
+- Five tasks were completed across three sequential phases, including one review-driven release correction.
 
 **Decisions:**
 
@@ -308,7 +357,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute `p01-t01` via `oat-project-implement`.
+- Run the final cross-phase review and complete lifecycle bookkeeping.
 
 **Blockers:**
 
@@ -341,30 +390,34 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | ------------------------------------ |
 | 1     | 124       | 124    | 0      | Focused reviewer/canonical contracts |
 | 2     | 5         | 4      | 1\*    | \*Unrelated baseline link-check gate |
-| 3     | -         | -      | -      | -                                    |
+| 3     | 153       | 153    | 0      | Focused contracts plus full release  |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Provider-neutral, bounded reviewer-local reconnaissance for eligible broad reviews.
+- Synchronized provider roles, user-facing workflow documentation, and lockstep public package release metadata at `0.2.1`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Broad reviews may parallelize disjoint read-only evidence gathering when explicit economical worker dispatch is available.
+- Primary reviewers retain source validation, synthesis, severity, validation, and final-output ownership; unsupported or failed delegation falls back inline without reducing coverage.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/agents/oat-reviewer.md` - canonical reviewer orchestration contract.
+- `packages/cli/src/validation/skills.test.ts` - semantic contract coverage.
+- `apps/oat-docs/docs/workflows/projects/reviews.md` - workflow documentation.
+- `.codex/agents/oat-reviewer*.toml` - synchronized Codex role variants.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused reviewer/provider tests, complete workspace lint/type/test/build/docs checks, provider drift checks, npm version uniqueness checks, PJM integrity checks, and public-package release validation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- No design artifact exists in quick mode. A review-discovered published-version collision added `p03-t03`, which corrected the planned `0.1.74` release to unused upstream-derived `0.2.1`.
 
 ## References
 
