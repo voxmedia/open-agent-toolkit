@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p02-t10
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -27,12 +27,12 @@ oat_generated: false
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
 | Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | in_progress | 10    | 9/10      |
+| Phase 2 | in_progress | 10    | 10/10     |
 | Phase 3 | pending     | 9     | 0/9       |
 | Phase 4 | pending     | 9     | 0/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 15/38 tasks completed
+**Total:** 16/38 tasks completed
 
 ---
 
@@ -372,6 +372,26 @@ oat_generated: false
 
 - Full config-free core suite — pass (91/91).
 - Run integration suite — pass (7/7).
+- Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p02-t10: Gate interactive content approval and resume
+
+**Status:** completed
+**Commit:** `7c908abc`
+
+**Outcome:**
+
+- Added explicit interactive content approval after Markdown generation,
+  preventing render/durability/publish before approval.
+- Added persisted rejection/correction state and same-run resume while
+  unattended lifecycle runs remain non-prompting with provenance.
+
+**Verification:**
+
+- Approval and integration suites — pass (14/14).
+- Full core suite — pass (98/98).
 - Scoped lint, formatting, and whitespace checks — pass.
 
 ---
