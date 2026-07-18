@@ -1,17 +1,15 @@
 ---
 id: BL-260708-enable-oat-reviewer-subagent
 title: 'Enable oat-reviewer subagent orchestration for faster broad reviews'
-status: open # open | in_progress | closed | wont_do
+status: closed # open | in_progress | closed | wont_do
 priority: high # urgent | high | medium | low | none
 scope: feature # idea | task | feature | initiative
 scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [reviews, subagents, orchestration, cost-control]
 assignee: null
 created: '2026-07-08T22:00:35Z'
-updated: '2026-07-08T22:00:35Z'
+updated: '2026-07-18T23:08:25Z'
 associated_issues: []
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description

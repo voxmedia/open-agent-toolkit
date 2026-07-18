@@ -21,7 +21,6 @@ bullet lines over rewriting whole sections, and reference backlog records by ID
 - **BL-YYMMDD-slug: {title}** — brief description. Project: {name} (if linked)
 -->
 
-- **BL-260708-enable-oat-reviewer-subagent: Enable oat-reviewer subagent orchestration for faster broad reviews** — Delegate bounded reconnaissance while retaining primary-reviewer judgment.
 - **BL-260711-skip-re-review-for-bookkeeping: Skip re-review for bookkeeping-only review findings** — Avoid redundant reviewer dispatch after narrowly classified, deterministically validated bookkeeping fixes across direct/subagent and gate-originated review flows.
 - **BL-260712-per-project-override: Per-project override to disable configured external gates** — Skip configured gates for one project without mutating shared user configuration.
 

@@ -30,6 +30,11 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.1.74` enables bounded reviewer-local reconnaissance for broad
+  reviews. Read-only, non-recursive evidence lanes can use economical workers,
+  while the primary reviewer retains source validation, synthesis, severity,
+  validation decisions, and final findings; unsupported hosts preserve the
+  same review coverage inline.
 - CLI `0.1.73` adds an optional append-only `project-log.md` with
   create-on-first-append behavior, explicit scaffold controls, validated
   append/check/synthesize/rollup commands, and automatic structural entries at
@@ -136,5 +141,5 @@ also covers adaptive idle-kill and early-artifact semantics beyond the shipped
 gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
 eligibility by 2026-08-08, optional root-owned exact dispatch, root-agent
-judgment logging for project observations, reviewer reconnaissance, and
-avoiding redundant bookkeeping-only re-reviews.
+judgment logging for project observations, and avoiding redundant
+bookkeeping-only re-reviews.
