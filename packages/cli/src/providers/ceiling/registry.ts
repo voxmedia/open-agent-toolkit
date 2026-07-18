@@ -3,6 +3,8 @@ import {
   VALID_CODEX_DISPATCH_CEILINGS,
 } from '@config/oat-config';
 import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/shared';
+import { findCursorModelPinMapping } from '@providers/cursor/codec/catalog';
+import { buildCursorMaterializedRoleName } from '@providers/cursor/codec/shared';
 
 /**
  * Provider ceiling adapter registry.
@@ -20,6 +22,7 @@ import { buildCodexMaterializedTargetRoleName } from '@providers/codex/codec/sha
  */
 
 export type EnforcementMechanism = 'pinned-variant' | 'model-arg' | 'none';
+export type ProviderSelectionAxis = 'model' | 'model-effort' | 'tier' | 'none';
 
 export type CeilingRole = 'implementer' | 'reviewer';
 
@@ -49,6 +52,7 @@ export interface ProviderCeilingAdapter {
   supportsCeiling: boolean;
   validValues: string[];
   mechanism: EnforcementMechanism;
+  selectionAxis: ProviderSelectionAxis;
   /**
    * Compile a ceiling value into dispatch args for the given role, or `null`
    * when the value is invalid or the provider is advisory/unsupported.
@@ -83,6 +87,7 @@ const codexAdapter: ProviderCeilingAdapter = {
   supportsCeiling: true,
   validValues: [...VALID_CODEX_DISPATCH_CEILINGS],
   mechanism: 'pinned-variant',
+  selectionAxis: 'model-effort',
   compileToDispatchArgs(value, role, ctx) {
     if (!VALID_CODEX_DISPATCH_CEILINGS.includes(value as never)) {
       return null;
@@ -132,6 +137,7 @@ const claudeAdapter: ProviderCeilingAdapter = {
   supportsCeiling: true,
   validValues: [...VALID_CLAUDE_DISPATCH_CEILINGS],
   mechanism: 'model-arg',
+  selectionAxis: 'tier',
   compileToDispatchArgs(value) {
     if (
       isDirectDispatchRoleName(value) ||
@@ -151,10 +157,24 @@ const cursorAdapter: ProviderCeilingAdapter = {
   provider: 'cursor',
   supportsCeiling: true,
   validValues: [],
-  mechanism: 'model-arg',
-  compileToDispatchArgs(value) {
-    const model = value.trim();
-    return model && !isDirectDispatchRoleName(model) ? { model } : null;
+  mechanism: 'pinned-variant',
+  selectionAxis: 'model',
+  compileToDispatchArgs(value, role, ctx) {
+    const model = ctx.target?.model ?? value.trim();
+    if (
+      !model ||
+      isDirectDispatchRoleName(model) ||
+      !findCursorModelPinMapping(model)
+    ) {
+      return null;
+    }
+    return {
+      variant: buildCursorMaterializedRoleName({
+        agentName:
+          role === 'reviewer' ? CODEX_REVIEWER_ROLE : CODEX_IMPLEMENTER_ROLE,
+        ladderModelId: model,
+      }),
+    };
   },
   // Cursor model slugs do not share a total order, so upgrade verification is
   // not meaningful here; availability is checked by the identity oracle layer.
@@ -169,6 +189,7 @@ function advisoryAdapter(provider: string): ProviderCeilingAdapter {
     supportsCeiling: false,
     validValues: [],
     mechanism: 'none',
+    selectionAxis: 'none',
     compileToDispatchArgs() {
       return null;
     },
