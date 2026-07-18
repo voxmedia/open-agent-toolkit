@@ -20,8 +20,14 @@ import {
 } from '@commands/shared/adopt-stray';
 import {
   detectCodexRoleStrays,
+  filterMaterializationManagedStrays,
   regenerateCodexAfterAdoption,
 } from '@commands/shared/codex-strays';
+import {
+  applyCursorSkillDisposition,
+  isCursorSkillCandidate,
+  type CursorSkillDisposition,
+} from '@commands/shared/cursor-skill-disposition';
 import { PROVIDER_CONFIG_REMEDIATION } from '@commands/shared/messages';
 import { withScopeOption } from '@commands/shared/scope-option';
 import {
@@ -47,12 +53,11 @@ import {
   detectDefaultBranch,
   type OatConfig,
   type OatDocumentationConfig,
-  readUserConfig,
   readOatConfig,
   resolveLocalPaths,
-  type UserConfig,
   writeOatConfig,
 } from '@config/oat-config';
+import { resolveUserSyncConfig } from '@config/user-sync-config';
 import {
   type DriftReport,
   detectStrays,
@@ -65,6 +70,7 @@ import {
   type HookInstallInfo,
   installHook,
   isHookInstalled,
+  scanBundledManagedAgents,
   scanCanonical,
   uninstallHook,
 } from '@engine/index';
@@ -85,15 +91,20 @@ import {
 } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import {
+  applyCursorProjectExtensionPlan,
+  computeCursorProjectExtensionPlan,
+} from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   type ConfigAwareAdaptersResult,
   getActiveAdapters,
   getConfigAwareAdapters,
-  getSyncMappings,
+  type MaterializationPlan,
   type PathMapping,
   type ProviderAdapter,
 } from '@providers/shared';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import type { ConcreteScope, Scope } from '@shared/types';
 import { Command } from 'commander';
 
@@ -164,6 +175,7 @@ interface InitDependencies {
     manifest: Manifest,
     canonicalEntries: CanonicalEntry[],
     activeAdapters?: ProviderAdapter[],
+    userConfigDir?: string,
   ) => Promise<InitStrayCandidate[]>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   selectManyWithAbort: <T extends string>(
@@ -192,7 +204,7 @@ interface InitDependencies {
   uninstallHook: (projectRoot: string) => Promise<void>;
   getAdapters: () => ProviderAdapter[];
   loadSyncConfig: (configPath: string) => Promise<SyncConfig>;
-  readUserConfig: (userConfigDir: string) => Promise<UserConfig>;
+  resolveUserSyncConfig: (userConfigDir: string) => Promise<SyncConfig>;
   saveSyncConfig: (
     configPath: string,
     config: SyncConfig,
@@ -231,6 +243,14 @@ interface InitDependencies {
     choices: SelectChoice<T>[],
     ctx: PromptContext,
   ) => Promise<T | null>;
+  applyCursorSkillDisposition: (
+    scopeRoot: string,
+    stray: InitStrayCandidate,
+    manifest: Manifest,
+    disposition: CursorSkillDisposition,
+    syncConfigPath: string,
+    options?: { replaceCanonical?: boolean },
+  ) => Promise<Manifest>;
   runGuidedSetup: (
     context: CommandContext,
     dependencies: InitDependencies,
@@ -271,23 +291,74 @@ async function collectStraysDefault(
   manifest: Manifest,
   canonicalEntries: CanonicalEntry[],
   activeAdapters?: ProviderAdapter[],
+  userConfigDir = join(scopeRoot, '.oat'),
 ): Promise<InitStrayCandidate[]> {
   const adaptersToScan =
     activeAdapters ??
     (await getActiveAdapters(getDefaultAdapters(), scopeRoot));
   const candidates: InitStrayCandidate[] = [];
+  const hasMaterializationAdapter = adaptersToScan.some(
+    (adapter) => adapter.name === 'codex' || adapter.name === 'cursor',
+  );
+  const materializationCanonicalEntries =
+    scope === 'user' && hasMaterializationAdapter
+      ? [...canonicalEntries, ...(await scanBundledManagedAgents())]
+      : canonicalEntries;
+  const codexExtensionPlan = adaptersToScan.some(
+    (adapter) => adapter.name === 'codex',
+  )
+    ? await computeCodexProjectExtensionPlan(
+        scopeRoot,
+        materializationCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const cursorExtensionPlan = adaptersToScan.some(
+    (adapter) => adapter.name === 'cursor',
+  )
+    ? await computeCursorProjectExtensionPlan(
+        scopeRoot,
+        materializationCanonicalEntries,
+        undefined,
+        { userConfigDir },
+      )
+    : undefined;
+  const materializationPlans: MaterializationPlan[] = [
+    ...(codexExtensionPlan
+      ? [
+          {
+            provider: 'codex',
+            operations: codexExtensionPlan.operations.map((operation) => ({
+              ...operation,
+              provider: 'codex',
+              entryName: operation.roleName,
+            })),
+            managedEntries: codexExtensionPlan.managedRoles,
+            aggregateHash: codexExtensionPlan.aggregateConfigHash,
+            metadata: codexExtensionPlan.metadata,
+          },
+        ]
+      : []),
+    ...(cursorExtensionPlan ? [cursorExtensionPlan] : []),
+  ];
 
   for (const adapter of adaptersToScan) {
-    const mappings = getSyncMappings(adapter, scope);
-    for (const mapping of mappings) {
-      const providerDir = join(scopeRoot, mapping.providerDir);
-      const strays = await detectStrays(
-        adapter.name,
-        providerDir,
-        manifest,
-        canonicalEntries,
-        mapping,
-      );
+    const adoptionSources = getAdoptionSources(adapter, scope);
+    for (const source of adoptionSources) {
+      const providerDir = join(scopeRoot, source.directory);
+      const strays = filterMaterializationManagedStrays(
+        (
+          await detectStrays(
+            adapter.name,
+            providerDir,
+            manifest,
+            canonicalEntries,
+            source.mapping,
+          )
+        ).map((report) => ({ provider: adapter.name, report })),
+        materializationPlans,
+      ).map((candidate) => candidate.report);
       for (const report of strays) {
         if (report.state.status !== 'stray') {
           continue;
@@ -295,24 +366,17 @@ async function collectStraysDefault(
         candidates.push({
           provider: adapter.name,
           report,
-          mapping,
+          mapping: source.mapping,
         });
       }
     }
   }
 
-  if (
-    scope === 'project' &&
-    adaptersToScan.some((adapter) => adapter.name === 'codex')
-  ) {
-    const codexExtensionPlan = await computeCodexProjectExtensionPlan(
-      scopeRoot,
-      canonicalEntries,
-    );
+  if (adaptersToScan.some((adapter) => adapter.name === 'codex')) {
     const codexStrays = await detectCodexRoleStrays(
       scopeRoot,
       canonicalEntries,
-      new Set(codexExtensionPlan.managedRoles),
+      new Set(codexExtensionPlan!.managedRoles),
     );
     for (const stray of codexStrays) {
       candidates.push({
@@ -379,7 +443,7 @@ function createDependencies(): InitDependencies {
     async loadSyncConfig(configPath) {
       return loadSyncConfig(configPath, DEFAULT_SYNC_CONFIG);
     },
-    readUserConfig,
+    resolveUserSyncConfig,
     saveSyncConfig,
     getConfigAwareAdapters,
     applyOatCoreGitignore,
@@ -394,6 +458,7 @@ function createDependencies(): InitDependencies {
     fileExists,
     inputWithDefault,
     selectWithAbort,
+    applyCursorSkillDisposition,
     runGuidedSetup: runGuidedSetupImpl,
     runToolPacks: runInitToolsWithDefaults,
     async runProviderSync(projectRoot: string) {
@@ -815,13 +880,15 @@ async function runInitCommand(
   let projectRoot: string | null = null;
   let oatDirExistedBefore = true;
   const scopeSummaries: InitScopeSummary[] = [];
+  let migrationAborted = false;
 
   for (const scope of scopes) {
     const scopeRoot = await dependencies.resolveScopeRoot(scope, context);
     const syncConfigPath = join(scopeRoot, '.oat', 'sync', 'config.json');
     const userConfigDir = join(context.home, '.oat');
     let syncConfig = await dependencies.loadSyncConfig(syncConfigPath);
-    const userConfig = await dependencies.readUserConfig(userConfigDir);
+    const userSyncConfig =
+      await dependencies.resolveUserSyncConfig(userConfigDir);
     let activeAdaptersForStrays: ProviderAdapter[] | undefined;
     if (scope === 'project') {
       projectRoot = scopeRoot;
@@ -904,52 +971,80 @@ async function runInitCommand(
       manifest,
       canonicalEntries,
       activeAdaptersForStrays,
+      userConfigDir,
     );
     const { candidates: strays } = filterKnownStrays({
       reports: collectedStrays.map((stray) => stray.report),
       candidates: collectedStrays,
       knownStrays: {
         project: syncConfig.knownStrays,
-        user: userConfig.knownStrays,
+        user: userSyncConfig.knownStrays,
       },
     });
     let straysAdopted = 0;
+    let codexStrayAdopted = false;
+    const cursorSkillStrays = strays.filter(isCursorSkillCandidate);
+    const ordinaryStrays = strays.filter(
+      (stray) => !isCursorSkillCandidate(stray),
+    );
 
     if (!context.interactive && strays.length > 0) {
       context.logger.warn(ADOPT_REMEDIATION);
     }
 
-    if (context.interactive && strays.length > 0) {
-      const choices = strays.map((stray, index) => ({
-        label: formatStrayChoiceLabel(
-          scope,
-          stray.report.providerPath,
-          stray.provider,
-        ),
-        value: String(index),
-        description: formatPathForScope(scope, stray.report.providerPath),
-      }));
-      const selectedValues = await dependencies.selectManyWithAbort(
-        `Select stray entries to adopt [${scope}]`,
-        choices,
-        { interactive: context.interactive },
-      );
-
-      const selectedIndices = new Set(
-        (selectedValues ?? []).map((value) => Number.parseInt(value, 10)),
-      );
-      let codexStrayAdopted = false;
-      for (const [index, stray] of strays.entries()) {
-        if (!selectedIndices.has(index)) {
-          continue;
+    if (context.interactive && strays.length > 0 && !migrationAborted) {
+      for (const stray of cursorSkillStrays) {
+        const disposition = await dependencies.selectWithAbort(
+          `Migrate Cursor skill [${scope}]: ${formatPathForScope(
+            scope,
+            stray.report.providerPath,
+          )}`,
+          [
+            {
+              label: 'Adopt into canonical',
+              value: 'adopt',
+              description: `Move to ${stray.mapping.canonicalDir}.`,
+            },
+            {
+              label: 'Keep Cursor-only',
+              value: 'keep',
+              description: 'Leave in .cursor/skills and remember this choice.',
+            },
+          ],
+          { interactive: context.interactive },
+        );
+        if (disposition === null) {
+          migrationAborted = true;
+          break;
         }
 
         try {
-          manifest = await dependencies.adoptStray(scopeRoot, stray, manifest);
-          straysAdopted += 1;
-          codexStrayAdopted = codexStrayAdopted || stray.provider === 'codex';
+          manifest = await dependencies.applyCursorSkillDisposition(
+            scopeRoot,
+            stray,
+            manifest,
+            disposition,
+            syncConfigPath,
+          );
+          if (disposition === 'adopt') {
+            straysAdopted += 1;
+          } else {
+            context.logger.success(
+              `Kept Cursor-only [${scope}]: ${formatPathForScope(
+                scope,
+                stray.report.providerPath,
+              )}.`,
+            );
+          }
         } catch (error) {
-          if (!isAdoptionConflictError(error)) {
+          if (
+            error instanceof Error &&
+            error.message.startsWith('Cannot keep ')
+          ) {
+            context.logger.warn(error.message);
+            continue;
+          }
+          if (!isAdoptionConflictError(error) || disposition !== 'adopt') {
             throw error;
           }
 
@@ -959,16 +1054,86 @@ async function runInitCommand(
           );
           if (!shouldReplace) {
             context.logger.warn(
-              `Skipped conflicting stray entry [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
+              `Skipped conflicting Cursor skill [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
             );
             continue;
           }
 
-          manifest = await dependencies.adoptStray(scopeRoot, stray, manifest, {
-            replaceCanonical: true,
-          });
+          manifest = await dependencies.applyCursorSkillDisposition(
+            scopeRoot,
+            stray,
+            manifest,
+            disposition,
+            syncConfigPath,
+            { replaceCanonical: true },
+          );
           straysAdopted += 1;
-          codexStrayAdopted = codexStrayAdopted || stray.provider === 'codex';
+        }
+      }
+
+      if (!migrationAborted && ordinaryStrays.length > 0) {
+        const selectedValues = await dependencies.selectManyWithAbort(
+          `Select stray entries to adopt [${scope}]`,
+          ordinaryStrays.map((stray, index) => ({
+            label: formatStrayChoiceLabel(
+              scope,
+              stray.report.providerPath,
+              stray.provider,
+            ),
+            value: String(index),
+            description: formatPathForScope(scope, stray.report.providerPath),
+          })),
+          { interactive: context.interactive },
+        );
+        if (selectedValues === null) {
+          migrationAborted = true;
+        } else {
+          const selectedIndices = new Set(
+            selectedValues.map((value) => Number.parseInt(value, 10)),
+          );
+          for (const [index, stray] of ordinaryStrays.entries()) {
+            if (!selectedIndices.has(index)) {
+              continue;
+            }
+
+            try {
+              manifest = await dependencies.adoptStray(
+                scopeRoot,
+                stray,
+                manifest,
+              );
+              straysAdopted += 1;
+              codexStrayAdopted =
+                codexStrayAdopted || stray.provider === 'codex';
+            } catch (error) {
+              if (!isAdoptionConflictError(error)) {
+                throw error;
+              }
+
+              const shouldReplace = await dependencies.confirmAction(
+                `Conflict detected for ${formatPathForScope(scope, stray.report.providerPath)}. Replace canonical content with stray content?`,
+                { interactive: context.interactive },
+              );
+              if (!shouldReplace) {
+                context.logger.warn(
+                  `Skipped conflicting stray entry [${scope}]: ${formatPathForScope(scope, stray.report.providerPath)}`,
+                );
+                continue;
+              }
+
+              manifest = await dependencies.adoptStray(
+                scopeRoot,
+                stray,
+                manifest,
+                {
+                  replaceCanonical: true,
+                },
+              );
+              straysAdopted += 1;
+              codexStrayAdopted =
+                codexStrayAdopted || stray.provider === 'codex';
+            }
+          }
         }
       }
 
@@ -980,6 +1145,21 @@ async function runInitCommand(
           computeExtensionPlan: computeCodexProjectExtensionPlan,
           applyExtensionPlan: applyCodexProjectExtensionPlan,
         });
+        if (
+          activeAdaptersForStrays?.some((adapter) => adapter.name === 'cursor')
+        ) {
+          const refreshedCanonical = await dependencies.scanCanonical(
+            scopeRoot,
+            scope,
+          );
+          const cursorPlan = await computeCursorProjectExtensionPlan(
+            scopeRoot,
+            refreshedCanonical,
+            undefined,
+            { userConfigDir },
+          );
+          await applyCursorProjectExtensionPlan(scopeRoot, cursorPlan);
+        }
       }
 
       if (straysAdopted > 0) {

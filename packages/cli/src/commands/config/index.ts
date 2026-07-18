@@ -919,6 +919,18 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
       'Default sync strategy used when a provider does not override its own strategy.',
   },
   {
+    key: 'sync.knownStrays',
+    group: 'Sync/Provider (.oat/sync/config.json)',
+    file: '.oat/sync/config.json',
+    scope: 'project sync',
+    type: 'string[]',
+    defaultValue: '[]',
+    mutability: 'managed',
+    owningCommand: 'oat init / oat status',
+    description:
+      'Exact normalized provider-local paths intentionally kept outside the canonical project inventory.',
+  },
+  {
     key: 'sync.providers.<name>.enabled',
     group: 'Sync/Provider (.oat/sync/config.json)',
     file: '.oat/sync/config.json',
@@ -940,6 +952,53 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand: 'oat providers set --scope project',
     description:
       'Provider-specific sync strategy override for a named provider.',
+  },
+  {
+    key: 'sync.defaultStrategy',
+    group: 'User Sync (~/.oat/sync/config.json)',
+    file: '~/.oat/sync/config.json',
+    scope: 'user sync',
+    type: 'auto | symlink | copy',
+    defaultValue: 'auto',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope user',
+    description:
+      'Default user-scope sync strategy used when a provider does not override its own strategy.',
+  },
+  {
+    key: 'sync.knownStrays',
+    group: 'User Sync (~/.oat/sync/config.json)',
+    file: '~/.oat/sync/config.json',
+    scope: 'user sync',
+    type: 'string[]',
+    defaultValue: '[]',
+    mutability: 'managed',
+    owningCommand: 'oat init / oat status',
+    description:
+      'Exact normalized user provider-local paths intentionally kept outside the canonical user inventory.',
+  },
+  {
+    key: 'sync.providers.<name>.enabled',
+    group: 'User Sync (~/.oat/sync/config.json)',
+    file: '~/.oat/sync/config.json',
+    scope: 'user sync',
+    type: 'boolean',
+    defaultValue: 'unset',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope user --enabled/--disabled',
+    description: 'Provider-specific enablement for user sync surfaces.',
+  },
+  {
+    key: 'sync.providers.<name>.strategy',
+    group: 'User Sync (~/.oat/sync/config.json)',
+    file: '~/.oat/sync/config.json',
+    scope: 'user sync',
+    type: 'auto | symlink | copy',
+    defaultValue: 'inherit sync.defaultStrategy',
+    mutability: 'read/write',
+    owningCommand: 'oat providers set --scope user',
+    description:
+      'Provider-specific user sync strategy override for a named provider.',
   },
 ];
 

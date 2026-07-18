@@ -114,6 +114,85 @@ describe('adoptStrayToCanonical', () => {
     expect(canonical).toContain('New body');
   });
 
+  it('moves a native-read Cursor skill without recreating a provider view or manifest row', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-adopt-stray-'));
+    tempDirs.push(scopeRoot);
+    await mkdir(join(scopeRoot, '.cursor', 'skills', 'local-only'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(scopeRoot, '.cursor', 'skills', 'local-only', 'SKILL.md'),
+      '# Local only\n',
+      'utf8',
+    );
+    const mapping = CURSOR_PROJECT_MAPPINGS.find(
+      (entry) => entry.contentType === 'skill',
+    )!;
+
+    const manifest = await adoptStrayToCanonical(
+      scopeRoot,
+      {
+        provider: 'cursor',
+        report: { providerPath: '.cursor/skills/local-only' },
+        mapping,
+      },
+      createEmptyManifest(),
+    );
+
+    await expect(
+      readFile(
+        join(scopeRoot, '.agents', 'skills', 'local-only', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('# Local only\n');
+    await expect(
+      readFile(
+        join(scopeRoot, '.cursor', 'skills', 'local-only', 'SKILL.md'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(manifest.entries).toHaveLength(0);
+  });
+
+  it('removes an identical native-read Cursor duplicate', async () => {
+    const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-adopt-stray-'));
+    tempDirs.push(scopeRoot);
+    for (const directory of [
+      join(scopeRoot, '.agents', 'skills', 'duplicate'),
+      join(scopeRoot, '.cursor', 'skills', 'duplicate'),
+    ]) {
+      await mkdir(directory, { recursive: true });
+      await writeFile(join(directory, 'SKILL.md'), '# Same\n', 'utf8');
+    }
+    const mapping = CURSOR_PROJECT_MAPPINGS.find(
+      (entry) => entry.contentType === 'skill',
+    )!;
+
+    const manifest = await adoptStrayToCanonical(
+      scopeRoot,
+      {
+        provider: 'cursor',
+        report: { providerPath: '.cursor/skills/duplicate' },
+        mapping,
+      },
+      createEmptyManifest(),
+    );
+
+    await expect(
+      readFile(
+        join(scopeRoot, '.agents', 'skills', 'duplicate', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('# Same\n');
+    await expect(
+      readFile(
+        join(scopeRoot, '.cursor', 'skills', 'duplicate', 'SKILL.md'),
+        'utf8',
+      ),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    expect(manifest.entries).toHaveLength(0);
+  });
+
   it('adopts cursor rule strays into canonical markdown and tracks the provider copy', async () => {
     const scopeRoot = await mkdtemp(join(tmpdir(), 'oat-adopt-stray-'));
     tempDirs.push(scopeRoot);

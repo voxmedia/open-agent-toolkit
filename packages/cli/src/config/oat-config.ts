@@ -10,6 +10,7 @@ import {
   type WorkflowDispatchProviderValue,
 } from './dispatch-matrix';
 import { parseJsonConfig } from './json';
+import { resolveUserSyncConfig } from './user-sync-config';
 
 export {
   VALID_DISPATCH_MATRIX_TIERS,
@@ -829,7 +830,6 @@ export interface OatLocalConfig {
 export interface UserConfig {
   version: number;
   activeIdea?: string | null;
-  knownStrays?: string[];
   updateNotifications?: boolean;
   explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
@@ -876,29 +876,6 @@ function trimNonEmptyString(value: unknown): string | undefined {
   }
   const trimmed = value.trim();
   return trimmed.length > 0 ? trimmed : undefined;
-}
-
-function normalizeKnownStrayPath(pathValue: string): string | undefined {
-  const trimmed = pathValue.trim();
-  if (!trimmed) {
-    return undefined;
-  }
-
-  const normalized = trimPathValue(normalizeToPosixPath(trimmed));
-  return normalized && normalized !== '.' ? normalized : undefined;
-}
-
-function normalizeKnownStrays(value: unknown): string[] | undefined {
-  if (!Array.isArray(value)) {
-    return undefined;
-  }
-
-  const normalized = value
-    .filter((pathValue): pathValue is string => typeof pathValue === 'string')
-    .map((pathValue) => normalizeKnownStrayPath(pathValue))
-    .filter((pathValue): pathValue is string => pathValue !== undefined);
-
-  return normalized.length > 0 ? [...new Set(normalized)].sort() : undefined;
 }
 
 export function normalizeProjectPath(
@@ -1331,6 +1308,14 @@ function getUserConfigPath(userConfigDir: string): string {
   return join(userConfigDir, 'config.json');
 }
 
+const USER_CONFIG_OWNED_KEYS = new Set([
+  'version',
+  'activeIdea',
+  'updateNotifications',
+  'workflow',
+  'knownStrays',
+]);
+
 function normalizeUserConfig(parsed: unknown): UserConfig {
   const next: UserConfig = { ...DEFAULT_USER_CONFIG };
   if (!isRecord(parsed)) {
@@ -1342,11 +1327,6 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
-  }
-
-  const knownStrays = normalizeKnownStrays(parsed.knownStrays);
-  if (knownStrays) {
-    next.knownStrays = knownStrays;
   }
 
   if (typeof parsed.updateNotifications === 'boolean') {
@@ -1364,6 +1344,32 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
   }
 
   return next;
+}
+
+async function readUnknownUserConfigFields(
+  configPath: string,
+): Promise<Record<string, unknown>> {
+  try {
+    const parsed = parseJsonConfig(
+      await readFile(configPath, 'utf8'),
+      configPath,
+    );
+    if (!isRecord(parsed)) {
+      return {};
+    }
+
+    return Object.fromEntries(
+      Object.entries(parsed).filter(
+        ([key]) => !USER_CONFIG_OWNED_KEYS.has(key),
+      ),
+    );
+  } catch (error) {
+    if (isMissingFileError(error)) {
+      return {};
+    }
+
+    throw error;
+  }
 }
 
 export async function readUserConfig(
@@ -1388,8 +1394,10 @@ export async function writeUserConfig(
   config: UserConfig,
 ): Promise<void> {
   const configPath = getUserConfigPath(userConfigDir);
+  await resolveUserSyncConfig(userConfigDir);
+  const unknownFields = await readUnknownUserConfigFields(configPath);
   const normalized = normalizeUserConfig(config);
-  await atomicWriteJson(configPath, normalized);
+  await atomicWriteJson(configPath, { ...unknownFields, ...normalized });
 }
 
 export async function resolveActiveIdea(

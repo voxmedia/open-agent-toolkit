@@ -1,7 +1,22 @@
 import type { SyncConfig } from '@config/sync-config';
 import type { Scope } from '@shared/types';
 
-import type { PathMapping, ProviderAdapter } from './adapter.types';
+import type {
+  AdoptionSource,
+  PathMapping,
+  ProviderAdapter,
+} from './adapter.types';
+
+function getScopeMappings(
+  adapter: ProviderAdapter,
+  scope: Scope,
+): PathMapping[] {
+  return scope === 'project'
+    ? adapter.projectMappings
+    : scope === 'user'
+      ? adapter.userMappings
+      : [...adapter.projectMappings, ...adapter.userMappings];
+}
 
 export async function getActiveAdapters(
   adapters: ProviderAdapter[],
@@ -72,18 +87,40 @@ export function getSyncMappings(
   adapter: ProviderAdapter,
   scope: Scope,
 ): PathMapping[] {
-  const scopeMappings =
-    scope === 'project'
-      ? adapter.projectMappings
-      : scope === 'user'
-        ? adapter.userMappings
-        : [...adapter.projectMappings, ...adapter.userMappings];
-
-  const syncMappings = scopeMappings.filter((mapping) => !mapping.nativeRead);
+  const syncMappings = getScopeMappings(adapter, scope).filter(
+    (mapping) => !mapping.nativeRead,
+  );
   const seen = new Set<string>();
 
   return syncMappings.filter((mapping) => {
     const key = `${mapping.contentType}::${mapping.canonicalDir}::${mapping.providerDir}`;
+    if (seen.has(key)) {
+      return false;
+    }
+    seen.add(key);
+    return true;
+  });
+}
+
+export function getAdoptionSources(
+  adapter: ProviderAdapter,
+  scope: Scope,
+): AdoptionSource[] {
+  const sources = getScopeMappings(adapter, scope).flatMap((mapping) => {
+    const directories = mapping.nativeRead
+      ? (mapping.adoptionSourceDirs ?? [])
+      : [mapping.providerDir];
+
+    return directories.map((directory) => ({
+      contentType: mapping.contentType,
+      directory,
+      mapping,
+    }));
+  });
+  const seen = new Set<string>();
+
+  return sources.filter((source) => {
+    const key = `${source.contentType}::${source.directory}`;
     if (seen.has(key)) {
       return false;
     }

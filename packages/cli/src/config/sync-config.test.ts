@@ -6,8 +6,10 @@ import { CliError } from '@errors/index';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
+  appendKnownStray,
   DEFAULT_SYNC_CONFIG,
   loadSyncConfig,
+  mergeKnownStrays,
   saveSyncConfig,
   setProviderEnabled,
 } from './sync-config';
@@ -85,6 +87,38 @@ describe('loadSyncConfig', () => {
       '.cursor/skills/cloud-environment-setup',
       '.cursor/skills/local-only',
     ]);
+  });
+
+  it('merges known strays into a normalized sorted union', () => {
+    expect(
+      mergeKnownStrays(
+        ['.cursor/skills/project-only', './.cursor/skills/shared'],
+        [' .cursor\\skills\\user-only ', '.cursor/skills/shared/'],
+      ),
+    ).toEqual([
+      '.cursor/skills/project-only',
+      '.cursor/skills/shared',
+      '.cursor/skills/user-only',
+    ]);
+  });
+
+  it('appends a normalized known stray without duplicating existing paths', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-config-'));
+    tempDirs.push(root);
+    const configPath = join(root, '.oat', 'sync', 'config.json');
+
+    await appendKnownStray(
+      configPath,
+      ' .cursor\\skills\\cloud-environment-setup/ ',
+    );
+    await appendKnownStray(
+      configPath,
+      './.cursor/skills/cloud-environment-setup',
+    );
+
+    await expect(loadSyncConfig(configPath)).resolves.toMatchObject({
+      knownStrays: ['.cursor/skills/cloud-environment-setup'],
+    });
   });
 
   it('loads config with trailing commas', async () => {

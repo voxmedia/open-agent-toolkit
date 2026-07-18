@@ -154,7 +154,7 @@ Each inner array is a group of phases that execute concurrently in their own wor
 - Each group must contain **2 or more** phases — singleton groups are rejected.
 - Every phase ID must exist in the plan body.
 - No phase may appear in more than one group.
-- Parallelism is only honored at Tier 1 (native subagents). Tier 2 degrades parallel groups to sequential target-preserving execution, not unconditional inline review. Concrete managed Claude and Cursor reviewers retain the exact resolver-returned `dispatchArgs.model` in the actual invocation and every retry; Codex retains its exact role or pinned child. Inline review requires verified equivalent host controls or an explicit inherit/default or managed-uncapped base-role exception, and otherwise blocks.
+- Parallelism is only honored at Tier 1 (native subagents). Tier 2 degrades parallel groups to sequential target-preserving execution, not unconditional inline review. Concrete managed Claude reviewers retain the exact resolver-returned `dispatchArgs.model`; Cursor reviewers retain the exact `providers.cursor.dispatchArgs.variant` native agent type; Codex retains its exact role or pinned child. Every retry preserves the complete target. Inline review requires verified equivalent host controls or an explicit inherit/default or managed-uncapped base-role exception, and otherwise blocks.
 
 **Authoring responsibility:**
 

@@ -106,6 +106,10 @@ export async function adoptStrayToCanonical<
     await rename(providerAbsolutePath, canonicalAbsolutePath);
   }
 
+  if (stray.mapping.nativeRead) {
+    return manifest;
+  }
+
   const strategy = await createSymlink(
     canonicalAbsolutePath,
     providerAbsolutePath,

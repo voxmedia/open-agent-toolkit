@@ -149,6 +149,34 @@ describe('installWorkflows', () => {
     await expect(stat(join(targetRoot, '.oat', 'projects'))).rejects.toThrow();
   });
 
+  it('preserves executable mode on scripts nested inside skill directories', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'target');
+    await seedAssets(assetsRoot);
+
+    const skill = WORKFLOW_SKILLS[0];
+    const nestedScriptsDir = join(assetsRoot, 'skills', skill, 'scripts');
+    await mkdir(nestedScriptsDir, { recursive: true });
+    const nestedScript = join(nestedScriptsDir, 'bootstrap-group.sh');
+    await writeFile(nestedScript, '#!/usr/bin/env bash\necho ok\n', 'utf8');
+    await chmod(nestedScript, 0o755);
+
+    await installWorkflows({ assetsRoot, targetRoot });
+
+    const installedStat = await stat(
+      join(
+        targetRoot,
+        '.agents',
+        'skills',
+        skill,
+        'scripts',
+        'bootstrap-group.sh',
+      ),
+    );
+    expect(installedStat.mode & 0o111).not.toBe(0);
+  });
+
   it('preserves script chmod 0o755', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');

@@ -23,6 +23,7 @@ import {
   getSyncMappings,
   type ProviderAdapter,
 } from '@providers/shared';
+import { getAdoptionSources } from '@providers/shared/adapter.utils';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
@@ -62,6 +63,25 @@ function createAdapter(name: string, providerDir: string): ProviderAdapter {
   };
 }
 
+function createCursorAdapter(): ProviderAdapter {
+  const skillMapping = {
+    contentType: 'skill' as const,
+    canonicalDir: '.agents/skills',
+    providerDir: '.agents/skills',
+    nativeRead: true,
+    adoptionSourceDirs: ['.cursor/skills'],
+  };
+
+  return {
+    name: 'cursor',
+    displayName: 'cursor',
+    defaultStrategy: 'symlink',
+    projectMappings: [skillMapping],
+    userMappings: [skillMapping],
+    detect: async () => true,
+  };
+}
+
 function createHarness(options: {
   projectRoot: string;
   userRoot?: string;
@@ -74,7 +94,7 @@ function createHarness(options: {
   const capture = createLoggerCapture();
   const adapters = options.adapters ?? [
     createAdapter('claude', '.claude/skills'),
-    createAdapter('cursor', '.cursor/skills'),
+    createCursorAdapter(),
   ];
 
   const command = createRemoveSkillCommand({
@@ -99,6 +119,7 @@ function createHarness(options: {
     getAdapters: () => adapters,
     getConfigAwareAdapters,
     getSyncMappings,
+    getAdoptionSources,
     pathExists: async (path) =>
       (await fileExists(path)) || (await dirExists(path)),
     removeDirectory: async (path) => {

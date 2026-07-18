@@ -504,6 +504,43 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('dispatches concrete Cursor reviews through resolver-selected native variants', () => {
+    const local = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const remote = readRepoFile(
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['local review', local],
+      ['remote review', remote],
+    ] as const) {
+      expect(content, `${name} Cursor variant payload`).toContain(
+        'providers.cursor.dispatchArgs.variant',
+      );
+      expect(content, `${name} exact native variant`).toMatch(
+        /Cursor[\s\S]{0,420}exact resolver-(?:returned|selected) native reviewer variant/i,
+      );
+      expect(content, `${name} pre-start rejection boundary`).toMatch(
+        /pre-start native role-selection rejection/i,
+      );
+      expect(content, `${name} no stale Cursor model argument`).not.toContain(
+        'providers.cursor.dispatchArgs.model',
+      );
+      expect(content, `${name} no concrete base reviewer launch`).not.toContain(
+        'Cursor: explicit invocation `/oat-reviewer`',
+      );
+    }
+
+    expect(
+      remote,
+      'malformed output remains terminal after acceptance',
+    ).not.toMatch(
+      /malformed (?:structured )?output[\s\S]{0,160}(?:fall through|fallback|proceed|continue|route)[\s\S]{0,80}Tier [23]/i,
+    );
+  });
+
   it('documents codex dispatch through resolver-returned materialized roles', () => {
     const implementerContent = readRepoFile(
       '.agents/skills/oat-project-implement/SKILL.md',

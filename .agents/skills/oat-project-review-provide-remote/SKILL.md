@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.0.3
+version: 1.0.4
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -234,6 +234,16 @@ producer stamps, configured defaults, or reviewer self-report as runtime
 confirmation. Leave report runtime identity not-reported unless independently
 observed.
 
+For a concrete managed Cursor target, require
+`providers.cursor.dispatchArgs.variant` and launch the exact resolver-selected
+native reviewer variant first. Keep mapped Cursor model strings opaque inside
+the resolver and materialized definition; do not add a Task-level model
+argument. Only a recorded pre-start native role-selection rejection of that
+exact variant before any reviewer starts permits another target-preserving
+route. After acceptance, continue only through the existing reviewer handle;
+timeout, interruption, malformed output, or `BLOCKED` never authorizes a
+replacement launch.
+
 This resolver command is independent of lifecycle gates. Reusable `oat gate
 review` commands must remain provider-neutral and must not contain or add a
 provider/model `--target` argument.
@@ -249,7 +259,9 @@ provider/model `--target` argument.
 Detection:
 
 - Claude Code: Task-style subagent dispatch with `subagent_type: "oat-reviewer"` (resolves from `.claude/agents/oat-reviewer.md`).
-- Cursor: explicit invocation `/oat-reviewer` (or natural mention), resolved from `.cursor/agents/oat-reviewer.md` or the `.claude/agents/oat-reviewer.md` compatibility path.
+- Cursor: use the exact resolver-selected native reviewer variant for a
+  concrete managed target. Use base `oat-reviewer` only for an explicit
+  inherit/default exception.
 - Codex multi-agent: verify `[features] multi_agent = true`; if the host requires explicit authorization before `spawn_agent`, announce `authorization required` and ask one concise confirmation before selecting a lower tier. If authorized -> Tier 1; if declined -> Tier 2/3 fallback.
 - If the runtime can dispatch reviewer work -> Tier 1. If subagent dispatch is unavailable -> Tier 2. If the user requests inline / confirms a fresh session -> Tier 3.
 
@@ -260,7 +272,16 @@ Build the dispatch payload and spawn the reviewer in structured-output mode. Thi
 - Set `oat_output_mode: structured` in the dispatch payload (the flag `.agents/agents/oat-reviewer.md` recognizes). In this mode the reviewer returns a `StructuredFindings` object in-memory and writes NO artifact under `reviews/`.
 - Include the project context (`oat_project`, `oat_review_scope`, `oat_review_head_sha`), the Review Scope metadata block, a pointer to the posted-review-body schema (`design.md` → Data Models → Posted-review-body), and the resolved narrowing range (`<prior_sha>..<HEAD>` or none).
 - If a worktree was resolved in Step 2, include its path so the reviewer reads from the checkout.
-- The reviewer returns `StructuredFindings` (summary + findings array + `verification_commands`). On a dispatcher error, do NOT retry at Tier 1 — fall through to Tier 2/3. On malformed structured output, surface the validation error and fall through to Tier 2/3.
+- For Cursor concrete managed dispatch, invoke
+  `providers.cursor.dispatchArgs.variant` as the exact native agent type. Do
+  not substitute base `oat-reviewer` or add a concrete model argument.
+- The reviewer returns `StructuredFindings` (summary + findings array +
+  `verification_commands`). Tier 2/3 is eligible only when dispatch is
+  unavailable before launch or the exact native role is explicitly rejected
+  before any reviewer starts; record that pre-start outcome and do not retry
+  at Tier 1. Once a reviewer is accepted, malformed structured output is a
+  terminal validation failure: surface the error, block the review, and do not
+  launch another reviewer.
 
 **Step 5c: Tier 2 — Fresh session (recommended fallback).** If subagent dispatch is unavailable and the user is not already in a fresh session, provide fresh-session instructions and exit. (If Codex reported `authorization required` and the user later authorizes, return to Tier 1.)
 
@@ -371,7 +392,9 @@ At completion, report:
 - OAT project resolved from the diff (or `--project` override) and validated; project artifacts read read-only for mode-aware context.
 - PR content acquired via ephemeral worktree (or diff-only fallback) without mutating the caller's working tree.
 - Prior provide-remote reviews detected and filtered to this `(project, scope)`; re-review narrowing applied only after the stale-SHA guard passes.
-- Review executed via Tier 1 (`oat-reviewer` structured-output, NO artifact) / Tier 2 (fresh session) / Tier 3 (inline), with graceful fallthrough.
+- Review executed via Tier 1 (`oat-reviewer` structured-output, NO artifact) /
+  Tier 2 (fresh session) / Tier 3 (inline), with fallthrough limited to
+  dispatch unavailability or explicit pre-start native role rejection.
 - Findings produced with consistent 4-tier severities and file:line references.
 - Inline comments mapped to in-diff positions; out-of-diff findings downgraded to the body, never dropped.
 - Posted-review body carries the marker block first (with `oat_project` + `oat_review_scope`), correct severity counts, and the minor-fix nudge when minors are present.

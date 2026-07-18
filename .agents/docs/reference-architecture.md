@@ -157,10 +157,12 @@ The distinction: if a document exists primarily so that **agents can consume it 
 │   ├── reference-architecture.md   # This document — where things live and why
 │   └── ...
 └── skills/                         # Tool-agnostic skills (canonical source)
-    └── ...                         # Distributed to provider paths via symlink or copy
+    └── ...                         # Native-read or distributed as providers require
 ```
 
-Skills distributed to tool-specific locations (`.claude/skills/`, `.cursor/skills/`, etc.) — whether by OAT sync, `npx skills`, or manual symlinks — can reference `.agents/docs/` via relative paths.
+Cursor, Codex, and Gemini read canonical skills directly. Providers that require
+tool-specific views receive them through OAT sync, `npx skills`, or manual
+symlinks. Either form can reference `.agents/docs/` via relative paths.
 
 ---
 
@@ -182,7 +184,7 @@ my-repo/
 │       │       └── examples.md
 │       └── ...
 │
-├── .claude/                            # Claude Code + Cursor (Cursor reads this)
+├── .claude/                            # Claude Code
 │   ├── skills/                         # Symlinks → .agents/skills/*
 │   │   ├── my-skill → ../../.agents/skills/my-skill
 │   │   └── ...
@@ -195,19 +197,19 @@ my-repo/
 │       ├── my-skill → ../../.agents/skills/my-skill
 │       └── ...
 │
-└── .cursor/                            # Cursor-specific (non-skill config)
-    ├── agents/                         # Subagents (native path)
-    └── rules/                          # Rules (native)
+└── .cursor/                            # Cursor-specific extensions and views
+    ├── skills/                         # Intentional Cursor-only skills, not mirrors
+    ├── agents/                         # Materialized subagent definitions
+    └── rules/                          # Rendered rules
 ```
 
 **Key points:**
 
 - Skills are authored once in `.agents/skills/` (canonical source)
-- Codex reads `.agents/skills/` natively at both project and user level — no symlink needed
-- Cursor reads `.claude/skills/` natively — symlink `.agents/skills/` → `.claude/skills/` covers both Claude Code and Cursor
-- GitHub Copilot requires symlinks to `.github/skills/`
-- Only two symlink targets needed: `.claude/skills/` and `.github/skills/`
-- Subagents remain per-tool (no cross-tool standard exists yet)
+- Cursor, Codex, and Gemini read `.agents/skills/` natively at project and user scope
+- Claude Code and GitHub Copilot use generated views under their provider directories
+- `.cursor/skills/` is reserved for intentional Cursor-only packages and migration candidates
+- Canonical subagent definitions live in `.agents/agents/`, while OAT materializes provider-specific runtime formats
 - `.agents/docs/` is referenced via relative paths from skills
 
 ### What Lives Where
@@ -217,17 +219,19 @@ my-repo/
 | Agent instructions (all tools) | `AGENTS.md` (hierarchical)       | Open standard — 60k+ repos, 60+ tools                |
 | Shared reference documents     | **`.agents/docs/`**              | Tool-agnostic, agent-operational guidance            |
 | Skills (per tool)              | `.<tool>/skills/`                | Native per Agent Skills spec + tool conventions      |
-| Skills (cross-tool canonical)  | `.agents/skills/`                | Recognized by ecosystem; symlinked to tool paths     |
-| Subagents (per tool)           | `.<tool>/agents/`                | Native per tool (no cross-tool standard yet)         |
+| Skills (cross-tool canonical)  | `.agents/skills/`                | Native-read or distributed as each provider requires |
+| Subagents (canonical source)   | `.agents/agents/`                | Rendered/materialized into provider runtime formats  |
 | Skill-specific references      | `.<tool>/skills/<n>/references/` | Per Agent Skills spec — one level deep from SKILL.md |
 
 ---
 
 ## How Skills Reference Shared Documents
 
-### From a Skill (via symlink)
+### From a Skill
 
-Skills are authored in `.agents/skills/` and symlinked to tool-specific paths. SKILL.md references shared docs via relative path:
+Skills are authored in `.agents/skills/` and either read natively or exposed
+through generated provider views. SKILL.md references shared docs via relative
+path:
 
 ```markdown
 ---
@@ -247,7 +251,10 @@ in full before proceeding.
 ...
 ```
 
-The relative path from `.agents/skills/my-skill/SKILL.md` traverses up to `.agents/` and into `docs/`. Since tool-specific paths (`.claude/skills/`, `.codex/skills/`, `.github/skills/`) are symlinks to `.agents/skills/`, the relative path resolves correctly through the symlink — the filesystem follows the canonical path.
+The relative path from `.agents/skills/my-skill/SKILL.md` traverses up to
+`.agents/` and into `docs/`. Native-read providers resolve it from the canonical
+package. Generated symlink views such as `.claude/skills/` and
+`.github/skills/` resolve it through the canonical target.
 
 ### From a Subagent
 
@@ -329,14 +336,16 @@ For skills that should work across multiple tools:
 Author skills in `.agents/skills/` (canonical source). Use OAT's built-in sync to distribute to each tool's native path:
 
 ```bash
-# Dry-run to preview what will be synced
+# Apply sync across project and user scopes
 oat sync --scope all
 
 # Dry-run to preview only (no writes)
 oat sync --scope all --dry-run
 ```
 
-OAT sync handles symlink/copy distribution from `.agents/skills/` to provider-specific directories, with manifest tracking and drift detection.
+OAT sync keeps native-read skills canonical and handles symlink/copy
+distribution only for providers that require a provider-specific directory,
+with manifest tracking and drift detection for generated views.
 
 ### Option B: `npx skills` (For remote/community skills)
 
@@ -351,16 +360,19 @@ npx skills add github-user/skill-repo -a claude-code -a cursor
 
 When skills use tool-specific features (Claude Code's `context: fork`, hooks), author directly in that tool's native path. Other tools won't consume these skills.
 
-**Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic canonical source) and use OAT sync (or symlinks) to distribute to each required tool's native path:
+**Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic
+canonical source). Native-read providers consume that package directly; use OAT
+sync for providers that require generated views:
 
 ```
 .agents/skills/my-skill/SKILL.md          ← canonical source (single copy)
-  ↓ symlink
-.claude/skills/my-skill → ../../.agents/skills/my-skill   ← Claude Code + Cursor
+  ├── native read: Cursor, Codex, Gemini
+  └── generated views:
+.claude/skills/my-skill → ../../.agents/skills/my-skill   ← Claude Code
 .github/skills/my-skill → ../../.agents/skills/my-skill   ← GitHub Copilot
 ```
 
-Codex reads `.agents/skills/` natively at the project level — no symlink needed. Cursor natively reads `.claude/skills/` for cross-tool compatibility, so it doesn't need its own symlink either. **Result: one canonical source, two symlinks, four tools.**
+**Result:** one canonical source, two generated views, and five providers.
 
 All skills reference `.agents/docs/` via relative path for shared standards.
 
@@ -368,7 +380,9 @@ All skills reference `.agents/docs/` via relative path for shared standards.
 
 ## Subagent Placement
 
-Subagents remain **tool-specific** — there is no cross-tool subagent standard yet:
+Subagent runtime formats remain **tool-specific** because there is no cross-tool
+subagent standard. OAT uses `.agents/agents/` as its canonical source and
+materializes the provider forms below:
 
 | Tool        | Location                                                         | Example                                                                                           |
 | ----------- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
@@ -387,10 +401,9 @@ The system prompt body can be largely shared across tools, but frontmatter schem
 - Create `.agents/docs/` in repositories
 - Author skills in `.agents/skills/` (canonical, tool-agnostic source)
 - Symlink to required tool paths: `.claude/skills/`, `.github/skills/`
-  - Cursor reads `.claude/skills/` natively — no additional symlink needed
-  - Codex reads `.agents/skills/` natively — no symlink needed
+  - Cursor, Codex, and Gemini read `.agents/skills/` natively — no symlink needed
 - Skills reference `.agents/docs/` via relative path
-- Subagents in `.<tool>/agents/` (no cross-tool standard yet)
+- Canonical subagents in `.agents/agents/`, materialized into `.<tool>/agents/`
 - Zero custom tooling — just directory conventions, symlinks, and relative paths
 
 ### Phase 2: Scale and Distribute
@@ -411,13 +424,13 @@ The system prompt body can be largely shared across tools, but frontmatter schem
 
 ## Summary
 
-| Question                                    | Answer                                                                                                                                                       |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| What's the open standard for skills?        | **Agent Skills spec** at [agentskills.io](https://agentskills.io) — SKILL.md with YAML frontmatter, `references/`, `scripts/`, `assets/`                     |
-| Where do shared reference docs live?        | **`.agents/docs/`** — tool-agnostic, agent-operational guidance only                                                                                         |
-| Where do skills live?                       | **`.<tool>/skills/`** natively; **`.agents/skills/`** for cross-tool canonical source                                                                        |
-| Where do subagents live?                    | **`.<tool>/agents/`** — native per tool (no cross-tool standard yet)                                                                                         |
-| Where do skill-specific references live?    | **`.<tool>/skills/<n>/references/`** — per Agent Skills spec                                                                                                 |
-| How do skills get distributed across tools? | **OAT sync** for local/internal skills; **`npx skills`** CLI for remote/community skills — both create symlinks from canonical source to tool-specific paths |
-| Is `.agents/docs/` a standard?              | **No** — it's a convention. `.agents/skills/` is recognized; `.agents/docs/` fills a gap for shared non-skill references.                                    |
-| What's native vs. custom?                   | Skills spec, tool paths, `references/` = **standard**. `.agents/docs/` = **convention**.                                                                     |
+| Question                                    | Answer                                                                                                                                                  |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| What's the open standard for skills?        | **Agent Skills spec** at [agentskills.io](https://agentskills.io) — SKILL.md with YAML frontmatter, `references/`, `scripts/`, `assets/`                |
+| Where do shared reference docs live?        | **`.agents/docs/`** — tool-agnostic, agent-operational guidance only                                                                                    |
+| Where do skills live?                       | **`.agents/skills/`** is canonical; native-read providers consume it directly and other providers use generated views                                   |
+| Where do subagents live?                    | **`.agents/agents/`** is canonical in OAT; provider runtimes consume materialized definitions in their native formats                                   |
+| Where do skill-specific references live?    | **`.<tool>/skills/<n>/references/`** — per Agent Skills spec                                                                                            |
+| How do skills get distributed across tools? | Native-read providers use canonical skills directly; **OAT sync** creates required local views, while **`npx skills`** installs remote/community skills |
+| Is `.agents/docs/` a standard?              | **No** — it's a convention. `.agents/skills/` is recognized; `.agents/docs/` fills a gap for shared non-skill references.                               |
+| What's native vs. custom?                   | Skills spec, tool paths, `references/` = **standard**. `.agents/docs/` = **convention**.                                                                |

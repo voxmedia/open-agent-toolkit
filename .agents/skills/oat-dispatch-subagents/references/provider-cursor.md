@@ -6,24 +6,35 @@ volatile snapshot, never a durable inventory.
 
 ## Control Surfaces
 
-| Source                       | Establishes                                               | Does not establish                                             |
-| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| Native Task/Subagent schema  | Roles and opaque selectors for that dispatcher invocation | CLI account eligibility or another dispatcher's native catalog |
-| `cursor-agent --list-models` | Opaque selectors accepted by the account CLI              | Native Task eligibility                                        |
-| Cursor UI role configuration | User-selected defaults and role settings                  | Live root or nested schema without a new observation           |
+| Source                       | Establishes                                                    | Does not establish                                             |
+| ---------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| Native Task/Subagent schema  | Agent types available for that dispatcher invocation           | CLI account eligibility or another dispatcher's native catalog |
+| `cursor-agent --list-models` | Opaque flat model IDs accepted by the account CLI and resolver | Native Task eligibility or definition-pin acceptance           |
+| Cursor UI role configuration | User-selected defaults and role settings                       | Live root or nested schema without a new observation           |
 
 Root and nested catalogs are independent, volatile observations. Equality in
 one run does not establish equality in another run or nesting boundary.
 
 ## Native Selection
 
-1. Read the native model enum from the dispatcher that will launch the child.
-2. Intersect configured candidates with that exact snapshot.
-3. Pass the selected opaque string byte-for-byte.
-4. Treat an omitted model as deliberate parent inheritance, not generic
-   defaulting or evidence that a target was unavailable.
-5. Record requested selector, acceptance, outcome, and runtime identity
-   separately.
+Managed Cursor dispatch resolves an opaque flat model ID through OAT's explicit
+mapping and returns `providers.cursor.dispatchArgs.variant`. The mapping owns
+the bracket-form model pin inside the materialized definition; skills must
+never parse, normalize, or reconstruct either model string.
+
+1. Require a non-empty `providers.cursor.dispatchArgs.variant`.
+2. Launch that exact resolver-selected native agent type first.
+3. Treat native launch acceptance plus the complete launcher payload as
+   configured-invocation evidence, not observed runtime model identity.
+4. Permit a replacement route only after a recorded pre-start native
+   role-selection rejection of that exact variant, before any child starts.
+5. After acceptance, continue only through the existing handle. Timeout,
+   interruption, `BLOCKED`, missing telemetry, or self-report never authorizes
+   fallback or replacement.
+6. Treat an omitted variant as deliberate parent inheritance only when the
+   resolver selected no managed target.
+7. Record selected variant, mapped target, acceptance, outcome, and runtime
+   identity separately.
 
 Do not infer Cursor IDE behavior from a headless CLI surface. Keep bounded
 recon on economical explicit targets and reserve stronger targets for
@@ -52,12 +63,13 @@ verdict.
 
 ## Pre-Start CLI Routes
 
-When the current native intersection is absent or unsatisfactory, a caller may
-use a deliberate pre-start CLI route only when:
+When exact native role selection rejects the resolver-selected variant before
+launch, a caller may use a deliberate pre-start CLI route only when:
 
 - the caller's fallback policy allows it;
 - the exact CLI selector exists in the account catalog;
-- native mismatch, route, reason, and candidates are recorded before launch;
+- the native mismatch, rejected variant, route, reason, and candidates are
+  recorded before launch;
 - the prompt is self-contained and authority-bounded.
 
 Verify current CLI help before use. A typical shape is:

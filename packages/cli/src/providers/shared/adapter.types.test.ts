@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest';
 
 import type { PathMapping, ProviderAdapter } from './adapter.types';
 import {
+  getAdoptionSources,
   getActiveAdapters,
   getConfigAwareAdapters,
   getSyncMappings,
@@ -38,6 +39,19 @@ describe('ProviderAdapter types', () => {
     expect(
       mapping.transformCanonical?.('# rule', '.agents/rules/demo.md'),
     ).toContain('.agents/rules/demo.md');
+  });
+
+  it('PathMapping supports provider-local adoption sources', () => {
+    const mapping: PathMapping = {
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    };
+
+    expect(mapping.adoptionSourceDirs).toEqual(['.cursor/skills']);
+    expect(mapping.providerDir).toBe(mapping.canonicalDir);
   });
 
   it('ProviderAdapter has required fields', () => {
@@ -147,6 +161,78 @@ describe('ProviderAdapter types', () => {
       canonicalDir: '.agents/skills',
       providerDir: '.claude/skills',
     });
+  });
+
+  it('getAdoptionSources uses mirrored provider directories and explicit native-read sources', () => {
+    const adapter: ProviderAdapter = {
+      name: 'example',
+      displayName: 'Example Provider',
+      defaultStrategy: 'auto',
+      projectMappings: [
+        {
+          contentType: 'skill',
+          canonicalDir: '.agents/skills',
+          providerDir: '.agents/skills',
+          nativeRead: true,
+          adoptionSourceDirs: ['.example/skills'],
+        },
+        {
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.example/agents',
+          nativeRead: false,
+        },
+      ],
+      userMappings: [],
+      detect: async () => true,
+    };
+
+    expect(getAdoptionSources(adapter, 'project')).toEqual([
+      {
+        contentType: 'skill',
+        directory: '.example/skills',
+        mapping: adapter.projectMappings[0],
+      },
+      {
+        contentType: 'agent',
+        directory: '.example/agents',
+        mapping: adapter.projectMappings[1],
+      },
+    ]);
+  });
+
+  it('getAdoptionSources excludes native-read mappings without explicit sources and deduplicates all scope', () => {
+    const sharedSkillMapping: PathMapping = {
+      contentType: 'skill',
+      canonicalDir: '.agents/skills',
+      providerDir: '.agents/skills',
+      nativeRead: true,
+      adoptionSourceDirs: ['.cursor/skills'],
+    };
+    const adapter: ProviderAdapter = {
+      name: 'cursor',
+      displayName: 'Cursor',
+      defaultStrategy: 'symlink',
+      projectMappings: [
+        sharedSkillMapping,
+        {
+          contentType: 'agent',
+          canonicalDir: '.agents/agents',
+          providerDir: '.agents/agents',
+          nativeRead: true,
+        },
+      ],
+      userMappings: [sharedSkillMapping],
+      detect: async () => true,
+    };
+
+    expect(getAdoptionSources(adapter, 'all')).toEqual([
+      {
+        contentType: 'skill',
+        directory: '.cursor/skills',
+        mapping: sharedSkillMapping,
+      },
+    ]);
   });
 
   it('getConfigAwareAdapters keeps explicitly enabled provider active even when not detected', async () => {

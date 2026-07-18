@@ -5,11 +5,12 @@ description: 'Configuration schema and behavior for provider sync in .oat/sync/c
 
 # Sync Config (`.oat/sync/config.json`)
 
-This document defines the project sync config used by provider-interop commands.
+This document defines the project and user sync config used by provider-interop commands.
 
 ## Location
 
 - Project scope: `.oat/sync/config.json`
+- User scope: `~/.oat/sync/config.json`
 
 ## Purpose
 
@@ -17,7 +18,7 @@ This document defines the project sync config used by provider-interop commands.
 
 Discovery note:
 
-- `oat config describe` includes `.oat/sync/config.json` in its catalog so you can inspect the sync/provider keys from the main config help surface.
+- `oat config describe` includes both sync config scopes in its catalog so you can inspect sync/provider keys from the main config help surface.
 - Mutation ownership still lives with provider-sync commands such as `oat providers set`, not `oat config set`.
 
 It is read by:
@@ -64,7 +65,7 @@ Entries are exact provider-path matches after path normalization; they are not
 globs and do not suppress sibling paths.
 
 Project-level config in `.oat/sync/config.json` applies to everyone using the
-repository:
+repository. A Keep Cursor-only choice for a project skill writes here:
 
 ```json
 {
@@ -74,11 +75,13 @@ repository:
 }
 ```
 
-User-level config in `~/.oat/config.json` is useful for personal provider-local
-files that should not be committed to the repository:
+User-level config in `~/.oat/sync/config.json` owns personal provider-local
+files and user-scope Keep Cursor-only choices:
 
 ```json
 {
+  "version": 1,
+  "defaultStrategy": "auto",
   "knownStrays": [".cursor/skills/cloud-environment-setup"]
 }
 ```
@@ -86,6 +89,12 @@ files that should not be committed to the repository:
 The common Cursor-only skill case is a good fit: the skill may intentionally
 exist in `.cursor/skills/cloud-environment-setup` while remaining outside the
 canonical `.agents/skills` inventory.
+
+Earlier releases stored user `knownStrays` in `~/.oat/config.json`. Before OAT
+resolves user sync config or writes any general user-config change, it
+normalizes and unions those entries into `~/.oat/sync/config.json`, writes the
+sync config first, then removes only the legacy key. Repeating the migration is
+safe, including after interruption.
 
 ## Behavior notes
 
@@ -95,6 +104,8 @@ canonical `.agents/skills` inventory.
   - unset: provider falls back to directory detection.
 - `defaultStrategy` is used when no provider-specific `strategy` is set.
 - At runtime, config is normalized so `providers` is always present in memory.
+- Project scans combine project and user known-stray paths. User scans use the
+  user sync config.
 - Codex project sync also manages generated materialized roles derived from
   canonical agents and explicit model+effort targets. Dispatch-aware roles such
   as `oat-phase-implementer-gpt-5-6-terra-xhigh` and
@@ -106,7 +117,7 @@ canonical `.agents/skills` inventory.
 - Initial setup (interactive): `oat init --scope project`
 - Explicit updates: `oat providers set --scope project --enabled <providers> --disabled <providers>`
 - Apply sync changes: `oat sync --scope project`
-- Inspect the sync config contract: `oat config describe sync.defaultStrategy` or `oat config describe sync.providers.<name>.enabled`
+- Inspect the sync config contract: `oat config describe sync.defaultStrategy`, `oat config describe sync.knownStrays`, or `oat config describe sync.providers.<name>.enabled`
 
 ## Related references
 

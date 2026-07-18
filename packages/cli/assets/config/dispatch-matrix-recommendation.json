@@ -1,5 +1,5 @@
 {
-  "version": "2026-07-10.2",
+  "version": "2026-07-11.1",
   "providers": {
     "codex": {
       "economy": {
@@ -101,29 +101,25 @@
     "cursor": {
       "economy": {
         "candidates": [
-          "gpt-5.6-luna-low",
-          "gpt-5.6-luna-medium",
-          "gpt-5.6-luna-high"
+          "composer-2.5",
+          "claude-sonnet-5-high",
+          "gpt-5.6-luna-high",
+          "gpt-5.6-luna-xhigh"
         ]
       },
       "balanced": {
-        "candidates": [
-          "gpt-5.6-luna-xhigh",
-          "gpt-5.6-terra-low",
-          "gpt-5.6-terra-medium",
-          "gpt-5.6-terra-high",
-          "gpt-5.6-terra-xhigh"
-        ]
+        "candidates": ["cursor-grok-4.5-high", "gpt-5.6-terra-high"]
       },
       "high": {
-        "candidates": [
-          "gpt-5.6-sol-low",
-          "gpt-5.6-sol-medium",
-          "gpt-5.6-sol-high"
-        ]
+        "candidates": ["gpt-5.6-sol-medium", "gpt-5.6-sol-high"]
       },
       "frontier": {
-        "candidates": ["gpt-5.6-sol-xhigh", "gpt-5.6-sol-max"]
+        "candidates": [
+          "claude-fable-5-thinking-high",
+          "claude-fable-5-thinking-xhigh",
+          "gpt-5.6-sol-xhigh",
+          "gpt-5.6-sol-max"
+        ]
       }
     }
   }

@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
+  diagnoseCursorMaterializedModels,
   probeCursorSubagentModel,
   resolveCursorModelCatalog,
   validateCursorSubagentModel,
@@ -207,6 +208,45 @@ describe('resolveCursorModelCatalog', () => {
     });
 
     expect(runCursorAgent).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('diagnoseCursorMaterializedModels', () => {
+  it('reports stale flat IDs from the broad catalog without claiming pin verification', async () => {
+    const runCursorAgent = vi.fn(async () => ({
+      ok: true,
+      stdout: 'gpt-5.6-sol-high - GPT 5.6 Sol High\n',
+      stderr: '',
+    }));
+
+    const diagnostics = await diagnoseCursorMaterializedModels(
+      ['gpt-5.6-sol-high', 'retired-model-high'],
+      {
+        cwd: '/repo',
+        dependencies: createDependencies({ runCursorAgent }),
+      },
+    );
+
+    expect(diagnostics).toEqual([
+      expect.objectContaining({
+        ladderModelId: 'gpt-5.6-sol-high',
+        availability: 'available',
+        evidence: 'broad-cli-catalog',
+      }),
+      expect.objectContaining({
+        ladderModelId: 'retired-model-high',
+        availability: 'missing',
+        evidence: 'broad-cli-catalog',
+      }),
+    ]);
+    expect(diagnostics[0]?.message).toContain(
+      'does not verify the materialized definition pin or runtime identity',
+    );
+    expect(diagnostics[1]?.message).toContain(
+      'Definition-pin behavior and runtime identity were not tested',
+    );
+    expect(runCursorAgent).toHaveBeenCalledTimes(1);
+    expect(runCursorAgent.mock.calls[0]?.[0]).toEqual(['models']);
   });
 });
 
