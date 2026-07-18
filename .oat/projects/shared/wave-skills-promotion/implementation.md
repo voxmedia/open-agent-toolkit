@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -34,13 +34,13 @@ oat_generated: false
 | Phase                                  | Status    | Tasks | Completed |
 | -------------------------------------- | --------- | ----- | --------- |
 | Phase 1: Port + toolkit integration    | completed | 4     | 4/4       |
-| Phase 2: §2 queue + genericization     | pending   | 9     | 0/9       |
+| Phase 2: §2 queue + genericization     | completed | 9     | 9/9       |
 | Phase 3: Dispositions                  | pending   | 3     | 0/3       |
 | Phase 4: Docs                          | pending   | 2     | 0/2       |
 | Phase 5: Validation + release          | pending   | 5     | 0/5       |
 | Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
 
-**Total:** 4/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 13/27 tasks completed (23 executable; 4 gated on explainer-kit RC)
 
 ---
 
@@ -90,10 +90,31 @@ oat_generated: false
 
 ## Phase 2: §2 queue + genericization
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-18
+**Completed:** 2026-07-18
 
-Tasks: p02-t01..t06 (one commit per queue item B1–B6), p02-t07 (genericization + equivalence checklist), p02-t08 (conventions + versions + traceability table), p02-t09 (re-sync).
+### Phase Summary
+
+**Outcome (what changed):**
+
+- All six §2 queue items applied, one commit each (B1 `52c59aa8`, B2 `98267802`, B3 `1ef49623`, B4 `db8b28a0`, B5 `d6440606`, B6 `4b32c611`); traceability table below in Implementation Log.
+- Genericization complete with 69-row equivalence checklist (`references/equivalence-checklist.md`), reviewer-sampled adversarially (21 rows): intent preserved everywhere; one over-deleted provenance citation caught in review and restored (`7601d2d6`).
+- Versions: `oat-wave-execute` 1.5.0, `oat-wave-program` 1.1.0; release-collapse (1.4.1+1.5.0 → 1.5.0) recorded in the t08 commit body; no dogfood/status prose remains.
+- p02-t09 resolved as a **verified no-op**: provider views are symlinks, so text edits flow through; re-run `oat sync --scope all` reports "No changes required."
+
+**Verification:** lint + type-check green; bash-3.2 syntax + construct checks on `bootstrap-group.sh`; byte-identical asset templates vs frozen sources; reviewer round 1 FAIL (1 Important) → round 2 PASS.
+
+**Notes / Decisions:**
+
+- Mid-phase sync-cleanliness event: `oat sync --scope all` materialized 24 supported-catalogue cursor dispatch-variant roles (oat-managed). Implementer correctly refused to stage (task-boundary discipline = the just-codified B3 class); root committed them separately (`08d7b205`); sync now idempotent-clean.
+
+### Tasks
+
+- p02-t01..t06: **completed** (queue commits above)
+- p02-t07: **completed**, `d544b622` (checklist 69 rows: 44 execute / 25 program)
+- p02-t08: **completed**, `de16cb5d` + fix `7601d2d6` (restored DR-260713-extract provenance citation; EX-I07 corrected)
+- p02-t09: **completed (no-op)** — see Phase Summary; root catalogue commit `08d7b205` adjacent but outside task scope
 
 ---
 
@@ -149,6 +170,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | Phase | Implementer                                              | Tasks | Review                                                          | Fix loops                                   | Result |
 | ----- | -------------------------------------------------------- | ----- | --------------------------------------------------------------- | ------------------------------------------- | ------ |
 | p01   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0) | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
+| p02   | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)             | 1 (provenance citation restore, `7601d2d6`) | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
@@ -198,7 +220,7 @@ Chronological log of implementation progress.
 | Phase | Tests Run                                                                   | Passed | Failed | Coverage |
 | ----- | --------------------------------------------------------------------------- | ------ | ------ | -------- |
 | 1     | CLI suite 3001 tests (250 files) + 2 new regression tests; lint; type-check | all    | 0      | n/a      |
-| 2     | -                                                                           | -      | -      | -        |
+| 2     | lint + type-check + bash-3.2 + citation-set + asset byte-diffs              | all    | 0      | n/a      |
 | 3     | -                                                                           | -      | -      | -        |
 | 4     | -                                                                           | -      | -      | -        |
 | 5     | -                                                                           | -      | -      | -        |
