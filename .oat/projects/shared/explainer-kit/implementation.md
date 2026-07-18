@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-17
-oat_current_task_id: p04-t07
+oat_current_task_id: p04-t08
 oat_generated: false
 ---
 
@@ -29,10 +29,10 @@ oat_generated: false
 | Phase 1 | complete    | 6     | 6/6       |
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | in_progress | 9     | 6/9       |
+| Phase 4 | in_progress | 9     | 7/9       |
 | Phase 5 | pending     | 4     | 0/4       |
 
-**Total:** 31/38 tasks completed
+**Total:** 32/38 tasks completed
 
 ---
 
@@ -791,6 +791,26 @@ stale version pins and unmapped Phase 3 lifecycle prompt sites.
 - Related wrapper smoke — pass (6/6).
 - CLI asset suite — pass (3,055 tests).
 - Scoped lint, formatting, and whitespace checks — pass.
+
+---
+
+### Task p04-t07: Build reproducible retained release candidates
+
+**Status:** completed
+**Commit:** `87b0cbbb`
+
+**Outcome:**
+
+- Added a timestamp-free retained RC builder with stable commit, package/skill
+  version, schema/recipe, artifact hash, and candidate identity records.
+- Rejects dirty release inputs and candidates that change while building; never
+  publishes.
+
+**Verification:**
+
+- RC builder suite — pass (3/3), independently rerun after authentication
+  recovery.
+- Commit contains exactly the two planned files.
 
 ---
 
