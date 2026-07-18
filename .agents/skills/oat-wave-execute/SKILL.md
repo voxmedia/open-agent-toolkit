@@ -178,8 +178,9 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   `scripts/bootstrap-group.sh wave-2 $(git rev-parse HEAD) p01 p02 p03`
   (wraps the `oat-worktree-bootstrap-auto` contract: create at explicit base,
   propagate local config, verify base ancestry, repo bootstrap via
-  `worktree:init`, proportionate baseline, structured STATUS lines; as of 1.3.0
-  the script relocates its `.bootstrap-*.log` files into `$TMPDIR` itself).
+  `worktree:init`, verify provider-view parity with the root checkout,
+  proportionate baseline, structured STATUS lines; as of 1.3.0 the script
+  relocates its `.bootstrap-*.log` files into `$TMPDIR` itself).
   Pre-trust new worktree paths in `~/.codex/config.toml` when lanes carry codex
   review steps.
 - **Implementer briefs:** self-contained Phase Scope (resolver-stamped dispatch
@@ -235,7 +236,14 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   cwd-persistence wrong-branch failure observed in wave 5. Integration DoD gates
   after fan-in run TO COMPLETION BEFORE any group bookkeeping edits start
   (DR-260714-integration-gates-run-before);
-  then the group bookkeeping commit. **Conflict-resolution contract
+  then the group bookkeeping commit. Before dispatch, inspect every worktree's
+  sync commit content and stop on provider-view deletions or unrelated managed
+  path churn. This is a **regression guard for the named stale-local-binary
+  failure class**: a stale locally resolved `node_modules/.bin/oat` can shadow
+  the global CLI and make two desired-state sync versions thrash managed files.
+  On any parity mismatch, compare `node_modules/.bin/oat --version` with
+  `oat --version`; do not treat it as unexplained toolkit corruption.
+  **Conflict-resolution contract
   (DR-260715-conflict-resolution-contract):** on rebase/merge conflicts —
   keep-both where lanes appended to shared surfaces; then in-worktree BUILD +
   touched-package suites BEFORE amending (mechanical splices break seams:

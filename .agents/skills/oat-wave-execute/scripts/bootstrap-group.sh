@@ -11,6 +11,62 @@ usage() {
   echo "  e.g. bootstrap-group.sh wave-2 <full-40-hex-sha> p01 p02 p03" >&2
 }
 
+provider_view_list() {
+  local checkout="$1"
+  node - "$checkout/.oat/sync/manifest.json" <<'NODE'
+const fs = require("fs");
+const manifestPath = process.argv[2];
+const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+const paths = manifest.entries.map((entry) => entry.providerPath).sort();
+process.stdout.write(`${paths.join("\n")}\n`);
+NODE
+}
+
+verify_view_parity() {
+  local root_checkout="$1"
+  local worktree_checkout="$2"
+  local root_list
+  local worktree_list
+  local local_version
+  local global_version
+
+  root_list="$(mktemp "${TMPDIR:-/tmp}/oat-root-views.XXXXXX")" || return 1
+  worktree_list="$(mktemp "${TMPDIR:-/tmp}/oat-worktree-views.XXXXXX")" || {
+    rm -f "$root_list"
+    return 1
+  }
+
+  if ! provider_view_list "$root_checkout" >"$root_list" ||
+     ! provider_view_list "$worktree_checkout" >"$worktree_list"; then
+    echo "STATUS view-parity=MISMATCH"
+    echo "  diagnostic: unable to read provider-view lists from sync manifests"
+    rm -f "$root_list" "$worktree_list"
+    return 1
+  fi
+
+  if cmp -s "$root_list" "$worktree_list"; then
+    echo "STATUS view-parity=ok"
+    rm -f "$root_list" "$worktree_list"
+    return 0
+  fi
+
+  echo "STATUS view-parity=MISMATCH"
+  echo "  root-only provider views:"
+  comm -23 "$root_list" "$worktree_list"
+  echo "  worktree-only provider views:"
+  comm -13 "$root_list" "$worktree_list"
+  if [[ -x "$worktree_checkout/node_modules/.bin/oat" ]]; then
+    local_version="$("$worktree_checkout/node_modules/.bin/oat" --version 2>&1)"
+  else
+    local_version="missing"
+  fi
+  global_version="$(cd "$worktree_checkout" && oat --version 2>&1)"
+  echo "  node_modules/.bin/oat --version: $local_version"
+  echo "  oat --version: $global_version"
+  rm -f "$root_list" "$worktree_list"
+  return 1
+}
+
 # Guard: require wave-prefix, base-sha, and at least one phase (3+ args)
 if [[ $# -lt 3 ]]; then
   echo "FATAL: expected <wave-prefix> <base-sha> <phase>... (got $# arg(s))" >&2
@@ -67,6 +123,9 @@ for P in "${PHASES[@]}"; do
   # Repository bootstrap (declared: worktree:init) + proportionate baseline
   if ! (cd "$TP" && SKIP_S3_ARCHIVE_SYNC=1 pnpm run worktree:init >"$TP/.bootstrap-init.log" 2>&1); then
     echo "STATUS $P: status=error reason=repository-bootstrap-failed (see $TP/.bootstrap-init.log)"; tail -5 "$TP/.bootstrap-init.log"; continue
+  fi
+  if ! verify_view_parity "$REPO" "$TP"; then
+    echo "STATUS $P: status=error reason=provider-view-parity-mismatch"; continue
   fi
   if ! (cd "$TP" && pnpm type-check >"$TP/.bootstrap-baseline.log" 2>&1); then
     echo "STATUS $P: status=error reason=baseline-verification-failed (see $TP/.bootstrap-baseline.log)"; continue
