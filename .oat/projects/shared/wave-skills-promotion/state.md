@@ -28,7 +28,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/158' # tracked PR URL
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T19:56:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-18T20:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_post_implement_sequence:
   status: awaiting_approval # pre_approval | awaiting_approval | post_approval | failed | complete
@@ -81,11 +81,15 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 ## Blockers
 
-- p06 gated on the packaged explainer-kit v1 RC (plan-declared; project at
-  scaffold stage on this repo's `explainer-kit` branch). Gate-open contract:
-  refine p06 task bodies against frozen RC schemas via plan revision, re-run
-  plan artifact review for the phase, coordinate merge order with
-  explainer-kit Phase 3.
+- None hard. p06's RC gate OPENED 2026-07-18: explainer-kit v1 RC frozen at
+  sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348
+  (code commit c485b784; record: explainer-kit workspace
+  `.oat/repo/reference/explainer-kit-acceptance/v1/rc.json`). p06 execution
+  starts after PR #158 merges, per the gate-open contract (p06 plan revision
+  against frozen RC schemas + phase re-review + merge-order coordination with
+  explainer-kit Phase 3). The private-wrapper migration E2E
+  (`~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs` emitting
+  sanitized `private-wrapper-result.json`) is operator-owned.
 
 ## Next Milestone
 
