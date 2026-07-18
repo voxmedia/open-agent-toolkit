@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_last_updated: 2026-07-18
 oat_generated: false
-oat_template: true
+oat_template: false
 oat_template_name: design
 ---
 
@@ -85,10 +85,13 @@ allowed/no_gate           validate envelope + receive eligibility
                       allowed              blocked
                          |                    |
                          v                    +--> persist + stop/resume
-approval-aware pre/post sequence
+approval-aware pre-approval sequence
     |
     v
 final HiLL approval
+    |
+    v
+approval-aware post-approval sequence
     |
     v
 complete state --> success output
@@ -369,7 +372,46 @@ allowed --closeout-only descendants----> allowed
 
 ## Testing Strategy
 
-Pending collaborative review.
+### Structural Lifecycle Validation
+
+- Add `oat-project-implement` to the shared exit-gate ordering matrix.
+- Assert that final verification/review precedes gate handling; gate allowance
+  precedes automated sequencing and final HiLL; completion and success output
+  come last.
+- Assert that the implementation skill declares gate CLI capability and its
+  success criteria require configured-gate disposition.
+
+### Post-Implementation Contract Tests
+
+- Phase gate absent or disabled while the final configured gate remains active.
+- No configured final gate (`null`) records explicit no-gate allowance.
+- Configured success plus `block`, `prompt`, and `warn` outcomes.
+- Corroborated receive-eligible handoff versus invalid, contradictory, or
+  ineligible envelopes.
+- Interruption at pending and blocked boundaries.
+- Unchanged valid resume without duplicate gate execution.
+- Substantive post-review HEAD changes mark state stale and require current
+  final review plus a new gate generation.
+- Automated sequence, final HiLL, completion state, and success output cannot
+  start while the gate is unresolved.
+- PR #156 project-log mutations remain compatible.
+
+### State and Router Tests
+
+- Recognize and preserve `oat_implement_exit_gate` in shared frontmatter
+  handling.
+- Cover representative pending, allowed, blocked, stale, and legacy-absent
+  fixtures.
+- Ensure `oat-project-next` prioritizes unresolved or stale gate state over
+  `complete` and `pr_open`.
+
+### Documentation and Release Verification
+
+- Validate the canonical skill and synchronized provider views.
+- Run targeted contract tests first, then repository format, lint, type-check,
+  full tests, build, and `pnpm release:validate`.
+- Verify the changed skill version increments exactly once and all five public
+  package versions move in lockstep.
 
 ## References
 
