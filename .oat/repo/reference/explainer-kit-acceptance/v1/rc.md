@@ -2,8 +2,8 @@
 
 ## Frozen identity
 
-- Code commit: `534a408eed0080bcf653a6dde3abc1dd612f0ccb`
-- RC ID: `sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`
+- Code commit: `da1e7a713adac4743368addf206aa780a94871ba`
+- RC ID: `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
 - Identity record: `rc.json`
 - Retained local artifacts: `dist/explainer-kit-rc/`
 - Candidate changes reported by the builder: none
@@ -17,17 +17,17 @@ here.
 
 | Package                               | Version | Retained artifact                              | SHA-256                                                            |
 | ------------------------------------- | ------- | ---------------------------------------------- | ------------------------------------------------------------------ |
-| `@open-agent-toolkit/cli`             | `0.2.1` | `open-agent-toolkit-cli-0.2.1.tgz`             | `3229470321f278183158e320380c93a05d06081b4a74007fe91cd8dbf755d5dc` |
-| `@open-agent-toolkit/control-plane`   | `0.2.1` | `open-agent-toolkit-control-plane-0.2.1.tgz`   | `6ebfcde0d79e26de137578c6b8955ab9f20b5f2dda23daf3d371a8b107f2ca76` |
-| `@open-agent-toolkit/docs-config`     | `0.2.1` | `open-agent-toolkit-docs-config-0.2.1.tgz`     | `6677634b3ff32b488688d25433cb125758b64ffc357f7260842067da998f5695` |
-| `@open-agent-toolkit/docs-theme`      | `0.2.1` | `open-agent-toolkit-docs-theme-0.2.1.tgz`      | `efa30129492972206949a00411114482198c8353d002acb229eedf47e853c60e` |
-| `@open-agent-toolkit/docs-transforms` | `0.2.1` | `open-agent-toolkit-docs-transforms-0.2.1.tgz` | `0bce3e640bceacfeb565f1efdc905ffda2fe70f9fe8a2060927398197f5ae79a` |
+| `@open-agent-toolkit/cli`             | `0.2.3` | `open-agent-toolkit-cli-0.2.3.tgz`             | `dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1` |
+| `@open-agent-toolkit/control-plane`   | `0.2.3` | `open-agent-toolkit-control-plane-0.2.3.tgz`   | `59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5` |
+| `@open-agent-toolkit/docs-config`     | `0.2.3` | `open-agent-toolkit-docs-config-0.2.3.tgz`     | `3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f` |
+| `@open-agent-toolkit/docs-theme`      | `0.2.3` | `open-agent-toolkit-docs-theme-0.2.3.tgz`      | `493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0` |
+| `@open-agent-toolkit/docs-transforms` | `0.2.3` | `open-agent-toolkit-docs-transforms-0.2.3.tgz` | `a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd` |
 
 ## Skills
 
 | Skill               | Version | Bundled path                              | Tree SHA-256                                                       |
 | ------------------- | ------- | ----------------------------------------- | ------------------------------------------------------------------ |
-| `explainer-kit`     | `1.0.0` | `package/assets/skills/explainer-kit`     | `58579e5c02d284168e2245e1ef1cd6b1cb49f2dd82ee3eeedec4e4170e8a48da` |
+| `explainer-kit`     | `1.0.0` | `package/assets/skills/explainer-kit`     | `ea933187cfca91d475770391f49fd93446153fb1a69a41c54087ea8c977fa03a` |
 | `oat-explainer-kit` | `1.0.0` | `package/assets/skills/oat-explainer-kit` | `2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654` |
 
 ## Schemas
@@ -48,17 +48,35 @@ here.
 | Recipe ID           | Version | Schema version            | Bundled path                     | SHA-256                                                            |
 | ------------------- | ------- | ------------------------- | -------------------------------- | ------------------------------------------------------------------ |
 | `engineer-tour`     | `1`     | `explainer-kit.recipe/v1` | `recipes/engineer-tour.json`     | `041a1c5201d7e72c0aef8a097c0389088001ac0cc11fede9e8b8c64f477be0fd` |
+| `program-recap`     | `1`     | `explainer-kit.recipe/v1` | `recipes/program-recap.json`     | `705ed786fff8f4af69542ac326257fc52de466229a60fe164bd42b4f64a51274` |
 | `project-explainer` | `1`     | `explainer-kit.recipe/v1` | `recipes/project-explainer.json` | `0202736cccacc5b9f7a26c6783148aadcc6ad66e7dc9f78e85fc133127651535` |
 | `project-recap`     | `1`     | `explainer-kit.recipe/v1` | `recipes/project-recap.json`     | `1881b9a7ff9e4d4afcbe1ca96df5e396f32017fec0d44af16390f208112c2866` |
 
 ## Operator notes
 
-This candidate was refrozen after wave promotion reconciliation. It supersedes
-the prior tracked RC
-`sha256:a7f90d1ccf98d390389e32a11bb7a994db9e03b67fab475f26e16ee2ed395348`
-at code commit `c485b784cf6c9269514b769d78c192fe4b80393f`. External acceptance must use the
-new RC ID and retained `0.2.1` package tarballs; evidence for the superseded RC
+This final candidate was refrozen after PR #161/p06 reconciliation. It
+supersedes RC
+`sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`
+at code commit `534a408eed0080bcf653a6dde3abc1dd612f0ccb`. External acceptance must use the
+new RC ID and retained `0.2.3` package tarballs; evidence for the superseded RC
 does not apply.
+
+The operator-owned wrapper runbook must pin:
+
+```json
+{
+  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+  "subtreeSha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
+}
+```
+
+Two same-machine builds produced byte-identical records and all five tarballs.
+The Mini must rebuild commit `da1e7a713adac4743368addf206aa780a94871ba`,
+compare the CLI archive entries/content manifest against the tracked p06
+baseline, and require the `oat-explainer-kit` subtree hash above before operator
+acceptance. Any whole-tarball mismatch remains recorded rather than silently
+treated as equivalent.
 
 ## Operator verification
 

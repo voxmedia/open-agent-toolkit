@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers:
-  - p05-t02 awaits the operator-owned private-wrapper migration and real E2E against the post-wave frozen RC.
-oat_last_updated: 2026-07-17
+  - p05-t02 awaits Mini verification of the final RC and the operator-owned private-wrapper E2E.
+oat_last_updated: 2026-07-19
 oat_current_task_id: p05-t02
 oat_generated: false
 ---
@@ -974,6 +974,34 @@ predates merged wave promotion #158 and package version `0.2.1`. Task
   retained tarball matches `rc.json`.
 - The real private wrapper remains unavailable locally; `p05-t02` requires the
   operator-owned migration and cannot use the in-repo fixture as a substitute.
+
+**Superseded:** Wave p06 landed in PR #161 and consumed package version `0.2.2`;
+this candidate must not be used for external acceptance.
+
+### Task p05-t01 (final replacement): Refreeze after p06
+
+**Status:** completed
+**Frozen code commit:** `da1e7a71`
+**RC ID:** `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+
+**Outcome:**
+
+- Merged p06 from main, advanced all five public packages to `0.2.3`, and
+  registered the wave-owned `program-recap` recipe in the core recipe registry.
+- Retained the final five package tarballs and published the exact
+  `rcId`/commit/`oat-explainer-kit` subtree pins for the operator runbook.
+
+**Verification:**
+
+- Program-recap tests passed RED → GREEN; core recipe/integration tests pass
+  (22/22).
+- Release validation, lint, type-check, and the full workspace test suite pass
+  (CLI 3,242 tests plus smoke suites).
+- Two local final-RC builds produced byte-identical records and all five
+  tarballs.
+- Cross-machine verification remains required: the Mini must rebuild
+  `da1e7a71`, compare against the tracked p06 manifests, and report the final
+  CLI archive and skill-subtree hashes before operator acceptance.
 
 ---
 

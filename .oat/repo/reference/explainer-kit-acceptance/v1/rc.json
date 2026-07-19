@@ -1,37 +1,37 @@
 {
   "schemaVersion": "explainer-kit.release-candidate/v1",
-  "rcId": "sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854",
-  "commit": "534a408eed0080bcf653a6dde3abc1dd612f0ccb",
+  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
   "packages": [
     {
       "name": "@open-agent-toolkit/cli",
-      "version": "0.2.1",
-      "artifact": "open-agent-toolkit-cli-0.2.1.tgz",
-      "sha256": "sha256:3229470321f278183158e320380c93a05d06081b4a74007fe91cd8dbf755d5dc"
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+      "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
     },
     {
       "name": "@open-agent-toolkit/control-plane",
-      "version": "0.2.1",
-      "artifact": "open-agent-toolkit-control-plane-0.2.1.tgz",
-      "sha256": "sha256:6ebfcde0d79e26de137578c6b8955ab9f20b5f2dda23daf3d371a8b107f2ca76"
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
+      "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
     },
     {
       "name": "@open-agent-toolkit/docs-config",
-      "version": "0.2.1",
-      "artifact": "open-agent-toolkit-docs-config-0.2.1.tgz",
-      "sha256": "sha256:6677634b3ff32b488688d25433cb125758b64ffc357f7260842067da998f5695"
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
+      "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
     },
     {
       "name": "@open-agent-toolkit/docs-theme",
-      "version": "0.2.1",
-      "artifact": "open-agent-toolkit-docs-theme-0.2.1.tgz",
-      "sha256": "sha256:efa30129492972206949a00411114482198c8353d002acb229eedf47e853c60e"
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
+      "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
     },
     {
       "name": "@open-agent-toolkit/docs-transforms",
-      "version": "0.2.1",
-      "artifact": "open-agent-toolkit-docs-transforms-0.2.1.tgz",
-      "sha256": "sha256:0bce3e640bceacfeb565f1efdc905ffda2fe70f9fe8a2060927398197f5ae79a"
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
+      "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
     }
   ],
   "skills": [
@@ -40,7 +40,7 @@
       "version": "1.0.0",
       "package": "@open-agent-toolkit/cli",
       "path": "package/assets/skills/explainer-kit",
-      "sha256": "sha256:58579e5c02d284168e2245e1ef1cd6b1cb49f2dd82ee3eeedec4e4170e8a48da"
+      "sha256": "sha256:ea933187cfca91d475770391f49fd93446153fb1a69a41c54087ea8c977fa03a"
     },
     {
       "name": "oat-explainer-kit",
@@ -99,6 +99,13 @@
       "schemaVersion": "explainer-kit.recipe/v1",
       "path": "recipes/engineer-tour.json",
       "sha256": "sha256:041a1c5201d7e72c0aef8a097c0389088001ac0cc11fede9e8b8c64f477be0fd"
+    },
+    {
+      "id": "program-recap",
+      "version": "1",
+      "schemaVersion": "explainer-kit.recipe/v1",
+      "path": "recipes/program-recap.json",
+      "sha256": "sha256:705ed786fff8f4af69542ac326257fc52de466229a60fe164bd42b4f64a51274"
     },
     {
       "id": "project-explainer",

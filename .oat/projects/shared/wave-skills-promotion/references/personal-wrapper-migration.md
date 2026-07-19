@@ -35,6 +35,15 @@ this repository.
   fill all three placeholders in the installed wrapper's `config.json`
   `finalRc` block (`rcId`, `commit`, `subtreeSha256`); the acceptance harness
   reads them from there and carries them into the sanitized acceptance record.
+- Final-RC pins:
+
+  ```json
+  {
+    "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+    "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+    "subtreeSha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
+  }
+  ```
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.
