@@ -111,6 +111,16 @@ item before archiving it. A stomp keeps the item open with the new evidence.
 
 ## 4. Handle a Behavioral Regression
 
+**Scope boundary (p06):** this regression protocol applies to the
+1.4.0+§2-queue surface ONLY — the behavior the equivalence checklist covers.
+The p06 additions (the wave-close/program-close explainer callers and the
+`program-recap` recipe) are NEW surface with no repo-local counterpart: a W6
+anomaly there is an ordinary defect handled through the normal bug flow (file,
+fix, release), never a phrasing-restore against the frozen source. W6 pins the
+published version current at its kickoff — realistically 0.2.2, which carries
+the p06 delta (execute 1.6.0 / program 1.2.0); replace the `0.2.1` pins in
+this runbook with that kickoff-current version per section 1.
+
 If W6 diverges from the repo-local behavior:
 
 1. Stop and keep stoa on, or restore it to, the recorded repo-local rollback

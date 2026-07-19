@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "explainer-kit.recipe/v1",
+  "id": "project-explainer",
+  "version": "1",
+  "sourceRoles": [
+    {
+      "role": "project",
+      "required": true,
+      "accepts": ["file", "directory", "git", "github"],
+      "minBindings": 1,
+      "maxBindings": 1
+    }
+  ],
+  "requiredNarrative": [
+    "planned-architecture",
+    "decisions",
+    "risks",
+    "phases",
+    "validation-approach"
+  ],
+  "artifacts": [
+    {
+      "id": "project-explainer",
+      "type": "hub",
+      "template": "house-style",
+      "required": true
+    }
+  ],
+  "discoveryLimits": {
+    "consecutiveNoNewFindingsRounds": 2,
+    "maxRounds": 8
+  }
+}

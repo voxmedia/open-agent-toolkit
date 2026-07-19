@@ -3,6 +3,17 @@
 This checklist compares the frozen source skills with the promoted skills. Historical
 `DR-*` and `BL-*` citations refer to records in the source program's repository.
 
+## Scope Boundary (p06)
+
+The checklist's zero-regression coverage ends at the 1.4.0+§2-queue surface:
+the rows above compare the frozen 1.4.0 sources plus the six queue items
+against the promoted text. The p06 additions — the wave-close/program-close
+explainer callers (execute 1.6.0 / program 1.2.0) and the `program-recap`
+recipe — are additive NEW surface with no frozen-source counterpart. They get
+additive-feature entries, not equivalence rows: a W6 anomaly on that surface
+is an ordinary defect (normal bug flow), never a phrasing-restore under the
+W6 regression protocol.
+
 ## `oat-wave-execute`
 
 | ID      | Source text (cite)                                                                                                                                              | Promoted text                                                                                                                                                                                                                     | intent preserved? | Divergence rationale                                                                                                          |

@@ -1,7 +1,9 @@
 ---
-oat_current_task: p06-t01
+oat_current_task: null
 oat_last_commit: 17a56f39
-oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
+oat_blockers: [
+    'p06 gate-open plan revision blocked on RC artifact delivery: rc.json + dist/explainer-kit-rc tarballs + frozen schemas not reachable from this workspace (534a408e not in clone; origin/explainer-kit stale). Requested via msg_a700ca447031.',
+  ] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -12,7 +14,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # phases 1-5 + p-rev1 merged; p06 (RC-gated) remains before completion
+oat_phase_status: pr_open # all 33 tasks complete; PR 161 open; externals: acceptance run + stoa W6
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -21,8 +23,8 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: open # PR 160 (0.2.1 follow-up); PR 158 merged as 4578e261
-oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/160' # tracked PR URL (158 merged)
+oat_pr_status: open # PR 161 (p06); 158+160 merged
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/161' # tracked PR URL (158, 160 merged)
 oat_project_created: '2026-07-17T23:47:59.747Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-07-18T20:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
@@ -91,7 +93,7 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 ## Next Milestone
 
-p05 HiLL checkpoint (operator approval), then final verification/review and
+p06 kickoff (operator GO 2026-07-18): RC delivery -> gate-open plan revision + phase re-review -> p06-t01..t04 -> operator acceptance run. PUBLISH-HOLD: 0.2.1 npm publish deferred until the RC promotes post-acceptance. Then stoa W6. Superseded text: p05 HiLL checkpoint (operator approval), then final verification/review and
 PR for the phases 1–5 delta; stoa W6 handoff per
 `references/w6-handoff-runbook.md` after release. After PR #158 merges, revise
 and re-review the p06 plan against the frozen RC, then coordinate its Phase 3
