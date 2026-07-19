@@ -1064,6 +1064,10 @@ describe('validateOatSkills', () => {
       reviewProvide.match(
         /### Step 8\.5: Validate Review Orchestration and Append Root Log[\s\S]*?(?=### Step 9:)/,
       )?.[0] ?? '';
+    const implementationSummary =
+      implement.match(
+        /## Project Log Append Points[\s\S]*?(?=## Autonomy Policy)/,
+      )?.[0] ?? '';
     const implementationHandoff =
       phaseExecution.match(
         /### Per-Phase Review[\s\S]*?(?=#### Bounded Fix and Re-Review Loop)/,
@@ -1103,6 +1107,7 @@ describe('validateOatSkills', () => {
     );
 
     for (const [name, rootWorkflow, orchestrationHandoff] of [
+      ['project implement summary', implement, implementationSummary],
       [
         'project implement',
         `${implement}\n${phaseExecution}`,

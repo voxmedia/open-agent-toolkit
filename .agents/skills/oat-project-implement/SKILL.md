@@ -37,20 +37,22 @@ merge provider mechanics.
 
 ## Project Log Append Points
 
-At each point below, invoke `oat project log append` and defer entry flags and
-format to `oat project log append --help`. Never pre-check project-log config:
+Defer entry flags to `oat project log append --help`; never pre-check config:
 the helper no-ops when the feature is off.
 
-- After every accepted subagent dispatch, invoke `oat project log append` for
-  a structural stamp that references the corresponding run record by
+- After every accepted subagent dispatch, use `oat project log append` at
   `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
-- After validating a returned review artifact, when its
-  `## Review Orchestration` section records attempted delegated
-  reconnaissance, invoke `oat project log append` exactly once for one concise
-  structural project-log entry that references the review artifact path. First
-  validate the waves, task classes, classification rationale, selected targets,
-  acceptance/outcomes, floor satisfaction, fallback, and primary
-  reconciliation; never copy every worker record into the log.
+- Before validating the review artifact or updating project bookkeeping, consume
+  exactly one brief artifact-mode confirmation of reconnaissance:
+- `**Reconnaissance:** attempted`
+- `**Reconnaissance:** not-attempted`
+  Missing, duplicate, or invalid signals are incomplete-artifact errors: stop
+  and fail closed before validation, bookkeeping, or logging.
+- For `attempted`, require complete `## Review Orchestration` evidence. After
+  validation, append exactly once through `oat project log append`, referencing
+  the artifact without copying records.
+- For `not-attempted`, the artifact must not contain `## Review Orchestration`;
+  do not invoke `oat project log append` or create a log entry.
 - Before every STOP or park return, invoke `oat project log append` for a
   structural entry naming the triggering condition.
 - After every phase outcome, invoke `oat project log append` for a structural
