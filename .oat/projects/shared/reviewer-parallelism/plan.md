@@ -462,7 +462,7 @@ If a listed generated file is unchanged, omit it from `git add`.
 | p03    | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
-| design | artifact | fixes_completed | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T001316Z.md |
+| design | artifact | passed          | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T002158Z.md |
 | plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
