@@ -734,6 +734,18 @@ attempt and project.
 The stdout receipt is one valid structured envelope and correlates the run,
 project, invocation, artifact, and configured Important threshold.
 
+### 2026-07-19 — Post-integration receive intent persisted
+
+- Gate run: `4ae2b434-8fd4-49d3-a879-422b84fc2f57`
+- Source: `reviews/final-review-2026-07-19T132025Z.md`
+- Event identity:
+  `scope=final;type=code;source=final-review-2026-07-19T132025Z.md`
+- Pre-receive HEAD: `a50abb6d69b5c3ae55ce61b884630e09ed7e1070`
+- State: `pending/receive_intent_persisted`
+
+The receive correlation and archive destination were committed before applying
+the receive side effects.
+
 ---
 
 ## Final Closeout Sequence
