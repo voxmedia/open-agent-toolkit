@@ -40,8 +40,19 @@ this repository.
     (verified Mini-side: `references/explainer-rc-985d0abd/verification-2026-07-19.md`;
     packages 0.2.3). The acceptance harness reads them from there and carries
     them into the sanitized acceptance record.
-    PRECONDITION: the CLI whole-tarball provenance mismatch must be resolved
-    (per-file manifest diff) before this acceptance run — do not waive.
+    PRECONDITION RESOLVED (2026-07-19): the CLI whole-tarball mismatch is
+    dispositioned BENIGN — 1257/1257 entry paths and 1254/1257 file hashes
+    match; the only deltas are ordering-only text in three generated `.d.ts`
+    files (union-member / inferred-property order); toolchains identical
+    (TS 5.9.3, pnpm 10.13.1, node 22.17.0); JS, maps, skill subtrees,
+    schemas, recipes byte-identical. No semantic delta.
+    BINDING REQUIREMENT: acceptance consumes the EXACT RECORDED laptop
+    artifact — CLI tarball
+    `sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1`
+    (retained explainer-side) — NOT a locally rebuilt tarball. Its
+    `oat-explainer-kit` subtree matches the required pin `sha256:2cf98952…b654`.
+    Evidence: `explainer-rc-985d0abd/verification-2026-07-19.md` (incl.
+    Resolution section) + `explainer-rc-985d0abd/mini-dts/`.
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.
