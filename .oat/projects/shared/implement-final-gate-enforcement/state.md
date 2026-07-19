@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: ba6bb0dbe3c9ef478fcbaff1ddfceb885fa10c5e
+oat_last_commit: 5a5c1b934eec9f62e87b24cf7d7ff9d56f8eb61a
 oat_blockers: []
 oat_implement_exit_gate:
   status: allowed
@@ -41,7 +41,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-07-19T01:12:44Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p03
   pre_approval:
@@ -51,6 +51,7 @@ oat_post_implement_sequence:
   pre_approval_completed:
     - summary
     - document
+    - pr
   approval: pending
   approval_source: null
   post_approval: []
@@ -92,7 +93,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/162' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T01:28:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T01:30:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -104,7 +105,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — Pre-approval closeout complete; final HiLL approval pending.
 
 ## Artifacts
 
@@ -135,9 +136,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ JSON-output purity recovery and full verification
 - ✓ Fresh final lifecycle review
 - ✓ Authorized replacement implementation exit gate
-- ⧗ Approval-aware post-implementation sequence and final HiLL
+- ✓ Pre-approval post-implementation sequence
+- ⧗ Final HiLL approval
 - ✓ PR created
-- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -145,8 +146,5 @@ None.
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Approve or defer the final implementation HiLL checkpoint. Resume with
+`oat-project-implement`.
