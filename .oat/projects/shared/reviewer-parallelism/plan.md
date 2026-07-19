@@ -1011,7 +1011,7 @@ required and remain out of scope for this project.
 | p03                | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T030013Z.md             |
 | final-pre-revision | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
-| final              | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T030944Z.md           |
+| final              | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T031330Z.md           |
 | spec               | artifact | pending         | -          | -                                                             |
 | design             | artifact | passed          | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T002158Z.md |
 | plan               | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |

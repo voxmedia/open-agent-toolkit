@@ -532,7 +532,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the superseding final cross-phase review.
+- Optional: generate the project summary, run documentation synchronization,
+  and open the final PR when requested.
 
 **Blockers:**
 
