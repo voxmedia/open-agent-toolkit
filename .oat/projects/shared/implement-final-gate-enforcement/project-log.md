@@ -128,6 +128,10 @@ User explicitly authorized bounded recovery and one new gate generation. Accepte
 
 Authorized recovery commits ce122492 and 09123235 make JSON-mode gate stdout envelope-only and add live subprocess coverage. Focused 314/314 plus the complete quality/build/release chain passed; fresh final lifecycle review is pending.
 
+### 2026-07-19 · structural · oat-project-implement · gate-recovery-final-review-passed
+
+Fresh final lifecycle review of the recovered basis passed with zero findings through 98c935c3. The one user-authorized replacement configured exit-gate generation is now pending; the retired run remains audit-only.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
