@@ -1,7 +1,9 @@
 ---
 oat_current_task: p06-t01
 oat_last_commit: 17a56f39
-oat_blockers: [] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
+oat_blockers: [
+    'p06 gate-open plan revision blocked on RC artifact delivery: rc.json + dist/explainer-kit-rc tarballs + frozen schemas not reachable from this workspace (534a408e not in clone; origin/explainer-kit stale). Requested via msg_a700ca447031.',
+  ] # RC gate opened 2026-07-18; p06 waits for PR #158 merge
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -91,7 +93,7 @@ delta ends at p05; the p05 HiLL checkpoint is the pause point.
 
 ## Next Milestone
 
-p05 HiLL checkpoint (operator approval), then final verification/review and
+p06 kickoff (operator GO 2026-07-18): RC delivery -> gate-open plan revision + phase re-review -> p06-t01..t04 -> operator acceptance run. PUBLISH-HOLD: 0.2.1 npm publish deferred until the RC promotes post-acceptance. Then stoa W6. Superseded text: p05 HiLL checkpoint (operator approval), then final verification/review and
 PR for the phases 1–5 delta; stoa W6 handoff per
 `references/w6-handoff-runbook.md` after release. After PR #158 merges, revise
 and re-review the p06 plan against the frozen RC, then coordinate its Phase 3
