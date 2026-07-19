@@ -1118,7 +1118,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
 
       expect(gateSection, `${skillName} exports PROJECT_PATH`).toContain(
         'export PROJECT_PATH',
@@ -1894,7 +1894,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
       expect(gateSection, `${skillName} lifecycle target neutrality`).toMatch(
         /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
       );
