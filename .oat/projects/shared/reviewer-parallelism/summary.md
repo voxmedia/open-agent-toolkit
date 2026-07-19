@@ -4,48 +4,29 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
 oat_generated: true
-oat_summary_last_task: p04-t11
+oat_summary_last_task: p04-t14
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
 
 # Summary: Reviewer Parallelism
 
-## Overview
-
-This project completed `BL-260708-enable-oat-reviewer-subagent`: broad reviews
-can delegate bounded, provider-neutral reconnaissance while the primary reviewer
-retains verification, synthesis, severity, validation, and final output.
+## Overview — Bounded, task-class-aware review reconnaissance
 
 ## What Was Implemented
 
-- Completed 16/16 tasks through `p04-t11`: one-level advisory lanes now use
-  artifact-informed task-class floors, separate mixed waves, and fail-closed inline fallback.
-- Added an explicit attempted/not-attempted signal and identical signal-first
-  validation in both implementation and review-provide roots before log handoff.
-- Synchronized provider views, docs, semantic tests, backlog history, and all
-  five public packages at final verified-unpublished lockstep version `0.2.3`.
+- 19/19 tasks through `p04-t14` shipped class-aware lanes, safe fallback, attempt
+  signaling, root logging, docs, tests, and provider views.
+- The latest merge's two Bugbot fixes and CI/release correction shipped at
+  lockstep `0.2.4`; final re-review found zero findings.
+- The exit-gate run was canceled before producing an envelope, was not received
+  or passed, and lifecycle completion was authorized separately.
 
 ## Key Decisions
 
-- **Separate recon authority from model floors.** Keep role and floor independent.
-- **Use floor-safe parent-inline fallback.** Never downgrade stronger lanes.
-- **Keep final judgment with the primary reviewer.** Workers only advise.
-- **Root-owned orchestration logging.** Roots validate and append once.
-- **Full reviewers are not recon workers.** Pinned recon remains deferred.
-
-## Notable Challenges and Design Deltas
-
-- Dogfooding replaced homogeneous cheap routing with class-aware lanes; Cursor
-  proved mechanical delegation plus floor-safe primary-inline intelligent coverage.
-- Review fixes added attempt cardinality, implementation-root parity, autonomy
-  inventory mapping, provider cleanup, and evidence-driven release selection.
-- Published-version collisions at `0.1.74` and later `0.2.2` required upstream/npm
-  rechecks; `0.2.3` passed full release and workspace validation, then final review passed with zero findings.
-
-## Associated Issues
-
-- Completed and archived: `BL-260708-enable-oat-reviewer-subagent`.
+**Separate recon authority from model floors.** **Use floor-safe parent-inline
+fallback.** **Keep final judgment with the primary reviewer.** **Root-owned
+orchestration logging.** **Full reviewers are not recon workers.**
 
 ## Workflow Observations
 
@@ -196,3 +177,23 @@ Accepted one sequential High phase-implementer dispatch for p04-t10 and p04-t11.
 ### 2026-07-19 · structural · oat-project-implement · final-review-2026-07-19T143851Z
 
 Accepted superseding final review after signal-first validation. One mechanical release-metadata reconnaissance lane ran on Composer 2.5 Fast with a satisfied floor; the primary reviewer independently revalidated all evidence and retained final judgment. Review passed with zero findings. Evidence: reviews/archived/final-review-2026-07-19T143851Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · closeout-pr-refresh
+
+Configured PR refresh updated PR #163 and its local artifact, but the push hook exposed an unbumped oat-project-implement skill version. The PR closeout step remains incomplete pending bounded task p04-t12 and final re-review.
+
+### 2026-07-19 · structural · oat-project-implement · upstream-merge-3
+
+Merged current origin/main at d438c30874cba575de872387030f6405a282ca3b in 0ee096a739658a1e8dea4563b3fee055d4b20b9a. Semantic conflict resolution preserved upstream final-gate enforcement plus this branch reconnaissance mappings, PJM closeout, and reviewer contract versions; focused contracts and provider sync passed.
+
+### 2026-07-19 · structural · oat-project-review-receive-remote · pr-163-remote-2
+
+Second PR #163 remote cycle received one new Medium Bugbot finding and CI/release version failures. Converted the handoff-summary finding to p04-t13 and post-merge package correction to p04-t14; prior comment 3610616848 remains resolved by p04-t08/p04-t10.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t12-t14-dispatch
+
+Accepted one sequential High phase-implementer dispatch for p04-t12 through p04-t14. A validation-only autonomy prompt-site mapping was folded into p04-t13 as a bounded correction. Final commits ed09641d1b20661e33c94e682c2061a5d50dd1cd, 3a49f6ec29cd85dad8f043758e17b8d3b68fdb02, and d916bd1f71a8353c3497eb700c9a06cd4a420b85 passed skill-version, provider, release, test, smoke, lint, type-check, and build gates.
+
+### 2026-07-19 · structural · oat-project-implement · exit-gate-cancelled
+
+Configured implementation exit gate run c366dc84-ffe5-453a-b452-32081001c485 was explicitly canceled by the user before producing a structured envelope. The attempt remains accepted with no receive disposition and is not recorded as passed; the user separately authorized lifecycle completion through oat-project-complete.
