@@ -684,6 +684,20 @@ for the current basis before final HiLL.
 The current implementation basis is eligible for one new configured
 implementation exit-gate generation. The stale prior generation is not reused.
 
+### 2026-07-19 — Post-integration gate generation initialized
+
+- Resolution: configured
+- Reviewed HEAD: `dad6158b4666db7a31e117422c7941b0fb85e88f`
+- Configuration fingerprint:
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- Implementation fingerprint:
+  `sha256:0a3baa57c968e55013fba1460f784db8ca98538c31e0cb403200c1a50cc63b54`
+- Policy: `block`, maximum 2 attempts
+- State: `pending/not_started`
+
+The configured declaration was resolved again for this new generation. Its
+fingerprint is unchanged, but the generation and implementation basis are new.
+
 ---
 
 ## Final Closeout Sequence
