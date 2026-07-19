@@ -672,6 +672,14 @@ unchanged.
 The snapshot is immutable for this closeout. Each pre-approval step must commit
 success before the next dispatch; final HiLL approval follows all three.
 
+### 2026-07-19 — Summary complete
+
+- Commit: `2083e3ae3097c05aae47c5f80cb535f6abedf44e`
+- Artifact: `summary.md` (165 lines)
+- Decision promotion: 2 created, 3 exact-slug matches skipped
+- Project-log rollup: 25 entries, ledger deduplicated
+- Completed pre-approval steps: `[summary]`
+
 ---
 
 ## Deviations from Plan / Design

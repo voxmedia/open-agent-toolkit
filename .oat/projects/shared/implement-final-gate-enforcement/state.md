@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 1ece93fd732be631fa5f8e71e74374d868e423f1
+oat_last_commit: 2083e3ae3097c05aae47c5f80cb535f6abedf44e
 oat_blockers: []
 oat_implement_exit_gate:
   status: allowed
@@ -48,7 +48,8 @@ oat_post_implement_sequence:
     - summary
     - document
     - pr
-  pre_approval_completed: []
+  pre_approval_completed:
+    - summary
   approval: pending
   approval_source: null
   post_approval: []
@@ -90,7 +91,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T01:13:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T01:19:24Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
