@@ -605,6 +605,16 @@ The complete stdout receipt parses as exactly one JSON object and its run,
 project, invocation, artifact, and handoff fields corroborate. Receive is the
 next required boundary; no terminal gate disposition has been applied yet.
 
+### 2026-07-19 — Replacement receive intent persisted
+
+- Source: `reviews/final-review-2026-07-19T010616Z.md`
+- Archive destination:
+  `reviews/archived/final-review-2026-07-19T010616Z.md`
+- Event identity:
+  `scope=final;type=code;source=final-review-2026-07-19T010616Z.md`
+- Pre-receive HEAD: `d6fb952c4a125276cc7584941da4ae27c0418135`
+- State: `pending/receive_intent_persisted`
+
 ---
 
 ## Deviations from Plan / Design
