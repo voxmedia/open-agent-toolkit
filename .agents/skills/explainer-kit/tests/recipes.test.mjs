@@ -17,6 +17,14 @@ const RECAP_SECTIONS = [
   'validation-evidence',
   'outcome',
 ];
+const PROGRAM_RECAP_SECTIONS = [
+  'program-overview',
+  'wave-map',
+  'per-wave-outcomes',
+  'convention-evolution',
+  'aggregate-numbers',
+  'follow-up-ledger',
+];
 
 function contentModel(recipe, overrides = {}) {
   return {
@@ -30,7 +38,12 @@ function contentModel(recipe, overrides = {}) {
 }
 
 test('loads each supported recipe by exact id and version', () => {
-  for (const id of ['project-explainer', 'project-recap', 'engineer-tour']) {
+  for (const id of [
+    'project-explainer',
+    'project-recap',
+    'engineer-tour',
+    'program-recap',
+  ]) {
     const recipe = loadRecipe(id, '1');
     assert.equal(recipe.id, id);
     assert.equal(recipe.version, '1');
@@ -40,10 +53,10 @@ test('loads each supported recipe by exact id and version', () => {
 
 test('rejects unsupported recipe ids and versions with the contract error', () => {
   assert.throws(
-    () => loadRecipe('program-recap', '1'),
+    () => loadRecipe('future-recap', '1'),
     (error) =>
       error.code === 'E_RECIPE_UNSUPPORTED' &&
-      /program-recap@1/.test(error.message),
+      /future-recap@1/.test(error.message),
   );
   assert.throws(
     () => loadRecipe('project-recap', '2'),
@@ -117,6 +130,25 @@ test('project recap requires all six accountability sections', () => {
   });
 });
 
+test('program recap binds one program and requires its six birdseye sections', () => {
+  const recipe = loadRecipe('program-recap', '1');
+  const oneProgram = [{ role: 'program', kind: 'directory', locator: '/repo' }];
+
+  assert.deepEqual(recipe.requiredNarrative, PROGRAM_RECAP_SECTIONS);
+  assert.deepEqual(validateSourceBindings(recipe, oneProgram), {
+    valid: true,
+    errors: [],
+  });
+  assert.deepEqual(validateSourceBindings(recipe, []), {
+    valid: false,
+    errors: ['Missing required source role: program'],
+  });
+  assert.deepEqual(validateContentModel(recipe, contentModel(recipe)), {
+    valid: true,
+    errors: [],
+  });
+});
+
 test('content models are closed to declared artifacts and safe section content', () => {
   const recipe = loadRecipe('project-explainer', '1');
   const duplicate = contentModel(recipe);
@@ -185,7 +217,12 @@ test('unknown-size discovery stops after two consecutive empty rounds', () => {
 });
 
 test('unknown-size discovery always stops at the recipe hard maximum', () => {
-  for (const id of ['project-explainer', 'project-recap', 'engineer-tour']) {
+  for (const id of [
+    'project-explainer',
+    'project-recap',
+    'engineer-tour',
+    'program-recap',
+  ]) {
     const recipe = loadRecipe(id, '1');
     const findingsByRound = Array.from(
       { length: recipe.discoveryLimits.maxRounds },

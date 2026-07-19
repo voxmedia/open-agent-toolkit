@@ -32,6 +32,7 @@ const RECIPE_FILES = [
   'project-explainer.json',
   'project-recap.json',
   'engineer-tour.json',
+  'program-recap.json',
 ];
 
 const RECIPES = new Map(

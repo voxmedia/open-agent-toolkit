@@ -515,7 +515,7 @@ test('rejects invalid requests and recipes before creating the output root', asy
   await assert.rejects(
     runExplainer({
       ...invalid,
-      recipe: { id: 'program-recap', version: '1' },
+      recipe: { id: 'future-recap', version: '1' },
     }),
     /unsupported recipe/i,
   );

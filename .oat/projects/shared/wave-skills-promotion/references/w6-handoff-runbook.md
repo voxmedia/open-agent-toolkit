@@ -1,6 +1,6 @@
 # Stoa W6 Handoff Runbook
 
-Use this runbook after `@open-agent-toolkit/cli` 0.2.0 is published. Stoa's
+Use this runbook after `@open-agent-toolkit/cli` 0.2.1 is published. Stoa's
 repo-local wave skills remain the rollback source until W6 passes.
 
 ## 1. Pin Release Provenance
@@ -8,24 +8,44 @@ repo-local wave skills remain the rollback source until W6 passes.
 Release-version placeholder for this handoff:
 
 ```text
-OAT_RELEASE_VERSION=0.2.0
+OAT_RELEASE_VERSION=0.2.1
 ```
 
-Before migration, verify that exact package exists:
+Before migration, verify the contents of that exact package. Package existence
+alone is insufficient: 0.1.76 was published on the same day without the wave
+skills.
 
 ```bash
-npm view @open-agent-toolkit/cli@0.2.0 version
+OAT_RELEASE_VERSION=0.2.1
+PACK_DIR="$(mktemp -d)"
+PACK_TARBALL="$(
+  npm pack "@open-agent-toolkit/cli@${OAT_RELEASE_VERSION}" \
+    --pack-destination "$PACK_DIR" --silent
+)"
+tar -tf "$PACK_DIR/$PACK_TARBALL" >"$PACK_DIR/contents.txt"
+for expected in \
+  package/assets/skills/oat-wave-execute/SKILL.md \
+  package/assets/skills/oat-wave-execute/scripts/bootstrap-group.sh \
+  package/assets/skills/oat-wave-execute/assets/wrapper-plan-template.md \
+  package/assets/skills/oat-wave-execute/assets/orchestration-log-template.md \
+  package/assets/skills/oat-wave-program/SKILL.md \
+  package/assets/skills/oat-wave-program/assets/execution-program-template.md
+do
+  grep -Fx "$expected" "$PACK_DIR/contents.txt"
+done
+rm -rf "$PACK_DIR"
 ```
 
-Expected output: `0.2.0`. If release automation publishes a different version,
-replace every `0.2.0` in this runbook with the actual published version before
-continuing; do not leave a symbolic or floating version.
+Expected: all six paths print and every command exits zero. If release
+automation publishes a different version, replace every `0.2.1` in this
+runbook with the actual published version before continuing; do not leave a
+symbolic or floating version.
 
 In stoa's W6 execution-program artifact, add this provenance line to the W6
 section before kickoff:
 
 ```text
-Packaged wave-skill source: @open-agent-toolkit/cli@0.2.0
+Packaged wave-skill source: @open-agent-toolkit/cli@0.2.1
 ```
 
 Commit that pin with the W6 composition update. The artifact must identify one
@@ -38,8 +58,23 @@ as the rollback point, then perform this sequence without reordering:
 
 1. Delete stoa's repo-local canonical copies of `oat-wave-execute` and
    `oat-wave-program`. Do not manually copy toolkit files over them.
-2. Run `oat tools update`.
-3. Run `oat sync --scope all`.
+2. Remove provider-view entries left by those repo-local copies before the
+   packaged install. In stoa this includes stale
+   `.cursor/skills/oat-wave-execute` and
+   `.cursor/skills/oat-wave-program` symlinks; remove equivalent pre-packaged
+   entries for any other enabled provider.
+3. Run `oat tools update`.
+4. Run `oat sync --scope all`.
+5. Run `oat status --scope all` and require a clean result.
+
+The temporary migration workaround below is retired for 0.2.1 and later:
+
+```bash
+chmod +x .agents/skills/oat-wave-execute/scripts/bootstrap-group.sh
+```
+
+The installer now makes files under installed skill `scripts/` directories
+executable even when npm normalizes tarball modes.
 
 Verify:
 
@@ -47,7 +82,8 @@ Verify:
 - execute is version 1.5.0 and program is version 1.1.0;
 - `bootstrap-group.sh` is executable;
 - provider views exist for every provider enabled in stoa;
-- `oat status --scope project` reports no unexpected managed-file deletion;
+- `oat status --scope all` reports clean, with no stray pre-packaged views or
+  unexpected managed-file deletion;
   and
 - the migration diff contains only the expected packaged-skill and
   sync-managed changes.
@@ -74,6 +110,16 @@ A clean observation is the trigger to close
 item before archiving it. A stomp keeps the item open with the new evidence.
 
 ## 4. Handle a Behavioral Regression
+
+**Scope boundary (p06):** this regression protocol applies to the
+1.4.0+§2-queue surface ONLY — the behavior the equivalence checklist covers.
+The p06 additions (the wave-close/program-close explainer callers and the
+`program-recap` recipe) are NEW surface with no repo-local counterpart: a W6
+anomaly there is an ordinary defect handled through the normal bug flow (file,
+fix, release), never a phrasing-restore against the frozen source. W6 pins the
+published version current at its kickoff — realistically 0.2.2, which carries
+the p06 delta (execute 1.6.0 / program 1.2.0); replace the `0.2.1` pins in
+this runbook with that kickoff-current version per section 1.
 
 If W6 diverges from the repo-local behavior:
 
