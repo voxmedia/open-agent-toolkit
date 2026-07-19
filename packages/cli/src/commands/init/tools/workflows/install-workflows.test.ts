@@ -142,7 +142,7 @@ describe('installWorkflows', () => {
     await expect(stat(join(targetRoot, '.oat', 'projects'))).rejects.toThrow();
   });
 
-  it('preserves executable mode on scripts nested inside skill directories', async () => {
+  it('makes mode-normalized scripts inside installed skills executable', async () => {
     const root = await makeTempDir();
     const assetsRoot = join(root, 'assets');
     const targetRoot = join(root, 'target');
@@ -153,7 +153,8 @@ describe('installWorkflows', () => {
     await mkdir(nestedScriptsDir, { recursive: true });
     const nestedScript = join(nestedScriptsDir, 'bootstrap-group.sh');
     await writeFile(nestedScript, '#!/usr/bin/env bash\necho ok\n', 'utf8');
-    await chmod(nestedScript, 0o755);
+    await chmod(nestedScript, 0o644);
+    expect((await stat(nestedScript)).mode & 0o111).toBe(0);
 
     await installWorkflows({ assetsRoot, targetRoot });
 

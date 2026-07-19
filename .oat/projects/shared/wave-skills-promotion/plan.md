@@ -755,6 +755,7 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T191920Z.md           |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md    |
 | p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md               |
+| p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md               |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | passed          | 2026-07-18 | -                                                             |
 | plan   | artifact | passed          | 2026-07-18 | -                                                             |
@@ -840,6 +841,47 @@ git add .oat/projects/shared/wave-skills-promotion/state.md
 git commit -m "fix(prev1-t03): align p06 RC-gate state frontmatter with prose"
 ```
 
+## Phase p-rev2: Revision 2
+
+Source: stoa W6-migration report (references/w6-migration-report-2026-07-18.md) + superseded explainer RC (2026-07-18)
+
+### Task prev2-t01: (revision) Installed skill scripts get execute bits regardless of source mode
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/init/tools/shared/copy-helpers.ts` (or the shared install seam both paths use)
+- Modify: `packages/cli/src/commands/init/tools/workflows/install-workflows.test.ts`, `packages/cli/src/commands/tools/update/update-tools.test.ts`
+
+**Step 1: Write test (RED)** — simulate npm's mode normalization: seed a bundled skill fixture whose `scripts/*.sh` is 0644 (no exec bit), install via BOTH paths (workflows install AND tools update skill path), assert the installed script is executable. Root cause: npm strips exec bits at pack time (verified: 0.2.0 tarball ships bootstrap-group.sh as rw-r--r--), so mode-preserving copy is insufficient from a published package.
+
+**Step 2: Implement (GREEN)** — after copying a skill directory, chmod 0755 files under its `scripts/` subdirectory (mirror the existing `.oat/scripts` pack-asset chmod at update-tools.ts ~L272). Put the chmod in the shared seam (copyDirWithStatus/copyDirWithVersionCheck callers or a helper) so init, install, and update paths all get it. Keep the copyDirectory mode preservation (still correct for repo-checkout installs).
+
+**Step 3: Verify** — targeted tests, then `pnpm --filter @open-agent-toolkit/cli test && pnpm lint && pnpm type-check`.
+
+**Step 4: Commit** — `fix(prev2-t01): chmod installed skill scripts executable (npm strips modes)`
+
+### Task prev2-t02: (revision) Runbook hardening from stoa migration findings
+
+**Files:**
+
+- Modify: `.oat/projects/shared/wave-skills-promotion/references/w6-handoff-runbook.md`
+
+**Step 1:** §2 gains a cleanup step: repos migrating FROM repo-local copies must remove pre-packaged provider-view entries (e.g. stale `.cursor/skills/oat-wave-*` symlinks) and confirm `oat status --scope all` ends clean. §1's version-verify upgraded to CONTENT verification: `npm pack @open-agent-toolkit/cli@<ver>` + inspect for the six skill files (0.1.76 shipped same-day WITHOUT them — existence of a version is not evidence). Note the §2 chmod workaround as retired once prev2-t01 ships in a patch release.
+
+**Step 2: Verify** — `rg -n "npm pack|status --scope all|chmod" <runbook>` shows all three; oxfmt clean.
+
+**Step 3: Commit** — `docs(prev2-t02): harden W6 runbook - view cleanup + content verify`
+
+### Task prev2-t03: (revision) Lockstep patch bumps for the installer fix
+
+**Files:**
+
+- Modify: five public package manifests + `packages/cli/assets/public-package-versions.json`
+
+**Step 1:** Bump all five 0.2.0 → 0.2.1; regenerate bundle; `pnpm release:validate && pnpm test && pnpm lint && pnpm type-check`.
+
+**Step 2: Commit** — `chore(prev2-t03): lockstep 0.2.1 for installer exec-bit fix`
+
 ## Implementation Complete
 
 **Summary:**
@@ -851,8 +893,9 @@ git commit -m "fix(prev1-t03): align p06 RC-gate state frontmatter with prose"
 - Phase 5: 5 tasks - Validation + release readiness
 - Phase 6: 4 tasks - §4 explainer integration + its own release choreography (RC-gated)
 - Phase p-rev1: 3 tasks - PR #158 Bugbot revision
+- Phase p-rev2: 3 tasks - stoa migration findings (installer exec-bit, runbook, 0.2.1)
 
-**Total: 30 tasks** (26 unblocked; 4 gated on explainer-kit RC)
+**Total: 33 tasks** (29 unblocked; 4 gated on explainer-kit RC)
 
 Ready for code review and merge.
 
