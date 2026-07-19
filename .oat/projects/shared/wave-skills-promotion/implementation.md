@@ -292,10 +292,11 @@ Chronological log of implementation progress.
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented                | Actual / Accepted                                 | Reason                                               | Source of Truth | Follow-up |
-| ------------- | --------------- | ----------------------------------- | ------------------------------------------------- | ---------------------------------------------------- | --------------- | --------- |
-| HiLL config   | plan.md         | `final` = literal final phase (p06) | `['p05','p06']` — final phase per mergeable delta | p06 is RC-gated; literal reading = 0 pauses this run | plan.md         | none      |
-| p02-t09       | plan.md         | re-sync commits wave-view changes   | verified no-op (symlinked views; sync idempotent) | text edits flow through symlinked views              | Phase 2 notes   | none      |
+| Task / Review | Source Artifact | Planned / Documented                                 | Actual / Accepted                                 | Reason                                               | Source of Truth    | Follow-up                                             |
+| ------------- | --------------- | ---------------------------------------------------- | ------------------------------------------------- | ---------------------------------------------------- | ------------------ | ----------------------------------------------------- |
+| HiLL config   | plan.md         | `final` = literal final phase (p06)                  | `['p05','p06']` — final phase per mergeable delta | p06 is RC-gated; literal reading = 0 pauses this run | plan.md            | none                                                  |
+| p02-t09       | plan.md         | re-sync commits wave-view changes                    | verified no-op (symlinked views; sync idempotent) | text edits flow through symlinked views              | Phase 2 notes      | none                                                  |
+| p06-t01       | plan.md         | recipe under `.agents/skills/explainer-kit/recipes/` | interim home under `oat-wave-execute/assets/`     | explainer-kit Phase 3 has not merged yet             | p06 gate-open plan | re-home the recipe after explainer-kit Phase 3 merges |
 
 ## Test Results
 
