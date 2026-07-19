@@ -658,6 +658,22 @@ unchanged.
 
 ---
 
+## Final Closeout Sequence
+
+### 2026-07-19 — Configured sequence initialized
+
+- Source: `configured`
+- Final phase: `p03`
+- Pre-approval: `summary → document → pr`
+- Approval: `pending`
+- Post-approval: none
+- Configured exit gate: `allowed/passed`
+
+The snapshot is immutable for this closeout. Each pre-approval step must commit
+success before the next dispatch; final HiLL approval follows all three.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
