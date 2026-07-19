@@ -563,6 +563,21 @@ stdout as exactly one parseable result envelope. Human mode retains normal
 stdout behavior. The recovery also hardens the lifecycle gate-section test
 anchor and annotates configured resolved inputs in the design schema.
 
+### 2026-07-19 — Authorized replacement generation initialized
+
+- Resolution: configured
+- Reviewed HEAD: `98c935c3eb5a1d4f6bf5ff7decb5d9fee713c6be`
+- Configuration fingerprint:
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- Implementation fingerprint:
+  `sha256:c57464134c845d17a63cb6e8d28b03717aae7367e5ce5c93d3ec6a105bcc43e2`
+- Policy: `block`, maximum 2 attempts
+- State: `pending/not_started`
+
+The fresh final lifecycle review passed with zero findings. This generation is
+the one replacement launch explicitly authorized by the user; it does not reuse
+or reinterpret the retired run.
+
 ---
 
 ## Deviations from Plan / Design
