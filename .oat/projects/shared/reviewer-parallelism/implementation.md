@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p04-t08
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: reviewer-parallelism
 
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-18
+**Last Updated:** 2026-07-19
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 8     | 7/8       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 8     | 8/8       |
 
-**Total:** 12/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
 ## Phase 1: Canonical Reviewer Orchestration Contract
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
 
 ### Phase Summary (fill when phase is complete)
@@ -379,12 +379,17 @@ oat_generated: false
 
 ### Task p04-t08: (review) Add an explicit reconnaissance-attempt signal
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 1aa7c1ab23e906cf4cd73b3d3e8de48303ad5ad1
+**Review fix commit:** 384895ab95172eb430dc895a3d3e790cb5bbcfdb
 
 **Outcome (required when completed):**
 
-- Pending implementation of remote-review finding `M1`.
+- Artifact-mode reviewer confirmations now report exactly one
+  attempted/not-attempted reconnaissance signal, and the root workflow consumes
+  it before validation or bookkeeping.
+- Focused re-review passed after one bounded semantic-test fix pinned template
+  cardinality, duplicate rejection, and handoff ordering.
 
 ---
 
@@ -498,6 +503,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - None for Phase 4.
 
+### Run 5
+
+**Timestamp:** 2026-07-19T13:42:00Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome | Task commits           | Root review | Fix iterations |
+| ----- | ------- | ---------------------- | ----------- | -------------- |
+| p04   | passed  | `1aa7c1ab`, `384895ab` | passed      | 1              |
+
+**Dispatch notes:**
+
+- Phase implementation used target-preserving `gpt-5.6-sol-high` dispatch after
+  the native schema did not advertise the resolver's materialized variant.
+- `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+- Both root review rounds used the independently resolved High reviewer target;
+  the bounded fix continued through the original phase implementer handle.
+- `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
+- Both narrow review rounds reported `Reconnaissance: not-attempted`, so neither
+  required a `## Review Orchestration` section or nested-recon log append.
+- Review evidence:
+  `reviews/archived/p04-review-2026-07-19T135154Z.md` and
+  `reviews/archived/p04-review-2026-07-19T135807Z.md`.
+- Optional nested dispatches: none.
+
+**Outstanding items:**
+
+- None.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -536,13 +572,15 @@ Chronological log of implementation progress.
 - [x] p04-t05: Add root-owned review orchestration logging - `e9f49294`
 - [x] p04-t06: Regenerate fix views and revalidate the release - `67db4f8c`
 - [x] p04-t07: Remove obsolete Cursor wave-skill mirrors - `839de7d5`
+- [x] p04-t08: Add an explicit reconnaissance-attempt signal - `1aa7c1ab`,
+      `384895ab`
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- All twelve tasks were completed across four sequential phases. Class-aware
-  dogfood acceptance passed, the merge-reconciliation cleanup is complete, and
-  Phase 4 passed with zero residual findings.
+- All thirteen tasks were completed across four sequential phases. The remote
+  reconnaissance-signal finding and its focused semantic-test follow-up both
+  passed re-review with zero residual findings.
 
 **Decisions:**
 
@@ -557,8 +595,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Optional: generate the project summary, run documentation synchronization,
-  and open the final PR when requested.
+- Run final closeout review for the updated PR delta, then fetch PR #163 remote
+  feedback again to confirm the original comment is resolved.
 
 **Blockers:**
 
@@ -591,6 +629,13 @@ Document any intentional deviations from the original plan, spec, or design. Inc
     temporarily regressed when Phase 4 reopened implementation, and restored
     to `complete` during superseding final-review receipt.
 
+- **p04-t08-M1 — Signal-cardinality coverage was incomplete**
+  - Source: `reviews/archived/p04-review-2026-07-19T135154Z.md`
+  - Final disposition: resolved in `384895ab`.
+  - Rationale: the semantic test now pins exactly one confirmation template
+    line, missing/duplicate/invalid rejection, and signal consumption before
+    artifact validation or bookkeeping.
+
 ## Test Results
 
 Track test execution during implementation.
@@ -601,6 +646,7 @@ Track test execution during implementation.
 | 2     | 5         | 4      | 1\*    | \*Unrelated baseline link-check gate |
 | 3     | 153       | 153    | 0      | Focused contracts plus full release  |
 | 4     | 3409      | 3409   | 0      | Workspace, smoke, and full release   |
+| 4 fix | 125       | 125    | 0      | Reconnaissance-signal handoff        |
 
 ## Final Summary (for PR/docs)
 
@@ -621,6 +667,8 @@ Track test execution during implementation.
   silently downgrade.
 - Primary reviewers retain source validation, synthesis, severity, validation,
   final-output ownership, and root-owned project-log handoff.
+- Artifact-mode reviewer returns explicitly report whether reconnaissance was
+  attempted, allowing roots to fail closed on missing or inconsistent evidence.
 
 **Key files / modules:**
 

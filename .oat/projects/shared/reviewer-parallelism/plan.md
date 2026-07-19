@@ -1084,7 +1084,9 @@ required and remain out of scope for this project.
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
 | plan               | artifact | passed          | 2026-07-19 | reviews/archived/artifact-plan-review-2026-07-19T003101Z.md   |
-| pr-163             | remote   | fixes_added     | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
+| pr-163             | remote   | fixes_completed | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
+| p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135154Z.md             |
+| p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1103,9 +1105,10 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
 - Phase 4: 8 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, and remote-review signal correction
 
-**Total: 4 phases, 13 tasks (12 complete, 1 pending)**
+**Total: 4 phases, 13 tasks (13 complete)**
 
-Implementation reopened for remote-review task `p04-t08`.
+All planned tasks are complete. Final verification and a superseding final
+review remain before the open PR returns to remote-review receipt.
 
 ---
 

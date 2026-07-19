@@ -152,6 +152,22 @@ Superseding final review passed with zero findings after narrow bookkeeping re-r
 
 Promoted from "### 2026-07-19 · project · feedback · Cursor parent-inline fallback" because the behavior applies to any Cursor review using nested reconnaissance: delegate mechanical lanes only when advertised capability satisfies the floor, and keep stronger unsatisfied lanes with the primary reviewer instead of downgrading.
 
+### 2026-07-19 · structural · oat-project-implement · p04-t08-dispatch
+
+Accepted Phase p04 implementer dispatch for p04-t08; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-review-dispatch
+
+Accepted root-owned Phase p04 review dispatch for p04-t08; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-rereview-dispatch
+
+Accepted focused root-owned Phase p04 re-review after one bounded p04-t08 fix iteration; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-outcome
+
+Phase p04 remote-review task p04-t08 passed focused root-owned re-review after one bounded fix iteration; evidence: reviews/archived/p04-review-2026-07-19T135807Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

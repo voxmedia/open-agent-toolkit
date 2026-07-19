@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t08
-oat_last_commit: 44d4013ef792a0e88df6e8f82aea84c4ee046397
+oat_current_task: null
+oat_last_commit: 384895ab95172eb430dc895a3d3e790cb5bbcfdb
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -39,19 +39,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T13:25:06Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:02:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation reopened for PR feedback
+**Status:** Implementation complete; final closeout pending
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implementation — remote review fix in progress; PR remains open.
+Implementation — remote review fix complete; final closeout review pending.
 
 ## Artifacts
 
@@ -89,7 +89,8 @@ Implementation — remote review fix in progress; PR remains open.
 - ✓ Superseding final review passed with zero residual findings
 - ✓ PR created
 - ⚠ PR #163 remote review added Medium finding `M1`
-- ⧗ Task `p04-t08` pending
+- ✓ Task `p04-t08` and its bounded semantic-test fix completed
+- ✓ Phase 4 focused re-review passed with zero residual findings
 
 ## Blockers
 
@@ -97,5 +98,5 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to execute `p04-t08`, then receive a fresh remote
-review cycle for PR #163.
+Run final verification and a superseding final review for the updated PR delta,
+then receive a fresh remote review cycle for PR #163.
