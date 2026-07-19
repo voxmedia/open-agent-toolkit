@@ -479,6 +479,13 @@ The resolved declaration was migrated from the legacy human-oriented command
 shape to canonical `oat --json gate review` before the generation was
 initialized. No gate command has launched yet.
 
+### 2026-07-19 — Launch intent persisted
+
+- Attempt: `adc8991b-5be6-4c26-a378-9d45cc3f3d34`
+- Result receipt:
+  `reviews/exit-gate-adc8991b-result.json`
+- State: `pending/intent_persisted`
+
 ---
 
 ## Deviations from Plan / Design
