@@ -719,6 +719,21 @@ configured command.
 The run marker uniquely correlates the accepted launch with the persisted
 attempt and project.
 
+### 2026-07-19 — Post-integration result persisted
+
+- Gate run: `4ae2b434-8fd4-49d3-a879-422b84fc2f57`
+- Envelope: `ok`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Receive eligible: `true`
+- Review artifact:
+  `reviews/final-review-2026-07-19T132025Z.md`
+- Receipt:
+  `reviews/exit-gate-9e37dbac-result.json`
+- State: `pending/result_persisted`
+
+The stdout receipt is one valid structured envelope and correlates the run,
+project, invocation, artifact, and configured Important threshold.
+
 ---
 
 ## Final Closeout Sequence

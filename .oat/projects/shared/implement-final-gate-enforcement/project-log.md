@@ -140,6 +140,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Received and archived gate run bb3ed5bc-c97f-45f9-9328-300e580ffc25. The Important threshold passed; one Minor test-hardening finding was deferred with rationale in judgment-sweep mode; no implementation change or blocking task was added.
 
+### 2026-07-19 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T132025Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
