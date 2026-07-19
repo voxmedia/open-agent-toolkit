@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t12
 oat_last_commit: 160a7e244d0f4b5da916505c8dc9a1aede33f8e0
 oat_blockers: []
 associated_issues:
@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -38,7 +38,7 @@ oat_docs_updated: complete # null | skipped | complete — documentation sync st
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_post_implement_sequence:
-  status: pre_approval
+  status: failed
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
@@ -47,22 +47,22 @@ oat_post_implement_sequence:
   approval_source: null
   post_approval: []
   post_approval_completed: []
-  failure: null
+  failure: 'pre_approval step pr: push hook reported oat-project-implement 2.1.4 missing its required PR-scoped version bump; run oat-project-implement to complete p04-t12 and final re-review'
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:49:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:52:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Final review passed; PR open for review
+**Status:** Implementation reopened for closeout verification
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-19
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — closeout verification task `p04-t12` pending; PR remains open.
 
 ## Artifacts
 
@@ -111,8 +111,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Superseding final re-review passed with zero findings
 - ✓ Configured summary refresh completed
 - ✓ Configured documentation refresh completed
-- ✓ Existing PR #163 refreshed; immutable closeout snapshot preserved
-- ⧗ Awaiting human review
+- ✓ Existing PR #163 artifact/body refresh completed
+- ⚠ Push hook exposed a missing `oat-project-implement` skill-version bump
+- ⧗ Task `p04-t12` pending; PR closeout step remains incomplete
 
 ## Blockers
 
@@ -120,8 +121,5 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Run `oat-project-implement` to complete `p04-t12`, repeat final review, and
+resume the failed configured PR closeout step.

@@ -1172,6 +1172,42 @@ git add \
 git commit -m "fix(p04-t11): advance unpublished lockstep version"
 ```
 
+---
+
+### Task p04-t12: (verification) Bump the changed implementation skill version
+
+**Source Verification:** PR push-hook skill-version validation on 2026-07-19
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate managed provider views and `.oat/sync/manifest.json`
+
+1. Bump `oat-project-implement` from `2.1.4` to `2.1.5` because this PR changes
+   both its canonical skill surface and `references/phase-execution.md`.
+2. Update every semantic/version assertion for that skill, regenerate provider
+   views and sync metadata, and preserve the already-correct `0.2.3` lockstep
+   public package version.
+3. Run focused contracts, the canonical skill-version bump validator against
+   `origin/main`, provider status/sync, formatting, `pnpm release:validate`,
+   and the full final verification gate.
+
+**Expected:** the changed canonical implementation skill has exactly one
+PR-scoped version bump, all generated surfaces agree on `2.1.5`, and the push
+hook/release gates pass.
+
+**Commit:**
+
+```bash
+git add \
+  .agents/skills/oat-project-implement/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  .claude/skills/oat-project-implement/SKILL.md \
+  .oat/sync/manifest.json
+git commit -m "fix(p04-t12): bump implementation skill version"
+```
+
 ### Phase 4 Review Acceptance
 
 The rerun root-owned Phase 4 code review is also the class-aware dogfood
@@ -1221,6 +1257,7 @@ required and remain out of scope for this project.
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
 | final              | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
 | final              | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T143851Z.md           |
+| final              | code     | pending         | -          | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1237,12 +1274,11 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 11 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, and release-version correction
+- Phase 4: 12 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, release-version correction, and implementation-skill version reconciliation
 
-**Total: 4 phases, 16 tasks (16 complete)**
+**Total: 4 phases, 17 tasks (16 complete, 1 pending)**
 
-All implementation and final-review fix tasks are complete. Superseding final
-re-review remains pending.
+Implementation reopened for closeout verification task `p04-t12`.
 
 ---
 

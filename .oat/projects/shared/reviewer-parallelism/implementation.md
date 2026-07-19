@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: null
+oat_current_task_id: p04-t12
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 11    | 11/11     |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | in_progress | 12    | 11/12     |
 
-**Total:** 16/16 tasks completed
+**Total:** 16/17 tasks completed
 
 ---
 
@@ -433,6 +433,17 @@ oat_generated: false
 
 ---
 
+### Task p04-t12: (verification) Bump the changed implementation skill version
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending correction of the skill-version warning emitted by the PR push hook.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -700,8 +711,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the superseding final re-review, then fetch PR #163 remote feedback
-  again.
+- Complete p04-t12, run the superseding final re-review, refresh PR #163, then
+  fetch remote feedback again.
 
 **Blockers:**
 
@@ -754,6 +765,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
   - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
   - Final disposition: resolved directly in root bookkeeping before the next
     implementation dispatch.
+
+- **Closeout-V1 — Changed implementation skill retained upstream version**
+  - Source: PR push-hook validation after the configured PR refresh.
+  - Final disposition: converted to `p04-t12`.
 
 ## Test Results
 

@@ -188,6 +188,10 @@ Accepted one sequential High phase-implementer dispatch for p04-t10 and p04-t11.
 
 Accepted superseding final review after signal-first validation. One mechanical release-metadata reconnaissance lane ran on Composer 2.5 Fast with a satisfied floor; the primary reviewer independently revalidated all evidence and retained final judgment. Review passed with zero findings. Evidence: reviews/archived/final-review-2026-07-19T143851Z.md.
 
+### 2026-07-19 · structural · oat-project-implement · closeout-pr-refresh
+
+Configured PR refresh updated PR #163 and its local artifact, but the push hook exposed an unbumped oat-project-implement skill version. The PR closeout step remains incomplete pending bounded task p04-t12 and final re-review.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
