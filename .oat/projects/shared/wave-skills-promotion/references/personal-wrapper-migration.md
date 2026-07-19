@@ -1,12 +1,30 @@
 # Personal Wrapper Migration and Final RC Acceptance
 
-This runbook is for the operator migrating
-`~/.agents/skills/personal-explainer-kit`. The repository ships the migration
-CODE as an installable scaffold at
+This runbook migrates `~/.agents/skills/personal-explainer-kit`. The
+repository ships the migration CODE as an installable scaffold at
 `.oat/projects/shared/wave-skills-promotion/references/personal-explainer-kit/`
-(`SKILL.md` + `scripts/acceptance.mjs` + `config.seams.example.json`); the
-operator installs it, fills the personal-config seams, and runs acceptance
-outside this repository.
+(`SKILL.md` + `scripts/acceptance.mjs` + `config.seams.example.json`); it is
+installed, seam-filled, and acceptance-run on the operator's laptop, outside
+this repository.
+
+## Executor model (operator-decided 2026-07-18)
+
+- **Runbook executor: a FRESH agent on the laptop** (no prior context from the
+  wave or explainer sessions). Executing cold is deliberate — it removes
+  producer-acceptance conflict (the explainer agent must not accept its own
+  deliverable) and doubles as a usability test of this runbook and scaffold.
+- **Operator supervises the seams:** every value in `config.seams.example.json`
+  that touches personal credentials, vault paths, document ids, or publish
+  destinations is supplied or approved by the operator; the fresh agent never
+  invents them. The operator also blesses the final
+  `private-wrapper-result.json` before the RC promotes.
+- **Explainer agent's role is upstream/downstream only:** it freezes the
+  post-p06 final RC (which supplies the `finalRc` pins below) and consumes the
+  blessed acceptance result for its promotion record. It does not execute this
+  runbook.
+- **Result fan-out:** the sanitized `private-wrapper-result.json` goes to the
+  explainer project (RC acceptance record) and to the wave project
+  (`wave-skills-promotion` p06-t03 verification record).
 
 ## Preconditions and pins
 
