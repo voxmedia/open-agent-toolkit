@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t12
-oat_last_commit: 160a7e244d0f4b5da916505c8dc9a1aede33f8e0
+oat_last_commit: 0ee096a739658a1e8dea4563b3fee055d4b20b9a
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -47,22 +47,22 @@ oat_post_implement_sequence:
   approval_source: null
   post_approval: []
   post_approval_completed: []
-  failure: 'pre_approval step pr: push hook reported oat-project-implement 2.1.4 missing its required PR-scoped version bump; run oat-project-implement to complete p04-t12 and final re-review'
+  failure: 'pre_approval step pr: complete p04-t12 through p04-t14 for the implementation-skill version, Bugbot handoff summary, and post-merge 0.2.4 release; then run final re-review'
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:52:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:58:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation reopened for closeout verification
+**Status:** Implementation reopened after upstream, Bugbot, and CI triage
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-19
 
 ## Current Phase
 
-Implementation — closeout verification task `p04-t12` pending; PR remains open.
+Implementation — tasks `p04-t12` through `p04-t14` pending; PR remains open.
 
 ## Artifacts
 
@@ -113,7 +113,10 @@ Implementation — closeout verification task `p04-t12` pending; PR remains open
 - ✓ Configured documentation refresh completed
 - ✓ Existing PR #163 artifact/body refresh completed
 - ⚠ Push hook exposed a missing `oat-project-implement` skill-version bump
-- ⧗ Task `p04-t12` pending; PR closeout step remains incomplete
+- ✓ Merged latest large `origin/main` change with semantic conflict resolution
+- ⚠ New Bugbot Medium: top-level implementation summary omits signal-first order
+- ⚠ CI/release dry run reused the upstream package version
+- ⧗ Tasks `p04-t12` through `p04-t14` pending
 
 ## Blockers
 
@@ -121,5 +124,5 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` to complete `p04-t12`, repeat final review, and
-resume the failed configured PR closeout step.
+Run `oat-project-implement` to complete `p04-t12` through `p04-t14`, repeat
+final review, and resume the failed configured PR closeout step.

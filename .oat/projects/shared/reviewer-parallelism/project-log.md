@@ -192,6 +192,14 @@ Accepted superseding final review after signal-first validation. One mechanical 
 
 Configured PR refresh updated PR #163 and its local artifact, but the push hook exposed an unbumped oat-project-implement skill version. The PR closeout step remains incomplete pending bounded task p04-t12 and final re-review.
 
+### 2026-07-19 · structural · oat-project-implement · upstream-merge-3
+
+Merged current origin/main at d438c30874cba575de872387030f6405a282ca3b in 0ee096a739658a1e8dea4563b3fee055d4b20b9a. Semantic conflict resolution preserved upstream final-gate enforcement plus this branch reconnaissance mappings, PJM closeout, and reviewer contract versions; focused contracts and provider sync passed.
+
+### 2026-07-19 · structural · oat-project-review-receive-remote · pr-163-remote-2
+
+Second PR #163 remote cycle received one new Medium Bugbot finding and CI/release version failures. Converted the handoff-summary finding to p04-t13 and post-merge package correction to p04-t14; prior comment 3610616848 remains resolved by p04-t08/p04-t10.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

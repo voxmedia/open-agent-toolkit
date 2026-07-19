@@ -1186,12 +1186,12 @@ git commit -m "fix(p04-t11): advance unpublished lockstep version"
 
 1. Bump `oat-project-implement` from `2.1.4` to `2.1.5` because this PR changes
    both its canonical skill surface and `references/phase-execution.md`.
-2. Update every semantic/version assertion for that skill, regenerate provider
-   views and sync metadata, and preserve the already-correct `0.2.3` lockstep
-   public package version.
+2. Update every semantic/version assertion for that skill and regenerate
+   provider views and sync metadata. Leave the post-merge public-package
+   reconciliation to `p04-t14`.
 3. Run focused contracts, the canonical skill-version bump validator against
-   `origin/main`, provider status/sync, formatting, `pnpm release:validate`,
-   and the full final verification gate.
+   `origin/main`, provider status/sync, formatting, and diff hygiene. The
+   release/full gate remains deferred to `p04-t14`.
 
 **Expected:** the changed canonical implementation skill has exactly one
 PR-scoped version bump, all generated surfaces agree on `2.1.5`, and the push
@@ -1206,6 +1206,86 @@ git add \
   .claude/skills/oat-project-implement/SKILL.md \
   .oat/sync/manifest.json
 git commit -m "fix(p04-t12): bump implementation skill version"
+```
+
+---
+
+### Task p04-t13: (review) Align the implementation handoff summary
+
+**Source Review:**
+`reviews/archived/remote-pr-163-review-2026-07-19T145741Z.md` (Medium `M1`)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate managed provider views and `.oat/sync/manifest.json`
+
+1. Update the top-level implementation-skill summary so it explicitly consumes
+   exactly one reconnaissance confirmation before artifact validation or
+   project-log bookkeeping.
+2. Keep the summary aligned with `references/phase-execution.md`: malformed
+   signals fail closed, `attempted` validates orchestration evidence and
+   appends once, and `not-attempted` forbids evidence and skips the append.
+3. Add a semantic assertion for the top-level summary, regenerate provider
+   views, and run focused contracts, provider status/sync, formatting, and diff
+   hygiene.
+
+**Expected:** following either the top-level skill summary or its detailed
+phase-execution reference preserves the same signal-first ordering and branch
+semantics.
+
+**Commit:**
+
+```bash
+git add \
+  .agents/skills/oat-project-implement/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  .claude/skills/oat-project-implement/SKILL.md \
+  .oat/sync/manifest.json
+git commit -m "fix(p04-t13): align implementation handoff summary"
+```
+
+---
+
+### Task p04-t14: (verification) Advance the post-merge lockstep release
+
+**Source Verification:** CI runs `29688448796` and `29688448786`, plus the
+latest `origin/main` merge
+
+**Files:**
+
+- Modify: all five lockstep public package manifests under `packages/`
+- Modify generated release, provider, sync, and PJM attribution surfaces as
+  required by repository tooling
+
+1. Re-query npm after the upstream merge. Starting from upstream/public
+   `0.2.3`, select the next shared patch that is unpublished for all five public
+   packages (`0.2.4` only if the live check still confirms availability).
+2. Update all five manifests together, regenerate bundled/provider assets and
+   sync metadata, and update this project's release attribution while
+   preserving upstream's `0.2.3` feature attribution.
+3. Re-query npm immediately before commit, then run the skill-version validator,
+   provider status/sync, formatting, `pnpm release:validate`, and the full final
+   verification gate.
+
+**Expected:** the branch uses one shared version greater than upstream and
+unpublished for all five packages; skill-version, CI, provider, and release
+gates pass.
+
+**Commit:**
+
+```bash
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+git commit -m "fix(p04-t14): advance post-merge lockstep version"
 ```
 
 ### Phase 4 Review Acceptance
@@ -1258,6 +1338,7 @@ required and remain out of scope for this project.
 | final              | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
 | final              | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T143851Z.md           |
 | final              | code     | pending         | -          | -                                                             |
+| pr-163             | remote   | fixes_added     | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T145741Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1274,11 +1355,11 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 12 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, release-version correction, and implementation-skill version reconciliation
+- Phase 4: 14 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, release-version correction, implementation-skill version reconciliation, top-level handoff alignment, and post-merge release correction
 
-**Total: 4 phases, 17 tasks (16 complete, 1 pending)**
+**Total: 4 phases, 19 tasks (16 complete, 3 pending)**
 
-Implementation reopened for closeout verification task `p04-t12`.
+Implementation reopened for tasks `p04-t12` through `p04-t14`.
 
 ---
 

@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 12    | 11/12     |
+| Phase 4 | in_progress | 14    | 11/14     |
 
-**Total:** 16/17 tasks completed
+**Total:** 16/19 tasks completed
 
 ---
 
@@ -444,6 +444,29 @@ oat_generated: false
 
 ---
 
+### Task p04-t13: (review) Align the implementation handoff summary
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending implementation of the second PR #163 Bugbot Medium finding.
+
+---
+
+### Task p04-t14: (verification) Advance the post-merge lockstep release
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending reconciliation of the CI/release failures with upstream/public
+  `0.2.3`.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -663,6 +686,17 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Informational:** The Bugbot PR-summary issue comment was not treated as a
   finding.
 
+### 2026-07-19 — PR #163 (second cycle)
+
+- **Artifact:** `reviews/archived/remote-pr-163-review-2026-07-19T145741Z.md`
+- **Severity counts:** 0 critical, 0 important, 1 medium, 0 minor
+- **Converted:** `M1` → `p04-t13`
+- **Already addressed:** Comment `3610616848` was resolved by `p04-t08` and
+  `p04-t10`.
+- **CI triage:** Release/CI version failure → `p04-t14`.
+- **Deferred:** None
+- **Dismissed:** None
+
 ---
 
 ## Implementation Log
@@ -711,8 +745,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Complete p04-t12, run the superseding final re-review, refresh PR #163, then
-  fetch remote feedback again.
+- Complete p04-t12 through p04-t14, run the superseding final re-review, and
+  refresh PR #163.
 
 **Blockers:**
 
@@ -769,6 +803,16 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 - **Closeout-V1 — Changed implementation skill retained upstream version**
   - Source: PR push-hook validation after the configured PR refresh.
   - Final disposition: converted to `p04-t12`.
+
+- **Remote-M1 — Top-level implementation handoff summary omits signal-first ordering**
+  - Source:
+    `reviews/archived/remote-pr-163-review-2026-07-19T145741Z.md`
+  - Final disposition: converted to `p04-t13`.
+
+- **Closeout-V2 — Latest upstream/public package version is now `0.2.3`**
+  - Source: latest `origin/main` merge plus CI runs `29688448796` and
+    `29688448786`.
+  - Final disposition: converted to `p04-t14`.
 
 ## Test Results
 
