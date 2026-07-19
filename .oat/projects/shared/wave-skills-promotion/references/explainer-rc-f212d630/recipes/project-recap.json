@@ -1,0 +1,34 @@
+{
+  "schemaVersion": "explainer-kit.recipe/v1",
+  "id": "project-recap",
+  "version": "1",
+  "sourceRoles": [
+    {
+      "role": "project",
+      "required": true,
+      "accepts": ["file", "directory", "git", "github"],
+      "minBindings": 1,
+      "maxBindings": 1
+    }
+  ],
+  "requiredNarrative": [
+    "original-request",
+    "key-agent-decisions",
+    "as-built-architecture",
+    "implementation-record",
+    "validation-evidence",
+    "outcome"
+  ],
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "template": "house-style",
+      "required": true
+    }
+  ],
+  "discoveryLimits": {
+    "consecutiveNoNewFindingsRounds": 2,
+    "maxRounds": 8
+  }
+}
