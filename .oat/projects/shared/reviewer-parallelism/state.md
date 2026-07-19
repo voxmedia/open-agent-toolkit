@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t10
-oat_last_commit: 5478956722737681decd1f54c0fc4e5d57592b9d
+oat_current_task: null
+oat_last_commit: 160a7e244d0f4b5da916505c8dc9a1aede33f8e0
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -39,19 +39,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:19:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:34:18Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation reopened for final-review fixes
+**Status:** Implementation fixes complete; awaiting final re-review
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implementation — final-review tasks `p04-t10` and `p04-t11` pending.
+Implementation — all tasks complete; awaiting superseding final re-review.
 
 ## Artifacts
 
@@ -95,7 +95,9 @@ Implementation — final-review tasks `p04-t10` and `p04-t11` pending.
 - ✓ Task `p04-t09` completed with full verification
 - ⚠ Superseding final review: 1 Critical, 2 Important
 - ✓ Tracking-only Important finding resolved in root bookkeeping
-- ⧗ Tasks `p04-t10` and `p04-t11` pending
+- ✓ Tasks `p04-t10` and `p04-t11` completed
+- ✓ Full test, lint, type-check, build, provider, and release gates passed
+- ⧗ Superseding final re-review pending
 
 ## Blockers
 
@@ -103,6 +105,5 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` for `p04-t10` and `p04-t11`, repeat final
-verification and the superseding final review, then receive a fresh remote
-review cycle for PR #163.
+Run the superseding final re-review, then receive a fresh remote review cycle
+for PR #163.

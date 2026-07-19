@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p04-t10
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 11    | 9/11      |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 11    | 11/11     |
 
-**Total:** 14/16 tasks completed
+**Total:** 16/16 tasks completed
 
 ---
 
@@ -408,23 +408,28 @@ oat_generated: false
 
 ### Task p04-t10: (review) Enforce the signal-first handoff in phase review
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 5386db92679c916807314065c5ec41dda35f7bfc
 
 **Outcome (required when completed):**
 
-- Pending implementation of final-review Important finding `I1`.
+- The implementation-owned review path now consumes exactly one
+  reconnaissance signal before artifact validation or bookkeeping, with
+  fail-closed malformed-signal handling and attempted/not-attempted branch
+  semantics independently pinned by tests.
 
 ---
 
 ### Task p04-t11: (review) Advance to the next unpublished lockstep version
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 160a7e244d0f4b5da916505c8dc9a1aede33f8e0
 
 **Outcome (required when completed):**
 
-- Pending implementation of final-review Critical finding `C1`.
+- Advanced all five public packages from published upstream `0.2.2` to shared
+  unpublished `0.2.3`, regenerated release attribution, and passed provider,
+  release, test, lint, type-check, and build verification.
 
 ---
 
@@ -600,6 +605,34 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - p04-t10 and p04-t11.
 
+### Run 7
+
+**Timestamp:** 2026-07-19T14:22:00Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome         | Task commits           | Root review | Fix iterations |
+| ----- | --------------- | ---------------------- | ----------- | -------------- |
+| p04   | fixes_completed | `5386db92`, `160a7e24` | pending     | 1              |
+
+**Dispatch notes:**
+
+- One sequential High phase implementer owned p04-t10 and p04-t11.
+- p04-t10 initially exposed one validation-only autonomy prompt-site key. The
+  same implementer applied a bounded `NG` mapping correction and amended the
+  task commit before proceeding.
+- p04-t11 selected `0.2.3` only after confirming upstream/latest were `0.2.2`
+  and the candidate was unpublished for all five packages.
+- Full verification passed after both commits; superseding final re-review is
+  the remaining gate.
+- Optional nested dispatches: none.
+
+**Outstanding items:**
+
+- Superseding final re-review.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -641,6 +674,8 @@ Chronological log of implementation progress.
 - [x] p04-t08: Add an explicit reconnaissance-attempt signal - `1aa7c1ab`,
       `384895ab`
 - [x] p04-t09: Map new handoff prose in the autonomy inventory - `08c0e1cd`
+- [x] p04-t10: Enforce the signal-first handoff in phase review - `5386db92`
+- [x] p04-t11: Advance to the next unpublished lockstep version - `160a7e24`
 
 **What changed (high level):**
 
@@ -662,8 +697,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Complete p04-t10 and p04-t11, rerun final verification and final review, then
-  fetch PR #163 remote feedback again.
+- Run the superseding final re-review, then fetch PR #163 remote feedback
+  again.
 
 **Blockers:**
 
@@ -680,6 +715,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | Task / Review        | Source Artifact | Planned / Documented                                   | Actual / Accepted                                                                    | Reason                                                                                  | Source of Truth               | Follow-up                                                            |
 | -------------------- | --------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
 | p04-t03 / p04 review | `plan.md`       | Release task limited to generated and release surfaces | Commit also corrected canonical Claude, Codex, and Cursor provider-reference wording | Release validation exposed an autonomy-prompt regression after canonical implementation | Committed provider references | Keep history; include future canonical corrections in contract tasks |
+| p04-t10              | `plan.md`       | Signal handoff task omitted the autonomy inventory     | Commit also mapped one validation-only prompt-site key to `NG`                       | Full tests detected the key generated by the new phase-review prose                     | Committed autonomy contract   | Bounded correction accepted; no further follow-up                    |
 
 ## Deferred Findings (Medium)
 
@@ -705,11 +741,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - **Final-C1 — Lockstep `0.2.2` is published**
   - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
-  - Final disposition: converted to `p04-t11`.
+  - Final disposition: resolved in `p04-t11`.
 
 - **Final-I1 — Implementation-owned review path lacks signal-first handoff**
   - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
-  - Final disposition: converted to `p04-t10`.
+  - Final disposition: resolved in `p04-t10`.
 
 - **Final-I2 — p04-t09 tracking remained pending after commit**
   - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
@@ -728,6 +764,7 @@ Track test execution during implementation.
 | 4     | 3409      | 3409   | 0      | Workspace, smoke, and full release   |
 | 4 fix | 125       | 125    | 0      | Reconnaissance-signal handoff        |
 | 4 fix | 3409      | 3409   | 0      | Autonomy inventory and full closeout |
+| 4 fix | 3409      | 3409   | 0      | Final review fixes and full closeout |
 
 ## Final Summary (for PR/docs)
 
@@ -737,7 +774,7 @@ Track test execution during implementation.
   eligible broad reviews.
 - Root-owned orchestration logging, synchronized Cursor/Codex reviewer roles,
   user-facing workflow documentation, and lockstep public package release
-  metadata at `0.2.2`.
+  metadata at `0.2.3`.
 
 **Behavioral changes (user-facing):**
 

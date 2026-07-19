@@ -1219,7 +1219,8 @@ required and remain out of scope for this project.
 | pr-163             | remote   | fixes_completed | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
 | p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135154Z.md             |
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
-| final              | code     | fixes_added     | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
+| final              | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
+| final              | code     | pending         | -          | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1238,9 +1239,10 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
 - Phase 4: 11 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, and release-version correction
 
-**Total: 4 phases, 16 tasks (14 complete, 2 pending)**
+**Total: 4 phases, 16 tasks (16 complete)**
 
-Implementation reopened for final-review tasks `p04-t10` and `p04-t11`.
+All implementation and final-review fix tasks are complete. Superseding final
+re-review remains pending.
 
 ---
 
