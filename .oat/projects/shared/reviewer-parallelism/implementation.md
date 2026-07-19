@@ -24,12 +24,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 7     | 7/7       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 7     | 7/7       |
 
 **Total:** 12/12 tasks completed
 
@@ -249,8 +249,45 @@ oat_generated: false
 
 ## Phase 4: Task-Class-Aware Reviewer Orchestration Revision
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-18
+
+### Phase Summary
+
+**Outcome (what changed):**
+
+- Reviewer-local orchestration now separates read-only worker authority from
+  task/model-class floors, uses floor-safe fallback, and records compact
+  orchestration evidence for root-owned project-log handoff.
+- Cursor delegates suitable mechanical work to an advertised nested target and
+  retains stronger unavailable lanes in the primary reviewer without reducing
+  coverage.
+- Provider views, documentation, semantic contracts, and lockstep `0.2.2`
+  release surfaces are synchronized against merged upstream.
+
+**Key files touched:**
+
+- `.agents/agents/oat-reviewer.md`
+- `.agents/skills/oat-dispatch-subagents/**`
+- `.agents/skills/oat-project-implement/**`
+- `.agents/skills/oat-project-review-provide/SKILL.md`
+- `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Cursor and Codex materialized reviewer roles
+
+**Verification:**
+
+- Focused contracts: 162/162 during release synchronization and 138/138 after
+  final Cursor mirror cleanup.
+- Full workspace plus smoke tests: 3409/3409.
+- Lint, type-check, build, docs, formatting, package-version checks, release
+  tarballs, provider status, and sync dry-run all pass.
+
+**Notes / Decisions:**
+
+- Class-aware dogfood passed with Composer 2.5 Fast handling mechanical work
+  and the primary reviewer completing the unavailable intelligent lane inline.
+- Full pinned reviewer variants are not recursively reused as recon workers;
+  `BL-260719-add-pinned-recon-agents` tracks a reusable dedicated contract.
 
 ### Task p04-t01: Separate reviewer lane authority from model-class floors
 
@@ -429,9 +466,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Dispatch policy:** High (Cursor managed capped)
 **Schedule:** sequential
 
-| Phase | Outcome         | Task commits                                                                       | Root review       | Fix iterations |
-| ----- | --------------- | ---------------------------------------------------------------------------------- | ----------------- | -------------- |
-| p04   | fixes_completed | `7b90e802`, `b741820b`, `56eeecc4`, `ede972ce`, `e9f49294`, `67db4f8c`, `839de7d5` | re-review pending | 2 completed    |
+| Phase | Outcome | Task commits                                                                       | Root review | Fix iterations |
+| ----- | ------- | ---------------------------------------------------------------------------------- | ----------- | -------------- |
+| p04   | passed  | `7b90e802`, `b741820b`, `56eeecc4`, `ede972ce`, `e9f49294`, `67db4f8c`, `839de7d5` | passed      | 2              |
 
 **Dispatch notes:**
 
@@ -448,9 +485,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Outstanding items:**
 
-- Narrow root-owned re-review of `p04-t07` remains pending.
-- The accepted historical `p04-t03` scope deviation remains recorded rather
-  than rewriting committed history.
+- None for Phase 4.
 
 <!-- orchestration-runs-end -->
 
@@ -481,8 +516,8 @@ Chronological log of implementation progress.
 
 - Quick-mode discovery and the reviewed execution plan were completed.
 - All twelve tasks were completed across four sequential phases. Class-aware
-  dogfood acceptance passed and the merge-reconciliation cleanup is complete;
-  narrow re-review remains.
+  dogfood acceptance passed, the merge-reconciliation cleanup is complete, and
+  Phase 4 passed with zero residual findings.
 
 **Decisions:**
 
@@ -497,8 +532,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Complete the Phase 4 review fixes, rerun its class-aware dogfood review, and
-  run the superseding final review.
+- Run the superseding final cross-phase review.
 
 **Blockers:**
 
@@ -520,8 +554,10 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - **p01-M1 — Semantic regression coverage does not pin every declared safety boundary**
   - Source: `reviews/archived/p01-review-2026-07-18T224716Z.md`
-  - Final disposition: accepted as a non-blocking follow-up after final review resurfaced it at Medium severity.
-  - Rationale: shipped behavior is correct and validation passes, but targeted assertions remain necessary for the no-hard-coded-model policy, one-time capability check, and prohibition on worker writes to either final output sink.
+  - Final disposition: resolved in `p04-t01`.
+  - Rationale: targeted assertions now pin the no-hard-coded-model policy,
+    one-time capability check, and prohibition on worker writes to either final
+    output sink.
 
 - **Final-M2 — Implementation completion status was internally inconsistent**
   - Source: `reviews/archived/final-review-2026-07-18T234708Z.md`
@@ -542,20 +578,34 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- Provider-neutral, bounded reviewer-local reconnaissance for eligible broad reviews.
-- Synchronized provider roles, user-facing workflow documentation, and lockstep public package release metadata at `0.2.1`.
+- Provider-neutral, bounded, task-class-aware reviewer reconnaissance for
+  eligible broad reviews.
+- Root-owned orchestration logging, synchronized Cursor/Codex reviewer roles,
+  user-facing workflow documentation, and lockstep public package release
+  metadata at `0.2.2`.
 
 **Behavioral changes (user-facing):**
 
-- Broad reviews may parallelize disjoint read-only evidence gathering when explicit economical worker dispatch is available.
-- Primary reviewers retain source validation, synthesis, severity, validation, and final-output ownership; unsupported or failed delegation falls back inline without reducing coverage.
+- Broad reviews may parallelize disjoint read-only evidence gathering with
+  model capability matched to each lane's complexity.
+- Mechanical work uses fast economical targets when advertised. Stronger lanes
+  use a floor-satisfying target or stay with the primary reviewer; they never
+  silently downgrade.
+- Primary reviewers retain source validation, synthesis, severity, validation,
+  final-output ownership, and root-owned project-log handoff.
 
 **Key files / modules:**
 
 - `.agents/agents/oat-reviewer.md` - canonical reviewer orchestration contract.
+- `.agents/skills/oat-dispatch-subagents/` - provider-neutral task-class and
+  dispatch evidence contract.
+- `.agents/skills/oat-project-implement/` and
+  `.agents/skills/oat-project-review-provide/` - root-owned orchestration-log
+  handoff.
 - `packages/cli/src/validation/skills.test.ts` - semantic contract coverage.
 - `apps/oat-docs/docs/workflows/projects/reviews.md` - workflow documentation.
-- `.codex/agents/oat-reviewer*.toml` - synchronized Codex role variants.
+- `.cursor/agents/oat-reviewer*.md` and `.codex/agents/oat-reviewer*.toml` -
+  synchronized materialized reviewer variants.
 
 **Verification performed:**
 
@@ -563,7 +613,13 @@ Track test execution during implementation.
 
 **Design deltas (if any):**
 
-- No design artifact exists in quick mode. A review-discovered published-version collision added `p03-t03`, which corrected the planned `0.1.74` release to unused upstream-derived `0.2.1`.
+- Dogfood findings added the supplemental `design.md` and Phase 4 to separate
+  authority from model-class floors.
+- A published-version collision added `p03-t03`; merged upstream then
+  established `0.2.1` as the baseline and this project retained verified-unused
+  `0.2.2`.
+- The accepted `p04-t03` commit-scope deviation remains recorded above; no
+  history was rewritten.
 
 ## References
 

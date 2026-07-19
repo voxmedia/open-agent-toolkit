@@ -132,6 +132,10 @@ Phase p04 re-review resolved prior findings and found one Important merge-reconc
 
 Accepted p04-t07 commit 839de7d5: removed only the two obsolete Cursor wave-skill mirrors; provider status is 82 in sync with zero strays, sync dry-run is clean, and focused tests pass 138/138.
 
+### 2026-07-19 · structural · oat-project-implement · p04-pass
+
+Phase p04 passed narrow final re-review with zero findings. The prior Cursor-mirror Important is resolved, provider status is 82/82 in sync, and the class-aware dogfood pass carries forward. Evidence: reviews/archived/p04-review-2026-07-19T030013Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

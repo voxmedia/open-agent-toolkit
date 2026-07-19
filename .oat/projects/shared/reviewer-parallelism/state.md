@@ -39,19 +39,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T02:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T03:01:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Revision implementation in progress
+**Status:** Revision implementation complete; final review pending
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implement - Phase 4 task-class-aware revision
+Implement - final cross-phase review
 
 ## Artifacts
 
@@ -59,7 +59,7 @@ Implement - Phase 4 task-class-aware revision
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (supplemental revision design review passed)
 - **Plan:** `plan.md` (revision amendment review passed)
-- **Implementation:** `implementation.md` (all Phase 4 tasks complete; narrow re-review pending)
+- **Implementation:** `implementation.md` (all phases and tasks complete)
 
 ## Progress
 
@@ -82,7 +82,8 @@ Implement - Phase 4 task-class-aware revision
 - ✓ Corrected class-aware dogfood acceptance passed
 - ⚠ Phase 4 re-review found two obsolete tracked Cursor wave-skill mirrors
 - ✓ Cleanup task `p04-t07` removed both mirrors with zero remaining strays
-- ⧗ Running narrow final Phase 4 re-review
+- ✓ Phase 4 passed narrow final re-review with zero findings
+- ⧗ Running superseding final cross-phase review
 
 ## Blockers
 
@@ -90,4 +91,4 @@ None
 
 ## Next Milestone
 
-Pass the revision plan review, then execute Phase 4
+Pass the superseding final cross-phase review
