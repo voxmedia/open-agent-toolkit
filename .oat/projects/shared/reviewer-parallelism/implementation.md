@@ -462,7 +462,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Implementation selected `gpt-5.6-sol-high` after the lower configured candidate received a pre-start native catalog rejection.
 - `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
-- Optional nested dispatches: none.
+- Optional nested implementation dispatches: none.
 
 **Outstanding items:**
 
@@ -613,9 +613,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Dispatch policy:** High (Cursor managed capped)
 **Schedule:** sequential
 
-| Phase | Outcome         | Task commits           | Root review | Fix iterations |
-| ----- | --------------- | ---------------------- | ----------- | -------------- |
-| p04   | fixes_completed | `5386db92`, `160a7e24` | pending     | 1              |
+| Phase | Outcome | Task commits           | Root review | Fix iterations |
+| ----- | ------- | ---------------------- | ----------- | -------------- |
+| p04   | passed  | `5386db92`, `160a7e24` | passed      | 1              |
 
 **Dispatch notes:**
 
@@ -625,13 +625,16 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   task commit before proceeding.
 - p04-t11 selected `0.2.3` only after confirming upstream/latest were `0.2.2`
   and the candidate was unpublished for all five packages.
-- Full verification passed after both commits; superseding final re-review is
-  the remaining gate.
+- Full verification passed after both commits.
+- The superseding final reviewer delegated one mechanical release-metadata lane
+  to Composer 2.5 Fast, independently revalidated its evidence, and passed with
+  zero findings. Evidence:
+  `reviews/archived/final-review-2026-07-19T143851Z.md`.
 - Optional nested dispatches: none.
 
 **Outstanding items:**
 
-- Superseding final re-review.
+- None.
 
 <!-- orchestration-runs-end -->
 

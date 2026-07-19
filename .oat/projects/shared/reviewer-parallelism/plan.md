@@ -1220,7 +1220,7 @@ required and remain out of scope for this project.
 | p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135154Z.md             |
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
 | final              | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
-| final              | code     | pending         | -          | -                                                             |
+| final              | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T143851Z.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
