@@ -60,10 +60,10 @@ oat_implement_exit_gate:
   attempts_completed: 0
   reviewed_head: a2a5f3cbf84ae53cc8bb328f74d7915b71112355
   implementation_fingerprint: 'git-tree:e7bbafe5b1ff25c318d6d22534c19ac8fe18c267'
-  launch_state: not_started
-  launch_attempt_id: null
-  launch_started_at: null
-  launch_result_receipt: null
+  launch_state: intent_persisted
+  launch_attempt_id: '90538cc6-87f9-44a0-a223-4c0cc3a065fe'
+  launch_started_at: '2026-07-19T15:51:52Z'
+  launch_result_receipt: '.oat/projects/shared/reviewer-parallelism/reviews/gate-receipts/90538cc6-87f9-44a0-a223-4c0cc3a065fe.json'
   gate_run_marker: null
   gate_run_id: null
   envelope_status: null
@@ -79,7 +79,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-07-19T15:51:10Z'
+  updated_at: '2026-07-19T15:51:52Z'
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-07-19T15:32:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation

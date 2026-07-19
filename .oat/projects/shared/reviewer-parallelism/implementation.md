@@ -720,6 +720,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Resolution:** configured
 - **Policy:** block, maximum 2 remediation attempts
 - **Transition:** persisted `pending/not_started` before gate launch.
+- **Launch intent:** attempt `90538cc6-87f9-44a0-a223-4c0cc3a065fe`,
+  persisted before invoking the configured command.
 
 ---
 
