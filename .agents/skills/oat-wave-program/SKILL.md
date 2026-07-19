@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.1.0
+version: 1.2.0
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -89,6 +89,31 @@ target (same disclaimer as the plan indexes).
 2. Update the status ledger row: PR, merge SHA, completion-record link.
 3. Note next-wave unblocks ("W3 merged → W4 token-cost unblocked").
 4. Commit with the wave's closeout bookkeeping.
+5. Optionally run the mechanical program-recap explainer caller described below,
+   then add its manifest `runId` and `outcome` to the wave ledger row.
+
+### Program-close explainer caller
+
+At wave-close or program-close, the orchestrator owns fact-base synthesis. It
+synthesizes an `explainer-kit.fact-base/v1` document from the reconciled
+execution-program artifact, wave summaries, and completion records. Its required
+keys are exactly:
+`schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+
+The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
+required keys are exactly:
+`schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
+`{ "id": "program-recap", "version": "1" }`; this is an object with exactly
+`id` and `version`. Set `outputRoot` to `.oat/repo/explainers/<slug>/`. Bind the
+synthesized fact-base file through `factBase` with the required keys
+`mode, freshnessPolicy`, set `mode` to `"supplied"`, set `freshnessPolicy` to
+`"live-wins"`, and set `path` to that file.
+
+After the run, read the `explainer-kit.manifest/v1` document. Its required keys
+are exactly:
+`schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
+Record the manifest's `runId` and `outcome` in the wave or program ledger row.
+Publishing is human-gated; this caller never invokes publish.
 
 ## Integration with `oat-wave-execute`
 

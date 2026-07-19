@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.5.0
+version: 1.6.0
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -303,7 +303,30 @@ archive anything first.
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the
    program ledger records the merge (PR, SHA, completion-record link) and flips
-   the wave's plan rows to `done`.
+   the wave's plan rows to `done`. Optionally generate the program recap using
+   the mechanical explainer caller below.
+
+#### Optional program-recap explainer caller
+
+The orchestrator owns fact-base synthesis. It synthesizes an
+`explainer-kit.fact-base/v1` document from the reconciled execution-program
+artifact, wave summaries, and completion records. Its required keys are exactly:
+`schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+
+The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
+required keys are exactly:
+`schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
+`{ "id": "program-recap", "version": "1" }`; this is an object with exactly
+`id` and `version`. Set `outputRoot` to `.oat/repo/explainers/<slug>/`. Bind the
+synthesized fact-base file through `factBase` with the required keys
+`mode, freshnessPolicy`, set `mode` to `"supplied"`, set `freshnessPolicy` to
+`"live-wins"`, and set `path` to that file.
+
+After the run, read the `explainer-kit.manifest/v1` document. Its required keys
+are exactly:
+`schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
+Record the manifest's `runId` and `outcome` in the wave ledger row. Publishing is
+human-gated; this caller never invokes publish.
 
 ## Success Criteria
 
