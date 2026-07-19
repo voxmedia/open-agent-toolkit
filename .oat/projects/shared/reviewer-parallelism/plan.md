@@ -1,16 +1,16 @@
 ---
 oat_plan_source: quick
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p03']
 oat_auto_review_at_hill_checkpoints: true
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_last_updated: 2026-07-18
+oat_last_updated: 2026-07-19
 oat_generated: false
 oat_template: false
 ---
@@ -974,6 +974,72 @@ git add -u \
 git commit -m "fix(p04-t07): remove obsolete Cursor skill mirrors"
 ```
 
+---
+
+### Task p04-t08: (review) Add an explicit reconnaissance-attempt signal
+
+**Source Review:** `reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md`
+(Medium `M1`)
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate as applicable: `.claude/agents/oat-reviewer.md`
+- Regenerate as applicable: `.cursor/agents/oat-reviewer*.md`
+- Regenerate as applicable: `.codex/agents/oat-reviewer*.toml`
+- Regenerate: `.oat/sync/manifest.json`
+
+1. **Analyze the failure context.** Confirm the artifact-mode reviewer return
+   cannot distinguish `not attempted` from `attempted but evidence omitted`,
+   while the root workflow depends on that distinction for fail-closed
+   orchestration validation.
+2. **Implement the fix.** Add one stable attempted/not-attempted reconnaissance
+   signal to the reviewer's brief artifact-mode confirmation and make
+   `oat-project-review-provide` consume that signal before validating
+   `## Review Orchestration` and appending the root-owned log entry. Preserve
+   structured-output behavior, inline-only behavior, and the existing
+   PR-scoped agent/skill versions.
+3. **Verify targeted behavior.** Extend the existing semantic contract test to
+   pin both sides of the handoff, regenerate provider views, and run:
+
+   ```bash
+   pnpm --filter @open-agent-toolkit/cli exec vitest run \
+     src/validation/skills.test.ts \
+     src/commands/init/tools/shared/review-skill-contracts.test.ts
+   pnpm run cli -- status --scope project --json
+   pnpm run cli -- sync --scope project --dry-run
+   ```
+
+4. **Verify project commands.** Format the touched Markdown and TypeScript
+   files with the repository formatter, then run:
+
+   ```bash
+   pnpm release:validate
+   git diff --check
+   git status --short
+   ```
+
+**Expected:** An artifact-mode reviewer always reports whether reconnaissance
+was attempted; the root rejects attempted delegation without complete
+orchestration evidence, skips the orchestration log when none was attempted,
+provider views remain synchronized, and release validation passes.
+
+**Commit:**
+
+```bash
+git add \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-project-review-provide/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  .claude/agents/oat-reviewer.md \
+  .cursor/agents/oat-reviewer*.md \
+  .codex/agents/oat-reviewer*.toml \
+  .oat/sync/manifest.json
+git commit -m "fix(p04-t08): expose reviewer reconnaissance attempts"
+```
+
 ### Phase 4 Review Acceptance
 
 The rerun root-owned Phase 4 code review is also the class-aware dogfood
@@ -1018,6 +1084,7 @@ required and remain out of scope for this project.
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
 | plan               | artifact | passed          | 2026-07-19 | reviews/archived/artifact-plan-review-2026-07-19T003101Z.md   |
+| pr-163             | remote   | fixes_added     | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1034,11 +1101,11 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 7 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, and revised lockstep release
+- Phase 4: 8 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, and remote-review signal correction
 
-**Total: 4 phases, 12 tasks**
+**Total: 4 phases, 13 tasks (12 complete, 1 pending)**
 
-Ready for code review and merge after all tasks and required reviews pass.
+Implementation reopened for remote-review task `p04-t08`.
 
 ---
 

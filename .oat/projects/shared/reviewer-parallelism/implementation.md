@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_last_updated: 2026-07-19
+oat_current_task_id: p04-t08
 oat_generated: false
 ---
 
@@ -24,20 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 7     | 7/7       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | in_progress | 8     | 7/8       |
 
-**Total:** 12/12 tasks completed
+**Total:** 12/13 tasks completed
 
 ---
 
 ## Phase 1: Canonical Reviewer Orchestration Contract
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-18
 
 ### Phase Summary (fill when phase is complete)
@@ -377,6 +377,17 @@ oat_generated: false
 
 ---
 
+### Task p04-t08: (review) Add an explicit reconnaissance-attempt signal
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending implementation of remote-review finding `M1`.
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -488,6 +499,20 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - None for Phase 4.
 
 <!-- orchestration-runs-end -->
+
+---
+
+## Remote Review Received
+
+### 2026-07-19 — PR #163
+
+- **Artifact:** `reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md`
+- **Severity counts:** 0 critical, 0 important, 1 medium, 0 minor
+- **Converted:** `M1` → `p04-t08`
+- **Deferred:** None
+- **Dismissed:** None
+- **Informational:** The Bugbot PR-summary issue comment was not treated as a
+  finding.
 
 ---
 
