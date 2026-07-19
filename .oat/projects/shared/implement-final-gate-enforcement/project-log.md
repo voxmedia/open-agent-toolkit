@@ -136,6 +136,10 @@ Fresh final lifecycle review of the recovered basis passed with zero findings th
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T010616Z.md
 
+### 2026-07-19 · structural · oat-project-review-receive · replacement-exit-gate-review-received
+
+Received and archived gate run bb3ed5bc-c97f-45f9-9328-300e580ffc25. The Important threshold passed; one Minor test-hardening finding was deferred with rationale in judgment-sweep mode; no implementation change or blocking task was added.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
