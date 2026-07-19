@@ -592,6 +592,19 @@ or reinterpret the retired run.
   `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/bb3ed5bc-c97f-45f9-9328-300e580ffc25.json`
 - State: `pending/accepted`
 
+### 2026-07-19 — Replacement result persisted
+
+- Gate run: `bb3ed5bc-c97f-45f9-9328-300e580ffc25`
+- Envelope: `ok`, exit code `0`
+- Artifact: `reviews/final-review-2026-07-19T010616Z.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 1 Minor
+- Receive eligible: `true`
+- State: `pending/result_persisted`
+
+The complete stdout receipt parses as exactly one JSON object and its run,
+project, invocation, artifact, and handoff fields corroborate. Receive is the
+next required boundary; no terminal gate disposition has been applied yet.
+
 ---
 
 ## Deviations from Plan / Design

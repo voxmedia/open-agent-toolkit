@@ -132,6 +132,10 @@ Authorized recovery commits ce122492 and 09123235 make JSON-mode gate stdout env
 
 Fresh final lifecycle review of the recovered basis passed with zero findings through 98c935c3. The one user-authorized replacement configured exit-gate generation is now pending; the retired run remains audit-only.
 
+### 2026-07-19 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T010616Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
