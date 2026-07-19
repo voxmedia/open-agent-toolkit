@@ -417,15 +417,16 @@ git commit -m "chore(p03-t02): sync final gate assets and release versions"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                                    |
-| ------ | -------- | ------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed  | 2026-07-18 | reviews/archived/p01-review-2026-07-18T200353Z.md           |
-| p02    | code     | passed  | 2026-07-18 | reviews/archived/p02-review-2026-07-18T205056Z.md           |
-| p03    | code     | pending | -          | -                                                           |
-| final  | code     | passed  | 2026-07-18 | reviews/archived/final-review-2026-07-18T235623Z.md         |
-| spec   | artifact | pending | -          | -                                                           |
-| design | artifact | pending | -          | -                                                           |
-| plan   | artifact | passed  | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T193932Z.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                    |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | passed   | 2026-07-18 | reviews/archived/p01-review-2026-07-18T200353Z.md           |
+| p02    | code     | passed   | 2026-07-18 | reviews/archived/p02-review-2026-07-18T205056Z.md           |
+| p03    | code     | pending  | -          | -                                                           |
+| final  | code     | passed   | 2026-07-18 | reviews/archived/final-review-2026-07-18T235623Z.md         |
+| final  | code     | received | 2026-07-19 | reviews/final-review-2026-07-19T001811Z.md                  |
+| spec   | artifact | pending  | -          | -                                                           |
+| design | artifact | pending  | -          | -                                                           |
+| plan   | artifact | passed   | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T193932Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
