@@ -428,7 +428,7 @@ git commit -m "chore(p03-t02): sync final gate assets and release versions"
 | final  | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T010616Z.md         |
 | final  | code     | fixes_completed | 2026-07-19 | reviews/archived/final-review-2026-07-19T125608Z.md         |
 | final  | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T130147Z.md         |
-| final  | code     | received        | 2026-07-19 | reviews/final-review-2026-07-19T132025Z.md                  |
+| final  | code     | passed          | 2026-07-19 | reviews/archived/final-review-2026-07-19T132025Z.md         |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T193932Z.md |
