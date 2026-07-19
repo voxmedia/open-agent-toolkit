@@ -168,6 +168,18 @@ Accepted focused root-owned Phase p04 re-review after one bounded p04-t08 fix it
 
 Phase p04 remote-review task p04-t08 passed focused root-owned re-review after one bounded fix iteration; evidence: reviews/archived/p04-review-2026-07-19T135807Z.md.
 
+### 2026-07-19 · structural · oat-project-implement · p04-t09-dispatch
+
+Accepted p04-t09 implementation dispatch on the configured High target; implementation commit 08c0e1cd6cbd9890742ffaefa1a973d7e424ab14 passed focused and full verification.
+
+### 2026-07-19 · structural · oat-project-implement · upstream-merge-2
+
+Merged current origin/main at 3ec32f0c70af343ea94ce273b402098d52693dba after final review identified the published 0.2.2 baseline; merge completed without conflicts.
+
+### 2026-07-19 · structural · oat-project-implement · final-review-2026-07-19T141639Z
+
+Superseding final review completed without nested reconnaissance and requested changes: 1 Critical release-version collision and 2 Important workflow/tracking findings. Evidence: reviews/archived/final-review-2026-07-19T141639Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

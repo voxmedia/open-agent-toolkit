@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p04-t09
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 9     | 8/9       |
+| Phase 4 | in_progress | 11    | 9/11      |
 
-**Total:** 13/14 tasks completed
+**Total:** 14/16 tasks completed
 
 ---
 
@@ -395,13 +395,36 @@ oat_generated: false
 
 ### Task p04-t09: (verification) Map new handoff prose in the autonomy inventory
 
+**Status:** completed
+**Commit:** 08c0e1cd6cbd9890742ffaefa1a973d7e424ab14
+
+**Outcome (required when completed):**
+
+- Mapped both validation-only prompt-site keys to `NG`. The focused inventory
+  test, provider status/sync, release validation, tests, lint, type-check, and
+  build all passed.
+
+---
+
+### Task p04-t10: (review) Enforce the signal-first handoff in phase review
+
 **Status:** pending
 **Commit:** pending
 
 **Outcome (required when completed):**
 
-- Pending reconciliation of the two non-gate prompt-site keys found by the full
-  final verification suite.
+- Pending implementation of final-review Important finding `I1`.
+
+---
+
+### Task p04-t11: (review) Advance to the next unpublished lockstep version
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending implementation of final-review Critical finding `C1`.
 
 ---
 
@@ -546,6 +569,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - None.
 
+### Run 6
+
+**Timestamp:** 2026-07-19T14:10:00Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome     | Task commits | Root review       | Fix iterations |
+| ----- | ----------- | ------------ | ----------------- | -------------- |
+| p04   | fixes_added | `08c0e1cd`   | changes_requested | 0              |
+
+**Dispatch notes:**
+
+- p04-t09 used the configured High phase implementer target and completed all
+  focused and full verification.
+- The superseding final reviewer kept reconnaissance inline because the current
+  nested host exposed no explicitly selectable floor-safe target.
+- The reviewer returned `Reconnaissance: not-attempted`; no orchestration
+  section or nested-recon project-log append was accepted.
+- Final evidence:
+  `reviews/archived/final-review-2026-07-19T141639Z.md`.
+- The root merged current `origin/main` after validating the published `0.2.2`
+  collision, then converted the Critical and substantive Important findings
+  into p04-t10 and p04-t11. The tracking-only Important finding was repaired
+  directly in this bookkeeping update.
+
+**Outstanding items:**
+
+- p04-t10 and p04-t11.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -586,6 +640,7 @@ Chronological log of implementation progress.
 - [x] p04-t07: Remove obsolete Cursor wave-skill mirrors - `839de7d5`
 - [x] p04-t08: Add an explicit reconnaissance-attempt signal - `1aa7c1ab`,
       `384895ab`
+- [x] p04-t09: Map new handoff prose in the autonomy inventory - `08c0e1cd`
 
 **What changed (high level):**
 
@@ -607,8 +662,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run final closeout review for the updated PR delta, then fetch PR #163 remote
-  feedback again to confirm the original comment is resolved.
+- Complete p04-t10 and p04-t11, rerun final verification and final review, then
+  fetch PR #163 remote feedback again.
 
 **Blockers:**
 
@@ -648,6 +703,19 @@ Document any intentional deviations from the original plan, spec, or design. Inc
     line, missing/duplicate/invalid rejection, and signal consumption before
     artifact validation or bookkeeping.
 
+- **Final-C1 — Lockstep `0.2.2` is published**
+  - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
+  - Final disposition: converted to `p04-t11`.
+
+- **Final-I1 — Implementation-owned review path lacks signal-first handoff**
+  - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
+  - Final disposition: converted to `p04-t10`.
+
+- **Final-I2 — p04-t09 tracking remained pending after commit**
+  - Source: `reviews/archived/final-review-2026-07-19T141639Z.md`
+  - Final disposition: resolved directly in root bookkeeping before the next
+    implementation dispatch.
+
 ## Test Results
 
 Track test execution during implementation.
@@ -659,6 +727,7 @@ Track test execution during implementation.
 | 3     | 153       | 153    | 0      | Focused contracts plus full release  |
 | 4     | 3409      | 3409   | 0      | Workspace, smoke, and full release   |
 | 4 fix | 125       | 125    | 0      | Reconnaissance-signal handoff        |
+| 4 fix | 3409      | 3409   | 0      | Autonomy inventory and full closeout |
 
 ## Final Summary (for PR/docs)
 

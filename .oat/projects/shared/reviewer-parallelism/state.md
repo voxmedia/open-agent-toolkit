@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t09
-oat_last_commit: 384895ab95172eb430dc895a3d3e790cb5bbcfdb
+oat_current_task: p04-t10
+oat_last_commit: 5478956722737681decd1f54c0fc4e5d57592b9d
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -39,19 +39,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:06:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:19:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation reopened for final-verification fix
+**Status:** Implementation reopened for final-review fixes
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implementation — final-verification task `p04-t09` in progress.
+Implementation — final-review tasks `p04-t10` and `p04-t11` pending.
 
 ## Artifacts
 
@@ -92,7 +92,10 @@ Implementation — final-verification task `p04-t09` in progress.
 - ✓ Task `p04-t08` and its bounded semantic-test fix completed
 - ✓ Phase 4 focused re-review passed with zero residual findings
 - ⚠ Full final verification found two unmapped autonomy prompt-site keys
-- ⧗ Task `p04-t09` pending
+- ✓ Task `p04-t09` completed with full verification
+- ⚠ Superseding final review: 1 Critical, 2 Important
+- ✓ Tracking-only Important finding resolved in root bookkeeping
+- ⧗ Tasks `p04-t10` and `p04-t11` pending
 
 ## Blockers
 
@@ -100,5 +103,6 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` for `p04-t09`, repeat final verification and the
-superseding final review, then receive a fresh remote review cycle for PR #163.
+Run `oat-project-implement` for `p04-t10` and `p04-t11`, repeat final
+verification and the superseding final review, then receive a fresh remote
+review cycle for PR #163.

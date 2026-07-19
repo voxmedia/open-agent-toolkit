@@ -1089,6 +1089,89 @@ git add \
 git commit -m "fix(p04-t09): map review handoff prompt sites"
 ```
 
+---
+
+### Task p04-t10: (review) Enforce the signal-first handoff in phase review
+
+**Source Review:** `reviews/archived/final-review-2026-07-19T141639Z.md`
+(Important `I1`)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/project-log.md`
+- Regenerate managed provider views and `.oat/sync/manifest.json` as applicable
+
+1. Apply the exact signal-first state machine from
+   `oat-project-review-provide` to the implementation-owned phase-review path.
+   Consume exactly one `attempted|not-attempted` signal before artifact
+   validation or bookkeeping; missing, duplicate, or invalid signals fail
+   closed.
+2. Require complete orchestration evidence and exactly one root log append for
+   `attempted`. For `not-attempted`, forbid `## Review Orchestration` and
+   perform no orchestration-log append.
+3. Extend the existing semantic contract test to pin the behavior independently
+   in both root workflows, update project-log documentation, regenerate views,
+   and run focused contracts, provider status/sync, formatting, and
+   `pnpm release:validate`.
+
+**Expected:** both root review workflows consume the same explicit signal,
+reject malformed handoffs before validation/bookkeeping, and append
+orchestration evidence only when reconnaissance was attempted.
+
+**Commit:**
+
+```bash
+git add \
+  .agents/skills/oat-project-implement/references/phase-execution.md \
+  packages/cli/src/validation/skills.test.ts \
+  apps/oat-docs/docs/cli-utilities/project-log.md \
+  .claude/skills/oat-project-implement/references/phase-execution.md \
+  .oat/sync/manifest.json
+git commit -m "fix(p04-t10): enforce implementation review signal handoff"
+```
+
+---
+
+### Task p04-t11: (review) Advance to the next unpublished lockstep version
+
+**Source Review:** `reviews/archived/final-review-2026-07-19T141639Z.md`
+(Critical `C1`)
+
+**Files:**
+
+- Modify: all five lockstep public package manifests under `packages/`
+- Modify generated release, provider, sync, and PJM attribution surfaces as
+  required by repository tooling
+
+1. Starting from the freshly merged `origin/main` baseline, query npm for all
+   five public packages and select the next shared patch greater than upstream
+   that is unpublished for every package.
+2. Update all five manifests together, regenerate bundled/provider assets and
+   sync metadata, and update release attribution without changing unrelated
+   project content.
+3. Re-query npm immediately before commit, then run project status/sync,
+   formatting, `pnpm release:validate`, and the full final verification gate.
+
+**Expected:** every lockstep package uses one shared version that is greater
+than upstream and unpublished across all five registries immediately before
+commit; provider and release validation pass.
+
+**Commit:**
+
+```bash
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+git commit -m "fix(p04-t11): advance unpublished lockstep version"
+```
+
 ### Phase 4 Review Acceptance
 
 The rerun root-owned Phase 4 code review is also the class-aware dogfood
@@ -1136,7 +1219,7 @@ required and remain out of scope for this project.
 | pr-163             | remote   | fixes_completed | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
 | p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135154Z.md             |
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
-| final              | code     | pending         | -          | -                                                             |
+| final              | code     | fixes_added     | 2026-07-19 | reviews/archived/final-review-2026-07-19T141639Z.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -1153,11 +1236,11 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 9 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, and autonomy-inventory reconciliation
+- Phase 4: 11 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, autonomy-inventory reconciliation, implementation-root signal enforcement, and release-version correction
 
-**Total: 4 phases, 14 tasks (13 complete, 1 pending)**
+**Total: 4 phases, 16 tasks (14 complete, 2 pending)**
 
-Implementation reopened for final-verification task `p04-t09`.
+Implementation reopened for final-review tasks `p04-t10` and `p04-t11`.
 
 ---
 
