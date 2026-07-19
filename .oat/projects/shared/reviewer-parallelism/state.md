@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -35,23 +35,23 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T12:41:34Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T13:11:50Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation complete
+**Status:** PR open
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implement - complete
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -60,6 +60,7 @@ Implement - complete
 - **Design:** `design.md` (supplemental revision design review passed)
 - **Plan:** `plan.md` (revision amendment review passed)
 - **Implementation:** `implementation.md` (all phases and tasks complete)
+- **Summary:** `summary.md` (complete)
 
 ## Progress
 
@@ -86,6 +87,8 @@ Implement - complete
 - ⚠ Superseding final review found two Medium bookkeeping-only defects
 - ✓ Implementation status and three Phase 4 full task SHAs corrected
 - ✓ Superseding final review passed with zero residual findings
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -93,4 +96,8 @@ None
 
 ## Next Milestone
 
-Optional project summary, documentation sync, and final PR handoff
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
