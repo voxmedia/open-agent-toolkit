@@ -585,6 +585,13 @@ or reinterpret the retired run.
   `reviews/exit-gate-6ac2b9f3-result.json`
 - State: `pending/intent_persisted`
 
+### 2026-07-19 — Replacement launch accepted
+
+- Gate run: `bb3ed5bc-c97f-45f9-9328-300e580ffc25`
+- Run marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/bb3ed5bc-c97f-45f9-9328-300e580ffc25.json`
+- State: `pending/accepted`
+
 ---
 
 ## Deviations from Plan / Design
