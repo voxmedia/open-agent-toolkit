@@ -935,6 +935,45 @@ git commit -m "chore(p04-t06): synchronize review orchestration fixes"
 If a listed path is absent or unchanged for a provider, omit it from staging.
 Expected: full release validation passes and project sync reports no drift.
 
+---
+
+### Task p04-t07: Remove obsolete Cursor wave-skill mirrors
+
+**Files:**
+
+- Delete: `.cursor/skills/oat-wave-execute`
+- Delete: `.cursor/skills/oat-wave-program`
+
+Remove only the two tracked provider-view symlinks. Preserve their canonical
+`.agents/skills/oat-wave-*` packages and current Claude views. These Cursor
+paths are absent from the merged sync manifest because Cursor reads canonical
+skills natively.
+
+Verify:
+
+```bash
+pnpm run cli -- status --scope project --json
+pnpm run cli -- sync --scope project --dry-run
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/providers/cursor/codec/sync-extension.test.ts
+git diff --check
+git status --short
+```
+
+Expected: project status reports no Cursor skill strays, sync dry-run has no
+changes, focused tests pass, and only the two obsolete symlinks are deleted.
+
+Commit:
+
+```bash
+git add -u \
+  .cursor/skills/oat-wave-execute \
+  .cursor/skills/oat-wave-program
+git commit -m "fix(p04-t07): remove obsolete Cursor skill mirrors"
+```
+
 ### Phase 4 Review Acceptance
 
 The rerun root-owned Phase 4 code review is also the class-aware dogfood
@@ -970,7 +1009,7 @@ required and remain out of scope for this project.
 | p01                | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
 | p02                | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
 | p03                | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
-| p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T005827Z.md             |
+| p04                | code     | fixes_added     | 2026-07-19 | reviews/archived/p04-review-2026-07-19T025353Z.md             |
 | final-pre-revision | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
 | final              | code     | pending         | -          | -                                                             |
 | spec               | artifact | pending         | -          | -                                                             |
@@ -995,9 +1034,9 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 6 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, and revised lockstep release
+- Phase 4: 7 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, and revised lockstep release
 
-**Total: 4 phases, 11 tasks**
+**Total: 4 phases, 12 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 

@@ -120,6 +120,14 @@ Accepted Cursor reviewer behavior: delegate suitable mechanical lanes to Compose
 
 Accepted review-fix commits ede972ce, e9f49294, and 67db4f8c after merged-upstream reconciliation. Focused contracts pass 162/162, workspace plus smoke tests pass 3409/3409, full release validation passes at unpublished 0.2.2, and provider dry-run is clean.
 
+### 2026-07-19 · structural · oat-project-implement · p04-review-orchestration
+
+Phase p04 re-review used one Composer 2.5 Fast mechanical lane and parent-inline intelligent coverage after the stronger nested floor was unsatisfied; dogfood passed. Evidence: reviews/archived/p04-review-2026-07-19T025353Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · p04-review-fix-2
+
+Phase p04 re-review resolved prior findings and found one Important merge-reconciliation defect: remove two obsolete tracked Cursor wave-skill mirrors, then rerun project status, sync dry-run, and focused provider tests.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
