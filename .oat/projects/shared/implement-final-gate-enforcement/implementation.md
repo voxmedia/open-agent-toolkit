@@ -698,6 +698,17 @@ implementation exit-gate generation. The stale prior generation is not reused.
 The configured declaration was resolved again for this new generation. Its
 fingerprint is unchanged, but the generation and implementation basis are new.
 
+### 2026-07-19 — Post-integration launch intent persisted
+
+- Attempt ID: `9e37dbac-dcb8-4b87-8c1e-78d411491603`
+- Started at: `2026-07-19T13:05:38Z`
+- Receipt:
+  `reviews/exit-gate-9e37dbac-result.json`
+- State: `pending/intent_persisted`
+
+The launch intent and result-receipt path were committed before invoking the
+configured command.
+
 ---
 
 ## Final Closeout Sequence
