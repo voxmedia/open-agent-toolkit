@@ -31,10 +31,17 @@ this repository.
 - Confirm the rollback backup exists at
   `~/.agents/skills-backup/oat-explainer-kit-0.4.1` before changing the installed
   wrapper.
-- Use the post-p06 final explainer-kit RC for acceptance. At final-RC freeze,
-  fill all three placeholders in the installed wrapper's `config.json`
-  `finalRc` block (`rcId`, `commit`, `subtreeSha256`); the acceptance harness
-  reads them from there and carries them into the sanitized acceptance record.
+- Use the post-p06 final explainer-kit RC for acceptance. FINAL RC FROZEN
+  2026-07-19 — fill the installed wrapper's `config.json` `finalRc` block with
+  exactly:
+  - `rcId`: `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+  - `commit`: `da1e7a713adac4743368addf206aa780a94871ba`
+  - `subtreeSha256`: `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`
+    (verified Mini-side: `references/explainer-rc-985d0abd/verification-2026-07-19.md`;
+    packages 0.2.3). The acceptance harness reads them from there and carries
+    them into the sanitized acceptance record.
+    PRECONDITION: the CLI whole-tarball provenance mismatch must be resolved
+    (per-file manifest diff) before this acceptance run — do not waive.
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.
