@@ -30,7 +30,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.2` enables task-class-aware reviewer-local reconnaissance for broad
+- CLI `0.2.3` enables task-class-aware reviewer-local reconnaissance for broad
   reviews. Read-only, non-recursive evidence lanes keep `recon` authority while
   independent model-class floors distinguish deterministic checks from
   silent-miss-prone interpretation and stronger bounded analysis. The primary
