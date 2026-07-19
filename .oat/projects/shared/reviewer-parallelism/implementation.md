@@ -708,6 +708,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ---
 
+## Implementation Exit Gate
+
+### Generation 1 — pending
+
+- **Reviewed implementation head:** `a2a5f3cbf84ae53cc8bb328f74d7915b71112355`
+- **Implementation fingerprint:**
+  `git-tree:e7bbafe5b1ff25c318d6d22534c19ac8fe18c267`
+- **Config fingerprint:**
+  `9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7`
+- **Resolution:** configured
+- **Policy:** block, maximum 2 remediation attempts
+- **Transition:** persisted `pending/not_started` before gate launch.
+
+---
+
 ## Remote Review Received
 
 ### 2026-07-19 — PR #163

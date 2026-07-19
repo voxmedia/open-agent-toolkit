@@ -48,6 +48,38 @@ oat_post_implement_sequence:
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: '9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: a2a5f3cbf84ae53cc8bb328f74d7915b71112355
+  implementation_fingerprint: 'git-tree:e7bbafe5b1ff25c318d6d22534c19ac8fe18c267'
+  launch_state: not_started
+  launch_attempt_id: null
+  launch_started_at: null
+  launch_result_receipt: null
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-07-19T15:51:10Z'
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
 oat_project_state_updated: '2026-07-19T15:32:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
