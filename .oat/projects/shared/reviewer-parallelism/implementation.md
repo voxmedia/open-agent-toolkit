@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: null
+oat_current_task_id: p04-t09
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 3     | 3/3       |
-| Phase 4 | complete | 8     | 8/8       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | in_progress | 9     | 8/9       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/14 tasks completed
 
 ---
 
@@ -390,6 +390,18 @@ oat_generated: false
   it before validation or bookkeeping.
 - Focused re-review passed after one bounded semantic-test fix pinned template
   cardinality, duplicate rejection, and handoff ordering.
+
+---
+
+### Task p04-t09: (verification) Map new handoff prose in the autonomy inventory
+
+**Status:** pending
+**Commit:** pending
+
+**Outcome (required when completed):**
+
+- Pending reconciliation of the two non-gate prompt-site keys found by the full
+  final verification suite.
 
 ---
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t09
 oat_last_commit: 384895ab95172eb430dc895a3d3e790cb5bbcfdb
 oat_blockers: []
 associated_issues:
@@ -39,19 +39,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/163' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:03:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:06:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation tasks complete; awaiting final review
+**Status:** Implementation reopened for final-verification fix
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implementation — tasks complete; awaiting final review.
+Implementation — final-verification task `p04-t09` in progress.
 
 ## Artifacts
 
@@ -91,7 +91,8 @@ Implementation — tasks complete; awaiting final review.
 - ⚠ PR #163 remote review added Medium finding `M1`
 - ✓ Task `p04-t08` and its bounded semantic-test fix completed
 - ✓ Phase 4 focused re-review passed with zero residual findings
-- ⧗ Awaiting superseding final review
+- ⚠ Full final verification found two unmapped autonomy prompt-site keys
+- ⧗ Task `p04-t09` pending
 
 ## Blockers
 
@@ -99,5 +100,5 @@ None
 
 ## Next Milestone
 
-Run final verification and a superseding final review for the updated PR delta,
-then receive a fresh remote review cycle for PR #163.
+Run `oat-project-implement` for `p04-t09`, repeat final verification and the
+superseding final review, then receive a fresh remote review cycle for PR #163.

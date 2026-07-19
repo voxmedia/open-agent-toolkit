@@ -1040,6 +1040,55 @@ git add \
 git commit -m "fix(p04-t08): expose reviewer reconnaissance attempts"
 ```
 
+---
+
+### Task p04-t09: (verification) Map new handoff prose in the autonomy inventory
+
+**Source Verification:** `pnpm test` on 2026-07-19
+
+**Files:**
+
+- Modify: `.agents/docs/autonomy-contract.md`
+- Synchronize matching canonical embedded copies under
+  `.agents/skills/oat-project-{autonomous,quick-start,implement,document,pr-final}/references/`
+- Regenerate managed provider copies as applicable
+- Regenerate: `.oat/sync/manifest.json`
+
+1. **Classify the prompt sites.** Record the two stable keys emitted by the
+   autonomy drift test for the new artifact-mode handoff prose as `NG`; these
+   lines validate reviewer output and do not ask a human to choose or approve
+   anything.
+2. **Synchronize copies.** Keep all canonical embedded autonomy contracts
+   byte-identical, then regenerate managed provider views without changing the
+   existing PR-scoped skill or package versions.
+3. **Verify the fix.** Run the focused autonomy inventory test, provider
+   status/sync dry-run, formatting, `pnpm release:validate`, and the complete
+   final verification gate (`pnpm test`, `pnpm lint`, `pnpm type-check`,
+   `pnpm build`).
+
+**Expected:** the autonomy inventory recognizes both new non-gate prompt sites,
+all embedded/provider copies remain synchronized, and the full final
+verification gate passes.
+
+**Commit:**
+
+```bash
+git add \
+  .agents/docs/autonomy-contract.md \
+  .agents/skills/oat-project-autonomous/references/gate-inventory.md \
+  .agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md \
+  .agents/skills/oat-project-implement/references/docs/autonomy-contract.md \
+  .agents/skills/oat-project-document/references/docs/autonomy-contract.md \
+  .agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md \
+  .claude/skills/oat-project-autonomous/references/gate-inventory.md \
+  .claude/skills/oat-project-quick-start/references/docs/autonomy-contract.md \
+  .claude/skills/oat-project-implement/references/docs/autonomy-contract.md \
+  .claude/skills/oat-project-document/references/docs/autonomy-contract.md \
+  .claude/skills/oat-project-pr-final/references/docs/autonomy-contract.md \
+  .oat/sync/manifest.json
+git commit -m "fix(p04-t09): map review handoff prompt sites"
+```
+
 ### Phase 4 Review Acceptance
 
 The rerun root-owned Phase 4 code review is also the class-aware dogfood
@@ -1104,12 +1153,11 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 8 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, and remote-review signal correction
+- Phase 4: 9 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, Cursor native-skill cleanup, revised lockstep release, remote-review signal correction, and autonomy-inventory reconciliation
 
-**Total: 4 phases, 13 tasks (13 complete)**
+**Total: 4 phases, 14 tasks (13 complete, 1 pending)**
 
-All planned tasks are complete. Final verification and a superseding final
-review remain before the open PR returns to remote-review receipt.
+Implementation reopened for final-verification task `p04-t09`.
 
 ---
 
