@@ -493,6 +493,28 @@ initialized. No gate command has launched yet.
   `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4ac107e3-0caf-4cf8-bd26-b026335d1282.json`
 - State: `pending/accepted`
 
+### 2026-07-19 — Result reconciliation blocked
+
+- Durable stdout receipt:
+  `reviews/exit-gate-adc8991b-result.json`
+- Matching gate artifact:
+  `reviews/final-review-2026-07-19T001811Z.md`
+- Gate run: `4ac107e3-0caf-4cf8-bd26-b026335d1282`
+- State: `blocked/accepted`
+- Failure: `launch_result_reconciliation_required`
+
+The stdout receipt contains human-oriented review output before the structured
+JSON object, so it is not exactly one parseable envelope. The apparent trailing
+object and matching artifact cannot authorize receive or policy handling. The
+capture wrapper also exited after assigning zsh's read-only `status` parameter,
+so the wrapper exit is `1` and the configured command's exit code is not
+independently available; neither exit code is used to infer the gate outcome.
+
+No receive ran, no `on_failure` policy was applied, and no remediation attempt
+was consumed. Recovery requires correcting JSON-mode stdout purity, obtaining a
+current final lifecycle review for that substantive change, and explicit human
+retirement of this accepted attempt before a new generation may launch.
+
 ---
 
 ## Deviations from Plan / Design

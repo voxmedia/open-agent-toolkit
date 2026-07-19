@@ -1,0 +1,169 @@
+Review complete. The gate-originated final review passed with no blocking findings.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ PROVIDE REVIEW — COMPLETE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Gate route: inline (runtime=cursor, cliRoot=/Users/tstang/orca/workspaces/open-agent-toolkit/implement-final-gate-reinforcement)
+
+**Scope:** final (`917d210f..HEAD`, 27 files, 43 commits — the 4 commits after the reviewed head `50452294` are all gate-owned closeout bookkeeping)
+**Findings: 0 critical, 0 important, 0 medium, 2 minor** — no blocking findings.
+
+What I verified, independently re-running everything rather than trusting recorded claims:
+
+- **Requirements coverage** — all discovery success criteria are implemented: Step 14 gate execution sits between the mandatory final review and approval-aware sequencing; the 31-field `oat_implement_exit_gate` state machine persists launch/receive/freshness provenance with fail-closed reconciliation; `oat-project-next` check 5.0 routes unresolved or stale gate state ahead of every normal post-implementation route; manual-review provenance is rejected; null resolution is explicit `allowed/no_gate`. The live project state on this branch is itself exercising the contract correctly (`pending/accepted` with matching run ID and fingerprints).
+- **Verification** — 154/154 focused contract tests, 58 skills validated, base-relative version-bump validation (2.1.4 / 1.0.10, each bumped exactly once), format, lint, type-check, full workspace `pnpm test` (exit 0), deterministic docs-index regeneration (no drift), and `pnpm release:validate` for all five public packages at 0.1.77 — all pass.
+- **Deferred ledger** — no deferred Medium/Minor findings carry forward; all prior final-review findings have resolving commits and the user-authorized re-review passed clean.
+
+The two Minor findings: (1) the shared skill tests now slice gate sections on the bare substring `Gate Execution`, which could silently shrink the asserted slice if later prose mentions that phrase; (2) small wording drift in the design schema block where `resolved_command`/`resolved_description` show null defaults despite the validation rules requiring them before launch.
+
+Bookkeeping: review artifact written to `reviews/final-review-2026-07-19T001811Z.md` with the six gate frontmatter fields copied verbatim, plan `## Reviews` row appended, both formatted with oxfmt and committed atomically as `5b102440`. The `exit-gate-adc8991b-*` receipt files in `reviews/` are owned by the parent gate process and were left untouched.That was the full workspace test suite I ran as part of the review — it finished with exit code 0 (123/123 root smoke aggregate passing), and the result was already incorporated into the review artifact's verification evidence. No follow-up needed; the review is complete and committed as `5b102440`.
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "4ac107e3-0caf-4cf8-bd26-b026335d1282",
+  "target": "cursor-fable-5-xhigh",
+  "project": ".oat/projects/shared/implement-final-gate-enforcement",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T001811Z.md",
+  "generatedAt": "2026-07-19T00:18:11Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 2
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Gate passed at the important threshold, but the final review still contains non-blocking findings (minor=2). Run oat-project-review-receive for .oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T001811Z.md to disposition them before marking the final review row passed.",
+  "diversity": {
+    "avoid": "same-family",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": [
+        "openai"
+      ],
+      "contributingScopes": [
+        "p03",
+        "p02",
+        "p01"
+      ],
+      "contributingStampCount": 3
+    },
+    "reviewer": {
+      "target": "cursor-fable-5-xhigh",
+      "runtime": "cursor",
+      "family": "claude",
+      "model": "claude-fable-5-xhigh"
+    }
+  },
+  "gateInvocation": {
+    "runId": "4ac107e3-0caf-4cf8-bd26-b026335d1282",
+    "targetId": "cursor-fable-5-xhigh",
+    "runtime": "cursor",
+    "model": "claude-fable-5-xhigh",
+    "reasoningEffort": "provider-default",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "cursor-fable-5-xhigh"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "4ac107e3-0caf-4cf8-bd26-b026335d1282",
+      "targetId": "cursor-fable-5-xhigh",
+      "runtime": "cursor",
+      "model": "claude-fable-5-xhigh",
+      "reasoningEffort": "provider-default",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/shared/implement-final-gate-enforcement",
+      "invocation": {
+        "runId": "4ac107e3-0caf-4cf8-bd26-b026335d1282",
+        "targetId": "cursor-fable-5-xhigh",
+        "runtime": "cursor",
+        "model": "claude-fable-5-xhigh",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/shared/implement-final-gate-enforcement",
+      "artifactProject": ".oat/projects/shared/implement-final-gate-enforcement",
+      "normalizedArtifactProject": ".oat/projects/shared/implement-final-gate-enforcement",
+      "matchingArtifactPaths": [
+        ".oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T001811Z.md"
+      ],
+      "invocation": {
+        "runId": "4ac107e3-0caf-4cf8-bd26-b026335d1282",
+        "targetId": "cursor-fable-5-xhigh",
+        "runtime": "cursor",
+        "model": "claude-fable-5-xhigh",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}

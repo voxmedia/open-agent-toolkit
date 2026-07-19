@@ -112,6 +112,14 @@ User explicitly authorized one artifact-only correction after automatic retry ex
 
 User-authorized final whole-project review passed with zero findings. Configured implementation exit gate is the next mandatory boundary.
 
+### 2026-07-19 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T001811Z.md
+
+### 2026-07-19 · structural · oat-project-implement · implementation-exit-gate-blocked
+
+Accepted gate run 4ac107e3-0caf-4cf8-bd26-b026335d1282 produced a matching gate artifact but a non-JSON-pure stdout receipt. Parent receive and onFailure policy are prohibited; launch-result reconciliation is required before any new generation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -1,0 +1,3 @@
+wrapper_exit_code=1
+configured_command_exit_code=unknown
+wrapper_failure=zsh read-only parameter assignment after configured command returned
