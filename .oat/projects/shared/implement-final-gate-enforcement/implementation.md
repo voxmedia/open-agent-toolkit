@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - One user-authorized replacement implementation exit-gate generation is pending.
+oat_blockers: []
 oat_last_updated: 2026-07-19
 oat_current_task_id: null
 oat_generated: false
@@ -641,6 +640,21 @@ next required boundary; no terminal gate disposition has been applied yet.
   `scope=final;type=code;source=final-review-2026-07-19T010616Z.md`
 - Pre-receive HEAD: `d6fb952c4a125276cc7584941da4ae27c0418135`
 - State: `pending/receive_intent_persisted`
+
+### 2026-07-19 — Replacement gate passed and received
+
+- Gate run: `bb3ed5bc-c97f-45f9-9328-300e580ffc25`
+- Archived artifact:
+  `reviews/archived/final-review-2026-07-19T010616Z.md`
+- Receive bookkeeping commit:
+  `465064289fe72ef7ccdc820ac0c2a93001e1165d`
+- Disposition: `allowed/passed`
+- Receive state: `completed`
+
+The exact archived artifact, final/code review event, and post-intent bookkeeping
+commit corroborate. The configured gate is fresh for implementation basis
+`98c935c3`; no gate or receive rerun is permitted while that basis remains
+unchanged.
 
 ---
 
