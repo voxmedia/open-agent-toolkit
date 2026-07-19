@@ -36,7 +36,9 @@ copying their content here. -->
   silent-miss-prone interpretation and stronger bounded analysis. The primary
   reviewer retains source validation, synthesis, severity, validation
   decisions, and final findings; unsatisfied floors preserve the same review
-  coverage inline without downgrading.
+  coverage inline without downgrading. Review artifacts carry compact
+  orchestration evidence, while root project workflows own the single
+  structural `project-log.md` reference.
 - Wave-orchestration skills promoted from stoa (PR #158, release `0.2.0`):
   `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 in the workflow pack
   with genericized rule text and bundled assets, a mini-wave validation
@@ -160,4 +162,6 @@ gate liveness evidence, a per-project external-gate override,
 trimming the largest implementation reference, rechecking Cursor GPT-5.6
 eligibility by 2026-08-08, optional root-owned exact dispatch, root-agent
 judgment logging for project observations, and avoiding redundant
-bookkeeping-only re-reviews.
+bookkeeping-only re-reviews. `BL-260719-add-pinned-recon-agents` tracks a
+reusable pinned recon-role contract for review and non-review orchestration if
+observed value justifies the additional provider role matrix.
