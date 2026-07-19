@@ -1087,6 +1087,7 @@ required and remain out of scope for this project.
 | pr-163             | remote   | fixes_completed | 2026-07-19 | reviews/archived/remote-pr-163-review-2026-07-19T132506Z.md   |
 | p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135154Z.md             |
 | p04                | code     | passed          | 2026-07-19 | reviews/archived/p04-review-2026-07-19T135807Z.md             |
+| final              | code     | pending         | -          | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
