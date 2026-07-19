@@ -495,8 +495,10 @@ initialized. No gate command has launched yet.
 
 ### 2026-07-19 — Result reconciliation blocked
 
-- Durable stdout receipt:
+- Preselected stdout receipt:
   `reviews/exit-gate-adc8991b-result.json`
+- Byte-preserving quarantine copy:
+  `reviews/exit-gate-adc8991b-result.txt`
 - Matching gate artifact:
   `reviews/final-review-2026-07-19T001811Z.md`
 - Gate run: `4ac107e3-0caf-4cf8-bd26-b026335d1282`
@@ -506,6 +508,9 @@ initialized. No gate command has launched yet.
 The stdout receipt contains human-oriented review output before the structured
 JSON object, so it is not exactly one parseable envelope. The apparent trailing
 object and matching artifact cannot authorize receive or policy handling. The
+malformed content was moved byte-for-byte to a `.txt` quarantine so repository
+JSON formatting remains valid; the original preselected receipt path is
+preserved in routing state for reconciliation. The
 capture wrapper also exited after assigning zsh's read-only `status` parameter,
 so the wrapper exit is `1` and the configured command's exit code is not
 independently available; neither exit code is used to infer the gate outcome.

@@ -36,6 +36,7 @@ oat_implement_exit_gate:
   failure:
     code: launch_result_reconciliation_required
     message: 'The durable stdout receipt contains human-oriented review output before the structured JSON object and cannot parse as exactly one envelope.'
+    quarantined_receipt: .oat/projects/shared/implement-final-gate-enforcement/reviews/exit-gate-adc8991b-result.txt
     stderr: .oat/projects/shared/implement-final-gate-enforcement/reviews/exit-gate-adc8991b-stderr.log
     wrapper_exit_code: 1
     configured_command_exit_code: null
