@@ -128,6 +128,10 @@ Phase p04 re-review used one Composer 2.5 Fast mechanical lane and parent-inline
 
 Phase p04 re-review resolved prior findings and found one Important merge-reconciliation defect: remove two obsolete tracked Cursor wave-skill mirrors, then rerun project status, sync dry-run, and focused provider tests.
 
+### 2026-07-19 · structural · oat-project-implement · p04-fix-2
+
+Accepted p04-t07 commit 839de7d5: removed only the two obsolete Cursor wave-skill mirrors; provider status is 82 in sync with zero strays, sync dry-run is clean, and focused tests pass 138/138.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

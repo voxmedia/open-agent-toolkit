@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t07
-oat_last_commit: 67db4f8c45b460384ed0763a55caaf26f5f49b60
+oat_current_task: null
+oat_last_commit: 839de7d56f74c9551e522ab29244caa75b4c0862
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T02:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T02:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -59,7 +59,7 @@ Implement - Phase 4 task-class-aware revision
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (supplemental revision design review passed)
 - **Plan:** `plan.md` (revision amendment review passed)
-- **Implementation:** `implementation.md` (Phase 4 cleanup ready at `p04-t07`)
+- **Implementation:** `implementation.md` (all Phase 4 tasks complete; narrow re-review pending)
 
 ## Progress
 
@@ -81,7 +81,8 @@ Implement - Phase 4 task-class-aware revision
 - ✓ Phase 4 review fixes complete with full release validation
 - ✓ Corrected class-aware dogfood acceptance passed
 - ⚠ Phase 4 re-review found two obsolete tracked Cursor wave-skill mirrors
-- ⧗ Executing cleanup task `p04-t07`
+- ✓ Cleanup task `p04-t07` removed both mirrors with zero remaining strays
+- ⧗ Running narrow final Phase 4 re-review
 
 ## Blockers
 

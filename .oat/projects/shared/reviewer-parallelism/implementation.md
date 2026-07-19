@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p04-t07
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 7     | 6/7       |
+| Phase 4 | in_progress | 7     | 7/7       |
 
-**Total:** 11/12 tasks completed
+**Total:** 12/12 tasks completed
 
 ---
 
@@ -329,8 +329,14 @@ oat_generated: false
 
 ### Task p04-t07: Remove obsolete Cursor wave-skill mirrors
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** 839de7d56f74c9551e522ab29244caa75b4c0862
+
+**Outcome (required when completed):**
+
+- Removed only the two obsolete Cursor wave-skill mirrors; provider status now
+  reports 82 in sync with zero strays while canonical and Claude surfaces
+  remain intact.
 
 ---
 
@@ -423,9 +429,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Dispatch policy:** High (Cursor managed capped)
 **Schedule:** sequential
 
-| Phase | Outcome     | Task commits                                                           | Root review | Fix iterations |
-| ----- | ----------- | ---------------------------------------------------------------------- | ----------- | -------------- |
-| p04   | fixes_added | `7b90e802`, `b741820b`, `56eeecc4`, `ede972ce`, `e9f49294`, `67db4f8c` | failed      | 2 in progress  |
+| Phase | Outcome         | Task commits                                                                       | Root review       | Fix iterations |
+| ----- | --------------- | ---------------------------------------------------------------------------------- | ----------------- | -------------- |
+| p04   | fixes_completed | `7b90e802`, `b741820b`, `56eeecc4`, `ede972ce`, `e9f49294`, `67db4f8c`, `839de7d5` | re-review pending | 2 completed    |
 
 **Dispatch notes:**
 
@@ -442,8 +448,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Outstanding items:**
 
-- Remove the two obsolete tracked `.cursor/skills/oat-wave-*` symlinks and
-  rerun project status, sync, and focused provider tests.
+- Narrow root-owned re-review of `p04-t07` remains pending.
 - The accepted historical `p04-t03` scope deviation remains recorded rather
   than rewriting committed history.
 
@@ -470,14 +475,14 @@ Chronological log of implementation progress.
 - [x] p04-t04: Correct recon baselines and nested model-choice terminology - `ede972ce`
 - [x] p04-t05: Add root-owned review orchestration logging - `e9f49294`
 - [x] p04-t06: Regenerate fix views and revalidate the release - `67db4f8c`
-- [ ] p04-t07: Remove obsolete Cursor wave-skill mirrors - next
+- [x] p04-t07: Remove obsolete Cursor wave-skill mirrors - `839de7d5`
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- Eleven of twelve tasks were completed across four sequential phases. The
-  class-aware dogfood acceptance passed; one merge-reconciliation cleanup
-  remains before Phase 4 can pass review.
+- All twelve tasks were completed across four sequential phases. Class-aware
+  dogfood acceptance passed and the merge-reconciliation cleanup is complete;
+  narrow re-review remains.
 
 **Decisions:**
 
