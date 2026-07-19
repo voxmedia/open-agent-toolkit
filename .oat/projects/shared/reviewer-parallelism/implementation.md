@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
@@ -292,7 +292,7 @@ oat_generated: false
 ### Task p04-t01: Separate reviewer lane authority from model-class floors
 
 **Status:** completed
-**Commit:** 7b90e8029cf96f8af58089488ee55c080168673e
+**Commit:** 7b90e8028fbbc76a758ead832a75cef3c1197ffe
 
 **Outcome (required when completed):**
 
@@ -305,7 +305,7 @@ oat_generated: false
 ### Task p04-t02: Document model-class-aware review lanes
 
 **Status:** completed
-**Commit:** b741820be9f9de0092f1b23b52b269566f8a2c2f
+**Commit:** b741820bddfd23417425def760532a45bfb73ad5
 
 **Outcome (required when completed):**
 
@@ -317,7 +317,7 @@ oat_generated: false
 ### Task p04-t03: Regenerate provider views and finalize the revised release
 
 **Status:** completed
-**Commit:** 56eeecc4520e478a8924fa0467f770ef1669e1d5
+**Commit:** 56eeecc43fb0930ac97427cc4656fffc8f1b377e
 
 **Outcome (required when completed):**
 
@@ -561,7 +561,9 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - **Final-M2 — Implementation completion status was internally inconsistent**
   - Source: `reviews/archived/final-review-2026-07-18T234708Z.md`
-  - Final disposition: resolved during completion bookkeeping by setting `oat_status` and the Phase 3 overview row to `complete`.
+  - Final disposition: resolved during original completion bookkeeping,
+    temporarily regressed when Phase 4 reopened implementation, and restored
+    to `complete` during superseding final-review receipt.
 
 ## Test Results
 

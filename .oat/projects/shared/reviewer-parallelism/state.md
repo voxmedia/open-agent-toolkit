@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T03:01:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T03:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,7 +83,9 @@ Implement - final cross-phase review
 - ⚠ Phase 4 re-review found two obsolete tracked Cursor wave-skill mirrors
 - ✓ Cleanup task `p04-t07` removed both mirrors with zero remaining strays
 - ✓ Phase 4 passed narrow final re-review with zero findings
-- ⧗ Running superseding final cross-phase review
+- ⚠ Superseding final review found two Medium bookkeeping-only defects
+- ✓ Implementation status and three Phase 4 full task SHAs corrected
+- ⧗ Running narrow final bookkeeping re-review
 
 ## Blockers
 

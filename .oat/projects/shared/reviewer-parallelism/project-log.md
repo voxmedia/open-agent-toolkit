@@ -136,6 +136,14 @@ Accepted p04-t07 commit 839de7d5: removed only the two obsolete Cursor wave-skil
 
 Phase p04 passed narrow final re-review with zero findings. The prior Cursor-mirror Important is resolved, provider status is 82/82 in sync, and the class-aware dogfood pass carries forward. Evidence: reviews/archived/p04-review-2026-07-19T030013Z.md.
 
+### 2026-07-19 · structural · oat-project-implement · final-review-orchestration
+
+Superseding final review used one Composer 2.5 Fast mechanical lane and parent-inline intelligent coverage after the stronger nested floor was unsatisfied. Evidence: reviews/archived/final-review-2026-07-19T030944Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · final-review-fix-1
+
+Final review found two Medium bookkeeping-only defects: restore implementation status to complete and correct three Phase 4 full task SHAs. Functional, provider, release, documentation, and security checks passed.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
