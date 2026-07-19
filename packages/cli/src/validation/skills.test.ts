@@ -1058,16 +1058,29 @@ describe('validateOatSkills', () => {
     expect(reviewer).toMatch(
       /delegated reconnaissance[\s\S]{0,180}(?:attempted|attempt)[\s\S]{0,220}`?## Review Orchestration`?/i,
     );
-    expect(artifactConfirmation).toContain(
-      '**Reconnaissance:** {attempted | not-attempted}',
-    );
+    expect(
+      artifactConfirmation.match(
+        /^\*\*Reconnaissance:\*\* \{attempted \| not-attempted\}$/gm,
+      ),
+    ).toHaveLength(1);
     expect(artifactConfirmation).toMatch(
       /exactly one[\s\S]{0,180}(?:attempted|not-attempted)/i,
     );
     expect(orchestrationHandoff).toContain('**Reconnaissance:** attempted');
     expect(orchestrationHandoff).toContain('**Reconnaissance:** not-attempted');
+    for (const rejectedSignal of ['missing', 'duplicate', 'invalid']) {
+      expect(
+        orchestrationHandoff,
+        `${rejectedSignal} signal fails closed`,
+      ).toMatch(
+        new RegExp(
+          `${rejectedSignal}[\\s\\S]{0,180}(?:incomplete-artifact error|stop|fail closed)`,
+          'i',
+        ),
+      );
+    }
     expect(orchestrationHandoff).toMatch(
-      /missing[\s\S]{0,180}invalid[\s\S]{0,180}(?:stop|fail closed)/i,
+      /Before validating the review artifact or updating project bookkeeping, consume[\s\S]{0,120}brief artifact-mode confirmation/i,
     );
     expect(orchestrationHandoff).toMatch(
       /`attempted`[\s\S]{0,320}complete[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,360}append[\s\S]{0,100}exactly once/i,
