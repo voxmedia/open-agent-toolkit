@@ -210,8 +210,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
 **Optional nested dispatches:** None.
-**Outstanding items:** The local configured gate declaration still uses the
-legacy non-global-JSON command and must be migrated before final gate execution.
+**Outstanding items:** Configured implementation exit gate.
 
 ### Run 1: Phase p01 {#run-1}
 
@@ -454,11 +453,31 @@ before final gate execution.
 - [x] Final review fix: align autonomous exit-gate policy - `9f859165`
 
 **Outcome:** All six plan tasks and the complete repository quality/release
-chain passed. Final review identified two implementation fixes and one stale
-bookkeeping baseline; all findings are fixed and awaiting re-review.
+chain passed. The user-authorized final whole-project re-review passed with no
+findings.
 
-**Blockers:** Final review must pass before configured exit-gate execution,
-approval-aware sequencing, final HiLL, or implementation completion.
+**Blockers:** The configured implementation exit gate must pass or be allowed
+by policy before approval-aware sequencing, final HiLL, or implementation
+completion.
+
+---
+
+## Implementation Exit Gate
+
+### 2026-07-18 — Generation initialized
+
+- Resolution: configured
+- Reviewed HEAD: `5045229444e131d964cd472c0d55fda7a3fb2e72`
+- Configuration fingerprint:
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- Implementation fingerprint:
+  `sha256:7eff772bea9abc5d7764584767bd2910c0e76f075c4f6c5830e3ac357d10595b`
+- Policy: `block`, maximum 2 attempts
+- State: `pending/not_started`
+
+The resolved declaration was migrated from the legacy human-oriented command
+shape to canonical `oat --json gate review` before the generation was
+initialized. No gate command has launched yet.
 
 ---
 
