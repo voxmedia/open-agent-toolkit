@@ -984,6 +984,57 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps recon economy subordinate to explicit model-class floors', async () => {
+    const engine = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const schema = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/references/record-schema.md',
+    );
+    const cursor = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/references/provider-cursor.md',
+    );
+    const reconRow =
+      engine.match(/^\|\s*`recon`\s*\|(.+)\|$/m)?.[1]?.trim() ?? '';
+
+    expect(reconRow).toMatch(/read-only[\s\S]*bounded/i);
+    expect(reconRow).toMatch(
+      /(?:task_class|model_class_floor)[\s\S]*(?:at or above|meet|satisf)/i,
+    );
+    expect(reconRow).toMatch(
+      /economical[\s\S]*(?:only|when)[\s\S]*(?:no|without|absent|unconstrained)[\s\S]*(?:task_class|class floor|task-class)/i,
+    );
+    expect(reconRow).not.toMatch(
+      /(?:all|every|universal)[\s\S]*economical|economical[\s\S]*(?:all|every|universal)/i,
+    );
+
+    expect(engine).toMatch(
+      /class-constrained recon[\s\S]{0,260}(?:at or above|meet|satisf)[\s\S]{0,220}`model_class_floor`/i,
+    );
+    expect(`${engine}\n${schema}`).toMatch(
+      /floor_satisfaction:\s*unsatisfied[\s\S]{0,240}caller-inline/i,
+    );
+    expect(engine).toMatch(
+      /unconstrained legacy recon[\s\S]{0,120}no `task_class` supplied/i,
+    );
+    expect(engine).toMatch(
+      /unconstrained legacy recon[\s\S]{0,180}economical target/i,
+    );
+
+    expect(cursor).toMatch(
+      /exact model choice[\s\S]{0,40}advertised by the current nested dispatcher/i,
+    );
+    expect(cursor).toContain(
+      'model_selector_granularity: exact-native-model-choice',
+    );
+    expect(schema).toContain(
+      'model_selector_granularity: exact-native-model-choice',
+    );
+    expect(`${cursor}\n${schema}`).not.toMatch(
+      /model_selector_granularity:\s*exact-native-enum/i,
+    );
+  });
+
   it('pins deferred reviewer reconnaissance safety assertions', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
 

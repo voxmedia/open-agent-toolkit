@@ -182,14 +182,14 @@ or a second launch.
 
 Specific role names are extensible, but map every dispatch to one class:
 
-| Class          | Default contract                                                                                                                  |
-| -------------- | --------------------------------------------------------------------------------------------------------------------------------- |
-| `recon`        | Read-only, bounded evidence collection. Select an explicit economical target; never silently inherit an expensive root model.     |
-| `dossier-lead` | Reconcile dispersed evidence within one declared scope. May coordinate bounded recon only when nesting is supported and approved. |
-| `generator`    | Produce a self-contained artifact within caller-declared authority.                                                               |
-| `worker`       | Execute bounded work with explicit authority, outputs, and verification.                                                          |
-| `reviewer`     | Perform independent or inherited review exactly as caller policy specifies.                                                       |
-| `coordinator`  | Coordinate a caller-defined topology without taking over caller synthesis or user dialogue.                                       |
+| Class          | Default contract                                                                                                                                                                                                                          |
+| -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `recon`        | Read-only, bounded evidence collection. Meet any supplied `task_class` / `model_class_floor` at or above the floor; select an explicit economical target only when no task-class floor was supplied. Never silently inherit a root model. |
+| `dossier-lead` | Reconcile dispersed evidence within one declared scope. May coordinate bounded recon only when nesting is supported and approved.                                                                                                         |
+| `generator`    | Produce a self-contained artifact within caller-declared authority.                                                                                                                                                                       |
+| `worker`       | Execute bounded work with explicit authority, outputs, and verification.                                                                                                                                                                  |
+| `reviewer`     | Perform independent or inherited review exactly as caller policy specifies.                                                                                                                                                               |
+| `coordinator`  | Coordinate a caller-defined topology without taking over caller synthesis or user dialogue.                                                                                                                                               |
 
 Use stronger workers when context, ambiguity, or consequence requires them,
 not merely because many files exist. Keep coherence-critical synthesis and
@@ -217,6 +217,13 @@ escalation:
 Mechanical workers may execute checks and return exact output. Interpretation
 and policy judgment require a stronger class or stay with the root caller. When
 uncertain between classes, use the stronger floor.
+
+For unconstrained legacy recon with no `task_class` supplied, select an
+explicit economical target rather than silently inheriting the root model.
+Class-constrained recon must select a target at or above the supplied
+`model_class_floor`; otherwise set `floor_satisfaction: unsatisfied` and return
+the lane through `caller-inline`. An economical target is not a universal
+baseline for the `recon` role.
 
 Resolve current class examples through active user and repository instructions
 first, then the active-provider reference and live catalog, all constrained by

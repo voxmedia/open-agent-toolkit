@@ -67,11 +67,11 @@ use the lifecycle resolver because no materialized lifecycle `recon` role
 exists.
 
 1. Read the model choices advertised by the nested Task/Subagent dispatcher.
-2. Intersect that exact snapshot with active user and repository
+2. Intersect those advertised model choices with active user and repository
    model-class instructions, this provider reference, the supplied
    policy/ceiling, and the requested `model_class_floor`.
-3. Use the native `generalPurpose` agent type and pass an exact model selector
-   advertised by the nested dispatcher byte-for-byte.
+3. Use the native `generalPurpose` agent type and pass the exact model choice
+   advertised by the current nested dispatcher byte-for-byte.
 4. Record the selector as `model_selector` with
    `model_selector_granularity: exact-native-model-choice`.
 5. Treat an omitted model as deliberate parent inheritance only for an

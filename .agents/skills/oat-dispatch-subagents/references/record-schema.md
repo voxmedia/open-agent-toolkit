@@ -113,6 +113,26 @@ floor_satisfaction: satisfied
 blocks launch and records no weaker selection as success. These five fields
 remain absent when a legacy request omits task-class metadata.
 
+For a Cursor reviewer-local request whose advertised nested model choices do
+not satisfy the class floor, record the blocked selection without inventing a
+selector:
+
+```yaml
+role_selector: generalPurpose
+model_selector: null
+model_selector_granularity: exact-native-model-choice
+floor_satisfaction: unsatisfied
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
+launch_status: blocked-before-start
+child_outcome: caller-inline-completed
+```
+
+`exact-native-model-choice` means an exact model choice advertised by the
+current nested dispatcher. It does not imply a stable enum or authorize
+reconstruction of a materialized lifecycle variant.
+
 `role_selector` is the exact provider or harness agent-type selector, when that
 surface exists. Preserve opaque selectors byte-for-byte.
 
