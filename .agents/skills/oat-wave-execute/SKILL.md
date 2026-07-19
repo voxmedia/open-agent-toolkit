@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.6.0
+version: 1.6.1
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -23,6 +23,21 @@ waves inherit evidence, not anecdotes.
 Historical `DR-*` and `BL-*` slugs in this skill (including the provenance
 record above) are evidence citations in the source program's repository; they
 are not required artifacts in the consuming repo.
+
+## Progress Indicators (User-Facing)
+
+Print this banner once when execution starts:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ WAVE EXECUTE
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Before each major boundary, report the current step: preflight, drift refresh,
+  wrapper scaffold, group dispatch, integration gate, or closeout.
+- For parallel groups, report accepted lane IDs once, then summarize outcomes
+  after all lanes return; do not stream every worker action.
+- Surface STOP conditions immediately with the blocked lane, durable evidence,
+  and exact resume action.
 
 ## Ownership Boundary
 
