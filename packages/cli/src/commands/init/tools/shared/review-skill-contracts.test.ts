@@ -62,7 +62,7 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.8');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -228,6 +228,30 @@ describe('review skill contracts', () => {
       /parallel-group merge[\s\S]*?oat project log append/i,
     );
     expect(appendPoints).toContain('fix-loop count');
+  });
+
+  it('keeps reviewer orchestration logging in root project workflows', () => {
+    const implement = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewProvide = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['project implement', implement],
+      ['project review provide', reviewProvide],
+    ] as const) {
+      expect(content, `${name} validates orchestration evidence`).toMatch(
+        /validat(?:e|es|ing)[\s\S]{0,180}review artifact[\s\S]{0,240}orchestration/i,
+      );
+      expect(content, `${name} appends one artifact reference`).toMatch(
+        /one (?:concise )?structural (?:project-log )?entry[\s\S]{0,280}(?:review artifact|artifact path)/i,
+      );
+      expect(content, `${name} uses CLI-owned logging`).toContain(
+        'oat project log append',
+      );
+    }
   });
 
   it('pins oat-project-summary project-log graduation and roll-up ordering', () => {

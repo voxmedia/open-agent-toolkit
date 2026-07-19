@@ -37,6 +37,28 @@ escalate_when:
 `dispatch_policy` and `dispatch_ceiling` are optional resolved inputs. The
 general engine does not resolve their source.
 
+Task-class metadata is also generic-optional. A class-constrained caller adds
+all of these fields; `oat-reviewer` requires them for reviewer-local recon:
+
+```yaml
+task_class: intelligent-recon
+classification_source: caller
+classification_reason: >-
+  Determining whether semantic tests pin safety boundaries requires
+  interpretation, and a silent miss would survive mechanical checks.
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
+```
+
+`task_class` is one of `mechanical-recon`, `intelligent-recon`,
+`default-implementation`, `hard-reasoning`, or `consequential`.
+`classification_source` is the literal `caller`, and
+`classification_reason` is non-empty. Legacy callers may omit all three and
+retain the original role-based selection and fallback behavior. The legacy
+`explicit-downgrade` example above is valid only for an unconstrained request
+without task-class metadata or a declared class floor.
+
 ## Record
 
 ```yaml
@@ -76,6 +98,41 @@ diagnostics: []
 continuation_events: []
 ```
 
+For a class-constrained dispatch, the record also includes:
+
+```yaml
+task_class: intelligent-recon
+model_class_floor: intelligent-recon
+classification_source: caller
+classification_reason: Semantic contract interpretation has silent-miss risk.
+floor_satisfaction: satisfied
+```
+
+`model_class_floor` equals the requested `task_class`.
+`floor_satisfaction` is `satisfied` or `unsatisfied`. An unsatisfied floor
+blocks launch and records no weaker selection as success. These five fields
+remain absent when a legacy request omits task-class metadata.
+
+For a Cursor reviewer-local request whose advertised nested model choices do
+not satisfy the class floor, record the blocked selection without inventing a
+selector:
+
+```yaml
+role_selector: generalPurpose
+model_selector: null
+model_selector_granularity: exact-native-model-choice
+floor_satisfaction: unsatisfied
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
+launch_status: blocked-before-start
+child_outcome: caller-inline-completed
+```
+
+`exact-native-model-choice` means an exact model choice advertised by the
+current nested dispatcher. It does not imply a stable enum or authorize
+reconstruction of a materialized lifecycle variant.
+
 `role_selector` is the exact provider or harness agent-type selector, when that
 surface exists. Preserve opaque selectors byte-for-byte.
 
@@ -98,6 +155,8 @@ selection source.
 wave_id: repo-audit-wave-1
 scope: repo:packages/cli
 shared_dispatch_record: dispatch-unique-id
+task_class: intelligent-recon
+model_class_floor: intelligent-recon
 lanes:
   - lane_id: correctness
     scope: packages/cli/src
@@ -110,5 +169,7 @@ lanes:
 ```
 
 The wave scope is the aggregate boundary. Lane scope may narrow it. Use one
-shared record only when every dispatch axis listed in the main skill is
-identical.
+shared record only when every dispatch axis listed in the main skill,
+`task_class`, and `model_class_floor` are identical. Lane entries do not
+redefine the shared class fields. Mixed classes require separate records and
+waves.

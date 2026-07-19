@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260719-full-reviewers-are-not-recon   | 2026-07-19 | accepted | Full reviewers are not recon workers                                    | -      |
+| DR-260719-keep-final-judgment            | 2026-07-19 | accepted | Keep final judgment with the primary reviewer                           | -      |
+| DR-260719-root-owned-orchestration       | 2026-07-19 | accepted | Root-owned orchestration logging                                        | -      |
+| DR-260719-separate-recon-authority-from  | 2026-07-19 | accepted | Separate recon authority from model floors                              | -      |
+| DR-260719-use-floor-safe-parent-inline   | 2026-07-19 | accepted | Use floor-safe parent-inline fallback                                   | -      |
 | DR-260718-append-based-ledger-graduation | 2026-07-18 | accepted | Append-based ledger graduation                                          | -      |
 | DR-260718-automatic-create-on-first      | 2026-07-18 | accepted | Automatic create-on-first-append                                        | -      |
 | DR-260718-cli-owned-log-mutations        | 2026-07-18 | accepted | CLI-owned log mutations                                                 | -      |
