@@ -12,7 +12,8 @@ Decisions live in reference/decisions/ (one file per record); link them rather t
 copying their content here. -->
 
 - [Workflow Gates](../../../apps/oat-docs/docs/cli-utilities/workflow-gates.md)
-  defines gate invocation provenance and declared-project corroboration.
+  defines gate invocation provenance, declared-project corroboration, and the
+  mandatory configured implementation exit-gate closeout boundary.
 - [Project Reviews](../../../apps/oat-docs/docs/workflows/projects/reviews.md)
   defines phase review gates and producer aggregation behavior.
 - [Dispatch Policy](../../../apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md)
@@ -30,6 +31,14 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.3` makes the configured `oat-project-implement` exit gate an
+  independent, resumable closeout boundary after final verification and
+  lifecycle review but before approval-aware sequencing, final HiLL,
+  completion, or success output. Durable launch/receive provenance,
+  implementation-basis freshness, explicit no-gate and policy dispositions,
+  and fail-closed reconciliation prevent missing, ambiguous, stale, or manual
+  review evidence from satisfying the boundary. JSON-mode gate child output is
+  routed to stderr so stdout remains exactly one structured result envelope.
 - Wave-orchestration skills promoted from stoa (PR #158, release `0.2.0`):
   `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 in the workflow pack
   with genericized rule text and bundled assets, a mini-wave validation

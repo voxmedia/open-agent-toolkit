@@ -186,6 +186,7 @@ interface ProcessRunOptions {
   purpose: 'host-detection' | 'availability' | 'execute';
   stdin: 'ignore' | 'inherit';
   stdio: 'ignore' | 'inherit' | 'pipe';
+  stdoutDestination?: 'stdout' | 'stderr';
   timeoutMs: number;
 }
 
@@ -691,7 +692,11 @@ async function runChildProcess(
       stdoutBytes += chunk.byteLength;
       stdoutLineBuffer = scanChunk(stdoutLineBuffer, chunk);
       recordActivity();
-      process.stdout.write(chunk);
+      const destination =
+        options.stdoutDestination === 'stderr'
+          ? process.stderr
+          : process.stdout;
+      destination.write(chunk);
     });
     child.stderr?.on('data', (chunk: Buffer) => {
       stderrBytes += chunk.byteLength;
@@ -2035,6 +2040,7 @@ async function executeTarget(
         purpose: 'execute',
         stdin: 'ignore',
         stdio: 'pipe',
+        stdoutDestination: context.json ? 'stderr' : 'stdout',
         timeoutMs: timeout.timeoutMs,
       },
     );
