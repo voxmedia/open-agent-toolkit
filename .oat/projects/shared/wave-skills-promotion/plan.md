@@ -816,6 +816,7 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md    |
 | p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md               |
 | p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md               |
+| plan   | artifact | passed          | 2026-07-18 | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | passed          | 2026-07-18 | -                                                             |
 | plan   | artifact | passed          | 2026-07-18 | -                                                             |
@@ -824,6 +825,8 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T150023Z.md   |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
+
+_Gate-open p06 plan re-review (last plan row): in-session structured review, 2 rounds (1 Critical + 4 Important applied → clean), phase-scoped per the p06 gate contract; no artifact file — findings applied in the gate-open revision commits._
 
 _First plan-row provenance: in-session structured review (`oat-reviewer` subagent, inherited parent model, 3 attempts → clean, 2026-07-18); no artifact file — findings F1–F7 applied in the plan draft commits. The next two rows are the cross-family gate reviews (codex gpt-5.6-sol/max); all 18 findings were remediated in commit `a634db1c`. The final row is the delta-scoped gate re-run that verified every remediation and returned 0 findings (verdict ok, run 87f67c9f) — advancing all three gate events to `passed`._
 
