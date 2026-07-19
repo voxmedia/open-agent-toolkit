@@ -382,3 +382,9 @@ Append-only. Entries by Fable unless marked otherwise.
 - **Assessment:** works-well
 - **Fable's position:** No dissent — the approved artifacts are the PASS versions plus the adopted hardening note; every reviewer finding across all three review cycles (initial 11, archive-safe 3, durable-reference 1 note) was incorporated before approval.
 - **Skill implication:** none. Design phase closed for the second and final time. Full design-phase review record: initial draft (11 findings → PASS), archive-safe amendment (3 findings → PASS), durable-reference refinement (1 hardening note → PASS), each converged peer-to-peer before its user gate.
+
+### [2026-07-17 18:50] content — user direction: deck slides advance horizontally (msg_94c51222b88c, msg_421c836492b5)
+
+- **What happened:** User asked why decks scroll vertically and stated a preference for left-to-right advance. Fable verified the cause (draft `deck-shell.html` uses `scroll-snap-type: y mandatory`, inherited from 0.4.1; its keydown handler already maps both arrow pairs) and explained the engineering reasons vertical is the HTML default (native scroll axis, no-JS degradation, print mapping). User directed the change; Fable relayed to Sol with suggested wording: horizontal paging as presentation default, vertical print stylesheet preserved, readable no-JS fallback required, render QA extended to x-axis overflow/advance/keyboard/print; axis stays shell behavior, not theme identity (renderStrategy precedent). User then flagged Sol is already executing p02-t04, so a follow-up instructed applying it as input to the imminent deck-shell task directly, with plan wording updated at the next write boundary.
+- **Assessment:** works-well
+- **Skill implication:** none; implementation-phase direction relayed through the established channel with the write boundary respected.
