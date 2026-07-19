@@ -1035,6 +1035,59 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('keeps review orchestration evidence artifact-owned and root-logged', async () => {
+    const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const implement = await readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const phaseExecution = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const reviewProvide = await readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    expect(reviewer).toMatch(
+      /delegated reconnaissance[\s\S]{0,180}(?:attempted|attempt)[\s\S]{0,220}`?## Review Orchestration`?/i,
+    );
+    for (const field of [
+      'waves',
+      'task classes',
+      'classification rationale',
+      'selected targets',
+      'acceptance',
+      'outcomes',
+      'floor satisfaction',
+      'fallback',
+      'primary reconciliation',
+    ]) {
+      expect(reviewer, `review orchestration ${field}`).toMatch(
+        new RegExp(field.replaceAll(' ', '\\s+'), 'i'),
+      );
+    }
+    expect(reviewer).toMatch(
+      /(?:reviewer|primary reviewer)[\s\S]{0,220}workers[\s\S]{0,220}(?:never|must not)[\s\S]{0,160}(?:write|modify)[\s\S]{0,120}`?project-log\.md`?/i,
+    );
+    expect(reviewer).toMatch(
+      /structured-output mode[\s\S]{0,300}orchestration[\s\S]{0,180}`summary`/i,
+    );
+
+    for (const [name, rootWorkflow] of [
+      ['project implement', `${implement}\n${phaseExecution}`],
+      ['project review provide', reviewProvide],
+    ] as const) {
+      expect(rootWorkflow, `${name} artifact validation`).toMatch(
+        /validat(?:e|es|ing)[\s\S]{0,180}review artifact[\s\S]{0,240}orchestration/i,
+      );
+      expect(rootWorkflow, `${name} root log append`).toMatch(
+        /oat project log append[\s\S]{0,260}(?:review artifact|artifact path)|(?:review artifact|artifact path)[\s\S]{0,260}oat project log append/i,
+      );
+      expect(rootWorkflow, `${name} one structural entry`).toMatch(
+        /one (?:concise )?structural (?:project-log )?entry/i,
+      );
+    }
+  });
+
   it('pins deferred reviewer reconnaissance safety assertions', async () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
 
@@ -1464,7 +1517,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1681,7 +1734,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1700,7 +1753,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.21');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.22');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -1855,7 +1908,7 @@ describe('validateOatSkills', () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
       ['.agents/agents/oat-reviewer.md', '1.1.8'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.21'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.3'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
@@ -2112,7 +2165,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.3');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.4');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2357,10 +2410,10 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.16'],
-      ['oat-project-review-provide', '1.3.21'],
+      ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.3'],
+      ['oat-project-implement', '2.1.4'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.3'],
@@ -3434,7 +3487,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.2'],
       ['oat-project-quick-start', '2.3.3'],
       ['oat-project-import-plan', '1.4.7'],
-      ['oat-project-review-provide', '1.3.21'],
+      ['oat-project-review-provide', '1.3.22'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3449,8 +3502,8 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.3'],
-      ['oat-project-review-provide', '1.3.21'],
+      ['oat-project-implement', '2.1.4'],
+      ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;
 

@@ -309,6 +309,20 @@ claims, reconciles overlap and disagreement, fills cross-lane gaps, performs
 synthesis, assigns severity, decides validation, and alone writes the review
 artifact or final `StructuredFindings`.
 
+When the reviewer attempts delegated reconnaissance, the review artifact
+includes a compact `Review Orchestration` section. It records each wave's task
+class and classification rationale, selected target, acceptance and outcome,
+floor satisfaction, fallback, and the primary reviewer's reconciliation. The
+section is the detailed evidence source; it does not copy every internal worker
+record. Structured-output reviews keep the existing schema and summarize the
+same orchestration evidence in `summary`.
+
+The reviewer and its workers never write `project-log.md`. After validating the
+artifact, the root project implementation or review workflow uses
+`oat project log append` to add one concise structural entry that references
+the artifact. Logging remains capability-gated by the CLI helper, so disabled
+project logging requires no reviewer-side branch or write authority.
+
 If nested workers are unsupported, unauthorized, fail, or return empty or
 malformed reports, the primary reviewer covers those lanes inline. It also
 stays inline when the host cannot explicitly satisfy a lane's model-class

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.21
+version: 1.3.22
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -732,7 +732,8 @@ After the subagent completes:
   blocks the review; do not invoke fallback and do not infer a pass from a
   missing review artifact or absent findings.
 - Verify the review artifact was written to the expected path
-- Continue with Step 9 (plan update) and Step 9.5 (commit)
+- Continue with Step 8.5 (artifact/orchestration validation), Step 9 (plan
+  update), and Step 9.5 (commit)
 
 **Step 6c: Tier 2 — Fresh Session (recommended fallback)**
 
@@ -906,6 +907,26 @@ Findings: {N} critical, {N} important, {N} medium, {N} minor
 Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 
 ```
+
+### Step 8.5: Validate Review Orchestration and Append Root Log
+
+Validate the review artifact before updating project bookkeeping. When the
+artifact contains `## Review Orchestration`, require one compact account of
+every attempted wave: task class, classification rationale, selected target,
+acceptance/outcome, floor satisfaction, fallback, and primary reconciliation.
+If the reviewer return indicates delegated reconnaissance was attempted but
+the artifact omits this section or any required evidence, stop with an
+incomplete-artifact error.
+
+After successful orchestration validation, invoke `oat project log append`
+exactly once for one concise structural project-log entry referencing the
+review artifact path. Do not duplicate individual worker records. Defer flags
+and entry format to `oat project log append --help`; never pre-check project-log
+configuration because the helper no-ops when logging is disabled. The reviewer
+and workers never write `project-log.md` or append this entry.
+
+If no delegated reconnaissance was attempted, no orchestration log entry is
+needed. If `INLINE_ONLY=true`, skip this step because no review artifact exists.
 
 ### Step 9: Update Plan Reviews Section
 

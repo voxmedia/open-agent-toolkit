@@ -132,8 +132,21 @@ handle. Only explicit pre-start rejection allows another route. Timeout,
 interruption, `BLOCKED`, or contract refusal is the review outcome and never a
 reason to replace an accepted reviewer.
 
-Validate artifact scope and commit range. Zero Critical and zero Important
-findings passes. Medium/Minor findings are recorded without blocking.
+Validate the review artifact scope and commit range. When the returned artifact
+contains `## Review Orchestration`, validate that it covers every attempted
+wave with task class, classification rationale, selected target,
+acceptance/outcome, floor satisfaction, fallback, and primary reconciliation.
+If the reviewer reports delegated reconnaissance but omits that section or any
+required evidence, reject the artifact as incomplete.
+
+After successful orchestration validation, invoke `oat project log append`
+exactly once for one concise structural project-log entry referencing the
+review artifact path. Do not mirror individual worker records. The CLI helper
+owns capability gating and no-ops when project logging is disabled; the
+reviewer and workers never write `project-log.md`.
+
+Zero Critical and zero Important findings passes. Medium/Minor findings are
+recorded without blocking.
 
 #### Bounded Fix and Re-Review Loop
 

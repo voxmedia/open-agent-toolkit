@@ -230,6 +230,30 @@ describe('review skill contracts', () => {
     expect(appendPoints).toContain('fix-loop count');
   });
 
+  it('keeps reviewer orchestration logging in root project workflows', () => {
+    const implement = readRepoFile(
+      '.agents/skills/oat-project-implement/SKILL.md',
+    );
+    const reviewProvide = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+
+    for (const [name, content] of [
+      ['project implement', implement],
+      ['project review provide', reviewProvide],
+    ] as const) {
+      expect(content, `${name} validates orchestration evidence`).toMatch(
+        /validat(?:e|es|ing)[\s\S]{0,180}review artifact[\s\S]{0,240}orchestration/i,
+      );
+      expect(content, `${name} appends one artifact reference`).toMatch(
+        /one (?:concise )?structural (?:project-log )?entry[\s\S]{0,280}(?:review artifact|artifact path)/i,
+      );
+      expect(content, `${name} uses CLI-owned logging`).toContain(
+        'oat project log append',
+      );
+    }
+  });
+
   it('pins oat-project-summary project-log graduation and roll-up ordering', () => {
     const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
     const graduationIndex = content.indexOf(

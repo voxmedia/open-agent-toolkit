@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.1.3
+version: 2.1.4
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -44,6 +44,13 @@ the helper no-ops when the feature is off.
 - After every accepted subagent dispatch, invoke `oat project log append` for
   a structural stamp that references the corresponding run record by
   `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
+- After validating a returned review artifact, when its
+  `## Review Orchestration` section records attempted delegated
+  reconnaissance, invoke `oat project log append` exactly once for one concise
+  structural project-log entry that references the review artifact path. First
+  validate the waves, task classes, classification rationale, selected targets,
+  acceptance/outcomes, floor satisfaction, fallback, and primary
+  reconciliation; never copy every worker record into the log.
 - Before every STOP or park return, invoke `oat project log append` for a
   structural entry naming the triggering condition.
 - After every phase outcome, invoke `oat project log append` for a structural
