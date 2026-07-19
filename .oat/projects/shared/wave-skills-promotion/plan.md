@@ -763,9 +763,12 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 
 ### Task p06-t03: Personal-wrapper migration support
 
+**Scope extension (operator-confirmed via stoa Flag 2, 2026-07-18):** p06 ships the migration CODE as installable artifacts, not runbook-only — the wrapper source and personal credentials live on the operator's laptop, so the repo authors a complete scaffold with clearly-marked personal-config seams the operator fills at install.
+
 **Files:**
 
-- Create: `.oat/projects/shared/wave-skills-promotion/references/personal-wrapper-migration.md` — the migration runbook the OPERATOR executes against `~/.agents/skills/personal-explainer-kit` (that tree is user-level; not writable from this repo project).
+- Create: `.oat/projects/shared/wave-skills-promotion/references/personal-explainer-kit/` — the INSTALLABLE wrapper skill tree: `SKILL.md` (thin personal wrapper over the packaged `oat-explainer-kit`: constructs `explainer-kit.run-request/v1`, consumes `explainer-kit.manifest/v1`, personal destinations behind config seams) + `scripts/acceptance.mjs` (full test matrix: vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emits sanitized `private-wrapper-result.json`; final-RC identifier placeholders pinned at freeze) + `config.seams.example.json` (every personal value the operator supplies, with provenance comments pointing at the 0.4.1 backup).
+- Create: `.oat/projects/shared/wave-skills-promotion/references/personal-wrapper-migration.md` — the install/run companion runbook the OPERATOR executes against `~/.agents/skills/personal-explainer-kit` (copy tree → fill seams → run acceptance).
 
 **Step 1: Author the runbook** from the vendored contracts: (a) backup exists (`~/.agents/skills-backup/oat-explainer-kit-0.4.1` — confirmed stoa-side); (b) replace with RC 1.0.0 skill content — ACCEPTANCE PINS THE SKILL SUBTREE, not the whole CLI tarball: install `package/assets/skills/oat-explainer-kit` whose content hash must equal rc.json's recorded `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654` (verify with the RC tool's own hashing via a rebuild record, or byte-compare against a rebuild). Artifact locator: deterministic rebuild procedure = temp worktree at `534a408e` → `pnpm install --frozen-lockfile && pnpm build` → `node tools/release/build-explainer-rc.mjs --output <tmp> --record <tmp>`; the rebuilt CLI tarball's whole-file hash is `sha256:296cfa27d678f269ff649b92ebd7…` (differs from rc.json's recorded whole-tarball hash — upstream provenance question msg_02337b3a27f4 — but the skill-subtree and all schema/recipe hashes match the record, which is what acceptance consumes); (c) wrapper invocation migrates to constructing `explainer-kit.run-request/v1` (exact required keys) and consuming `explainer-kit.manifest/v1` (runId/outcome/artifacts/immutableHashes) instead of pre-1.0 interfaces; (d) acceptance: SEQUENCING (explainer decision_gate 2026-07-18): acceptance runs against the POST-p06 FINAL RC (frozen by explainer-kit after merging our p06 delta), not f212d630 — the runbook carries placeholder fields for the final RC's rcId/commit/subtree-hash to be pinned at freeze; the f212d schemas remain the valid contract basis (p06 does not alter explainer schemas). Run `~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs` against that exact final RC covering vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emit sanitized `private-wrapper-result.json`; (e) rollback: restore the 0.4.1 backup. Result feeds BOTH the explainer-kit RC acceptance and this project's p06-t03 verification record (stored-verification-record discipline, B5).
 
@@ -773,7 +776,7 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 
 **Step 3: Commit** — `feat(p06-t03): personal-wrapper migration runbook for RC acceptance`
 
-**Completion semantics:** task completes when the runbook ships; the OPERATOR-run E2E result is recorded in implementation.md when it arrives (project completion may await it per the plan's acceptance criteria).
+**Completion semantics:** task completes when the installable tree + runbook ship; the OPERATOR-run E2E result is recorded in implementation.md when it arrives (project completion may await it per the plan's acceptance criteria).
 
 ---
 
