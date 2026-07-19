@@ -4,7 +4,8 @@
     "packagedSkillRoot": "Path to the installed packaged oat-explainer-kit skill (post-migration: the RC 1.0.0 subtree). Provenance: install location chosen during migration.",
     "vaultRoot": "Personal vault root for explainer output. Provenance: same value used by the 0.4.1 backup wrapper (see the backup's config).",
     "googleDocs": "Export wiring for the Google Docs destination. exportCommand is an argv array invoked with the manifest path appended; wiringRef names where the wiring lives. Provenance: 0.4.1 backup's gdocs integration.",
-    "publish": "Personal published destinations. Each preset pins corresponding s3Uri/publicBaseUrl roots per destination-contract.md; cloudFrontDistributionId is the personal distribution. Provenance: 0.4.1 backup's destination config.",
+    "publish": "Personal published destinations. Each preset pins corresponding s3Uri/publicBaseUrl roots per destination-contract.md; cloudFrontDistributionId is the personal distribution; awsRegion is the schema-required region for explainer-kit.publish-request/v1. Provenance: 0.4.1 backup's destination config.",
+    "sanitization": "The acceptance harness redacts every seam string value of 4+ characters from evidence output (plus $HOME and absolute paths). Seam values shorter than 4 characters are NOT redacted — avoid personal values that short, or lengthen them (e.g. full ids over fragments).",
     "backupPath": "Rollback source: the pre-migration wrapper backup. Confirmed stoa-side at ~/.agents/skills-backup/oat-explainer-kit-0.4.1.",
     "acceptance": "Acceptance-run inputs: a valid supplied fact-base file, the recipe pin, and the human gate for the publish leg (allowPublish stays false until the operator explicitly enables the end-to-end publish test).",
     "finalRc": "Post-p06 final RC pins. These are PLACEHOLDERS pinned at the final freeze by the explainer-kit project; do not run acceptance until all three are filled. The f212d630 schemas remain the contract basis."
@@ -16,6 +17,7 @@
     "wiringRef": "<fill: reference to the gdocs wiring location, from the 0.4.1 backup>"
   },
   "publish": {
+    "awsRegion": "<fill: AWS region of the personal destination bucket, from the 0.4.1 backup's destination config>",
     "cloudFrontDistributionId": "<fill: personal CloudFront distribution id>",
     "presets": [
       {

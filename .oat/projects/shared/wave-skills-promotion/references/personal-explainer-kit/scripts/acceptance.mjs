@@ -43,6 +43,17 @@ const MANIFEST_REQUIRED_KEYS = [
   'warnings',
 ];
 
+// Required keys of explainer-kit.publish-request/v1 (frozen RC f212d630).
+const PUBLISH_REQUEST_REQUIRED_KEYS = [
+  'schemaVersion',
+  'provider',
+  's3Uri',
+  'publicBaseUrl',
+  'awsRegion',
+  'siteRoot',
+  'manifestPath',
+];
+
 // --- sanitization -----------------------------------------------------------
 
 /** Collect every string seam value from the config, keyed by dotted path. */
@@ -204,11 +215,14 @@ function testPersonalDestinations(config) {
   const preset = config.publish.presets[0];
   const publishRequest = {
     schemaVersion: 'explainer-kit.publish-request/v1',
-    manifestPath: run.manifestPath,
-    siteRoot: join(run.runRoot, 'site'),
+    provider: 's3-static',
     s3Uri: preset.s3Uri,
     publicBaseUrl: preset.publicBaseUrl,
+    awsRegion: config.publish.awsRegion,
+    siteRoot: join(run.runRoot, 'site'),
+    manifestPath: run.manifestPath,
   };
+  requireKeys(publishRequest, PUBLISH_REQUEST_REQUIRED_KEYS, 'publish request');
   const requestPath = join(run.outputRoot, 'publish-request.json');
   const receiptPath = join(run.outputRoot, 'publish-receipt.json');
   writeFileSync(requestPath, `${JSON.stringify(publishRequest, null, 2)}\n`);
