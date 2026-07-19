@@ -1,44 +1,86 @@
 ---
-oat_generated: false
-purpose: project-observations
-oat_last_updated: 2026-07-18
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-07-19
+oat_generated: true
+oat_summary_last_task: p04-t07
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
-# Project Log: reviewer-parallelism
+# Summary: Reviewer Parallelism
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+This project addressed `BL-260708-enable-oat-reviewer-subagent` with bounded,
+provider-neutral review reconnaissance that matches worker capability to lane
+complexity while keeping all judgment and final output with the primary reviewer.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- Added one-level, read-only reviewer reconnaissance plus task-class floors,
+  floor evidence, mixed-wave separation, and no-downgrade inline fallback.
+- Added root-owned orchestration logging, workflow documentation, semantic
+  contracts, and synchronized Cursor/Codex reviewer roles.
+- Closed the original backlog, tracked pinned recon as a follow-up, merged
+  upstream, removed obsolete Cursor mirrors, and finalized all public packages
+  at verified-unpublished version `0.2.2`.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+## Key Decisions
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Separate recon authority from model floors.** `role.class: recon` stays
+  advisory while `task_class` independently sets the capability floor.
+- **Use floor-safe parent-inline fallback.** An unsatisfied stronger floor
+  returns to the primary reviewer; it never launches a weaker worker.
+- **Keep final judgment with the primary reviewer.** Workers return evidence;
+  the primary verifies sources, reconciles, assigns severity, and writes output.
+- **Keep project logging root-owned.** Review artifacts hold orchestration
+  evidence; the root lifecycle validates and appends the structural log entry.
+- **Do not recursively reuse full reviewers as recon workers.** Dedicated pinned
+  recon roles remain deferred until their value justifies the maintenance cost.
 
-## Entry format
+## Design Deltas
 
-Judgment entries:
+- Dogfood findings added the supplemental design and Phase 4 to separate task
+  complexity from authority and make mixed-class behavior explicit.
+- A published-version collision replaced `0.1.74` with evidence-derived release
+  selection; merged upstream ultimately established verified-unused `0.2.2`.
+- Release validation required provider wording outside `p04-t03`'s declared
+  scope; the accepted deviation remains recorded without rewriting history.
 
-```text
-### 2026-07-18 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+## Notable Challenges
 
-Structural entries:
+- Cursor exposed a mechanical nested target but no demonstrably
+  intelligent-floor target, so stronger work correctly remained inline.
+- The upstream merge required semantic reconciliation and revealed two obsolete
+  Cursor mirrors; final review then caught and cleared only bookkeeping defects.
 
-```text
-### 2026-07-18 · structural · <producer> · <ref>
-```
+## Tradeoffs Made
 
-## Entries
+- The solution stays instruction/schema-based and one-level rather than adding
+  a scheduler or live nested-agent test harness.
+- Canonical behavior names model classes; provider guidance resolves current
+  examples against active instructions, policy, ceiling, and availability.
 
-Entries are chronological and append-only.
+## Integration Notes
+
+- Existing generic callers remain compatible; `oat-reviewer` is the first to
+  require task-class fields. Cursor lifecycle variants still use the lifecycle
+  resolver, while nested recon uses advertised native model choices.
+- Validation passed 3,409 workspace/smoke tests plus lint, type-check, builds,
+  docs, formatting, provider, npm, PJM, and release gates.
+
+## Follow-up Items
+
+- `BL-260719-add-pinned-recon-agents` tracks reusable provider-neutral pinned
+  recon roles if evidence later justifies their maintenance cost.
+
+## Associated Issues
+
+- Completed and archived: `BL-260708-enable-oat-reviewer-subagent`.
+
+## Workflow Observations
 
 ### 2026-07-18 · structural · oat-project-implement · p01
 
@@ -151,7 +193,3 @@ Superseding final review passed with zero findings after narrow bookkeeping re-r
 ### 2026-07-19 · general · feedback · Cursor parent-inline fallback
 
 Promoted from "### 2026-07-19 · project · feedback · Cursor parent-inline fallback" because the behavior applies to any Cursor review using nested reconnaissance: delegate mechanical lanes only when advertised capability satisfies the floor, and keep stronger unsatisfied lanes with the primary reviewer instead of downgrading.
-
-## End-of-run synthesis (pending — do not skip at project completion)
-
-Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
