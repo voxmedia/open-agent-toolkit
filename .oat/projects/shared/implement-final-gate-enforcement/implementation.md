@@ -657,6 +657,22 @@ commit corroborate. The configured gate is fresh for implementation basis
 `98c935c3`; no gate or receive rerun is permitted while that basis remains
 unchanged.
 
+### 2026-07-19 — Main integration invalidated the prior basis
+
+- Main integration commit: `3b5f196560cdb684bf9a7abde688e6114902b86d`
+- Integration validation fix: `b9f2c6a0177921b54da9fa4aca83f06053b44cb8`
+- Fresh final review:
+  `reviews/archived/final-review-2026-07-19T125608Z.md`
+- Review outcome: pass with one non-blocking Minor finding
+- Finding disposition: fixed by
+  `72b19c256e7fa34650d73a125003f46788306086`
+
+The merge, wave-skill contract fixes, and test-anchor fix are substantive
+descendants of the prior reviewed HEAD. The earlier allowed gate generation is
+therefore stale and remains audit evidence only. The Minor finding is complete;
+a fresh final lifecycle review and new configured gate generation are required
+for the current basis before final HiLL.
+
 ---
 
 ## Final Closeout Sequence
