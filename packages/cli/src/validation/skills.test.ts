@@ -1050,9 +1050,13 @@ describe('validateOatSkills', () => {
       reviewer.match(
         /### Step 9: Return Confirmation[\s\S]*?(?=## Structured-Output Mode)/,
       )?.[0] ?? '';
-    const orchestrationHandoff =
+    const reviewProvideHandoff =
       reviewProvide.match(
         /### Step 8\.5: Validate Review Orchestration and Append Root Log[\s\S]*?(?=### Step 9:)/,
+      )?.[0] ?? '';
+    const implementationHandoff =
+      phaseExecution.match(
+        /### Per-Phase Review[\s\S]*?(?=#### Bounded Fix and Re-Review Loop)/,
       )?.[0] ?? '';
 
     expect(reviewer).toMatch(
@@ -1065,28 +1069,6 @@ describe('validateOatSkills', () => {
     ).toHaveLength(1);
     expect(artifactConfirmation).toMatch(
       /exactly one[\s\S]{0,180}(?:attempted|not-attempted)/i,
-    );
-    expect(orchestrationHandoff).toContain('**Reconnaissance:** attempted');
-    expect(orchestrationHandoff).toContain('**Reconnaissance:** not-attempted');
-    for (const rejectedSignal of ['missing', 'duplicate', 'invalid']) {
-      expect(
-        orchestrationHandoff,
-        `${rejectedSignal} signal fails closed`,
-      ).toMatch(
-        new RegExp(
-          `${rejectedSignal}[\\s\\S]{0,180}(?:incomplete-artifact error|stop|fail closed)`,
-          'i',
-        ),
-      );
-    }
-    expect(orchestrationHandoff).toMatch(
-      /Before validating the review artifact or updating project bookkeeping, consume[\s\S]{0,120}brief artifact-mode confirmation/i,
-    );
-    expect(orchestrationHandoff).toMatch(
-      /`attempted`[\s\S]{0,320}complete[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,360}append[\s\S]{0,100}exactly once/i,
-    );
-    expect(orchestrationHandoff).toMatch(
-      /`not-attempted`[\s\S]{0,280}(?:must not|no)[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,320}(?:must not|do not|no)[\s\S]{0,140}(?:log entry|`oat project log append`)/i,
     );
     for (const field of [
       'waves',
@@ -1110,10 +1092,47 @@ describe('validateOatSkills', () => {
       /structured-output mode[\s\S]{0,300}orchestration[\s\S]{0,180}`summary`/i,
     );
 
-    for (const [name, rootWorkflow] of [
-      ['project implement', `${implement}\n${phaseExecution}`],
-      ['project review provide', reviewProvide],
+    for (const [name, rootWorkflow, orchestrationHandoff] of [
+      [
+        'project implement',
+        `${implement}\n${phaseExecution}`,
+        implementationHandoff,
+      ],
+      ['project review provide', reviewProvide, reviewProvideHandoff],
     ] as const) {
+      expect(
+        orchestrationHandoff.match(/^- `\*\*Reconnaissance:\*\* attempted`$/gm),
+        `${name} attempted signal cardinality`,
+      ).toHaveLength(1);
+      expect(
+        orchestrationHandoff.match(
+          /^- `\*\*Reconnaissance:\*\* not-attempted`$/gm,
+        ),
+        `${name} not-attempted signal cardinality`,
+      ).toHaveLength(1);
+      for (const rejectedSignal of ['missing', 'duplicate', 'invalid']) {
+        expect(
+          orchestrationHandoff,
+          `${name} ${rejectedSignal} signal fails closed`,
+        ).toMatch(
+          new RegExp(
+            `${rejectedSignal}[\\s\\S]{0,180}(?:incomplete-artifact error|stop|fail closed)`,
+            'i',
+          ),
+        );
+      }
+      expect(
+        orchestrationHandoff,
+        `${name} consumes signal before validation or bookkeeping`,
+      ).toMatch(
+        /Before validating[\s\S]{0,180}(?:review artifact|artifact scope)[\s\S]{0,180}(?:updating|project bookkeeping)[\s\S]{0,120}consume[\s\S]{0,120}brief artifact-mode confirmation/i,
+      );
+      expect(orchestrationHandoff, `${name} attempted branch`).toMatch(
+        /`attempted`[\s\S]{0,320}complete[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,360}append[\s\S]{0,100}exactly once/i,
+      );
+      expect(orchestrationHandoff, `${name} not-attempted branch`).toMatch(
+        /`not-attempted`[\s\S]{0,280}(?:must not|no)[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,320}(?:must not|do not|no)[\s\S]{0,140}(?:log entry|`oat project log append`)/i,
+      );
       expect(rootWorkflow, `${name} artifact validation`).toMatch(
         /validat(?:e|es|ing)[\s\S]{0,180}review artifact[\s\S]{0,240}orchestration/i,
       );

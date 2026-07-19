@@ -132,18 +132,38 @@ handle. Only explicit pre-start rejection allows another route. Timeout,
 interruption, `BLOCKED`, or contract refusal is the review outcome and never a
 reason to replace an accepted reviewer.
 
-Validate the review artifact scope and commit range. When the returned artifact
-contains `## Review Orchestration`, validate that it covers every attempted
-wave with task class, classification rationale, selected target,
-acceptance/outcome, floor satisfaction, fallback, and primary reconciliation.
-If the reviewer reports delegated reconnaissance but omits that section or any
-required evidence, reject the artifact as incomplete.
+Before validating the review artifact scope or commit range, or updating any
+project bookkeeping, consume the reviewer's brief artifact-mode confirmation.
+It must contain exactly one of these exact lines:
 
-After successful orchestration validation, invoke `oat project log append`
-exactly once for one concise structural project-log entry referencing the
-review artifact path. Do not mirror individual worker records. The CLI helper
-owns capability gating and no-ops when project logging is disabled; the
-reviewer and workers never write `project-log.md`.
+- `**Reconnaissance:** attempted`
+- `**Reconnaissance:** not-attempted`
+
+A missing, duplicate, or invalid reconnaissance signal is an
+incomplete-artifact error: stop and fail closed without validating the review
+artifact, updating bookkeeping, or appending a project-log entry.
+
+Use the valid signal to validate the review artifact's orchestration evidence:
+
+- For `attempted`, require a complete `## Review Orchestration` section with
+  one compact account of every attempted wave: task class, classification
+  rationale, selected target, acceptance/outcome, floor satisfaction, fallback,
+  and primary reconciliation. Missing or incomplete evidence is an
+  incomplete-artifact error. After successful validation, append exactly once
+  through `oat project log append`, creating one concise structural entry that
+  references the review artifact path.
+- For `not-attempted`, the artifact must not contain
+  `## Review Orchestration`; treat a present section as an inconsistent,
+  incomplete artifact. Do not append a log entry and do not invoke
+  `oat project log append`.
+
+For the attempted branch, do not mirror individual worker records. Defer flags
+and entry format to `oat project log append --help`; never pre-check project-log
+configuration because the helper no-ops when logging is disabled. The reviewer
+and workers never write `project-log.md` or append this entry.
+
+After successful signal and orchestration validation, validate the review
+artifact scope and commit range.
 
 Zero Critical and zero Important findings passes. Medium/Minor findings are
 recorded without blocking.
