@@ -14,12 +14,12 @@ oat_implement_exit_gate:
   attempts_completed: 0
   reviewed_head: dad6158b4666db7a31e117422c7941b0fb85e88f
   implementation_fingerprint: 'sha256:0a3baa57c968e55013fba1460f784db8ca98538c31e0cb403200c1a50cc63b54'
-  launch_state: intent_persisted
+  launch_state: accepted
   launch_attempt_id: 9e37dbac-dcb8-4b87-8c1e-78d411491603
   launch_started_at: '2026-07-19T13:05:38Z'
   launch_result_receipt: .oat/projects/shared/implement-final-gate-enforcement/reviews/exit-gate-9e37dbac-result.json
-  gate_run_marker: null
-  gate_run_id: null
+  gate_run_marker: /var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4ae2b434-8fd4-49d3-a879-422b84fc2f57.json
+  gate_run_id: 4ae2b434-8fd4-49d3-a879-422b84fc2f57
   envelope_status: null
   artifact: null
   handoff: null
@@ -33,7 +33,7 @@ oat_implement_exit_gate:
   receive_eligible: false
   receive_completed: false
   failure: null
-  updated_at: '2026-07-19T13:05:38Z'
+  updated_at: '2026-07-19T13:06:46Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -87,7 +87,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/162' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T13:05:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T13:06:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

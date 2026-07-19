@@ -709,6 +709,16 @@ fingerprint is unchanged, but the generation and implementation basis are new.
 The launch intent and result-receipt path were committed before invoking the
 configured command.
 
+### 2026-07-19 — Post-integration launch accepted
+
+- Gate run: `4ae2b434-8fd4-49d3-a879-422b84fc2f57`
+- Marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4ae2b434-8fd4-49d3-a879-422b84fc2f57.json`
+- State: `pending/accepted`
+
+The run marker uniquely correlates the accepted launch with the persisted
+attempt and project.
+
 ---
 
 ## Final Closeout Sequence
