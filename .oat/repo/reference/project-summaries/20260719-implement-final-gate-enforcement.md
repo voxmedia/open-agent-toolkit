@@ -164,3 +164,11 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 ### 2026-07-19 · structural · oat-project-review-receive · replacement-exit-gate-review-received
 
 Received and archived gate run bb3ed5bc-c97f-45f9-9328-300e580ffc25. The Important threshold passed; one Minor test-hardening finding was deferred with rationale in judgment-sweep mode; no implementation change or blocking task was added.
+
+### 2026-07-19 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T132025Z.md
+
+### 2026-07-19 · structural · oat-project-review-receive · post-integration-exit-gate-review-received
+
+Received and archived gate run 4ae2b434-8fd4-49d3-a879-422b84fc2f57. The Important threshold passed with zero findings and no carry-forward debt.

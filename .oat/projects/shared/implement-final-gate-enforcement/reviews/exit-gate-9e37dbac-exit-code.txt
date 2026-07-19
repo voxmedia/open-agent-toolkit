@@ -1,2 +1,0 @@
-wrapper_exit_code=0
-configured_command_exit_code=0
