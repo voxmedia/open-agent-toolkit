@@ -30,11 +30,13 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.1` enables bounded reviewer-local reconnaissance for broad
-  reviews. Read-only, non-recursive evidence lanes can use economical workers,
-  while the primary reviewer retains source validation, synthesis, severity,
-  validation decisions, and final findings; unsupported hosts preserve the
-  same review coverage inline.
+- CLI `0.2.2` enables task-class-aware reviewer-local reconnaissance for broad
+  reviews. Read-only, non-recursive evidence lanes keep `recon` authority while
+  independent model-class floors distinguish deterministic checks from
+  silent-miss-prone interpretation and stronger bounded analysis. The primary
+  reviewer retains source validation, synthesis, severity, validation
+  decisions, and final findings; unsatisfied floors preserve the same review
+  coverage inline without downgrading.
 - CLI `0.1.73` adds an optional append-only `project-log.md` with
   create-on-first-append behavior, explicit scaffold controls, validated
   append/check/synthesize/rollup commands, and automatic structural entries at

@@ -59,10 +59,10 @@ and requested class floor:
 - `consequential`: the strongest allowed class for security, release safety,
   irreversible impact, or expensive failure.
 
-When a named example is stale or unavailable, choose a newer eligible model
-meeting the same class floor or route one class up. Never select below the
-floor. Keep model and reasoning effort as separate recorded axes, and record
-`floor_satisfaction`.
+A stale or unavailable named example requires a newer eligible model meeting
+the same class floor or a route one class up. Selection below the floor is
+prohibited. Keep model and reasoning effort as separate recorded axes, and
+record `floor_satisfaction`.
 
 Native spawn acceptance is configured-invocation evidence. Missing runtime
 model identity does not invalidate an accepted configured payload.

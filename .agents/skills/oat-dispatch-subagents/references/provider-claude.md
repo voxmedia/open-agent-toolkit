@@ -48,9 +48,9 @@ ceiling. Select one exact accepted alias at or above the requested floor:
 - `consequential`: the strongest allowed class for security, release safety,
   irreversible impact, or expensive failure.
 
-When a named example is stale or unavailable, choose a newer eligible model
-meeting the same class floor or route one class up. Never select below the
-floor. Record the exact selector and `floor_satisfaction`.
+A stale or unavailable named example requires a newer eligible model meeting
+the same class floor or a route one class up. Selection below the floor is
+prohibited. Record the exact selector and `floor_satisfaction`.
 
 ## Surface-Aware Selection
 
