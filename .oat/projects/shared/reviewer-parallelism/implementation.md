@@ -710,7 +710,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Exit Gate
 
-### Generation 1 — pending
+### Generation 1 — canceled
 
 - **Reviewed implementation head:** `a2a5f3cbf84ae53cc8bb328f74d7915b71112355`
 - **Implementation fingerprint:**
@@ -724,6 +724,10 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   persisted before invoking the configured command.
 - **Accepted run:** `c366dc84-ffe5-453a-b452-32081001c485` on
   `codex-5-6-sol-max`; durable run marker observed before completion.
+- **Outcome:** canceled by explicit user request before a structured envelope
+  was produced. The accepted run was not received or represented as passed;
+  lifecycle completion was authorized separately through
+  `oat-project-complete`.
 
 ---
 

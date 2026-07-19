@@ -49,7 +49,7 @@ oat_post_implement_sequence:
   post_approval_completed: []
   failure: null
 oat_implement_exit_gate:
-  status: pending
+  status: blocked
   resolution: configured
   disposition: null
   config_fingerprint: '9ac8967118067aebf9ba18a0dbfe2c7238383645db6b587dd7abb2636186dfc7'
@@ -78,11 +78,11 @@ oat_implement_exit_gate:
   receive_commit: null
   receive_eligible: false
   receive_completed: false
-  failure: null
-  updated_at: '2026-07-19T15:52:37Z'
+  failure: 'cancelled_by_user: accepted run produced no structured envelope and was not received; lifecycle completion was separately authorized via oat-project-complete'
+  updated_at: '2026-07-19T16:04:32Z'
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T15:32:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T16:04:32Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
