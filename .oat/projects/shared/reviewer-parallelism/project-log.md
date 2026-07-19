@@ -76,6 +76,10 @@ Final cross-phase review passed with zero Critical/Important findings. Two Mediu
 
 Implementation complete after five tasks across three phases, one Phase p03 fix iteration, and a passing final review. Release surfaces target unpublished lockstep version 0.2.1.
 
+### 2026-07-19 · structural · oat-project-implement · revision-design
+
+Reopened the completed reviewer-parallelism project for a reviewed revision after dogfooding showed heterogeneous review lanes were flattened to one economical model. Drafting a lightweight design that separates advisory role from per-lane task-class floor while preserving root-reviewer judgment.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

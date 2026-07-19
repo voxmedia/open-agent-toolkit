@@ -12,8 +12,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -38,28 +38,28 @@ oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
-oat_project_completed: '2026-07-18T23:48:44Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-18T23:48:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
+oat_project_state_updated: '2026-07-19T00:07:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Implementation complete
+**Status:** Revision design in progress
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-18
 
 ## Current Phase
 
-Implement - Complete
+Design - Model-class-aware reviewer orchestration revision
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
-- **Plan:** `plan.md` (complete — amendment review passed)
-- **Implementation:** `implementation.md` (complete — final review passed)
+- **Design:** `design.md` (draft complete — artifact review pending)
+- **Plan:** `plan.md` (pre-revision implementation complete; revision amendment pending)
+- **Implementation:** `implementation.md` (pre-revision final review passed; project reopened)
 
 ## Progress
 
@@ -72,7 +72,8 @@ Implement - Complete
 - ✓ Phases 1-2 implemented and passed root-owned review
 - ✓ Phase 3 passed focused re-review after one fix iteration
 - ✓ Final cross-phase review passed with zero Critical/Important findings
-- ✓ Implementation bookkeeping completed
+- ⚠ Dogfood review exposed homogeneous cheap-model routing across heterogeneous lanes
+- ⧗ Reviewing the supplemental model-class-aware design
 
 ## Blockers
 
@@ -80,4 +81,4 @@ None
 
 ## Next Milestone
 
-Optionally run documentation sync, generate a project summary, or open the final PR
+Pass the supplemental design review, then amend the plan with a revision phase
