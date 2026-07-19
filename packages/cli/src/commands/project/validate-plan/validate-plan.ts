@@ -72,7 +72,7 @@ export function validateParallelGroups(
     }
     if (group.length < 2) {
       errors.push(
-        `group[${i}] must contain at least 2 phase IDs (singleton groups are not allowed)`,
+        `group[${i}] must contain at least 2 phase IDs (singleton groups are not allowed — run a solo lane as an ungrouped phase (ungrouped phases execute sequentially in plan order))`,
       );
     }
     for (const phaseId of group) {

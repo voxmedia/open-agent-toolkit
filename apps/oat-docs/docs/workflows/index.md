@@ -13,6 +13,7 @@ Use this section when you want explicit project artifacts, stable task IDs, revi
 
 - [Ideas Workflow](ideas/index.md) - Lightweight idea capture, brainstorming, and promotion into tracked projects when the work becomes concrete.
 - [Workflow & Projects](projects/index.md) - Lifecycle, artifacts, reviews, PR flow, and repository analysis.
+- [Wave Workflows](wave-workflows.md) - Program-level coordination for executing a corpus of external plans as ordered wrapper projects.
 - [Skills](skills/index.md) - Workflow-oriented skill discovery and use-case routing.
 
 ## What This Section Is

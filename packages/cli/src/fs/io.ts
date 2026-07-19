@@ -1,4 +1,5 @@
 import {
+  chmod,
   mkdir,
   readdir,
   readFile,
@@ -48,8 +49,12 @@ export async function copyDirectory(src: string, dest: string): Promise<void> {
     }
 
     if (entry.isFile()) {
+      const sourceStat = await stat(sourcePath);
       const content = await readFile(sourcePath);
-      await writeFile(destPath, content);
+      await writeFile(destPath, content, { mode: sourceStat.mode });
+      // writeFile's mode applies only on creation; chmod covers
+      // pre-existing destination files so modes stay in sync.
+      await chmod(destPath, sourceStat.mode);
     }
   }
 }

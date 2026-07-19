@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "oatVersion": "0.1.77",
+  "oatVersion": "0.2.3",
   "entries": [
     {
       "canonicalPath": ".agents/agents/oat-codebase-mapper.md",
@@ -801,6 +801,26 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-07-14T00:27:35.913Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-wave-execute",
+      "providerPath": ".claude/skills/oat-wave-execute",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T21:41:15.219Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/oat-wave-program",
+      "providerPath": ".claude/skills/oat-wave-program",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-18T21:41:15.220Z"
     }
   ],
   "lastUpdated": "2026-07-18T21:54:06.887Z"

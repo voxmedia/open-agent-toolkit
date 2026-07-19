@@ -1,0 +1,92 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.build-record/v1",
+  "title": "BuildRecordV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "renderStrategy",
+    "startedAt",
+    "stages",
+    "outcome"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.build-record/v1" },
+    "runId": { "type": "string", "minLength": 1 },
+    "renderStrategy": { "enum": ["default-only", "user-switchable"] },
+    "startedAt": { "type": "string", "format": "date-time" },
+    "completedAt": { "type": "string", "format": "date-time" },
+    "stages": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/stage" },
+      "minItems": 1
+    },
+    "outcome": {
+      "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+    },
+    "error": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["code", "message", "recovery"],
+      "properties": {
+        "code": { "type": "string", "minLength": 1 },
+        "message": { "type": "string", "minLength": 1 },
+        "recovery": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "stage": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "status", "outputPaths", "warnings"],
+      "properties": {
+        "id": {
+          "enum": [
+            "validate",
+            "fact-base",
+            "content",
+            "theme",
+            "render",
+            "qa",
+            "durability",
+            "publish"
+          ]
+        },
+        "status": {
+          "enum": [
+            "pending",
+            "running",
+            "passed",
+            "warned",
+            "failed",
+            "skipped"
+          ]
+        },
+        "startedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "outputPaths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/safeRelativePath" },
+          "uniqueItems": true
+        },
+        "warnings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "error": { "$ref": "#/$defs/error" }
+      }
+    }
+  }
+}

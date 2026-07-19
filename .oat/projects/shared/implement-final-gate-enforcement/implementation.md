@@ -114,7 +114,8 @@ oat_generated: false
 - Documented the independent implementation exit-gate ordering, durable state,
   resume behavior, and autonomy boundary across four workflow pages.
 - Synchronized provider and bundled assets against the Cursor native-read
-  baseline and bumped the five public packages to `0.1.77`.
+  baseline. After main advanced to `0.2.2`, the five public packages were
+  rebased to `0.2.3`.
 - Reconciled rebase-era docs validation and autonomy inventory drift.
 
 **Verification:**
@@ -686,7 +687,7 @@ success before the next dispatch; final HiLL approval follows all three.
 - State commit: `ba6bb0dbe3c9ef478fcbaff1ddfceb885fa10c5e`
 - Coverage: all shipped capabilities adequately covered by Phase 3 docs
 - Delta recommendations: none requiring approval
-- PJM refresh: current state updated for CLI `0.1.77`
+- PJM refresh: current state updated for CLI `0.2.3`
 - Result: `oat_docs_updated: complete`
 - Completed pre-approval steps: `[summary, document]`
 

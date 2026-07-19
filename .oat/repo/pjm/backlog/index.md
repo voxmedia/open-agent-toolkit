@@ -4,6 +4,23 @@
 
 ## Curated Overview
 
+- Workflow-integrity (high, evidence-backed 2026-07-18): lifecycle text that
+  names another skill as an execution step needs a mandatory-load clause —
+  the wave-skills-promotion closeout showed "dispatch X" degrading to
+  outcome-from-memory, silently skipping newer skill steps
+  (`BL-260718-mandatory-skill-load-clause` — Mandatory skill-load clause for
+  lifecycle steps that name skills).
+- Upstream wave-program feedback now tracks generated-runbook command
+  validation, sync producer-version warnings, and the remaining full-surface
+  gate budget/recursive-dispatch hazards. Current main already fixes sync
+  `--scope` placement drift through local option parsing plus doctor detection,
+  and clearly rejects resolver calls that combine exact-candidate flags with
+  `--preferred`.
+- Wave-workflow follow-ups now track the grouped CLI-family and stable-artifact
+  contract work, a tested TypeScript bootstrap-group rewrite, and removal of
+  the temporary reviews-row watch after one more clean W6 gate. The proposed
+  tracked-config guard is archived as `wont_do`: dependency hygiene in the
+  consuming repo addresses the stale-local-CLI root cause.
 - CLI update awareness is shipped at `0.1.62`: eligible ordinary commands use
   passive cached npm `latest` metadata, while `init`, `tools install`, and
   `tools update` guard against installing older bundled tool versions from an
@@ -37,18 +54,28 @@
 
 <!-- OAT BACKLOG-INDEX -->
 
-| ID                                       | Title                                                               | Status | Priority | Scope   | Estimate |
-| ---------------------------------------- | ------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                    | open   | high     | feature | M        |
-| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches      | open   | high     | feature | M        |
-| BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews | open   | high     | feature | M        |
-| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                    | open   | high     | task    | S        |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                 | open   | high     | feature | M        |
-| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance       | open   | medium   | task    | S        |
-| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs   | open   | medium   | feature | L        |
-| BL-260712-per-project-override           | Per-project override to disable configured external gates           | open   | medium   | feature | M        |
-| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log          | open   | medium   | feature | S        |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                          | open   | medium   | task    | S        |
+| ID                                       | Title                                                                  | Status | Priority | Scope   | Estimate |
+| ---------------------------------------- | ---------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | M        |
+| BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
+| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
+| BL-260708-enable-oat-reviewer-subagent   | Enable oat-reviewer subagent orchestration for faster broad reviews    | open   | high     | feature | M        |
+| BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
+| BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
+| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
+| BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
+| BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                        | open   | medium   | feature | M        |
+| BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract             | open   | medium   | feature | M        |
+| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance          | open   | medium   | task    | S        |
+| BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos         | open   | medium   | task    |          |
+| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs      | open   | medium   | feature | L        |
+| BL-260712-per-project-override           | Per-project override to disable configured external gates              | open   | medium   | feature | M        |
+| BL-260718-remove-post-w6-reviews-row     | Remove post-W6 reviews-row restore watch                               | open   | medium   | task    | XS       |
+| BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command          | open   | medium   | feature | M        |
+| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log             | open   | medium   | feature | S        |
+| BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)          | open   | medium   | task    |          |
+| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
 
 <!-- END OAT BACKLOG-INDEX -->
 

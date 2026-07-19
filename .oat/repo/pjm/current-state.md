@@ -31,7 +31,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.1.77` makes the configured `oat-project-implement` exit gate an
+- CLI `0.2.3` makes the configured `oat-project-implement` exit gate an
   independent, resumable closeout boundary after final verification and
   lifecycle review but before approval-aware sequencing, final HiLL,
   completion, or success output. Durable launch/receive provenance,
@@ -39,6 +39,15 @@ copying their content here. -->
   and fail-closed reconciliation prevent missing, ambiguous, stale, or manual
   review evidence from satisfying the boundary. JSON-mode gate child output is
   routed to stderr so stdout remains exactly one structured result envelope.
+- Wave-orchestration skills promoted from stoa (PR #158, release `0.2.0`):
+  `oat-wave-execute` 1.5.0 and `oat-wave-program` 1.1.0 in the workflow pack
+  with genericized rule text and bundled assets, a mini-wave validation
+  fixture, and a W6 handoff runbook. Fresh installs now preserve nested
+  skill-script execute bits (`copyDirectory` mode fix), and
+  `oat project validate-plan` documents the singleton-group rule with the
+  ungrouped-phase alternative. Stoa's wave 6 on the packaged skills is the
+  pending zero-regression acceptance gate; explainer integration (p06)
+  follows against the frozen explainer-kit v1 RC.
 - CLI `0.1.76` makes Cursor skills native-read from project and user
   `.agents/skills` roots while retaining `.cursor/skills` as an explicit
   Cursor-only extension and migration surface. Interactive `init` and `status`

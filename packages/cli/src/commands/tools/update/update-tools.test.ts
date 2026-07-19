@@ -6,6 +6,7 @@ import { CORE_SKILLS } from '@commands/init/tools/core/install-core';
 import { DOCS_SKILLS } from '@commands/init/tools/docs/install-docs';
 import { IDEA_SKILLS } from '@commands/init/tools/ideas/install-ideas';
 import {
+  copyDirWithStatus,
   copyFileWithStatus,
   type CopyStatus,
 } from '@commands/init/tools/shared/copy-helpers';
@@ -403,6 +404,51 @@ describe('updateTools', () => {
       source: '/assets/skills/oat-idea-new',
       dest: '/project/.agents/skills/oat-idea-new',
     });
+  });
+
+  it('makes mode-normalized scripts inside updated skills executable', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-update-skill-'));
+
+    try {
+      const assetsRoot = join(root, 'assets');
+      const projectRoot = join(root, 'project');
+      const tool = createTool();
+      const sourceSkill = join(assetsRoot, 'skills', tool.name);
+      const sourceScript = join(sourceSkill, 'scripts', 'bootstrap-group.sh');
+      await mkdir(join(sourceSkill, 'scripts'), { recursive: true });
+      await writeFile(
+        join(sourceSkill, 'SKILL.md'),
+        `---\nname: ${tool.name}\nversion: 2.0.0\n---\n`,
+      );
+      await writeFile(sourceScript, '#!/bin/sh\nexit 0\n', { mode: 0o644 });
+      expect((await stat(sourceScript)).mode & 0o111).toBe(0);
+
+      const deps = createDeps({ project: [tool] });
+      deps.resolveAssetsRoot = async () => assetsRoot;
+      deps.resolveScopeRoot = async () => projectRoot;
+      deps.copyDirWithStatus = copyDirWithStatus;
+
+      await updateTools(
+        { kind: 'name', name: tool.name },
+        ['project'],
+        '/cwd',
+        '/home',
+        false,
+        deps,
+      );
+
+      const installedScript = join(
+        projectRoot,
+        '.agents',
+        'skills',
+        tool.name,
+        'scripts',
+        'bootstrap-group.sh',
+      );
+      expect((await stat(installedScript)).mode & 0o111).not.toBe(0);
+    } finally {
+      await rm(root, { recursive: true, force: true });
+    }
   });
 
   it('copies agent files with force=true', async () => {
