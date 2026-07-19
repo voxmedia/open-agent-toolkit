@@ -120,6 +120,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Accepted gate run 4ac107e3-0caf-4cf8-bd26-b026335d1282 produced a matching gate artifact but a non-JSON-pure stdout receipt. Parent receive and onFailure policy are prohibited; launch-result reconciliation is required before any new generation.
 
+### 2026-07-19 · structural · oat-project-implement · implementation-exit-gate-retired
+
+User explicitly authorized bounded recovery and one new gate generation. Accepted run 4ac107e3-0caf-4cf8-bd26-b026335d1282 is stale/retired without receive or policy disposition; fresh verification and final lifecycle review are required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

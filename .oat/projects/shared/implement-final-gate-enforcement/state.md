@@ -2,9 +2,9 @@
 oat_current_task: null
 oat_last_commit: 5b10244018b054846fee4f0e02197262b5074616
 oat_blockers:
-  - Configured implementation exit gate result requires reconciliation because its stdout receipt is not exactly one JSON envelope.
+  - Authorized gate-recovery changes require fresh verification and final lifecycle review before a new exit-gate generation.
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -40,8 +40,11 @@ oat_implement_exit_gate:
     stderr: .oat/projects/shared/implement-final-gate-enforcement/reviews/exit-gate-adc8991b-stderr.log
     wrapper_exit_code: 1
     configured_command_exit_code: null
-    recovery: 'Correct JSON-mode stdout purity, obtain a current final lifecycle review for the changed basis, and explicitly retire this accepted attempt before starting a new generation. Do not receive or relaunch automatically.'
-  updated_at: '2026-07-19T00:21:13Z'
+    retired: true
+    retired_at: '2026-07-19T00:37:03Z'
+    retirement_authorization: 'User explicitly authorized bounded recovery and one new gate generation.'
+    recovery: 'Complete the JSON-mode stdout purity fix, obtain a current final lifecycle review for the changed basis, then start the one user-authorized new generation.'
+  updated_at: '2026-07-19T00:37:03Z'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -78,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T00:21:13Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T00:37:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -90,7 +93,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Configured implementation exit gate blocked on result-receipt reconciliation
+Implementation - Authorized exit-gate recovery fix in progress
 
 ## Artifacts
 
@@ -117,13 +120,14 @@ Implementation - Configured implementation exit gate blocked on result-receipt r
 - ✓ Final review fixes
 - ✓ Final review round 2 fixes
 - ✓ Final whole-project review
-- ⚠ Configured implementation exit gate blocked
+- ⚠ Prior configured implementation exit-gate attempt retired
+- ⧗ JSON-output purity fix and fresh final lifecycle review
 
 ## Blockers
 
-- Exit-gate stdout receipt is not exactly one structured JSON envelope; receive
-  and policy handling are prohibited.
+- Fresh verification and final lifecycle review are required after the
+  authorized gate-recovery changes.
 
 ## Next Milestone
 
-Reconcile the accepted configured implementation exit-gate attempt
+Fix JSON-mode stdout purity and obtain a fresh final lifecycle review

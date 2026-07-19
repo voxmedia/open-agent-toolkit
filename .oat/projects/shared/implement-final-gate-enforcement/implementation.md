@@ -520,6 +520,14 @@ was consumed. Recovery requires correcting JSON-mode stdout purity, obtaining a
 current final lifecycle review for that substantive change, and explicit human
 retirement of this accepted attempt before a new generation may launch.
 
+### 2026-07-19 — Accepted attempt retired by user
+
+The user explicitly authorized bounded recovery and one new gate generation.
+Run `4ac107e3-0caf-4cf8-bd26-b026335d1282` is retained for audit but marked
+stale/retired; it will not be received, reinterpreted, or relaunched. The
+recovery changes must pass fresh verification and final lifecycle review before
+the authorized new generation starts.
+
 ---
 
 ## Deviations from Plan / Design
