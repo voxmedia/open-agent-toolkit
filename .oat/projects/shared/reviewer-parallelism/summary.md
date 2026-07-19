@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
 oat_generated: true
-oat_summary_last_task: p04-t07
+oat_summary_last_task: p04-t11
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -13,68 +13,35 @@ oat_summary_includes_revisions: []
 
 ## Overview
 
-This project addressed `BL-260708-enable-oat-reviewer-subagent` with bounded,
-provider-neutral review reconnaissance that matches worker capability to lane
-complexity while keeping all judgment and final output with the primary reviewer.
+This project completed `BL-260708-enable-oat-reviewer-subagent`: broad reviews
+can delegate bounded, provider-neutral reconnaissance while the primary reviewer
+retains verification, synthesis, severity, validation, and final output.
 
 ## What Was Implemented
 
-- Added one-level, read-only reviewer reconnaissance plus task-class floors,
-  floor evidence, mixed-wave separation, and no-downgrade inline fallback.
-- Added root-owned orchestration logging, workflow documentation, semantic
-  contracts, and synchronized Cursor/Codex reviewer roles.
-- Closed the original backlog, tracked pinned recon as a follow-up, merged
-  upstream, removed obsolete Cursor mirrors, and finalized all public packages
-  at verified-unpublished version `0.2.2`.
+- Completed 16/16 tasks through `p04-t11`: one-level advisory lanes now use
+  artifact-informed task-class floors, separate mixed waves, and fail-closed inline fallback.
+- Added an explicit attempted/not-attempted signal and identical signal-first
+  validation in both implementation and review-provide roots before log handoff.
+- Synchronized provider views, docs, semantic tests, backlog history, and all
+  five public packages at final verified-unpublished lockstep version `0.2.3`.
 
 ## Key Decisions
 
-- **Separate recon authority from model floors.** `role.class: recon` stays
-  advisory while `task_class` independently sets the capability floor.
-- **Use floor-safe parent-inline fallback.** An unsatisfied stronger floor
-  returns to the primary reviewer; it never launches a weaker worker.
-- **Keep final judgment with the primary reviewer.** Workers return evidence;
-  the primary verifies sources, reconciles, assigns severity, and writes output.
-- **Keep project logging root-owned.** Review artifacts hold orchestration
-  evidence; the root lifecycle validates and appends the structural log entry.
-- **Do not recursively reuse full reviewers as recon workers.** Dedicated pinned
-  recon roles remain deferred until their value justifies the maintenance cost.
+- **Separate recon authority from model floors.** Keep role and floor independent.
+- **Use floor-safe parent-inline fallback.** Never downgrade stronger lanes.
+- **Keep final judgment with the primary reviewer.** Workers only advise.
+- **Root-owned orchestration logging.** Roots validate and append once.
+- **Full reviewers are not recon workers.** Pinned recon remains deferred.
 
-## Design Deltas
+## Notable Challenges and Design Deltas
 
-- Dogfood findings added the supplemental design and Phase 4 to separate task
-  complexity from authority and make mixed-class behavior explicit.
-- A published-version collision replaced `0.1.74` with evidence-derived release
-  selection; merged upstream ultimately established verified-unused `0.2.2`.
-- Release validation required provider wording outside `p04-t03`'s declared
-  scope; the accepted deviation remains recorded without rewriting history.
-
-## Notable Challenges
-
-- Cursor exposed a mechanical nested target but no demonstrably
-  intelligent-floor target, so stronger work correctly remained inline.
-- The upstream merge required semantic reconciliation and revealed two obsolete
-  Cursor mirrors; final review then caught and cleared only bookkeeping defects.
-
-## Tradeoffs Made
-
-- The solution stays instruction/schema-based and one-level rather than adding
-  a scheduler or live nested-agent test harness.
-- Canonical behavior names model classes; provider guidance resolves current
-  examples against active instructions, policy, ceiling, and availability.
-
-## Integration Notes
-
-- Existing generic callers remain compatible; `oat-reviewer` is the first to
-  require task-class fields. Cursor lifecycle variants still use the lifecycle
-  resolver, while nested recon uses advertised native model choices.
-- Validation passed 3,409 workspace/smoke tests plus lint, type-check, builds,
-  docs, formatting, provider, npm, PJM, and release gates.
-
-## Follow-up Items
-
-- `BL-260719-add-pinned-recon-agents` tracks reusable provider-neutral pinned
-  recon roles if evidence later justifies their maintenance cost.
+- Dogfooding replaced homogeneous cheap routing with class-aware lanes; Cursor
+  proved mechanical delegation plus floor-safe primary-inline intelligent coverage.
+- Review fixes added attempt cardinality, implementation-root parity, autonomy
+  inventory mapping, provider cleanup, and evidence-driven release selection.
+- Published-version collisions at `0.1.74` and later `0.2.2` required upstream/npm
+  rechecks; `0.2.3` passed full release and workspace validation, then final review passed with zero findings.
 
 ## Associated Issues
 
@@ -193,3 +160,39 @@ Superseding final review passed with zero findings after narrow bookkeeping re-r
 ### 2026-07-19 · general · feedback · Cursor parent-inline fallback
 
 Promoted from "### 2026-07-19 · project · feedback · Cursor parent-inline fallback" because the behavior applies to any Cursor review using nested reconnaissance: delegate mechanical lanes only when advertised capability satisfies the floor, and keep stronger unsatisfied lanes with the primary reviewer instead of downgrading.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-dispatch
+
+Accepted Phase p04 implementer dispatch for p04-t08; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-review-dispatch
+
+Accepted root-owned Phase p04 review dispatch for p04-t08; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-rereview-dispatch
+
+Accepted focused root-owned Phase p04 re-review after one bounded p04-t08 fix iteration; run record: .oat/projects/shared/reviewer-parallelism/implementation.md#run-5.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t08-outcome
+
+Phase p04 remote-review task p04-t08 passed focused root-owned re-review after one bounded fix iteration; evidence: reviews/archived/p04-review-2026-07-19T135807Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t09-dispatch
+
+Accepted p04-t09 implementation dispatch on the configured High target; implementation commit 08c0e1cd6cbd9890742ffaefa1a973d7e424ab14 passed focused and full verification.
+
+### 2026-07-19 · structural · oat-project-implement · upstream-merge-2
+
+Merged current origin/main at 3ec32f0c70af343ea94ce273b402098d52693dba after final review identified the published 0.2.2 baseline; merge completed without conflicts.
+
+### 2026-07-19 · structural · oat-project-implement · final-review-2026-07-19T141639Z
+
+Superseding final review completed without nested reconnaissance and requested changes: 1 Critical release-version collision and 2 Important workflow/tracking findings. Evidence: reviews/archived/final-review-2026-07-19T141639Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · p04-t10-t11-dispatch
+
+Accepted one sequential High phase-implementer dispatch for p04-t10 and p04-t11. A test-discovered autonomy-inventory mapping was handled as one bounded p04-t10 correction; final commits 5386db92679c916807314065c5ec41dda35f7bfc and 160a7e244d0f4b5da916505c8dc9a1aede33f8e0 passed the full verification gate.
+
+### 2026-07-19 · structural · oat-project-implement · final-review-2026-07-19T143851Z
+
+Accepted superseding final review after signal-first validation. One mechanical release-metadata reconnaissance lane ran on Composer 2.5 Fast with a satisfied floor; the primary reviewer independently revalidated all evidence and retained final judgment. Review passed with zero findings. Evidence: reviews/archived/final-review-2026-07-19T143851Z.md.
