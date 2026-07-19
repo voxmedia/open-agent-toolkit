@@ -93,9 +93,22 @@ When delegation is eligible:
 
 Lanes may share one homogeneous dispatch wave only when every existing dispatch axis, `task_class`, and `model_class_floor` match. Mixed task classes require separate records and waves. The one-level fan-out limit applies across all waves.
 
+When delegated reconnaissance is attempted, artifact mode must include a
+compact `## Review Orchestration` section. Record the waves, task classes,
+classification rationale, selected targets, acceptance and outcomes, floor
+satisfaction, fallback, and primary reconciliation. Condense the dispatch
+evidence instead of copying every worker record. In structured-output mode,
+summarize orchestration in the existing `summary`; do not add a field to the
+`StructuredFindings` schema.
+
 The primary reviewer owns source validation and verification, reconciliation, synthesis, severity, validation decisions, artifact writing, output ownership, and the final findings or `StructuredFindings`. Reopen authoritative sources and directly re-verify every load-bearing positive and negative claim; repeat relevant searches for absence claims before promotion to a finding. Reconcile overlap, disagreement, and cross-lane gaps across task classes before deduplicating and assigning severity.
 
 Capability-check reviewer-local delegation once. A reviewer-local request must use `fallback.mode: caller-inline` and `allow_below_task_class_floor: false`. If the requested floor cannot be explicitly satisfied, record it as unsatisfied, do not launch a below-floor worker, and cover the affected lane inline without weakening review coverage, the checklist, or the output contract. The same inline fallback applies when nested dispatch is unsupported, unauthorized, failed, empty, or malformed. The inline and delegated paths preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged.
+
+The primary reviewer and lane workers must not write or modify
+`project-log.md` and must not invoke `oat project log append`. The root project
+workflow validates review orchestration evidence and owns any structural log
+entry.
 
 ## Mode Contract
 
@@ -362,6 +375,17 @@ oat_invocation_source: { exec-target-config|unknown }
 
 Findings: {N} critical, {N} important, {N} medium, {N} minor
 
+## Review Orchestration
+
+{Include this section only when delegated reconnaissance was attempted.}
+
+| Wave | Task class | Classification rationale | Selected target  | Acceptance / outcome | Floor satisfaction | Fallback |
+| ---- | ---------- | ------------------------ | ---------------- | -------------------- | ------------------ | -------- |
+| {id} | {class}    | {reason}                 | {target or none} | {status / outcome}   | {status}           | {route}  |
+
+**Primary reconciliation:** {independent verification, accepted/rejected
+worker claims, and root-inline coverage}
+
 ## Findings
 
 ### Critical
@@ -463,7 +487,7 @@ When the dispatch payload sets `oat_output_mode: structured`, the output sink ch
 
 ```typescript
 interface StructuredFindings {
-  summary: string; // 2-3 sentence review summary
+  summary: string; // 2-3 sentence review summary; include compact orchestration when reconnaissance was attempted
   findings: Array<{
     id: string; // C1, I1, M1, m1 — stable per dispatch (C/I/M/m prefix matches the severity model)
     severity: 'critical' | 'important' | 'medium' | 'minor';
