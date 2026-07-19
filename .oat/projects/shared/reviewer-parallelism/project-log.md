@@ -92,6 +92,10 @@ Supplemental model-class-aware design passed focused artifact re-review with zer
 
 Drafted Phase p04 from the approved supplemental design: one contract/test task, one docs task, one provider/release task, and a mixed-class dogfood phase-review acceptance gate. Testing stays semantic and reuses existing focused/release validation.
 
+### 2026-07-19 · structural · oat-project-implement · revision-plan-pass
+
+Phase p04 amendment passed artifact review with one Minor checklist wording correction applied during receipt. Reopening implementation at p04-t01.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -1,9 +1,9 @@
 ---
 oat_plan_source: quick
-oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p03']
 oat_auto_review_at_hill_checkpoints: true
@@ -34,7 +34,8 @@ oat_template: false
 - [x] Phases evaluated for parallelism
 - [x] `oat_plan_parallel_groups` set from dependency/write-set analysis
 - [x] Dispatch policy resolved before implementation readiness
-- [x] Plan artifact review passed
+- [x] Original plan artifact review passed
+- [x] Supplemental revision plan artifact review passed
 
 ## Parallelism
 
@@ -794,7 +795,7 @@ dogfood acceptance blocked rather than silently substituting a weaker worker.
 | plan               | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
 | plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
-| plan               | artifact | pending         | -          | -                                                             |
+| plan               | artifact | passed          | 2026-07-19 | reviews/archived/artifact-plan-review-2026-07-19T003101Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

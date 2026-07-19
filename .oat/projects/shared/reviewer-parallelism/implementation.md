@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: null
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 1     | 1/1       |
-| Phase 2 | complete | 1     | 1/1       |
-| Phase 3 | complete | 3     | 3/3       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 1     | 1/1       |
+| Phase 2 | complete    | 1     | 1/1       |
+| Phase 3 | complete    | 3     | 3/3       |
+| Phase 4 | in_progress | 3     | 0/3       |
 
-**Total:** 5/5 tasks completed
+**Total:** 5/8 tasks completed
 
 ---
 
@@ -246,6 +247,32 @@ oat_generated: false
 
 ---
 
+## Phase 4: Task-Class-Aware Reviewer Orchestration Revision
+
+**Status:** in_progress
+**Started:** 2026-07-18
+
+### Task p04-t01: Separate reviewer lane authority from model-class floors
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+### Task p04-t02: Document model-class-aware review lanes
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p04-t03: Regenerate provider views and finalize the revised release
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below with:_
@@ -344,6 +371,9 @@ Chronological log of implementation progress.
 - [x] p03-t01: Regenerate provider views and finalize lockstep release metadata - `8a8d0b2f`
 - [x] p03-t02: Close the shipped backlog item - `9772f01b`
 - [x] p03-t03: Correct the release to the next unpublished lockstep version - `cde08669`
+- [ ] p04-t01: Separate reviewer lane authority from model-class floors - next
+- [ ] p04-t02: Document model-class-aware review lanes
+- [ ] p04-t03: Regenerate provider views and finalize the revised release
 
 **What changed (high level):**
 
@@ -357,7 +387,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the final cross-phase review and complete lifecycle bookkeeping.
+- Execute Phase 4 and pass its mixed-class dogfood review plus the superseding final review.
 
 **Blockers:**
 
