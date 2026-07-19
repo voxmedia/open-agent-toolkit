@@ -486,6 +486,13 @@ initialized. No gate command has launched yet.
   `reviews/exit-gate-adc8991b-result.json`
 - State: `pending/intent_persisted`
 
+### 2026-07-19 — Launch accepted
+
+- Gate run: `4ac107e3-0caf-4cf8-bd26-b026335d1282`
+- Run marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/4ac107e3-0caf-4cf8-bd26-b026335d1282.json`
+- State: `pending/accepted`
+
 ---
 
 ## Deviations from Plan / Design
