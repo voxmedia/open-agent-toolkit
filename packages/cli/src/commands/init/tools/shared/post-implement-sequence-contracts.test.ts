@@ -1,4 +1,13 @@
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
+import {
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
 import { describe, expect, it } from 'vitest';
@@ -42,6 +51,54 @@ function readStateTemplate(): string {
 
 function normalizeWhitespace(value: string): string {
   return value.replace(/\s+/g, ' ').trim();
+}
+
+function git(cwd: string, ...args: string[]): string {
+  return execFileSync('git', args, {
+    cwd,
+    encoding: 'utf8',
+    env: { ...process.env, LC_ALL: 'C' },
+  }).trim();
+}
+
+function effectiveDeltaFingerprint(
+  cwd: string,
+  baseRef: string,
+  head: string,
+  stateCarrier = '.oat/project/state.md',
+): string {
+  const mergeBases = git(cwd, 'merge-base', '--all', baseRef, head)
+    .split('\n')
+    .filter(Boolean);
+  if (mergeBases.length !== 1) {
+    throw new Error(`expected one merge base, got ${mergeBases.length}`);
+  }
+
+  const raw = execFileSync(
+    'git',
+    [
+      'diff',
+      '--raw',
+      '-z',
+      '--no-renames',
+      '--no-abbrev',
+      mergeBases[0],
+      head,
+      '--',
+      '.',
+      `:(exclude,literal)${stateCarrier}`,
+    ],
+    {
+      cwd,
+      encoding: 'buffer',
+      env: { ...process.env, LC_ALL: 'C' },
+    },
+  );
+
+  return createHash('sha256')
+    .update(Buffer.from('effective-delta-v1\0'))
+    .update(raw)
+    .digest('hex');
 }
 
 function expectMarkersInOrder(
@@ -176,7 +233,10 @@ describe('post-implementation sequence contracts', () => {
       'max_attempts',
       'attempts_completed',
       'reviewed_head',
+      'implementation_base_ref',
       'implementation_fingerprint',
+      'freshness_head',
+      'freshness_fingerprint',
       'launch_state',
       'launch_attempt_id',
       'launch_started_at',
@@ -242,7 +302,10 @@ describe('post-implementation sequence contracts', () => {
       'max_attempts',
       'attempts_completed',
       'reviewed_head',
+      'implementation_base_ref',
       'implementation_fingerprint',
+      'freshness_head',
+      'freshness_fingerprint',
       'launch_state',
       'launch_attempt_id',
       'launch_started_at',
@@ -433,6 +496,135 @@ describe('post-implementation sequence contracts', () => {
     expect(normalizedNext).toContain(
       'Pending and blocked generations resume their persisted configuration; configuration-fingerprint mismatch fails closed.',
     );
+  });
+
+  it('preserves a fresh gate across unchanged effective-delta base updates', () => {
+    const skill = normalizeWhitespace(readImplementSkill());
+    const next = normalizeWhitespace(readNextSkill());
+
+    expect(skill).toContain(
+      'New generations persist `implementation_fingerprint` as `sha256:effective-delta-v1:<digest>`.',
+    );
+    expect(skill).toContain(
+      'Persist the logical base ref as `implementation_base_ref`; require exactly one merge base between that ref and each compared HEAD.',
+    );
+    expect(skill).toContain(
+      'Hash the exact NUL-delimited byte stream from Git `--raw -z --no-renames --no-abbrev` output, which includes both base and final modes and full object IDs for blobs, symlinks, deletions, and gitlinks.',
+    );
+    expect(skill).toContain(
+      'Set `freshness_head` to `reviewed_head` and `freshness_fingerprint` to `implementation_fingerprint` when the generation starts.',
+    );
+    expect(skill).toContain(
+      'Exclude only the exact `$PROJECT_PATH/state.md` checkpoint carrier to avoid a self-referential digest.',
+    );
+    expect(skill).toContain(
+      'After a corroborated closeout-only transition, hash the complete current effective delta and persist the rolling freshness checkpoint.',
+    );
+    expect(skill).toContain(
+      'A merge, rebase, or base update is not substantive by itself.',
+    );
+    expect(skill).toContain(
+      'When it matches the rolling fingerprint, preserve the allowed generation and persist an advanced rolling checkpoint without rerunning gate or receive.',
+    );
+    expect(skill).toContain(
+      'Conflict resolution or branch-owned implementation, test, skill, template, or workflow changes that alter the effective delta are substantive.',
+    );
+    expect(skill).toContain(
+      'Legacy unqualified `sha256:<digest>` values keep the descendant-path policy and are never reinterpreted or migrated in place.',
+    );
+    expect(next).toContain(
+      'For qualified state, require `implementation_base_ref`, `freshness_head`, and a valid `freshness_fingerprint`.',
+    );
+    expect(next).toContain(
+      'An unchanged qualified fingerprint preserves freshness across a merge, rebase, or base update but routes to `oat-project-implement` to persist the advanced rolling checkpoint; a mismatch routes as stale.',
+    );
+    expect(next).toContain(
+      'Legacy unqualified fingerprints retain the closeout-only descendant-path check.',
+    );
+  });
+
+  it('fingerprints effective tree deltas instead of merge history', () => {
+    const cwd = mkdtempSync(join(tmpdir(), 'oat-effective-delta-'));
+
+    try {
+      git(cwd, 'init', '-b', 'main');
+      git(cwd, 'config', 'user.name', 'OAT Test');
+      git(cwd, 'config', 'user.email', 'oat-test@example.com');
+      writeFileSync(join(cwd, 'app.txt'), 'base\n');
+      writeFileSync(join(cwd, 'unrelated.txt'), 'one\n');
+      git(cwd, 'add', '.');
+      git(cwd, 'commit', '-m', 'base');
+
+      git(cwd, 'checkout', '-b', 'feature');
+      writeFileSync(join(cwd, 'app.txt'), 'feature\n');
+      git(cwd, 'add', 'app.txt');
+      git(cwd, 'commit', '-m', 'feature');
+      const reviewedHead = git(cwd, 'rev-parse', 'HEAD');
+      const reviewedFingerprint = effectiveDeltaFingerprint(
+        cwd,
+        'main',
+        reviewedHead,
+      );
+
+      mkdirSync(join(cwd, '.oat/project'), { recursive: true });
+      writeFileSync(join(cwd, '.oat/project/state.md'), 'closeout\n');
+      writeFileSync(join(cwd, '.oat/project/summary.md'), 'summary\n');
+      git(cwd, 'add', '.oat/project');
+      git(cwd, 'commit', '-m', 'closeout bookkeeping');
+      const closeoutFingerprint = effectiveDeltaFingerprint(
+        cwd,
+        'main',
+        'HEAD',
+      );
+      expect(closeoutFingerprint).not.toBe(reviewedFingerprint);
+
+      writeFileSync(join(cwd, '.oat/project/state.md'), 'checkpoint\n');
+      git(cwd, 'add', '.oat/project/state.md');
+      git(cwd, 'commit', '-m', 'persist freshness checkpoint');
+      expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).toBe(
+        closeoutFingerprint,
+      );
+
+      git(cwd, 'checkout', 'main');
+      writeFileSync(join(cwd, 'unrelated.txt'), 'two\n');
+      git(cwd, 'add', 'unrelated.txt');
+      git(cwd, 'commit', '-m', 'base-only update');
+      git(cwd, 'checkout', 'feature');
+      git(cwd, 'merge', 'main', '--no-edit');
+      expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).toBe(
+        closeoutFingerprint,
+      );
+
+      writeFileSync(join(cwd, 'app.txt'), 'feature-v2\n');
+      git(cwd, 'add', 'app.txt');
+      git(cwd, 'commit', '-m', 'change implementation');
+      expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).not.toBe(
+        closeoutFingerprint,
+      );
+
+      writeFileSync(join(cwd, 'app.txt'), 'feature\n');
+      git(cwd, 'add', 'app.txt');
+      git(cwd, 'commit', '-m', 'restore reviewed implementation');
+      expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).toBe(
+        closeoutFingerprint,
+      );
+
+      git(cwd, 'checkout', 'main');
+      writeFileSync(join(cwd, 'app.txt'), 'changed-base\n');
+      git(cwd, 'add', 'app.txt');
+      git(cwd, 'commit', '-m', 'change implementation base');
+      git(cwd, 'checkout', 'feature');
+      expect(() => git(cwd, 'merge', 'main', '--no-edit')).toThrow();
+      writeFileSync(join(cwd, 'app.txt'), 'feature\n');
+      git(cwd, 'add', 'app.txt');
+      git(cwd, 'commit', '-m', 'resolve with reviewed implementation');
+      expect(readFileSync(join(cwd, 'app.txt'), 'utf8')).toBe('feature\n');
+      expect(effectiveDeltaFingerprint(cwd, 'main', 'HEAD')).not.toBe(
+        closeoutFingerprint,
+      );
+    } finally {
+      rmSync(cwd, { recursive: true, force: true });
+    }
   });
 
   it('uses one immutable snapshot and its stored order across every closeout boundary', () => {

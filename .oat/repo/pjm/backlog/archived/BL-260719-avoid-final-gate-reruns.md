@@ -1,7 +1,7 @@
 ---
 id: BL-260719-avoid-final-gate-reruns
 title: Avoid final-gate reruns for merge-only updates
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -12,7 +12,7 @@ labels:
   - performance
 assignee: null
 created: 2026-07-19T13:42:05.069Z
-updated: 2026-07-19T13:42:05.069Z
+updated: '2026-07-19T16:34:24Z'
 associated_issues: []
 external_plans: []
 ---

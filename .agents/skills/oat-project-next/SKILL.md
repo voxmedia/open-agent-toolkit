@@ -1,6 +1,6 @@
 ---
 name: oat-project-next
-version: 1.0.10
+version: 1.0.11
 description: Use when continuing work on the active OAT project. Reads project state, determines the next lifecycle action, and invokes the appropriate skill automatically.
 disable-model-invocation: true
 user-invocable: true
@@ -270,9 +270,13 @@ Before every other post-implementation route, inspect
 or not fresh, route to `oat-project-implement`.
 
 This override applies even when `oat_phase_status` is `complete` or `pr_open`,
-and before the summary, document, PR, or `oat-project-complete` routes. Announce
-exactly: "Implementation exit gate unresolved or stale — resume with
-`oat-project-implement` before post-implementation routing."
+and before the summary, document, PR, or `oat-project-complete` routes. When a
+qualified allowed result matches but its rolling checkpoint trails HEAD,
+announce exactly: "Implementation exit gate freshness checkpoint pending —
+resume with `oat-project-implement` before post-implementation routing." For all
+other unresolved or stale cases, announce exactly: "Implementation exit gate
+unresolved or stale — resume with `oat-project-implement` before
+post-implementation routing."
 
 Only an `allowed` and fresh exit-gate disposition falls through to the normal
 post-implementation checks.
@@ -282,11 +286,13 @@ alone:
 
 - `allowed/no_gate` is valid only with `disposition: no_gate`, null gate-run and
   artifact provenance, and current `reviewed_head` and implementation
-  fingerprint fields.
+  fingerprint fields. Qualified state also requires `implementation_base_ref`,
+  `freshness_head`, and `freshness_fingerprint`.
 - `allowed/configured` is valid only with `disposition: passed`, `warned`, or
   `prompt_approved`; matching `config_fingerprint`, `reviewed_head`,
-  `implementation_fingerprint`, and configured gate-run provenance; and any
-  eligible receive durably completed.
+  `implementation_fingerprint`, configured gate-run provenance, and any eligible
+  receive durably completed. Qualified state also requires the complete rolling
+  freshness fields.
 - `pending`, `blocked`, malformed, contradictory, or legacy-absent state never
   falls through. Pending and blocked generations resume their persisted
   configuration; configuration-fingerprint mismatch fails closed.
@@ -294,10 +300,24 @@ alone:
   paths and substantive changes route as stale. The recognized set is limited
   to configured gate artifacts and receipts, project tracking and
   `project-log.md` appends, summary/documentation/PR sequence outputs, final
-  HiLL bookkeeping, and completion bookkeeping.
-- Any implementation, test, skill, template, workflow configuration, or other
-  unrecognized change after `reviewed_head` invalidates the implementation
-  fingerprint and routes to `oat-project-implement`.
+  HiLL bookkeeping, and completion bookkeeping. A category match without its
+  persisted transition boundary is unknown, not closeout-only.
+- For qualified state, require `implementation_base_ref`, `freshness_head`, and
+  a valid `freshness_fingerprint`. Exactly one merge base and 64-character
+  lowercase hexadecimal implementation/freshness digests are mandatory.
+  Missing or malformed inputs route as stale. When HEAD differs from
+  `freshness_head`, use the full raw Git byte algorithm from
+  `oat-project-implement` with only its literal state-carrier exclusion. Verify
+  and ignore state-only checkpoint commits before classification. An unchanged
+  qualified fingerprint preserves freshness across a merge, rebase, or base
+  update but routes to `oat-project-implement` to persist the advanced rolling
+  checkpoint; a mismatch routes as stale. This read-only router never advances
+  state or invents another fingerprint algorithm.
+- Legacy unqualified fingerprints retain the closeout-only descendant-path
+  check. Any implementation, test, skill, template, workflow configuration, or
+  other unrecognized change after `reviewed_head` invalidates the implementation
+  fingerprint and routes to `oat-project-implement`. Do not reinterpret or
+  migrate legacy state while routing.
 
 Routing is read-only: announce stale or malformed state, but leave transition
 repair, gate execution, receive, and persistence to `oat-project-implement`.

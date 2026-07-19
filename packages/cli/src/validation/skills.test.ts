@@ -1281,7 +1281,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.1.5',
+        version: '2.1.6',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1634,7 +1634,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1851,7 +1851,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.5');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2280,7 +2280,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.5');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2528,11 +2528,11 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.5'],
+      ['oat-project-implement', '2.1.6'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.3'],
-      ['oat-project-next', '1.0.10'],
+      ['oat-project-next', '1.0.11'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3420,7 +3420,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.11');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
@@ -3617,7 +3617,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.5'],
+      ['oat-project-implement', '2.1.6'],
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;

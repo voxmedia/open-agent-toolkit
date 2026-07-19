@@ -310,7 +310,10 @@ oat_implement_exit_gate:
   max_attempts: 2
   attempts_completed: 0
   reviewed_head: null
+  implementation_base_ref: null
   implementation_fingerprint: null
+  freshness_head: null
+  freshness_fingerprint: null
   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
   launch_attempt_id: null
   launch_started_at: null
@@ -342,6 +345,29 @@ resolved command, description, `onFailure`, and `maxAttempts` to derive
 pending` before any gate launch. Missing state means unresolved, never no gate.
 A `null` resolution persists `allowed/no_gate` with `disposition: no_gate`,
 null run/artifact/receive provenance, and the current implementation basis.
+
+New generations persist `implementation_fingerprint` as
+`sha256:effective-delta-v1:<digest>`. Resolve the logical integration base from
+the tracked PR's exact base ref, then the repository's configured remote default
+branch; missing or ambiguous resolution fails closed. Persist the logical base
+ref as `implementation_base_ref`; require exactly one merge base between that
+ref and each compared HEAD.
+
+Prefix the fingerprint input with the bytes `effective-delta-v1\0`. Hash the
+exact NUL-delimited byte stream from Git
+`--raw -z --no-renames --no-abbrev` output, which includes both base and final
+modes and full object IDs for blobs, symlinks, deletions, and gitlinks. Run with
+`LC_ALL=C` from the unique merge base to the compared HEAD. Git's raw `-z`
+format owns path framing and byte ordering; do not parse and reserialize it,
+abbreviate object IDs, enable rename detection, or hash human patch output.
+
+Exclude only the exact `$PROJECT_PATH/state.md` checkpoint carrier to avoid a
+self-referential digest. Use Git's literal exclusion pathspec, not a glob.
+Validate that file independently as the structured transition above. Every
+other path remains fingerprinted. Set `freshness_head` to `reviewed_head` and
+`freshness_fingerprint` to `implementation_fingerprint` when the generation
+starts. These rolling fields preserve the accepted tree outcome after later
+authorized closeout transitions without changing the immutable reviewed basis.
 
 An in-flight `pending` or `blocked` generation reuses its persisted resolved
 configuration and never re-resolves it. Recompute the fingerprint from those
@@ -476,19 +502,43 @@ disposition.
   policy, or persistence boundary.
 - A fresh `allowed` result resumes after the gate without executing the gate or
   receive a second time. Reuse requires a valid disposition, complete
-  configured-gate provenance when configured, an unchanged implementation
-  fingerprint, and any eligible receive marked complete.
+  configured-gate provenance when configured, an unchanged immutable
+  implementation fingerprint, a valid rolling freshness checkpoint, and any
+  eligible receive marked complete.
 - Closeout-only descendants include configured gate artifacts and receipts,
   project tracking, `project-log.md` appends, summary/documentation/PR sequence
   outputs, final HiLL bookkeeping, and completion bookkeeping. Classify
   gate-owned `oat project log append` mutations introduced with PR #156 as
-  closeout-only; they do not invalidate the reviewed implementation basis.
-- Determine freshness from every path changed after `reviewed_head`, and require
-  each descendant commit to contain only recognized closeout work. An unknown
-  changed path fails closed as substantive implementation change.
-  Implementation, test, skill, template, or workflow configuration changes
-  make the prior result `stale`. Preserve its provenance for audit, require a
-  current final lifecycle review for the new basis, and start a new generation.
+  closeout-only. A path category alone is insufficient: the corresponding
+  persisted gate or sequence transition must own that descendant boundary;
+  unknown or mixed work is substantive.
+- For a qualified `sha256:effective-delta-v1:<digest>` value, require the
+  persisted `implementation_base_ref`, `freshness_head`, one current merge base,
+  and 64-character lowercase hexadecimal implementation and freshness digests.
+  Missing or malformed inputs fail closed. Walk descendants after
+  `freshness_head` in commit order. Ignore a checkpoint-persistence commit only
+  after verifying its diff changes the exact state carrier and nothing else.
+  After a corroborated closeout-only transition, hash the complete current
+  effective delta and persist the rolling freshness checkpoint. Record the
+  transition's last non-checkpoint commit as `freshness_head`; the following
+  state-only persistence commit is the verified carrier exception above. For a
+  merge, rebase, or base-update boundary, recompute the complete effective delta
+  against the current merge base. A merge, rebase, or base update is not
+  substantive by itself. When it matches the rolling fingerprint, preserve the
+  allowed generation and persist an advanced rolling checkpoint without
+  rerunning gate or receive. A mismatch, unknown commit, or mixed
+  closeout/substantive boundary marks the generation `stale`.
+  Conflict resolution or branch-owned implementation, test, skill, template, or
+  workflow changes that alter the effective delta are substantive.
+- Legacy unqualified `sha256:<digest>` values keep the descendant-path policy
+  and are never reinterpreted or migrated in place. Determine freshness from
+  every path changed after `reviewed_head`, and require each descendant commit
+  to contain only recognized closeout work. An unknown changed path fails closed
+  as substantive implementation change. Implementation, test, skill, template,
+  or workflow configuration changes make the prior result `stale`.
+- Every stale transition preserves prior provenance for audit, requires a
+  current final lifecycle review for the changed basis, and starts a new
+  generation using the qualified fingerprint format.
 
 Before approval-aware sequencing, final HiLL approval, implementation
 completion, or success output, run the configured gate:
@@ -682,6 +732,14 @@ Commit each completed step before dispatching the next step. On failure, persist
 A pre-approval failure leaves `approval: pending`; a post-approval failure
 retains `approval: approved`. Fail fast with the boundary, failed step, and
 exact resume command: `oat-project-implement`.
+
+For qualified gate state, treat each committed sequence step as a corroborated
+closeout boundary. Recompute the complete effective delta, record that step
+commit as `freshness_head`, and persist `freshness_fingerprint` in a separate
+state-only checkpoint commit before dispatching the next step. Apply the same
+checkpoint protocol to gate bookkeeping, final HiLL bookkeeping, and completion
+bookkeeping. A mixed commit, missing child transition, or non-state path in the
+checkpoint-persistence commit fails closed as stale.
 
 1. Dispatch incomplete `pre_approval` steps in stored order.
 2. When they succeed and a final checkpoint exists, commit `status:
