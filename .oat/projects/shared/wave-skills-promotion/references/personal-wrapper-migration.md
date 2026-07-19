@@ -1,9 +1,12 @@
 # Personal Wrapper Migration and Final RC Acceptance
 
 This runbook is for the operator migrating
-`~/.agents/skills/personal-explainer-kit`. The repository phase ships this
-procedure; the operator performs the migration and acceptance outside this
-repository.
+`~/.agents/skills/personal-explainer-kit`. The repository ships the migration
+CODE as an installable scaffold at
+`.oat/projects/shared/wave-skills-promotion/references/personal-explainer-kit/`
+(`SKILL.md` + `scripts/acceptance.mjs` + `config.seams.example.json`); the
+operator installs it, fills the personal-config seams, and runs acceptance
+outside this repository.
 
 ## Preconditions and pins
 
@@ -11,14 +14,9 @@ repository.
   `~/.agents/skills-backup/oat-explainer-kit-0.4.1` before changing the installed
   wrapper.
 - Use the post-p06 final explainer-kit RC for acceptance. At final-RC freeze,
-  replace all three placeholders below and retain them in the sanitized
-  acceptance record:
-
-  ```text
-  FINAL_RC_ID=<pin final rcId at freeze>
-  FINAL_RC_COMMIT=<pin final commit at freeze>
-  FINAL_RC_SKILL_SUBTREE_SHA256=<pin final oat-explainer-kit subtree hash at freeze>
-  ```
+  fill all three placeholders in the installed wrapper's `config.json`
+  `finalRc` block (`rcId`, `commit`, `subtreeSha256`); the acceptance harness
+  reads them from there and carries them into the sanitized acceptance record.
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.
@@ -47,9 +45,9 @@ Acceptance pins the skill subtree, not the whole CLI tarball.
    byte-compare the subtree against the rebuild. For the f212d630 contract basis,
    the result must be
    `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`.
-5. For final acceptance, repeat the same procedure at `FINAL_RC_COMMIT` and
-   require the rebuilt subtree hash to equal
-   `FINAL_RC_SKILL_SUBTREE_SHA256`.
+5. For final acceptance, repeat the same procedure at the pinned `finalRc`
+   `commit` and require the rebuilt subtree hash to equal the pinned `finalRc`
+   `subtreeSha256`.
 
 The rebuilt CLI tarball has whole-file hash
 `sha256:296cfa27d678f269ff649b92ebd7…`, which differs from the whole-tarball hash
@@ -59,26 +57,42 @@ record; those are the inputs consumed by acceptance.
 
 ## Install and migrate the wrapper
 
-1. Replace the installed wrapper's explainer-kit 0.4.1 content with the verified
-   final-RC 1.0.0 content from
+1. Install the packaged skill: replace the installed explainer-kit 0.4.1
+   content with the verified final-RC 1.0.0 content from
    `package/assets/skills/oat-explainer-kit`.
-2. Change wrapper invocation to construct an
-   `explainer-kit.run-request/v1` document. Its required keys are exactly:
-   `schemaVersion, recipe, slug, outputRoot, factBase, mode`.
-3. For supplied fact-base mode, construct an
-   `explainer-kit.fact-base/v1` document whose required keys are exactly:
-   `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
-   Bind its file through the run request's `factBase` object using `mode:
+2. Install the wrapper scaffold: copy the shipped tree from
+   `.oat/projects/shared/wave-skills-promotion/references/personal-explainer-kit/`
+   to `~/.agents/skills/personal-explainer-kit`, replacing the 0.4.1 wrapper
+   content (the backup remains the rollback source).
+3. Fill the seams: copy `config.seams.example.json` to `config.json` in the
+   installed wrapper and fill every seam (vault root, Google Docs wiring,
+   CloudFront/preset identifiers, backup path, acceptance inputs) from the
+   0.4.1 backup's configuration. Never commit or share a filled `config.json`.
+4. Pin the final RC: when the explainer-kit agent freezes the post-p06 final
+   RC, fill the `finalRc` block (`rcId`, `commit`, `subtreeSha256`) in
+   `config.json`.
+
+The installed wrapper's contract surface (enforced by `SKILL.md` and exercised
+by the acceptance harness):
+
+- It constructs an `explainer-kit.run-request/v1` document. Its required keys
+  are exactly:
+  `schemaVersion, recipe, slug, outputRoot, factBase, mode`.
+- For supplied fact-base mode, it uses an `explainer-kit.fact-base/v1`
+  document whose required keys are exactly:
+  `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+  The file binds through the run request's `factBase` object using `mode:
 "supplied"`, `freshnessPolicy: "live-wins"`, and `path`.
-4. Replace all pre-1.0 response handling with consumption of the
-   `explainer-kit.manifest/v1` document. Its required keys are exactly:
-   `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
-   The wrapper must consume at least `runId`, `outcome`, `artifacts`, and
-   `immutableHashes`.
+- It replaces all pre-1.0 response handling with consumption of the
+  `explainer-kit.manifest/v1` document. Its required keys are exactly:
+  `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
+  The wrapper must consume at least `runId`, `outcome`, `artifacts`, and
+  `immutableHashes`.
 
 ## Run final-RC acceptance
 
-Only after the post-p06 final RC is frozen and all placeholders are pinned, run:
+Only after the post-p06 final RC is frozen and the `finalRc` block is pinned,
+run:
 
 ```bash
 ~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs
@@ -93,16 +107,17 @@ Run against that exact final RC. Acceptance must cover:
 - manifest consumption; and
 - rollback.
 
-Emit a sanitized `private-wrapper-result.json` containing the final RC pins, the
-acceptance command, pass/fail status for each coverage item, verification time,
-and evidence locators without private content or credentials. Store the result
-as the verification record for both explainer-kit final-RC acceptance and this
-project's p06-t03. This satisfies the stored-verification-record discipline: it
-states what was verified, how it was verified, and where the evidence is
-recorded.
+The harness emits a sanitized `private-wrapper-result.json` (`rcId`, `commit`,
+`startedAt`, `finishedAt`, per-test `results[]` with `{name, status,
+evidence}`, and `overall`) with all personal paths, credentials, and document
+identifiers redacted through the config seams map. Deliver the result to BOTH
+the explainer-kit RC acceptance and this project's p06-t03 verification record
+(stored-verification-record discipline, B5): it states what was verified, how
+it was verified, and where the evidence is recorded.
 
 ## Rollback
 
-If migration or acceptance fails, remove the migrated content and restore
+If migration or acceptance fails, remove the migrated content (both the
+packaged skill and the wrapper scaffold) and restore
 `~/.agents/skills-backup/oat-explainer-kit-0.4.1`. Record the failed step and
 sanitized evidence in `private-wrapper-result.json` before retrying.
