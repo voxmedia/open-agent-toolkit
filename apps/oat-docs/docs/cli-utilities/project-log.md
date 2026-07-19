@@ -93,6 +93,13 @@ entries without asking agents to edit `project-log.md`:
 - `oat-project-implement` records accepted subagent dispatches, STOP or park
   events, phase outcomes, and parallel-group merge results. These entries point
   to the corresponding `implementation.md` record instead of copying it.
+- When `oat-project-implement` or `oat-project-review-provide` receives a review
+  artifact with a `Review Orchestration` section, the root workflow validates
+  the recorded waves, task classes, selected targets, outcomes, floor
+  satisfaction, fallback, and primary reconciliation. It then appends exactly
+  one structural entry referencing the review artifact instead of copying
+  worker records. Reviewers and reconnaissance workers never write
+  `project-log.md` themselves.
 - `oat gate review` records exactly one entry for every terminal outcome,
   including successful and blocking verdicts, child failure, timeout,
   targeting-correlation failure, and artifact-validation failure. A log append
