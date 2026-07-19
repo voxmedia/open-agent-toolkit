@@ -138,7 +138,7 @@ User-authorized final whole-project review passed with zero findings. Configured
 
 ### 2026-07-19 · structural · oat gate review · final
 
-target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/final-review-2026-07-19T001811Z.md
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:2 exit=0 status=ok artifact=.oat/projects/shared/implement-final-gate-enforcement/reviews/archived/final-review-2026-07-19T001811Z.md
 
 ### 2026-07-19 · structural · oat-project-implement · implementation-exit-gate-blocked
 

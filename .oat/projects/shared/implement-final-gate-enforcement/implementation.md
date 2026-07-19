@@ -546,7 +546,7 @@ initialized. No gate command has launched yet.
 - Byte-preserving quarantine copy:
   `reviews/exit-gate-adc8991b-result.txt`
 - Matching gate artifact:
-  `reviews/final-review-2026-07-19T001811Z.md`
+  `reviews/archived/final-review-2026-07-19T001811Z.md`
 - Gate run: `4ac107e3-0caf-4cf8-bd26-b026335d1282`
 - State: `blocked/accepted`
 - Failure: `launch_result_reconciliation_required`
