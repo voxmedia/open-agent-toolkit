@@ -41,6 +41,10 @@
 - Dispatch matrix normalization consolidation, pass-scoped Cursor catalog caching, and the Dispatch Report V1 schema/formatter are shipped.
 - The live workflow smoke fixture is complete: deterministic root verification, an opt-in authenticated runner, root-owned phase-agent topology, safe recovery/cleanup, public runbooks, and a canonical Codex packet passing 10/10 assertions.
 - Reusable dispatch contracts are split between a provider-neutral utility engine and a project lifecycle adapter. Analytical callers can use bounded reconnaissance without importing project phase/task/gate policy; a separate root-owned exact-launch broker remains optional backlog work for specialized nesting.
+- Reusable pinned reconnaissance is now tracked in
+  `BL-260719-add-pinned-recon-agents`: define read-only, non-recursive recon
+  roles that `oat-dispatch-subagents` can select by task-class floor for review
+  and non-review orchestration without recursively reusing full reviewers.
 - GPT-5.6 live Task/subagent slug eligibility remains an active recheck: structured controls exposed no Task events, so the current Cursor candidates remain configured but unvalidated. Re-run after a qualifying client rollout or Cursor support evidence, with a 2026-08-08 review-by date.
 - Bounded `oat-reviewer` reconnaissance is shipped: broad reviews can use
   cheaper/faster, read-only evidence lanes while the primary reviewer retains
@@ -67,6 +71,7 @@
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                        | open   | medium   | feature | M        |
+| BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                     | open   | medium   | feature | M        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract             | open   | medium   | feature | M        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance          | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos         | open   | medium   | task    |          |
