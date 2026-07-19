@@ -42,7 +42,7 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p04
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary]
+  pre_approval_completed: [summary, document]
   approval: pending
   approval_source: null
   post_approval: []
@@ -50,7 +50,7 @@ oat_post_implement_sequence:
   failure: null
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:47:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:48:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -110,7 +110,8 @@ Implementation — final review passed; pre-approval closeout steps pending.
 - ✓ Full test, lint, type-check, build, provider, and release gates passed
 - ✓ Superseding final re-review passed with zero findings
 - ✓ Configured summary refresh completed
-- ⧗ Configured pre-approval sequence remaining: document → PR
+- ✓ Configured documentation refresh completed
+- ⧗ Configured pre-approval sequence remaining: PR
 
 ## Blockers
 
