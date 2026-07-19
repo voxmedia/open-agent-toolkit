@@ -23,7 +23,8 @@ This project closed a lifecycle gap that allowed implementation to proceed throu
 - Added structural and integration coverage for ordering, mechanism independence, all policy paths, interruption/resume, duplicate-run prevention, receive eligibility, stale HEAD handling, and manual-review provenance rejection.
 - Documented the contract across the workflow-gates, lifecycle, implementation-execution, and autonomy guides; synchronized provider and bundled assets; bumped both changed canonical skills and rebased all five public packages onto main's newer release line at `0.2.3`.
 - Recovered JSON-mode gate execution so child human-oriented output streams to stderr and stdout remains exactly one parseable result envelope. The recovery added live subprocess coverage and passed fresh final lifecycle review before the one authorized replacement gate generation.
-- Completed the replacement configured gate at the Important threshold. Gate run `bb3ed5bc-c97f-45f9-9328-300e580ffc25` was received with disposition `allowed/passed`; its one Minor finding was explicitly deferred and no implementation files changed during receive.
+- Merged current `main`, resolved release and skill-contract integration, and fixed the remaining deferred test-anchor Minor. A fresh lifecycle review passed with zero findings.
+- Completed and received post-integration gate run `4ae2b434-8fd4-49d3-a879-422b84fc2f57` at the Important threshold with disposition `allowed/passed`, zero findings, and no deferred debt.
 
 ## Key Decisions
 
@@ -55,8 +56,8 @@ This project closed a lifecycle gap that allowed implementation to proceed throu
 ## Integration Notes
 
 - The authoritative behavior lives in `.agents/skills/oat-project-implement/references/completion-and-closeout.md`; `.agents/skills/oat-project-next/SKILL.md` owns unresolved/stale resume routing, and the shared post-implementation contracts enforce ordering.
-- Final verification passed: 314/314 recovery-focused tests; 3,294 package tests plus 123 smoke tests (3,417 aggregate); skill and base-relative version validation; format, lint, type-check, build, docs build, source-sync/bundle reproducibility, and `pnpm release:validate`.
-- The successful gate is fresh for implementation basis `98c935c3`. Closeout-only summary, documentation, PR, and approval bookkeeping may follow without rerunning it; substantive implementation changes would stale the disposition.
+- Final verification passed: 351 focused tests in the post-integration review; 3,294 package tests plus 123 smoke tests (3,417 aggregate); skill and base-relative version validation; format, lint, type-check, build, docs build, source-sync/bundle reproducibility, and `pnpm release:validate`.
+- The successful gate is fresh for implementation basis `dad6158b`. Closeout-only summary, documentation, PR, and approval bookkeeping may follow without rerunning it; substantive implementation changes would stale the disposition.
 
 ## Follow-up Items
 

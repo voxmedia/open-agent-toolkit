@@ -746,6 +746,20 @@ project, invocation, artifact, and configured Important threshold.
 The receive correlation and archive destination were committed before applying
 the receive side effects.
 
+### 2026-07-19 — Post-integration gate passed and received
+
+- Gate run: `4ae2b434-8fd4-49d3-a879-422b84fc2f57`
+- Archived artifact:
+  `reviews/archived/final-review-2026-07-19T132025Z.md`
+- Receive bookkeeping commit:
+  `147c73cba2e4be4132df6a24eb0086d9ef872863`
+- Disposition: `allowed/passed`
+- Receive state: `completed`
+
+The new gate generation is fresh for implementation basis `dad6158b`, has zero
+findings and no deferred debt, and is now the only generation eligible to
+satisfy the final HiLL boundary.
+
 ---
 
 ## Final Closeout Sequence
