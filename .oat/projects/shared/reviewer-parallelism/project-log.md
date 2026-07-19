@@ -108,6 +108,14 @@ Phase p04 review orchestration: mechanical-recon launched on composer-2.5-fast a
 
 Phase p04 review found one Important authority/model-floor contradiction and one Medium commit-scope deviation. Added bounded fixes for the recon baseline, plain-language advertised-model wording, root-owned orchestration log handoff, regenerated views, and a root-native mixed-class re-review.
 
+### 2026-07-19 · structural · oat-project-implement · upstream-merge
+
+Merged origin/main at 8fc8285c before Phase p04 review fixes. Preserved upstream Cursor native skill/subagent materialization and this branch's task-class-aware dispatch contract; focused dispatch/Cursor tests pass 146/146.
+
+### 2026-07-19 · project · feedback · Cursor parent-inline fallback
+
+Accepted Cursor reviewer behavior: delegate suitable mechanical lanes to Composer 2.5 Fast; when no nested model choice satisfies an intelligent-or-stronger floor, the primary reviewer completes that lane inline. Full pinned oat-reviewer variants are not recursively reused as recon workers; dedicated pinned recon roles remain a future option only if evidence justifies their maintenance cost.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

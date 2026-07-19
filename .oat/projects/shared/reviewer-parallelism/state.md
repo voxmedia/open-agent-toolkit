@@ -1,6 +1,6 @@
 ---
 oat_current_task: p04-t04
-oat_last_commit: 56eeecc4520e478a8924fa0467f770ef1669e1d5
+oat_last_commit: 8fc8285c5a7059778288f24e216584c24b5b92f4
 oat_blockers: []
 associated_issues:
   - { type: backlog, ref: 'BL-260708-enable-oat-reviewer-subagent' }
@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T01:06:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T01:13:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -77,6 +77,7 @@ Implement - Phase 4 task-class-aware revision
 - ✓ Supplemental revision plan review passed
 - ✓ Phase 4 implementation tasks completed and release validation passed
 - ⚠ Phase 4 review received one Important contract finding and one Medium scope deviation
+- ✓ Merged `origin/main` and preserved upstream Cursor native skill/subagent materialization
 - ⧗ Executing Phase 4 review fixes from `p04-t04`
 
 ## Blockers

@@ -859,7 +859,7 @@ entry instead of copying every worker record. Keep logging capability-gated and
 preserve read-only reviewer/worker authority.
 
 Bump `oat-project-implement` from `2.1.3` to `2.1.4` and
-`oat-project-review-provide` from `1.3.20` to `1.3.21`. Keep
+`oat-project-review-provide` from merged upstream `1.3.21` to `1.3.22`. Keep
 `oat-reviewer` at its existing PR-scoped `1.1.8` version.
 
 **Step 3: Verify and commit**
@@ -900,13 +900,17 @@ project-log entry links to it, and no child gains write authority.
 **Files:**
 
 - Regenerate as applicable: `.claude/agents/oat-reviewer.md`
-- Regenerate as applicable: `.cursor/agents/oat-reviewer.md`
+- Regenerate as applicable: `.cursor/agents/oat-reviewer*.md`
 - Regenerate as applicable: `.codex/agents/oat-reviewer*.toml`
-- Regenerate as applicable: provider views for
+- Regenerate as applicable: Claude/Codex provider views for
   `oat-dispatch-subagents`, `oat-project-implement`, and
   `oat-project-review-provide`
 - Regenerate: `packages/cli/assets/**`
 - Regenerate: `.oat/sync/manifest.json`
+
+Cursor reads canonical skills natively from `.agents/skills`; do not recreate
+the obsolete `.cursor/skills` managed views removed by merged upstream
+`0.2.1`.
 
 Run asset bundling, provider sync, focused contract tests, docs build, complete
 workspace validation, release validation, provider dry-run, formatting, and
@@ -919,14 +923,11 @@ Commit only generated/release surfaces:
 git add -A \
   packages/cli/assets \
   .claude/agents/oat-reviewer.md \
-  .cursor/agents/oat-reviewer.md \
+  .cursor/agents/oat-reviewer*.md \
   .codex/agents \
   .claude/skills/oat-dispatch-subagents \
-  .cursor/skills/oat-dispatch-subagents \
   .claude/skills/oat-project-implement \
-  .cursor/skills/oat-project-implement \
   .claude/skills/oat-project-review-provide \
-  .cursor/skills/oat-project-review-provide \
   .oat/sync/manifest.json
 git commit -m "chore(p04-t06): synchronize review orchestration fixes"
 ```
@@ -956,7 +957,8 @@ authoritative range, the primary reviewer must:
 
 Dogfood acceptance depends on correct classification, floor-safe dispatch, and
 complete parent-owned coverage—not on successfully launching one worker per
-class. Pinned named subagents may provide additional model choices but are not
+class. Full pinned `oat-reviewer` variants are not recursively reused as recon
+workers. Dedicated pinned recon roles may be considered later, but are not
 required and remain out of scope for this project.
 
 ---

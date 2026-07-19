@@ -325,9 +325,11 @@ new `StructuredFindings` field.
   coverage or blocked acceptance. A provider may expose only a mechanical
   nested target; the reviewer should use it for suitable work and complete
   stronger lanes itself.
-- Provider-specific named workers pinned to stronger models may extend the
-  available catalog, but this project does not require that heavier
-  configuration.
+- Cursor may materialize full `oat-reviewer` variants pinned to stronger
+  models, but those roles retain full reviewer authority and are not
+  recursively reused as reconnaissance workers. Dedicated pinned recon roles
+  remain a future option only if observed review value justifies the additional
+  role matrix and maintenance cost.
 - Reviewer-local requests use `fallback.mode: caller-inline` and
   `allow_below_task_class_floor: false`. The record-schema example's legacy
   `explicit-downgrade` mode remains valid only for callers without a declared

@@ -409,6 +409,10 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - The mechanical lane ran on an explicit Composer 2.5 Fast target.
 - The nested Cursor catalog exposed no demonstrably intelligent-floor target,
   so the primary reviewer completed that lane inline without downgrading.
+- This is the accepted Cursor behavior. Full pinned `oat-reviewer` variants
+  added by merged upstream are not recursively reused as recon workers;
+  dedicated pinned recon roles are deferred unless observed value justifies
+  their maintenance cost.
 - Detailed orchestration evidence is in
   `reviews/archived/p04-review-2026-07-19T005827Z.md`.
 
@@ -456,6 +460,12 @@ Chronological log of implementation progress.
 
 - Keep execution sequential because documentation depends on the finalized contract and provider/release output depends on both canonical and docs changes.
 - Keep primary-reviewer judgment in the root reviewer; delegate only bounded, advisory reconnaissance.
+- Preserve Cursor parent-inline coverage for stronger lanes unavailable through
+  the nested model catalog; do not recursively dispatch full pinned reviewers
+  as reconnaissance workers.
+- Merge `origin/main` before review fixes so Cursor native skill reads and
+  pinned lifecycle reviewer materialization remain the current distribution
+  baseline.
 
 **Follow-ups / TODO:**
 
