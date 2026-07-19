@@ -1046,9 +1046,34 @@ describe('validateOatSkills', () => {
     const reviewProvide = await readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
+    const artifactConfirmation =
+      reviewer.match(
+        /### Step 9: Return Confirmation[\s\S]*?(?=## Structured-Output Mode)/,
+      )?.[0] ?? '';
+    const orchestrationHandoff =
+      reviewProvide.match(
+        /### Step 8\.5: Validate Review Orchestration and Append Root Log[\s\S]*?(?=### Step 9:)/,
+      )?.[0] ?? '';
 
     expect(reviewer).toMatch(
       /delegated reconnaissance[\s\S]{0,180}(?:attempted|attempt)[\s\S]{0,220}`?## Review Orchestration`?/i,
+    );
+    expect(artifactConfirmation).toContain(
+      '**Reconnaissance:** {attempted | not-attempted}',
+    );
+    expect(artifactConfirmation).toMatch(
+      /exactly one[\s\S]{0,180}(?:attempted|not-attempted)/i,
+    );
+    expect(orchestrationHandoff).toContain('**Reconnaissance:** attempted');
+    expect(orchestrationHandoff).toContain('**Reconnaissance:** not-attempted');
+    expect(orchestrationHandoff).toMatch(
+      /missing[\s\S]{0,180}invalid[\s\S]{0,180}(?:stop|fail closed)/i,
+    );
+    expect(orchestrationHandoff).toMatch(
+      /`attempted`[\s\S]{0,320}complete[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,360}append[\s\S]{0,100}exactly once/i,
+    );
+    expect(orchestrationHandoff).toMatch(
+      /`not-attempted`[\s\S]{0,280}(?:must not|no)[\s\S]{0,180}`## Review Orchestration`[\s\S]{0,320}(?:must not|do not|no)[\s\S]{0,140}(?:log entry|`oat project log append`)/i,
     );
     for (const field of [
       'waves',

@@ -462,6 +462,9 @@ For gate-originated artifacts, all six gate-only fields are required when the pr
 **Artifact mode only.** In structured-output mode (`oat_output_mode: structured`), return the `StructuredFindings` object instead — see **Structured-Output Mode** below.
 
 Return a brief confirmation. DO NOT include full review contents.
+Return exactly one reconnaissance status line using only `attempted` or
+`not-attempted`; this signal reports whether delegated reconnaissance was
+attempted, including an attempted launch that fell back or failed.
 
 Format:
 ```
@@ -471,6 +474,7 @@ Format:
 **Scope:** {scope}
 **Findings:** {N} critical, {N} important, {N} medium, {N} minor
 **Review artifact:** {path}
+**Reconnaissance:** {attempted | not-attempted}
 
 Return to your main session and run the `oat-project-review-receive` skill.
 
