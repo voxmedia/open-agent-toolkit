@@ -252,10 +252,32 @@ After the outer dispatch, the primary reviewer may use reviewer-local workers
 when a broad review has multiple independent evidence lanes. Examples include
 final code reviews, broad phase or phase-range reviews, documentation sweeps,
 and provider-view audits. Running disjoint searches concurrently can reduce
-wall-clock review time, and an explicitly selected economical worker can reduce
-cost, but only when the active host reliably exposes nested dispatch and
-cheaper/faster target controls. Narrow task and artifact reviews remain inline
-when coordination would cost as much as direct inspection.
+wall-clock review time, and matching each lane to the least expensive model
+class that can safely do the work can reduce cost. The primary reviewer first
+reads the authoritative diff and the workflow-required discovery, spec,
+design, plan, and implementation artifacts. It decides lane boundaries and
+task classes only after understanding the changed surfaces, requirements, and
+failure consequences. Narrow task and artifact reviews remain inline when
+coordination would cost as much as direct inspection.
+
+Worker authority and model capability are independent. Every reviewer-local
+worker keeps the read-only, advisory `recon` role class. The lane's separate
+task class sets its minimum model-capability floor:
+
+- **Mechanical recon** covers deterministic inventories, exact parity checks,
+  and test, lint, format, or build execution whose results are cheaply
+  verifiable.
+- **Intelligent recon** covers semantic interpretation, unfamiliar-code
+  auditing, and other evidence where a miss could be silent.
+- **Stronger bounded analysis** is reserved for independently scoped work where
+  dispersed context, ambiguity, security, release safety, irreversible impact,
+  or expensive failure warrants a higher floor.
+
+File count alone does not justify escalation. Interpretation and policy
+judgment either use an adequate stronger class or remain with the primary
+reviewer. Active user and repository instructions, the active-provider
+guidance, and the live nested catalog resolve current model examples; the
+canonical reviewer does not promise named models.
 
 Reviewer-local fan-out is limited to one bounded, read-only, non-recursive
 round. Each worker receives a disjoint scope, cannot modify files or spawn more
@@ -270,9 +292,11 @@ Before launching these lanes, the reviewer loads the generic
 `oat-dispatch-subagents` contract and exactly one active-provider reference.
 That shared contract owns nested capability checks, worker catalog resolution,
 model and effort selection, routing, authorization, launch evidence, and
-provider-specific mechanics. It maps these workers to the `recon` role class
-without hard-coding a provider model or assuming that they inherit the primary
-reviewer's target.
+provider-specific mechanics. It records each lane's task class, model-class
+floor, classification rationale, and floor satisfaction without assuming that
+workers inherit the primary reviewer's target. Lanes may share one wave only
+when their task classes, model floors, and all other dispatch axes match;
+mixed-class reviews use separate waves and records.
 
 This generic reviewer-local use is distinct from
 `oat-project-dispatch-subagents`, which is reserved for OAT lifecycle phase and
@@ -287,10 +311,13 @@ artifact or final `StructuredFindings`.
 
 If nested workers are unsupported, unauthorized, fail, or return empty or
 malformed reports, the primary reviewer covers those lanes inline. It also
-stays inline when the host cannot explicitly select the intended economical
-worker. Fallback preserves the same checklist, verification depth, severity
-policy, and final output contract; it does not promise provider behavior or
-silently inherit the primary reviewer's model.
+stays inline when the host cannot explicitly satisfy a lane's model-class
+floor. Fallback never selects below the declared floor. It preserves the same
+checklist, verification depth, severity policy, and final output contract; it
+does not promise provider behavior or silently inherit the primary reviewer's
+model. Workers remain advisory and non-recursive regardless of task class, and
+the primary reviewer keeps final verification, reconciliation, severity,
+validation decisions, and output ownership.
 
 ## Reference artifacts
 
