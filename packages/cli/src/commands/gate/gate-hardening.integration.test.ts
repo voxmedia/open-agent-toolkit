@@ -197,7 +197,14 @@ describe(
         receiveEligible: true,
         corroboration: { run: 'matched', invocation: 'matched' },
       });
-      expect(result.stdout).toContain(
+      expect(JSON.parse(result.stdout)).toMatchObject({
+        status: 'ok',
+        receiveEligible: true,
+      });
+      expect(result.stdout).not.toContain(
+        'FAKE_GATE_ROUTE:inline:cursor:fake-model:',
+      );
+      expect(result.stderr).toContain(
         'FAKE_GATE_ROUTE:inline:cursor:fake-model:',
       );
       expect(result.diagnostics).toContainEqual({

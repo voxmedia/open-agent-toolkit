@@ -4,6 +4,12 @@
 
 ## Curated Overview
 
+- Final-gate freshness is split into an incremental path: first ship the
+  high-priority narrow optimization that preserves a gate across unchanged-delta
+  base updates (`BL-260719-avoid-final-gate-reruns`), then evaluate the
+  lower-priority broader policy only if usage evidence shows CI, Bugbot, and
+  lifecycle self-review leave meaningful gaps
+  (`BL-260719-evaluate-broader-final-gate`).
 - Workflow-integrity (high, evidence-backed 2026-07-18): lifecycle text that
   names another skill as an execution step needs a mandatory-load clause —
   the wave-skills-promotion closeout showed "dispatch X" degrading to
@@ -65,6 +71,7 @@
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
+| BL-260719-avoid-final-gate-reruns        | Avoid final-gate reruns for merge-only updates                         | open   | high     | task    | S        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
@@ -82,6 +89,7 @@
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log             | open   | medium   | feature | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)          | open   | medium   | task    |          |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
+| BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 

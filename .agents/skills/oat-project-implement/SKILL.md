@@ -6,7 +6,7 @@ oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 ---
 
 # Implementation Phase
@@ -211,4 +211,6 @@ Rules:
 - Implementation.md tracks all progress
 - Final verification passes
 - Final review passes (no Critical/Important findings)
+- The configured implementation exit gate has an allowed and fresh disposition
+  before approval-aware sequencing, completion state, or success output
 - No unresolved blockers

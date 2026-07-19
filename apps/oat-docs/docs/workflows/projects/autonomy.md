@@ -84,6 +84,9 @@ Autonomous execution preserves independent review:
   bounded implement-and-re-review loop.
 - Critical findings and failed blocking reviews stop progression. Important
   findings follow the configured gate policy.
+- A normal phase or final lifecycle review cannot satisfy a configured
+  implementation exit gate. Only gate invocation provenance with the matching
+  run ID can authorize that boundary.
 
 Project review artifacts and review rows reference launcher-owned dispatch
 records. The configured invocation is authoritative evidence; child
@@ -104,12 +107,23 @@ An existing valid explicit list is preserved. An existing `[]` is also
 preserved and means every phase, never no phases. At each configured checkpoint,
 autonomy runs and receives the review without waiting.
 
-At final closeout, pre-approval lifecycle steps run first. After a passing final
-review, autonomy records final HiLL approval and then runs post-approval steps.
-A failed blocking review stops before approval. The default autonomous tail is
-summary, documentation, and final PR when no post-implementation sequence is
-configured; stored legacy or structured sequences retain their documented
-meaning.
+At final closeout, autonomy follows the same authoritative order as an
+interactive run: final verification, mandatory final lifecycle review,
+configured implementation exit gate, pre-approval sequence, final HiLL
+approval, post-approval sequence, then implementation completion and success
+output. A null gate resolution persists an explicit no-gate allowance before
+the sequence starts.
+
+Autonomy does not turn an ordinary independent review into configured-gate
+provenance. A configured review must produce a gate-originated artifact with
+the matching run ID, and eligible receive must be durably reconciled. Blocked,
+ambiguous, malformed, or stale gate state is a boundary stop: the run remains
+resumable through `oat-project-implement` and cannot continue to approval,
+completion, or output.
+
+The default autonomous tail is summary, documentation, and final PR when no
+post-implementation sequence is configured; stored legacy or structured
+sequences retain their documented meaning.
 
 ## Execution-learnings loop
 

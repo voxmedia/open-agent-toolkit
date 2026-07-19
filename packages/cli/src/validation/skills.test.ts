@@ -98,6 +98,16 @@ function currentSkillContent(
 }
 
 const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
+
+function sliceFromLastGateExecutionHeading(
+  content: string,
+  skillName: string,
+): string {
+  const headings = [...content.matchAll(/^###[^\n]*Gate Execution[^\n]*$/gm)];
+  const heading = headings.at(-1);
+  expect(heading, `${skillName} gate execution heading`).toBeDefined();
+  return content.slice(heading!.index);
+}
 const implementReferencePaths = [
   'dispatch-and-dry-run.md',
   'plan-and-resume.md',
@@ -1264,6 +1274,14 @@ describe('validateOatSkills', () => {
           '### Step 3.7: Record Review Disposition and Mark Plan Complete',
         noGateNextStep: 'Step 3.7',
       },
+      {
+        skillName: 'oat-project-implement',
+        version: '2.1.4',
+        finalizedHeading: '### Step 13: Trigger Final Review',
+        gateHeading: '### Step 14: Gate Execution',
+        completionHeading: '### Step 16: Mark Implementation Complete',
+        noGateNextStep: 'Step 15',
+      },
     ] as const) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -1298,7 +1316,7 @@ describe('validateOatSkills', () => {
         `${skillName} no-gate path continues into completion`,
       ).toMatch(
         new RegExp(
-          `no gate is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
+          `no gate\\s+is configured; proceed directly\\s+to the completion steps in ${noGateNextStep.replace('.', '\\.')} below`,
         ),
       );
       expect(
@@ -1333,6 +1351,24 @@ describe('validateOatSkills', () => {
     expect(plan).not.toContain('### Step 14.5: Propose Parallel Groups');
   });
 
+  it('declares the implementation exit gate as a required top-level closeout capability', async () => {
+    const implement = await readRawRepoFile(implementSkillPath);
+    const composedImplement = await readRepoFile(implementSkillPath);
+    const allowedTools = implement.match(/^allowed-tools:\s*(.+)$/m)?.[1] ?? '';
+    const successCriteria = composedImplement.slice(
+      composedImplement.indexOf('## Success Criteria'),
+    );
+
+    expect(allowedTools).toContain('Bash(oat:*)');
+    expect(allowedTools).not.toContain('Bash(oat gate:*)');
+    expect(successCriteria).toMatch(
+      /configured implementation exit gate[\s\S]{0,240}allowed[\s\S]{0,120}fresh/i,
+    );
+    expect(successCriteria).toMatch(
+      /before[\s\S]{0,180}approval-aware[\s\S]{0,180}completion[\s\S]{0,180}success output/i,
+    );
+  });
+
   it('routes lifecycle gate handoff only for receive-eligible corroborated results', async () => {
     for (const skillName of [
       'oat-project-plan',
@@ -1343,9 +1379,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
 
       expect(gateSection, `${skillName} positive statuses`).toMatch(
         /status.*`ok`.*`blocked`/is,
@@ -1369,7 +1403,7 @@ describe('validateOatSkills', () => {
         /`artifact_validation_failed`.*correct.*revalidat/is,
       );
       expect(gateSection, `${skillName} no artifact-path shortcut`).toMatch(
-        /artifact path.*never authorizes|never authorize.*artifact path/is,
+        /artifact path.*never\s+authorizes|never\s+authorize.*artifact path/is,
       );
       expect(
         gateSection,
@@ -1447,9 +1481,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
 
       expect(gateSection, `${skillName} exports PROJECT_PATH`).toContain(
         'export PROJECT_PATH',
@@ -1461,7 +1493,7 @@ describe('validateOatSkills', () => {
         gateSection,
         `${skillName} validates stored review commands`,
       ).toMatch(
-        /configured review command[\s\S]{0,300}must (?:already )?(?:contain|include)[\s\S]{0,120}--project/i,
+        /configured review\s+command[\s\S]{0,300}must\s+(?:already\s+)?(?:contain|include)[\s\S]{0,120}--project/i,
       );
       expect(
         gateSection,
@@ -1528,6 +1560,27 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('requires the implementation review gate to use global JSON mode', async () => {
+    const content = await readRepoFile(implementSkillPath);
+    const gateSection = content.slice(
+      content.indexOf('### Step 14: Gate Execution'),
+      content.indexOf('### Step 15: Final HiLL Closeout Sequence'),
+    );
+
+    expect(gateSection).toContain(
+      '`oat --json gate review --project "$PROJECT_PATH" ...`',
+    );
+    expect(gateSection).toMatch(
+      /reject[\s\S]{0,100}`oat gate review \.\.\.`[\s\S]{0,140}global `--json`[\s\S]{0,140}before launch/i,
+    );
+    expect(gateSection).toMatch(
+      /migrate[\s\S]{0,180}(?:stored|resolved) declaration[\s\S]{0,180}before execution/i,
+    );
+    expect(gateSection).not.toMatch(
+      /valid reusable shape is\s+`oat gate review --project/i,
+    );
+  });
+
   it('documents lifecycle review-project migration without provider target pins', async () => {
     const workflowGates = await readRepoFile(
       'apps/oat-docs/docs/cli-utilities/workflow-gates.md',
@@ -1555,7 +1608,9 @@ describe('validateOatSkills', () => {
       /migrat[\s\S]{0,500}current project[\s\S]{0,500}--project "\$PROJECT_PATH"/i,
     );
     const reusableReviewCommands = [
-      ...workflowGates.matchAll(/--command '([^']*oat gate review[^']*)'/g),
+      ...workflowGates.matchAll(
+        /--command '([^']*oat (?:--json )?gate review[^']*)'/g,
+      ),
     ].map((match) => match[1] ?? '');
     expect(reusableReviewCommands.length).toBeGreaterThan(0);
     for (const command of reusableReviewCommands) {
@@ -1589,7 +1644,7 @@ describe('validateOatSkills', () => {
       'Reviewers receive only the bounded review scope, commit range, allowed files',
     );
     expect(entry).not.toContain('### Step 5: Per-Phase Execution');
-    expect(entry).not.toContain('### Step 14: Trigger Final Review');
+    expect(entry).not.toContain('### Step 13: Trigger Final Review');
   });
 
   it('detects smoke bootstrap mode from the resolved base before worktree creation', async () => {
@@ -1844,8 +1899,8 @@ describe('validateOatSkills', () => {
       implement.indexOf('### Optional External Phase Review Gate'),
     );
     const finalReview = implement.slice(
-      implement.indexOf('### Step 14: Trigger Final Review'),
-      implement.indexOf('### Step 15: Prompt for Next Steps'),
+      implement.indexOf('### Step 13: Trigger Final Review'),
+      implement.indexOf('### Step 14: Gate Execution'),
     );
 
     expect(phaseAgent).toMatch(
@@ -2202,9 +2257,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(
-        content.lastIndexOf('### Gate Execution'),
-      );
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
       expect(gateSection, `${skillName} lifecycle target neutrality`).toMatch(
         /must not (?:contain|include|add)[\s\S]{0,100}--target/i,
       );
@@ -2474,7 +2527,7 @@ describe('validateOatSkills', () => {
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.3'],
-      ['oat-project-next', '1.0.9'],
+      ['oat-project-next', '1.0.10'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3362,7 +3415,7 @@ describe('validateOatSkills', () => {
     expect(planTier3Row(quickTable)).toContain('`oat-project-quick-start`');
     expect(planTier3Row(specTable)).toContain('`oat-project-plan`');
     expect(planTier3Row(importTable)).toContain('`oat-project-import-plan`');
-    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
+    expect(next.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
   });
 
   it('supports project completion before or after PR merge in every mode', async () => {
