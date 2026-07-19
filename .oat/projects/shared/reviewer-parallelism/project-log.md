@@ -80,6 +80,10 @@ Implementation complete after five tasks across three phases, one Phase p03 fix 
 
 Reopened the completed reviewer-parallelism project for a reviewed revision after dogfooding showed heterogeneous review lanes were flattened to one economical model. Drafting a lightweight design that separates advisory role from per-lane task-class floor while preserving root-reviewer judgment.
 
+### 2026-07-19 · structural · oat-project-implement · revision-design-fix-1
+
+Applied the two Important design-review corrections: reviewer task-class fields are generic-optional/reviewer-required with exact request-record/floor-safe fallback semantics and an instruction-only Cursor nested-native boundary; release baselines now use upstream skill 1.1.4 -> 1.1.5 and next-unused public patch selection (currently 0.2.2).
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

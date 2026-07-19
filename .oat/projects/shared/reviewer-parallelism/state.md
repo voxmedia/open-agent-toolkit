@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T00:07:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T00:17:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,13 +51,13 @@ oat_generated: false
 
 ## Current Phase
 
-Design - Model-class-aware reviewer orchestration revision
+Design - Corrections complete; focused re-review pending
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (draft complete — artifact review pending)
+- **Design:** `design.md` (review fixes complete — focused re-review pending)
 - **Plan:** `plan.md` (pre-revision implementation complete; revision amendment pending)
 - **Implementation:** `implementation.md` (pre-revision final review passed; project reopened)
 
@@ -73,7 +73,8 @@ Design - Model-class-aware reviewer orchestration revision
 - ✓ Phase 3 passed focused re-review after one fix iteration
 - ✓ Final cross-phase review passed with zero Critical/Important findings
 - ⚠ Dogfood review exposed homogeneous cheap-model routing across heterogeneous lanes
-- ⧗ Reviewing the supplemental model-class-aware design
+- ✓ Applied both Important supplemental-design review corrections
+- ⧗ Re-running the focused supplemental design review
 
 ## Blockers
 

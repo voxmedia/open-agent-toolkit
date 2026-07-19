@@ -455,17 +455,17 @@ If a listed generated file is unchanged, omit it from `git add`.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md           |
-| p02    | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md           |
-| p03    | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md           |
-| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md         |
-| spec   | artifact | pending         | -          | -                                                           |
-| design | artifact | pending         | -          | -                                                           |
-| plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                      |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
+| p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
+| p02    | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
+| p03    | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
+| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
+| spec   | artifact | pending         | -          | -                                                             |
+| design | artifact | fixes_completed | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T001316Z.md |
+| plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 

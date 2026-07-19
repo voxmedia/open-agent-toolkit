@@ -29,8 +29,10 @@ while separating two independent axes:
 The root reviewer reads the workflow artifacts and authoritative diff before
 decomposition, assigns each lane a task class with a rationale, and asks the
 generic dispatch contract to resolve an explicit provider target meeting that
-floor. The root reviewer still validates evidence, reconciles lanes, assigns
-severity, decides verification, and writes the final review.
+floor. These class fields are required for reviewer-local reconnaissance but
+remain optional for existing generic-dispatch callers. The root reviewer still
+validates evidence, reconciles lanes, assigns severity, decides verification,
+and writes the final review.
 
 ## Evidence and Problem Statement
 
@@ -84,9 +86,11 @@ evidence showing the selected class floor per lane.
 - **Primary `oat-reviewer`:** Establishes scope, reads available
   discovery/spec/design/plan/implementation artifacts, decomposes independent
   lanes, assigns task classes, verifies reports, and owns the verdict.
-- **Generic `oat-dispatch-subagents`:** Accepts the caller's role and task class,
-  resolves an eligible provider target at or above the class floor, records the
-  selection, and launches the bounded worker.
+- **Generic `oat-dispatch-subagents`:** Accepts optional task-class metadata in
+  its generic request. `oat-reviewer` is the first caller that requires those
+  fields. The skill resolves an eligible provider target at or above the class
+  floor, records the selection, and launches the bounded worker without
+  changing callers that omit the fields.
 - **Provider reference:** Maps task classes to current provider-appropriate
   model families or selectors, subject to live catalog and active
   user/repository instructions.
@@ -121,23 +125,46 @@ root reopens sources, reruns load-bearing checks, reconciles, and decides
 
 ### Orthogonal Axes
 
-Every request retains `role.class: recon` because authority remains read-only
-and advisory. It also adds a required `task_class`:
+Every reviewer-local lane retains `role.class: recon` because authority remains
+read-only and advisory. Its generic dispatch request also requires these flat
+fields:
 
 ```yaml
 role:
   name: reviewer-recon-worker
   class: recon
 task_class: intelligent-recon
-classification_source: primary-reviewer
+classification_source: caller
 classification_reason: >-
   Determining whether semantic tests uniquely pin safety boundaries requires
   interpreting contract intent; a silent miss would survive mechanical checks.
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
 ```
 
-The dispatch record preserves `task_class`, the resulting class floor, and the
-selection rationale separately from `role_class`, model selector, effort, and
-route.
+`task_class` is one of `mechanical-recon`, `intelligent-recon`,
+`default-implementation`, `hard-reasoning`, or `consequential`.
+`classification_source` is the literal `caller`, and
+`classification_reason` is a non-empty string. These fields are generic
+optional for compatibility and reviewer-required by the canonical reviewer
+contract. Existing lifecycle and repository-audit callers require no migration
+and retain their role-based behavior when the fields are absent.
+
+The generic dispatch record adds:
+
+```yaml
+task_class: intelligent-recon
+model_class_floor: intelligent-recon
+classification_source: caller
+classification_reason: Semantic contract interpretation has silent-miss risk.
+floor_satisfaction: satisfied
+```
+
+`floor_satisfaction` is `satisfied` or `unsatisfied`. An unsatisfied floor
+blocks launch and returns control to the caller; it never records a weaker
+selection as success. These fields remain absent for legacy requests that do
+not provide task-class metadata.
 
 ### Classification Rules
 
@@ -187,11 +214,38 @@ These are dated examples, not canonical hard-coded requirements. If an exact
 candidate is unavailable, select a newer eligible model meeting the same class
 floor or route one class up; never silently degrade.
 
+### Cursor Resolution Boundary
+
+Outer lifecycle implementer/reviewer dispatch remains unchanged: managed
+Cursor dispatch continues to resolve through
+`oat project dispatch-ceiling resolve` and launches the exact
+`providers.cursor.dispatchArgs.variant` returned by that resolver.
+
+Reviewer-local reconnaissance is a different nested generic-dispatch surface.
+It uses the native Task/Subagent call's explicit model enum with the
+`generalPurpose` agent type because no materialized lifecycle `recon` role
+exists. The generic dispatcher:
+
+1. reads the nested native model enum;
+2. intersects it with the provider reference, active user/repository
+   model-class guidance, and the supplied policy/ceiling;
+3. selects an exact model at or above `model_class_floor`;
+4. passes that exact selector to the native call; and
+5. records it as `model_selector` with
+   `model_selector_granularity: exact-native-enum`.
+
+It does not call the lifecycle resolver, reconstruct a lifecycle variant, or
+parse bracket-form model pins. This keeps the revision instruction/schema-only
+and avoids changes to the CLI resolver, dispatch matrix, materialized lifecycle
+roles, or existing generic callers.
+
 ## Wave Formation
 
 One review may have multiple dispatch waves. Lanes may share a homogeneous wave
-record only when every existing dispatch axis **and `task_class`** are
-identical.
+record only when every existing dispatch axis, `task_class`, and
+`model_class_floor` are identical. A recon-wave record repeats the shared
+`task_class` and `model_class_floor` beside `shared_dispatch_record`; lane
+entries do not redefine them.
 
 Example final review:
 
@@ -241,11 +295,16 @@ artifacts or forming its own review strategy.
 
 ## Failure and Fallback
 
-- If the requested class floor cannot be explicitly satisfied, do not launch a
-  weaker worker.
+- If the requested class floor cannot be explicitly satisfied, set
+  `floor_satisfaction: unsatisfied`, do not launch a weaker worker, and return
+  the lane to the caller.
 - A mechanical lane may fall back inline without changing review coverage.
 - An intelligent/hard/consequential lane falls back to the root reviewer or a
   pre-authorized stronger route; it never falls back to a cheaper class.
+- Reviewer-local requests use `fallback.mode: caller-inline` and
+  `allow_below_task_class_floor: false`. The record-schema example's legacy
+  `explicit-downgrade` mode remains valid only for callers without a declared
+  class floor; it is invalid for class-constrained reviewer lanes.
 - A worker failure, timeout, empty response, or malformed response remains a
   post-acceptance outcome and does not authorize automatic replacement.
 - Classifying one lane more strongly does not escalate unrelated lanes.
@@ -258,15 +317,16 @@ workers and root judgment. It should not promise that every provider exposes
 every class or named model.
 
 Provider synchronization must regenerate all materialized reviewer roles after
-the canonical contract changes. The existing lockstep public package release
-remains `0.2.1` because it is not yet published; this revision expands the
-contents of the same pending release rather than creating another version
-bump.
+the canonical contract changes. At design review time, upstream and npm had
+already published lockstep public package `0.2.1`. Implementation must re-read
+the five upstream manifests and npm immediately before its release commit, then
+choose the next shared unpublished patch greater than upstream (`0.2.2` only
+if it remains unused).
 
 The canonical reviewer version remains `1.1.8` because the repository requires
 one version bump per changed agent in the final PR diff, not one bump per edit.
 Changing `oat-dispatch-subagents/SKILL.md` requires its single PR-scoped version
-bump from `1.1.3` to `1.1.4`.
+bump above current upstream `1.1.4`, currently `1.1.5`.
 
 ## Testing Strategy
 
@@ -282,6 +342,10 @@ Extend the existing reviewer semantic test to assert:
 - mechanical, intelligent, and stronger-class boundaries are described;
 - mixed task classes cannot share one homogeneous wave record;
 - unsatisfied class floors never silently downgrade;
+- task-class fields are required for reviewer-local recon and optional for
+  existing generic callers;
+- Cursor nested recon uses an exact native model selector while lifecycle
+  roles continue to use resolver-returned variants;
 - primary-reviewer synthesis, severity, and final-output ownership remain
   unchanged.
 
@@ -337,7 +401,8 @@ sequential revision phase:
 1. update generic dispatch request/record semantics and provider guidance;
 2. update the canonical reviewer and lean semantic assertions;
 3. update user-facing review documentation;
-4. regenerate provider views and validate the pending `0.2.1` release; and
+4. regenerate provider views, select the next shared unpublished package
+   version from current upstream/npm evidence, and validate that release; and
 5. run a mixed-class dogfood review followed by a new final review.
 
 The prior final review remains historical evidence for the pre-revision scope.
