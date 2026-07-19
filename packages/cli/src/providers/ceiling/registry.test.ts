@@ -192,23 +192,24 @@ describe('provider ceiling adapters', () => {
   describe('cursor adapter', () => {
     const cursor = getCeilingAdapter('cursor');
 
-    it('declares model-arg mechanism and supports the ceiling', () => {
+    it('declares model-axis pinned variants and supports the ceiling', () => {
       expect(cursor.provider).toBe('cursor');
       expect(cursor.supportsCeiling).toBe(true);
-      expect(cursor.mechanism).toBe('model-arg');
+      expect(cursor.mechanism).toBe('pinned-variant');
+      expect(cursor.selectionAxis).toBe('model');
       expect(cursor.validValues).toEqual([]);
     });
 
-    it('compiles opaque slugs to model args for implementer and reviewer roles', () => {
+    it('compiles mapped flat IDs to role-specific native variants', () => {
       expect(
         cursor.compileToDispatchArgs('composer-2.5', 'implementer', {}),
       ).toEqual({
-        model: 'composer-2.5',
+        variant: 'oat-phase-implementer-composer-2-5',
       });
       expect(
-        cursor.compileToDispatchArgs('gpt-5.3-codex-high', 'reviewer', {}),
+        cursor.compileToDispatchArgs('gpt-5.6-sol-high', 'reviewer', {}),
       ).toEqual({
-        model: 'gpt-5.3-codex-high',
+        variant: 'oat-reviewer-gpt-5-6-sol-high',
       });
     });
 
@@ -217,7 +218,7 @@ describe('provider ceiling adapters', () => {
       expect(cursor.compileToDispatchArgs('   ', 'reviewer', {})).toBeNull();
     });
 
-    it('rejects direct managed role names while preserving opaque models', () => {
+    it('rejects direct managed role names and unmapped models', () => {
       expect(
         cursor.compileToDispatchArgs(
           'oat-phase-implementer-gpt-5-6-sol-high',
@@ -231,7 +232,7 @@ describe('provider ceiling adapters', () => {
           'implementer',
           {},
         ),
-      ).toEqual({ model: 'opaque:model/lower [v1]' });
+      ).toBeNull();
     });
 
     it('never flags verifyOnDispatch because Cursor has no total order', () => {

@@ -512,10 +512,10 @@ function dispatchValueFromRouteTarget(
   target: ResolvedDispatchRouteTarget,
 ): string | null {
   const adapter = getCeilingAdapter(target.harness);
-  if (adapter.mechanism === 'pinned-variant') {
+  if (adapter.selectionAxis === 'model-effort') {
     return target.effort ?? null;
   }
-  if (adapter.mechanism === 'model-arg') {
+  if (adapter.selectionAxis === 'model' || adapter.selectionAxis === 'tier') {
     return target.model ?? null;
   }
   return null;
@@ -543,7 +543,7 @@ function routeTargetFromBareValue(
     routeLength,
   };
 
-  if (adapter.mechanism === 'pinned-variant') {
+  if (adapter.selectionAxis === 'model-effort') {
     target.effort = value;
   } else {
     target.model = value;
@@ -806,7 +806,7 @@ function candidatePrimaryTarget(
   }
   const targetAdapter = getCeilingAdapter(target.harness);
   if (
-    targetAdapter.mechanism === 'pinned-variant' &&
+    targetAdapter.selectionAxis === 'model-effort' &&
     (!target.model ||
       !target.effort ||
       !CODEX_VALUES.includes(target.effort as WorkflowCodexDispatchCeiling))
@@ -815,7 +815,11 @@ function candidatePrimaryTarget(
       `Malformed ${provider} candidate ordering in ${tier}: Codex candidates require a model and supported effort.`,
     );
   }
-  if (targetAdapter.mechanism === 'model-arg' && !target.model) {
+  if (
+    (targetAdapter.selectionAxis === 'model' ||
+      targetAdapter.selectionAxis === 'tier') &&
+    !target.model
+  ) {
     throw new Error(
       `Malformed ${provider} candidate ordering in ${tier}: model-argument candidates require a model.`,
     );
@@ -1740,7 +1744,7 @@ function selectDispatchValue(
   };
 }
 
-function hasCodexVariantDispatchArgs(
+function hasVariantDispatchArgs(
   dispatchArgs: CeilingDispatchArgs,
 ): dispatchArgs is { variant: string } {
   return (
@@ -1763,6 +1767,7 @@ function hasModelDispatchArgs(
 }
 
 function modelAxis(
+  provider: DispatchCeilingProvider,
   selection: DispatchSelection,
   dispatchArgs: CeilingDispatchArgs,
 ): string {
@@ -1772,6 +1777,15 @@ function modelAxis(
 
   if (hasModelDispatchArgs(dispatchArgs)) {
     return `selected:${dispatchArgs.model}`;
+  }
+
+  if (
+    provider === 'cursor' &&
+    hasVariantDispatchArgs(dispatchArgs) &&
+    selection.target === null &&
+    selection.selectedValue
+  ) {
+    return `selected:${selection.selectedValue}`;
   }
 
   if (selection.selectionMode === 'inherit-default') {
@@ -1785,7 +1799,7 @@ function codexEffortAxis(
   selection: DispatchSelection,
   dispatchArgs: CeilingDispatchArgs,
 ): string {
-  if (hasCodexVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
+  if (hasVariantDispatchArgs(dispatchArgs) && selection.target?.effort) {
     return `selected:${selection.target.effort}`;
   }
 
@@ -1870,7 +1884,7 @@ function buildProviderResolution(
     mode,
     mechanism: adapter.mechanism,
     dispatchArgs,
-    modelAxis: modelAxis(selection, dispatchArgs),
+    modelAxis: modelAxis(provider, selection, dispatchArgs),
     effortAxis:
       provider === 'codex'
         ? codexEffortAxis(selection, dispatchArgs)

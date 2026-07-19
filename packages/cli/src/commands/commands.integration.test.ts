@@ -4,6 +4,7 @@ import {
   mkdtemp,
   readFile,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -288,7 +289,7 @@ describe('CLI command integration', () => {
     expect(manifest.entries).toEqual([]);
   });
 
-  it('sync creates symlinks for detected providers', async () => {
+  it('sync uses Cursor native skills while retaining Cursor agent views', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
     await runCli(root, ['init']);
@@ -300,9 +301,6 @@ describe('CLI command integration', () => {
     const claudeSkillStat = await lstat(
       join(root, '.claude', 'skills', 'skill-one'),
     );
-    const cursorSkillStat = await lstat(
-      join(root, '.cursor', 'skills', 'skill-one'),
-    );
     const claudeAgentStat = await lstat(
       join(root, '.claude', 'agents', 'agent-one'),
     );
@@ -311,9 +309,143 @@ describe('CLI command integration', () => {
     );
 
     expect(claudeSkillStat.isSymbolicLink()).toBe(true);
-    expect(cursorSkillStat.isSymbolicLink()).toBe(true);
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
     expect(claudeAgentStat.isSymbolicLink()).toBe(true);
     expect(cursorAgentStat.isSymbolicLink()).toBe(true);
+    const manifest = JSON.parse(
+      await readFile(join(root, '.oat', 'sync', 'manifest.json'), 'utf8'),
+    );
+    expect(
+      manifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
+  });
+
+  it('sync safely retires legacy Cursor skill ownership', async () => {
+    const root = await createWorkspace();
+    tempDirs.push(root);
+    await runCli(root, ['init']);
+    await seedCanonical(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.agents', 'skills', 'skill-two', 'SKILL.md'),
+      'skill two',
+      'utf8',
+    );
+
+    await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+    await symlink(
+      join(root, '.agents', 'skills', 'skill-one'),
+      join(root, '.cursor', 'skills', 'skill-one'),
+      'dir',
+    );
+    await mkdir(join(root, '.cursor', 'skills', 'skill-two'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.cursor', 'skills', 'skill-two', 'SKILL.md'),
+      'user replacement',
+      'utf8',
+    );
+    await mkdir(join(root, '.cursor', 'skills', 'cursor-only'), {
+      recursive: true,
+    });
+    await writeFile(
+      join(root, '.cursor', 'skills', 'cursor-only', 'SKILL.md'),
+      'cursor only',
+      'utf8',
+    );
+
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const manifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    manifest.entries.push(
+      {
+        canonicalPath: '.agents/skills/skill-one',
+        providerPath: '.cursor/skills/skill-one',
+        provider: 'cursor',
+        contentType: 'skill',
+        strategy: 'symlink',
+        contentHash: null,
+        isFile: false,
+        lastSynced: new Date().toISOString(),
+      },
+      {
+        canonicalPath: '.agents/skills/skill-two',
+        providerPath: '.cursor/skills/skill-two',
+        provider: 'cursor',
+        contentType: 'skill',
+        strategy: 'symlink',
+        contentHash: null,
+        isFile: false,
+        lastSynced: new Date().toISOString(),
+      },
+    );
+    await writeFile(
+      manifestPath,
+      `${JSON.stringify(manifest, null, 2)}\n`,
+      'utf8',
+    );
+
+    const dryRun = await runCli(root, ['sync', '--dry-run']);
+    expect(dryRun.exitCode).toBe(0);
+    expect(dryRun.stdout).toContain(
+      'remove cursor/skill-one (obsolete mapping has verified clean managed symlink)',
+    );
+    expect(dryRun.stdout).toContain(
+      'detach cursor/skill-two (obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership)',
+    );
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).resolves.toBeDefined();
+
+    const result = await runCli(root, ['sync']);
+    expect(result.exitCode).toBe(0);
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'skill-one')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(
+      readFile(
+        join(root, '.cursor', 'skills', 'skill-two', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('user replacement');
+    await expect(
+      readFile(
+        join(root, '.cursor', 'skills', 'cursor-only', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('cursor only');
+
+    const updatedManifest = JSON.parse(await readFile(manifestPath, 'utf8'));
+    expect(
+      updatedManifest.entries.some(
+        (entry: { contentType: string; provider: string }) =>
+          entry.provider === 'cursor' && entry.contentType === 'skill',
+      ),
+    ).toBe(false);
+
+    const status = await runCli(root, ['status', '--json'], ['--json']);
+    const statusPayload = JSON.parse(status.stdout);
+    expect(statusPayload.reports).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          provider: 'cursor',
+          providerPath: '.cursor/skills/skill-two',
+          state: { status: 'stray' },
+        }),
+        expect.objectContaining({
+          provider: 'cursor',
+          providerPath: '.cursor/skills/cursor-only',
+          state: { status: 'stray' },
+        }),
+      ]),
+    );
   });
 
   it('status --json outputs valid JSON with no prompts', async () => {
@@ -330,6 +462,7 @@ describe('CLI command integration', () => {
   it('doctor on healthy setup reports all pass', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
+    await rm(join(root, '.cursor'), { recursive: true, force: true });
     const previousHome = process.env.HOME;
     process.env.HOME = root;
 

@@ -14,6 +14,9 @@ For detailed `.oat/` tree semantics, see:
 - Skills: `.agents/skills/`
 - Agents/subagents: `.agents/agents/`
 - Rules: `.agents/rules/`
+- Cursor reads project skills directly from `.agents/skills/` and user skills
+  directly from `~/.agents/skills/`. `.cursor/skills/` remains a Cursor-only
+  extension and adoption surface, not generated output.
 
 ## OAT runtime/state
 
@@ -23,11 +26,12 @@ For detailed `.oat/` tree semantics, see:
 - Projects root config: `projects.root` in `.oat/config.json` (read via `oat config get projects.root`)
 - Archive config: `archive.s3Uri`, `archive.s3SyncOnComplete`, `archive.summaryExportPath`, `archive.wrapUpExportPath`, `archive.awsProfile`, and `archive.awsRegion` in `.oat/config.json`
 - Workflow gate config: `workflow.gates.skills` and `workflow.gates.execTargets` in `.oat/config.json`, `.oat/config.local.json`, or `~/.oat/config.json` (manage via `oat gate`)
-- Project manifests/config: `.oat/sync/`
+- Project sync manifest/config: `.oat/sync/`
+- User sync manifest/config: `~/.oat/sync/`
 
 Config discovery via CLI:
 
-- `oat config describe` lists the supported config surfaces and keys across `.oat/config.json`, `.oat/config.local.json`, `~/.oat/config.json`, and `.oat/sync/config.json`.
+- `oat config describe` lists the supported config surfaces and keys across `.oat/config.json`, `.oat/config.local.json`, `~/.oat/config.json`, `.oat/sync/config.json`, and `~/.oat/sync/config.json`.
 - `oat config describe <key>` shows file location, scope, default, mutability, and the owning command for one key.
 - `oat config list` shows the currently resolved values for the repo-local/shared command surface.
 
@@ -36,7 +40,9 @@ Config ownership note:
 - `.oat/config.json` is the canonical home for shared non-sync settings (for example, `worktrees.root`, `projects.root`).
 - `.oat/config.local.json` is the canonical home for per-developer lifecycle state (for example, `activeProject`, `lastPausedProject`, `activeIdea`).
 - `~/.oat/config.json` is the canonical home for user-level state (for example, `activeIdea` at global scope).
-- `.oat/sync/config.json` remains the sync/provider config contract.
+- `.oat/sync/config.json` owns project sync/provider settings and known strays.
+- `~/.oat/sync/config.json` owns user sync/provider settings and personal known
+  strays. OAT migrates the legacy `~/.oat/config.json#knownStrays` key here.
 - Legacy `.oat/active-project` / `.oat/projects-root` / `.oat/active-idea` files may still exist as inert compatibility artifacts in some repos/worktrees.
 
 ## OAT workflow

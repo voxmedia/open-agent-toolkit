@@ -5,6 +5,7 @@ import type { CanonicalEntry } from '@engine/index';
 import TOML from '@iarna/toml';
 import { isOatManagedCodexRoleFile } from '@providers/codex/codec/shared';
 import type { CodexExtensionPlan } from '@providers/codex/codec/sync-extension';
+import type { MaterializationPlan } from '@providers/shared';
 
 export interface CodexRoleStray {
   roleName: string;
@@ -23,6 +24,33 @@ export interface CodexRegenerationDependencies {
     scopeRoot: string,
     plan: CodexExtensionPlan,
   ) => Promise<unknown>;
+}
+
+interface ProviderStrayCandidate {
+  provider: string;
+  report: { providerPath: string };
+}
+
+export function filterMaterializationManagedStrays<
+  TCandidate extends ProviderStrayCandidate,
+>(
+  candidates: TCandidate[],
+  plans: readonly MaterializationPlan[],
+): TCandidate[] {
+  const managedPaths = new Set(
+    plans.flatMap((plan) =>
+      plan.operations.map(
+        (operation) =>
+          `${plan.provider}|${operation.path.replaceAll('\\', '/')}`,
+      ),
+    ),
+  );
+  return candidates.filter(
+    (candidate) =>
+      !managedPaths.has(
+        `${candidate.provider}|${candidate.report.providerPath.replaceAll('\\', '/')}`,
+      ),
+  );
 }
 
 function canonicalRoleNames(canonicalEntries: CanonicalEntry[]): Set<string> {

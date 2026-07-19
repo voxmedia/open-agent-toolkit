@@ -164,8 +164,8 @@ Resolution order:
 
 Read `providers.<active-provider>` from the `--json` response for the concrete
 dispatch controls. `dispatchArgs` carries the provider-specific argument to
-pass through (Codex: `variant` name; Claude: `model` string; Cursor: opaque
-`model` string). `selection` carries `role`, `selectedValue`, `capped`,
+pass through (Codex: `variant` name; Claude: `model` string; Cursor:
+materialized `variant` name). `selection` carries `role`, `selectedValue`, `capped`,
 `selectionMode`, and policy fields; `selection.target` and an optional
 `providers.<provider>.target` carry route data. For implementer/fix dispatch,
 use exactly one of two mutually exclusive selection paths:
@@ -398,13 +398,19 @@ Claude rules:
 Cursor rules:
 
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
-  or infer capability from its spelling.
+  or infer capability from its spelling. The materialized mapping and resolver
+  alone translate it to a native variant.
 - For managed capped phase-implementer/fix dispatch, call
   `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <phase-id> --report-action implementation --json`.
   For bounded fixes, reuse the exact phase target with a bounded fix scope.
-- Require `providers.cursor.dispatchArgs.model` and pass that exact byte-for-byte
-  string as the actual Cursor invocation model. If the host cannot apply it,
-  fail closed.
+- Require `providers.cursor.dispatchArgs.variant` and launch that exact
+  resolver-selected native agent type first. Native acceptance plus the
+  complete launcher payload is configured invocation evidence; it does not
+  prove runtime model identity.
+- Only a recorded pre-start native role-selection rejection of the exact
+  variant before any child starts permits another target-preserving route. If
+  the host cannot apply the variant, fail closed. After acceptance, timeout,
+  interruption, `BLOCKED`, or missing telemetry never authorizes replacement.
 
 Payload-first invariant:
 
@@ -526,7 +532,7 @@ Dispatch policy: {policy}; selected={selected value | none}; cap={value | none} 
 Dispatch policy: balanced; selected=xhigh; cap=xhigh (codex, enforced — variant oat-phase-implementer-gpt-5-6-terra-xhigh)
 Dispatch policy: inherit host defaults; selected=none; cap=none (codex, advisory — base role follows provider default)
 Dispatch policy: balanced; selected=sonnet; cap=sonnet (claude, enforced — Task model arg)
-Cursor opaque model-string example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — model arg gpt-5.6-sol-max)
+Cursor materialized-variant example: Dispatch policy: frontier; selected=gpt-5.6-sol-max; cap=gpt-5.6-sol-max (cursor, enforced — native variant oat-phase-implementer-gpt-5-6-sol-max)
 Dispatch policy: unresolved; selected=none; cap=none (codex, advisory — policy set but no value resolved)
 ```
 
@@ -542,8 +548,8 @@ Dispatch policy: high; selected=opus; cap=opus (claude, advisory — provider di
 ```
 
 **`enforced`** — the adapter compiled concrete dispatch args and the provider
-accepted them. Log value + provider + mechanism detail (variant name or "Task
-model arg").
+accepted them. Log value + provider + mechanism detail (native variant name or
+"Task model arg").
 
 **`advisory`** — the adapter supports the policy but no concrete value resolved,
 the policy intentionally inherits provider defaults, or the provider is known

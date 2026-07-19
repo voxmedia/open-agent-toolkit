@@ -10,7 +10,7 @@ import {
 } from './engine.types';
 
 describe('engine types', () => {
-  it('SyncOperationType includes all 6 operation types', () => {
+  it('SyncOperationType includes all 7 operation types', () => {
     const operations: SyncOperationType[] = [...SYNC_OPERATION_TYPES];
 
     expect(SYNC_OPERATION_TYPES).toEqual([
@@ -19,9 +19,10 @@ describe('engine types', () => {
       'update_symlink',
       'update_copy',
       'remove',
+      'detach',
       'skip',
     ]);
-    expect(operations).toHaveLength(6);
+    expect(operations).toHaveLength(7);
   });
 
   it('SyncPlanEntry has all required fields', () => {
@@ -64,16 +65,22 @@ describe('engine types', () => {
       operation: 'remove',
       reason: 'canonical entry no longer exists',
     };
+    const detachment: RemovalSyncPlanEntry = {
+      ...entry,
+      operation: 'detach',
+      reason: 'provider path changed; preserve and detach manifest ownership',
+    };
 
     const plan: SyncPlan = {
       scope: 'project',
       entries: [entry],
-      removals: [removal],
+      removals: [removal, detachment],
     };
 
     expect(plan.scope).toBe('project');
     expect(plan.entries).toHaveLength(1);
     expect(plan.removals[0]?.operation).toBe('remove');
+    expect(plan.removals[1]?.operation).toBe('detach');
   });
 
   it('SyncResult tracks applied + failed counts', () => {

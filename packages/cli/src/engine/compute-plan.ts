@@ -1,11 +1,29 @@
-import { access, lstat, readFile, readlink } from 'node:fs/promises';
-import { basename, dirname, join, normalize, resolve } from 'node:path';
+import { createHash } from 'node:crypto';
+import {
+  access,
+  lstat,
+  readdir,
+  readFile,
+  readlink,
+  stat,
+} from 'node:fs/promises';
+import {
+  basename,
+  dirname,
+  join,
+  normalize,
+  relative,
+  resolve,
+} from 'node:path';
 
 import type { SyncConfig } from '@config/sync-config';
 import { computeContentHash, computeStringHash } from '@manifest/hash';
 import { findEntry } from '@manifest/manager';
 import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
-import type { ProviderAdapter } from '@providers/shared/adapter.types';
+import type {
+  PathMapping,
+  ProviderAdapter,
+} from '@providers/shared/adapter.types';
 import { getSyncMappings } from '@providers/shared/adapter.utils';
 import type { ContentType } from '@shared/types';
 
@@ -15,6 +33,7 @@ import type {
   SyncPlan,
   SyncPlanEntry,
 } from './engine.types';
+import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
 import type { CanonicalEntry } from './scanner';
 
 interface ComputeSyncPlanArgs {
@@ -151,6 +170,225 @@ function createRemovalEntry(
     strategy: manifestEntry.strategy,
     reason: 'canonical entry no longer exists',
   };
+}
+
+function createRetirementEntry(
+  manifestEntry: ManifestEntry,
+  scopeRoot: string,
+  operation: RemovalSyncPlanEntry['operation'],
+  reason: string,
+): RemovalSyncPlanEntry {
+  return {
+    ...createRemovalEntry(manifestEntry, scopeRoot),
+    operation,
+    reason,
+  };
+}
+
+function manifestEntryInsideMapping(
+  entry: ManifestEntry,
+  mapping: PathMapping,
+): boolean {
+  if (entry.contentType !== mapping.contentType) {
+    return false;
+  }
+
+  const canonicalPath = normalize(entry.canonicalPath).replaceAll('\\', '/');
+  const canonicalDir = normalize(mapping.canonicalDir).replaceAll('\\', '/');
+  return (
+    canonicalPath === canonicalDir ||
+    canonicalPath.startsWith(`${canonicalDir}/`)
+  );
+}
+
+async function computeManagedDirectoryCopyHash(
+  providerPath: string,
+  canonicalPath: string,
+  contentType: ManifestEntry['contentType'],
+): Promise<string | null> {
+  const expectedMarker = `${OAT_MARKER_PREFIX} Source: ${canonicalPath} -->`;
+  const sentinelPath = join(providerPath, OAT_DIRECTORY_SENTINEL);
+
+  try {
+    const sentinel = await readFile(sentinelPath, 'utf8');
+    if (sentinel !== `${expectedMarker}\n`) {
+      return null;
+    }
+  } catch {
+    return null;
+  }
+
+  const files: string[] = [];
+  async function collectFiles(current: string): Promise<boolean> {
+    const entries = await readdir(current, { withFileTypes: true });
+    for (const entry of entries) {
+      const fullPath = join(current, entry.name);
+      if (fullPath === sentinelPath) {
+        continue;
+      }
+      if (entry.isDirectory()) {
+        if (!(await collectFiles(fullPath))) {
+          return false;
+        }
+        continue;
+      }
+      if (!entry.isFile()) {
+        return false;
+      }
+      files.push(fullPath);
+    }
+    return true;
+  }
+
+  try {
+    if (!(await collectFiles(providerPath))) {
+      return null;
+    }
+
+    files.sort((left, right) =>
+      relative(providerPath, left).localeCompare(relative(providerPath, right)),
+    );
+
+    const markerFileName =
+      contentType === 'skill'
+        ? 'SKILL.md'
+        : contentType === 'agent'
+          ? 'AGENT.md'
+          : null;
+    const markerPath = markerFileName
+      ? join(providerPath, markerFileName)
+      : null;
+    const hash = createHash('sha256');
+
+    for (const file of files) {
+      const relativePath = relative(providerPath, file);
+      let content = await readFile(file);
+      if (file === markerPath) {
+        const markerPrefix = Buffer.from(`${expectedMarker}\n`);
+        if (
+          content.length < markerPrefix.length ||
+          !content.subarray(0, markerPrefix.length).equals(markerPrefix)
+        ) {
+          return null;
+        }
+        content = content.subarray(markerPrefix.length);
+      }
+      hash.update(relativePath);
+      hash.update('\0');
+      hash.update(content);
+      hash.update('\0');
+    }
+
+    return hash.digest('hex');
+  } catch {
+    return null;
+  }
+}
+
+async function classifyObsoleteMappingRetirement(
+  manifestEntry: ManifestEntry,
+  scopeRoot: string,
+): Promise<RemovalSyncPlanEntry> {
+  const providerPath = resolve(scopeRoot, manifestEntry.providerPath);
+  const canonicalPath = resolve(scopeRoot, manifestEntry.canonicalPath);
+  let providerStat: Awaited<ReturnType<typeof lstat>>;
+
+  try {
+    providerStat = await lstat(providerPath);
+  } catch (error) {
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'ENOENT'
+    ) {
+      return createRetirementEntry(
+        manifestEntry,
+        scopeRoot,
+        'detach',
+        'obsolete mapping provider path is missing; detach manifest ownership',
+      );
+    }
+
+    return createRetirementEntry(
+      manifestEntry,
+      scopeRoot,
+      'detach',
+      'obsolete mapping provider path is unverified; preserve and detach manifest ownership',
+    );
+  }
+
+  if (manifestEntry.strategy === 'symlink') {
+    if (providerStat.isSymbolicLink()) {
+      try {
+        const linkTarget = await readlink(providerPath);
+        const resolvedTarget = resolve(dirname(providerPath), linkTarget);
+        await stat(resolvedTarget);
+        if (resolvedTarget === canonicalPath) {
+          return createRetirementEntry(
+            manifestEntry,
+            scopeRoot,
+            'remove',
+            'obsolete mapping has verified clean managed symlink',
+          );
+        }
+      } catch {
+        // Broken or unreadable links are preserved and detached below.
+      }
+    }
+
+    return createRetirementEntry(
+      manifestEntry,
+      scopeRoot,
+      'detach',
+      'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+    );
+  }
+
+  const expectedTypeMatches = manifestEntry.isFile
+    ? providerStat.isFile()
+    : providerStat.isDirectory();
+  if (expectedTypeMatches && manifestEntry.contentHash) {
+    try {
+      const currentHash = await computeContentHash(
+        providerPath,
+        manifestEntry.isFile,
+      );
+      if (currentHash === manifestEntry.contentHash) {
+        return createRetirementEntry(
+          manifestEntry,
+          scopeRoot,
+          'remove',
+          'obsolete mapping has verified clean managed copy',
+        );
+      }
+    } catch {
+      // Hash failures are unverified and therefore non-destructive.
+    }
+
+    if (!manifestEntry.isFile) {
+      const managedHash = await computeManagedDirectoryCopyHash(
+        providerPath,
+        canonicalPath,
+        manifestEntry.contentType,
+      );
+      if (managedHash === manifestEntry.contentHash) {
+        return createRetirementEntry(
+          manifestEntry,
+          scopeRoot,
+          'remove',
+          'obsolete mapping has verified clean managed copy',
+        );
+      }
+    }
+  }
+
+  return createRetirementEntry(
+    manifestEntry,
+    scopeRoot,
+    'detach',
+    'obsolete mapping provider path is changed or unverified; preserve and detach manifest ownership',
+  );
 }
 
 async function classifyOperation(
@@ -294,6 +532,7 @@ export async function computeSyncPlan({
   const scopeRoot = resolveScopeRoot(canonical, explicitScopeRoot);
   const seenCanonicalKeys = new Set<string>();
   const activeProviderNames = new Set<string>();
+  const activeMappingsByProvider = new Map<string, PathMapping[]>();
   const canonicalFilter = allowedCanonicalPaths
     ? new Set(
         allowedCanonicalPaths.map((canonicalPath) => normalize(canonicalPath)),
@@ -301,6 +540,10 @@ export async function computeSyncPlan({
     : null;
 
   for (const adapter of adapters) {
+    if (resolveStrategy(adapter, config)) {
+      activeProviderNames.add(adapter.name);
+    }
+
     for (const mapping of getSyncMappings(adapter, scope)) {
       const mappingStrategy = resolveStrategy(
         adapter,
@@ -311,7 +554,9 @@ export async function computeSyncPlan({
         continue;
       }
 
-      activeProviderNames.add(adapter.name);
+      const activeMappings = activeMappingsByProvider.get(adapter.name) ?? [];
+      activeMappings.push(mapping);
+      activeMappingsByProvider.set(adapter.name, activeMappings);
 
       for (const canonicalEntry of canonical) {
         if (!entryContentTypeMatches(canonicalEntry, mapping.contentType)) {
@@ -403,7 +648,15 @@ export async function computeSyncPlan({
       continue;
     }
 
-    removals.push(createRemovalEntry(manifestEntry, scopeRoot));
+    const mappingStillExists = (
+      activeMappingsByProvider.get(manifestEntry.provider) ?? []
+    ).some((mapping) => manifestEntryInsideMapping(manifestEntry, mapping));
+
+    removals.push(
+      mappingStillExists
+        ? createRemovalEntry(manifestEntry, scopeRoot)
+        : await classifyObsoleteMappingRetirement(manifestEntry, scopeRoot),
+    );
   }
 
   return { scope, entries, removals };

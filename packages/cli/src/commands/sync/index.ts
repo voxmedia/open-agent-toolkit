@@ -21,7 +21,7 @@ import {
 import {
   computeSyncPlan,
   executeSyncPlan,
-  scanBundledManagedCodexAgents,
+  scanBundledManagedAgents,
   scanCanonical,
 } from '@engine/index';
 import { CliError } from '@errors/index';
@@ -29,16 +29,14 @@ import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { loadManifest } from '@manifest/index';
 import { claudeAdapter } from '@providers/claude';
 import { codexAdapter } from '@providers/codex';
-import {
-  applyCodexProjectExtensionPlan,
-  computeCodexProjectExtensionPlan,
-  toCodexExtensionOperations,
-} from '@providers/codex/codec/sync-extension';
+import { codexMaterializationExtension } from '@providers/codex/codec/sync-extension';
 import { copilotAdapter } from '@providers/copilot';
 import { cursorAdapter } from '@providers/cursor';
+import { cursorMaterializationExtension } from '@providers/cursor/codec/sync-extension';
 import { geminiAdapter } from '@providers/gemini';
 import {
   getConfigAwareAdapters,
+  toMaterializationOperations,
   type ProviderAdapter,
 } from '@providers/shared';
 import { formatSyncPlan } from '@ui/output';
@@ -68,7 +66,7 @@ function defaultDependencies(): SyncCommandDependencies {
     },
     saveSyncConfig,
     scanCanonical,
-    scanBundledManagedCodexAgents,
+    scanBundledManagedAgents,
     getAdapters() {
       return [
         claudeAdapter,
@@ -82,9 +80,17 @@ function defaultDependencies(): SyncCommandDependencies {
     selectProvidersWithAbort: selectManyWithAbort,
     computeSyncPlan,
     executeSyncPlan,
-    computeCodexProjectExtensionPlan,
-    toCodexExtensionOperations,
-    applyCodexProjectExtensionPlan,
+    getMaterializationExtensions() {
+      return [
+        codexMaterializationExtension,
+        cursorMaterializationExtension,
+      ] as SyncCommandDependencies['getMaterializationExtensions'] extends () => infer T
+        ? T
+        : never;
+    },
+    applyMaterializationExtensionPlan(extension, scopeRoot, plan) {
+      return extension.applyPlan(scopeRoot, plan);
+    },
     formatSyncPlan,
   };
 }
@@ -269,31 +275,34 @@ async function computePlans(
       allowedCanonicalPaths,
     });
 
-    let codexExtensionPlan: ScopeSyncPlan['codexExtensionPlan'];
-    let codexExtension: ScopeSyncPlan['codexExtension'];
     const activeAdapterNames = resolved.activeAdapters.map(
       (adapter) => adapter.name,
     );
-    if (activeAdapterNames.includes('codex')) {
-      const codexCanonical =
-        scope === 'user'
-          ? [
-              ...canonical,
-              ...(await dependencies.scanBundledManagedCodexAgents()),
-            ]
-          : canonical;
-      codexExtensionPlan = await dependencies.computeCodexProjectExtensionPlan(
-        scopeRoot,
-        codexCanonical,
-        allowedCanonicalPaths,
-        { userConfigDir: join(context.home, '.oat') },
-      );
-      codexExtension = {
-        operations: dependencies.toCodexExtensionOperations(codexExtensionPlan),
-        managedRoles: codexExtensionPlan.managedRoles,
-        aggregateConfigHash: codexExtensionPlan.aggregateConfigHash,
-      };
-    }
+    const enabledExtensions = dependencies
+      .getMaterializationExtensions()
+      .filter((extension) => activeAdapterNames.includes(extension.provider));
+    const extensionCanonical =
+      scope === 'user' && enabledExtensions.length > 0
+        ? [...canonical, ...(await dependencies.scanBundledManagedAgents())]
+        : canonical;
+    const materializationExtensionPlans = await Promise.all(
+      enabledExtensions.map((extension) =>
+        extension.computePlan({
+          scopeRoot,
+          canonicalEntries: extensionCanonical,
+          allowedCanonicalPaths,
+          options: { userConfigDir: join(context.home, '.oat') },
+        }),
+      ),
+    );
+    const materializationExtensions = materializationExtensionPlans.map(
+      (extensionPlan) => ({
+        provider: extensionPlan.provider,
+        operations: toMaterializationOperations(extensionPlan),
+        managedEntries: extensionPlan.managedEntries,
+        aggregateHash: extensionPlan.aggregateHash,
+      }),
+    );
 
     scopePlans.push({
       scope,
@@ -304,8 +313,8 @@ async function computePlans(
       activeAdapterNames,
       plan,
       providerMismatches: resolved.mismatches,
-      codexExtensionPlan,
-      codexExtension,
+      materializationExtensionPlans,
+      materializationExtensions,
     });
   }
 

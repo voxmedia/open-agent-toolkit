@@ -19,7 +19,7 @@ one run does not establish equality in another run or nesting boundary.
 
 Apply active user and repository instructions first; they override the dated
 model-family examples in this provider reference. Intersect that guidance with
-the exact model enum exposed by the dispatcher, the supplied policy and
+the exact model choices advertised by the dispatcher, the supplied policy and
 ceiling, and the requested class floor:
 
 - `mechanical-recon`: the fastest economical class suitable for deterministic
@@ -61,19 +61,19 @@ reconstruct either model string.
 ## Reviewer-Local Nested Selection
 
 Reviewer-local recon uses `generalPurpose` with an
-`exact-native-enum` model selector.
+`exact-native-model-choice` selector.
 Reviewer-local reconnaissance is a separate nested native surface. It does not
 use the lifecycle resolver because no materialized lifecycle `recon` role
 exists.
 
-1. Read the model enum from the nested Task/Subagent dispatcher.
+1. Read the model choices advertised by the nested Task/Subagent dispatcher.
 2. Intersect that exact snapshot with active user and repository
    model-class instructions, this provider reference, the supplied
    policy/ceiling, and the requested `model_class_floor`.
 3. Use the native `generalPurpose` agent type and pass an exact model selector
-   from the nested enum byte-for-byte.
+   advertised by the nested dispatcher byte-for-byte.
 4. Record the selector as `model_selector` with
-   `model_selector_granularity: exact-native-enum`.
+   `model_selector_granularity: exact-native-model-choice`.
 5. Treat an omitted model as deliberate parent inheritance only for an
    unconstrained caller whose recorded policy permits inheritance. A
    class-constrained reviewer lane never omits the model.
@@ -84,8 +84,8 @@ satisfies the floor, record `floor_satisfaction: unsatisfied` and return the
 lane for caller-inline coverage without launching a weaker worker.
 
 Do not infer Cursor IDE behavior from a headless CLI surface. Keep bounded
-recon on economical explicit targets and reserve stronger targets for
-context-heavy or consequential work.
+mechanical recon on economical explicit targets. Stronger lanes use a
+floor-satisfying target when advertised or stay with the primary reviewer.
 
 ## Dispatch Mode and Liveness
 

@@ -13,32 +13,34 @@ function summarize(scopePlans: ScopeSyncPlan[]): SyncSummary {
     applied: 0,
     failed: 0,
     skipped: scopePlans.reduce((total, scopePlan) => {
-      const codexSkipped =
-        scopePlan.codexExtension?.operations.filter(
-          (operation) => operation.action === 'skip',
-        ).length ?? 0;
+      const extensionSkipped = scopePlan.materializationExtensions.reduce(
+        (count, extension) =>
+          count +
+          extension.operations.filter(
+            (operation) => operation.action === 'skip',
+          ).length,
+        0,
+      );
       return (
         total +
         scopePlan.plan.entries.filter((entry) => entry.operation === 'skip')
           .length +
-        codexSkipped
+        extensionSkipped
       );
     }, 0),
   };
 }
 
-function formatCodexExtension(scopePlan: ScopeSyncPlan): string {
-  const codexExtension = scopePlan.codexExtension;
-  if (!codexExtension) {
-    return '';
-  }
-
-  const lines = codexExtension.operations.map((operation) => {
-    const role = operation.roleName ? ` (${operation.roleName})` : '';
-    return `- codex:${operation.target}:${operation.action} ${operation.path}${role} (${operation.reason})`;
-  });
-
-  return `Codex extension (dry-run)\n${lines.join('\n')}`;
+function formatMaterializationExtensions(scopePlan: ScopeSyncPlan): string {
+  return scopePlan.materializationExtensions
+    .map((extension) => {
+      const lines = extension.operations.map((operation) => {
+        const entry = operation.entryName ? ` (${operation.entryName})` : '';
+        return `- ${operation.provider}:${operation.target}:${operation.action} ${operation.path}${entry} (${operation.reason})`;
+      });
+      return `${extension.provider} extension (dry-run)\n${lines.join('\n')}`;
+    })
+    .join('\n\n');
 }
 
 function formatDryRunOutput(
@@ -59,9 +61,9 @@ function formatDryRunOutput(
   return scopePlans
     .map((scopePlan) => {
       const syncOutput = dependencies.formatSyncPlan(scopePlan.plan, false);
-      const codexOutput = formatCodexExtension(scopePlan);
-      return codexOutput
-        ? `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${codexOutput}`
+      const extensionOutput = formatMaterializationExtensions(scopePlan);
+      return extensionOutput
+        ? `Scope: ${scopePlan.scope}\n${syncOutput}\n\n${extensionOutput}`
         : `Scope: ${scopePlan.scope}\n${syncOutput}`;
     })
     .join('\n\n');
@@ -76,9 +78,22 @@ export function runSyncDryRun(
   const providerMismatches = scopePlans
     .map((scopePlan) => scopePlan.providerMismatches)
     .filter((mismatch) => mismatch !== undefined);
-  const codexExtensions = scopePlans
-    .map((scopePlan) => scopePlan.codexExtension)
-    .filter((extension) => extension !== undefined);
+  const materializationExtensions = scopePlans.flatMap(
+    (scopePlan) => scopePlan.materializationExtensions,
+  );
+  const codexExtensions = materializationExtensions
+    .filter((extension) => extension.provider === 'codex')
+    .map((extension) => ({
+      operations: extension.operations.map((operation) => ({
+        action: operation.action,
+        target: operation.target as 'role' | 'config',
+        path: operation.path,
+        reason: operation.reason,
+        roleName: operation.entryName,
+      })),
+      managedRoles: extension.managedEntries,
+      aggregateConfigHash: extension.aggregateHash,
+    }));
 
   if (context.json) {
     context.logger.json({
@@ -87,6 +102,7 @@ export function runSyncDryRun(
       plans: scopePlans.map((scopePlan) => scopePlan.plan),
       summary,
       providerMismatches,
+      materializationExtensions,
       codexExtensions,
     });
   } else {

@@ -2,7 +2,7 @@
 
 Agent Skills ecosystem research and notes across providers.
 
-_Last updated: February 2026_
+_Last updated: July 2026_
 
 ---
 
@@ -194,15 +194,20 @@ Legend: ✅ documented support | ⚠️ provider-specific semantics | 💤 ignor
 **Skill locations:**
 
 - Project:
+  - `.agents/skills/<skill-name>/SKILL.md` (**portable canonical path**)
   - `.cursor/skills/<skill-name>/SKILL.md`
   - `.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
   - `.codex/skills/<skill-name>/SKILL.md` (**Codex compatibility**)
 - Personal:
+  - `~/.agents/skills/<skill-name>/SKILL.md` (**portable canonical path**)
   - `~/.cursor/skills/<skill-name>/SKILL.md`
   - `~/.claude/skills/<skill-name>/SKILL.md` (**Claude compatibility**)
   - `~/.codex/skills/<skill-name>/SKILL.md` (**Codex compatibility**)
 
-**Notable:** Cursor explicitly reads from `.claude/skills/` and `.codex/skills/` for cross-tool compatibility. This means skills authored in `.claude/skills/` are automatically available in Cursor without symlinking.
+**Notable:** Cursor reads `.agents/skills/` natively at project and user scope, so
+portable canonical skills need no Cursor mirror. `.cursor/skills/` remains a
+supported home for Cursor-only skills. Cursor also reads `.claude/skills/` and
+`.codex/skills/` for compatibility.
 
 **Documented frontmatter fields:**
 
@@ -341,13 +346,13 @@ Installs skills from GitHub repos, local paths, or GitLab URLs to any supported 
 Author skills in `.agents/skills/` (canonical) and distribute to provider-specific directories:
 
 ```bash
-# Claude Code + Cursor (Cursor reads .claude/skills/ natively)
+# Claude Code
 ln -s ../../.agents/skills/my-skill .claude/skills/my-skill
 
 # GitHub Copilot
 ln -s ../../.agents/skills/my-skill .github/skills/my-skill
 
-# Codex reads .agents/skills/ natively at project level — no symlink needed
+# Cursor, Codex, and Gemini read .agents/skills/ natively — no symlink needed
 ```
 
 For automated distribution, use **OAT sync** (for local/internal skills) or **`npx skills add`** (for remote/community skills):
@@ -360,9 +365,11 @@ oat sync --scope all
 npx skills add github-user/skill-repo -a claude-code -a github-copilot
 ```
 
-**Result: one canonical source, two symlinks, four tools.**
+**Result: one canonical source, two symlinks, five tools.**
 
-**Note:** Cursor already reads `.claude/skills/` natively, so the Claude Code symlink covers both. Codex reads `.agents/skills/` at project level (per Vercel skills docs), eliminating its symlink entirely.
+**Note:** Cursor, Codex, and Gemini read `.agents/skills/` directly at project
+and user scope. Keep `.cursor/skills/` for intentionally Cursor-only skills,
+not as a generated mirror of canonical content.
 
 ---
 
@@ -516,31 +523,33 @@ The proposal has community interest but no official timeline or maintainer respo
 
 **Source:** https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices, https://github.com/agentskills/agentskills/tree/main/skills-ref
 
-### Q: Cursor reads `.claude/skills/` natively — does this make `.agents/skills/` + symlinks unnecessary?
+### Q: Does Cursor's native `.agents/skills/` support eliminate all provider views?
 
-**Answer:** No. While Cursor reading `.claude/skills/` is convenient, it only covers two of four required tools:
+**Answer:** No. Cursor, Codex, and Gemini need no skill mirror, but Claude Code
+and GitHub Copilot still use provider-specific paths:
 
 | Tool           | Native Path       | Reads `.claude/skills/`? | Reads `.agents/skills/`? |
 | -------------- | ----------------- | ------------------------ | ------------------------ |
 | Claude Code    | `.claude/skills/` | ✅ (native)              | ❌                       |
-| Cursor         | `.cursor/skills/` | ✅ (cross-compat)        | ❌                       |
+| Cursor         | `.agents/skills/` | ✅ (compatibility)       | ✅ (native)              |
 | Codex CLI      | `.agents/skills/` | ❌                       | ✅ (native)              |
-| GitHub Copilot | `.github/skills/` | ✅ (cross-compat)        | ❌                       |
-| Gemini CLI     | `.gemini/skills/` | ❌                       | ✅ (native alias)        |
+| GitHub Copilot | `.github/skills/` | ✅ (compatibility)       | ❌                       |
+| Gemini CLI     | `.agents/skills/` | ❌                       | ✅ (native alias)        |
 
 **Recommended approach:** Author skills in `.agents/skills/` (tool-agnostic canonical source), then symlink only where needed:
 
 ```bash
 # Two symlinks needed:
-ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + Cursor + Copilot
+ln -s ../../.agents/skills/my-skill .claude/skills/my-skill    # Claude Code + Copilot compatibility
 ln -s ../../.agents/skills/my-skill .github/skills/my-skill    # GitHub Copilot (native path)
-# Codex reads .agents/skills/ natively — no symlink needed
-# Gemini reads .agents/skills/ natively — no symlink needed
+# Cursor, Codex, and Gemini read .agents/skills/ natively — no symlink needed
 ```
 
 **One canonical source, two symlinks, five tools.** (Copilot reads `.claude/skills/` cross-compat, so the `.github/skills` symlink is optional but recommended for explicitness.)
 
-**Note (updated Feb 2026):** Codex now reads `.agents/skills/` natively at both project level (`$CWD/.agents/skills` up to `$REPO_ROOT/.agents/skills`) and user level (`$HOME/.agents/skills`). Gemini CLI also reads `.agents/skills/` natively at both workspace and user scopes. No symlinks needed for Codex or Gemini at any scope.
+**Note (updated July 2026):** Cursor, Codex, and Gemini read
+`.agents/skills/` natively at project and user scope. No skill symlinks are
+needed for those providers.
 
 **Source:** https://cursor.com/docs/context/skills, https://code.visualstudio.com/docs/copilot/customization/agent-skills, https://developers.openai.com/codex/skills, https://github.com/vercel-labs/skills
 

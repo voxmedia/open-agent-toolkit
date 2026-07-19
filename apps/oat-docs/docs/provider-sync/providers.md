@@ -16,16 +16,17 @@ description: 'Provider-specific path mappings for Claude, Cursor, Copilot, Gemin
 
 === "Cursor"
 
-    - Project: `.agents/skills` -> `.cursor/skills`, `.agents/agents` -> `.cursor/agents`, `.agents/rules` -> `.cursor/rules`
-    - User: `~/.agents/skills` -> `~/.cursor/skills`, `~/.agents/agents` -> `~/.cursor/agents`
-    - Subagent invocation in Cursor is prompt-driven (`/name` or natural mention), not `subagent_type`
-    - OAT-controlled Cursor dispatch uses the generic `.cursor/agents/<name>.md` file plus the exact `providers.cursor.dispatchArgs.model` value selected from the candidate ladder. OAT passes it byte-for-byte as the actual Task-level `model`; a `model` frontmatter value is only a default/fallback mechanism.
-    - Cursor model strings are opaque. OAT does not infer family, effort, cost, or capability from their spelling; the configured candidate position owns the named tier meaning.
-    - Cursor model validation checks whether the selected model is eligible for subagent Task dispatch. Each adopt/doctor command probes each distinct exact candidate once and shares one lazy broad-catalog lookup across that pass; the cache ends with the command.
-    - A correlated accepted Task carrying the exact model argument plus the child sentinel proves argument eligibility for that account/client. It does not prove backend runtime identity; that remains `not-reported` without trusted Cursor telemetry or support confirmation. Structured rejection can establish `unknown-value`, while parent prose and broad `cursor-agent models` catalog presence remain diagnostic-only.
-    - The [dated GPT-5.6 verification artifact](https://github.com/voxmedia/open-agent-toolkit/blob/main/.oat/repo/reference/project-summaries/20260711-cursor-gpt-5-6-subagent-verification.md) preserves the original probe and a stream-JSON control pass. The controls observed no Task events, so the stop rule ran zero recommendation or exploratory candidates and retained the recommendation unchanged.
-    - The artifact's structured second-pass block contains only allowlisted event fields, derived outcomes, sanitized auth presence, and identifier hashes. Exact request/session/tool-call IDs and credential-redacted unprojected streams from that pass remain in gitignored local project storage for support escalation.
-    - The same public artifact retains the sanitized historical v1 text-mode record for provenance. That older section includes command arguments and prompts, stdout and stderr, exit and duration data, and capture-environment details such as user-specific binary paths; it is not limited to the structured second-pass allowlist.
+    - Project skills are native-read from `.agents/skills`; agents and rules still sync to `.cursor/agents` and `.cursor/rules`
+    - User skills are native-read from `~/.agents/skills`; agents still sync to `~/.cursor/agents`
+    - `.cursor/skills` and `~/.cursor/skills` remain supported Cursor-only extension and adoption surfaces. OAT does not generate skill views there.
+    - Interactive `oat init` and `oat status` ask for an individual disposition for each unresolved Cursor-local skill: adopt it into `.agents/skills` or keep it Cursor-only and remember the exact path in sync config
+    - Keep-local is blocked when a canonical skill has the same name because Cursor does not document a safe duplicate-resolution order
+    - During upgrades, OAT removes only verified clean legacy managed skill views. Changed or replaced views are preserved, detached from manifest ownership, and offered for migration.
+    - Sync materializes pinned Markdown definitions for both `oat-phase-implementer` and `oat-reviewer`. Each generated name keeps the configured flat ladder ID, while an explicit verified mapping writes the separate bracket-form frontmatter model. OAT never derives one form from the other.
+    - Generated definitions carry `supported-catalogue`, `project-config`, or `user-config` ownership. Project and supported output lives in the tracked `.cursor/agents` view; user-owned output lives under `~/.cursor/agents`. Cleanup reconciles only the applicable owner.
+    - Managed dispatch requires `providers.cursor.dispatchArgs.variant` and launches that exact resolver-selected native agent type first. Skills do not pass a Task-level model argument or normalize Cursor model strings.
+    - Cursor may silently fallback when a definition pin cannot be honored. Variant acceptance therefore establishes launcher-owned `configured` provenance only; runtime identity remains `not-reported` unless independently observed.
+    - `oat doctor` checks whether each flat ID is still present in the current Cursor catalogue and reports availability drift. Catalogue availability is diagnostic and does not prove that a definition-level bracket pin ran as configured.
     - Rule files render as `.cursor/rules/*.mdc`
 
 === "Copilot"
@@ -81,9 +82,9 @@ oat config adopt dispatch-matrix --user
 ```
 
 Project-config candidates materialize into the tracked, version-controlled
-project `.codex` view. User-config candidates materialize under `~/.codex`.
-OAT does not auto-ignore project output or create its Git commit; the team owns
-that repository change.
+project `.codex` and `.cursor` views. User-config candidates materialize under
+`~/.codex` and `~/.cursor`. OAT does not auto-ignore project output or create
+its Git commit; the team owns that repository change.
 
 At implementation time, the root passes the recorded named maximum through
 invocation-only `--ceiling-tier`, resolves one exact candidate per phase, and
@@ -91,24 +92,27 @@ dispatches one phase implementer. Codex first attempts the resolver-returned
 materialized role as the native `agent_type`. The launcher records the target,
 model axis, and effort axis from that resolved payload; child self-report is not
 provenance and cannot replace those values.
-Only an explicit pre-start native role-selection rejection permits a fresh
-pinned-child fallback. An accepted child, including one that later returns
+Only an explicit pre-start native role-selection rejection permits another
+target-preserving route. An accepted child, including one that later returns
 `BLOCKED` or lacks telemetry, is a task outcome rather than a fallback signal.
-Claude and Cursor bind the exact model arguments described above. A missing or
-unselectable managed target blocks rather than falling back to the root target
-or a base role.
+Claude binds the exact model argument described above. Cursor launches the
+exact native variant. A missing or unselectable managed target blocks rather
+than falling back to the root target or a base role.
 
 ## Scope rules
 
 - Project scope: skills + agents + rules
-- User scope: skills, plus the two bundled managed Codex role definitions used only for user-owned target expansion (provider mappings vary by adapter)
+- User scope: skills, plus the two bundled managed Codex and Cursor role definitions used only for user-owned target expansion (provider mappings vary by adapter)
 - Rules are project-scoped only in this release
 - Codex user-scope sync materializes user-config custom roles under `~/.codex`; project-config and supported-catalogue output remains project-scoped and version controlled
+- Cursor user-scope sync materializes user-config variants under `~/.cursor/agents`; project-config and supported-catalogue output remains project-scoped and version controlled
 
 ## Adoption model
 
 - Stray adoption is available in `oat init` and `oat status`.
 - Adoption reconciles canonical plus the adopted provider first.
+- Native-read Cursor skill adoption moves the provider-local skill into `.agents/skills` without recreating a `.cursor/skills` view or manifest entry.
+- Choosing Keep Cursor-only leaves the skill in place and records its exact normalized path in the project or user sync config.
 - Rule adoption normalizes provider filenames back to canonical `.agents/rules/*.md` entries before cross-provider fanout.
 - Cross-provider fanout is explicit via `oat sync --scope all`.
 

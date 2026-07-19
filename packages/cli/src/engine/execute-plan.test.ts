@@ -275,6 +275,54 @@ description: React components
     ).rejects.toThrow();
   });
 
+  it('detaches manifest ownership without deleting the provider path', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    tempDirs.push(root);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const providerPath = join(root, '.cursor', 'skills', 'skill-one');
+    await seedCanonical(root, 'skill-one');
+    await mkdir(providerPath, { recursive: true });
+    await writeFile(join(providerPath, 'SKILL.md'), 'user content', 'utf8');
+
+    const detachment: RemovalSyncPlanEntry = {
+      canonical: createCanonicalEntry(root, 'skill', 'skill-one'),
+      provider: 'cursor',
+      providerPath,
+      operation: 'detach',
+      strategy: 'symlink',
+      reason:
+        'obsolete mapping provider path is changed; preserve and detach manifest ownership',
+    };
+    const manifest = {
+      ...createEmptyManifest(),
+      entries: [
+        {
+          canonicalPath: '.agents/skills/skill-one',
+          providerPath: '.cursor/skills/skill-one',
+          provider: 'cursor',
+          contentType: 'skill' as const,
+          strategy: 'symlink' as const,
+          contentHash: null,
+          isFile: false,
+          lastSynced: new Date().toISOString(),
+        },
+      ],
+    };
+
+    const result = await executeSyncPlan(
+      createPlan([], [detachment]),
+      manifest,
+      manifestPath,
+    );
+    const updated = await loadManifest(manifestPath);
+
+    expect(result).toMatchObject({ applied: 1, failed: 0 });
+    expect(updated.entries).toEqual([]);
+    await expect(
+      readFile(join(providerPath, 'SKILL.md'), 'utf8'),
+    ).resolves.toBe('user content');
+  });
+
   it('removes copy-mode manifest entries without hashing deleted canonical paths', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
     tempDirs.push(root);

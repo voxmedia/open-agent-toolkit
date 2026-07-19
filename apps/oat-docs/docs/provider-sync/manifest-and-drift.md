@@ -55,9 +55,47 @@ Provider files ignored by Git are treated as intentionally local runtime files a
 
 Provider files listed in sync config `knownStrays` are also omitted from stray
 summaries and adoption prompts. Known strays can be configured at project scope
-in `.oat/sync/config.json` or user scope in `~/.oat/config.json`; entries use
+in `.oat/sync/config.json` or user scope in `~/.oat/sync/config.json`; entries use
 exact provider-path matching, so `.cursor/skills/cloud-environment-setup` does
 not suppress `.cursor/skills/cloud-environment-setup-extra`.
+
+### Cursor skill migration
+
+Cursor reads canonical project and user skills directly from `.agents/skills`
+and `~/.agents/skills`. OAT therefore treats `.cursor/skills` as a Cursor-only
+extension and adoption surface rather than generated output.
+
+Interactive `oat init` and `oat status` ask about every unresolved Cursor-local
+skill separately:
+
+- **Adopt:** move the skill to the matching canonical `.agents/skills`
+  directory without creating a Cursor skill view or manifest row. If identical
+  canonical content already exists, OAT removes the redundant Cursor-local
+  copy.
+- **Keep Cursor-only:** leave the skill in place and immediately add its exact
+  normalized path to the applicable project or user sync config.
+- **Abort:** keep the current and remaining skills unresolved. Choices already
+  completed in the same run remain saved.
+
+Keep Cursor-only is unavailable when a canonical skill has the same name.
+Rename one skill before retrying; Cursor does not document a safe precedence
+rule for duplicates discovered from both roots. Non-interactive and JSON modes
+report pending migration actions without choosing or mutating a disposition.
+
+### Retiring legacy Cursor skill views
+
+When upgrading from generated Cursor skill views, sync classifies each obsolete
+manifest-owned path before acting:
+
+- Verified clean symlinks and managed copies are removed with their manifest
+  entries.
+- Missing paths lose only their stale manifest entries.
+- Modified, replaced, broken, unreadable, or otherwise unverified paths are
+  preserved while OAT detaches their obsolete manifest ownership.
+- Unmanaged Cursor-only content is never removed.
+
+Use `oat sync --scope <project|user|all> --dry-run` to distinguish planned
+removal from preserve-and-detach operations before running a mutating sync.
 
 For rules, adoption maps provider-native files back into `.agents/rules/*.md`:
 

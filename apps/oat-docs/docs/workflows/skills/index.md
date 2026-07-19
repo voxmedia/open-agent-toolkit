@@ -27,6 +27,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Turn a repo audit, maintainability review, backlog review, backlog directory, or backlog item into standalone external implementation plans: `oat-repo-improve`. Plans land under `.oat/repo/reference/external-plans/`; execute them directly or optionally pass one to `oat-project-import-plan` for tracked OAT execution.
 - Work on docs surfaces: `authoring-docs` (general documentation baseline), `oat-docs-authoring` (targeted OAT/Fumadocs authoring), `oat-docs-bootstrap` (guided bootstrap of a new docs app), `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
+- Run a wave program over a corpus of external plans: `oat-wave-program` (durable program artifact: new/refresh/wave-close) and `oat-wave-execute` (one wave as a wrapper project) — see [Wave Workflows](../wave-workflows.md)
 - Research a topic in depth: `deep-research`
 - Analyze an artifact, codebase, or document: `analyze`
 - Compare options with domain-aware dimensions: `compare`
@@ -71,6 +72,8 @@ Use this section when you want to choose the right OAT skill for a task. If you 
     - `oat-project-document`
     - `oat-wrap-up`
     - `oat-project-complete`
+    - `oat-wave-program`
+    - `oat-wave-execute`
 
 === "Ideas"
 

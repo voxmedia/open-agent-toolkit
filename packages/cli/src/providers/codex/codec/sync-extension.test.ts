@@ -10,12 +10,20 @@ import { tmpdir } from 'node:os';
 import { join, relative } from 'node:path';
 
 import type { CanonicalEntry } from '@engine/index';
-import { afterEach, describe, expect, it } from 'vitest';
+import type {
+  MaterializationContext,
+  MaterializationExtension,
+} from '@providers/shared';
+import { afterEach, describe, expect, expectTypeOf, it } from 'vitest';
 
 import { buildCodexMaterializedRoleName } from './materialize';
 import {
   applyCodexProjectExtensionPlan,
+  codexMaterializationExtension,
   computeCodexProjectExtensionPlan,
+  toCodexExtensionOperations,
+  type CodexExtensionPlan,
+  type CodexMaterializationTargetOptions,
 } from './sync-extension';
 
 function canonicalAgentFileContent(name: string): string {
@@ -24,6 +32,15 @@ function canonicalAgentFileContent(name: string): string {
 
 describe('codex sync extension', () => {
   const tempDirs: string[] = [];
+
+  it('satisfies the provider-neutral extension hook contract', () => {
+    expectTypeOf(codexMaterializationExtension).toMatchTypeOf<
+      MaterializationExtension<
+        CodexExtensionPlan,
+        MaterializationContext<CodexMaterializationTargetOptions>
+      >
+    >();
+  });
 
   afterEach(async () => {
     await Promise.all(
@@ -56,6 +73,35 @@ describe('codex sync extension', () => {
       root,
       canonicalEntries,
     );
+    expect(firstPlan).toMatchObject({
+      provider: 'codex',
+      managedEntries: firstPlan.managedRoles,
+      aggregateHash: firstPlan.aggregateConfigHash,
+      metadata: {
+        managedRoles: firstPlan.managedRoles,
+        aggregateConfigHash: firstPlan.aggregateConfigHash,
+      },
+    });
+    expect(
+      firstPlan.operations.every((operation) => operation.provider === 'codex'),
+    ).toBe(true);
+    const firstRoleOperation = firstPlan.operations.find(
+      (operation) => operation.roleName === 'oat-reviewer',
+    )!;
+    expect(
+      toCodexExtensionOperations({
+        ...firstPlan,
+        operations: [firstRoleOperation],
+      }),
+    ).toEqual([
+      {
+        action: firstRoleOperation.action,
+        target: 'role',
+        path: '.codex/agents/oat-reviewer.toml',
+        reason: firstRoleOperation.reason,
+        roleName: 'oat-reviewer',
+      },
+    ]);
     expect(firstPlan.operations.some((op) => op.action === 'create')).toBe(
       true,
     );
