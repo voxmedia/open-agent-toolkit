@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 3     | 0/3       |
+| Phase 4 | in_progress | 6     | 3/6       |
 
-**Total:** 5/8 tasks completed
+**Total:** 8/11 tasks completed
 
 ---
 
@@ -254,19 +254,56 @@ oat_generated: false
 
 ### Task p04-t01: Separate reviewer lane authority from model-class floors
 
+**Status:** completed
+**Commit:** 7b90e8029cf96f8af58089488ee55c080168673e
+
+**Outcome (required when completed):**
+
+- Reviewer-local lanes now separate read-only `recon` authority from
+  artifact-informed model-class floors and fail closed instead of silently
+  downgrading.
+
+---
+
+### Task p04-t02: Document model-class-aware review lanes
+
+**Status:** completed
+**Commit:** b741820be9f9de0092f1b23b52b269566f8a2c2f
+
+**Outcome (required when completed):**
+
+- Review documentation explains class-aware orchestration without promising
+  provider-specific model names.
+
+---
+
+### Task p04-t03: Regenerate provider views and finalize the revised release
+
+**Status:** completed
+**Commit:** 56eeecc4520e478a8924fa0467f770ef1669e1d5
+
+**Outcome (required when completed):**
+
+- Provider views and lockstep public-package surfaces were synchronized at the
+  unpublished `0.2.2` version and passed release validation.
+
+---
+
+### Task p04-t04: Correct recon baselines and nested model-choice terminology
+
 **Status:** in_progress
 **Commit:** -
 
 ---
 
-### Task p04-t02: Document model-class-aware review lanes
+### Task p04-t05: Add root-owned review orchestration logging
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-### Task p04-t03: Regenerate provider views and finalize the revised release
+### Task p04-t06: Regenerate fix views and revalidate the release
 
 **Status:** pending
 **Commit:** -
@@ -354,6 +391,37 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - None for Phase 3.
 
+### Run 4
+
+**Timestamp:** 2026-07-19T00:58:27Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome     | Task commits                       | Root review | Fix iterations |
+| ----- | ----------- | ---------------------------------- | ----------- | -------------- |
+| p04   | fixes_added | `7b90e802`, `b741820b`, `56eeecc4` | failed      | 1 in progress  |
+
+**Dispatch notes:**
+
+- The primary reviewer classified separate mechanical and intelligent lanes.
+- The mechanical lane ran on an explicit Composer 2.5 Fast target.
+- The nested Cursor catalog exposed no demonstrably intelligent-floor target,
+  so the primary reviewer completed that lane inline without downgrading.
+- Detailed orchestration evidence is in
+  `reviews/archived/p04-review-2026-07-19T005827Z.md`.
+
+**Outstanding items:**
+
+- Important: remove the unconditional economical target from the generic
+  `recon` baseline when a model-class floor is supplied.
+- Medium: record that `p04-t03` included canonical provider wording outside its
+  declared scope; preserve committed history and correct task boundaries
+  prospectively.
+- Add plain-language nested model-choice terminology and root-owned
+  project-log orchestration handoff.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -371,14 +439,18 @@ Chronological log of implementation progress.
 - [x] p03-t01: Regenerate provider views and finalize lockstep release metadata - `8a8d0b2f`
 - [x] p03-t02: Close the shipped backlog item - `9772f01b`
 - [x] p03-t03: Correct the release to the next unpublished lockstep version - `cde08669`
-- [ ] p04-t01: Separate reviewer lane authority from model-class floors - next
-- [ ] p04-t02: Document model-class-aware review lanes
-- [ ] p04-t03: Regenerate provider views and finalize the revised release
+- [x] p04-t01: Separate reviewer lane authority from model-class floors - `7b90e802`
+- [x] p04-t02: Document model-class-aware review lanes - `b741820b`
+- [x] p04-t03: Regenerate provider views and finalize the revised release - `56eeecc4`
+- [ ] p04-t04: Correct recon baselines and nested model-choice terminology - next
+- [ ] p04-t05: Add root-owned review orchestration logging
+- [ ] p04-t06: Regenerate fix views and revalidate the release
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- Five tasks were completed across three sequential phases, including one review-driven release correction.
+- Eight tasks were completed across four sequential phases; the Phase 4 review
+  produced one blocking contract correction and one accepted scope deviation.
 
 **Decisions:**
 
@@ -387,7 +459,8 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute Phase 4 and pass its mixed-class dogfood review plus the superseding final review.
+- Complete the Phase 4 review fixes, rerun its class-aware dogfood review, and
+  run the superseding final review.
 
 **Blockers:**
 
@@ -401,9 +474,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review        | Source Artifact | Planned / Documented                                   | Actual / Accepted                                                                    | Reason                                                                                  | Source of Truth               | Follow-up                                                            |
+| -------------------- | --------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
+| p04-t03 / p04 review | `plan.md`       | Release task limited to generated and release surfaces | Commit also corrected canonical Claude, Codex, and Cursor provider-reference wording | Release validation exposed an autonomy-prompt regression after canonical implementation | Committed provider references | Keep history; include future canonical corrections in contract tasks |
 
 ## Deferred Findings (Medium)
 

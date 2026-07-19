@@ -96,6 +96,18 @@ Drafted Phase p04 from the approved supplemental design: one contract/test task,
 
 Phase p04 amendment passed artifact review with one Minor checklist wording correction applied during receipt. Reopening implementation at p04-t01.
 
+### 2026-07-19 · structural · oat-project-implement · p04
+
+Accepted Phase p04 implementer dispatch; task commits 7b90e802, b741820b, and 56eeecc4; run record will be finalized in implementation.md#run-4.
+
+### 2026-07-19 · structural · oat-project-implement · p04-review-orchestration
+
+Phase p04 review orchestration: mechanical-recon launched on composer-2.5-fast and completed; intelligent-recon floor was unsatisfied in the nested catalog and correctly stayed inline with no downgrade; primary reconciliation and evidence: reviews/archived/p04-review-2026-07-19T005827Z.md.
+
+### 2026-07-19 · structural · oat-project-implement · p04-review-fix-1
+
+Phase p04 review found one Important authority/model-floor contradiction and one Medium commit-scope deviation. Added bounded fixes for the recon baseline, plain-language advertised-model wording, root-owned orchestration log handoff, regenerated views, and a root-native mixed-class re-review.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

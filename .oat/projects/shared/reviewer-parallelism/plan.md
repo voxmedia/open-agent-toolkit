@@ -495,8 +495,8 @@ Assert:
   to unconstrained callers;
 - outer Cursor lifecycle roles use the exact resolver-returned
   `providers.cursor.dispatchArgs.variant`, while reviewer-local
-  `generalPurpose` recon uses an exact model from the nested native enum and
-  never reconstructs lifecycle variants;
+  `generalPurpose` recon uses an exact model choice advertised by the current
+  nested dispatcher and never reconstructs lifecycle variants;
 - root-only verification, reconciliation, severity, validation decisions, and
   output ownership remain unchanged.
 
@@ -760,14 +760,193 @@ Expected: all repository/release checks pass, all five tarballs target the
 same still-unpublished version, and no provider drift remains. Correct and
 amend the task commit before review if needed.
 
+---
+
+### Task p04-t04: Correct recon baselines and nested model-choice terminology
+
+**Files:**
+
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/record-schema.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add the review-driven regression assertions**
+
+Assert that:
+
+- the baseline `recon` role resolves an economical target only when no
+  `task_class` floor was supplied;
+- class-constrained recon selects at or above `model_class_floor` or returns
+  `caller-inline` with `floor_satisfaction: unsatisfied`;
+- an economical target is never treated as a universal recon baseline;
+- Cursor nested dispatch uses the plain-language concept “exact model choice
+  advertised by the current nested dispatcher”; and
+- record granularity uses `exact-native-model-choice`, not enum terminology.
+
+Run the focused skill tests and confirm the baseline assertion fails before the
+contract fix.
+
+**Step 2: Correct the canonical contract**
+
+Make economical selection the default only for unconstrained legacy recon.
+For a supplied task class, resolve the advertised nested model choices against
+the class floor and policy/ceiling; fail closed to caller-inline when none can
+demonstrably satisfy the floor. Replace “enum” prose and record values with the
+plain-language advertised-model-choice terminology.
+
+Keep `oat-dispatch-subagents` at its existing PR-scoped `1.1.5` version.
+
+**Step 3: Verify and commit**
+
+```bash
+pnpm exec oxfmt --write \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-cursor.md \
+  packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts
+git diff --check
+git add \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-cursor.md \
+  packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p04-t04): honor recon model-class floors"
+```
+
+Expected: focused tests pass and no class-constrained lane can be downgraded to
+the unconstrained economical default.
+
+---
+
+### Task p04-t05: Add root-owned review orchestration logging
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+
+**Step 1: Add semantic ownership assertions**
+
+Assert that:
+
+- review artifacts contain a compact orchestration section whenever delegated
+  reconnaissance is attempted;
+- the section records waves, task classes, classification rationale, selected
+  targets, acceptance/outcomes, floor satisfaction, fallback, and primary
+  reconciliation;
+- reviewers and workers never write `project-log.md`;
+- the root project implementation/review workflow validates the artifact and
+  appends one structural project-log entry referencing it through
+  `oat project log append`; and
+- structured-output mode keeps the existing schema and summarizes
+  orchestration in `summary`.
+
+**Step 2: Implement the root-owned handoff**
+
+Update the canonical reviewer artifact contract and the two root project
+workflows. The reviewer reports orchestration evidence in its artifact; after
+validating the returned artifact, the root appends one concise structural log
+entry instead of copying every worker record. Keep logging capability-gated and
+preserve read-only reviewer/worker authority.
+
+Bump `oat-project-implement` from `2.1.3` to `2.1.4` and
+`oat-project-review-provide` from `1.3.20` to `1.3.21`. Keep
+`oat-reviewer` at its existing PR-scoped `1.1.8` version.
+
+**Step 3: Verify and commit**
+
+```bash
+pnpm exec oxfmt --write \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-project-implement/SKILL.md \
+  .agents/skills/oat-project-implement/references/phase-execution.md \
+  .agents/skills/oat-project-review-provide/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  apps/oat-docs/docs/workflows/projects/reviews.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/agents/canonical/parse.test.ts
+pnpm build:docs
+git diff --check
+git add \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-project-implement/SKILL.md \
+  .agents/skills/oat-project-implement/references/phase-execution.md \
+  .agents/skills/oat-project-review-provide/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  apps/oat-docs/docs/workflows/projects/reviews.md
+git commit -m "feat(p04-t05): log review orchestration through root"
+```
+
+Expected: the review artifact is the detailed evidence source, one root-owned
+project-log entry links to it, and no child gains write authority.
+
+---
+
+### Task p04-t06: Regenerate fix views and revalidate the release
+
+**Files:**
+
+- Regenerate as applicable: `.claude/agents/oat-reviewer.md`
+- Regenerate as applicable: `.cursor/agents/oat-reviewer.md`
+- Regenerate as applicable: `.codex/agents/oat-reviewer*.toml`
+- Regenerate as applicable: provider views for
+  `oat-dispatch-subagents`, `oat-project-implement`, and
+  `oat-project-review-provide`
+- Regenerate: `packages/cli/assets/**`
+- Regenerate: `.oat/sync/manifest.json`
+
+Run asset bundling, provider sync, focused contract tests, docs build, complete
+workspace validation, release validation, provider dry-run, formatting, and
+diff hygiene. Keep all public packages at the already-selected unpublished
+`0.2.2` version and recheck npm uniqueness immediately before commit.
+
+Commit only generated/release surfaces:
+
+```bash
+git add -A \
+  packages/cli/assets \
+  .claude/agents/oat-reviewer.md \
+  .cursor/agents/oat-reviewer.md \
+  .codex/agents \
+  .claude/skills/oat-dispatch-subagents \
+  .cursor/skills/oat-dispatch-subagents \
+  .claude/skills/oat-project-implement \
+  .cursor/skills/oat-project-implement \
+  .claude/skills/oat-project-review-provide \
+  .cursor/skills/oat-project-review-provide \
+  .oat/sync/manifest.json
+git commit -m "chore(p04-t06): synchronize review orchestration fixes"
+```
+
+If a listed path is absent or unchanged for a provider, omit it from staging.
+Expected: full release validation passes and project sync reports no drift.
+
 ### Phase 4 Review Acceptance
 
-The root-owned Phase 4 code review is also the mixed-class dogfood acceptance
-run. After reading `design.md`, the plan, implementation record, and
+The rerun root-owned Phase 4 code review is also the class-aware dogfood
+acceptance run. After reading `design.md`, the plan, implementation record, and
 authoritative range, the primary reviewer must:
 
-- delegate at least one genuinely mechanical lane and one genuinely
-  intelligent lane when the live nested catalog can satisfy both floors;
+- classify at least one genuinely mechanical lane and one genuinely
+  intelligent lane;
+- delegate suitable mechanical work to an explicitly floor-satisfying nested
+  target;
+- delegate an intelligent lane only when the live nested catalog exposes a
+  demonstrably floor-satisfying target; otherwise record it as unsatisfied and
+  complete that lane itself;
 - use separate dispatch records/waves and explicit provider targets;
 - keep release/security/policy interpretation and all final judgment with the
   primary reviewer;
@@ -775,8 +954,10 @@ authoritative range, the primary reviewer must:
 - record task classes, selected targets, lane purposes, and reconciliation in
   the review artifact.
 
-If the live host cannot explicitly satisfy both floors, review inline and mark
-dogfood acceptance blocked rather than silently substituting a weaker worker.
+Dogfood acceptance depends on correct classification, floor-safe dispatch, and
+complete parent-owned coverage—not on successfully launching one worker per
+class. Pinned named subagents may provide additional model choices but are not
+required and remain out of scope for this project.
 
 ---
 
@@ -787,7 +968,7 @@ dogfood acceptance blocked rather than silently substituting a weaker worker.
 | p01                | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
 | p02                | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
 | p03                | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
-| p04                | code     | pending         | -          | -                                                             |
+| p04                | code     | fixes_added     | 2026-07-19 | reviews/archived/p04-review-2026-07-19T005827Z.md             |
 | final-pre-revision | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
 | final              | code     | pending         | -          | -                                                             |
 | spec               | artifact | pending         | -          | -                                                             |
@@ -812,9 +993,9 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
-- Phase 4: 3 tasks - Task-class-aware dispatch contracts, review documentation, provider synchronization, and revised lockstep release
+- Phase 4: 6 tasks - Task-class-aware dispatch contracts, review documentation, root-owned orchestration logging, provider synchronization, and revised lockstep release
 
-**Total: 4 phases, 8 tasks**
+**Total: 4 phases, 11 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 

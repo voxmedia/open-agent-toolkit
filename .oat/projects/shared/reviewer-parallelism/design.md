@@ -222,17 +222,18 @@ Cursor dispatch continues to resolve through
 `providers.cursor.dispatchArgs.variant` returned by that resolver.
 
 Reviewer-local reconnaissance is a different nested generic-dispatch surface.
-It uses the native Task/Subagent call's explicit model enum with the
+It uses an exact model choice advertised by the native Task/Subagent call with
+the
 `generalPurpose` agent type because no materialized lifecycle `recon` role
 exists. The generic dispatcher:
 
-1. reads the nested native model enum;
+1. reads the model choices advertised by the current nested dispatcher;
 2. intersects it with the provider reference, active user/repository
    model-class guidance, and the supplied policy/ceiling;
 3. selects an exact model at or above `model_class_floor`;
 4. passes that exact selector to the native call; and
 5. records it as `model_selector` with
-   `model_selector_granularity: exact-native-enum`.
+   `model_selector_granularity: exact-native-model-choice`.
 
 It does not call the lifecycle resolver, reconstruct a lifecycle variant, or
 parse bracket-form model pins. This keeps the revision instruction/schema-only
@@ -293,6 +294,25 @@ After dispatch, the root reviewer must:
 The root reviewer must not use stronger workers as a substitute for reading the
 artifacts or forming its own review strategy.
 
+## Project-Log Orchestration Handoff
+
+When project logging is enabled, reviewer orchestration becomes durable without
+allowing the reviewer or its workers to mutate `project-log.md` directly:
+
+1. The reviewer writes a compact orchestration section in its review artifact
+   covering each wave's task class, classification rationale, selected target,
+   acceptance/outcome, floor satisfaction, fallback, and primary
+   reconciliation.
+2. The root project workflow validates the review artifact and appends one
+   structural project-log entry through `oat project log append`.
+3. The log entry references the review artifact rather than duplicating every
+   worker record.
+
+This boundary preserves root-owned append-only writes, read-only workers,
+artifact-mode traceability, and structured-output schemas. A structured review
+may summarize orchestration inside its existing `summary`; it does not add a
+new `StructuredFindings` field.
+
 ## Failure and Fallback
 
 - If the requested class floor cannot be explicitly satisfied, set
@@ -301,6 +321,13 @@ artifacts or forming its own review strategy.
 - A mechanical lane may fall back inline without changing review coverage.
 - An intelligent/hard/consequential lane falls back to the root reviewer or a
   pre-authorized stronger route; it never falls back to a cheaper class.
+- This parent-owned fallback is successful orchestration, not reduced review
+  coverage or blocked acceptance. A provider may expose only a mechanical
+  nested target; the reviewer should use it for suitable work and complete
+  stronger lanes itself.
+- Provider-specific named workers pinned to stronger models may extend the
+  available catalog, but this project does not require that heavier
+  configuration.
 - Reviewer-local requests use `fallback.mode: caller-inline` and
   `allow_below_task_class_floor: false`. The record-schema example's legacy
   `explicit-downgrade` mode remains valid only for callers without a declared
@@ -344,8 +371,9 @@ Extend the existing reviewer semantic test to assert:
 - unsatisfied class floors never silently downgrade;
 - task-class fields are required for reviewer-local recon and optional for
   existing generic callers;
-- Cursor nested recon uses an exact native model selector while lifecycle
-  roles continue to use resolver-returned variants;
+- Cursor nested recon uses an exact model choice advertised by the current
+  nested dispatcher while lifecycle roles continue to use resolver-returned
+  variants;
 - primary-reviewer synthesis, severity, and final-output ownership remain
   unchanged.
 
@@ -403,7 +431,9 @@ sequential revision phase:
 3. update user-facing review documentation;
 4. regenerate provider views, select the next shared unpublished package
    version from current upstream/npm evidence, and validate that release; and
-5. run a mixed-class dogfood review followed by a new final review.
+5. run a class-aware dogfood review that accepts floor-safe parent-inline
+   coverage for unavailable stronger nested classes, followed by a new final
+   review.
 
 The prior final review remains historical evidence for the pre-revision scope.
 The project is complete only after the revision phase and superseding final
