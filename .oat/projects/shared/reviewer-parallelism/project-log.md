@@ -116,6 +116,10 @@ Merged origin/main at 8fc8285c before Phase p04 review fixes. Preserved upstream
 
 Accepted Cursor reviewer behavior: delegate suitable mechanical lanes to Composer 2.5 Fast; when no nested model choice satisfies an intelligent-or-stronger floor, the primary reviewer completes that lane inline. Full pinned oat-reviewer variants are not recursively reused as recon workers; dedicated pinned recon roles remain a future option only if evidence justifies their maintenance cost.
 
+### 2026-07-19 · structural · oat-project-implement · p04-fix-1
+
+Accepted review-fix commits ede972ce, e9f49294, and 67db4f8c after merged-upstream reconciliation. Focused contracts pass 162/162, workspace plus smoke tests pass 3409/3409, full release validation passes at unpublished 0.2.2, and provider dry-run is clean.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

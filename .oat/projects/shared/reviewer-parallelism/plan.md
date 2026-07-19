@@ -970,7 +970,7 @@ required and remain out of scope for this project.
 | p01                | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
 | p02                | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
 | p03                | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
-| p04                | code     | fixes_added     | 2026-07-19 | reviews/archived/p04-review-2026-07-19T005827Z.md             |
+| p04                | code     | fixes_completed | 2026-07-19 | reviews/archived/p04-review-2026-07-19T005827Z.md             |
 | final-pre-revision | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
 | final              | code     | pending         | -          | -                                                             |
 | spec               | artifact | pending         | -          | -                                                             |

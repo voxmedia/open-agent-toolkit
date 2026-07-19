@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p04-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1 | complete    | 1     | 1/1       |
 | Phase 2 | complete    | 1     | 1/1       |
 | Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 6     | 3/6       |
+| Phase 4 | in_progress | 6     | 6/6       |
 
-**Total:** 8/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ---
 
@@ -291,22 +291,39 @@ oat_generated: false
 
 ### Task p04-t04: Correct recon baselines and nested model-choice terminology
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** ede972ce71461fc3d36366c044763b253a58c241
+
+**Outcome (required when completed):**
+
+- Generic recon now honors declared model-class floors, limits economical
+  selection to unconstrained/mechanical work, and uses plain-language
+  advertised-model-choice terminology.
 
 ---
 
 ### Task p04-t05: Add root-owned review orchestration logging
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** e9f49294dd294e08ffbfda5c522d1d89b862c682
+
+**Outcome (required when completed):**
+
+- Reviewers report compact orchestration evidence in the review artifact while
+  root project workflows own the single structural project-log append.
 
 ---
 
 ### Task p04-t06: Regenerate fix views and revalidate the release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 67db4f8c45b460384ed0763a55caaf26f5f49b60
+
+**Outcome (required when completed):**
+
+- All 14 Codex and 12 Cursor reviewer variants were regenerated against the
+  merged baseline; full workspace, docs, sync, and `0.2.2` release validation
+  pass.
 
 ---
 
@@ -399,9 +416,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Dispatch policy:** High (Cursor managed capped)
 **Schedule:** sequential
 
-| Phase | Outcome     | Task commits                       | Root review | Fix iterations |
-| ----- | ----------- | ---------------------------------- | ----------- | -------------- |
-| p04   | fixes_added | `7b90e802`, `b741820b`, `56eeecc4` | failed      | 1 in progress  |
+| Phase | Outcome         | Task commits                                                           | Root review       | Fix iterations |
+| ----- | --------------- | ---------------------------------------------------------------------- | ----------------- | -------------- |
+| p04   | fixes_completed | `7b90e802`, `b741820b`, `56eeecc4`, `ede972ce`, `e9f49294`, `67db4f8c` | re-review pending | 1 completed    |
 
 **Dispatch notes:**
 
@@ -418,13 +435,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 **Outstanding items:**
 
-- Important: remove the unconditional economical target from the generic
-  `recon` baseline when a model-class floor is supplied.
-- Medium: record that `p04-t03` included canonical provider wording outside its
-  declared scope; preserve committed history and correct task boundaries
-  prospectively.
-- Add plain-language nested model-choice terminology and root-owned
-  project-log orchestration handoff.
+- Phase 4 root-owned re-review remains pending.
+- The accepted historical `p04-t03` scope deviation remains recorded rather
+  than rewriting committed history.
 
 <!-- orchestration-runs-end -->
 
@@ -446,15 +459,15 @@ Chronological log of implementation progress.
 - [x] p04-t01: Separate reviewer lane authority from model-class floors - `7b90e802`
 - [x] p04-t02: Document model-class-aware review lanes - `b741820b`
 - [x] p04-t03: Regenerate provider views and finalize the revised release - `56eeecc4`
-- [ ] p04-t04: Correct recon baselines and nested model-choice terminology - next
-- [ ] p04-t05: Add root-owned review orchestration logging
-- [ ] p04-t06: Regenerate fix views and revalidate the release
+- [x] p04-t04: Correct recon baselines and nested model-choice terminology - `ede972ce`
+- [x] p04-t05: Add root-owned review orchestration logging - `e9f49294`
+- [x] p04-t06: Regenerate fix views and revalidate the release - `67db4f8c`
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- Eight tasks were completed across four sequential phases; the Phase 4 review
-  produced one blocking contract correction and one accepted scope deviation.
+- Eleven tasks were completed across four sequential phases. The Phase 4
+  review correction is implemented and fully validated; re-review remains.
 
 **Decisions:**
 
@@ -508,6 +521,7 @@ Track test execution during implementation.
 | 1     | 124       | 124    | 0      | Focused reviewer/canonical contracts |
 | 2     | 5         | 4      | 1\*    | \*Unrelated baseline link-check gate |
 | 3     | 153       | 153    | 0      | Focused contracts plus full release  |
+| 4     | 3409      | 3409   | 0      | Workspace, smoke, and full release   |
 
 ## Final Summary (for PR/docs)
 
