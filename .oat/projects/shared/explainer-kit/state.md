@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t03
-oat_last_commit: 931644ce
+oat_current_task: p05-t04
+oat_last_commit: e699aebe
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T19:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T19:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 5 executing `p05-t03`
+Implementation - Phase 5 executing `p05-t04`
 
 ## Artifacts
 
@@ -108,7 +108,8 @@ Implementation - Phase 5 executing `p05-t03`
 - ✓ Mini cross-machine provenance verification resolved as semantically benign
   declaration-emission ordering; exact RC bytes remain authoritative
 - ✓ Real private-wrapper acceptance passed all six gates against the exact RC
-- ⧗ Recording the distinct packaged publish-entry S3/CDN smoke gate
+- ✓ Packaged `scripts/publish.mjs` S3/CDN smoke gate passed against the exact RC
+- ⧗ Reconciling final promotion readiness
 
 ## Blockers
 
@@ -116,5 +117,5 @@ None.
 
 ## Next Milestone
 
-Record the packaged `scripts/publish.mjs` S3/CDN smoke evidence, then reconcile
-both external gates for final promotion readiness.
+Run the combined external acceptance, release validation, and full test suite,
+then record the promotion decision.

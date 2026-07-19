@@ -1568,11 +1568,13 @@ operator-provisioned corresponding roots, then run:
 ```bash
 node tools/release/run-explainer-rc.mjs \
   --rc-manifest .oat/repo/reference/explainer-kit-acceptance/v1/rc.json \
+  --artifacts-dir dist/explainer-kit-rc \
   --entry scripts/publish.mjs \
   --record .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-result.json \
   -- \
   --request .oat/repo/reference/explainer-kit-acceptance/v1/live-publish-request.json \
-  --receipt .oat/repo/reference/explainer-kit-acceptance/v1/publish-receipt.json
+  --receipt .oat/repo/reference/explainer-kit-acceptance/v1/publish-receipt.json \
+  --confirm-publish
 ```
 
 The runner verifies/extracts the recorded core tarball and forbids a source-tree

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p05-t03
+oat_current_task_id: p05-t04
 oat_generated: false
 ---
 
@@ -30,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 2/4       |
+| Phase 5 | in_progress | 4     | 3/4       |
 
-**Total:** 36/38 tasks completed
+**Total:** 37/38 tasks completed
 
 ---
 
@@ -1032,6 +1032,30 @@ this candidate must not be used for external acceptance.
 - The initial publish failure was an IAM `s3:DeleteObject` permission gap; after
   the operator granted the required permission and orphaned sentinels were
   cleaned, the unchanged RC passed.
+
+### Task p05-t03: Record the live S3/CDN smoke test
+
+**Status:** completed
+**Commit:** `e699aebe`
+**RC ID:** `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+
+**Outcome:**
+
+- The exact retained RC executed packaged `scripts/publish.mjs` through
+  `run-explainer-rc.mjs`, using the accepted wrapper run's retained manifest and
+  byte-identical site artifact.
+- One declared HTML artifact was published to the operator-approved date-scoped
+  roots; the receipt binds request, manifest, artifact, and RC identity.
+- The plan command was corrected to include the runner's required
+  `--artifacts-dir` and the connector's mandatory `--confirm-publish` flag.
+
+**Verification:**
+
+- `validate-explainer-acceptance.mjs --gate publish` passes with one artifact,
+  all sentinel checks true, and zero undeclared overwrites or deletes.
+- `--gate all` passes both wrapper and publish gates against the unchanged RC.
+- Independent CDN retrieval returned HTTP 200 with bytes matching
+  `4f59d3d2…edcce`; S3 `head-object` confirmed the sentinel key was deleted.
 
 ---
 
