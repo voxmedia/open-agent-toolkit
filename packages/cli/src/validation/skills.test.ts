@@ -872,6 +872,132 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('classifies reviewer reconnaissance independently from worker authority', async () => {
+    const reviewer = await readRepoFile('.agents/agents/oat-reviewer.md');
+    const engine = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const schema = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/references/record-schema.md',
+    );
+    const cursor = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/references/provider-cursor.md',
+    );
+    const providerGuidance = [
+      cursor,
+      await readRepoFile(
+        '.agents/skills/oat-dispatch-subagents/references/provider-claude.md',
+      ),
+      await readRepoFile(
+        '.agents/skills/oat-dispatch-subagents/references/provider-codex.md',
+      ),
+    ].join('\n');
+
+    expect(reviewer).toMatch(
+      /authoritative (?:commit )?range[\s\S]{0,240}(?:discovery|spec|design|plan|implementation)[\s\S]{0,240}before (?:decomposition|decomposing)/i,
+    );
+    expect(reviewer).toMatch(
+      /role\.class:\s*`?recon`?[\s\S]{0,180}independent[\s\S]{0,180}`task_class`/i,
+    );
+    for (const field of [
+      'task_class',
+      'classification_source',
+      'classification_reason',
+    ]) {
+      expect(reviewer, `reviewer-required ${field}`).toContain(field);
+      expect(engine, `generic-optional ${field}`).toContain(field);
+    }
+    expect(engine).toMatch(
+      /task-class metadata[\s\S]{0,180}optional[\s\S]{0,180}existing|existing[\s\S]{0,180}optional[\s\S]{0,180}task-class metadata/i,
+    );
+
+    for (const taskClass of [
+      'mechanical-recon',
+      'intelligent-recon',
+      'default-implementation',
+      'hard-reasoning',
+      'consequential',
+    ]) {
+      expect(reviewer, taskClass).toContain(taskClass);
+      expect(engine, taskClass).toContain(taskClass);
+    }
+    expect(`${reviewer}\n${engine}`).toMatch(
+      /deterministic[\s\S]{0,220}(?:silent-miss|silent miss)[\s\S]{0,260}dispersed context[\s\S]{0,220}ambiguity[\s\S]{0,220}consequence/i,
+    );
+    expect(`${reviewer}\n${engine}`).toMatch(
+      /file count alone[\s\S]{0,100}(?:never|not)[\s\S]{0,100}escalat/i,
+    );
+    for (const mechanicalExample of [
+      'inventories',
+      'parity checks',
+      'test/lint/format/build',
+    ]) {
+      expect(`${reviewer}\n${engine}`, mechanicalExample).toContain(
+        mechanicalExample,
+      );
+    }
+    expect(`${reviewer}\n${engine}`).toMatch(
+      /interpretation[\s\S]{0,180}policy judgment[\s\S]{0,220}(?:stronger|root)/i,
+    );
+
+    for (const recordField of [
+      'task_class',
+      'model_class_floor',
+      'classification_source',
+      'classification_reason',
+      'floor_satisfaction',
+    ]) {
+      expect(schema, `dispatch record ${recordField}`).toContain(recordField);
+    }
+    expect(`${engine}\n${schema}`).toMatch(
+      /homogeneous[\s\S]{0,240}task_class[\s\S]{0,160}model_class_floor[\s\S]{0,180}(?:identical|match)/i,
+    );
+    expect(`${engine}\n${schema}`).toMatch(
+      /caller-inline[\s\S]{0,180}allow_below_task_class_floor:\s*false/i,
+    );
+    expect(`${engine}\n${schema}`).toMatch(
+      /explicit-downgrade[\s\S]{0,240}(?:without|omit|absent|unconstrained)[\s\S]{0,160}(?:task class|class floor|task-class)/i,
+    );
+
+    expect(cursor).toContain('providers.cursor.dispatchArgs.variant');
+    expect(cursor).toMatch(
+      /outer lifecycle[\s\S]{0,220}exact[\s\S]{0,180}resolver/i,
+    );
+    expect(cursor).toMatch(
+      /reviewer-local[\s\S]{0,240}`generalPurpose`[\s\S]{0,240}exact-native-enum/i,
+    );
+    expect(cursor).toMatch(
+      /does not[\s\S]{0,160}(?:reconstruct|parse)[\s\S]{0,160}lifecycle variant/i,
+    );
+    expect(providerGuidance).toMatch(
+      /active (?:user and repository|user\/repository) instructions[\s\S]{0,200}(?:override|precedence|first)/i,
+    );
+
+    for (const rootOnly of [
+      'verification',
+      'reconciliation',
+      'severity',
+      'validation decisions',
+      'output',
+    ]) {
+      expect(reviewer, `root-only ${rootOnly}`).toContain(rootOnly);
+    }
+  });
+
+  it('pins deferred reviewer reconnaissance safety assertions', async () => {
+    const content = await readRepoFile('.agents/agents/oat-reviewer.md');
+
+    expect(content).toMatch(
+      /(?:never|must not) hard-code provider model names/i,
+    );
+    expect(
+      content.match(/Capability-check reviewer-local delegation once\./g),
+    ).toHaveLength(1);
+    expect(content).toMatch(
+      /workers[\s\S]{0,180}must not[\s\S]{0,300}review artifacts[\s\S]{0,160}`StructuredFindings`[\s\S]{0,180}either output sink/i,
+    );
+  });
+
   it('requires gate review guidance to copy configured invocation metadata without inference', async () => {
     for (const path of [
       '.agents/agents/oat-reviewer.md',
@@ -3213,7 +3339,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.1\.3$/m);
+    expect(engine).toMatch(/^version:\s*1\.1\.5$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.2$/m);

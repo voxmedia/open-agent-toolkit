@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.1.3
+version: 1.1.5
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -75,6 +75,19 @@ Require the caller to provide:
 - fallback policy and authorization scope;
 - route-selection source for any non-native route;
 - optional resolved dispatch policy or named ceiling.
+
+The caller may also provide `task_class`, `classification_source`, and
+`classification_reason`. This task-class metadata is optional for existing
+generic callers. When supplied, all three fields are required:
+
+- `task_class`: `mechanical-recon`, `intelligent-recon`,
+  `default-implementation`, `hard-reasoning`, or `consequential`;
+- `classification_source`: the literal `caller`; and
+- `classification_reason`: a non-empty artifact-informed rationale.
+
+The caller owns classification. `oat-reviewer` requires these fields for every
+reviewer-local reconnaissance lane; other callers that omit them retain
+role-based selection behavior and records without class-floor fields.
 
 Reject an over-broad request before selection. Every nontrivial request must
 state the exact objective, scope, expected output, verification evidence, and
@@ -182,6 +195,35 @@ Use stronger workers when context, ambiguity, or consequence requires them,
 not merely because many files exist. Keep coherence-critical synthesis and
 cross-scope judgment in the root caller.
 
+## Task Classes and Model Floors
+
+Role class and task class are independent. Role class controls authority and
+output ownership; task class is the minimum model-capability floor for one
+bounded objective. A `role.class: recon` worker remains read-only and advisory
+at every task class.
+
+Classify by deterministic verifiability, silent-miss risk, dispersed context,
+ambiguity, and consequence, in that order. File count alone never justifies
+escalation:
+
+| Task class               | Minimum capability contract                                                                             |
+| ------------------------ | ------------------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | Deterministic inventories, parity checks, or test/lint/format/build execution whose misses are visible. |
+| `intelligent-recon`      | Interpretation, unfamiliar-code auditing, or policy/semantic evidence where a miss could be silent.     |
+| `default-implementation` | Retain and reconcile dispersed context inside one independently bounded scope.                          |
+| `hard-reasoning`         | Ambiguity, novelty, architecture analysis, or competing interpretations dominate.                       |
+| `consequential`          | Security, release safety, irreversible impact, adversarial analysis, or expensive failure dominates.    |
+
+Mechanical workers may execute checks and return exact output. Interpretation
+and policy judgment require a stronger class or stay with the root caller. When
+uncertain between classes, use the stronger floor.
+
+Resolve current class examples through active user and repository instructions
+first, then the active-provider reference and live catalog, all constrained by
+the supplied policy and ceiling. Provider-reference model names are dated
+examples, not canonical requirements. Select an exact eligible target at or
+above the requested floor; never silently downgrade.
+
 ## Catalog Evidence
 
 A catalog snapshot belongs to one dispatch context. A root native catalog does
@@ -206,9 +248,11 @@ cannot expose before selection. Record the visibility timing instead.
 For every dispatch:
 
 1. Validate the caller request and capability state.
-2. Resolve provider, context, role class, policy, ceiling, and candidates.
+2. Resolve provider, context, role class, optional task class and model-class
+   floor, policy, ceiling, and candidates.
 3. Observe the launching dispatcher's relevant catalogs.
-4. Compute the exact native intersection.
+4. Compute the exact native intersection at or above the supplied task-class
+   floor, when present.
 5. Prefer an eligible native route. Otherwise select one policy-resolved or
    explicitly authorized inherited, provider-CLI/programmatic, workflow, gate,
    or blocked route before launch.
@@ -239,14 +283,38 @@ flowchart TD
 
 ## Homogeneous Recon Waves
 
+A homogeneous wave may share one record only when `task_class` and
+`model_class_floor` match in addition to every existing dispatch axis.
 Multiple read-only recon lanes may share one selection record only when all of
 these axes are identical: provider, dispatch context, catalog snapshot,
 selected route, role class, role selector, model, effort, authority, deadline,
-retry limit, and fallback. Include a lane manifest with lane-specific scope,
-acceptance, and outcome.
+retry limit, fallback, `task_class`, and `model_class_floor`. Include a lane
+manifest with lane-specific scope, acceptance, and outcome. A recon-wave record
+repeats the shared `task_class` and `model_class_floor` beside
+`shared_dispatch_record`; lane entries do not redefine them.
 
-If any axis differs, create separate records. The record-level scope is the
-aggregate wave boundary; each lane may narrow that boundary.
+If any axis differs or either class field does not match, create separate
+records and waves. The record-level scope is the aggregate wave boundary; each
+lane may narrow that boundary.
+
+## Class-Constrained Fallback
+
+For a request with task-class metadata, record `model_class_floor` equal to
+`task_class` and set `floor_satisfaction` to `satisfied` or `unsatisfied`.
+An unsatisfied floor blocks launch and returns control to the caller; it never
+records a weaker selection as success.
+
+Reviewer-local requests use:
+
+```yaml
+fallback:
+  mode: caller-inline
+  allow_below_task_class_floor: false
+```
+
+Below-floor selection is prohibited. The legacy `explicit-downgrade` fallback
+remains available only to unconstrained callers without task-class metadata or
+a declared class floor.
 
 ## Acceptance and Recovery
 

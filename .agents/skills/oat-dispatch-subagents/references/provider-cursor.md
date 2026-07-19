@@ -6,24 +6,81 @@ volatile snapshot, never a durable inventory.
 
 ## Control Surfaces
 
-| Source                       | Establishes                                               | Does not establish                                             |
-| ---------------------------- | --------------------------------------------------------- | -------------------------------------------------------------- |
-| Native Task/Subagent schema  | Roles and opaque selectors for that dispatcher invocation | CLI account eligibility or another dispatcher's native catalog |
-| `cursor-agent --list-models` | Opaque selectors accepted by the account CLI              | Native Task eligibility                                        |
-| Cursor UI role configuration | User-selected defaults and role settings                  | Live root or nested schema without a new observation           |
+| Source                       | Establishes                                                    | Does not establish                                             |
+| ---------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
+| Native Task/Subagent schema  | Agent types available for that dispatcher invocation           | CLI account eligibility or another dispatcher's native catalog |
+| `cursor-agent --list-models` | Opaque flat model IDs accepted by the account CLI and resolver | Native Task eligibility or definition-pin acceptance           |
+| Cursor UI role configuration | User-selected defaults and role settings                       | Live root or nested schema without a new observation           |
 
 Root and nested catalogs are independent, volatile observations. Equality in
 one run does not establish equality in another run or nesting boundary.
 
-## Native Selection
+## Task-Class Resolution
 
-1. Read the native model enum from the dispatcher that will launch the child.
-2. Intersect configured candidates with that exact snapshot.
-3. Pass the selected opaque string byte-for-byte.
-4. Treat an omitted model as deliberate parent inheritance, not generic
-   defaulting or evidence that a target was unavailable.
-5. Record requested selector, acceptance, outcome, and runtime identity
-   separately.
+Apply active user and repository instructions first; they override the dated
+model-family examples in this provider reference. Intersect that guidance with
+the exact model enum exposed by the dispatcher, the supplied policy and
+ceiling, and the requested class floor:
+
+- `mechanical-recon`: the fastest economical class suitable for deterministic
+  inventories, parity, and command execution;
+- `intelligent-recon`: a stronger fast class for interpretation,
+  unfamiliar-code auditing, and silent-miss-prone evidence;
+- `default-implementation`: a context-retentive implementation class for an
+  independently bounded dossier;
+- `hard-reasoning`: a strong reasoning class for ambiguity or architecture;
+- `consequential`: the strongest allowed class for security, release safety,
+  irreversible impact, or expensive failure.
+
+If an example is stale or unavailable, choose a newer eligible model meeting
+the same class floor or route one class up. Never select below the floor.
+
+## Outer Lifecycle Native Selection
+
+Outer lifecycle implementer and reviewer dispatch uses the exact
+`providers.cursor.dispatchArgs.variant` returned by the lifecycle resolver.
+The resolver maps an opaque flat model ID and owns the bracket-form model pin
+inside the materialized definition; skills never parse, normalize, or
+reconstruct either model string.
+
+1. Require a non-empty resolver-returned variant for managed dispatch.
+2. Launch that exact native agent type first.
+3. Treat native launch acceptance plus the complete launcher payload as
+   configured-invocation evidence, not observed runtime model identity.
+4. Permit a replacement route only after a recorded pre-start native
+   role-selection rejection of that exact variant, before any child starts.
+5. After acceptance, continue only through the existing handle. Timeout,
+   interruption, `BLOCKED`, missing telemetry, or self-report never authorizes
+   fallback or replacement.
+6. Treat an omitted variant as deliberate parent inheritance only when the
+   resolver selected no managed target.
+7. Record selected variant, mapped target, acceptance, outcome, and runtime
+   identity separately.
+
+## Reviewer-Local Nested Selection
+
+Reviewer-local recon uses `generalPurpose` with an
+`exact-native-enum` model selector.
+Reviewer-local reconnaissance is a separate nested native surface. It does not
+use the lifecycle resolver because no materialized lifecycle `recon` role
+exists.
+
+1. Read the model enum from the nested Task/Subagent dispatcher.
+2. Intersect that exact snapshot with active user and repository
+   model-class instructions, this provider reference, the supplied
+   policy/ceiling, and the requested `model_class_floor`.
+3. Use the native `generalPurpose` agent type and pass an exact model selector
+   from the nested enum byte-for-byte.
+4. Record the selector as `model_selector` with
+   `model_selector_granularity: exact-native-enum`.
+5. Treat an omitted model as deliberate parent inheritance only for an
+   unconstrained caller whose recorded policy permits inheritance. A
+   class-constrained reviewer lane never omits the model.
+
+This nested path does not call the lifecycle resolver, parse bracket-form
+model pins, or reconstruct a lifecycle variant. If no exact nested selector
+satisfies the floor, record `floor_satisfaction: unsatisfied` and return the
+lane for caller-inline coverage without launching a weaker worker.
 
 Do not infer Cursor IDE behavior from a headless CLI surface. Keep bounded
 recon on economical explicit targets and reserve stronger targets for
@@ -52,12 +109,17 @@ verdict.
 
 ## Pre-Start CLI Routes
 
-When the current native intersection is absent or unsatisfactory, a caller may
-use a deliberate pre-start CLI route only when:
+Any native mismatch is recorded before launch with the route, reason, and
+candidate set.
+
+When exact outer lifecycle role selection rejects the resolver-selected
+variant before launch, or a generic caller's current native intersection is
+unsatisfactory, a caller may use a deliberate pre-start CLI route only when:
 
 - the caller's fallback policy allows it;
 - the exact CLI selector exists in the account catalog;
-- native mismatch, route, reason, and candidates are recorded before launch;
+- the native mismatch, rejected variant when applicable, route, reason, and
+  candidates are recorded before launch;
 - the prompt is self-contained and authority-bounded.
 
 Verify current CLI help before use. A typical shape is:
