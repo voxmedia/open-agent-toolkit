@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -50,19 +50,19 @@ oat_post_implement_sequence:
   failure: null
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T15:25:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T15:27:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Final review passed; PR closeout refresh pending
+**Status:** Final review passed; PR open; configured human approval pending
 **Started:** 2026-07-10
 **Last Updated:** 2026-07-19
 
 ## Current Phase
 
-Implementation — final review passed; configured PR refresh pending.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -111,7 +111,7 @@ Implementation — final review passed; configured PR refresh pending.
 - ✓ Superseding final re-review passed with zero findings
 - ✓ Configured summary refresh completed
 - ✓ Configured documentation refresh completed
-- ✓ Existing PR #163 artifact/body refresh completed
+- ✓ Initial PR #163 artifact/body refresh completed
 - ⚠ Push hook exposed a missing `oat-project-implement` skill-version bump
 - ✓ Merged latest large `origin/main` change with semantic conflict resolution
 - ⚠ New Bugbot Medium: top-level implementation summary omits signal-first order
@@ -119,7 +119,8 @@ Implementation — final review passed; configured PR refresh pending.
 - ✓ Tasks `p04-t12` through `p04-t14` completed
 - ✓ Skill-version, provider, release, workspace, smoke, lint, type, and build gates passed
 - ✓ Superseding final re-review passed with zero findings
-- ⧗ Configured PR closeout refresh pending
+- ✓ Post-merge PR #163 closeout refresh completed
+- ⧗ Awaiting configured human approval
 
 ## Blockers
 
@@ -127,4 +128,8 @@ None
 
 ## Next Milestone
 
-Resume the configured PR closeout step, then request final HiLL approval.
+PR is open for review and configured human approval.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.

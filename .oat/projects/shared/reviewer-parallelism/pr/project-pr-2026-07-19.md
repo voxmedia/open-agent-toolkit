@@ -17,7 +17,8 @@ their read-only authority, so mechanical work can use fast workers while
 semantic or consequential work never silently downgrades. The change also adds
 root-owned orchestration logging, synchronized provider roles, user-facing
 documentation, and lockstep public-package metadata at the verified unpublished
-version `0.2.3`. All 16 planned tasks are complete.
+version `0.2.4`. All 19 planned tasks are complete, including two Bugbot-driven
+corrections and post-merge release reconciliation.
 
 ## Goals / Non-Goals
 
@@ -51,48 +52,67 @@ version `0.2.3`. All 16 planned tasks are complete.
   exactly one signal before validation or bookkeeping, enforce the same
   fail-closed branches, and append orchestration evidence only when delegation
   was attempted.
+- Bumped the changed `oat-project-implement` skill to `2.1.5` and aligned its
+  top-level summary with the detailed signal-first handoff contract.
 - Added semantic contract coverage and updated review/project-log docs.
 - Regenerated 14 Codex and 12 Cursor reviewer variants, reconciled the current
   upstream native-skill baseline, and removed two obsolete Cursor skill mirrors.
 - Archived `BL-260708-enable-oat-reviewer-subagent` and added
   `BL-260719-add-pinned-recon-agents` as an evidence-gated follow-up for
   dedicated pinned recon roles.
+- Merged the latest `origin/main` baseline in `0ee096a7`, preserving upstream's
+  configured implementation exit gate and Cursor-native skill materialization
+  while retaining this branch's reviewed orchestration behavior.
 - Updated all five public packages and bundled release surfaces to verified
-  unpublished version `0.2.3`.
-- Completed all 16 tasks across four phases, including the remote-review signal
-  fix, autonomy-inventory mapping, implementation-root parity, and final
-  unpublished-version correction.
+  unpublished version `0.2.4`.
+- Completed all 19 tasks across four phases, including autonomy-inventory
+  mapping, implementation-root parity, skill-version reconciliation, and the
+  final post-merge release correction.
+
+## Bugbot Findings
+
+- `3610616848` — the artifact-mode handoff did not expose whether
+  reconnaissance was attempted. Resolved by `p04-t08` and `p04-t10`: reviewers
+  emit exactly one attempted/not-attempted signal, and both roots consume it
+  before validation or bookkeeping with fail-closed branch semantics.
+- `3610774966` — the top-level implementation summary omitted that signal-first
+  ordering. Resolved by `p04-t13`: the summary now matches
+  `references/phase-execution.md`, and semantic tests independently pin both
+  surfaces.
 
 ## Verification
 
-- Focused reviewer, dispatch, provider, and semantic contract suites passed,
-  including the final 162/162 suite.
-- Full workspace and smoke suites passed: 3,409/3,409.
-- Lint, type-check (10/10), workspace build (5/5), docs build, formatting, and
-  `git diff --check` passed.
-- Provider status reported 82/82 in sync with zero strays; sync dry-run passed.
-- Live npm uniqueness checks confirmed `0.2.3` is unpublished for all five
-  public packages; package-version checks, PJM integrity checks, release
-  tarballs (5/5), and `pnpm release:validate` passed.
+- Focused reviewer, closeout, canonical, and Codex synchronization contracts
+  passed: 180/180.
+- Canonical skill-version validation against `origin/main` passed for all 60
+  skills, including `oat-project-implement` `2.1.5`,
+  `oat-dispatch-subagents` `1.1.5`, and `oat-project-review-provide` `1.3.22`.
+- Full workspace tests passed, including CLI 3,209/3,209 and smoke 123/123.
+- Lint passed with zero warnings/errors; type-check passed 10/10; workspace
+  build passed 5/5; formatting and full-range `git diff --check` passed.
+- Provider status and project sync dry-run passed with no drift.
+- Live npm checks confirmed `0.2.4` is unpublished for all five public
+  packages; package-version checks and `pnpm release:validate` passed with 5/5
+  `0.2.4` tarballs.
 - Class-aware dogfood passed with a mechanical nested lane and parent-inline
   intelligent coverage when the stronger Cursor floor was unavailable.
-- The superseding final review used a floor-satisfied mechanical release
-  metadata reconnaissance lane, independently revalidated its evidence in the
-  primary reviewer, and passed with zero Critical, Important, Medium, or Minor
-  findings.
+- The latest superseding final review at `2026-07-19T15:23:39Z` covered the
+  complete post-merge range, both Bugbot findings, skill and release versions,
+  and lifecycle tracking. It passed with zero Critical, Important, Medium, or
+  Minor findings.
 
 ## Reviews
 
-| Scope              | Type     | Status | Date       |
-| ------------------ | -------- | ------ | ---------- |
-| p01                | code     | passed | 2026-07-18 |
-| p02                | code     | passed | 2026-07-18 |
-| p03                | code     | passed | 2026-07-18 |
-| design             | artifact | passed | 2026-07-19 |
-| plan               | artifact | passed | 2026-07-19 |
-| p04                | code     | passed | 2026-07-19 |
-| final-pre-revision | code     | passed | 2026-07-18 |
-| final              | code     | passed | 2026-07-19 |
+| Scope              | Type     | Status | Date                   |
+| ------------------ | -------- | ------ | ---------------------- |
+| p01                | code     | passed | 2026-07-18             |
+| p02                | code     | passed | 2026-07-18             |
+| p03                | code     | passed | 2026-07-18             |
+| design             | artifact | passed | 2026-07-19             |
+| plan               | artifact | passed | 2026-07-19             |
+| p04                | code     | passed | 2026-07-19             |
+| final-pre-revision | code     | passed | 2026-07-18             |
+| final              | code     | passed | 2026-07-19 (15:23:39Z) |
 
 ## References
 
