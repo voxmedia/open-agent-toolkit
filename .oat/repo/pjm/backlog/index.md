@@ -71,7 +71,6 @@
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
-| BL-260719-avoid-final-gate-reruns        | Avoid final-gate reruns for merge-only updates                         | open   | high     | task    | S        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |

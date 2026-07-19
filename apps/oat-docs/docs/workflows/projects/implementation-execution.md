@@ -117,14 +117,39 @@ event, and bookkeeping commit before marking receive complete. Missing,
 contradictory, or ambiguous correlation fails closed. A valid accepted run or
 completed receive is never duplicated.
 
-Freshness is bound to the reviewed HEAD and an implementation fingerprint.
+Freshness is bound to the reviewed HEAD and a versioned implementation
+fingerprint. New generations use an `effective-delta-v1` fingerprint over
+Git's canonical NUL-delimited raw tree delta. The generation persists the
+logical PR/default-branch base ref, requires one merge base, and hashes full
+base and final modes and object IDs with rename detection disabled. This makes
+same-file base changes visible while excluding commit history and human diff
+context. Every effective-delta path is included except the exact project
+`state.md` file that carries the digest and would otherwise be self-referential;
+that structured state is validated independently.
+
 Recognized closeout-only descendants preserve a valid result: gate artifacts
 and receipts, project tracking and project-log appends,
 summary/documentation/PR sequence outputs, final HiLL bookkeeping, and
-completion bookkeeping. An implementation, test, skill, template, workflow
-configuration, or unknown path change is substantive. It makes the gate result
-stale, requires a current final lifecycle review for the new basis, and starts
-a new gate generation.
+completion bookkeeping. Recognition also requires the corresponding persisted
+gate or sequence transition; a matching path category alone is insufficient.
+After each authorized closeout boundary, the workflow advances a rolling
+checkpoint to the complete effective delta at that HEAD. The checkpoint records
+the last non-checkpoint commit; a following persistence commit is ignored only
+when its diff changes that exact state carrier and nothing else.
+
+A merge, rebase, or base update preserves the result only when its full
+effective delta matches that rolling checkpoint. Conflict resolution or
+branch-owned implementation, test, skill, template, or workflow changes that
+alter the delta make the result stale, require a current final lifecycle review,
+and start a new gate generation. No implementation or closeout output path is
+excluded from the comparison. Legacy unqualified fingerprints retain the older
+fail-closed descendant-path behavior and are not migrated in place.
+
+This narrow merge-only exemption relies on fresh repository CI, automated
+review such as Bugbot, and lifecycle self-review to cover integration risk.
+Those checks do not substitute for the semantic gate on the full
+implementation; they avoid repeating that expensive review when the
+implementation outcome itself did not change.
 
 Only an allowed and fresh gate disposition can enter the pre-approval sequence,
 cross final HiLL, run the post-approval sequence, mark implementation complete,

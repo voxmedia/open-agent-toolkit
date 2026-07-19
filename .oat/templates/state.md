@@ -40,7 +40,10 @@ oat_workflow_origin: native # native | imported
 #   max_attempts: 2
 #   attempts_completed: 0
 #   reviewed_head: null
-#   implementation_fingerprint: null
+#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
+#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
+#   freshness_head: null # rolling accepted tree checkpoint
+#   freshness_fingerprint: null # full effective delta at freshness_head
 #   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
 #   launch_attempt_id: null
 #   launch_started_at: null
