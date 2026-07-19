@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: oat-project-implement
-oat_blockers:
-  - p05-t02 awaits the operator-owned private-wrapper E2E.
+oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p05-t02
+oat_current_task_id: p05-t03
 oat_generated: false
 ---
 
@@ -31,9 +30,9 @@ oat_generated: false
 | Phase 2 | complete    | 10    | 10/10     |
 | Phase 3 | complete    | 9     | 9/9       |
 | Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 1/4       |
+| Phase 5 | in_progress | 4     | 2/4       |
 
-**Total:** 35/38 tasks completed
+**Total:** 36/38 tasks completed
 
 ---
 
@@ -1007,6 +1006,32 @@ this candidate must not be used for external acceptance.
   emission outside the explainer surfaces. Acceptance remains bound to the
   exact retained `dc1f2d82…93b1` CLI tarball and `2cf98952…b654`
   `oat-explainer-kit` subtree.
+
+### Task p05-t02: Record the operator-owned private-wrapper E2E
+
+**Status:** completed
+**Commit:** `931644ce`
+**RC ID:** `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+
+**Outcome:**
+
+- A fresh laptop agent migrated the real personal wrapper from the exact
+  retained RC, with operator-supplied personal seams and the 0.4.1 backup
+  preserved for rollback.
+- All six wrapper gates passed, including vault, Google Docs, presets, live
+  personal publishing, manifest consumption, and rollback.
+- Sanitized validator-shaped evidence, the original harness result, manifest,
+  publish receipt, and execution report are retained under the acceptance root.
+
+**Verification:**
+
+- `validate-explainer-acceptance.mjs --gate wrapper` passes independently with
+  packaged `scripts/run.mjs`, `built-durable`, and a validated post-run receipt.
+- The public acceptance artifact returns bytes matching
+  `4f59d3d2…edcce`; the deleted sentinel is not publicly retrievable.
+- The initial publish failure was an IAM `s3:DeleteObject` permission gap; after
+  the operator granted the required permission and orphaned sentinels were
+  cleaned, the unchanged RC passed.
 
 ---
 

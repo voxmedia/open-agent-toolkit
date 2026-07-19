@@ -1,8 +1,7 @@
 ---
-oat_current_task: p05-t02
-oat_last_commit: 296bd775
-oat_blockers:
-  - p05-t02 awaits the operator-owned private-wrapper E2E.
+oat_current_task: p05-t03
+oat_last_commit: 931644ce
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,7 +38,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T13:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T19:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -51,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 5 waiting at `p05-t02`
+Implementation - Phase 5 executing `p05-t03`
 
 ## Artifacts
 
@@ -108,14 +107,14 @@ Implementation - Phase 5 waiting at `p05-t02`
   `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
 - ✓ Mini cross-machine provenance verification resolved as semantically benign
   declaration-emission ordering; exact RC bytes remain authoritative
-- ⧗ Awaiting real private-wrapper acceptance
+- ✓ Real private-wrapper acceptance passed all six gates against the exact RC
+- ⧗ Recording the distinct packaged publish-entry S3/CDN smoke gate
 
 ## Blockers
 
-- No installed `personal-explainer-kit/scripts/acceptance.mjs` exists locally;
-  the operator/fresh-agent run remains external.
+None.
 
 ## Next Milestone
 
-Run the operator-owned private-wrapper acceptance against the exact retained
-final RC.
+Record the packaged `scripts/publish.mjs` S3/CDN smoke evidence, then reconcile
+both external gates for final promotion readiness.
