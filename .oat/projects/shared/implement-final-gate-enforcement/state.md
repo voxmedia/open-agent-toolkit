@@ -1,8 +1,8 @@
 ---
 oat_current_task: null
-oat_last_commit: 5b10244018b054846fee4f0e02197262b5074616
+oat_last_commit: 09123235f3b7a8ff7a91cf2fcf50b4fe91ab1e76
 oat_blockers:
-  - Authorized gate-recovery changes require fresh verification and final lifecycle review before a new exit-gate generation.
+  - Authorized gate-recovery changes require a fresh final lifecycle review before a new exit-gate generation.
 oat_implement_exit_gate:
   status: stale
   resolution: configured
@@ -43,7 +43,7 @@ oat_implement_exit_gate:
     retired: true
     retired_at: '2026-07-19T00:37:03Z'
     retirement_authorization: 'User explicitly authorized bounded recovery and one new gate generation.'
-    recovery: 'Complete the JSON-mode stdout purity fix, obtain a current final lifecycle review for the changed basis, then start the one user-authorized new generation.'
+    recovery: 'Obtain a current final lifecycle review for the recovered basis, then start the one user-authorized new generation.'
   updated_at: '2026-07-19T00:37:03Z'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -81,7 +81,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-18T14:19:35.368Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T00:37:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T00:41:51Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -93,7 +93,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Authorized exit-gate recovery fix in progress
+Implementation - Authorized exit-gate recovery verified; awaiting fresh final lifecycle review
 
 ## Artifacts
 
@@ -121,13 +121,14 @@ Implementation - Authorized exit-gate recovery fix in progress
 - ✓ Final review round 2 fixes
 - ✓ Final whole-project review
 - ⚠ Prior configured implementation exit-gate attempt retired
-- ⧗ JSON-output purity fix and fresh final lifecycle review
+- ✓ JSON-output purity recovery and full verification
+- ⧗ Fresh final lifecycle review
 
 ## Blockers
 
-- Fresh verification and final lifecycle review are required after the
-  authorized gate-recovery changes.
+- Fresh final lifecycle review is required after the authorized gate-recovery
+  changes; full verification has passed.
 
 ## Next Milestone
 
-Fix JSON-mode stdout purity and obtain a fresh final lifecycle review
+Obtain a fresh final lifecycle review for the recovered implementation basis

@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - Configured implementation exit gate is pending.
-oat_last_updated: 2026-07-18
+  - Fresh final lifecycle review is required after the authorized gate-recovery change.
+oat_last_updated: 2026-07-19
 oat_current_task_id: null
 oat_generated: false
 ---
@@ -11,7 +11,7 @@ oat_generated: false
 # Implementation: implement-final-gate-enforcement
 
 **Started:** 2026-07-18
-**Last Updated:** 2026-07-18
+**Last Updated:** 2026-07-19
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -183,7 +183,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Optional nested dispatches:** None.
 **Final review fix commits:** `54d6edad`, `9f859165`
 **User-authorized artifact alignment:** `f799b635`
-**Outstanding items:** Configured implementation exit gate.
+**Outstanding items:** Fresh final lifecycle review after the authorized
+gate-recovery change, followed by one authorized new gate generation.
 
 ### Run 2: Phase p02 {#run-2}
 
@@ -528,6 +529,21 @@ stale/retired; it will not be received, reinterpreted, or relaunched. The
 recovery changes must pass fresh verification and final lifecycle review before
 the authorized new generation starts.
 
+### 2026-07-19 — JSON-output recovery verified
+
+- Implementation fix: `ce122492`
+- Integration regression coverage: `09123235`
+- Focused verification: 314/314 tests plus CLI type-check
+- Full verification: skill/version validation, format, lint, type-check, all
+  package tests, smoke tests, build, docs build, and release validation passed
+- State: prior generation remains `stale/retired`; fresh final lifecycle review
+  is pending
+
+JSON-mode gate children now stream their human-oriented stdout to stderr, leaving
+stdout as exactly one parseable result envelope. Human mode retains normal
+stdout behavior. The recovery also hardens the lifecycle gate-section test
+anchor and annotates configured resolved inputs in the design schema.
+
 ---
 
 ## Deviations from Plan / Design
@@ -545,11 +561,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run                                                    | Passed       | Failed | Coverage                                                         |
-| ----- | ------------------------------------------------------------ | ------------ | ------ | ---------------------------------------------------------------- |
-| 1     | 40 focused + type-check + format                             | 40 + checks  | 0      | State registry, legacy absence, and router priority              |
-| 2     | 118 focused + skill/version/format                           | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness       |
-| 3     | 150 focused + 4 autonomy; 3,294 package + 123 smoke; release | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release |
+| Phase         | Tests Run                                                    | Passed       | Failed | Coverage                                                               |
+| ------------- | ------------------------------------------------------------ | ------------ | ------ | ---------------------------------------------------------------------- |
+| 1             | 40 focused + type-check + format                             | 40 + checks  | 0      | State registry, legacy absence, and router priority                    |
+| 2             | 118 focused + skill/version/format                           | 118 + checks | 0      | Ordering, policy, launch/receive reconciliation, freshness             |
+| 3             | 150 focused + 4 autonomy; 3,294 package + 123 smoke; release | All checks   | 0      | Docs, sync, bundles, autonomy inventory, full workspace, release       |
+| Gate recovery | 314 focused; 3,294 package + 123 smoke; release              | All checks   | 0      | JSON stdout purity, gate hardening, closeout contracts, full workspace |
 
 ## Final Summary (for PR/docs)
 
@@ -584,12 +601,9 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- `pnpm --filter @open-agent-toolkit/cli exec vitest run
-src/commands/shared/frontmatter.test.ts
-src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts
-src/validation/skills.test.ts`: 150/150.
-- `pnpm --filter @open-agent-toolkit/cli exec vitest run
-src/validation/autonomy-gate-inventory.test.ts`: 4/4.
+- Authorized gate-recovery focused suites: 314/314, covering the gate command,
+  hardening integration matrix, lifecycle skill validation, and post-implement
+  sequencing contracts.
 - `pnpm test`: CLI 3,199 + control-plane 54 + docs-config 10 +
   docs-transforms 31 = 3,294 package tests; smoke 123; aggregate 3,417.
   Focused suites are subsets and are not included in that aggregate.
