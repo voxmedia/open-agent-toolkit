@@ -14,9 +14,11 @@
 | DR-260718-automatic-create-on-first      | 2026-07-18 | accepted | Automatic create-on-first-append                                        | -      |
 | DR-260718-cli-owned-log-mutations        | 2026-07-18 | accepted | CLI-owned log mutations                                                 | -      |
 | DR-260718-configured-cursor-provenance   | 2026-07-18 | accepted | Configured Cursor provenance                                            | -      |
+| DR-260718-durable-fail-closed-closeout   | 2026-07-18 | accepted | Durable fail-closed closeout state                                      | -      |
 | DR-260718-explicit-cursor-pin-mapping    | 2026-07-18 | accepted | Explicit Cursor pin mapping                                             | -      |
 | DR-260718-family-aware-gate-exclusions   | 2026-07-18 | accepted | Family-aware gate exclusions                                            | -      |
 | DR-260718-general-purpose-project-log    | 2026-07-18 | accepted | General-purpose project log                                             | -      |
+| DR-260718-independent-configured-exit    | 2026-07-18 | accepted | Independent configured exit-gate boundary                               | -      |
 | DR-260718-keep-sync-state-in-sync-config | 2026-07-18 | accepted | Keep sync state in sync config                                          | -      |
 | DR-260718-native-cursor-variant-dispatch | 2026-07-18 | accepted | Native Cursor variant dispatch                                          | -      |
 | DR-260718-preserve-uncertain-legacy      | 2026-07-18 | accepted | Preserve uncertain legacy content                                       | -      |
