@@ -691,11 +691,27 @@ git commit -m "docs(p05-t05): W6 handoff mini-runbook"
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/recipes/program-recap.json` — NOTE: this path does not exist in this repo yet; the explainer-kit skills ship via the explainer-kit branch (frozen at 534a408e) and land on main via its Phase-3 merge. Until that merge, create the recipe under `.agents/skills/oat-wave-execute/assets/program-recap.recipe.json` as the wave-skills-owned copy, with a body comment noting its destination home once explainer-kit lands. (Deviation-recorded; re-home task goes to the follow-up ledger.)
+- Create: `.agents/skills/oat-wave-execute/assets/program-recap.recipe.json` (the task's ONLY output — pure `explainer-kit.recipe/v1` JSON, no comment fields). Context: the final home `.agents/skills/explainer-kit/recipes/` arrives with explainer-kit's Phase-3 merge; record the interim-home deviation and the re-home follow-up in `implementation.md`'s Deviations table + the follow-up ledger, never inside the JSON.
 
-**Step 1: Author** in `explainer-kit.recipe/v1` format matching the frozen schema (`references/explainer-rc-f212d630/schemas/recipe.schema.json` if present, else validate structurally against the three vendored recipe examples): `schemaVersion: "explainer-kit.recipe/v1"`, `id: "program-recap"`, `version: "1"`, `sourceRoles`: one required `program` role (accepts file/directory/git; minBindings 1) binding the reconciled execution-program artifact + wave summaries, `requiredNarrative`: program-shape sections (program-overview, wave-map, per-wave-outcomes, convention-evolution, aggregate-numbers, follow-up-ledger), `artifacts`: one required hub (`type: "hub"`, `template: "house-style"`), `discoveryLimits` mirroring project-recap (2 consecutive no-new-findings rounds, max 8). Reference implementation: the stoa program deck (packet §4); the vendored `project-recap.json` is the structural template.
+**Step 1: Author** in `explainer-kit.recipe/v1` format matching the frozen schema (`references/explainer-rc-f212d630/schemas/recipe.schema.json` if present, else validate structurally against the three vendored recipe examples): `schemaVersion: "explainer-kit.recipe/v1"`, `id: "program-recap"`, `version: "1"`, `sourceRoles`: one required `program` role (accepts file/directory/git; `minBindings: 1`, `maxBindings: 1` — one program source set containing the program artifact + wave records), `requiredNarrative`: program-shape sections (program-overview, wave-map, per-wave-outcomes, convention-evolution, aggregate-numbers, follow-up-ledger), `artifacts`: one required hub (`id: "program-recap"`, `type: "hub"`, `template: "house-style"`, `required: true`), `discoveryLimits` mirroring project-recap (2 consecutive no-new-findings rounds, max 8). Reference implementation: the stoa program deck (packet §4); the vendored `project-recap.json` is the structural template.
 
-**Step 2: Verify** — validate JSON parses; every field name/value shape matches the vendored `explainer-kit.recipe/v1` examples (`python3 - <script comparing key sets vs project-recap.json>`); `pnpm exec oxfmt --write` if the file lands in an oxfmt-covered glob.
+**Step 2: Verify** — run exactly:
+
+```bash
+python3 - <<'PY'
+import json
+new = json.load(open('.agents/skills/oat-wave-execute/assets/program-recap.recipe.json'))
+ref = json.load(open('.oat/projects/shared/wave-skills-promotion/references/explainer-rc-f212d630/recipes/project-recap.json'))
+assert new['schemaVersion'] == 'explainer-kit.recipe/v1', new['schemaVersion']
+assert set(new) == set(ref), (set(new) ^ set(ref))
+assert set(new['sourceRoles'][0]) == set(ref['sourceRoles'][0])
+assert set(new['artifacts'][0]) == set(ref['artifacts'][0])
+assert set(new['discoveryLimits']) == set(ref['discoveryLimits'])
+print('recipe shape OK: key sets match vendored explainer-kit.recipe/v1')
+PY
+```
+
+Expected: `recipe shape OK`.
 
 **Step 3: Commit** — `feat(p06-t01): add program-recap explainer recipe (explainer-kit.recipe/v1)`
 
@@ -711,12 +727,33 @@ git commit -m "docs(p05-t05): W6 handoff mini-runbook"
 **Step 1: Author caller sections (mechanical-layer only — judgment stays with the orchestrator):**
 
 - The ORCHESTRATOR synthesizes the fact base (judgment); the skill text specifies the mechanical contract: fact base conforms to `explainer-kit.fact-base/v1` (required keys exactly: `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`), sourced from the reconciled program artifact + wave summaries + completion records.
-- Invocation: construct an `explainer-kit.run-request/v1` document (required keys exactly: `schemaVersion, recipe, slug, outputRoot, factBase, mode`) with `recipe: "program-recap"`, `factBase` as a SUPPLIED binding per the schema's factBaseBinding def, `outputRoot: .oat/repo/explainers/<slug>/`.
+- Invocation: construct an `explainer-kit.run-request/v1` document (required keys exactly: `schemaVersion, recipe, slug, outputRoot, factBase, mode`) with `recipe: { "id": "program-recap", "version": "1" }` (the schema requires an OBJECT with exactly id+version), `factBase` as a supplied binding per the schema's factBaseBinding def — required keys `mode, freshnessPolicy` with `mode: "supplied"` plus `path` pointing at the synthesized fact-base file — and `outputRoot: .oat/repo/explainers/<slug>/`.
 - Consumption: the skill reads back `explainer-kit.manifest/v1` (required keys: `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`) and records `runId` + `outcome` in the wave/program ledger row.
 - Publishing stays HUMAN-GATED (destination-contract.md); the caller never invokes publish.
 - Frontmatter versions: execute → 1.6.0, program → 1.2.0 (separate minor; §4 delta independently revertible).
 
-**Step 2: Verify** — `rg -n "fact-base/v1|run-request/v1|manifest/v1" .agents/skills/oat-wave-*/SKILL.md` shows the exact schema ids; required-key lists in the skill text byte-match the vendored schemas (spot-check against `references/explainer-rc-f212d630/schemas/`); ownership boundary unchanged (`[JUDGMENT]` markers intact); `pnpm exec oxfmt --write` both files; `pnpm lint`.
+**Step 2: Verify** — run exactly:
+
+```bash
+python3 - <<'PY'
+import json, re
+base = '.oat/projects/shared/wave-skills-promotion/references/explainer-rc-f212d630/schemas/'
+expect = {
+  'explainer-kit.fact-base/v1': json.load(open(base+'fact-base.schema.json'))['required'],
+  'explainer-kit.run-request/v1': json.load(open(base+'run-request.schema.json'))['required'],
+  'explainer-kit.manifest/v1': json.load(open(base+'manifest.schema.json'))['required'],
+}
+text = open('.agents/skills/oat-wave-execute/SKILL.md').read() + open('.agents/skills/oat-wave-program/SKILL.md').read()
+for sid, req in expect.items():
+    assert sid in text, f'missing schema id {sid}'
+    joined = ', '.join(req)
+    assert joined in text.replace('`',''), f'required-key list drift for {sid}: expected "{joined}"'
+print('schema ids + required-key lists match vendored schemas')
+PY
+rg -n "\[JUDGMENT\]" .agents/skills/oat-wave-program/SKILL.md | wc -l
+```
+
+Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2). Then `pnpm exec oxfmt --write` both files; `pnpm lint`.
 
 **Step 3: Re-sync** — `oat sync --scope all`; verify no unrelated changes.
 
@@ -730,9 +767,9 @@ git commit -m "docs(p05-t05): W6 handoff mini-runbook"
 
 - Create: `.oat/projects/shared/wave-skills-promotion/references/personal-wrapper-migration.md` — the migration runbook the OPERATOR executes against `~/.agents/skills/personal-explainer-kit` (that tree is user-level; not writable from this repo project).
 
-**Step 1: Author the runbook** from the vendored contracts: (a) backup exists (`~/.agents/skills-backup/oat-explainer-kit-0.4.1` — confirmed stoa-side); (b) replace with RC 1.0.0 skill content from the VERIFIED rebuild tarball (`open-agent-toolkit-cli-0.2.1.tgz` → `package/assets/skills/oat-explainer-kit`), noting the upstream CLI-tarball provenance question must be resolved first (msg_02337b3a27f4); (c) wrapper invocation migrates to constructing `explainer-kit.run-request/v1` (exact required keys) and consuming `explainer-kit.manifest/v1` (runId/outcome/artifacts/immutableHashes) instead of pre-1.0 interfaces; (d) acceptance: run `~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs` against the exact RC covering vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emit sanitized `private-wrapper-result.json`; (e) rollback: restore the 0.4.1 backup. Result feeds BOTH the explainer-kit RC acceptance and this project's p06-t03 verification record (stored-verification-record discipline, B5).
+**Step 1: Author the runbook** from the vendored contracts: (a) backup exists (`~/.agents/skills-backup/oat-explainer-kit-0.4.1` — confirmed stoa-side); (b) replace with RC 1.0.0 skill content — ACCEPTANCE PINS THE SKILL SUBTREE, not the whole CLI tarball: install `package/assets/skills/oat-explainer-kit` whose content hash must equal rc.json's recorded `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654` (verify with the RC tool's own hashing via a rebuild record, or byte-compare against a rebuild). Artifact locator: deterministic rebuild procedure = temp worktree at `534a408e` → `pnpm install --frozen-lockfile && pnpm build` → `node tools/release/build-explainer-rc.mjs --output <tmp> --record <tmp>`; the rebuilt CLI tarball's whole-file hash is `sha256:296cfa27d678f269ff649b92ebd7…` (differs from rc.json's recorded whole-tarball hash — upstream provenance question msg_02337b3a27f4 — but the skill-subtree and all schema/recipe hashes match the record, which is what acceptance consumes); (c) wrapper invocation migrates to constructing `explainer-kit.run-request/v1` (exact required keys) and consuming `explainer-kit.manifest/v1` (runId/outcome/artifacts/immutableHashes) instead of pre-1.0 interfaces; (d) acceptance: run `~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs` against the exact RC covering vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emit sanitized `private-wrapper-result.json`; (e) rollback: restore the 0.4.1 backup. Result feeds BOTH the explainer-kit RC acceptance and this project's p06-t03 verification record (stored-verification-record discipline, B5).
 
-**Step 2: Verify** — runbook cites only vendored RC materials + schema ids with exact required-key lists; `pnpm exec oxfmt --write`.
+**Step 2: Verify** — run the same schema-fidelity Python check as p06-t02 Step 2 pointed at the runbook file (assert the three schema ids + joined required-key lists appear); `rg -n "2cf98952c03a60" <runbook>` shows the pinned subtree hash; `pnpm exec oxfmt --write`.
 
 **Step 3: Commit** — `feat(p06-t03): personal-wrapper migration runbook for RC acceptance`
 
