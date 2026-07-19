@@ -13,7 +13,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -50,19 +50,19 @@ oat_post_implement_sequence:
   failure: null
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: '2026-07-19T03:14:00Z' # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T14:48:07Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T14:49:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: reviewer-parallelism
 
-**Status:** Final review passed; configured closeout sequence in progress
+**Status:** Final review passed; PR open for review
 **Started:** 2026-07-10
-**Last Updated:** 2026-07-18
+**Last Updated:** 2026-07-19
 
 ## Current Phase
 
-Implementation — final review passed; pre-approval closeout steps pending.
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -111,7 +111,8 @@ Implementation — final review passed; pre-approval closeout steps pending.
 - ✓ Superseding final re-review passed with zero findings
 - ✓ Configured summary refresh completed
 - ✓ Configured documentation refresh completed
-- ⧗ Configured pre-approval sequence remaining: PR
+- ✓ Existing PR #163 refreshed; immutable closeout snapshot preserved
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -119,5 +120,8 @@ None
 
 ## Next Milestone
 
-Run the configured summary, documentation, and PR refresh sequence, then receive
-a fresh remote review cycle for PR #163.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
