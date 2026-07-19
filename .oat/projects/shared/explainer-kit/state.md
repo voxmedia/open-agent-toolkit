@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t04
-oat_last_commit: e699aebe
+oat_current_task: null
+oat_last_commit: 5b2c153b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -38,19 +38,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T19:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T20:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Implementation in progress
+**Status:** Implementation complete — promotion approved
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-19
 
 ## Current Phase
 
-Implementation - Phase 5 executing `p05-t04`
+Implementation complete — 38/38 tasks
 
 ## Artifacts
 
@@ -58,7 +58,7 @@ Implementation - Phase 5 executing `p05-t04`
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete; late artifact findings resolved)
-- **Implementation:** `implementation.md` (in progress; per-task history reconciled)
+- **Implementation:** `implementation.md` (complete; 38/38 tasks)
 
 ## Progress
 
@@ -109,7 +109,8 @@ Implementation - Phase 5 executing `p05-t04`
   declaration-emission ordering; exact RC bytes remain authoritative
 - ✓ Real private-wrapper acceptance passed all six gates against the exact RC
 - ✓ Packaged `scripts/publish.mjs` S3/CDN smoke gate passed against the exact RC
-- ⧗ Reconciling final promotion readiness
+- ✓ Combined acceptance, release validation, and full test suite passed
+- ✓ Frozen RC approved for unchanged promotion
 
 ## Blockers
 
@@ -117,5 +118,5 @@ None.
 
 ## Next Milestone
 
-Run the combined external acceptance, release validation, and full test suite,
-then record the promotion decision.
+Implementation is complete. The next lifecycle action is user-directed project
+review, documentation/summary, or final PR preparation.

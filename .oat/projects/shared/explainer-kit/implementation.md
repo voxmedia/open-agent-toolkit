@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p05-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 6     | 6/6       |
-| Phase 2 | complete    | 10    | 10/10     |
-| Phase 3 | complete    | 9     | 9/9       |
-| Phase 4 | complete    | 9     | 9/9       |
-| Phase 5 | in_progress | 4     | 3/4       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | complete  | 6     | 6/6       |
+| Phase 2 | complete  | 10    | 10/10     |
+| Phase 3 | complete  | 9     | 9/9       |
+| Phase 4 | complete  | 9     | 9/9       |
+| Phase 5 | completed | 4     | 4/4       |
 
-**Total:** 37/38 tasks completed
+**Total:** 38/38 tasks completed
 
 ---
 
@@ -920,8 +920,9 @@ passed with zero findings:
 
 ## Phase 5: Release-candidate acceptance
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-18
+**Completed:** 2026-07-19
 
 **Wave reconciliation:** Wave promotion #158 was merged to main and reconciled
 into this branch in merge commit `12c82fb4`. The previously frozen RC is now
@@ -1057,6 +1058,28 @@ this candidate must not be used for external acceptance.
 - Independent CDN retrieval returned HTTP 200 with bytes matching
   `4f59d3d2…edcce`; S3 `head-object` confirmed the sentinel key was deleted.
 
+### Task p05-t04: Confirm promotion readiness
+
+**Status:** completed
+**Commit:** `5b2c153b`
+**Decision:** approved for promotion
+
+**Outcome:**
+
+- `promotion.md` reconciles the RC, private-wrapper, and packaged publish
+  records and confirms one unchanged package, skill, schema, recipe, and
+  bundle-input identity.
+- The frozen RC may be promoted unchanged. Any identity change requires a new
+  freeze and rerun of both external gates.
+
+**Verification:**
+
+- `validate-explainer-acceptance.mjs --gate all` passed both external gates.
+- `pnpm release:validate` passed all five public package archives and 65
+  browser-backed visual measurements.
+- `pnpm test` passed across all six workspace packages; the root smoke suite
+  passed 129/129 with zero failures.
+
 ---
 
 ## Orchestration Runs
@@ -1173,39 +1196,76 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | bookkeeping   | Implementation workflow       | Separate root-owned tracking commit after every code commit        | Six task commits landed without interleaved tracking commits                       | Root delegated the full phase without a per-task return boundary                                                         | Git history and this reconciliation | Enforce per-task return and bookkeeping from Phase 2 onward |
 | p01-t05       | `plan.md` / p01-t01 invariant | New skill family remains at `1.0.0` until centralized release bump | p01-t05 changed `oat-explainer-kit` to `1.1.0`; fix `e7742119` restored `1.0.0`    | Implementer applied the general changed-skill bump rule despite this project's centralized bump plan                     | Fix commit `e7742119`               | None                                                        |
 | p03-t08       | Repository skill validator    | Task boundary excluded `.agents/skills/oat-explainer-kit/SKILL.md` | Append-only fix `93c24886` added required invocation metadata and progress heading | Canonical `oat:validate-skills` exposed mandatory structure missed by narrower Vitest validation                         | Fix commit `93c24886`               | None                                                        |
+| p05-t01       | Cross-machine RC verification | Rebuilt CLI tarball should match the frozen whole-archive hash     | Three generated `.d.ts` files differed only in declaration ordering                | TypeScript emitted semantically equivalent ordering across hosts; all runtime and explainer surfaces matched             | `rc.md` and Mini evidence           | Acceptance consumed the exact retained archive              |
+| p05-t02       | Operator wrapper environment  | Personal publish leg should complete with existing IAM policy      | First attempt lacked `s3:DeleteObject` for sentinel cleanup                        | The connector intentionally deletes its run-unique sentinel after public verification                                    | Private-wrapper acceptance record   | Permission granted; unchanged RC rerun passed               |
+| p05-t03       | `plan.md` publish command     | Listed command should execute the retained packaged connector      | Required `--artifacts-dir` and `--confirm-publish` arguments were missing          | The runner requires an explicit retained artifact root and the connector requires human approval                         | Updated `plan.md` and smoke record  | None                                                        |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage                                   |
-| ----- | --------- | ------ | ------ | ------------------------------------------ |
-| 1     | 491       | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
-| 2     | 102       | 102    | 0      | Full post-review-fix Phase 2 suite passes  |
-| 3     | 144       | 144    | 0      | Full post-review-fix Phase 3 matrix passes |
+| Phase | Tests Run                  | Passed | Failed | Coverage                                   |
+| ----- | -------------------------- | ------ | ------ | ------------------------------------------ |
+| 1     | 491                        | 491    | 0      | Full post-review-fix Phase 1 matrix passes |
+| 2     | 102                        | 102    | 0      | Full post-review-fix Phase 2 suite passes  |
+| 3     | 144                        | 144    | 0      | Full post-review-fix Phase 3 matrix passes |
+| 4     | 67 + full workspace        | all    | 0      | RC, acceptance, docs, and browser gates    |
+| 5     | 129 smoke + full workspace | all    | 0      | Final external and promotion gates         |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- A generic `explainer-kit` core with versioned run, fact-base, manifest,
+  durability, theme, publish-request, and publish-receipt contracts.
+- Named `project-explainer`, `project-recap`, `engineer-tour`, and
+  `program-recap` recipes; neutral visual shells; adversarial fact-base
+  reconciliation; and additive S3/CDN publishing.
+- An `oat-explainer-kit` adapter with typed configuration, lifecycle policy,
+  archive-safe recap exports, state intent, and project/repo output routing.
+- A private-wrapper migration scaffold and release-grade acceptance tooling
+  proven against the operator's real vault, Google Docs, and publish seams.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Interactive project workflows can ask for a plan explainer unless configured
+  otherwise; autonomous workflows require the final recap while keeping the
+  plan explainer opt-in.
+- Project recaps remain durable after archival through dated exports under
+  `.oat/repo/reference/project-explainers/`; transient plan explainers stay with
+  the project.
+- Publishing is explicit, preset-selected, sentinel-first, additive, and
+  disabled by default in the personal wrapper.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/explainer-kit/` - generic contracts, recipes, renderer,
+  publishing connector, and tests.
+- `.agents/skills/oat-explainer-kit/` - OAT configuration, lifecycle adapter,
+  archive exports, and state integration.
+- `tools/release/` - reproducible RC build/run, visual validation, and external
+  acceptance validators.
+- `.oat/repo/reference/explainer-kit-acceptance/v1/` - immutable RC,
+  private-wrapper, live publish, and promotion evidence.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Phase-scoped unit/integration suites, lint, format, type-check, and build
+  checks passed throughout implementation.
+- Final `pnpm release:validate` and `pnpm test` passed.
+- A fresh operator-supervised wrapper migration passed all six private gates.
+- The packaged connector published through the frozen RC and passed independent
+  CDN hash and S3 sentinel-deletion checks.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- The wave project added `program-recap` through the designed recipe extension
+  seam before final freeze.
+- Cross-machine declaration ordering made whole-tarball rebuilding
+  non-byte-identical on the Mini; acceptance therefore consumed the exact
+  retained laptop archive while separately verifying every explainer surface.
+- The live publish plan command was corrected to include required artifact-root
+  and explicit publish-confirmation arguments.
 
 ## Planning Gate Feedback
 
