@@ -722,6 +722,8 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - **Transition:** persisted `pending/not_started` before gate launch.
 - **Launch intent:** attempt `90538cc6-87f9-44a0-a223-4c0cc3a065fe`,
   persisted before invoking the configured command.
+- **Accepted run:** `c366dc84-ffe5-453a-b452-32081001c485` on
+  `codex-5-6-sol-max`; durable run marker observed before completion.
 
 ---
 
