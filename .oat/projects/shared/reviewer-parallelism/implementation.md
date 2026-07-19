@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-19
-oat_current_task_id: p04-t12
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 1     | 1/1       |
-| Phase 2 | complete    | 1     | 1/1       |
-| Phase 3 | complete    | 3     | 3/3       |
-| Phase 4 | in_progress | 14    | 11/14     |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 1     | 1/1       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 3     | 3/3       |
+| Phase 4 | complete | 14    | 14/14     |
 
-**Total:** 16/19 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -435,35 +435,38 @@ oat_generated: false
 
 ### Task p04-t12: (verification) Bump the changed implementation skill version
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** ed09641d1b20661e33c94e682c2061a5d50dd1cd
 
 **Outcome (required when completed):**
 
-- Pending correction of the skill-version warning emitted by the PR push hook.
+- Bumped the changed implementation skill to `2.1.5`, updated all version
+  assertions, and passed canonical skill-version validation.
 
 ---
 
 ### Task p04-t13: (review) Align the implementation handoff summary
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** 3a49f6ec29cd85dad8f043758e17b8d3b68fdb02
 
 **Outcome (required when completed):**
 
-- Pending implementation of the second PR #163 Bugbot Medium finding.
+- Aligned the top-level implementation summary with signal-first phase behavior
+  and added semantic coverage; one validation-only autonomy key was mapped to
+  `NG` in the same bounded fix.
 
 ---
 
 ### Task p04-t14: (verification) Advance the post-merge lockstep release
 
-**Status:** pending
-**Commit:** pending
+**Status:** completed
+**Commit:** d916bd1f71a8353c3497eb700c9a06cd4a420b85
 
 **Outcome (required when completed):**
 
-- Pending reconciliation of the CI/release failures with upstream/public
-  `0.2.3`.
+- Advanced all five public packages to shared unpublished `0.2.4`, preserved
+  upstream's `0.2.3` attribution, and passed release plus full workspace gates.
 
 ---
 
@@ -518,7 +521,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 - `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
-- Optional nested dispatches: none.
+- Optional nested implementation dispatches: none.
 
 **Outstanding items:**
 
@@ -670,6 +673,34 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 - None.
 
+### Run 8
+
+**Timestamp:** 2026-07-19T15:02:00Z
+**Branch:** `reviewer-parallelism`
+**Tier:** 1 — subagents
+**Dispatch policy:** High (Cursor managed capped)
+**Schedule:** sequential
+
+| Phase | Outcome         | Task commits                       | Root review | Fix iterations |
+| ----- | --------------- | ---------------------------------- | ----------- | -------------- |
+| p04   | fixes_completed | `ed09641d`, `3a49f6ec`, `d916bd1f` | pending     | 1              |
+
+**Dispatch notes:**
+
+- One sequential High implementer owned p04-t12 through p04-t14 after the latest
+  upstream merge and remote/CI triage.
+- p04-t13 initially exposed one validation-only autonomy prompt-site key; the
+  same implementer mapped it to `NG` and amended the task commit.
+- p04-t14 selected `0.2.4` only after confirming npm latest `0.2.3` and
+  candidate availability for every lockstep package.
+- Skill-version, provider, release, workspace, smoke, lint, type-check, and
+  build gates all passed.
+- Optional nested implementation dispatches: none.
+
+**Outstanding items:**
+
+- Superseding final re-review and PR closeout refresh.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -724,13 +755,16 @@ Chronological log of implementation progress.
 - [x] p04-t09: Map new handoff prose in the autonomy inventory - `08c0e1cd`
 - [x] p04-t10: Enforce the signal-first handoff in phase review - `5386db92`
 - [x] p04-t11: Advance to the next unpublished lockstep version - `160a7e24`
+- [x] p04-t12: Bump the changed implementation skill version - `ed09641d`
+- [x] p04-t13: Align the implementation handoff summary - `3a49f6ec`
+- [x] p04-t14: Advance the post-merge lockstep release - `d916bd1f`
 
 **What changed (high level):**
 
 - Quick-mode discovery and the reviewed execution plan were completed.
-- All thirteen tasks were completed across four sequential phases. The remote
-  reconnaissance-signal finding and its focused semantic-test follow-up both
-  passed re-review with zero residual findings.
+- All nineteen tasks were completed across four sequential phases, including
+  both Bugbot findings, repeated upstream version reconciliation, and final
+  top-level/detailed implementation handoff parity.
 
 **Decisions:**
 
@@ -745,8 +779,7 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Complete p04-t12 through p04-t14, run the superseding final re-review, and
-  refresh PR #163.
+- Run the superseding final re-review and refresh PR #163.
 
 **Blockers:**
 
@@ -764,6 +797,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | -------------------- | --------------- | ------------------------------------------------------ | ------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- | ----------------------------- | -------------------------------------------------------------------- |
 | p04-t03 / p04 review | `plan.md`       | Release task limited to generated and release surfaces | Commit also corrected canonical Claude, Codex, and Cursor provider-reference wording | Release validation exposed an autonomy-prompt regression after canonical implementation | Committed provider references | Keep history; include future canonical corrections in contract tasks |
 | p04-t10              | `plan.md`       | Signal handoff task omitted the autonomy inventory     | Commit also mapped one validation-only prompt-site key to `NG`                       | Full tests detected the key generated by the new phase-review prose                     | Committed autonomy contract   | Bounded correction accepted; no further follow-up                    |
+| p04-t13              | `plan.md`       | Top-level handoff task omitted the autonomy inventory  | Commit also mapped one validation-only prompt-site key to `NG`                       | Full tests detected the key generated by the new summary prose                          | Committed autonomy contract   | Bounded correction accepted; no further follow-up                    |
 
 ## Deferred Findings (Medium)
 
@@ -802,17 +836,17 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 - **Closeout-V1 — Changed implementation skill retained upstream version**
   - Source: PR push-hook validation after the configured PR refresh.
-  - Final disposition: converted to `p04-t12`.
+  - Final disposition: resolved in `p04-t12`.
 
 - **Remote-M1 — Top-level implementation handoff summary omits signal-first ordering**
   - Source:
     `reviews/archived/remote-pr-163-review-2026-07-19T145741Z.md`
-  - Final disposition: converted to `p04-t13`.
+  - Final disposition: resolved in `p04-t13`.
 
 - **Closeout-V2 — Latest upstream/public package version is now `0.2.3`**
   - Source: latest `origin/main` merge plus CI runs `29688448796` and
     `29688448786`.
-  - Final disposition: converted to `p04-t14`.
+  - Final disposition: resolved in `p04-t14`.
 
 ## Test Results
 
@@ -827,6 +861,7 @@ Track test execution during implementation.
 | 4 fix | 125       | 125    | 0      | Reconnaissance-signal handoff        |
 | 4 fix | 3409      | 3409   | 0      | Autonomy inventory and full closeout |
 | 4 fix | 3409      | 3409   | 0      | Final review fixes and full closeout |
+| 4 fix | 3332      | 3332   | 0      | Post-merge workspace and smoke tests |
 
 ## Final Summary (for PR/docs)
 
@@ -836,7 +871,7 @@ Track test execution during implementation.
   eligible broad reviews.
 - Root-owned orchestration logging, synchronized Cursor/Codex reviewer roles,
   user-facing workflow documentation, and lockstep public package release
-  metadata at `0.2.3`.
+  metadata at `0.2.4`.
 
 **Behavioral changes (user-facing):**
 
