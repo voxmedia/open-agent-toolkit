@@ -805,6 +805,17 @@ success before the next dispatch; final HiLL approval follows all three.
 - Sequence state: `awaiting_approval`
 - Approval: `pending`
 
+### 2026-07-19 — Final HiLL approved
+
+- Approval source: user
+- Configured exit gate: `allowed/passed`
+- Pre-approval steps: `[summary, document, pr]`
+- Post-approval steps: `[]`
+- Sequence state: `post_approval`
+
+The user explicitly approved final completion after the fresh post-integration
+gate passed and PR checks were green.
+
 ---
 
 ## Deviations from Plan / Design
