@@ -1,0 +1,33 @@
+{
+  "schemaVersion": "explainer-kit.recipe/v1",
+  "id": "engineer-tour",
+  "version": "1",
+  "sourceRoles": [
+    {
+      "role": "codebase",
+      "required": true,
+      "accepts": ["directory", "git"],
+      "minBindings": 1,
+      "maxBindings": 1
+    }
+  ],
+  "requiredNarrative": [
+    "orientation",
+    "architecture",
+    "execution-flow",
+    "key-code",
+    "validation"
+  ],
+  "artifacts": [
+    {
+      "id": "engineer-tour",
+      "type": "explainer",
+      "template": "engineer-tour",
+      "required": true
+    }
+  ],
+  "discoveryLimits": {
+    "consecutiveNoNewFindingsRounds": 2,
+    "maxRounds": 8
+  }
+}

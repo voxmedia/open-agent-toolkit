@@ -679,23 +679,41 @@ git commit -m "docs(p05-t05): W6 handoff mini-runbook"
 
 ---
 
-## Phase 6: §4 explainer integration (FR10) — GATED on explainer-kit v1 RC
+## Phase 6: §4 explainer integration (FR10) — RC GATE OPEN (f212d630)
 
-**Goal:** program-recap recipe + close-callers + personal-wrapper migration against the frozen RC.
+**Goal:** program-recap recipe + close-callers + personal-wrapper migration support against the frozen RC.
 
-> **GATE:** Do not start until the packaged explainer-kit v1 RC exists (project on this repo's `explainer-kit` branch). Build against the RC only — never its source tree. Coordinate merge order with explainer-kit Phase 3 (touches the same lifecycle skills). Detailed task bodies are intentionally thin placeholders and are NOT implementation-ready as written.
+> **GATE STATUS (2026-07-18): OPEN.** RC `sha256:f212d630…50b854` @ frozen commit `534a408e` verified (record self-consistency; 4/5 tarballs byte-match a pristine rebuild; all 11 schemas+recipes and both skill hashes match; CLI whole-tarball divergence reported upstream, confined outside explainer surfaces). Frozen build inputs are vendored at `references/explainer-rc-f212d630/` — build ONLY against those copies, never the explainer-kit source tree. Operator sequencing: p06 → operator acceptance → RC promotes → publish 0.2.1 (HOLD until then).
 >
-> **Gate-open checkpoint (mandatory before any p06 execution):** refine every p06 task body against the frozen RC schemas — concrete file paths, runnable verification commands, atomic staging sets — via a plan revision that preserves the existing task IDs, then re-run the plan artifact review scoped to Phase 6 before implementation proceeds.
+> Task bodies below were refined at gate-open (2026-07-18) per the mandatory checkpoint; phase-scoped plan re-review required before execution.
 
 ### Task p06-t01: program-recap recipe
 
 **Files:**
 
-- Create: recipe file in `explainer-kit.recipe/v1` format (location per RC packaging conventions)
+- Create: `.agents/skills/oat-wave-execute/assets/program-recap.recipe.json` (the task's ONLY output — pure `explainer-kit.recipe/v1` JSON, no comment fields). Context: the final home `.agents/skills/explainer-kit/recipes/` arrives with explainer-kit's Phase-3 merge; record the interim-home deviation and the re-home follow-up in `implementation.md`'s Deviations table + the follow-up ledger, never inside the JSON.
 
-Reference implementation: the shipped stoa program deck. Verify: recipe validates against the RC's recipe schema.
+**Step 1: Author** in `explainer-kit.recipe/v1` format matching the frozen schema (`references/explainer-rc-f212d630/schemas/recipe.schema.json` if present, else validate structurally against the three vendored recipe examples): `schemaVersion: "explainer-kit.recipe/v1"`, `id: "program-recap"`, `version: "1"`, `sourceRoles`: one required `program` role (accepts file/directory/git; `minBindings: 1`, `maxBindings: 1` — one program source set containing the program artifact + wave records), `requiredNarrative`: program-shape sections (program-overview, wave-map, per-wave-outcomes, convention-evolution, aggregate-numbers, follow-up-ledger), `artifacts`: one required hub (`id: "program-recap"`, `type: "hub"`, `template: "house-style"`, `required: true`), `discoveryLimits` mirroring project-recap (2 consecutive no-new-findings rounds, max 8). Reference implementation: the stoa program deck (packet §4); the vendored `project-recap.json` is the structural template.
 
-Commit: `feat(p06-t01): add program-recap explainer recipe`
+**Step 2: Verify** — run exactly:
+
+```bash
+python3 - <<'PY'
+import json
+new = json.load(open('.agents/skills/oat-wave-execute/assets/program-recap.recipe.json'))
+ref = json.load(open('.oat/projects/shared/wave-skills-promotion/references/explainer-rc-f212d630/recipes/project-recap.json'))
+assert new['schemaVersion'] == 'explainer-kit.recipe/v1', new['schemaVersion']
+assert set(new) == set(ref), (set(new) ^ set(ref))
+assert set(new['sourceRoles'][0]) == set(ref['sourceRoles'][0])
+assert set(new['artifacts'][0]) == set(ref['artifacts'][0])
+assert set(new['discoveryLimits']) == set(ref['discoveryLimits'])
+print('recipe shape OK: key sets match vendored explainer-kit.recipe/v1')
+PY
+```
+
+Expected: `recipe shape OK`.
+
+**Step 3: Commit** — `feat(p06-t01): add program-recap explainer recipe (explainer-kit.recipe/v1)`
 
 ---
 
@@ -703,21 +721,62 @@ Commit: `feat(p06-t01): add program-recap explainer recipe`
 
 **Files:**
 
-- Modify: `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (closeout step 8 gains the optional explainer caller)
+- Modify: `.agents/skills/oat-wave-program/SKILL.md` (wave-close mode + a new program-close note gain the caller)
 
-Add caller sections: synthesize fact base from reconciled program records → invoke via `FactBaseBindingV1 {mode:'supplied'}` → output root `.oat/repo/explainers/<slug>/`; publishing human-gated. Bump versions as a separate minor (execute → 1.6.0, program → 1.2.0) so the §4 delta is independently revertible. Re-sync provider views.
+**Step 1: Author caller sections (mechanical-layer only — judgment stays with the orchestrator):**
 
-Commit: `feat(p06-t02): explainer close-callers in wave skills (1.6.0/1.2.0)`
+- The ORCHESTRATOR synthesizes the fact base (judgment); the skill text specifies the mechanical contract: fact base conforms to `explainer-kit.fact-base/v1` (required keys exactly: `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`), sourced from the reconciled program artifact + wave summaries + completion records.
+- Invocation: construct an `explainer-kit.run-request/v1` document (required keys exactly: `schemaVersion, recipe, slug, outputRoot, factBase, mode`) with `recipe: { "id": "program-recap", "version": "1" }` (the schema requires an OBJECT with exactly id+version), `factBase` as a supplied binding per the schema's factBaseBinding def — required keys `mode, freshnessPolicy` with `mode: "supplied"` plus `path` pointing at the synthesized fact-base file — and `outputRoot: .oat/repo/explainers/<slug>/`.
+- Consumption: the skill reads back `explainer-kit.manifest/v1` (required keys: `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`) and records `runId` + `outcome` in the wave/program ledger row.
+- Publishing stays HUMAN-GATED (destination-contract.md); the caller never invokes publish.
+- Frontmatter versions: execute → 1.6.0, program → 1.2.0 (separate minor; §4 delta independently revertible).
+
+**Step 2: Verify** — run exactly:
+
+```bash
+python3 - <<'PY'
+import json, re
+base = '.oat/projects/shared/wave-skills-promotion/references/explainer-rc-f212d630/schemas/'
+expect = {
+  'explainer-kit.fact-base/v1': json.load(open(base+'fact-base.schema.json'))['required'],
+  'explainer-kit.run-request/v1': json.load(open(base+'run-request.schema.json'))['required'],
+  'explainer-kit.manifest/v1': json.load(open(base+'manifest.schema.json'))['required'],
+}
+text = open('.agents/skills/oat-wave-execute/SKILL.md').read() + open('.agents/skills/oat-wave-program/SKILL.md').read()
+for sid, req in expect.items():
+    assert sid in text, f'missing schema id {sid}'
+    joined = ', '.join(req)
+    assert joined in text.replace('`',''), f'required-key list drift for {sid}: expected "{joined}"'
+print('schema ids + required-key lists match vendored schemas')
+PY
+rg -n "\[JUDGMENT\]" .agents/skills/oat-wave-program/SKILL.md | wc -l
+```
+
+Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2). Then `pnpm exec oxfmt --write` both files; `pnpm lint`.
+
+**Step 3: Re-sync** — `oat sync --scope all`; verify no unrelated changes.
+
+**Step 4: Commit** — `feat(p06-t02): explainer close-callers in wave skills (1.6.0/1.2.0)`
 
 ---
 
 ### Task p06-t03: Personal-wrapper migration support
 
-**Files:** per RC migration runbook (operator-owned E2E)
+**Scope extension (operator-confirmed via stoa Flag 2, 2026-07-18):** p06 ships the migration CODE as installable artifacts, not runbook-only — the wrapper source and personal credentials live on the operator's laptop, so the repo authors a complete scaffold with clearly-marked personal-config seams the operator fills at install.
 
-Migrate the personal wrapper to `ExplainerRunRequestV1` + manifest consumption; this doubles as the RC acceptance gate. Verification: operator-run E2E green. Record outcome in `implementation.md`.
+**Files:**
 
-Commit: `feat(p06-t03): personal-wrapper migration to ExplainerRunRequestV1`
+- Create: `.oat/projects/shared/wave-skills-promotion/references/personal-explainer-kit/` — the INSTALLABLE wrapper skill tree: `SKILL.md` (thin personal wrapper over the packaged `oat-explainer-kit`: constructs `explainer-kit.run-request/v1`, consumes `explainer-kit.manifest/v1`, personal destinations behind config seams) + `scripts/acceptance.mjs` (full test matrix: vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emits sanitized `private-wrapper-result.json`; final-RC identifier placeholders pinned at freeze) + `config.seams.example.json` (every personal value the operator supplies, with provenance comments pointing at the 0.4.1 backup).
+- Create: `.oat/projects/shared/wave-skills-promotion/references/personal-wrapper-migration.md` — the install/run companion runbook the OPERATOR executes against `~/.agents/skills/personal-explainer-kit` (copy tree → fill seams → run acceptance).
+
+**Step 1: Author the runbook** from the vendored contracts: (a) backup exists (`~/.agents/skills-backup/oat-explainer-kit-0.4.1` — confirmed stoa-side); (b) replace with RC 1.0.0 skill content — ACCEPTANCE PINS THE SKILL SUBTREE, not the whole CLI tarball: install `package/assets/skills/oat-explainer-kit` whose content hash must equal rc.json's recorded `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654` (verify with the RC tool's own hashing via a rebuild record, or byte-compare against a rebuild). Artifact locator: deterministic rebuild procedure = temp worktree at `534a408e` → `pnpm install --frozen-lockfile && pnpm build` → `node tools/release/build-explainer-rc.mjs --output <tmp> --record <tmp>`; the rebuilt CLI tarball's whole-file hash is `sha256:296cfa27d678f269ff649b92ebd7…` (differs from rc.json's recorded whole-tarball hash — upstream provenance question msg_02337b3a27f4 — but the skill-subtree and all schema/recipe hashes match the record, which is what acceptance consumes); (c) wrapper invocation migrates to constructing `explainer-kit.run-request/v1` (exact required keys) and consuming `explainer-kit.manifest/v1` (runId/outcome/artifacts/immutableHashes) instead of pre-1.0 interfaces; (d) acceptance: SEQUENCING (explainer decision_gate 2026-07-18): acceptance runs against the POST-p06 FINAL RC (frozen by explainer-kit after merging our p06 delta), not f212d630 — the runbook carries placeholder fields for the final RC's rcId/commit/subtree-hash to be pinned at freeze; the f212d schemas remain the valid contract basis (p06 does not alter explainer schemas). Run `~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs` against that exact final RC covering vault, Google Docs, presets, personal destinations, manifest consumption, rollback; emit sanitized `private-wrapper-result.json`; (e) rollback: restore the 0.4.1 backup. Result feeds BOTH the explainer-kit RC acceptance and this project's p06-t03 verification record (stored-verification-record discipline, B5).
+
+**Step 2: Verify** — run the same schema-fidelity Python check as p06-t02 Step 2 pointed at the runbook file (assert the three schema ids + joined required-key lists appear); `rg -n "2cf98952c03a60" <runbook>` shows the pinned subtree hash; `pnpm exec oxfmt --write`.
+
+**Step 3: Commit** — `feat(p06-t03): personal-wrapper migration runbook for RC acceptance`
+
+**Completion semantics:** task completes when the installable tree + runbook ship; the OPERATOR-run E2E result is recorded in implementation.md when it arrives (project completion may await it per the plan's acceptance criteria).
 
 ---
 
@@ -725,11 +784,15 @@ Commit: `feat(p06-t03): personal-wrapper migration to ExplainerRunRequestV1`
 
 **Files:**
 
-- Modify: the five public package manifests (`packages/cli`, `packages/control-plane`, `packages/docs-config`, `packages/docs-theme`, `packages/docs-transforms`) + `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json`, `packages/cli/assets/public-package-versions.json`
 
-p06-t02 changes canonical `.agents/skills` assets, and repo policy requires the lockstep five-package bump + release validation in the SAME PR as any shipped-asset change. Since Phase 6 merges separately from the p05 release, it needs its own release choreography: bump all five packages, regenerate the bundle (`bash packages/cli/scripts/bundle-assets.sh`), run `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`, stage the six exact files.
+**Step 1:** Bump all five 0.2.1 → 0.2.2 (p06-t01/t02 change shipped `.agents/skills` assets; lockstep policy applies per separately-merged PR). Regenerate bundle (`bash packages/cli/scripts/bundle-assets.sh`).
 
-Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration release`
+**Step 2: Verify** — `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`; version asset matches manifests.
+
+**Step 3: Commit** — `chore(p06-t04): lockstep public package bumps for explainer-integration release`
+
+**Publish-hold note:** 0.2.1 npm publish is HELD until the RC promotes post-acceptance (operator sequencing 2026-07-18); 0.2.2 publishes after this delta merges and the same acceptance sequencing completes.
 
 ---
 
@@ -751,11 +814,14 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 | p05    | code     | passed          | 2026-07-18 | reviews/archived/code-p05-review-round2-2026-07-18T183353Z.md |
 | p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/p05-review-2026-07-18T184321Z.md             |
 | p05    | code     | passed          | 2026-07-18 | reviews/archived/p05-review-2026-07-18T185045Z.md             |
-| p06    | code     | pending         | -          | -                                                             |
+| p06    | code     | fixes_completed | 2026-07-19 | reviews/code-p06-review-round2-2026-07-19T010226Z.md          |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-round3-2026-07-19T010826Z.md          |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-2026-07-19T004731Z.md                 |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T191920Z.md           |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md    |
 | p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md               |
 | p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md               |
+| plan   | artifact | passed          | 2026-07-18 | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | passed          | 2026-07-18 | -                                                             |
 | plan   | artifact | passed          | 2026-07-18 | -                                                             |
@@ -764,6 +830,8 @@ Commit: `chore(p06-t04): lockstep public package bumps for explainer-integration
 | plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T150023Z.md   |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
+
+_Gate-open p06 plan re-review (last plan row): in-session structured review, 2 rounds (1 Critical + 4 Important applied → clean), phase-scoped per the p06 gate contract; no artifact file — findings applied in the gate-open revision commits._
 
 _First plan-row provenance: in-session structured review (`oat-reviewer` subagent, inherited parent model, 3 attempts → clean, 2026-07-18); no artifact file — findings F1–F7 applied in the plan draft commits. The next two rows are the cross-family gate reviews (codex gpt-5.6-sol/max); all 18 findings were remediated in commit `a634db1c`. The final row is the delta-scoped gate re-run that verified every remediation and returned 0 findings (verdict ok, run 87f67c9f) — advancing all three gate events to `passed`._
 
