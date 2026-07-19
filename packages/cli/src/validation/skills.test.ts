@@ -98,6 +98,16 @@ function currentSkillContent(
 }
 
 const implementSkillPath = '.agents/skills/oat-project-implement/SKILL.md';
+
+function sliceFromLastGateExecutionHeading(
+  content: string,
+  skillName: string,
+): string {
+  const headings = [...content.matchAll(/^###[^\n]*Gate Execution[^\n]*$/gm)];
+  const heading = headings.at(-1);
+  expect(heading, `${skillName} gate execution heading`).toBeDefined();
+  return content.slice(heading!.index);
+}
 const implementReferencePaths = [
   'dispatch-and-dry-run.md',
   'plan-and-resume.md',
@@ -1006,7 +1016,7 @@ describe('validateOatSkills', () => {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
-      const gateSection = content.slice(content.lastIndexOf('Gate Execution'));
+      const gateSection = sliceFromLastGateExecutionHeading(content, skillName);
 
       expect(gateSection, `${skillName} positive statuses`).toMatch(
         /status.*`ok`.*`blocked`/is,

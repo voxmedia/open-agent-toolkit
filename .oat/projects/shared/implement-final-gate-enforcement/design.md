@@ -263,8 +263,8 @@ oat_implement_exit_gate:
   resolution: configured # configured | no_gate
   disposition: null # null | passed | warned | prompt_approved | no_gate
   config_fingerprint: '<stable hash of resolved gate declaration>'
-  resolved_command: null
-  resolved_description: null
+  resolved_command: null # required before launch when resolution: configured
+  resolved_description: null # required before launch when resolution: configured
   on_failure: block # block | prompt | warn | null
   max_attempts: 2
   attempts_completed: 0
