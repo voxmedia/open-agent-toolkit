@@ -72,11 +72,20 @@ The operator-owned wrapper runbook must pin:
 ```
 
 Two same-machine builds produced byte-identical records and all five tarballs.
-The Mini must rebuild commit `da1e7a713adac4743368addf206aa780a94871ba`,
-compare the CLI archive entries/content manifest against the tracked p06
-baseline, and require the `oat-explainer-kit` subtree hash above before operator
-acceptance. Any whole-tarball mismatch remains recorded rather than silently
-treated as equivalent.
+A cache-bypassed Mini rebuild matched four package tarballs, every archive
+entry, 1,254 of 1,257 CLI file hashes, both skill subtrees, all eight schemas,
+and all four recipes. The only differences were ordering within three generated
+`.d.ts` files: one string-literal union, inferred Zod object properties, and one
+effort union. Node `22.17.0`, pnpm `10.13.1`, and TypeScript `5.9.3` matched;
+runtime JavaScript and declaration maps were byte-identical.
+
+The cross-machine difference is therefore recorded as semantically benign
+declaration-emission ordering outside the explainer surfaces. It does not
+change the frozen identity: acceptance must consume the exact retained
+`dc1f2d82…93b1` CLI tarball bytes and verify the `2cf98952…b654`
+`oat-explainer-kit` subtree, rather than substitute a rebuilt whole tarball.
+Normalized Mini evidence is tracked on `origin/wave-skills-promotion` at
+`36e98b05`.
 
 ## Operator verification
 

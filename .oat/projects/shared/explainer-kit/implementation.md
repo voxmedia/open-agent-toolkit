@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers:
-  - p05-t02 awaits Mini verification of the final RC and the operator-owned private-wrapper E2E.
+  - p05-t02 awaits the operator-owned private-wrapper E2E.
 oat_last_updated: 2026-07-19
 oat_current_task_id: p05-t02
 oat_generated: false
@@ -999,9 +999,14 @@ this candidate must not be used for external acceptance.
   (CLI 3,242 tests plus smoke suites).
 - Two local final-RC builds produced byte-identical records and all five
   tarballs.
-- Cross-machine verification remains required: the Mini must rebuild
-  `da1e7a71`, compare against the tracked p06 manifests, and report the final
-  CLI archive and skill-subtree hashes before operator acceptance.
+- A cache-bypassed Mini rebuild matched four package tarballs, all 1,257 CLI
+  paths, 1,254 CLI file hashes, both skill subtrees, all schemas, and all
+  recipes. The only differences were ordering within three generated `.d.ts`
+  files; runtime JavaScript and declaration maps matched.
+- Cross-machine provenance is resolved as semantically benign declaration
+  emission outside the explainer surfaces. Acceptance remains bound to the
+  exact retained `dc1f2d82…93b1` CLI tarball and `2cf98952…b654`
+  `oat-explainer-kit` subtree.
 
 ---
 
