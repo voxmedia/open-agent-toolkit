@@ -1,9 +1,9 @@
 ---
 oat_plan_source: quick
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: oat-project-review-provide
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p03']
 oat_auto_review_at_hill_checkpoints: true
@@ -19,9 +19,9 @@ oat_template: false
 
 > Execute this plan using `oat-project-implement`.
 
-**Goal:** Enable `oat-reviewer` to accelerate broad reviews through bounded, cheaper/faster reconnaissance workers without delegating source validation, synthesis, severity judgment, validation decisions, or final findings.
+**Goal:** Enable `oat-reviewer` to accelerate broad reviews through bounded, task-class-aware reconnaissance workers without delegating source validation, synthesis, severity judgment, validation decisions, or final findings.
 
-**Architecture:** Extend the canonical reviewer instruction contract with one provider-neutral, capability-gated reconnaissance layer. Preserve the existing review process and output sinks; workers only gather advisory evidence, while semantic tests, documentation, provider sync, and release validation keep the contract durable and distributable.
+**Architecture:** Preserve one provider-neutral, capability-gated advisory layer, but separate worker authority (`role.class`) from an artifact-informed per-lane `task_class` model floor. Deterministic checks use mechanical workers, interpretive reconnaissance uses intelligent workers, stronger bounded analysis is escalated by ambiguity/consequence, and the root reviewer remains responsible for verification, cross-lane synthesis, severity, and final output.
 
 **Tech Stack:** Canonical Markdown agent definitions, TypeScript/Vitest contract tests, Fumadocs Markdown, OAT provider sync, pnpm workspace release tooling.
 
@@ -30,7 +30,7 @@ oat_template: false
 ## Planning Checklist
 
 - [x] Requirements confirmed with the user
-- [x] Lightweight design evaluated and intentionally skipped
+- [x] Lightweight design initially skipped; supplemental model-class revision design added and reviewed after dogfooding
 - [x] Phases evaluated for parallelism
 - [x] `oat_plan_parallel_groups` set from dependency/write-set analysis
 - [x] Dispatch policy resolved before implementation readiness
@@ -38,7 +38,7 @@ oat_template: false
 
 ## Parallelism
 
-`oat_plan_parallel_groups: []` keeps execution sequential. Phase 2 must document the finalized reviewer contract from Phase 1, and Phase 3 must generate provider views and release assets from the combined canonical-agent and documentation changes. Running distribution or release validation concurrently would risk stale generated output and would validate an incomplete shipped diff.
+`oat_plan_parallel_groups: []` keeps execution sequential. Phases 1-3 preserve the completed pre-revision history. Revision Phase 4 updates the shared dispatch contract and canonical reviewer first, documents that finalized behavior second, and regenerates provider/release outputs last. Running distribution or release validation concurrently would risk stale generated output and would validate an incomplete shipped diff.
 
 ---
 
@@ -453,19 +453,348 @@ If a listed generated file is unchanged, omit it from `git add`.
 
 ---
 
+## Phase 4: Task-Class-Aware Reviewer Orchestration Revision
+
+### Task p04-t01: Separate reviewer lane authority from model-class floors
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/record-schema.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-cursor.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-claude.md`
+- Modify: `.agents/skills/oat-dispatch-subagents/references/provider-codex.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write the semantic contract assertions (RED)**
+
+Extend the existing focused tests without creating a nested-agent harness.
+Assert:
+
+- the primary reviewer reads the authoritative range and mode-required
+  discovery/spec/design/plan/implementation artifacts before decomposition;
+- reviewer-local lanes retain `role.class: recon` while requiring independent
+  `task_class`, `classification_source`, and `classification_reason` fields;
+- task-class metadata is generic-optional for existing callers and
+  reviewer-required for delegated reviewer reconnaissance;
+- the five task classes and escalation boundaries are based on deterministic
+  verification, silent-miss risk, dispersed context, ambiguity, and
+  consequence rather than file count;
+- mechanical work includes deterministic inventories, parity checks, and
+  test/lint/format/build execution, while interpretation and policy judgment
+  require stronger classes or stay with the root;
+- dispatch records include `task_class`, `model_class_floor`,
+  `classification_source`, `classification_reason`, and
+  `floor_satisfaction`;
+- homogeneous waves share one record only when task class and model floor also
+  match;
+- class-constrained reviewer fallback is `caller-inline`, forbids
+  below-floor selection, and leaves legacy `explicit-downgrade` available only
+  to unconstrained callers;
+- outer Cursor lifecycle roles use the exact resolver-returned
+  `providers.cursor.dispatchArgs.variant`, while reviewer-local
+  `generalPurpose` recon uses an exact model from the nested native enum and
+  never reconstructs lifecycle variants;
+- root-only verification, reconciliation, severity, validation decisions, and
+  output ownership remain unchanged.
+
+Close deferred `p01-M1` with targeted assertions for:
+
+- no hard-coded provider model names in the canonical reviewer;
+- exactly one reviewer-local capability check; and
+- no worker writes to review artifacts, `StructuredFindings`, or either output
+  sink.
+
+Update the shared-skill version assertion from branch `1.1.3` / upstream
+`1.1.4` to final PR version `1.1.5`. Keep the canonical reviewer assertion at
+its existing single PR-scoped bump `1.1.8`.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/agents/canonical/parse.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/providers/codex/codec/sync-extension.test.ts
+```
+
+Expected: new assertions fail against the homogeneous economical-recon
+contract.
+
+**Step 2: Implement the reviewed class-aware contract (GREEN)**
+
+Apply `design.md` exactly:
+
+- bump `oat-dispatch-subagents` once to `1.1.5`;
+- keep `oat-reviewer` at `1.1.8`;
+- make task-class fields generic-optional and reviewer-required;
+- record exact class-floor and floor-satisfaction fields;
+- require separate wave records when task classes differ;
+- encode floor-safe caller-inline fallback;
+- document provider-neutral class selection and active
+  user/repository-instruction precedence;
+- preserve outer Cursor lifecycle resolver variants while defining the
+  instruction-only nested `generalPurpose` exact-model path;
+- require the root reviewer to classify lanes after understanding the actual
+  artifacts and diff; and
+- preserve advisory workers and root-only final judgment.
+
+Do not add CLI resolver/config changes, a scheduler, benchmark logic, an E2E
+subagent harness, or tests pinned to named models.
+
+**Step 3: Verify and format**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-cursor.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-claude.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-codex.md \
+  packages/cli/src/validation/skills.test.ts
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/agents/canonical/parse.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/providers/codex/codec/sync-extension.test.ts
+pnpm exec oxfmt --check \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-cursor.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-claude.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-codex.md \
+  packages/cli/src/validation/skills.test.ts
+git diff --check
+```
+
+Expected: focused semantic, canonical, and provider tests pass without exact
+model-name assertions.
+
+**Step 4: Commit**
+
+```bash
+git add \
+  .agents/agents/oat-reviewer.md \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-cursor.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-claude.md \
+  .agents/skills/oat-dispatch-subagents/references/provider-codex.md \
+  packages/cli/src/validation/skills.test.ts
+git commit -m "feat(p04-t01): classify reviewer recon by task complexity"
+```
+
+---
+
+### Task p04-t02: Document model-class-aware review lanes
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+
+**Step 1: Update the existing reviewer-local reconnaissance section**
+
+Explain:
+
+- role/authority and task/model class are independent;
+- the root reviewer reads the review artifacts and diff before deciding lane
+  boundaries and task classes;
+- deterministic inventories, parity, and command execution are mechanical;
+- silent-miss-prone interpretation and unfamiliar-code auditing are
+  intelligent;
+- hard/consequential analysis is used only when ambiguity or failure cost
+  warrants it, while root judgment remains final;
+- active provider/user instructions and live catalogs resolve examples without
+  canonical model-name promises;
+- mixed classes create separate waves;
+- below-floor fallback is prohibited; and
+- workers remain advisory and non-recursive.
+
+Do not add a new page or generated navigation entry.
+
+**Step 2: Verify and commit**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write apps/oat-docs/docs/workflows/projects/reviews.md
+pnpm build:docs
+pnpm exec oxfmt --check apps/oat-docs/docs/workflows/projects/reviews.md
+git diff --check
+git add apps/oat-docs/docs/workflows/projects/reviews.md
+git commit -m "docs(p04-t02): explain task-class-aware review lanes"
+```
+
+Expected: docs build and formatting pass; the page matches the canonical
+contract without promising named provider models.
+
+---
+
+### Task p04-t03: Regenerate provider views and finalize the revised release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Regenerate: `packages/cli/assets/public-package-versions.json`
+- Regenerate: `.codex/agents/oat-reviewer*.toml`
+- Regenerate as applicable: `.claude/skills/oat-dispatch-subagents/**`
+- Regenerate as applicable: `.cursor/skills/oat-dispatch-subagents/**`
+- Regenerate as applicable: `.codex/config.toml`
+- Regenerate: `.oat/sync/manifest.json`
+- Modify: `.oat/repo/pjm/current-state.md`
+
+**Step 1: Resolve the current unpublished lockstep version**
+
+Fetch `origin/main`, verify all five upstream public manifests and the upstream
+`oat-dispatch-subagents` version, then query npm for all five packages.
+Select the next shared patch that is greater than upstream and unpublished for
+every package.
+
+Expected from plan-time evidence:
+
+- upstream public packages: `0.2.1`;
+- upstream dispatch skill: `1.1.4`;
+- final dispatch skill: `1.1.5`; and
+- public release: `0.2.2` only if it remains unpublished immediately before
+  commit.
+
+Never reuse a published package or skill version.
+
+**Step 2: Regenerate shipped surfaces**
+
+Update all five manifests together and align the reviewer capability
+attribution in `.oat/repo/pjm/current-state.md`. Then run sequentially:
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+pnpm run cli -- sync --scope all
+pnpm run cli -- sync --scope project --dry-run
+```
+
+Expected: every provider view contains the final canonical reviewer/dispatch
+contracts, all version metadata agrees, and project dry-run reports no drift.
+
+**Step 3: Run focused distribution checks**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/agents/canonical/parse.test.ts \
+  src/commands/init/tools/shared/review-skill-contracts.test.ts \
+  src/providers/codex/codec/sync-extension.test.ts
+pnpm release:check-versions
+pnpm format
+pnpm run cli -- sync --scope project --dry-run
+git diff --check
+git status --short
+```
+
+Repeat the five-package npm uniqueness check immediately before commit. If the
+candidate is occupied, choose the next shared patch and repeat generation and
+validation.
+
+**Step 4: Commit the revised shipped surface**
+
+Stage only changed files from the declared package, provider-view, sync, and
+PJM paths:
+
+```bash
+git add \
+  packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json \
+  .oat/sync/manifest.json \
+  .oat/repo/pjm/current-state.md
+git add .codex/agents/oat-reviewer*.toml
+git add -A \
+  .claude/skills/oat-dispatch-subagents \
+  .cursor/skills/oat-dispatch-subagents
+[ ! -e .codex/config.toml ] || git add .codex/config.toml
+git commit -m "chore(p04-t03): finalize class-aware reviewer release"
+```
+
+If a listed generated path is unchanged, omit it from staging.
+
+**Step 5: Validate the committed release**
+
+Run sequentially:
+
+```bash
+pnpm lint
+pnpm type-check
+pnpm test
+pnpm build
+pnpm build:docs
+pnpm release:check-versions
+pnpm release:validate
+pnpm run cli -- sync --scope project --dry-run
+git status --short
+```
+
+Expected: all repository/release checks pass, all five tarballs target the
+same still-unpublished version, and no provider drift remains. Correct and
+amend the task commit before review if needed.
+
+### Phase 4 Review Acceptance
+
+The root-owned Phase 4 code review is also the mixed-class dogfood acceptance
+run. After reading `design.md`, the plan, implementation record, and
+authoritative range, the primary reviewer must:
+
+- delegate at least one genuinely mechanical lane and one genuinely
+  intelligent lane when the live nested catalog can satisfy both floors;
+- use separate dispatch records/waves and explicit provider targets;
+- keep release/security/policy interpretation and all final judgment with the
+  primary reviewer;
+- independently verify every load-bearing worker claim; and
+- record task classes, selected targets, lane purposes, and reconciliation in
+  the review artifact.
+
+If the live host cannot explicitly satisfy both floors, review inline and mark
+dogfood acceptance blocked rather than silently substituting a weaker worker.
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
-| p02    | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
-| p03    | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
-| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
-| spec   | artifact | pending         | -          | -                                                             |
-| design | artifact | passed          | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T002158Z.md |
-| plan   | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
+| Scope              | Type     | Status          | Date       | Artifact                                                      |
+| ------------------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
+| p01                | code     | passed          | 2026-07-18 | reviews/archived/p01-review-2026-07-18T224716Z.md             |
+| p02                | code     | passed          | 2026-07-18 | reviews/archived/p02-review-2026-07-18T225832Z.md             |
+| p03                | code     | passed          | 2026-07-18 | reviews/archived/p03-review-2026-07-18T233038Z.md             |
+| p04                | code     | pending         | -          | -                                                             |
+| final-pre-revision | code     | passed          | 2026-07-18 | reviews/archived/final-review-2026-07-18T234708Z.md           |
+| final              | code     | pending         | -          | -                                                             |
+| spec               | artifact | pending         | -          | -                                                             |
+| design             | artifact | passed          | 2026-07-19 | reviews/archived/artifact-design-review-2026-07-19T002158Z.md |
+| plan               | artifact | fixes_completed | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T194838Z.md   |
+| plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T200447Z.md   |
+| plan               | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T221957Z.md   |
+| plan               | artifact | pending         | -          | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -482,8 +811,9 @@ The configured gate passed at its Important threshold on 2026-07-18. Its two non
 - Phase 1: 1 task - Canonical reviewer orchestration contract and regression coverage
 - Phase 2: 1 task - User-facing review workflow documentation
 - Phase 3: 3 tasks - Provider synchronization, lockstep release validation, backlog closeout, and unpublished-version correction
+- Phase 4: 3 tasks - Task-class-aware dispatch contracts, review documentation, provider synchronization, and revised lockstep release
 
-**Total: 3 phases, 5 tasks**
+**Total: 4 phases, 8 tasks**
 
 Ready for code review and merge after all tasks and required reviews pass.
 
@@ -492,7 +822,8 @@ Ready for code review and merge after all tasks and required reviews pass.
 ## References
 
 - Discovery: `discovery.md`
-- Backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — current: `.oat/repo/pjm/backlog/items/BL-260708-enable-oat-reviewer-subagent.md`; after `p03-t02`: `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
+- Supplemental revision design: `design.md`
+- Completed backlog item: “Enable oat-reviewer subagent orchestration for faster broad reviews” (`BL-260708-enable-oat-reviewer-subagent`) — `.oat/repo/pjm/backlog/archived/BL-260708-enable-oat-reviewer-subagent.md`
 - Current reviewer: `.agents/agents/oat-reviewer.md`
 - Shared nested-dispatch contract: `.agents/skills/oat-dispatch-subagents/SKILL.md`
 - Review workflow docs: `apps/oat-docs/docs/workflows/projects/reviews.md`

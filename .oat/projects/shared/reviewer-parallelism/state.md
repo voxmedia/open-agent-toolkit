@@ -39,7 +39,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-10T01:05:24.572Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T00:23:25Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-19T00:27:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -58,7 +58,7 @@ Plan - Model-class-aware revision phase
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (supplemental revision design review passed)
-- **Plan:** `plan.md` (revision amendment in progress)
+- **Plan:** `plan.md` (revision amendment drafted — artifact review pending)
 - **Implementation:** `implementation.md` (pre-revision final review passed; project reopened)
 
 ## Progress

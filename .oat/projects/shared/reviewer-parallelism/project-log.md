@@ -88,6 +88,10 @@ Applied the two Important design-review corrections: reviewer task-class fields 
 
 Supplemental model-class-aware design passed focused artifact re-review with zero findings after one correction iteration. Proceeding to plan amendment for one sequential revision phase.
 
+### 2026-07-19 · structural · oat-project-implement · revision-plan
+
+Drafted Phase p04 from the approved supplemental design: one contract/test task, one docs task, one provider/release task, and a mixed-class dogfood phase-review acceptance gate. Testing stays semantic and reuses existing focused/release validation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

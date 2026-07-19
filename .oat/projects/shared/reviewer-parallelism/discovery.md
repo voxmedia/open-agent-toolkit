@@ -108,6 +108,45 @@ None blocking plan generation. Implementation should use the host's supported ge
   - **Impact:** High
   - **Mitigation:** Treat negative claims as load-bearing and require the primary reviewer to repeat the relevant search before promoting them to findings.
 
+## Revision Addendum: Task-Class-Aware Reconnaissance
+
+Dogfooding the completed contract showed that every final-review lane used the
+same Composer 2.5 Fast target. That target was appropriate for deterministic
+parity and command-execution work, but the same homogeneous wave also handled
+semantic contract interpretation, lifecycle reconciliation, and release
+analysis. An earlier economical release lane missed a published-version
+collision that the primary reviewer later caught.
+
+This addendum supersedes the original blanket economical-selection portion of
+Key Decision 5 and Success Criterion 4:
+
+- `role.class: recon` continues to define read-only advisory authority; it no
+  longer implies one cheap model class.
+- After reading the authoritative diff and mode-required artifacts, the
+  primary reviewer classifies each independent lane as mechanical,
+  intelligent, context-heavy/default, hard-reasoning, or consequential.
+- Mechanical inventories, exact parity, and test/lint/format/build execution
+  use fast economical workers when available.
+- Silent-miss-prone interpretation, unfamiliar-code auditing, and
+  cross-artifact analysis require intelligent or stronger workers.
+- Security, release-policy, and other expensive-failure judgments remain
+  primary-owned even when a stronger bounded advisory lane is useful.
+- Mixed task classes use separate dispatch records/waves and never silently
+  downgrade below their declared floor.
+- Canonical guidance remains provider-neutral. Active user/repository
+  instructions, provider references, live catalogs, policy, and ceiling resolve
+  current examples such as Composer-class mechanical workers and Grok-class
+  intelligent workers.
+- Reviewer-local task-class request/record fields are added to the generic
+  instruction/schema contract as optional fields for compatibility and are
+  required by `oat-reviewer`; no CLI resolver or runtime scheduler is added.
+
+Testing remains lean: extend existing semantic assertions, close the three
+deferred safety-assertion gaps, reuse parity/sync/release checks, and dogfood one
+mixed-class review. Do not build a nested-agent E2E harness or pin tests to
+specific model names.
+
 ## Next Steps
 
-Confirm these requirements, then generate an executable quick-mode plan. No lightweight design artifact is needed because this work changes an instruction contract, its tests, generated views, documentation, and release metadata without introducing runtime components or data models.
+Execute the reviewed supplemental `design.md` through Phase 4 after the
+revision plan amendment passes artifact review.
