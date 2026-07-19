@@ -814,7 +814,9 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 | p05    | code     | passed          | 2026-07-18 | reviews/archived/code-p05-review-round2-2026-07-18T183353Z.md |
 | p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/p05-review-2026-07-18T184321Z.md             |
 | p05    | code     | passed          | 2026-07-18 | reviews/archived/p05-review-2026-07-18T185045Z.md             |
-| p06    | code     | pending         | -          | -                                                             |
+| p06    | code     | fixes_completed | 2026-07-19 | reviews/code-p06-review-round2-2026-07-19T010226Z.md          |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-round3-2026-07-19T010826Z.md          |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-2026-07-19T004731Z.md                 |
 | final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T191920Z.md           |
 | final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md    |
 | p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md               |

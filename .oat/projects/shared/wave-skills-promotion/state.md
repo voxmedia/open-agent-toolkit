@@ -1,5 +1,5 @@
 ---
-oat_current_task: p06-t01
+oat_current_task: null
 oat_last_commit: 17a56f39
 oat_blockers: [
     'p06 gate-open plan revision blocked on RC artifact delivery: rc.json + dist/explainer-kit-rc tarballs + frozen schemas not reachable from this workspace (534a408e not in clone; origin/explainer-kit stale). Requested via msg_a700ca447031.',

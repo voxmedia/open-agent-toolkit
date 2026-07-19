@@ -31,16 +31,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                  | Status    | Tasks | Completed |
-| -------------------------------------- | --------- | ----- | --------- |
-| Phase 1: Port + toolkit integration    | completed | 4     | 4/4       |
-| Phase 2: §2 queue + genericization     | completed | 9     | 9/9       |
-| Phase 3: Dispositions                  | completed | 3     | 3/3       |
-| Phase 4: Docs                          | completed | 2     | 2/2       |
-| Phase 5: Validation + release          | completed | 5     | 5/5       |
-| Phase 6: Explainer integration (GATED) | blocked   | 4     | 0/4       |
+| Phase                               | Status    | Tasks | Completed |
+| ----------------------------------- | --------- | ----- | --------- |
+| Phase 1: Port + toolkit integration | completed | 4     | 4/4       |
+| Phase 2: §2 queue + genericization  | completed | 9     | 9/9       |
+| Phase 3: Dispositions               | completed | 3     | 3/3       |
+| Phase 4: Docs                       | completed | 2     | 2/2       |
+| Phase 5: Validation + release       | completed | 5     | 5/5       |
+| Phase 6: Explainer integration      | completed | 4     | 4/4       |
 
-**Total:** 29/33 tasks completed (23 executable; 4 gated on explainer-kit RC)
+**Total:** 33/33 tasks completed
 
 ---
 
@@ -205,12 +205,21 @@ oat_generated: false
 
 ---
 
-## Phase 6: Explainer integration (RC-GATED)
+## Phase 6: Explainer integration
 
-**Status:** blocked (gate: packaged explainer-kit v1 RC; mandatory gate-open plan revision + re-review before execution)
-**Started:** -
+**Status:** completed (2026-07-18/19)
+**Gate:** opened 2026-07-18 (RC f212d630 verified + vendored); gate-open plan revision (2 rounds → clean) preceded execution; acceptance re-pinned to the post-p06 FINAL RC per explainer sequencing.
 
-Tasks: p06-t01 (recipe), p06-t02 (close-callers), p06-t03 (personal-wrapper migration), p06-t04 (Phase 6 release choreography).
+### Phase Summary
+
+- p06-t01 `fdf358fe`: program-recap recipe (explainer-kit.recipe/v1), interim home under wave-execute assets (re-home follow-up recorded).
+- p06-t02 `92cfd169`: optional close-callers in both skills (1.6.0/1.2.0) — schema-exact contracts; reviewer-confirmed safely inert for explainer-less repos (W6-safe).
+- p06-t03 `d65bc6af` + continuation `ce473258`/`70dfb97f`/`38e843fb` + fix `ed5ca542`: INSTALLABLE personal-explainer-kit scaffold (SKILL.md, acceptance.mjs with six-test matrix + verified sanitization + schema-asserted publish request, config seams) + migration runbook with fresh-agent executor model (operator decision).
+- p06-t04 `c8cf04af`: lockstep 0.2.2 prepared; PUBLISH-HOLD respected.
+- Scope-boundary notes (`08e3c516`): W6 runbook + equivalence checklist now bound the zero-regression bar to the 1.4.0+§2 surface; p06 additions = ordinary-defect handling.
+- Reviews: round 1 PASS (as-shipped) → extension round 2 FAIL (1 Important: publish-request keys; 1 Minor) → fix → round 3 PASS (1 low-impact Minor recorded: requireKeys presence-vs-undefined, non-blocking).
+
+**Pending externals (not tasks):** operator/fresh-agent acceptance run against the post-p06 final RC; stoa W6 evidence.
 
 ---
 
@@ -252,6 +261,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p05    | oat-phase-implementer-gpt-5-6-sol-high                   | 5/5   | round 1 FAIL (1 Important — root bookkeeping gap) → round 2 PASS | 1 root-side (`1e336990`, impl record)       | pass   |
 | p-rev1 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (1 Medium, root-fixed inline)                       | 0                                           | pass   |
 | p-rev2 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (0/0/0/0 — first clean round 1)                     | 0                                           | pass   |
+| p06    | oat-phase-implementer-gpt-5-6-sol-high (2 continuations) | 4/4   | R1 PASS → extension R2 FAIL (1 Important) → R3 PASS              | 1 (`ed5ca542`)                              | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
@@ -275,7 +285,7 @@ Chronological log of implementation progress.
 
 **Blockers:**
 
-- Phase 6 blocked on explainer-kit v1 packaged RC (expected — plan-declared gate).
+- (resolved 2026-07-18) Phase 6 RC gate opened and phase completed; see Phase 6 section.
 
 ### Phase 2 queue traceability (implementer-provided)
 
