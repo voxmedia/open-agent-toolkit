@@ -681,9 +681,9 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 **Dispatch policy:** High (Cursor managed capped)
 **Schedule:** sequential
 
-| Phase | Outcome         | Task commits                       | Root review | Fix iterations |
-| ----- | --------------- | ---------------------------------- | ----------- | -------------- |
-| p04   | fixes_completed | `ed09641d`, `3a49f6ec`, `d916bd1f` | pending     | 1              |
+| Phase | Outcome | Task commits                       | Root review | Fix iterations |
+| ----- | ------- | ---------------------------------- | ----------- | -------------- |
+| p04   | passed  | `ed09641d`, `3a49f6ec`, `d916bd1f` | passed      | 1              |
 
 **Dispatch notes:**
 
@@ -695,11 +695,14 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
   candidate availability for every lockstep package.
 - Skill-version, provider, release, workspace, smoke, lint, type-check, and
   build gates all passed.
+- The superseding final reviewer independently verified all merge, Bugbot,
+  skill-version, release, and tracking claims and passed with zero findings.
+  Evidence: `reviews/archived/final-review-2026-07-19T152339Z.md`.
 - Optional nested implementation dispatches: none.
 
 **Outstanding items:**
 
-- Superseding final re-review and PR closeout refresh.
+- Configured PR closeout refresh.
 
 <!-- orchestration-runs-end -->
 
