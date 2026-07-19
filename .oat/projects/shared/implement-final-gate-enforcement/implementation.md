@@ -578,6 +578,13 @@ The fresh final lifecycle review passed with zero findings. This generation is
 the one replacement launch explicitly authorized by the user; it does not reuse
 or reinterpret the retired run.
 
+### 2026-07-19 — Replacement launch intent persisted
+
+- Attempt: `6ac2b9f3-9be6-4c07-a76d-3daa69ef855d`
+- Result receipt:
+  `reviews/exit-gate-6ac2b9f3-result.json`
+- State: `pending/intent_persisted`
+
 ---
 
 ## Deviations from Plan / Design
