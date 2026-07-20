@@ -1,0 +1,37 @@
+{
+  "name": "ocean",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#f8fafc",
+        "panel": "#e2e8f0",
+        "elevated": "#cbd5e1"
+      },
+      "ink": { "primary": "#0f172a", "muted": "#334155", "inverse": "#ffffff" },
+      "accent": { "primary": "#075985", "secondary": "#155e75" },
+      "status": {
+        "success": "#166534",
+        "warning": "#854d0e",
+        "danger": "#991b1b",
+        "info": "#075985"
+      },
+      "diagramSeries": ["#075985", "#155e75", "#166534", "#854d0e"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#082f49",
+        "panel": "#0c4a6e",
+        "elevated": "#164e63"
+      },
+      "ink": { "primary": "#f0f9ff", "muted": "#bae6fd", "inverse": "#082f49" },
+      "accent": { "primary": "#7dd3fc", "secondary": "#67e8f9" },
+      "status": {
+        "success": "#86efac",
+        "warning": "#fde047",
+        "danger": "#fca5a5",
+        "info": "#bae6fd"
+      },
+      "diagramSeries": ["#7dd3fc", "#67e8f9", "#86efac", "#fde047"]
+    }
+  }
+}

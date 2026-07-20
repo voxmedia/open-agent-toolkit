@@ -21,10 +21,12 @@ import {
   type ArchiveProjectTarget,
   type ArchiveProjectOnCompletionOptions,
   type ArchiveProjectOnCompletionResult,
+  type ArchiveProjectRecapExportV1,
 } from './archive-utils';
 
 export interface ArchivePushOptions {
   dryRun?: boolean;
+  projectRecapRun?: string;
 }
 
 export interface ProjectArchivePushCommandDependencies {
@@ -60,6 +62,7 @@ interface ArchivePushReport {
   archivePath: string;
   s3Path: string | null;
   summaryExportFile: string | null;
+  projectRecapExport?: ArchiveProjectRecapExportV1;
   warnings: string[];
 }
 
@@ -119,6 +122,7 @@ function buildArchiveOptions(
   config: OatConfig,
   projectsRoot: string,
   target: ResolvedArchiveTarget,
+  options: ArchivePushOptions,
 ): ArchiveProjectOnCompletionOptions {
   return {
     repoRoot,
@@ -128,6 +132,7 @@ function buildArchiveOptions(
     s3Uri: config.archive?.s3Uri,
     s3SyncOnComplete: config.archive?.s3SyncOnComplete ?? false,
     summaryExportPath: config.archive?.summaryExportPath,
+    projectRecapRun: options.projectRecapRun,
     awsProfile: config.archive?.awsProfile,
     awsRegion: config.archive?.awsRegion,
   };
@@ -200,6 +205,11 @@ function emitArchivePushText(
   if (report.summaryExportFile) {
     logger.info(`Summary export: ${report.summaryExportFile}`);
   }
+  if (report.projectRecapExport) {
+    logger.info(
+      `Project recap export: ${report.projectRecapExport.exportRoot}`,
+    );
+  }
 }
 
 function emitArchivePushReport(
@@ -261,7 +271,7 @@ export async function runArchivePushCommand(
     }
 
     const result = await dependencies.archiveProjectOnCompletion(
-      buildArchiveOptions(repoRoot, config, projectsRoot, target),
+      buildArchiveOptions(repoRoot, config, projectsRoot, target, options),
     );
     const report: ArchivePushReport = {
       status: 'ok',
@@ -271,6 +281,9 @@ export async function runArchivePushCommand(
       archivePath: result.archivePath,
       s3Path: result.s3Path,
       summaryExportFile: result.summaryExportFile,
+      ...(result.projectRecapExport
+        ? { projectRecapExport: result.projectRecapExport }
+        : {}),
       warnings: result.warnings,
     };
 

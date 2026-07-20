@@ -1,0 +1,140 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.fact-base/v1",
+  "title": "FactBaseV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "generatedAt",
+    "mode",
+    "freshnessPolicy",
+    "sources",
+    "claims",
+    "unresolvedClaims",
+    "overrides"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.fact-base/v1" },
+    "generatedAt": { "type": "string", "format": "date-time" },
+    "mode": { "enum": ["supplied", "federated"] },
+    "freshnessPolicy": { "const": "live-wins" },
+    "sources": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/source" },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "claims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/claim" },
+      "uniqueItems": true
+    },
+    "unresolvedClaims": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/unresolvedClaim" },
+      "uniqueItems": true
+    },
+    "overrides": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/override" },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "sectionIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "source": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "kind", "locator", "hash"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "kind": {
+          "enum": ["file", "directory", "git", "github", "session", "other"]
+        },
+        "locator": { "type": "string", "minLength": 1 },
+        "role": { "type": "string", "minLength": 1 },
+        "sourceSetId": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "minLength": 1 },
+        "hash": { "$ref": "#/$defs/hash" },
+        "observedAt": { "type": "string", "format": "date-time" },
+        "authoritativeFor": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "uniqueItems": true
+        }
+      }
+    },
+    "citation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["sourceId", "locator"],
+      "properties": {
+        "sourceId": { "type": "string", "minLength": 1 },
+        "locator": { "type": "string", "minLength": 1 }
+      }
+    },
+    "claim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "status", "citations"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "status": { "enum": ["confirmed", "overridden"] },
+        "sections": { "$ref": "#/$defs/sectionIds" },
+        "citations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/citation" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "unresolvedClaim": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "text", "reason", "citations"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "text": { "type": "string", "minLength": 1 },
+        "reason": {
+          "enum": [
+            "contradictory",
+            "stale",
+            "missing-evidence",
+            "needs-confirmation"
+          ]
+        },
+        "sections": { "$ref": "#/$defs/sectionIds" },
+        "citations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/citation" },
+          "uniqueItems": true
+        }
+      }
+    },
+    "override": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["claimId", "decision", "confirmedAt"],
+      "properties": {
+        "claimId": { "type": "string", "minLength": 1 },
+        "decision": { "type": "string", "minLength": 1 },
+        "confirmedAt": { "type": "string", "format": "date-time" }
+      }
+    }
+  }
+}

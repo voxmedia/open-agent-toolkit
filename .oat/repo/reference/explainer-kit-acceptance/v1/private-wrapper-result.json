@@ -1,0 +1,213 @@
+{
+  "schemaVersion": "explainer-kit.wrapper-acceptance/v1",
+  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "candidate": {
+    "schemaVersion": "explainer-kit.release-candidate/v1",
+    "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+    "packages": [
+      {
+        "name": "@open-agent-toolkit/cli",
+        "version": "0.2.3",
+        "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+        "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+      },
+      {
+        "name": "@open-agent-toolkit/control-plane",
+        "version": "0.2.3",
+        "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
+        "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-config",
+        "version": "0.2.3",
+        "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
+        "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-theme",
+        "version": "0.2.3",
+        "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
+        "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-transforms",
+        "version": "0.2.3",
+        "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
+        "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+      }
+    ],
+    "skills": [
+      {
+        "name": "explainer-kit",
+        "version": "1.0.0",
+        "package": "@open-agent-toolkit/cli",
+        "path": "package/assets/skills/explainer-kit",
+        "sha256": "sha256:ea933187cfca91d475770391f49fd93446153fb1a69a41c54087ea8c977fa03a"
+      },
+      {
+        "name": "oat-explainer-kit",
+        "version": "1.0.0",
+        "package": "@open-agent-toolkit/cli",
+        "path": "package/assets/skills/oat-explainer-kit",
+        "sha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
+      }
+    ],
+    "schemas": [
+      {
+        "id": "explainer-kit.build-record/v1",
+        "path": "schemas/build-record.schema.json",
+        "sha256": "sha256:42127bb527b0471c167370b74777d6b27228ab1ae4000cbf377ca8ccbd21be89"
+      },
+      {
+        "id": "explainer-kit.durability-evidence/v1",
+        "path": "schemas/durability-evidence.schema.json",
+        "sha256": "sha256:4ffbccdd0892cf6d823379c03105d2f4407dec1015ae5ccad35c3e5d0a740c78"
+      },
+      {
+        "id": "explainer-kit.fact-base/v1",
+        "path": "schemas/fact-base.schema.json",
+        "sha256": "sha256:3481220c807f4c7879d9b9c8f0e37079b0b4b28d0834fb636b4c76d13ab9b476"
+      },
+      {
+        "id": "explainer-kit.manifest/v1",
+        "path": "schemas/manifest.schema.json",
+        "sha256": "sha256:a3ba804ef0e35618d2245e1838ad97fd7b017a6d4a11f271c151990bf8aea5d9"
+      },
+      {
+        "id": "explainer-kit.publish-receipt/v1",
+        "path": "schemas/publish-receipt.schema.json",
+        "sha256": "sha256:c6fd4c0f33842f04da8b9077b03998c11b90e436183b8d5c0ca7a658c86d45c1"
+      },
+      {
+        "id": "explainer-kit.publish-request/v1",
+        "path": "schemas/publish-request.schema.json",
+        "sha256": "sha256:41197c9a16f22ee5696480676a1c6c7649eeec1c674b30f5fd3331f00b60a845"
+      },
+      {
+        "id": "explainer-kit.run-request/v1",
+        "path": "schemas/run-request.schema.json",
+        "sha256": "sha256:ae07ca6485130b7359888e3d5afe164e5faa8cb42f8739599c8f53093e0a6ff1"
+      },
+      {
+        "id": "explainer-kit.theme/v1",
+        "path": "schemas/theme.schema.json",
+        "sha256": "sha256:f2a6959eb834146596bd5264f2cfc7d48584e5408625d028a92c8400f45808ca"
+      }
+    ],
+    "recipes": [
+      {
+        "id": "engineer-tour",
+        "version": "1",
+        "schemaVersion": "explainer-kit.recipe/v1",
+        "path": "recipes/engineer-tour.json",
+        "sha256": "sha256:041a1c5201d7e72c0aef8a097c0389088001ac0cc11fede9e8b8c64f477be0fd"
+      },
+      {
+        "id": "program-recap",
+        "version": "1",
+        "schemaVersion": "explainer-kit.recipe/v1",
+        "path": "recipes/program-recap.json",
+        "sha256": "sha256:705ed786fff8f4af69542ac326257fc52de466229a60fe164bd42b4f64a51274"
+      },
+      {
+        "id": "project-explainer",
+        "version": "1",
+        "schemaVersion": "explainer-kit.recipe/v1",
+        "path": "recipes/project-explainer.json",
+        "sha256": "sha256:0202736cccacc5b9f7a26c6783148aadcc6ad66e7dc9f78e85fc133127651535"
+      },
+      {
+        "id": "project-recap",
+        "version": "1",
+        "schemaVersion": "explainer-kit.recipe/v1",
+        "path": "recipes/project-recap.json",
+        "sha256": "sha256:1881b9a7ff9e4d4afcbe1ca96df5e396f32017fec0d44af16390f208112c2866"
+      }
+    ],
+    "changedCandidates": []
+  },
+  "coreRunId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+  "verdict": "passed",
+  "packagedExecution": {
+    "schemaVersion": "explainer-kit.packaged-execution/v1",
+    "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+    "entry": "scripts/run.mjs",
+    "package": {
+      "name": "@open-agent-toolkit/cli",
+      "version": "0.2.3",
+      "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+      "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+    },
+    "verifiedTarballs": [
+      {
+        "name": "@open-agent-toolkit/cli",
+        "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+        "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+      },
+      {
+        "name": "@open-agent-toolkit/control-plane",
+        "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
+        "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-config",
+        "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
+        "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-theme",
+        "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
+        "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+      },
+      {
+        "name": "@open-agent-toolkit/docs-transforms",
+        "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
+        "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+      }
+    ],
+    "request": {
+      "schemaVersion": "explainer-kit.run-request/v1",
+      "sha256": "sha256:98bbefcd95a8e2c5d64474530b47600e9026402b5d263992d44501aec4ee357d"
+    },
+    "outputs": {
+      "manifest": {
+        "schemaVersion": "explainer-kit.manifest/v1",
+        "sha256": "sha256:9a98bcd83603e1627e1bc2bd8237080b3266a0e41e9ef23b980f590c56df43e6"
+      },
+      "receipt": null
+    },
+    "coreRunId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+    "exit": {
+      "code": 0,
+      "signal": null
+    }
+  },
+  "command": {
+    "sanitized": true,
+    "argv": [
+      "node",
+      "~/.agents/skills/personal-explainer-kit/scripts/acceptance.mjs"
+    ]
+  },
+  "context": {
+    "privateRequestExternal": true,
+    "credentialsPersisted": false
+  },
+  "hashes": {
+    "request": "sha256:98bbefcd95a8e2c5d64474530b47600e9026402b5d263992d44501aec4ee357d",
+    "manifest": "sha256:9a98bcd83603e1627e1bc2bd8237080b3266a0e41e9ef23b980f590c56df43e6",
+    "publishReceipt": "sha256:e28070a38a0a4a6802652f527bfef6081840905390f8c768b40e50cffb98ab30"
+  },
+  "durability": {
+    "outcome": "built-durable",
+    "verified": true
+  },
+  "capabilities": {
+    "presetResolution": true,
+    "vaultStoaOutput": true,
+    "googleDocsSync": true,
+    "personalDestinationLinks": true,
+    "manifestConsumption": true,
+    "rollbackReady": true
+  }
+}

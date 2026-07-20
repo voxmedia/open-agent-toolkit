@@ -741,6 +741,23 @@ checkpoint protocol to gate bookkeeping, final HiLL bookkeeping, and completion
 bookkeeping. A mixed commit, missing child transition, or non-state path in the
 checkpoint-persistence commit fails closed as stale.
 
+**Implementation-Tail Project Recap:**
+
+The final-closeout orchestrator owns one project-recap gate. Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval. Preserve the stored order of all other pre-approval steps and the existing final review sequence; the recap gate does not replace or repeat either.
+
+Before generating, inspect the active project's explainer runs. A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs. A merely present, incomplete, wrong-recipe, or stale manifest does not satisfy this check.
+
+Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt. Interactive mode honors the adapter's resolved persisted or workflow intent.
+
+Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build. Use the adapter result and finalizer result as returned; do not improvise commits, durability evidence, or reruns. Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.
+Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
+
+Always include the selected or attempted recap's outcome and run path in the
+implementation completion report. If `summary.md` exists, append or refresh its
+single concise `Explainer Outcome` section using the manifest and build record;
+never append a second outcome section. If no recap was attempted or reused,
+leave the summary unchanged.
+
 1. Dispatch incomplete `pre_approval` steps in stored order.
 2. When they succeed and a final checkpoint exists, commit `status:
 awaiting_approval` with `approval: pending` before asking for final HiLL

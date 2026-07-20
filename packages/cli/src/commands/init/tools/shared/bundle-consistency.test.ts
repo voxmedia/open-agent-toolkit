@@ -31,56 +31,43 @@ import { BRAINSTORM_SKILLS, RESEARCH_AGENTS } from './skill-manifest';
 
 const BUNDLE_ASSETS_TEST_TIMEOUT_MS = 15_000;
 
-/**
- * Parse the SKILLS=(...) bash array from bundle-assets.sh.
- *
- * This catches drift between the build-time bundler and the runtime
- * installer arrays. When a new skill is added to any pack, it must
- * also appear in bundle-assets.sh — otherwise the build will nuke
- * the bundled asset on the next `pnpm build`.
- */
+type BundleInventory = {
+  skills: string[];
+  agents: string[];
+  templateFiles: string[];
+  publicVersionPackages: string[];
+};
+
+function readBundleInventory(): BundleInventory {
+  return JSON.parse(
+    execFileSync(process.execPath, [getBundleInventoryPath(), '--json'], {
+      encoding: 'utf8',
+    }),
+  ) as BundleInventory;
+}
+
 function parseBundleSkills(): string[] {
-  const content = readFileSync(getBundleScriptPath(), 'utf8');
-  const match = content.match(/SKILLS=\(\s*([\s\S]*?)\)/);
-  if (!match)
-    throw new Error('Could not parse SKILLS array from bundle-assets.sh');
-  return match[1]
-    .split('\n')
-    .map((line) => line.trim())
-    .filter((line) => line.length > 0 && !line.startsWith('#'));
+  return readBundleInventory().skills;
 }
 
 function parseBundleAgents(): string[] {
-  const content = readFileSync(getBundleScriptPath(), 'utf8');
-  const match = content.match(/for agent in ([\s\S]*?); do/);
-  if (!match)
-    throw new Error('Could not parse agent list from bundle-assets.sh');
-  return match[1]
-    .split(/\s+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
+  return readBundleInventory().agents;
 }
 
 function parseBundleTemplates(): string[] {
-  const content = readFileSync(getBundleScriptPath(), 'utf8');
-  const match = content.match(/for template in ([\s\S]*?); do/);
-  if (!match)
-    throw new Error('Could not parse template list from bundle-assets.sh');
-  return match[1]
-    .split(/\s+/)
-    .map((entry) => entry.trim())
-    .filter((entry) => entry.length > 0);
+  return readBundleInventory().templateFiles;
 }
 
 function getBundleScriptPath(): string {
   return join(import.meta.dirname, '../../../../../scripts/bundle-assets.sh');
 }
 
+function getBundleInventoryPath(): string {
+  return join(import.meta.dirname, '../../../../../scripts/bundle-inputs.mjs');
+}
+
 function getMigrationPromptSourcePath(): string {
-  return join(
-    import.meta.dirname,
-    '../../../../../assets/migration/pjm-restructure.md',
-  );
+  return join(import.meta.dirname, '../../../../../config/pjm-restructure.md');
 }
 
 function getDispatchMatrixRecommendationSourcePath(): string {
@@ -145,7 +132,7 @@ function readBundledSkillContract(
   return [entry, ...references].join('\n');
 }
 
-describe('bundle-assets.sh consistency', () => {
+describe('bundle asset inventory consistency', () => {
   const bundleSkills = parseBundleSkills();
   const bundleAgents = parseBundleAgents();
   const bundleTemplates = parseBundleTemplates();
@@ -171,6 +158,7 @@ describe('bundle-assets.sh consistency', () => {
     .sort();
 
   it('bundles every workflow skill', () => {
+    expect(WORKFLOW_SKILLS).toContain('oat-explainer-kit');
     const missing = WORKFLOW_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
     );
@@ -201,6 +189,7 @@ describe('bundle-assets.sh consistency', () => {
   });
 
   it('bundles every utility skill', () => {
+    expect(UTILITY_SKILLS).toContain('explainer-kit');
     const missing = UTILITY_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
     );
@@ -569,6 +558,48 @@ describe('bundle-assets.sh consistency', () => {
             ],
           },
         });
+      } finally {
+        rmSync(assetsRoot, { recursive: true, force: true });
+      }
+    },
+    BUNDLE_ASSETS_TEST_TIMEOUT_MS,
+  );
+
+  it(
+    'derives bundled public package versions from the shared inventory',
+    () => {
+      const assetsRoot = mkdtempSync(join(tmpdir(), 'oat-assets-'));
+
+      try {
+        execFileSync('bash', [getBundleScriptPath()], {
+          env: { ...process.env, OAT_ASSETS_DIR: assetsRoot },
+          stdio: 'pipe',
+        });
+
+        const actual = JSON.parse(
+          readFileSync(
+            join(assetsRoot, 'public-package-versions.json'),
+            'utf8',
+          ),
+        ) as Record<string, string>;
+        const expected = Object.fromEntries(
+          readBundleInventory().publicVersionPackages.map((name) => {
+            const packageJson = JSON.parse(
+              readFileSync(
+                join(
+                  import.meta.dirname,
+                  '../../../../../../../packages',
+                  name,
+                  'package.json',
+                ),
+                'utf8',
+              ),
+            ) as { version: string };
+            return [name, packageJson.version];
+          }),
+        );
+
+        expect(actual).toEqual(expected);
       } finally {
         rmSync(assetsRoot, { recursive: true, force: true });
       }

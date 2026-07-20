@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.publish-request/v1",
+  "title": "S3StaticPublishRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "provider",
+    "s3Uri",
+    "publicBaseUrl",
+    "awsRegion",
+    "siteRoot",
+    "manifestPath"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.publish-request/v1" },
+    "provider": { "const": "s3-static" },
+    "s3Uri": {
+      "type": "string",
+      "pattern": "^s3://[^/\\s]+(?:/[^\\s]*)?$"
+    },
+    "publicBaseUrl": {
+      "type": "string",
+      "pattern": "^https://[^\\s]+$"
+    },
+    "awsRegion": { "type": "string", "minLength": 1 },
+    "awsProfile": { "type": "string", "minLength": 1 },
+    "siteRoot": { "type": "string", "minLength": 1 },
+    "manifestPath": { "type": "string", "minLength": 1 }
+  }
+}

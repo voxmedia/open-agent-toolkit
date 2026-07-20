@@ -31,6 +31,33 @@ Mode-sensitive notes:
 - `references/imported-plan.md`: preserved source plan for import mode
 - `references/split-plan.json`: persisted split plan for a coordination parent, used as the durable resume source when `oat-project-split` is interrupted
 
+### Explainer artifacts
+
+[Explainer Kit](../skills/explainer-kit.md) writes project runs under
+`<resolved-project-path>/explainers/<slug>/`. The two project products have
+different retention contracts:
+
+- A `project-explainer` is a working artifact. In a shared project it can be
+  tracked while the project is active, but project completion removes it from
+  the tracked branch with the active project tree. It remains only in the local
+  archived project.
+- A selected final `project-recap` is a durable completion record. Before a
+  shared project is removed, archive copies the complete selected run to
+  `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies its
+  manifest artifact hashes, and reports that tracked export path. Summary and
+  PR links use this export, never the gitignored local archive.
+
+The archive exports at most one selected recap package. It preserves structured
+failure outcomes and successful intermediates, rejects an existing dated
+destination, and fails before deleting the active project if copy or hash
+verification fails.
+
+Local-scope projects are not archived through this export path. Their explainer
+packages inherit the local project's untracked posture and remain
+`built-not-durable` unless independent publish evidence exists. Non-project OAT
+explainer runs use `.oat/repo/reference/explainers/<slug>/`; direct core callers
+must provide their own explicit output root.
+
 ### Gate review frontmatter
 
 Review artifacts produced by `oat gate review` use the normal review fields plus

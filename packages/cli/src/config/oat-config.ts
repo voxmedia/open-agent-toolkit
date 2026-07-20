@@ -53,6 +53,27 @@ export interface OatArchiveConfig {
   awsRegion?: string;
 }
 
+export interface OatExplainerDefaultsConfig {
+  palette?: string;
+  visualProfile?: string;
+  themeBundlePath?: string;
+}
+
+export type OatExplainerPublishProvider = 's3-static';
+
+export interface OatExplainerPublishConfig {
+  provider?: OatExplainerPublishProvider;
+  s3Uri?: string;
+  publicBaseUrl?: string;
+  awsRegion?: string;
+  awsProfile?: string;
+}
+
+export interface OatExplainersConfig {
+  defaults?: OatExplainerDefaultsConfig;
+  publish?: OatExplainerPublishConfig;
+}
+
 export type WorkflowHillCheckpointDefault = 'every' | 'final';
 export type WorkflowProjectLog = true | false | 'auto';
 export type WorkflowPostImplementStep = 'summary' | 'document' | 'pr';
@@ -125,6 +146,13 @@ export interface WorkflowAutoArtifactReview {
   analysis?: boolean;
 }
 
+export type WorkflowExplainerPreference = 'always' | 'ask' | 'never';
+
+export interface WorkflowExplainersConfig {
+  projectExplainer?: WorkflowExplainerPreference;
+  projectRecap?: WorkflowExplainerPreference;
+}
+
 export interface GateConfig {
   command: string;
   onFailure: GateOnFailure;
@@ -176,6 +204,7 @@ export interface OatWorkflowConfig {
   dispatchCeiling?: WorkflowDispatchCeiling;
   gateTimeouts?: WorkflowGateTimeouts;
   gates?: WorkflowGatesConfig;
+  explainers?: WorkflowExplainersConfig;
 }
 
 const VALID_HILL_CHECKPOINT_DEFAULTS: readonly WorkflowHillCheckpointDefault[] =
@@ -211,6 +240,8 @@ const VALID_DESIGN_MODES: readonly WorkflowDesignMode[] = [
   'selective',
   'draft',
 ];
+const VALID_WORKFLOW_EXPLAINER_PREFERENCES: readonly WorkflowExplainerPreference[] =
+  ['always', 'ask', 'never'];
 export const VALID_CODEX_DISPATCH_CEILINGS: readonly WorkflowCodexDispatchCeiling[] =
   ['low', 'medium', 'high', 'xhigh', 'max'];
 export const VALID_CLAUDE_DISPATCH_CEILINGS: readonly WorkflowClaudeDispatchCeiling[] =
@@ -483,6 +514,79 @@ function normalizeRecordMap<T>(
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
+function normalizeExplainersConfig(
+  parsed: unknown,
+  scope: 'shared' | 'local' | 'user',
+): OatExplainersConfig | undefined {
+  if (!isRecord(parsed)) {
+    return undefined;
+  }
+
+  const next: OatExplainersConfig = {};
+  if (isRecord(parsed.defaults)) {
+    const defaults: OatExplainerDefaultsConfig = {};
+    const palette = trimNonEmptyString(parsed.defaults.palette);
+    if (palette !== undefined) {
+      defaults.palette = palette;
+    }
+    const visualProfile = trimNonEmptyString(parsed.defaults.visualProfile);
+    if (visualProfile !== undefined) {
+      defaults.visualProfile = visualProfile;
+    }
+    if (scope !== 'user') {
+      const rawPath = trimNonEmptyString(parsed.defaults.themeBundlePath);
+      if (rawPath !== undefined) {
+        const normalizedPath = normalizeToPosixPath(rawPath);
+        const escapesSharedScope =
+          normalizedPath === '..' || normalizedPath.startsWith('../');
+        if (
+          scope === 'local' ||
+          (!isAbsolute(normalizedPath) && !escapesSharedScope)
+        ) {
+          defaults.themeBundlePath = normalizedPath;
+        }
+      }
+    }
+    if (Object.keys(defaults).length > 0) {
+      next.defaults = defaults;
+    }
+  }
+
+  if (isRecord(parsed.publish)) {
+    const publish: OatExplainerPublishConfig = {};
+    if (scope === 'shared') {
+      if (parsed.publish.provider === 's3-static') {
+        publish.provider = 's3-static';
+      }
+      const s3Uri = trimNonEmptyString(parsed.publish.s3Uri);
+      if (s3Uri !== undefined && /^s3:\/\/[^/\s]+(?:\/.*)?$/.test(s3Uri)) {
+        publish.s3Uri = s3Uri.replace(/\/+$/, '');
+      }
+      const publicBaseUrl = trimNonEmptyString(parsed.publish.publicBaseUrl);
+      if (
+        publicBaseUrl !== undefined &&
+        /^https:\/\/[^/\s]+(?:\/.*)?$/.test(publicBaseUrl)
+      ) {
+        publish.publicBaseUrl = publicBaseUrl.replace(/\/+$/, '');
+      }
+      const awsRegion = trimNonEmptyString(parsed.publish.awsRegion);
+      if (awsRegion !== undefined) {
+        publish.awsRegion = awsRegion;
+      }
+    } else {
+      const awsProfile = trimNonEmptyString(parsed.publish.awsProfile);
+      if (awsProfile !== undefined) {
+        publish.awsProfile = awsProfile;
+      }
+    }
+    if (Object.keys(publish).length > 0) {
+      next.publish = publish;
+    }
+  }
+
+  return Object.keys(next).length > 0 ? next : undefined;
+}
+
 function normalizeWorkflowConfig(
   parsed: unknown,
 ): OatWorkflowConfig | undefined {
@@ -665,6 +769,24 @@ function normalizeWorkflowConfig(
     }
   }
 
+  if (isRecord(parsed.explainers)) {
+    const explainers: WorkflowExplainersConfig = {};
+    for (const key of ['projectExplainer', 'projectRecap'] as const) {
+      const value = parsed.explainers[key];
+      if (
+        typeof value === 'string' &&
+        (VALID_WORKFLOW_EXPLAINER_PREFERENCES as readonly string[]).includes(
+          value,
+        )
+      ) {
+        explainers[key] = value as WorkflowExplainerPreference;
+      }
+    }
+    if (Object.keys(explainers).length > 0) {
+      next.explainers = explainers;
+    }
+  }
+
   return Object.keys(next).length > 0 ? next : undefined;
 }
 
@@ -688,6 +810,7 @@ export interface OatConfig {
   projects?: { root: string };
   git?: OatGitConfig;
   archive?: OatArchiveConfig;
+  explainers?: OatExplainersConfig;
   tools?: OatToolsConfig;
   documentation?: OatDocumentationConfig;
   localPaths?: string[];
@@ -700,6 +823,7 @@ export interface OatLocalConfig {
   activeProject?: string | null;
   lastPausedProject?: string | null;
   activeIdea?: string | null;
+  explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
 }
 
@@ -707,6 +831,7 @@ export interface UserConfig {
   version: number;
   activeIdea?: string | null;
   updateNotifications?: boolean;
+  explainers?: OatExplainersConfig;
   workflow?: OatWorkflowConfig;
 }
 
@@ -885,6 +1010,11 @@ function normalizeOatConfig(parsed: unknown): OatConfig {
     }
   }
 
+  const explainers = normalizeExplainersConfig(parsed.explainers, 'shared');
+  if (explainers) {
+    next.explainers = explainers;
+  }
+
   if (isRecord(parsed.tools)) {
     const validPacks = [
       'core',
@@ -996,6 +1126,11 @@ function normalizeOatLocalConfig(
       typeof parsed.activeIdea === 'string' && parsed.activeIdea.trim()
         ? parsed.activeIdea.trim()
         : null;
+  }
+
+  const explainers = normalizeExplainersConfig(parsed.explainers, 'local');
+  if (explainers) {
+    next.explainers = explainers;
   }
 
   const workflow = normalizeWorkflowConfig(parsed.workflow);
@@ -1196,6 +1331,11 @@ function normalizeUserConfig(parsed: unknown): UserConfig {
 
   if (typeof parsed.updateNotifications === 'boolean') {
     next.updateNotifications = parsed.updateNotifications;
+  }
+
+  const explainers = normalizeExplainersConfig(parsed.explainers, 'user');
+  if (explainers) {
+    next.explainers = explainers;
   }
 
   const workflow = normalizeWorkflowConfig(parsed.workflow);

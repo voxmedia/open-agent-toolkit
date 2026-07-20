@@ -674,33 +674,22 @@ describe('validateOatSkills', () => {
 
   it('requires bundled oat skill files to include valid semver versions', async () => {
     const repoRoot = join(process.cwd(), '..', '..');
-    const bundleScriptPath = join(
+    const bundleInventoryPath = join(
       repoRoot,
       'packages',
       'cli',
       'scripts',
-      'bundle-assets.sh',
+      'bundle-inputs.mjs',
     );
-    const bundleScript = await readFile(bundleScriptPath, 'utf8');
-    const lines = bundleScript.split('\n');
-
-    const bundledSkills: string[] = [];
-    let inSkillsBlock = false;
-    for (const line of lines) {
-      if (line.trim() === 'SKILLS=(') {
-        inSkillsBlock = true;
-        continue;
-      }
-      if (inSkillsBlock && line.trim() === ')') {
-        break;
-      }
-      if (inSkillsBlock) {
-        const name = line.trim();
-        if (name.startsWith('oat-')) {
-          bundledSkills.push(name);
-        }
-      }
-    }
+    const { stdout } = await execFileAsync(
+      process.execPath,
+      [bundleInventoryPath, '--json'],
+      { encoding: 'utf8' },
+    );
+    const inventory = JSON.parse(stdout) as { skills: string[] };
+    const bundledSkills = inventory.skills.filter((name) =>
+      name.startsWith('oat-'),
+    );
 
     expect(bundledSkills.length).toBeGreaterThan(0);
 
@@ -740,6 +729,20 @@ describe('validateOatSkills', () => {
     }
 
     expect(invalidVersions).toEqual([]);
+  });
+
+  it('tracks the current explainer skill family versions', async () => {
+    for (const [skillName, expectedVersion] of [
+      ['explainer-kit', '1.0.1'],
+      ['oat-explainer-kit', '1.0.0'],
+    ]) {
+      const content = await readRepoFile(
+        `.agents/skills/${skillName}/SKILL.md`,
+      );
+      expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
+        expectedVersion,
+      );
+    }
   });
 
   it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
@@ -1264,7 +1267,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-plan',
-        version: '1.4.2',
+        version: '1.4.3',
         finalizedHeading: '### Step 12.5: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading: '### Step 13: Mark Plan Complete',
@@ -1281,7 +1284,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.1.6',
+        version: '2.1.7',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1634,7 +1637,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1851,7 +1854,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2027,7 +2030,7 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.1.8'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.3'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.4'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.3'],
@@ -2280,7 +2283,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.6');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2528,10 +2531,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.6'],
+      ['oat-project-implement', '2.1.7'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
-      ['oat-project-complete', '1.5.3'],
+      ['oat-project-complete', '1.5.4'],
       ['oat-project-next', '1.0.11'],
     ] as const;
 
@@ -3599,7 +3602,7 @@ describe('validateOatSkills', () => {
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.16'],
-      ['oat-project-plan', '1.4.2'],
+      ['oat-project-plan', '1.4.3'],
       ['oat-project-quick-start', '2.3.3'],
       ['oat-project-import-plan', '1.4.7'],
       ['oat-project-review-provide', '1.3.22'],
@@ -3617,7 +3620,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.6'],
+      ['oat-project-implement', '2.1.7'],
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;
