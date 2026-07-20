@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.7.0
+version: 1.7.1
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -357,23 +357,37 @@ archive anything first.
 6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
-7. **The full `oat-project-complete` PROCESS before merge** (standing order:
-   review → complete → merge; an open PR is expected, not a blocker — the
-   archive-aware PR body sync handles it). The requirement is the whole
-   completion tail, named explicitly: `oat project complete-state` →
+7. **The full `oat-project-complete` PROCESS, with an explicit autonomous
+   deferral branch.** Interactive runs retain the standing per-wave order
+   review → complete → merge (an open PR is expected, not a blocker — the
+   archive-aware PR body sync handles it). The requirement remains the whole
+   completion process, named explicitly: `oat project complete-state` →
    `oat project archive` (the CLI owns the local archive move, the summary
    export, and the S3 sync when `s3SyncOnComplete` is configured) →
    active-project pointer clear → the completion bookkeeping commit. Running
    `oat project complete-state` ALONE does NOT satisfy this step: in the Orc
    first run all four wrapper projects were left lifecycle-complete but
-   unarchived until an operator audit asked (S10). Under autonomous execution
-   the interactive completion skill is model-invisible
-   (`disable-model-invocation: true`), so the orchestrator cannot invoke it;
-   execute its SKILL.md as a document instead, resolving its gates from config
+   unarchived until an operator audit asked (S10).
+
+   Under autonomous execution, each wave MUST still run
+   `oat project complete-state` and its then-current project bookkeeping. The
+   archive tail — `oat project archive` (including configured S3 sync) →
+   active-project pointer clear → completion bookkeeping commit — MAY be
+   deferred to the program boundary so the wave can merge and execution can
+   continue. Record every such choice in the wave ledger exactly as
+   `completion tail: deferred to program close`; deferral is an outstanding
+   disposition, never satisfaction of the full-tail requirement. Interactive
+   per-wave full-tail completion remains valid.
+
+   The interactive completion skill is model-invisible
+   (`disable-model-invocation: true`), so an autonomous orchestrator executes
+   its `SKILL.md` as a document, resolving its gates from config
    (`workflow.archiveOnComplete`, `workflow.createPrOnComplete`), until an
    `oat-project-complete-auto` companion ships
-   (BL-260720-add-oat-project-complete-auto) — this step then repoints to it
-   for autonomous runs.
+   (BL-260720-add-oat-project-complete-auto). If the archive tail is deferred,
+   that execution occurs after the one human-gated program-end checkpoint in
+   `oat-wave-program`, across every deferred wave wrapper.
+
 8. **After the operator merges:** reconcile (squash-merge means content-diff the
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the

@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.3.0
+version: 1.3.1
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -113,6 +113,18 @@ target (same disclaimer as the plan indexes).
    program recap is not run, record `recap: not run — {reason}` there. Every
    optional step gets an explicit disposition; silence is indistinguishable
    from oversight (Orc program-recap evidence).
+6. When the final wave's ledger row flips to `done` and all wave merges are
+   recorded, stop at exactly one HUMAN-GATED program completion checkpoint,
+   including in autonomous runs:
+   "All waves are merged and the program is complete. Run the completion tail
+   (oat-project-complete: archive + S3 + pointer clear) across all N wave wrapper
+   projects now?" On yes, run the full deferred tail for each wrapper via
+   `oat-project-complete-auto` when it ships, or execute the interactive skill's
+   `SKILL.md` as a document until then, and flip every
+   `completion tail: deferred to program close` ledger disposition to `done`. On
+   no or defer, record the standing deferral and its owner in the program ledger.
+   This is the program completion gate and mirrors the recap publish gate; never
+   answer it autonomously or repeat it once per wave.
 
 ### Program-close explainer caller
 
