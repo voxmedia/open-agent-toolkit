@@ -796,6 +796,58 @@ Expected: match message printed; `[JUDGMENT]` count unchanged from pre-edit (2).
 
 ---
 
+## Phase p-rev3: Revision 3 — first-consumer feedback (1.7.0)
+
+Source: Orc-repo 4-wave program handoff (`references/2026-07-20-wave-skills-first-run-handoff.md`, log-verified Q&A 2026-07-20) + operator recap-disposition observation. Signal 9 routed to the explainer project (not ours).
+
+### Task prev3-t01: (revision) Gate-row status flow — passed is the only terminal state (S8)
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`
+
+**Step 1:** Fix the wave-0/1 precedent wording (Step 4 plan gate + closeout final gate + step 6.5): plan gates MAY PROCEED at `fixes_completed`; every gate row MUST flip to `passed` once its fix dispositions carry verification records (B5) — `passed` is the only terminal state for gate rows; step 6.5's restore-watch presumes it.
+
+**Step 2: Verify** — `rg -n "only terminal state" .agents/skills/oat-wave-execute/SKILL.md`; commit `fix(prev3-t01): gate rows terminate at passed - proceed-point vs terminal state (S8)`.
+
+### Task prev3-t02: (revision) Merge + fix-round discipline (S5, S7)
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`
+
+**Step 1:** Sharpen the pre-merge guard (B2 text) to the prescribed one-invocation compound shape: `cd /abs/repo/root && [ "$(git branch --show-current)" = "wave-N-execution" ] || exit 1 && git merge --no-ff …` with the rationale (cwd is healable via explicit cd; branch drift hard-aborts; advisory prints in separate invocations proved worthless — W2 incident + 2 saves).
+
+**Step 2:** New standing rule: fix rounds are APPEND-ONLY — never amend a reviewed SHA (amending invalidates stored review verdicts citing it); fix-round briefs MUST state append-only; a worker refusal of an amend instruction is correct role behavior (p10 precedent).
+
+**Step 3:** Step 3.1 `--no-commit`: add a preflight `oat project new --help` probe with both branches (flag present → use it; absent (version skew) → expect auto-commit and land wrapper artifacts in a follow-up commit), styled like rule 8's ≥0.1.65 check.
+
+**Verify** — rg for the compound guard + "append-only" + the probe; commit `fix(prev3-t02): same-shell merge guard, append-only fix rounds, --no-commit probe (S5,S7)`.
+
+### Task prev3-t03: (revision) Gate execution mechanics (S1, S2, S3, S4)
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`
+
+**Step 1 (S1):** Condition rule 3's "gate reviewers commit their own artifacts" on primary-checkout execution; from linked worktrees (git metadata outside the sandbox) the ORCHESTRATOR commits gate artifacts on the reviewer's behalf — environment-conditional refinement, both consumers' evidence cited (stoa waves 2–3; Orc W1–W4).
+
+**Step 2 (S2):** New dispatch-posture rule alongside 6/8: gates dispatch in BACKGROUND by default with a completion watcher (orchestrator-host foreground tool ceilings — e.g. 600s — are shorter than legitimate wave-scoped reviews); foreground only for short scopes; rule 8 remains the recovery path (used once in Orc W2, worked).
+
+**Step 3 (S3):** Standing rule: piped DoD/gate verification chains run under `set -o pipefail` or capture the raw exit code pre-filter (Orc W4: `pnpm test | grep` masked a 1-failed-test run).
+
+**Step 4 (S4):** Single-writer-until-committed rule for review artifacts: an uncommitted review artifact is exclusively owned by whichever agent is live on it; orchestrator dispositions land as immediate commits or wait for agent termination; lock/suffix conventions rejected (fragment the audited review chain).
+
+**Verify** — rg each; commit `fix(prev3-t03): gate posture, artifact ownership, pipefail, worktree commit fallback (S1-S4)`.
+
+### Task prev3-t04: (revision) Bootstrap CI waiver + rule-9 citation + program-skill optional-step disposition (S6 + Q5 + recap)
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+
+**Step 1:** Closeout/merge-wait guidance: a wave merging into a repo with NO CI records a one-line explicit waiver in the wave plan ("merge gate = local DoD only"); the CI-introducing wave's first green run certifies the cumulative merged tree and is recorded as waiver closure; no retroactive gate re-runs.
+
+**Step 2:** Rule 9 gains the second-consumer citation (Orc: regex vs oxfmt padding at wave-close; line-based transform required) — text otherwise verbatim.
+
+**Step 3 (program skill):** Optional-step disposition rule in wave-close: an autonomous orchestrator NEVER silently drops an optional step — wave-close bookkeeping records either the recap manifest runId/outcome or an explicit "recap: not run — {reason}" ledger entry (silent discretion is indistinguishable from oversight).
+
+**Step 4:** Versions: execute frontmatter → 1.7.0, program → 1.3.0. Re-sync provider views. (Lockstep 0.2.7 already present on this branch/PR.)
+
+**Verify** — version greps; `oat sync --scope all` clean; `pnpm lint`; commit `feat(prev3-t04): CI waiver rule, optional-step disposition, versions 1.7.0/1.3.0`.
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -962,8 +1014,9 @@ Source: stoa W6-migration report (references/w6-migration-report-2026-07-18.md) 
 - Phase 6: 4 tasks - §4 explainer integration + its own release choreography (RC-gated)
 - Phase p-rev1: 3 tasks - PR #158 Bugbot revision
 - Phase p-rev2: 3 tasks - stoa migration findings (installer exec-bit, runbook, 0.2.1)
+- Phase p-rev3: 4 tasks - Orc first-consumer feedback (1.7.0/1.3.0)
 
-**Total: 33 tasks** (29 unblocked; 4 gated on explainer-kit RC)
+**Total: 37 tasks**
 
 Ready for code review and merge.
 
