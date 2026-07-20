@@ -33,8 +33,10 @@ consumers.
 
 ## First-Run Audit Results (operator 8-question review)
 
-Full record: `../../../projects/shared/wave-4-execution/orchestration-log.md`
-(Program Retrospective Addendum). Condensed:
+Full record: wave-4 `orchestration-log.md` (Program Retrospective Addendum),
+archived with the wrapper project — local `.oat/projects/archived/wave-4-execution/`,
+S3 `s3://tkstang-open-agent-toolkit/repositories/orc/projects/20260720-wave-4-execution`.
+Condensed:
 
 - **Ledger/coverage:** 14/14 rows done, 0 deferred/dropped, invariant held at
   every commit; all 4 ledger rows carry PR + squash SHA + completion record.
@@ -63,7 +65,7 @@ Full record: `../../../projects/shared/wave-4-execution/orchestration-log.md`
   summaries; all 4 wrapper projects lifecycle-complete before merge.
 - **Defect found by the audit itself:** signal 8 below.
 
-## Skill Signals (8 + 1)
+## Skill Signals (8 + 2)
 
 Signals 1–5 are NEW relative to stoa's six waves; 6–7 strengthen/sharpen
 existing rules; 8 is a skill-TEXT defect; 9 is an explainer-kit core defect
@@ -154,9 +156,41 @@ found while producing the program recap.
    tags (or claim-id prefix convention) to the fact-base contract and
    distribute claims in `createContentModel`.
 
+10. **"oat-project-complete BEFORE merge" under-specifies the archive tail**
+    (gap, found post-program by operator question). Closeout step 7 names the
+    skill, but under autonomous execution `oat project complete-state` alone
+    read as satisfying it — all four wrapper projects were left
+    lifecycle-complete but unarchived (no local archive move, no
+    `s3SyncOnComplete` sync, active-project pointer still set) until the
+    operator asked. **Root cause is structural, not textual:**
+    `oat-project-complete` carries `disable-model-invocation: true`, so it is
+    invisible to and uninvokable by the autonomous orchestrator that step 7
+    orders to run it (it never appeared in the orchestrator's skill listing;
+    every other lifecycle skill did). Under that contradiction, degrading to
+    the nearest matching CLI command is the expected outcome, not a fluke —
+    the human-gated flag is right for interactive use (archive moves, S3
+    uploads, PR mutations) and wrong as a dependency of an autonomous
+    closeout. The post-program remediation worked only because the operator's
+    explicit request served as the gate: the orchestrator read SKILL.md as a
+    document and executed its process inline (config-resolved answers,
+    project-log gate, CLI-owned archive, pointer clear). Proposed, in
+    preference order: (a) ship an `oat-project-complete-auto` non-interactive
+    companion for orchestrators — the repo already establishes this exact
+    pattern with `oat-worktree-bootstrap-auto` — resolving every batched
+    question from config (`workflow.archiveOnComplete`,
+    `workflow.createPrOnComplete` already auto-answer), skipping PR steps
+    when the PR is merged, and hard-failing instead of prompting on any gate
+    it cannot auto-resolve; step 7 then names the `-auto` companion for
+    autonomous runs. (b) Failing that, step 7 inlines the full tail
+    explicitly — complete-state, `oat project archive` (CLI-owned local move
+    - summary export + S3 sync when configured), pointer clear — accepting
+      the duplication cost. Do NOT simply flip the flag on the interactive
+      skill; that loses the human gate for the cases that genuinely want it.
+
 ## Pointers
 
 - Program artifact: `../external-plans/2026-07-19-execution-program.md`
-- Wave summaries: `../project-summaries/wave-{1..4}-execution.md`
-- Program-level log of record: wave-4 `orchestration-log.md` (retro addendum)
+- Wave summaries: `../project-summaries/20260720-wave-{1..4}-execution.md`
+- Program-level log of record: wave-4 `orchestration-log.md` (retro addendum;
+  archived — see Full record note above)
 - Recap provenance: `../../explainers/execution-program-2026-07-19-recap/`
