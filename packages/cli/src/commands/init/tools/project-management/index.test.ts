@@ -1,8 +1,18 @@
 import type { CommandContext } from '@app/command-context';
 import { Command, Option } from 'commander';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 
 import { createInitToolsProjectManagementCommand } from './index';
+
+const { upsertAgentsMdSection } = vi.hoisted(() => ({
+  upsertAgentsMdSection: vi.fn(async () => ({
+    action: 'updated' as const,
+  })),
+}));
+
+vi.mock('@commands/shared/agents-md', () => ({
+  upsertAgentsMdSection,
+}));
 
 function makeLogger() {
   return {
@@ -65,6 +75,10 @@ async function runViaParent(
 }
 
 describe('createInitToolsProjectManagementCommand — scope conflict rejection', () => {
+  beforeEach(() => {
+    upsertAgentsMdSection.mockClear();
+  });
+
   it('rejects explicit --scope user with exit code 1', async () => {
     const logger = makeLogger();
     const installProjectManagement = makeInstallProjectManagement();
@@ -150,5 +164,30 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
 
     expect(exitCode).not.toBe(1);
     expect(installProjectManagement).toHaveBeenCalled();
+  });
+
+  it('writes root AGENTS guidance after a successful direct install', async () => {
+    const installProjectManagement = makeInstallProjectManagement();
+    const cmd = createInitToolsProjectManagementCommand({
+      buildCommandContext: () => makeContext(),
+      resolveProjectRoot: async () => '/test/project',
+      resolveAssetsRoot: async () => '/assets',
+      installProjectManagement,
+    });
+    const parent = wrapWithScopeParent(cmd);
+
+    const exitCode = await runViaParent(parent, ['project-management']);
+
+    expect(exitCode).not.toBe(1);
+    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+      '/test/project',
+      'project-management',
+      expect.stringContaining('### Project Management'),
+    );
+    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+      '/test/project',
+      'project-management',
+      expect.stringContaining('### Decision Records'),
+    );
   });
 });

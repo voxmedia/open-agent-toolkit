@@ -188,7 +188,8 @@ Key behavior:
 - Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
 - Tracks installed vs bundled skill versions and reports outdated skills
 - Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
-- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md`. When the `project-management` pack is installed, that section points agents to `.oat/repo/AGENTS.md` for active PJM and durable-reference routing, summarizes when to consult it, and gives decision-specific guidance for reviewing and creating durable records without hand-editing the generated index.
+- Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md`.
+- Installing the `project-management` pack—through either the aggregate picker or `oat tools install project-management`—also upserts a managed `OAT project-management` section. It points agents to `.oat/repo/AGENTS.md` for active PJM and durable-reference routing, summarizes when to consult it, and gives decision-specific guidance for reviewing and creating durable records without hand-editing the generated index.
 - Interactive runs can prompt to update selected outdated skills
 - Successful installs report the final scope chosen for each pack, including `project + user` when a pack is installed in both, and auto-sync only the scopes actually changed by the install so untouched scopes are never re-synced or pruned
 - Install-triggered auto-sync limits removal planning to the canonical entries from the pack that was just installed, so stale manifest drift in unrelated packs does not delete other provider views

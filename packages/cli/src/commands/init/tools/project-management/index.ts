@@ -3,6 +3,7 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import { upsertAgentsMdSection } from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   canonicalPathsForPack,
@@ -12,6 +13,10 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import {
+  buildProjectManagementAgentsSectionBody,
+  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+} from './agents-guidance';
 import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
@@ -85,6 +90,11 @@ export function createInitToolsProjectManagementCommand(
             targetRoot,
             force: options.force,
           });
+          const agentsGuidanceResult = await upsertAgentsMdSection(
+            targetRoot,
+            PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+            buildProjectManagementAgentsSectionBody(),
+          );
 
           if (context.json) {
             context.logger.json({
@@ -103,6 +113,11 @@ export function createInitToolsProjectManagementCommand(
             context.logger.info(
               `Templates: copied=${result.copiedTemplates.length}, updated=${result.updatedTemplates.length}, skipped=${result.skippedTemplates.length}`,
             );
+            if (agentsGuidanceResult.action !== 'no-change') {
+              context.logger.info(
+                `AGENTS.md project-management section ${agentsGuidanceResult.action}.`,
+              );
+            }
             context.logger.info('Run: oat sync --scope project');
           }
           didInstall = true;
