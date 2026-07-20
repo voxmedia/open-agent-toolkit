@@ -31,19 +31,21 @@ this repository.
 - Confirm the rollback backup exists at
   `~/.agents/skills-backup/oat-explainer-kit-0.4.1` before changing the installed
   wrapper.
-- Use the post-p06 final explainer-kit RC for acceptance. At final-RC freeze,
-  fill all three placeholders in the installed wrapper's `config.json`
-  `finalRc` block (`rcId`, `commit`, `subtreeSha256`); the acceptance harness
-  reads them from there and carries them into the sanitized acceptance record.
-- Final-RC pins:
-
-  ```json
-  {
-    "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
-    "commit": "da1e7a713adac4743368addf206aa780a94871ba",
-    "subtreeSha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
-  }
-  ```
+- ACCEPTANCE COMPLETE — this section is now historical record. The final
+  accepted RC (post-merge 0.2.6) supersedes all earlier pins:
+  - `rcId`: `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
+  - `commit`: `1f9be47e94ccda5d7304e66502f8bb1b88aa06d3` (main, PR #166)
+  - CLI tarball: `sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390`
+  - `subtreeSha256`: `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`
+    (unchanged across every RC generation)
+  - Evidence: initial six-gate run vs RC `985d0abd` (all pass; recorded at
+    `references/p06-t03-private-wrapper-acceptance-2026-07-19.md`), wrapper
+    retest + packaged S3/CDN smoke vs `7fea9e53` (all pass, first attempt;
+    canonical integrated evidence + promotion approval on
+    `origin/tkstang/explainer-kit-rc` @ `7bab4f25`,
+    `validate-explainer-acceptance.mjs --gate all` passing).
+  - Historical provenance notes (985d0abd CLI-tarball benign-ordering
+    disposition): `references/explainer-rc-985d0abd/`.
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.

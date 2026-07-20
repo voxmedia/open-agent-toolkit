@@ -1,0 +1,39 @@
+{
+  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+  "startedAt": "2026-07-19T18:58:11.820Z",
+  "finishedAt": "2026-07-19T18:58:19.112Z",
+  "results": [
+    {
+      "name": "vault-destination",
+      "status": "pass",
+      "evidence": "run run-7dec5351-5b79-4268-817d-478e669acb56 copied under vault explainers root; manifest hash verified"
+    },
+    {
+      "name": "google-docs-destination",
+      "status": "pass",
+      "evidence": "gdocs export wiring exited 0 for run run-7dec5351-5b79-4268-817d-478e669acb56"
+    },
+    {
+      "name": "presets",
+      "status": "pass",
+      "evidence": "3 preset(s) structurally valid (id, corresponding s3Uri/publicBaseUrl roots)"
+    },
+    {
+      "name": "personal-destinations-e2e",
+      "status": "pass",
+      "evidence": "publish receipt written (explainer-kit.publish-receipt/v1); artifacts verified at public root"
+    },
+    {
+      "name": "manifest-consumption",
+      "status": "pass",
+      "evidence": "all 12 schema-required keys present; 5 immutable hash(es) verified; runId=run-7dec5351-5b79-4268-817d-478e669acb56 outcome=built-not-durable"
+    },
+    {
+      "name": "rollback",
+      "status": "pass",
+      "evidence": "backup tree restores cleanly to a scratch target; restored SKILL.md byte-matches the backup"
+    }
+  ],
+  "overall": "pass"
+}
