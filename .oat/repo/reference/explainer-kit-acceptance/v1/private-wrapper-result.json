@@ -1,39 +1,39 @@
 {
   "schemaVersion": "explainer-kit.wrapper-acceptance/v1",
-  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
   "candidate": {
     "schemaVersion": "explainer-kit.release-candidate/v1",
-    "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+    "commit": "1f9be47e94ccda5d7304e66502f8bb1b88aa06d3",
     "packages": [
       {
         "name": "@open-agent-toolkit/cli",
-        "version": "0.2.3",
-        "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
-        "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+        "version": "0.2.6",
+        "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+        "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
       },
       {
         "name": "@open-agent-toolkit/control-plane",
-        "version": "0.2.3",
-        "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
-        "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+        "version": "0.2.6",
+        "artifact": "open-agent-toolkit-control-plane-0.2.6.tgz",
+        "sha256": "sha256:82d1e7f96517e53b78bb6387dddf20a201d5a8dae4dcdba0b860cc85c1e361aa"
       },
       {
         "name": "@open-agent-toolkit/docs-config",
-        "version": "0.2.3",
-        "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
-        "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+        "version": "0.2.6",
+        "artifact": "open-agent-toolkit-docs-config-0.2.6.tgz",
+        "sha256": "sha256:1e3b52ae6bc66728db2a3e1a5c93e9723939ca2bc8781e1418e376b0c0d320a3"
       },
       {
         "name": "@open-agent-toolkit/docs-theme",
-        "version": "0.2.3",
-        "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
-        "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+        "version": "0.2.6",
+        "artifact": "open-agent-toolkit-docs-theme-0.2.6.tgz",
+        "sha256": "sha256:e9eb1a3c4553f9674974df4557be49122883dd0a6f3d7b22a9b8b6f3c39dd662"
       },
       {
         "name": "@open-agent-toolkit/docs-transforms",
-        "version": "0.2.3",
-        "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
-        "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+        "version": "0.2.6",
+        "artifact": "open-agent-toolkit-docs-transforms-0.2.6.tgz",
+        "sha256": "sha256:eb991736bac0b143879a727f5826511086cbed7f3a8d1ff3763f9844fa328c96"
       }
     ],
     "skills": [
@@ -126,57 +126,57 @@
     ],
     "changedCandidates": []
   },
-  "coreRunId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+  "coreRunId": "run-5510b6de-ba63-41a8-b6fd-d166247f2506",
   "verdict": "passed",
   "packagedExecution": {
     "schemaVersion": "explainer-kit.packaged-execution/v1",
-    "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+    "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
     "entry": "scripts/run.mjs",
     "package": {
       "name": "@open-agent-toolkit/cli",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
-      "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+      "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
     },
     "verifiedTarballs": [
       {
         "name": "@open-agent-toolkit/cli",
-        "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
-        "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+        "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+        "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
       },
       {
         "name": "@open-agent-toolkit/control-plane",
-        "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
-        "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+        "artifact": "open-agent-toolkit-control-plane-0.2.6.tgz",
+        "sha256": "sha256:82d1e7f96517e53b78bb6387dddf20a201d5a8dae4dcdba0b860cc85c1e361aa"
       },
       {
         "name": "@open-agent-toolkit/docs-config",
-        "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
-        "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+        "artifact": "open-agent-toolkit-docs-config-0.2.6.tgz",
+        "sha256": "sha256:1e3b52ae6bc66728db2a3e1a5c93e9723939ca2bc8781e1418e376b0c0d320a3"
       },
       {
         "name": "@open-agent-toolkit/docs-theme",
-        "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
-        "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+        "artifact": "open-agent-toolkit-docs-theme-0.2.6.tgz",
+        "sha256": "sha256:e9eb1a3c4553f9674974df4557be49122883dd0a6f3d7b22a9b8b6f3c39dd662"
       },
       {
         "name": "@open-agent-toolkit/docs-transforms",
-        "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
-        "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+        "artifact": "open-agent-toolkit-docs-transforms-0.2.6.tgz",
+        "sha256": "sha256:eb991736bac0b143879a727f5826511086cbed7f3a8d1ff3763f9844fa328c96"
       }
     ],
     "request": {
       "schemaVersion": "explainer-kit.run-request/v1",
-      "sha256": "sha256:98bbefcd95a8e2c5d64474530b47600e9026402b5d263992d44501aec4ee357d"
+      "sha256": "sha256:4a9e72b02d0fcf7222433ec73a103e9dda4e8761cc71e56b286b93015c546be0"
     },
     "outputs": {
       "manifest": {
         "schemaVersion": "explainer-kit.manifest/v1",
-        "sha256": "sha256:9a98bcd83603e1627e1bc2bd8237080b3266a0e41e9ef23b980f590c56df43e6"
+        "sha256": "sha256:522109e098e239f53184fb7b5fac25a2f980fa567cce2732e1ce9fac34b86951"
       },
       "receipt": null
     },
-    "coreRunId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+    "coreRunId": "run-5510b6de-ba63-41a8-b6fd-d166247f2506",
     "exit": {
       "code": 0,
       "signal": null
@@ -194,9 +194,9 @@
     "credentialsPersisted": false
   },
   "hashes": {
-    "request": "sha256:98bbefcd95a8e2c5d64474530b47600e9026402b5d263992d44501aec4ee357d",
-    "manifest": "sha256:9a98bcd83603e1627e1bc2bd8237080b3266a0e41e9ef23b980f590c56df43e6",
-    "publishReceipt": "sha256:e28070a38a0a4a6802652f527bfef6081840905390f8c768b40e50cffb98ab30"
+    "request": "sha256:4a9e72b02d0fcf7222433ec73a103e9dda4e8761cc71e56b286b93015c546be0",
+    "manifest": "sha256:522109e098e239f53184fb7b5fac25a2f980fa567cce2732e1ce9fac34b86951",
+    "publishReceipt": "sha256:a0067b60c8325166133375b15ad8197a24a0a4ea17f7827b04f376f1fa4f2f9c"
   },
   "durability": {
     "outcome": "built-durable",

@@ -1,12 +1,12 @@
 {
   "schemaVersion": "explainer-kit.manifest/v1",
-  "runId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+  "runId": "run-5510b6de-ba63-41a8-b6fd-d166247f2506",
   "slug": "acceptance-run",
   "recipe": {
     "id": "project-recap",
     "version": "1"
   },
-  "createdAt": "2026-07-19T18:58:12.126Z",
+  "createdAt": "2026-07-20T02:15:47.897Z",
   "source": {
     "factBasePath": "source/fact-base.json",
     "factBaseHash": "sha256:7bb61de580c19d39dc3a0a1bca3281b7bcb5aa8bedc143c9b637df6368142e10",
@@ -41,7 +41,7 @@
   "outcome": "built-not-durable",
   "buildRecord": {
     "path": "build-record.json",
-    "hash": "sha256:f6fb398998de848d7bc7cc5b315a64e45241753524ec206c026f9aea8b1ae0dd"
+    "hash": "sha256:abaaeb2402d0e5712305a389add75dd353ee75590483435e2ff1bd44e508eb41"
   },
   "warnings": []
 }

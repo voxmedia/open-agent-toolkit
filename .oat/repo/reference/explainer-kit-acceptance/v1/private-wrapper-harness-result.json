@@ -1,18 +1,18 @@
 {
-  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
-  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
-  "startedAt": "2026-07-19T18:58:11.820Z",
-  "finishedAt": "2026-07-19T18:58:19.112Z",
+  "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
+  "commit": "1f9be47e94ccda5d7304e66502f8bb1b88aa06d3",
+  "startedAt": "2026-07-20T02:15:47.636Z",
+  "finishedAt": "2026-07-20T02:15:54.923Z",
   "results": [
     {
       "name": "vault-destination",
       "status": "pass",
-      "evidence": "run run-7dec5351-5b79-4268-817d-478e669acb56 copied under vault explainers root; manifest hash verified"
+      "evidence": "run run-5510b6de-ba63-41a8-b6fd-d166247f2506 copied under vault explainers root; manifest hash verified"
     },
     {
       "name": "google-docs-destination",
       "status": "pass",
-      "evidence": "gdocs export wiring exited 0 for run run-7dec5351-5b79-4268-817d-478e669acb56"
+      "evidence": "gdocs export wiring exited 0 for run run-5510b6de-ba63-41a8-b6fd-d166247f2506"
     },
     {
       "name": "presets",
@@ -27,7 +27,7 @@
     {
       "name": "manifest-consumption",
       "status": "pass",
-      "evidence": "all 12 schema-required keys present; 5 immutable hash(es) verified; runId=run-7dec5351-5b79-4268-817d-478e669acb56 outcome=built-not-durable"
+      "evidence": "all 12 schema-required keys present; 5 immutable hash(es) verified; runId=run-5510b6de-ba63-41a8-b6fd-d166247f2506 outcome=built-not-durable"
     },
     {
       "name": "rollback",
