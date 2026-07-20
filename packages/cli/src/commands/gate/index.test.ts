@@ -73,6 +73,7 @@ interface ProcessCall {
   livenessIntervalMs?: number;
   purpose: 'host-detection' | 'availability' | 'execute';
   stdio: 'ignore' | 'inherit' | 'pipe';
+  stdoutDestination?: 'stdout' | 'stderr';
   timeoutMs: number;
 }
 
@@ -97,6 +98,7 @@ type ProcessRunner = (
     purpose: ProcessCall['purpose'];
     stdin: ProcessCall['stdin'];
     stdio: ProcessCall['stdio'];
+    stdoutDestination?: ProcessCall['stdoutDestination'];
     timeoutMs: number;
   },
 ) => Promise<{
@@ -265,6 +267,9 @@ function createProcessRunner(
       livenessIntervalMs: runOptions.livenessIntervalMs,
       purpose: runOptions.purpose,
       stdio: runOptions.stdio,
+      ...(runOptions.stdoutDestination
+        ? { stdoutDestination: runOptions.stdoutDestination }
+        : {}),
       timeoutMs: runOptions.timeoutMs,
     });
 
@@ -320,6 +325,9 @@ function createProcessRunner(
         purpose: runOptions.purpose,
         stdin: runOptions.stdin,
         stdio: runOptions.stdio,
+        ...(runOptions.stdoutDestination
+          ? { stdoutDestination: runOptions.stdoutDestination }
+          : {}),
         cwd: runOptions.cwd,
       });
     }
@@ -4849,7 +4857,7 @@ describe('oat gate', () => {
     expect(process.exitCode).toBe(1);
   });
 
-  it('injects headless context only into gate review children', async () => {
+  it('injects headless context and keeps JSON stdout envelope-only', async () => {
     const { root, home } = await setup();
     const projectPath = await writeProject(root);
     await writeActiveProject(root, projectPath);
@@ -4888,6 +4896,7 @@ describe('oat gate', () => {
     });
     expect(promptRuntime).toBe('codex');
     expect(promptModel).toBe('provider-default');
+    expect(execute?.stdoutDestination).toBe('stderr');
     expect(execute?.args.at(-1)).toContain('oat_gate_headless: true');
     expect(
       runner.calls

@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "explainer-kit.packaged-execution/v1",
+  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
+  "entry": "scripts/publish.mjs",
+  "package": {
+    "name": "@open-agent-toolkit/cli",
+    "version": "0.2.3",
+    "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+    "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+  },
+  "verifiedTarballs": [
+    {
+      "name": "@open-agent-toolkit/cli",
+      "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
+      "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+    },
+    {
+      "name": "@open-agent-toolkit/control-plane",
+      "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
+      "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-config",
+      "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
+      "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-theme",
+      "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
+      "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-transforms",
+      "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
+      "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+    }
+  ],
+  "request": {
+    "schemaVersion": "explainer-kit.publish-request/v1",
+    "sha256": "sha256:7e444402bcde66e517c3b728adfec71ecbf41cf4919afaa023a9e2b93fcbc4ff"
+  },
+  "outputs": {
+    "manifest": {
+      "schemaVersion": "explainer-kit.manifest/v1",
+      "sha256": "sha256:9a98bcd83603e1627e1bc2bd8237080b3266a0e41e9ef23b980f590c56df43e6"
+    },
+    "receipt": {
+      "schemaVersion": "explainer-kit.publish-receipt/v1",
+      "sha256": "sha256:0e9a4706801ca546b9f8093954c5af902f26f337189b15d1b6ecf7b0c40cbe38"
+    }
+  },
+  "coreRunId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+  "exit": {
+    "code": 0,
+    "signal": null
+  }
+}

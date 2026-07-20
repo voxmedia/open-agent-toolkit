@@ -55,6 +55,20 @@ const DEFAULT_SHARED_CONFIG = {
     awsProfile: null,
     awsRegion: null,
   },
+  explainers: {
+    defaults: {
+      palette: 'neutral',
+      visualProfile: 'clean',
+      themeBundlePath: null,
+    },
+    publish: {
+      provider: null,
+      s3Uri: null,
+      publicBaseUrl: null,
+      awsRegion: null,
+      awsProfile: null,
+    },
+  },
   documentation: {
     root: null,
     tooling: null,
@@ -112,6 +126,10 @@ const DEFAULT_WORKFLOW_CONFIG = {
     dispatchPolicy: {
       mode: null,
       policy: null,
+    },
+    explainers: {
+      projectExplainer: 'ask',
+      projectRecap: 'ask',
     },
   },
 } satisfies Record<string, unknown>;

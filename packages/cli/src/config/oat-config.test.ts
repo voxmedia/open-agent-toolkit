@@ -2261,4 +2261,118 @@ describe('oat-config', () => {
       },
     );
   });
+
+  describe('explainer configuration', () => {
+    it('normalizes the shared explainer build and publish surface', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          explainers: {
+            defaults: {
+              palette: ' ocean ',
+              visualProfile: ' editorial ',
+              themeBundlePath: 'themes/team.json',
+            },
+            publish: {
+              provider: 's3-static',
+              s3Uri: 's3://example-bucket/explainers/',
+              publicBaseUrl: 'https://docs.example.com/explainers/',
+              awsRegion: ' us-east-1 ',
+              awsProfile: 'not-shared',
+            },
+          },
+          workflow: {
+            explainers: {
+              projectExplainer: 'always',
+              projectRecap: 'never',
+            },
+          },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
+        explainers: {
+          defaults: {
+            palette: 'ocean',
+            visualProfile: 'editorial',
+            themeBundlePath: 'themes/team.json',
+          },
+          publish: {
+            provider: 's3-static',
+            s3Uri: 's3://example-bucket/explainers',
+            publicBaseUrl: 'https://docs.example.com/explainers',
+            awsRegion: 'us-east-1',
+          },
+        },
+        workflow: {
+          explainers: {
+            projectExplainer: 'always',
+            projectRecap: 'never',
+          },
+        },
+      });
+    });
+
+    it('keeps local and user explainer fields within their allowed surfaces', async () => {
+      const repoRoot = await createRepoRoot();
+      const userConfigDir = await mkdtemp(
+        join(tmpdir(), 'oat-user-explainers-'),
+      );
+      tempDirs.push(userConfigDir);
+
+      const config = {
+        version: 1,
+        explainers: {
+          defaults: {
+            palette: 'violet',
+            visualProfile: 'clean',
+            themeBundlePath: '/tmp/private-theme.json',
+          },
+          publish: {
+            provider: 's3-static',
+            awsProfile: 'work-sso',
+          },
+        },
+        workflow: {
+          explainers: {
+            projectExplainer: 'ask',
+            projectRecap: 'always',
+          },
+        },
+      };
+      await writeFile(
+        join(repoRoot, '.oat', 'config.local.json'),
+        JSON.stringify(config),
+        'utf8',
+      );
+      await writeFile(
+        join(userConfigDir, 'config.json'),
+        JSON.stringify(config),
+        'utf8',
+      );
+
+      await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
+        explainers: {
+          defaults: {
+            palette: 'violet',
+            visualProfile: 'clean',
+            themeBundlePath: '/tmp/private-theme.json',
+          },
+          publish: { awsProfile: 'work-sso' },
+        },
+      });
+      await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
+        explainers: {
+          defaults: {
+            palette: 'violet',
+            visualProfile: 'clean',
+          },
+          publish: { awsProfile: 'work-sso' },
+        },
+      });
+    });
+  });
 });

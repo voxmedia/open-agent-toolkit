@@ -31,6 +31,27 @@ known role from the active contract when a pre-call role list is unavailable,
 and record visibility timing. Do not launch a diagnostic child solely to
 satisfy a universal catalog rule.
 
+## Task-Class Resolution
+
+Apply active user and repository instructions first; they override the dated
+model-family examples in this provider reference. Intersect the resulting
+class guidance with the live native model enum and the supplied policy and
+ceiling. Select one exact accepted alias at or above the requested floor:
+
+- `mechanical-recon`: the fastest economical class suitable for deterministic
+  inventories, parity, and command execution;
+- `intelligent-recon`: a stronger fast class that can interpret unfamiliar
+  code, semantics, and silent-miss-prone evidence;
+- `default-implementation`: a context-retentive implementation class for
+  independently bounded dossier work;
+- `hard-reasoning`: a strong reasoning class for ambiguity or architecture;
+- `consequential`: the strongest allowed class for security, release safety,
+  irreversible impact, or expensive failure.
+
+A stale or unavailable named example requires a newer eligible model meeting
+the same class floor or a route one class up. Selection below the floor is
+prohibited. Record the exact selector and `floor_satisfaction`.
+
 ## Surface-Aware Selection
 
 - Select an exact accepted alias from the native enum for native dispatch.

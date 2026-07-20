@@ -20,6 +20,9 @@ and updates project state.
   phase report.
 - **Fix boundary:** blocking findings return to the original phase handle when
   possible.
+- **Final exit-gate boundary:** after final verification and final lifecycle
+  review, the root resolves the configured implementation gate before
+  approval-aware sequencing, final HiLL, completion, or success output.
 - **Optional nesting:** a phase agent may dispatch bounded recon, fanout, or
   specialist work when that materially helps. Ordinary tasks do not require a
   third tier.
@@ -83,6 +86,74 @@ The root sends the reviewer a fresh scope containing the authoritative phase
 commit range, task IDs and boundaries, project artifacts, and verification
 evidence. The review passes with zero Critical and zero Important findings.
 Medium and Minor findings are recorded without blocking the phase.
+
+## Final Exit-Gate Boundary
+
+After every planned phase and review round finishes, the project root runs final
+verification and the mandatory final lifecycle review. It then resolves
+`workflow.gates.skills.oat-project-implement` and persists the result in
+`oat_implement_exit_gate`. This configured gate is separate from the phase
+reviewer, final lifecycle reviewer, and optional phase gate; none can substitute
+for another.
+
+Resolution and policy outcomes are explicit:
+
+- A null resolution persists `allowed/no_gate` for the current implementation
+  basis.
+- A configured passing review persists `allowed/passed` after any eligible
+  review receive is durably completed.
+- `warn` persists `allowed/warned`; `prompt` proceeds only after explicit
+  approval persists `allowed/prompt_approved`.
+- `block`, an unresolved prompt, invalid or contradictory output, and
+  operational or receive failures remain blocked. Remediation retries follow
+  the persisted `maxAttempts` policy.
+
+Gate execution is resumable across both launch and receive. Before launch, OAT
+persists an attempt ID, start time, and result-receipt path. It correlates those
+with the gate run marker, structured envelope, and run-bound artifact before it
+accepts a result or relaunches. Before receive, it persists the handoff and
+source/archive correlation; resume verifies the archived artifact, Reviews
+event, and bookkeeping commit before marking receive complete. Missing,
+contradictory, or ambiguous correlation fails closed. A valid accepted run or
+completed receive is never duplicated.
+
+Freshness is bound to the reviewed HEAD and a versioned implementation
+fingerprint. New generations use an `effective-delta-v1` fingerprint over
+Git's canonical NUL-delimited raw tree delta. The generation persists the
+logical PR/default-branch base ref, requires one merge base, and hashes full
+base and final modes and object IDs with rename detection disabled. This makes
+same-file base changes visible while excluding commit history and human diff
+context. Every effective-delta path is included except the exact project
+`state.md` file that carries the digest and would otherwise be self-referential;
+that structured state is validated independently.
+
+Recognized closeout-only descendants preserve a valid result: gate artifacts
+and receipts, project tracking and project-log appends,
+summary/documentation/PR sequence outputs, final HiLL bookkeeping, and
+completion bookkeeping. Recognition also requires the corresponding persisted
+gate or sequence transition; a matching path category alone is insufficient.
+After each authorized closeout boundary, the workflow advances a rolling
+checkpoint to the complete effective delta at that HEAD. The checkpoint records
+the last non-checkpoint commit; a following persistence commit is ignored only
+when its diff changes that exact state carrier and nothing else.
+
+A merge, rebase, or base update preserves the result only when its full
+effective delta matches that rolling checkpoint. Conflict resolution or
+branch-owned implementation, test, skill, template, or workflow changes that
+alter the delta make the result stale, require a current final lifecycle review,
+and start a new gate generation. No implementation or closeout output path is
+excluded from the comparison. Legacy unqualified fingerprints retain the older
+fail-closed descendant-path behavior and are not migrated in place.
+
+This narrow merge-only exemption relies on fresh repository CI, automated
+review such as Bugbot, and lifecycle self-review to cover integration risk.
+Those checks do not substitute for the semantic gate on the full
+implementation; they avoid repeating that expensive review when the
+implementation outcome itself did not change.
+
+Only an allowed and fresh gate disposition can enter the pre-approval sequence,
+cross final HiLL, run the post-approval sequence, mark implementation complete,
+or emit success.
 
 ## Phase Scope
 

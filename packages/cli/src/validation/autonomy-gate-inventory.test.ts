@@ -329,6 +329,45 @@ describe('autonomy gate-inventory drift enforcement', () => {
     ).resolves.toBeUndefined();
   });
 
+  it('keeps configured exit-gate autonomy policy fail closed', async () => {
+    const repoRoot = resolve(process.cwd(), '..', '..');
+    const contract = await readFile(
+      join(repoRoot, '.agents', 'docs', 'autonomy-contract.md'),
+      'utf8',
+    );
+    const normalized = normalizeSiteText(contract);
+    const implementExitGate = parseTable(contract, '## Gate inventory').find(
+      (row) => row[0] === 'IMPLEMENT-18',
+    );
+
+    expect(normalized).toContain(
+      'Configured lifecycle gate `onFailure` policy applies only to a validated, receive-eligible `blocked` envelope after its eligible receive has durably completed',
+    );
+    expect(normalized).toContain(
+      'Operational, validation, correlation, malformed or contradictory envelope, launch, and receive failures are boundary stops regardless of `onFailure`.',
+    );
+    expect(normalized).toContain(
+      'None can continue under `warn` or produce an allowed disposition.',
+    );
+    expect(implementExitGate?.[4]).toContain(
+      'Apply configured failure semantics only to a validated, receive-eligible `blocked` envelope after durable receive',
+    );
+    expect(implementExitGate?.[4]).toContain(
+      'failures stop regardless of `onFailure`, including `warn`',
+    );
+
+    for (const path of [
+      '.agents/skills/oat-project-implement/references/docs/autonomy-contract.md',
+      '.agents/skills/oat-project-quick-start/references/docs/autonomy-contract.md',
+      '.agents/skills/oat-project-document/references/docs/autonomy-contract.md',
+      '.agents/skills/oat-project-pr-final/references/docs/autonomy-contract.md',
+    ]) {
+      await expect(readFile(join(repoRoot, path), 'utf8')).resolves.toBe(
+        contract,
+      );
+    }
+  });
+
   it('keeps all fifteen autonomous skill roots mapped at repository HEAD', async () => {
     const repoRoot = resolve(process.cwd(), '..', '..');
     const contract = await readFile(

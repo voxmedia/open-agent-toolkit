@@ -216,7 +216,7 @@ Final review `passed` gate requires:
 
 ## Subagent Compatibility
 
-`oat-project-review-provide` uses provider-aware subagent dispatch when available:
+`oat-project-review-provide` uses provider-aware subagent dispatch when available. This outer dispatch starts the primary `oat-reviewer`; it is separate from any optional reconnaissance workers that the reviewer may launch after resolving its authoritative review scope:
 
 - Claude Code: dispatch `oat-reviewer` with `subagent_type` (resolved from `.claude/agents/oat-reviewer.md`).
 - Cursor: dispatch `oat-reviewer` via explicit `/oat-reviewer` invocation or natural mention (resolved from `.cursor/agents/oat-reviewer.md`; `.claude/agents/oat-reviewer.md` is also supported for compatibility).
@@ -245,6 +245,93 @@ Final review `passed` gate requires:
   the existing fallback path (fresh session preferred, inline reset as
   fallback). This generic fallback does not override managed exact-target
   rules: a managed reviewer that cannot be launched exactly blocks the review.
+
+### Reviewer-local reconnaissance
+
+After the outer dispatch, the primary reviewer may use reviewer-local workers
+when a broad review has multiple independent evidence lanes. Examples include
+final code reviews, broad phase or phase-range reviews, documentation sweeps,
+and provider-view audits. Running disjoint searches concurrently can reduce
+wall-clock review time, and matching each lane to the least expensive model
+class that can safely do the work can reduce cost. The primary reviewer first
+reads the authoritative diff and the workflow-required discovery, spec,
+design, plan, and implementation artifacts. It decides lane boundaries and
+task classes only after understanding the changed surfaces, requirements, and
+failure consequences. Narrow task and artifact reviews remain inline when
+coordination would cost as much as direct inspection.
+
+Worker authority and model capability are independent. Every reviewer-local
+worker keeps the read-only, advisory `recon` role class. The lane's separate
+task class sets its minimum model-capability floor:
+
+- **Mechanical recon** covers deterministic inventories, exact parity checks,
+  and test, lint, format, or build execution whose results are cheaply
+  verifiable.
+- **Intelligent recon** covers semantic interpretation, unfamiliar-code
+  auditing, and other evidence where a miss could be silent.
+- **Stronger bounded analysis** is reserved for independently scoped work where
+  dispersed context, ambiguity, security, release safety, irreversible impact,
+  or expensive failure warrants a higher floor.
+
+File count alone does not justify escalation. Interpretation and policy
+judgment either use an adequate stronger class or remain with the primary
+reviewer. Active user and repository instructions, the active-provider
+guidance, and the live nested catalog resolve current model examples; the
+canonical reviewer does not promise named models.
+
+Reviewer-local fan-out is limited to one bounded, read-only, non-recursive
+round. Each worker receives a disjoint scope, cannot modify files or spawn more
+workers, and returns a compact advisory report containing:
+
+- coverage and checks performed;
+- exact `file:line` evidence;
+- gaps in the assigned scope; and
+- explicit uncertainty, including uncertainty about absence claims.
+
+Before launching these lanes, the reviewer loads the generic
+`oat-dispatch-subagents` contract and exactly one active-provider reference.
+That shared contract owns nested capability checks, worker catalog resolution,
+model and effort selection, routing, authorization, launch evidence, and
+provider-specific mechanics. It records each lane's task class, model-class
+floor, classification rationale, and floor satisfaction without assuming that
+workers inherit the primary reviewer's target. Lanes may share one wave only
+when their task classes, model floors, and all other dispatch axes match;
+mixed-class reviews use separate waves and records.
+
+This generic reviewer-local use is distinct from
+`oat-project-dispatch-subagents`, which is reserved for OAT lifecycle phase and
+task dispatch policy. Reviewer-local lanes do not load or depend on that
+lifecycle adapter.
+
+Worker reports are candidate observations, not findings. The primary reviewer
+reopens authoritative sources, verifies load-bearing positive and negative
+claims, reconciles overlap and disagreement, fills cross-lane gaps, performs
+synthesis, assigns severity, decides validation, and alone writes the review
+artifact or final `StructuredFindings`.
+
+When the reviewer attempts delegated reconnaissance, the review artifact
+includes a compact `Review Orchestration` section. It records each wave's task
+class and classification rationale, selected target, acceptance and outcome,
+floor satisfaction, fallback, and the primary reviewer's reconciliation. The
+section is the detailed evidence source; it does not copy every internal worker
+record. Structured-output reviews keep the existing schema and summarize the
+same orchestration evidence in `summary`.
+
+The reviewer and its workers never write `project-log.md`. After validating the
+artifact, the root project implementation or review workflow uses
+`oat project log append` to add one concise structural entry that references
+the artifact. Logging remains capability-gated by the CLI helper, so disabled
+project logging requires no reviewer-side branch or write authority.
+
+If nested workers are unsupported, unauthorized, fail, or return empty or
+malformed reports, the primary reviewer covers those lanes inline. It also
+stays inline when the host cannot explicitly satisfy a lane's model-class
+floor. Fallback never selects below the declared floor. It preserves the same
+checklist, verification depth, severity policy, and final output contract; it
+does not promise provider behavior or silently inherit the primary reviewer's
+model. Workers remain advisory and non-recursive regardless of task class, and
+the primary reviewer keeps final verification, reconciliation, severity,
+validation decisions, and output ownership.
 
 ## Reference artifacts
 

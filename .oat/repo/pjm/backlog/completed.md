@@ -8,6 +8,8 @@
 
 ## Completed Items
 
+- 2026-07-19 — BL-260719-avoid-final-gate-reruns — Avoid final-gate reruns for merge-only updates — Added versioned rolling effective-delta fingerprints so unchanged base integration preserves a passed implementation gate while changed deltas fail closed.
+- 2026-07-18 — BL-260708-enable-oat-reviewer-subagent — Enable oat-reviewer subagent orchestration for faster broad reviews — Enabled bounded reviewer-local reconnaissance for faster broad reviews while preserving primary-reviewer judgment and evidence validation.
 - 2026-07-18 — BL-260718-add-tracked-config-guard — Add tracked-config guard against managed-file reverts — root-caused to stale locally-resolved CLI in consuming repo; dependency hygiene there is the cure; CLI-level guard unnecessary
 - 2026-07-13 — BL-260712-trim-dispatch-and-dry-run — Trim dispatch-and-dry-run implementation reference — Trimmed dispatch-and-dry-run.md from 715 to 562 lines: deduplicated engine/adapter-owned semantics into pointers, compressed the Dispatch Report V1 tutorial content and worked examples to their normative core, and consolidated the Codex target-first invariant. All 41 test-asserted strings and every contract regex preserved; 103 contract tests, 123 smoke tests, and release validation pass. Landed at 562 lines rather than the ~450 target because the remaining content is test-asserted normative contract; further cuts would require relaxing contract tests.
 - 2026-07-13 — BL-260711-add-live-workflow-smoke — Add live workflow smoke fixture — Shipped a disposable three-phase fixture, root-owned phase-agent orchestration, deterministic and live evidence, recovery and preflight hardening, and operator documentation; the canonical Codex packet passes 10/10 assertions.

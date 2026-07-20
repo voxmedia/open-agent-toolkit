@@ -11,7 +11,30 @@ import {
   type ProjectStateKind,
   type ProjectStatePhase,
 } from '@commands/shared/frontmatter';
+import type { ExplainerDecisionV1 } from '@open-agent-toolkit/control-plane';
 import YAML from 'yaml';
+
+const EXPLAINER_DECISIONS = ['generate', 'skip'] as const;
+const EXPLAINER_SOURCES = [
+  'interactive',
+  'kickoff_prompt',
+  'autonomous_policy',
+] as const;
+const EXPLAINER_DECISION_KEYS = ['decision', 'source', 'decided_at'] as const;
+const EXPLAINER_ALLOWED_PAIRS = {
+  oat_project_explainer: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:kickoff_prompt',
+  ]),
+  oat_project_recap: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:autonomous_policy',
+  ]),
+} as const;
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 export interface NormalizedProjectState {
   oat_kind: ProjectStateKind;
@@ -21,6 +44,8 @@ export interface NormalizedProjectState {
   oat_siblings: string[];
   oat_depends_on: string[];
   oat_children: string[];
+  oat_project_explainer?: ExplainerDecisionV1 | null;
+  oat_project_recap?: ExplainerDecisionV1 | null;
 }
 
 export interface ProjectStateValidationError {
@@ -88,6 +113,96 @@ function readStringArrayField(
     message: `${key} must be an array of strings`,
   });
   return [];
+}
+
+function readExplainerDecision(
+  frontmatter: Record<string, unknown>,
+  key: 'oat_project_explainer' | 'oat_project_recap',
+  errors: ProjectStateValidationError[],
+): ExplainerDecisionV1 | null | undefined {
+  const value = frontmatter[key];
+  if (value === undefined) {
+    return undefined;
+  }
+  if (value === null) {
+    return null;
+  }
+  if (typeof value !== 'object' || Array.isArray(value)) {
+    errors.push({
+      code: 'invalid-explainer-decision-record',
+      message: `${key} must be null or a decision object`,
+    });
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  if (
+    keys.some(
+      (entry) =>
+        !(EXPLAINER_DECISION_KEYS as readonly string[]).includes(entry),
+    )
+  ) {
+    errors.push({
+      code: 'invalid-explainer-decision-keys',
+      message: `${key} must contain only decision, source, and decided_at`,
+    });
+    return null;
+  }
+
+  const decision = record.decision;
+  const source = record.source;
+  const decidedAt = record.decided_at;
+  let valid = true;
+  if (
+    typeof decision !== 'string' ||
+    !(EXPLAINER_DECISIONS as readonly string[]).includes(decision)
+  ) {
+    errors.push({
+      code: 'invalid-explainer-decision',
+      message: `${key}.decision must be generate or skip`,
+    });
+    valid = false;
+  }
+  if (
+    typeof source !== 'string' ||
+    !(EXPLAINER_SOURCES as readonly string[]).includes(source)
+  ) {
+    errors.push({
+      code: 'invalid-explainer-source',
+      message: `${key}.source must be interactive, kickoff_prompt, or autonomous_policy`,
+    });
+    valid = false;
+  }
+  if (
+    typeof decidedAt !== 'string' ||
+    !ISO_TIMESTAMP_PATTERN.test(decidedAt) ||
+    Number.isNaN(Date.parse(decidedAt))
+  ) {
+    errors.push({
+      code: 'invalid-explainer-timestamp',
+      message: `${key}.decided_at must be an ISO 8601 timestamp`,
+    });
+    valid = false;
+  }
+  if (
+    valid &&
+    !EXPLAINER_ALLOWED_PAIRS[key].has(`${String(decision)}:${String(source)}`)
+  ) {
+    errors.push({
+      code: 'invalid-explainer-decision-source',
+      message: `${key} does not allow decision ${String(decision)} from source ${String(source)}`,
+    });
+    valid = false;
+  }
+
+  return valid
+    ? {
+        decision: decision as ExplainerDecisionV1['decision'],
+        source: source as ExplainerDecisionV1['source'],
+        decided_at: decidedAt as string,
+      }
+    : null;
 }
 
 function readKind(frontmatter: Record<string, unknown>): ProjectStateKind {
@@ -328,6 +443,16 @@ export function validateProjectState(
     oat_children: readStringArrayField(
       input.frontmatter,
       'oat_children',
+      errors,
+    ),
+    oat_project_explainer: readExplainerDecision(
+      input.frontmatter,
+      'oat_project_explainer',
+      errors,
+    ),
+    oat_project_recap: readExplainerDecision(
+      input.frontmatter,
+      'oat_project_recap',
       errors,
     ),
   };

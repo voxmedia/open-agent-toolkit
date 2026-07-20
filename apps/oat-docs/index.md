@@ -69,6 +69,7 @@
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - Skills
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
+    - [Explainer Kit](workflows/skills/explainer-kit.md) — Build destination-neutral visual explainers directly or from OAT project lifecycle artifacts.
     - [Repo Improve](workflows/skills/repo-improve.md) — Turn repository audits, maintainability reviews, and backlog sources into standalone external implementation plans.
   - [Wave Workflows](workflows/wave-workflows.md) — How OAT coordinates a corpus of external plans into waves while preserving project-lifecycle ownership and human judgment.
 - [Quickstart](quickstart.md) — Start-here guide for choosing the right OAT adoption path.

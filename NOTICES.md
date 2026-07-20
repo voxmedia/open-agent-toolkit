@@ -63,3 +63,20 @@ Source files: `skills/improve/SKILL.md` and
 Files copied into `.agents/skills/oat-repo-improve/`; the skill identifier,
 heading, invocation examples, and generated-plan attribution were renamed for
 the OAT repository namespace.
+
+## visual-explainer
+
+**Source:** `visual-explainer` plugin by nicobailon
+**License:** MIT
+**Version referenced:** 0.8.1
+
+### Explainer templates and render QA
+
+Visual presentation and QA patterns were adapted into
+`.agents/skills/explainer-kit/`, including self-contained HTML shells,
+responsive navigation, slide-deck interaction and print behavior, overflow
+containment, reduced-motion handling, and structural/render checks.
+
+The OAT implementation replaces upstream branding, destinations, invocation
+commands, and example content with destination-neutral contracts, themes,
+templates, and fixtures. Consumer OAT skill: `explainer-kit`.

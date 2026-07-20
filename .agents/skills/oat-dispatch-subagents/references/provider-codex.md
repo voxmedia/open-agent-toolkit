@@ -42,6 +42,28 @@ dispersed evidence, and to a stronger reasoning route when ambiguity,
 consequence, or adversarial analysis dominates. Do not escalate merely because
 many files must be searched.
 
+## Task-Class Resolution
+
+Apply active user and repository instructions first; they override the dated
+model-family examples in this provider reference. Intersect that guidance with
+the live model/effort selectors, registered roles, supplied policy and ceiling,
+and requested class floor:
+
+- `mechanical-recon`: an economical class and effort suitable for
+  deterministic inventories, parity, and command execution;
+- `intelligent-recon`: a stronger fast class for interpretation,
+  unfamiliar-code auditing, and silent-miss-prone evidence;
+- `default-implementation`: a context-retentive implementation class for an
+  independently bounded dossier;
+- `hard-reasoning`: a strong reasoning class for ambiguity or architecture;
+- `consequential`: the strongest allowed class for security, release safety,
+  irreversible impact, or expensive failure.
+
+A stale or unavailable named example requires a newer eligible model meeting
+the same class floor or a route one class up. Selection below the floor is
+prohibited. Keep model and reasoning effort as separate recorded axes, and
+record `floor_satisfaction`.
+
 Native spawn acceptance is configured-invocation evidence. Missing runtime
 model identity does not invalidate an accepted configured payload.
 

@@ -31,28 +31,21 @@ this repository.
 - Confirm the rollback backup exists at
   `~/.agents/skills-backup/oat-explainer-kit-0.4.1` before changing the installed
   wrapper.
-- Use the post-p06 final explainer-kit RC for acceptance. FINAL RC FROZEN
-  2026-07-19 — fill the installed wrapper's `config.json` `finalRc` block with
-  exactly:
-  - `rcId`: `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
-  - `commit`: `da1e7a713adac4743368addf206aa780a94871ba`
+- ACCEPTANCE COMPLETE — this section is now historical record. The final
+  accepted RC (post-merge 0.2.6) supersedes all earlier pins:
+  - `rcId`: `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
+  - `commit`: `1f9be47e94ccda5d7304e66502f8bb1b88aa06d3` (main, PR #166)
+  - CLI tarball: `sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390`
   - `subtreeSha256`: `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`
-    (verified Mini-side: `references/explainer-rc-985d0abd/verification-2026-07-19.md`;
-    packages 0.2.3). The acceptance harness reads them from there and carries
-    them into the sanitized acceptance record.
-    PRECONDITION RESOLVED (2026-07-19): the CLI whole-tarball mismatch is
-    dispositioned BENIGN — 1257/1257 entry paths and 1254/1257 file hashes
-    match; the only deltas are ordering-only text in three generated `.d.ts`
-    files (union-member / inferred-property order); toolchains identical
-    (TS 5.9.3, pnpm 10.13.1, node 22.17.0); JS, maps, skill subtrees,
-    schemas, recipes byte-identical. No semantic delta.
-    BINDING REQUIREMENT: acceptance consumes the EXACT RECORDED laptop
-    artifact — CLI tarball
-    `sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1`
-    (retained explainer-side) — NOT a locally rebuilt tarball. Its
-    `oat-explainer-kit` subtree matches the required pin `sha256:2cf98952…b654`.
-    Evidence: `explainer-rc-985d0abd/verification-2026-07-19.md` (incl.
-    Resolution section) + `explainer-rc-985d0abd/mini-dts/`.
+    (unchanged across every RC generation)
+  - Evidence: initial six-gate run vs RC `985d0abd` (all pass; recorded at
+    `references/p06-t03-private-wrapper-acceptance-2026-07-19.md`), wrapper
+    retest + packaged S3/CDN smoke vs `7fea9e53` (all pass, first attempt;
+    canonical integrated evidence + promotion approval on
+    `origin/tkstang/explainer-kit-rc` @ `7bab4f25`,
+    `validate-explainer-acceptance.mjs --gate all` passing).
+  - Historical provenance notes (985d0abd CLI-tarball benign-ordering
+    disposition): `references/explainer-rc-985d0abd/`.
 
 - The frozen f212d630 schemas remain the contract basis because p06 does not
   alter explainer schemas. Do not run acceptance against f212d630 itself.
@@ -67,7 +60,7 @@ this repository.
 Acceptance pins the skill subtree, not the whole CLI tarball.
 
 1. Create a temporary worktree at frozen commit
-   `534a408eed0080bcf653a6dde3abc1dd612f0ccb`.
+   `da1e7a713adac4743368addf206aa780a94871ba`.
 2. In that worktree, run:
 
    ```bash
@@ -78,18 +71,19 @@ Acceptance pins the skill subtree, not the whole CLI tarball.
 
 3. Locate `package/assets/skills/oat-explainer-kit` in the rebuilt CLI package.
 4. Verify its content hash using the RC tool's own rebuild record, or
-   byte-compare the subtree against the rebuild. For the f212d630 contract basis,
-   the result must be
+   byte-compare the subtree against the rebuild. The result must be
    `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`.
-5. For final acceptance, repeat the same procedure at the pinned `finalRc`
-   `commit` and require the rebuilt subtree hash to equal the pinned `finalRc`
-   `subtreeSha256`.
+5. For acceptance, use the exact retained CLI tarball whose whole-file hash is
+   `sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1`.
+   Do not substitute a rebuilt whole tarball.
 
-The rebuilt CLI tarball has whole-file hash
-`sha256:296cfa27d678f269ff649b92ebd7…`, which differs from the whole-tarball hash
-recorded in f212d630 `rc.json`. That upstream provenance question is tracked as
-`msg_02337b3a27f4`. The skill subtree and all schema and recipe hashes match the
-record; those are the inputs consumed by acceptance.
+Cross-machine provenance is resolved. A cache-bypassed Mini rebuild matched
+every path, 1,254 of 1,257 CLI files, both skill subtrees, all schemas, and all
+recipes. The only whole-tarball differences were ordering within three
+generated declaration files; runtime JavaScript, declaration maps, toolchain
+versions, and all explainer surfaces matched. The variance is semantically
+benign but remains recorded; exact frozen bytes are still required for
+acceptance.
 
 ## Install and migrate the wrapper
 

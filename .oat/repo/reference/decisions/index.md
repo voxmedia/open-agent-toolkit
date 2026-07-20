@@ -10,14 +10,21 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260719-full-reviewers-are-not-recon   | 2026-07-19 | accepted | Full reviewers are not recon workers                                    | -      |
+| DR-260719-keep-final-judgment            | 2026-07-19 | accepted | Keep final judgment with the primary reviewer                           | -      |
+| DR-260719-root-owned-orchestration       | 2026-07-19 | accepted | Root-owned orchestration logging                                        | -      |
+| DR-260719-separate-recon-authority-from  | 2026-07-19 | accepted | Separate recon authority from model floors                              | -      |
+| DR-260719-use-floor-safe-parent-inline   | 2026-07-19 | accepted | Use floor-safe parent-inline fallback                                   | -      |
 | DR-260718-append-based-ledger-graduation | 2026-07-18 | accepted | Append-based ledger graduation                                          | -      |
 | DR-260718-automatic-create-on-first      | 2026-07-18 | accepted | Automatic create-on-first-append                                        | -      |
 | DR-260718-cli-owned-log-mutations        | 2026-07-18 | accepted | CLI-owned log mutations                                                 | -      |
 | DR-260718-configured-cursor-provenance   | 2026-07-18 | accepted | Configured Cursor provenance                                            | -      |
+| DR-260718-durable-fail-closed-closeout   | 2026-07-18 | accepted | Durable fail-closed closeout state                                      | -      |
 | DR-260718-explicit-cursor-pin-mapping    | 2026-07-18 | accepted | Explicit Cursor pin mapping                                             | -      |
 | DR-260718-family-aware-gate-exclusions   | 2026-07-18 | accepted | Family-aware gate exclusions                                            | -      |
 | DR-260718-general-purpose-project-log    | 2026-07-18 | accepted | General-purpose project log                                             | -      |
 | DR-260718-hill-final-checkpoint-applies  | 2026-07-18 | accepted | HiLL final checkpoint applies per mergeable delta                       | -      |
+| DR-260718-independent-configured-exit    | 2026-07-18 | accepted | Independent configured exit-gate boundary                               | -      |
 | DR-260718-keep-sync-state-in-sync-config | 2026-07-18 | accepted | Keep sync state in sync config                                          | -      |
 | DR-260718-native-cursor-variant-dispatch | 2026-07-18 | accepted | Native Cursor variant dispatch                                          | -      |
 | DR-260718-neutral-phrasing               | 2026-07-18 | accepted | Neutral-phrasing genericization for promoted skills                     | -      |

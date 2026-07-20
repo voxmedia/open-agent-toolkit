@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "explainer-kit.publish-request/v1",
+  "provider": "s3-static",
+  "s3Uri": "s3://tkstang-open-agent-toolkit/explainers/acceptance-2026-07-19",
+  "publicBaseUrl": "https://dy4vzrzaexuy5.cloudfront.net/explainers/acceptance-2026-07-19",
+  "awsRegion": "us-east-1",
+  "siteRoot": "dist/live-smoke/acceptance-run/site",
+  "manifestPath": ".oat/repo/reference/explainer-kit-acceptance/v1/private-wrapper-manifest.json"
+}

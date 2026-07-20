@@ -24,6 +24,14 @@ interface HarnessOptions {
     archivePath: string;
     s3Path: string | null;
     summaryExportFile: string | null;
+    projectRecapExport?: {
+      sourceRunRoot: string;
+      exportRoot: string;
+      manifest: {
+        relativePath: 'manifest.json';
+        verifiedArtifactCount: number;
+      };
+    } | null;
     warnings: string[];
   };
   archiveTarget?: ArchiveProjectTarget;
@@ -73,6 +81,7 @@ function createHarness(options: HarnessOptions = {}): {
       'project-summaries',
       '20260401-demo-project.md',
     ),
+    projectRecapExport: null,
     warnings: ['Archive completed locally; S3 sync skipped.'],
   };
   const archiveTarget: ArchiveProjectTarget = options.archiveTarget ?? {
@@ -223,6 +232,25 @@ describe('oat project archive push', () => {
           'demo-project',
         ),
         projectName: 'demo-project',
+      }),
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('forwards only the selected project recap run to archival', async () => {
+    const { archiveProjectOnCompletion, context, dependencies } =
+      createHarness();
+
+    await runArchivePushCommand(
+      dependencies,
+      undefined,
+      { projectRecapRun: 'explainers/project-recap/run-20260401' },
+      context,
+    );
+
+    expect(archiveProjectOnCompletion).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectRecapRun: 'explainers/project-recap/run-20260401',
       }),
     );
     expect(process.exitCode).toBe(0);
@@ -393,7 +421,29 @@ describe('oat project archive push', () => {
   });
 
   it('emits the JSON contract for archive push results', async () => {
-    const { capture, context, dependencies } = createHarness({ json: true });
+    const recapExport = {
+      sourceRunRoot:
+        '/tmp/workspace/open-agent-toolkit/.oat/projects/shared/demo-project/explainers/project-recap/run-20260401',
+      exportRoot:
+        '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-recaps/20260401-demo-project',
+      manifest: {
+        relativePath: 'manifest.json' as const,
+        verifiedArtifactCount: 5,
+      },
+    };
+    const { capture, context, dependencies } = createHarness({
+      json: true,
+      archiveResult: {
+        archivePath:
+          '/tmp/workspace/open-agent-toolkit/.oat/projects/archived/demo-project',
+        s3Path:
+          's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
+        summaryExportFile:
+          '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-summaries/20260401-demo-project.md',
+        projectRecapExport: recapExport,
+        warnings: ['Archive completed locally; S3 sync skipped.'],
+      },
+    });
 
     await runArchivePushCommand(dependencies, undefined, {}, context);
 
@@ -409,6 +459,7 @@ describe('oat project archive push', () => {
         's3://example-bucket/oat-archive/open-agent-toolkit/projects/20260401-demo-project',
       summaryExportFile:
         '/tmp/workspace/open-agent-toolkit/.oat/repo/reference/project-summaries/20260401-demo-project.md',
+      projectRecapExport: recapExport,
       warnings: ['Archive completed locally; S3 sync skipped.'],
     });
     expect(process.exitCode).toBe(0);
