@@ -1228,6 +1228,28 @@ remaining blocker. Re-review passed with zero findings; canonical artifact:
   against `rc.json`; it must be replaced by fresh evidence for this RC before
   promotion.
 
+### 2026-07-19 — Post-merge external acceptance
+
+- Imported the operator-owned private-wrapper retest from
+  `tkstang/personal-explainer-kit` commit `897930cf`; canonical acceptance
+  evidence landed in `a602821c`.
+- The migrated wrapper passed all six gates on its first attempt against the
+  exact retained `0.2.6` tarballs. The validator confirmed packaged
+  `scripts/run.mjs`, `built-durable`, and a bound post-run publish receipt.
+- Imported the separate packaged S3/CDN smoke from operator commit
+  `d0c27632`; canonical publish evidence landed in `6c951550`.
+- The packaged `scripts/publish.mjs` entry exited 0, served the one declared
+  artifact with an exact manifest byte hash, deleted its run-unique sentinel,
+  and made no undeclared object mutation.
+- `validate-explainer-acceptance.mjs --gate all` passed both gates against RC
+  `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`.
+- No candidate inputs changed between freeze and acceptance. Both operator
+  acceptance runs report no deviations.
+- Final promotion verification passed: formatting, combined acceptance,
+  release validation for all five public `0.2.6` archives, the 65-measurement
+  browser visual gate, 3,268 CLI tests, all package suites, and 129/129 root
+  smoke tests.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

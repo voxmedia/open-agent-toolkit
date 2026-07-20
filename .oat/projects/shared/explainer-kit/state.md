@@ -1,8 +1,8 @@
 ---
 oat_current_task: null
-oat_last_commit: 1f9be47e
+oat_last_commit: 6c951550
 oat_blockers:
-  - Awaiting post-merge private-wrapper and packaged publish acceptance for RC sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903
+  - Awaiting Stoa Wave 6 and wave-promotion closeout against the accepted RC
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -39,13 +39,13 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T02:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T02:46:39Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Implementation merged — post-merge RC awaiting acceptance
+**Status:** Post-merge RC accepted — awaiting Wave 6/promotion closeout
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-19
 
@@ -122,13 +122,20 @@ Implementation complete — 38/38 tasks
 - ✓ PR #166 merged to `main` as `1f9be47e`
 - ✓ Post-merge `0.2.6` RC built twice with byte-identical identity
   `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
+- ✓ Private-wrapper retest passed all six gates with no deviations against the
+  exact retained `0.2.6` tarballs
+- ✓ Separate packaged `scripts/publish.mjs` S3/CDN smoke passed with public byte
+  verification, sentinel deletion, and no undeclared object mutations
+- ✓ Combined post-merge acceptance validator passed both external gates against
+  RC `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
+- ✓ Final promotion verification passed formatting, release validation,
+  browser visual validation, all package tests, and 129/129 root smoke tests
 
 ## Blockers
 
-- Awaiting private-wrapper and packaged S3/CDN acceptance against the exact
-  retained post-merge RC bytes.
+- Awaiting Stoa Wave 6 and wave-promotion closeout against the accepted RC.
 
 ## Next Milestone
 
-Rerun the external wrapper and packaged publish acceptance gates, update wave
-p06 evidence and promotion state, then complete the explainer-kit project.
+Complete Stoa Wave 6 and wave promotion using the accepted RC, then complete
+the explainer-kit project.
