@@ -1,4 +1,5 @@
 import type { CommandContext } from '@app/command-context';
+import { getInstalledCanonicalPaths } from '@commands/tools/shared/install-sync-context';
 import { Command, Option } from 'commander';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
@@ -189,5 +190,30 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
       'project-management',
       expect.stringContaining('### Decision Records'),
     );
+  });
+
+  it('keeps a completed install successful when AGENTS guidance cannot be written', async () => {
+    const logger = makeLogger();
+    const installProjectManagement = makeInstallProjectManagement();
+    upsertAgentsMdSection.mockRejectedValueOnce(new Error('permission denied'));
+    const cmd = createInitToolsProjectManagementCommand({
+      buildCommandContext: () => makeContext({ logger }),
+      resolveProjectRoot: async () => '/test/project',
+      resolveAssetsRoot: async () => '/assets',
+      installProjectManagement,
+    });
+    const parent = wrapWithScopeParent(cmd);
+
+    const exitCode = await runViaParent(parent, ['project-management']);
+
+    expect(exitCode).toBe(0);
+    expect(logger.info).toHaveBeenCalledWith(
+      'Installed project-management tool pack.',
+    );
+    expect(logger.warn).toHaveBeenCalledWith(
+      expect.stringContaining('Could not update AGENTS.md'),
+    );
+    expect(logger.error).not.toHaveBeenCalled();
+    expect(getInstalledCanonicalPaths(cmd)).not.toHaveLength(0);
   });
 });
