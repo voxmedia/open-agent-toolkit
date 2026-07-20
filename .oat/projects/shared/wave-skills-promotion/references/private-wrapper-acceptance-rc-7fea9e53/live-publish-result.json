@@ -1,0 +1,57 @@
+{
+  "schemaVersion": "explainer-kit.packaged-execution/v1",
+  "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
+  "entry": "scripts/publish.mjs",
+  "package": {
+    "name": "@open-agent-toolkit/cli",
+    "version": "0.2.6",
+    "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+    "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
+  },
+  "verifiedTarballs": [
+    {
+      "name": "@open-agent-toolkit/cli",
+      "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+      "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
+    },
+    {
+      "name": "@open-agent-toolkit/control-plane",
+      "artifact": "open-agent-toolkit-control-plane-0.2.6.tgz",
+      "sha256": "sha256:82d1e7f96517e53b78bb6387dddf20a201d5a8dae4dcdba0b860cc85c1e361aa"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-config",
+      "artifact": "open-agent-toolkit-docs-config-0.2.6.tgz",
+      "sha256": "sha256:1e3b52ae6bc66728db2a3e1a5c93e9723939ca2bc8781e1418e376b0c0d320a3"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-theme",
+      "artifact": "open-agent-toolkit-docs-theme-0.2.6.tgz",
+      "sha256": "sha256:e9eb1a3c4553f9674974df4557be49122883dd0a6f3d7b22a9b8b6f3c39dd662"
+    },
+    {
+      "name": "@open-agent-toolkit/docs-transforms",
+      "artifact": "open-agent-toolkit-docs-transforms-0.2.6.tgz",
+      "sha256": "sha256:eb991736bac0b143879a727f5826511086cbed7f3a8d1ff3763f9844fa328c96"
+    }
+  ],
+  "request": {
+    "schemaVersion": "explainer-kit.publish-request/v1",
+    "sha256": "sha256:8e7f9cb41718478f0e83d606485823e0e3dc12f9366ec84da2081c3f29b0f806"
+  },
+  "outputs": {
+    "manifest": {
+      "schemaVersion": "explainer-kit.manifest/v1",
+      "sha256": "sha256:522109e098e239f53184fb7b5fac25a2f980fa567cce2732e1ce9fac34b86951"
+    },
+    "receipt": {
+      "schemaVersion": "explainer-kit.publish-receipt/v1",
+      "sha256": "sha256:b96789a6c90597ac7ee22fcd1474617907c763be7665751f18b1992eb721ae61"
+    }
+  },
+  "coreRunId": "run-5510b6de-ba63-41a8-b6fd-d166247f2506",
+  "exit": {
+    "code": 0,
+    "signal": null
+  }
+}
