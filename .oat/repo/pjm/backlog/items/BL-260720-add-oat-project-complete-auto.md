@@ -28,6 +28,7 @@ Structural gap found by the Orc wave program (first-run handoff signal 10, root-
   3. Activation contract: invokable only by workflows naming it as a step (e.g. wave-execute closeout step 7) or OAT_AUTONOMOUS lifecycle runs; self-initiated cleanup invocations forbidden; run record carries requesting-workflow provenance.
 - Interactive oat-project-complete unchanged (flag stays; human gate preserved).
 - wave-execute step 7 repointed to the companion for autonomous runs (removes the interim as-document guidance shipped in 1.7.0).
+- BATCH MODE (operator design 2026-07-20): supports completing N wave-wrapper projects in one invocation at program close, gated by the program-end operator checkpoint (the ask itself is the human gate for the batch); per-project preconditions still hard-fail individually.
 
 - {Outcome 1}
 - {Outcome 2}

@@ -856,6 +856,30 @@ Source: Orc-repo 4-wave program handoff (`references/2026-07-20-wave-skills-firs
 
 **Step 2: Verify** — `rg -U -n "complete-state.*alone|full.*tail|archive" .agents/skills/oat-wave-execute/SKILL.md | head`; commit `fix(prev3-t05): closeout step 7 names the full completion tail (S10)`.
 
+## Phase p-rev4: Revision 4 — program-boundary closeout semantics (operator design feedback 2026-07-20)
+
+Source: operator direction after the Orc program: (1) recap belongs at PROGRAM scope, not per-wave; (2) under autonomous execution, per-wave completion may defer the archive tail — merge and move on — with ONE operator checkpoint at program end: "all waves merged — run the completion tail across all wave wrappers now?"
+
+### Task prev4-t01: (revision) Program-scope recap; per-wave recap default-off
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+
+**Step 1 (program skill):** The recap caller's DEFAULT scope is the program: at the wave-close that completes the FINAL pending wave (program close), offer/run the program-recap caller. Per-wave recaps are default-OFF; a wave-close that skips one records the explicit disposition "recap: deferred to program close" (satisfies the optional-step disposition rule — no silent omission).
+
+**Step 2 (execute skill):** Closeout step 8's recap pointer aligns: per-wave recap only on explicit operator request; the program recap is the deliverable, generated at program close from the reconciled program artifact + ALL wave records.
+
+**Verify:** `rg -U -n "program close|deferred to program close" both files`; commit `feat(prev4-t01): recap defaults to program scope with explicit per-wave deferral`.
+
+### Task prev4-t02: (revision) Autonomous archive deferral + program-end completion checkpoint
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+
+**Step 1 (execute skill, step 7):** Add the autonomous-mode branch: per-wave, `complete-state` + bookkeeping run as today, but the ARCHIVE TAIL (archive → S3 → pointer clear) MAY be deferred program-scoped; each deferral is recorded in the wave ledger row ("completion tail: deferred to program close") — explicit disposition, never silent. Interactive runs unchanged (full tail per wave remains valid).
+
+**Step 2 (program skill):** Program close gains the OPERATOR CHECKPOINT: when the final wave's ledger row flips done and all merges are recorded, ask exactly one question — "All waves are merged and the program is complete. Run the completion tail (oat-project-complete: archive + S3 + pointer clear) across all N wave wrapper projects now?" On yes: run the tail per wrapper (via oat-project-complete-auto when it ships; as-document until then), flip each ledger deferral note to done. On no/defer: record the standing deferral with owner. This checkpoint is HUMAN-GATED even in autonomous runs — it is the program's completion gate, mirroring the recap publish gate.
+
+**Verify:** rg evidence both files; versions: execute → 1.7.1, program → 1.3.1 (patch: semantics additions, no rule removals); commit `feat(prev4-t02): program-end completion checkpoint + autonomous archive deferral`.
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1024,8 +1048,9 @@ Source: stoa W6-migration report (references/w6-migration-report-2026-07-18.md) 
 - Phase p-rev1: 3 tasks - PR #158 Bugbot revision
 - Phase p-rev2: 3 tasks - stoa migration findings (installer exec-bit, runbook, 0.2.1)
 - Phase p-rev3: 5 tasks - Orc first-consumer feedback (1.7.0/1.3.0)
+- Phase p-rev4: 2 tasks - program-boundary closeout semantics (operator)
 
-**Total: 38 tasks**
+**Total: 40 tasks**
 
 Ready for code review and merge.
 
