@@ -219,7 +219,7 @@ oat_generated: false
 - Scope-boundary notes (`08e3c516`): W6 runbook + equivalence checklist now bound the zero-regression bar to the 1.4.0+§2 surface; p06 additions = ordinary-defect handling.
 - Reviews: round 1 PASS (as-shipped) → extension round 2 FAIL (1 Important: publish-request keys; 1 Minor) → fix → round 3 PASS (1 low-impact Minor recorded: requireKeys presence-vs-undefined, non-blocking).
 
-**Pending externals (not tasks):** operator/fresh-agent acceptance run against the post-p06 final RC; stoa W6 evidence.
+**Pending externals (not tasks):** ~~acceptance run~~ **RESOLVED 2026-07-19**: fresh-agent acceptance executed against final RC `985d0abd` — ALL SIX GATES PASS (vault, Google Docs, presets, personal-destinations e2e, manifest consumption, rollback); sanitized `private-wrapper-result.json` + verification record landed via cherry-pick of `53fb1d48` (`references/p06-t03-private-wrapper-acceptance-2026-07-19.md`); sanitization spot-check clean; laptop state: packaged 1.0.0 installed, allowPublish re-latched false, 0.4.1 rollback intact. Remaining external: stoa W6 evidence only.
 
 ---
 
