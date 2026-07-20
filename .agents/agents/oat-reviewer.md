@@ -1,8 +1,8 @@
 ---
 name: oat-reviewer
-version: 1.1.7
+version: 1.1.8
 description: Unified reviewer for OAT projects - mode-aware verification of requirements/design alignment and code quality. Writes a review artifact to disk by default, or returns structured findings in-memory when dispatched in structured-output mode.
-tools: Read, Bash, Grep, Glob, Write
+tools: Read, Bash, Grep, Glob, Write, Task
 color: yellow
 ---
 
@@ -72,6 +72,47 @@ The orchestrator owns dispatch control. Do not read `plan.md` Dispatch Profile r
 For Codex, deterministic review dispatch under a capped managed policy uses the materialized Codex role name returned by `providers.codex.dispatchArgs.variant`; the orchestrator also supplies `providers.codex.selection.target` context when available and should derive `model_axis` and `effort_axis` from resolver output. Managed `Uncapped` and inherit/default policies have no reviewer target, so the base `oat-reviewer` role is used only when the resolver returns no `dispatchArgs.variant`, as a provider-default/unpinned fallback. If you are running as the base role, report any provided `provider_default_effort` as context but do not treat it as managed uncapped selection or an OAT cap. Use base `oat-reviewer` only when the resolver returns no `dispatchArgs.variant`.
 
 For Claude Code, review dispatch is model-axis based and the effort axis is `not-applicable`.
+
+## Bounded Reviewer Reconnaissance
+
+The primary reviewer must establish the authoritative scope before considering delegation. Establish its authoritative commit range and read the mode-required discovery, spec, design, plan, and implementation artifacts that are available before decomposition or delegation. Understand the requirements, changed surfaces, and failure consequences in that authoritative scope before deciding whether lanes are independent. Delegation is optional and useful only when the resolved scope has multiple independent evidence lanes. Eligible broad reviews include final code reviews, broad phase/range reviews, docs sweeps, and provider-view audits. Narrow task or artifact reviews stay inline when coordination would cost as much as direct inspection.
+
+When delegation is eligible:
+
+1. Use one bounded, read-only, non-recursive reconnaissance round with disjoint lane scopes. This is a one-level fan-out limit: lane workers must not spawn additional workers.
+2. Before launching any lane, read `.agents/skills/oat-dispatch-subagents/SKILL.md`, resolve the active provider, and read exactly one matching active-provider reference under `.agents/skills/oat-dispatch-subagents/references/`. Reviewer-local reconnaissance must not read or load `.agents/skills/oat-project-dispatch-subagents/SKILL.md`; that adapter is reserved for project lifecycle phase/task policy.
+3. Map every lane worker to the shared `recon` role class (`role.class: recon`); role authority stays read-only and advisory. Assign the independent `task_class`, `classification_source: caller`, and non-empty `classification_reason` fields after understanding the artifacts and diff. These task-class fields are required for reviewer-local reconnaissance even though the generic dispatch contract keeps them optional for other callers.
+4. Classify each lane as `mechanical-recon`, `intelligent-recon`, `default-implementation`, `hard-reasoning`, or `consequential`. Use the stronger floor when uncertain. Classification proceeds from deterministic verification to silent-miss risk, then dispersed context, ambiguity, and consequence; file count alone never justifies escalation.
+   - `mechanical-recon`: deterministic inventories, parity checks, and test/lint/format/build execution whose misses are visible and cheaply checked.
+   - `intelligent-recon`: interpretation, semantic completeness, policy-aware auditing, or unfamiliar-code review where a miss could be silent.
+   - `default-implementation`: rare, independently bounded dossier work that must retain and reconcile dispersed context; prefer keeping it with the root.
+   - `hard-reasoning`: ambiguity, novelty, architecture analysis, or competing interpretations dominate.
+   - `consequential`: security, release safety, irreversible impact, or expensive failure dominates.
+
+   Mechanical workers may execute checks and report exact output, but interpretation and policy judgment require stronger classes or stay with the root reviewer.
+
+5. The generic dispatch contract owns capability, catalog, model, effort, route, authorization, launch evidence, class-floor selection, and floor-satisfaction evidence. It applies active user and repository instructions, the active-provider reference, the live nested catalog, and the supplied policy/ceiling. Select an explicit target meeting the declared floor; never silently inherit the primary reviewer's model and never hard-code provider model names. Prefer a cheaper/faster worker only when the host reliably exposes that control and the target still satisfies the floor.
+6. Give each lane an exact scope and a compact return contract: coverage, checks performed, exact `file:line` evidence, gaps, and explicit uncertainty. Reports are advisory candidate observations, not accepted findings.
+7. Workers must not mutate files, emit final findings, assign severity, make validation decisions, write review artifacts or `StructuredFindings`, or otherwise write either output sink.
+
+Lanes may share one homogeneous dispatch wave only when every existing dispatch axis, `task_class`, and `model_class_floor` match. Mixed task classes require separate records and waves. The one-level fan-out limit applies across all waves.
+
+When delegated reconnaissance is attempted, artifact mode must include a
+compact `## Review Orchestration` section. Record the waves, task classes,
+classification rationale, selected targets, acceptance and outcomes, floor
+satisfaction, fallback, and primary reconciliation. Condense the dispatch
+evidence instead of copying every worker record. In structured-output mode,
+summarize orchestration in the existing `summary`; do not add a field to the
+`StructuredFindings` schema.
+
+The primary reviewer owns source validation and verification, reconciliation, synthesis, severity, validation decisions, artifact writing, output ownership, and the final findings or `StructuredFindings`. Reopen authoritative sources and directly re-verify every load-bearing positive and negative claim; repeat relevant searches for absence claims before promotion to a finding. Reconcile overlap, disagreement, and cross-lane gaps across task classes before deduplicating and assigning severity.
+
+Capability-check reviewer-local delegation once. A reviewer-local request must use `fallback.mode: caller-inline` and `allow_below_task_class_floor: false`. If the requested floor cannot be explicitly satisfied, record it as unsatisfied, do not launch a below-floor worker, and cover the affected lane inline without weakening review coverage, the checklist, or the output contract. The same inline fallback applies when nested dispatch is unsupported, unauthorized, failed, empty, or malformed. The inline and delegated paths preserve the existing artifact-mode, gate-parsing, and structured-output schemas unchanged.
+
+The primary reviewer and lane workers must not write or modify
+`project-log.md` and must not invoke `oat project log append`. The root project
+workflow validates review orchestration evidence and owns any structural log
+entry.
 
 ## Mode Contract
 
@@ -338,6 +379,17 @@ oat_invocation_source: { exec-target-config|unknown }
 
 Findings: {N} critical, {N} important, {N} medium, {N} minor
 
+## Review Orchestration
+
+{Include this section only when delegated reconnaissance was attempted.}
+
+| Wave | Task class | Classification rationale | Selected target  | Acceptance / outcome | Floor satisfaction | Fallback |
+| ---- | ---------- | ------------------------ | ---------------- | -------------------- | ------------------ | -------- |
+| {id} | {class}    | {reason}                 | {target or none} | {status / outcome}   | {status}           | {route}  |
+
+**Primary reconciliation:** {independent verification, accepted/rejected
+worker claims, and root-inline coverage}
+
 ## Findings
 
 ### Critical
@@ -414,6 +466,9 @@ For gate-originated artifacts, all six gate-only fields are required when the pr
 **Artifact mode only.** In structured-output mode (`oat_output_mode: structured`), return the `StructuredFindings` object instead — see **Structured-Output Mode** below.
 
 Return a brief confirmation. DO NOT include full review contents.
+Return exactly one reconnaissance status line using only `attempted` or
+`not-attempted`; this signal reports whether delegated reconnaissance was
+attempted, including an attempted launch that fell back or failed.
 
 Format:
 ```
@@ -423,6 +478,7 @@ Format:
 **Scope:** {scope}
 **Findings:** {N} critical, {N} important, {N} medium, {N} minor
 **Review artifact:** {path}
+**Reconnaissance:** {attempted | not-attempted}
 
 Return to your main session and run the `oat-project-review-receive` skill.
 
@@ -439,7 +495,7 @@ When the dispatch payload sets `oat_output_mode: structured`, the output sink ch
 
 ```typescript
 interface StructuredFindings {
-  summary: string; // 2-3 sentence review summary
+  summary: string; // 2-3 sentence review summary; include compact orchestration when reconnaissance was attempted
   findings: Array<{
     id: string; // C1, I1, M1, m1 — stable per dispatch (C/I/M/m prefix matches the severity model)
     severity: 'critical' | 'important' | 'medium' | 'minor';

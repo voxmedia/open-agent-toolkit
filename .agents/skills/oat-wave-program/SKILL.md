@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.2.0
+version: 1.2.1
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -15,6 +15,21 @@ plans (from one or more plan-generation runs) map into an ordered sequence of
 waves, and keep that mapping durable and current as waves complete.
 `oat-wave-execute` runs ONE wave; this skill records and maintains the
 orchestrator-composed, operator-approved mapping of WHICH plans form each wave.
+
+## Progress Indicators (User-Facing)
+
+Print this banner once when the selected mode starts:
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+OAT ▸ WAVE PROGRAM
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+- Report the active boundary: inventory, dependency mapping, composition
+  checkpoint, coverage validation, or wave-close ledger update.
+- Present the composed wave map before its required operator checkpoint; do not
+  narrate every file read.
+- Surface missing plans, coverage mismatches, and frozen-wave conflicts
+  immediately with the exact artifact or row that blocks progress.
 
 ## Ownership Boundary
 

@@ -44,7 +44,23 @@ flowchart LR
 
 ## Post-implementation flow
 
-After implementation and final review pass:
+Implementation closeout has one authoritative order:
+
+1. Run final implementation verification.
+2. Pass the mandatory final lifecycle review.
+3. Resolve and disposition the configured `oat-project-implement` exit gate.
+4. Run the configured pre-approval sequence.
+5. Record final HiLL approval when the final phase is a checkpoint.
+6. Run the configured post-approval sequence.
+7. Mark implementation complete and emit the implementation success output.
+
+The configured exit gate is independent from the mandatory lifecycle review,
+root-owned phase reviews, and optional `oat_phase_review_gate`. It must reach an
+allowed and fresh disposition before pre-approval work starts. A null
+configuration is recorded explicitly as `allowed/no_gate`; it is not inferred
+from missing state.
+
+After implementation closeout finishes:
 
 1. **Summary** (`oat-project-summary`) — generates `summary.md` as institutional memory from project artifacts; PR-final and completion will auto-refresh it if you have not already run it or if it is stale
 2. **Documentation** (`oat-project-document`) — optional sync of project docs; now uses the shared `tools.project-management` config signal to decide whether repo-reference refresh should run before docs analysis, and should recommend new docs pages/directories when the shipped work introduces a capability area that the docs app does not already cover
@@ -87,11 +103,18 @@ This distinction matters during completion: `oat-project-complete` can skip the 
 ### Approval-aware post-implementation sequencing
 
 `workflow.postImplementSequence` can use the legacy string values or a structured
-`{ preApproval, postApproval }` value. After the final review passes, OAT
-snapshots the effective sequence, runs ordered pre-approval steps, records final
-HiLL approval, and only then runs post-approval steps. The snapshot is
-restart-safe: an incomplete sequence routes back to implementation and resumes
-from its first incomplete step.
+`{ preApproval, postApproval }` value. After final verification, final review,
+and an allowed, fresh implementation exit-gate disposition, OAT snapshots the
+effective sequence, runs ordered pre-approval steps, records final HiLL
+approval, and only then runs post-approval steps. The snapshot is restart-safe:
+an incomplete sequence routes back to implementation and resumes from its first
+incomplete step.
+
+`oat-project-next` checks `oat_implement_exit_gate` before every normal
+post-implementation route. Missing, pending, blocked, malformed, or stale state
+routes back to `oat-project-implement` even when `oat_phase_status` is
+`complete` or `pr_open`. Only an allowed, fresh disposition can continue to
+summary, documentation, PR, or project completion.
 
 When `workflow.autoReviewAtHillCheckpoints` is enabled or `plan.md` frontmatter sets `oat_auto_review_at_hill_checkpoints`, completing a HiLL checkpoint automatically runs the extra lifecycle review scoped to every implementation phase not already covered by a passed whole-phase code review, through the just-completed checkpoint. Mid-implementation multi-phase reviews use inclusive phase-range scopes such as `p02-p03`; the final implementation checkpoint uses `code final`. The review uses auto-disposition mode (minors auto-converted to fix tasks, no user prompts). Disabled by default. Legacy `autoReviewAtCheckpoints` and `oat_auto_review_at_checkpoints` are still read as fallbacks. This does not control Tier 1 per-phase `oat-reviewer` gates.
 

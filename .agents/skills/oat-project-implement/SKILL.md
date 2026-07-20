@@ -1,12 +1,12 @@
 ---
 name: oat-project-implement
-version: 2.1.4
+version: 2.1.7
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
 disable-model-invocation: true
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
+allowed-tools: Read, Write, Bash(git:*), Bash(oat:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion, Task
 ---
 
 # Implementation Phase
@@ -37,12 +37,28 @@ merge provider mechanics.
 
 ## Project Log Append Points
 
-At each point below, invoke `oat project log append` and defer entry flags and format to `oat project log append --help`. Never pre-check project-log config: the helper no-ops when the feature is off.
+Defer entry flags to `oat project log append --help`; never pre-check config:
+the helper no-ops when the feature is off.
 
-- After every accepted subagent dispatch, invoke `oat project log append` for a structural stamp referencing `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
-- Before every STOP or park return, invoke `oat project log append` for a structural entry naming the triggering condition.
-- After every phase outcome, invoke `oat project log append` for a structural entry with the verdict and fix-loop count.
-- After every parallel-group merge attempt, invoke `oat project log append` for a structural entry with the merge result.
+- After every accepted subagent dispatch, use `oat project log append` at
+  `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
+- Before validating the review artifact or updating project bookkeeping, consume
+  exactly one brief artifact-mode confirmation of reconnaissance:
+- `**Reconnaissance:** attempted`
+- `**Reconnaissance:** not-attempted`
+  Missing, duplicate, or invalid signals are incomplete-artifact errors: stop
+  and fail closed before validation, bookkeeping, or logging.
+- For `attempted`, require complete `## Review Orchestration` evidence. After
+  validation, append exactly once through `oat project log append`, referencing
+  the artifact without copying records.
+- For `not-attempted`, the artifact must not contain `## Review Orchestration`;
+  do not invoke `oat project log append` or create a log entry.
+- Before every STOP or park return, invoke `oat project log append` for a
+  structural entry naming the triggering condition.
+- After every phase outcome, invoke `oat project log append` for a structural
+  entry with the verdict and fix-loop count.
+- After every parallel-group merge attempt, invoke `oat project log append` for
+  a structural entry with the merge result.
 
 ## Autonomy Policy
 
@@ -183,23 +199,6 @@ Rules:
 5. Load `references/completion-and-closeout.md` only for blockers, completion,
    final verification/review, approval sequencing, and handoff.
 
-### Implementation-Tail Project Recap
-
-The final-closeout orchestrator owns one project-recap gate. Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval. Preserve the stored order of all other pre-approval steps and the existing final review sequence; the recap gate does not replace or repeat either.
-
-Before generating, inspect the active project's explainer runs. A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again. Fresh means the manifest identifies recipe `project-recap`, belongs to this project, has a terminal outcome, and its recorded source hashes match the current approved implementation inputs. A merely present, incomplete, wrong-recipe, or stale manifest does not satisfy this check.
-
-Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt. Interactive mode honors the adapter's resolved persisted or workflow intent.
-
-Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build. Use the adapter result and finalizer result as returned; do not improvise commits, durability evidence, or reruns. Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.
-Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
-
-Always include the selected or attempted recap's outcome and run path in the
-implementation completion report. If `summary.md` exists, append or refresh its
-single concise `Explainer Outcome` section using the manifest and build record;
-never append a second outcome section. If no recap was attempted or reused,
-leave the summary unchanged.
-
 ## Success Criteria
 
 - One exact target-pinned phase implementer directly executed each phase's
@@ -214,4 +213,6 @@ leave the summary unchanged.
 - Implementation.md tracks all progress
 - Final verification passes
 - Final review passes (no Critical/Important findings)
+- The configured implementation exit gate has an allowed and fresh disposition
+  before approval-aware sequencing, completion state, or success output
 - No unresolved blockers
