@@ -60,8 +60,12 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    Bare `merge(...)` fails commitlint. Keep headers ≤ 100 chars.
 3. **Clean orchestrator tree before group merges** — a dirty unrelated file leaves
    `git merge --no-ff` uncommitted and drags the full hook chain into recovery.
-   Gate reviewers now COMMIT their own artifacts (waves 2–3 evidence): keep the
-   tree clean around gate runs and expect a gate-authored commit on return.
+   When a gate reviewer runs in the primary checkout, it MUST COMMIT its own
+   artifact.
+   From a linked worktree, `.git` points to metadata outside the review sandbox and
+   that commit can fail silently; the ORCHESTRATOR commits the gate artifact on
+   the reviewer's behalf. Keep the tree clean around either path (both consumers:
+   stoa waves 2–3; Orc W1–W4).
 4. **Pre-declare CUMULATIVE churn in every brief:** declarations cover everything
    landed since each source plan's AUTHORED COMMIT (drift checks compare against
    that commit, not the group base), naming files + rough regions. Zero false
@@ -75,6 +79,12 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    waves (~6+ lanes), prefer per-phase gates over one monolithic final gate; if a
    final gate must cover the whole wave, scope its prompt to the integration
    diff plus the review-chain artifacts, not a re-review of every lane.
+   **Gate dispatch posture (standing rule alongside rules 6 and 8):** dispatch
+   gates in the BACKGROUND by default with a completion watcher because
+   orchestrator-host foreground ceilings (for example, 600 seconds) are shorter than
+   legitimate wave-scoped reviews. Use foreground only for demonstrably short scopes.
+   Rule 8 remains the recovery path; it worked on the one timeout in Orc W2 and was
+   not needed again in W2–W4.
 7. **Guard every formatter-ignored-file × staged-glob interaction:** a
    single-glob staged-file task can fail when every matched file is ignored by
    the repo's formatter. Audit every glob task and pair canonical-file
@@ -102,6 +112,15 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
     MUST state that fixes land in an append-only commit. A worker that refuses an
     instruction to amend a reviewed SHA is honoring its role contract (Orc p10
     precedent).
+12. **Piped DoD/gate verification must preserve the raw failure:** run every piped
+    verification chain under `set -o pipefail`, or capture the raw command's exit
+    code before filtering. In Orc W4, `pnpm test | grep` returned the filter's zero
+    while the test run contained one failure.
+13. **Review artifacts are single-writer until committed:** an uncommitted review
+    artifact is exclusively owned by whichever agent is live on it. Orchestrator
+    dispositions land as immediate commits or wait until every agent touching the
+    artifact terminates. Do not use lock or timestamp-suffix conventions; they
+    fragment the review chain that final gates audit (Orc W4 final-gate evidence).
 
 Plus inherited invariants: commit-verification via `git log` before retrying after
 any ambiguous hook outcome; every agent runs the repo's formatter on markdown it
