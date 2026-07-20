@@ -880,6 +880,18 @@ Source: operator direction after the Orc program: (1) recap belongs at PROGRAM s
 
 **Verify:** rg evidence both files; versions: execute → 1.7.1, program → 1.3.1 (patch: semantics additions, no rule removals); commit `feat(prev4-t02): program-end completion checkpoint + autonomous archive deferral`.
 
+## Phase p-rev5: Revision 5 — recap authoring-ownership docs (W6 recap defects)
+
+Source: `references/w6-recap-defects-handoff-2026-07-20.md` (defect 2, HIGH: unattended recap has no content-authoring seam; raw artifact text published-grade-approved by every automated gate). Wave-side ask only — core fixes are the explainer batch's.
+
+### Task prev5-t01: (revision) Recap callers own prose authoring
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`, `.agents/skills/oat-wave-program/SKILL.md`
+
+Caller sections state: prose authoring is CALLER-owned (like critic execution and fact-base synthesis); until the explainer authoring seam ships, callers either author the content document from the fact base + recipe outline or skip the unattended build with a recorded disposition. No mechanical-contract changes; no version bump (PR diff already bumps both skills).
+
+**Verify:** `rg -U -n "prose|authoring" both files`; commit `docs(prev5-t01): recap callers own prose authoring (W6 raw-dump evidence)`.
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1051,8 +1063,9 @@ Source: stoa W6-migration report (references/w6-migration-report-2026-07-18.md) 
 - Phase p-rev2: 3 tasks - stoa migration findings (installer exec-bit, runbook, 0.2.1)
 - Phase p-rev3: 5 tasks - Orc first-consumer feedback (1.7.0/1.3.0)
 - Phase p-rev4: 2 tasks - program-boundary closeout semantics (operator)
+- Phase p-rev5: 1 task - recap authoring-ownership docs (W6 defects)
 
-**Total: 40 tasks**
+**Total: 41 tasks**
 
 Ready for code review and merge.
 
