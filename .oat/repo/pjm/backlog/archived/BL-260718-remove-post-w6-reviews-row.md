@@ -1,7 +1,7 @@
 ---
 id: BL-260718-remove-post-w6-reviews-row
 title: Remove post-W6 reviews-row restore watch
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: XS
@@ -11,7 +11,7 @@ labels:
   - cleanup
 assignee: null
 created: 2026-07-18T17:31:56.421Z
-updated: 2026-07-18T17:31:56.421Z
+updated: '2026-07-20T16:00:09Z'
 associated_issues: []
 external_plans: []
 ---

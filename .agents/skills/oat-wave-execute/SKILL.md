@@ -352,8 +352,11 @@ archive anything first.
    disposition has its required stored verification record, flip the row to
    `passed`. A final
    gate MUST NOT remain at `fixes_completed`: `passed` is the only terminal
-   state for gate rows. The known final-Reviews-row restore-watch presumes this
-   flow (restore `passed` if row-stomp regresses it; Orc operator-audit S8).
+   state for gate rows (Orc operator-audit S8; confirmed convergently by stoa
+   W6's final-row handling). The historical row-stomp restore-watch is RETIRED:
+   the upstream stomp class was fixed in oat 0.1.65 and stoa's W6 supplied the
+   final clean observation (three gate rounds, zero stomps, watch never fired,
+   2026-07-20).
 6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).

@@ -85,7 +85,6 @@
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos          | open   | medium   | task    |          |
 | BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs       | open   | medium   | feature | L        |
 | BL-260712-per-project-override           | Per-project override to disable configured external gates               | open   | medium   | feature | M        |
-| BL-260718-remove-post-w6-reviews-row     | Remove post-W6 reviews-row restore watch                                | open   | medium   | task    | XS       |
 | BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command           | open   | medium   | feature | M        |
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log              | open   | medium   | feature | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)           | open   | medium   | task    |          |
