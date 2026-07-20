@@ -1,0 +1,37 @@
+{
+  "name": "neutral",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#ffffff",
+        "panel": "#f3f4f6",
+        "elevated": "#e5e7eb"
+      },
+      "ink": { "primary": "#111827", "muted": "#4b5563", "inverse": "#ffffff" },
+      "accent": { "primary": "#374151", "secondary": "#4b5563" },
+      "status": {
+        "success": "#166534",
+        "warning": "#854d0e",
+        "danger": "#991b1b",
+        "info": "#1e40af"
+      },
+      "diagramSeries": ["#374151", "#1e40af", "#166534", "#854d0e"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#111827",
+        "panel": "#1f2937",
+        "elevated": "#374151"
+      },
+      "ink": { "primary": "#f9fafb", "muted": "#d1d5db", "inverse": "#111827" },
+      "accent": { "primary": "#d1d5db", "secondary": "#e5e7eb" },
+      "status": {
+        "success": "#86efac",
+        "warning": "#fde047",
+        "danger": "#fca5a5",
+        "info": "#93c5fd"
+      },
+      "diagramSeries": ["#d1d5db", "#93c5fd", "#86efac", "#fde047"]
+    }
+  }
+}

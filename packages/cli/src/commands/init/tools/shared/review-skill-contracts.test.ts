@@ -133,6 +133,104 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('gates interactive plan explainers with ask-once persisted intent', () => {
+    const content = readRepoFile('.agents/skills/oat-project-plan/SKILL.md');
+
+    expect(content).toContain(
+      'Resolve `projectExplainer` intent before drafting the plan.',
+    );
+    expect(content).toContain(
+      'When resolution returns `needsPrompt: true`, ask exactly once whether to generate the project explainer, then resolve again with the answer and persist the returned `interactive` record.',
+    );
+    expect(content).toContain(
+      'A valid persisted `oat_project_explainer` decision prevents another prompt.',
+    );
+    expect(content).toContain(
+      'Generate only after plan artifact review, the configured plan gate, and the plan commit have completed successfully.',
+    );
+    expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    );
+    expect(content).toContain(
+      'Explainer failure must not roll back, amend, or invalidate the valid committed plan.',
+    );
+  });
+
+  it('persists autonomous explainer policy without broadening kickoff intent', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-autonomous/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'Resolve and persist `projectRecap` as `generate` with source `autonomous_policy` after project creation or resolution.',
+    );
+    expect(content).toContain(
+      'Reassert this forced recap intent on resume; a stale lower-precedence skip is overridden, warned, and recorded.',
+    );
+    expect(content).toContain(
+      'Resolve and persist `projectExplainer` as `generate` with source `kickoff_prompt` only when the kickoff request explicitly asks for a project explainer.',
+    );
+    expect(content).toContain(
+      'A general autonomous goal, project creation, or normal planning does not count as an explainer request.',
+    );
+    expect(content).toContain(
+      'When no explicit kickoff explainer request exists, do not persist a project-explainer intent record.',
+    );
+  });
+
+  it('runs one non-blocking implementation-tail recap before final HiLL approval', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+    );
+
+    expect(content).toContain(
+      'A fresh `project-recap` manifest for the current completed implementation deduplicates the lifecycle-tail run: reuse it and do not invoke the adapter again.',
+    );
+    expect(content).toContain(
+      'When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt.',
+    );
+    expect(content).toContain(
+      'Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build.',
+    );
+    expect(content).toContain(
+      'Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.',
+    );
+    expect(content).toContain(
+      'Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval.',
+    );
+    expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    );
+
+    const normalizedContent = content.replace(/\s+/g, ' ');
+    const finalReviewIndex = normalizedContent.indexOf(
+      'Final review must be `passed` and the configured implementation exit gate in Step 14 must be allowed before any pre-approval dispatch.',
+    );
+    const preApprovalIndex = normalizedContent.indexOf(
+      'Dispatch incomplete `pre_approval` steps in stored order.',
+    );
+    expect(finalReviewIndex).toBeGreaterThanOrEqual(0);
+    expect(preApprovalIndex).toBeGreaterThan(finalReviewIndex);
+    expect(content).toMatch(
+      /If final checkpoint auto-review is enabled, Step 8 has\s+already run `oat-project-review-provide code final`; do not run a duplicate\s+final review here\./,
+    );
+  });
+
+  it('surfaces a concise explainer outcome in project summaries', () => {
+    const content = readRepoFile('.agents/skills/oat-project-summary/SKILL.md');
+
+    expect(content).toContain('## Explainer Outcome');
+    expect(content).toContain(
+      'When a project-recap attempt exists, include exactly one concise outcome item with its recipe, outcome (`built-durable`, `built-not-durable`, or `failed`), run path, and warning or recovery note when applicable.',
+    );
+    expect(content).toContain(
+      'Use `manifest.json` and `build-record.json` as the source of truth; refresh the existing item instead of appending a duplicate.',
+    );
+    expect(content).toContain(
+      'Omit `Explainer Outcome` when no project-recap attempt exists.',
+    );
+  });
+
   it('allows quick/import design artifact reviews without spec.md', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-review-provide/SKILL.md',
@@ -556,6 +654,85 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('integrates interactive completion recap policy before lifecycle mutation', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+    const normalizedContent = content.replace(/\s+/g, ' ');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
+    expect(content).toContain(
+      'Resolve `projectRecap` intent before presenting the batched completion prompt.',
+    );
+    expect(content).toContain(
+      'When resolution returns `needsPrompt: true`, add exactly one project-recap question to that same batched prompt',
+    );
+    expect(content).toContain(
+      'Persist either `generate` or `skip` as the returned `interactive` record before continuing.',
+    );
+    expect(content).toContain(
+      'A valid persisted `oat_project_recap` decision prevents another prompt.',
+    );
+    expect(content).toContain(
+      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    );
+
+    const resolveIndex = normalizedContent.indexOf(
+      'Resolve `projectRecap` intent before presenting the batched completion prompt.',
+    );
+    const recapIndex = normalizedContent.indexOf(
+      '### Step 3.6: Select Final Project Recap',
+    );
+    const completeStateIndex = normalizedContent.indexOf(
+      '### Step 5: Set Lifecycle Complete',
+    );
+    expect(resolveIndex).toBeGreaterThanOrEqual(0);
+    expect(recapIndex).toBeGreaterThan(resolveIndex);
+    expect(completeStateIndex).toBeGreaterThan(recapIndex);
+  });
+
+  it('selects and archives only the final shared-project recap', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'A fresh `project-recap` manifest for the current completed implementation is reused without invoking the adapter again.',
+    );
+    expect(content).toContain(
+      'Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run.',
+    );
+    expect(content).toContain('ARCHIVE_ARGS=("$PROJECT_PATH")');
+    expect(content).toContain(
+      'ARCHIVE_ARGS+=("--project-recap-run" "$SELECTED_PROJECT_RECAP_RUN")',
+    );
+    expect(content).toContain(
+      'Never add `--project-recap-run` when `SELECTED_PROJECT_RECAP_RUN` is empty.',
+    );
+    expect(content).toContain(
+      '`project-explainer` runs are active-project working artifacts, not durable post-completion reference products.',
+    );
+    expect(content).toContain(
+      'Do not export, re-attest, or add archive-aware PR or summary reference links for a `project-explainer` run.',
+    );
+  });
+
+  it('keeps local completion recaps outside tracked archive durability', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-complete/SKILL.md',
+    );
+
+    expect(content).toContain(
+      'For `IS_SHARED_PROJECT="false"`, never export a tracked project recap and never construct or pass `--project-recap-run`.',
+    );
+    expect(content).toContain(
+      'A local-scope recap remains `built-not-durable` unless its manifest already contains independently verified publish evidence.',
+    );
+    expect(content).toContain(
+      'Do not treat local filesystem presence as durability.',
+    );
+  });
+
   it('delegates project completion state mutation to the CLI command', () => {
     const skillPath = repoFilePath(
       '.agents/skills/oat-project-complete/SKILL.md',
@@ -590,7 +767,7 @@ describe('review skill contracts', () => {
       'oat project complete-state "${COMPLETE_STATE_ARGS[@]}"',
     );
     const archiveIndex = content.indexOf(
-      'ARCHIVE_OUTPUT=$(oat project archive "$PROJECT_PATH" 2>&1)',
+      'ARCHIVE_OUTPUT=$(oat project archive "${ARCHIVE_ARGS[@]}" --json 2>&1)',
     );
 
     expect(checkIndex).toBeGreaterThanOrEqual(0);

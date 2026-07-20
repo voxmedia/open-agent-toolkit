@@ -40,6 +40,7 @@ export function resolvePackDefaultScope(packName: string): 'user' | 'project' {
 
 export const WORKFLOW_SKILLS = [
   'oat-cursor-cloud-projects',
+  'oat-explainer-kit',
   'oat-project-autonomous',
   'oat-project-capture',
   'oat-project-clear-active',
@@ -131,6 +132,7 @@ export const DOCS_SCRIPTS = ['resolve-tracking.sh'] as const;
 
 export const UTILITY_SKILLS = [
   'create-agnostic-skill',
+  'explainer-kit',
   'oat-dispatch-subagents',
   'oat-repo-improve',
   'oat-repo-maintainability-review',

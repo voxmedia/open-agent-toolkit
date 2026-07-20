@@ -69,6 +69,8 @@ export async function getProjectState(
     prUrl: parsedState.prUrl,
     docsUpdated: parsedState.docsUpdated,
     lastCommit: parsedState.lastCommit,
+    projectExplainer: parsedState.projectExplainer,
+    projectRecap: parsedState.projectRecap,
     timestamps: {
       created: parsedState.projectCreated ?? '',
       completed: parsedState.projectCompleted,
@@ -140,6 +142,8 @@ export async function listProjects(
         prUrl: parsedState.prUrl,
         docsUpdated: parsedState.docsUpdated,
         lastCommit: parsedState.lastCommit,
+        projectExplainer: parsedState.projectExplainer,
+        projectRecap: parsedState.projectRecap,
         timestamps: {
           created: parsedState.projectCreated ?? '',
           completed: parsedState.projectCompleted,

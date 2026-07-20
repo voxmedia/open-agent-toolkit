@@ -5,6 +5,7 @@ import {
 } from '../shared/utils/normalize';
 import type {
   ExecutionMode,
+  ExplainerDecisionV1,
   Lifecycle,
   Phase,
   PhaseStatus,
@@ -23,6 +24,27 @@ const PHASE_STATUSES = ['in_progress', 'complete', 'pr_open'] as const;
 const EXECUTION_MODES = ['single-thread', 'subagent-driven'] as const;
 const WORKFLOW_MODES = ['spec-driven', 'quick', 'import'] as const;
 const LIFECYCLE_VALUES = ['active', 'paused', 'complete'] as const;
+const EXPLAINER_DECISIONS = ['generate', 'skip'] as const;
+const EXPLAINER_SOURCES = [
+  'interactive',
+  'kickoff_prompt',
+  'autonomous_policy',
+] as const;
+const EXPLAINER_DECISION_KEYS = ['decision', 'source', 'decided_at'] as const;
+const EXPLAINER_ALLOWED_PAIRS = {
+  projectExplainer: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:kickoff_prompt',
+  ]),
+  projectRecap: new Set([
+    'generate:interactive',
+    'skip:interactive',
+    'generate:autonomous_policy',
+  ]),
+} as const;
+const ISO_TIMESTAMP_PATTERN =
+  /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
 
 export interface ParsedStateFrontmatter {
   currentTask: string | null;
@@ -45,6 +67,8 @@ export interface ParsedStateFrontmatter {
   projectCreated: string | null;
   projectCompleted: string | null;
   projectStateUpdated: string | null;
+  projectExplainer: ExplainerDecisionV1 | null;
+  projectRecap: ExplainerDecisionV1 | null;
   generated: boolean;
   template: boolean;
 }
@@ -70,6 +94,8 @@ const EMPTY_PARSED_STATE: ParsedStateFrontmatter = {
   projectCreated: null,
   projectCompleted: null,
   projectStateUpdated: null,
+  projectExplainer: null,
+  projectRecap: null,
   generated: false,
   template: false,
 };
@@ -128,9 +154,53 @@ export function parseStateFrontmatter(content: string): ParsedStateFrontmatter {
         treatPlaceholdersAsNull: true,
       },
     ),
+    projectExplainer: parseExplainerDecision(
+      parsed.oat_project_explainer,
+      'projectExplainer',
+    ),
+    projectRecap: parseExplainerDecision(
+      parsed.oat_project_recap,
+      'projectRecap',
+    ),
     generated: parseBoolean(parsed.oat_generated),
     template: parseBoolean(parsed.oat_template),
   };
+}
+
+function parseExplainerDecision(
+  value: unknown,
+  product: keyof typeof EXPLAINER_ALLOWED_PAIRS,
+): ExplainerDecisionV1 | null {
+  if (value === null || typeof value !== 'object' || Array.isArray(value)) {
+    return null;
+  }
+
+  const record = value as Record<string, unknown>;
+  const keys = Object.keys(record);
+  if (
+    keys.length !== EXPLAINER_DECISION_KEYS.length ||
+    keys.some(
+      (key) => !(EXPLAINER_DECISION_KEYS as readonly string[]).includes(key),
+    )
+  ) {
+    return null;
+  }
+
+  const decision = normalizeEnum(record.decision, EXPLAINER_DECISIONS);
+  const source = normalizeEnum(record.source, EXPLAINER_SOURCES);
+  const decidedAt = normalizeNullableString(record.decided_at);
+  if (
+    decision === null ||
+    source === null ||
+    decidedAt === null ||
+    !ISO_TIMESTAMP_PATTERN.test(decidedAt) ||
+    Number.isNaN(Date.parse(decidedAt)) ||
+    !EXPLAINER_ALLOWED_PAIRS[product].has(`${decision}:${source}`)
+  ) {
+    return null;
+  }
+
+  return { decision, source, decided_at: decidedAt };
 }
 
 function parseStringArray(value: unknown): string[] {

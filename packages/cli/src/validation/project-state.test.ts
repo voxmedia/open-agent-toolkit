@@ -119,6 +119,145 @@ describe('validateProjectState - coordination additions', () => {
   });
 });
 
+describe('validateProjectState - explainer intent', () => {
+  it('accepts independent decisions, valid sources, timestamps, and nulls', () => {
+    expect(
+      validateProjectState({
+        frontmatter: {
+          oat_project_explainer: {
+            decision: 'generate',
+            source: 'kickoff_prompt',
+            decided_at: '2026-07-17T20:00:00Z',
+          },
+          oat_project_recap: null,
+        },
+      }),
+    ).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_explainer: {
+          decision: 'generate',
+          source: 'kickoff_prompt',
+          decided_at: '2026-07-17T20:00:00Z',
+        },
+        oat_project_recap: null,
+      },
+    });
+  });
+
+  it('keeps projects without explainer intent valid', () => {
+    expect(validateProjectState({ frontmatter: {} })).toMatchObject({
+      ok: true,
+      state: {
+        oat_project_explainer: undefined,
+        oat_project_recap: undefined,
+      },
+    });
+  });
+
+  it.each([
+    ['oat_project_explainer', 'generate', 'interactive', true],
+    ['oat_project_explainer', 'skip', 'interactive', true],
+    ['oat_project_explainer', 'generate', 'kickoff_prompt', true],
+    ['oat_project_explainer', 'skip', 'kickoff_prompt', false],
+    ['oat_project_explainer', 'generate', 'autonomous_policy', false],
+    ['oat_project_explainer', 'skip', 'autonomous_policy', false],
+    ['oat_project_recap', 'generate', 'interactive', true],
+    ['oat_project_recap', 'skip', 'interactive', true],
+    ['oat_project_recap', 'generate', 'kickoff_prompt', false],
+    ['oat_project_recap', 'skip', 'kickoff_prompt', false],
+    ['oat_project_recap', 'generate', 'autonomous_policy', true],
+    ['oat_project_recap', 'skip', 'autonomous_policy', false],
+  ] as const)(
+    'validates the %s %s/%s decision-source matrix',
+    (key, decision, source, expectedValid) => {
+      const result = validateProjectState({
+        frontmatter: {
+          [key]: {
+            decision,
+            source,
+            decided_at: '2026-07-17T20:00:00Z',
+          },
+        },
+      });
+
+      expect(result.ok).toBe(expectedValid);
+      if (!expectedValid) {
+        expect(result.errors).toContainEqual(
+          expect.objectContaining({
+            code: 'invalid-explainer-decision-source',
+          }),
+        );
+      }
+    },
+  );
+
+  it.each([
+    [
+      'unknown keys',
+      {
+        decision: 'generate',
+        source: 'interactive',
+        decided_at: '2026-07-17T20:00:00Z',
+        extra: true,
+      },
+      'invalid-explainer-decision-keys',
+    ],
+    [
+      'invalid decisions',
+      {
+        decision: 'ask',
+        source: 'interactive',
+        decided_at: '2026-07-17T20:00:00Z',
+      },
+      'invalid-explainer-decision',
+    ],
+    [
+      'invalid sources',
+      {
+        decision: 'generate',
+        source: 'workflow_preference',
+        decided_at: '2026-07-17T20:00:00Z',
+      },
+      'invalid-explainer-source',
+    ],
+    [
+      'invalid timestamps',
+      {
+        decision: 'generate',
+        source: 'interactive',
+        decided_at: 'not-iso',
+      },
+      'invalid-explainer-timestamp',
+    ],
+  ])('rejects %s', (_label, decision, expectedCode) => {
+    const result = validateProjectState({
+      frontmatter: { oat_project_recap: decision },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: expectedCode }),
+    );
+  });
+
+  it('rejects partial decision/source records', () => {
+    const result = validateProjectState({
+      frontmatter: {
+        oat_project_explainer: {
+          decision: 'generate',
+          decided_at: '2026-07-17T20:00:00Z',
+        },
+      },
+    });
+
+    expect(result.ok).toBe(false);
+    expect(result.errors).toContainEqual(
+      expect.objectContaining({ code: 'invalid-explainer-source' }),
+    );
+  });
+});
+
 describe('child linkage validation', () => {
   const tempDirs: string[] = [];
 

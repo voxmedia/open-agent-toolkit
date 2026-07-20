@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Explainer Kit — Initial Working Map</title>
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #10131a;
+      color: #f4f6fb;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: radial-gradient(circle at top, #1b2230 0, #10131a 45%); }
+    main { width: min(1180px, calc(100% - 32px)); margin: 0 auto; padding: 48px 0 64px; }
+    h1 { margin: 0 0 8px; font-size: clamp(2rem, 5vw, 3.5rem); letter-spacing: -0.04em; }
+    h2 { margin: 0; font-size: 1.05rem; }
+    p { line-height: 1.55; }
+    .subtitle { color: #aeb8ca; max-width: 820px; margin: 0 0 32px; }
+    .section { margin-top: 24px; }
+    .label { color: #8fa1bc; font-size: .75rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .grid { display: grid; gap: 14px; margin-top: 10px; }
+    .two { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .three { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .five { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+    .card { border: 1px solid #3a465b; border-radius: 14px; padding: 16px; background: rgba(24, 30, 41, .86); }
+    .core { border: 2px solid #5c86ff; }
+    .oat { border: 2px solid #916fff; }
+    .question { border: 2px dashed #d99a44; }
+    .personal { border: 2px dashed #dc6674; }
+    .product { background: linear-gradient(145deg, rgba(79,124,255,.18), rgba(125,92,255,.10)); }
+    .muted { opacity: .64; }
+    .step strong { display: block; margin-bottom: 6px; }
+    .arrow { text-align: center; color: #8291a9; font-size: 28px; line-height: 1; margin: 16px 0 0; }
+    .note { margin-top: 28px; padding: 14px 16px; border-left: 3px solid #d99a44; background: rgba(217,154,68,.08); color: #d7deea; }
+    @media (max-width: 880px) {
+      .three, .five { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 640px) {
+      .two { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Explainer Kit</h1>
+    <p class="subtitle">Initial working map from the July 16 brainstorm. This records the starting hypothesis, not an approved architecture.</p>
+
+    <section class="section">
+      <div class="label">Two in-scope entry points</div>
+      <div class="grid two">
+        <article class="card core">
+          <h2>explainer-kit</h2>
+          <p>Generic engine. No OAT/config dependency. Receives a fact base and destination contract through environment variables.</p>
+        </article>
+        <article class="card oat">
+          <h2>oat-explainer-kit</h2>
+          <p>OAT adapter. Resolves project artifacts, lifecycle recipe, configuration, and trigger timing, then invokes the core.</p>
+        </article>
+      </div>
+    </section>
+
+    <div class="arrow">↓</div>
+
+    <section class="section">
+      <div class="label">Core pipeline owned by this kit</div>
+      <div class="grid five">
+        <article class="card step"><strong>1. Reconcile</strong><span>Federated sources → cited fact base</span></article>
+        <article class="card step"><strong>2. Challenge</strong><span>Adversarial verification</span></article>
+        <article class="card step"><strong>3. Draft + gate</strong><span>Markdown narrative approval</span></article>
+        <article class="card step"><strong>4. Build</strong><span>HTML deck, diagrams, hub</span></article>
+        <article class="card step"><strong>5. QA/publish</strong><span>Structural, render, cohesion, verify</span></article>
+      </div>
+    </section>
+
+    <div class="arrow">↓</div>
+
+    <section class="section">
+      <div class="label">Dependencies named by the draft — disposition not yet decided</div>
+      <div class="grid three">
+        <article class="card question">
+          <h2>visual-explainer:*</h2>
+          <p>External, MIT-licensed generators for diagrams, slides, visual plans, and fact-checking. Candidate to adapt into OAT-owned capabilities.</p>
+        </article>
+        <article class="card question">
+          <h2>engineering-explainer</h2>
+          <p>Provenance and role uncertain: it may be a personal wrapper around visual-explainer. Inspect before deciding whether it survives.</p>
+        </article>
+        <article class="card personal">
+          <h2>Personal utilities</h2>
+          <p><code>skeptic</code> and optional docs-sync behavior may contain reusable methods, but should not become mandatory dependencies.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="label">Explicitly out of this project</div>
+      <article class="card muted">
+        <h2>personal-explainer-kit</h2>
+        <p>The personal preset wrapper is not shipping as part of this project.</p>
+      </article>
+    </section>
+
+    <section class="section">
+      <div class="label">OAT lifecycle products under consideration</div>
+      <div class="grid two">
+        <article class="card product">
+          <h2>Project explainer</h2>
+          <p>After planning/review: visually communicate discovery, requirements, design decisions, and planned execution.</p>
+        </article>
+        <article class="card product">
+          <h2>Project recap</h2>
+          <p>After implementation/review: explain what agents decided, what shipped, validation evidence, and as-built architecture.</p>
+        </article>
+      </div>
+    </section>
+
+    <p class="note">Next brainstorm: inspect the actual source and licensing of the named generator/personal skills, minimize mandatory dependencies, and decide whether project explainer and recap are recipes, modes, or separate OAT entry points.</p>
+  </main>
+</body>
+</html>

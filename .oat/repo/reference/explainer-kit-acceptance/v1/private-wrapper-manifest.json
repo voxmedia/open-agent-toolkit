@@ -1,0 +1,47 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-7dec5351-5b79-4268-817d-478e669acb56",
+  "slug": "acceptance-run",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-19T18:58:12.126Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:7bb61de580c19d39dc3a0a1bca3281b7bcb5aa8bedc143c9b637df6368142e10",
+    "inputHashes": {
+      "inputs/migration-runbook": "sha256:1570a2b93789b4bf4f8d60b4601ee24d4500929297dabb5a5ebb7df87277902e"
+    }
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:4b3532e45c44e9ee0c2a79513af86daf73f5adcef081b00abcd42bc6cd478ea3",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.md",
+      "renderedPath": "site/initiatives/acceptance-run/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:4f59d3d2502da483376ce4ae40942f2e980cdb66bb370d5de15c7e49fb3edcce",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "source/fact-base.json": "sha256:2efb07006c4da26a4f505141fd0bf9cdd24f306b4d028c63a55f02728e50c61e",
+    "source/fact-base.md": "sha256:61608fabedcb9eca95cf196f0e8325d2a1a7b2ebf400c89a3f5078e592917ba1",
+    "source/content/project-recap.md": "sha256:299576d394a3bd1890902706e817ef194561452f47d853a0134c52b1e5c70db2",
+    "theme.resolved.json": "sha256:36b31e08006a711b1db60dc94e352b65c4aa095d2e2fb449ae19e1dd1d982764",
+    "site/initiatives/acceptance-run/index.html": "sha256:4f59d3d2502da483376ce4ae40942f2e980cdb66bb370d5de15c7e49fb3edcce"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:f6fb398998de848d7bc7cc5b315a64e45241753524ec206c026f9aea8b1ae0dd"
+  },
+  "warnings": []
+}

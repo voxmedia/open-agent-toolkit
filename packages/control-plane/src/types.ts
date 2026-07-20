@@ -14,6 +14,12 @@ export type ExecutionMode = 'single-thread' | 'subagent-driven';
 
 export type Lifecycle = 'active' | 'paused' | 'complete';
 
+export interface ExplainerDecisionV1 {
+  decision: 'generate' | 'skip';
+  source: 'interactive' | 'kickoff_prompt' | 'autonomous_policy';
+  decided_at: string;
+}
+
 export type ArtifactType =
   | 'discovery'
   | 'spec'
@@ -90,6 +96,8 @@ export interface ProjectState {
   prUrl: string | null;
   docsUpdated: string | null;
   lastCommit: string | null;
+  projectExplainer: ExplainerDecisionV1 | null;
+  projectRecap: ExplainerDecisionV1 | null;
   timestamps: {
     created: string;
     completed: string | null;

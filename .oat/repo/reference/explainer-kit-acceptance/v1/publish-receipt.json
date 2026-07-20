@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "explainer-kit.publish-receipt/v1",
+  "provider": "s3-static",
+  "publishedAt": "2026-07-19T19:42:48.083Z",
+  "roots": {
+    "s3Uri": "s3://tkstang-open-agent-toolkit/explainers/acceptance-2026-07-19",
+    "publicBaseUrl": "https://dy4vzrzaexuy5.cloudfront.net/explainers/acceptance-2026-07-19"
+  },
+  "sentinel": {
+    "relativePath": ".explainer-kit-sentinel/run-7dec5351-5b79-4268-817d-478e669acb56-81c1c015f73008c1b6e8d4ff5075cf32.txt",
+    "uploadVerified": true,
+    "publicVerified": true,
+    "deleted": true
+  },
+  "artifacts": [
+    {
+      "relativePath": "site/initiatives/acceptance-run/index.html",
+      "hash": "sha256:4f59d3d2502da483376ce4ae40942f2e980cdb66bb370d5de15c7e49fb3edcce",
+      "s3Uri": "s3://tkstang-open-agent-toolkit/explainers/acceptance-2026-07-19/initiatives/acceptance-run/index.html",
+      "publicUrl": "https://dy4vzrzaexuy5.cloudfront.net/explainers/acceptance-2026-07-19/initiatives/acceptance-run/index.html",
+      "httpStatus": 200,
+      "contentType": "text/html; charset=utf-8"
+    }
+  ]
+}

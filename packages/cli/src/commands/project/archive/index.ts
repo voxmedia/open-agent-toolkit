@@ -42,6 +42,10 @@ export function createProjectArchiveCommand(
     .description('Manage archived project data')
     .argument('[project-path]', 'Project path to archive')
     .option('--dry-run', 'Preview archive without moving files or syncing S3')
+    .option(
+      '--project-recap-run <path>',
+      'Export the selected project-relative recap run before archiving',
+    )
     .addHelpText(
       'afterAll',
       '\nPull archived project data with `oat repo archive sync [project-name]`; `oat project archive sync` is deprecated.',

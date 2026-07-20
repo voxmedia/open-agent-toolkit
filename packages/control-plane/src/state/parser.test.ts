@@ -28,6 +28,14 @@ oat_pr_url: https://example.com/pr/1
 oat_project_created: '2026-04-08T17:16:52.421Z'
 oat_project_completed: null
 oat_project_state_updated: '2026-04-09T22:07:51Z'
+oat_project_explainer:
+  decision: generate
+  source: kickoff_prompt
+  decided_at: '2026-04-09T21:30:00Z'
+oat_project_recap:
+  decision: skip
+  source: interactive
+  decided_at: '2026-04-09T21:35:00-04:00'
 oat_generated: false
 oat_template: false
 ---
@@ -54,6 +62,16 @@ oat_template: false
       projectCreated: '2026-04-08T17:16:52.421Z',
       projectCompleted: null,
       projectStateUpdated: '2026-04-09T22:07:51Z',
+      projectExplainer: {
+        decision: 'generate',
+        source: 'kickoff_prompt',
+        decided_at: '2026-04-09T21:30:00Z',
+      },
+      projectRecap: {
+        decision: 'skip',
+        source: 'interactive',
+        decided_at: '2026-04-09T21:35:00-04:00',
+      },
       generated: false,
       template: false,
     });
@@ -89,6 +107,8 @@ oat_workflow_mode: spec-driven
       projectCreated: null,
       projectCompleted: null,
       projectStateUpdated: null,
+      projectExplainer: null,
+      projectRecap: null,
       generated: false,
       template: false,
     });
@@ -153,6 +173,90 @@ oat_workflow_mode: quick
     });
   });
 
+  it('accepts explicit null explainer decisions', () => {
+    const content = `---
+oat_project_explainer: null
+oat_project_recap: null
+---
+`;
+
+    expect(parseStateFrontmatter(content)).toMatchObject({
+      projectExplainer: null,
+      projectRecap: null,
+    });
+  });
+
+  it.each([
+    ['oat_project_explainer', 'generate', 'interactive', true],
+    ['oat_project_explainer', 'skip', 'interactive', true],
+    ['oat_project_explainer', 'generate', 'kickoff_prompt', true],
+    ['oat_project_explainer', 'skip', 'kickoff_prompt', false],
+    ['oat_project_explainer', 'generate', 'autonomous_policy', false],
+    ['oat_project_explainer', 'skip', 'autonomous_policy', false],
+    ['oat_project_recap', 'generate', 'interactive', true],
+    ['oat_project_recap', 'skip', 'interactive', true],
+    ['oat_project_recap', 'generate', 'kickoff_prompt', false],
+    ['oat_project_recap', 'skip', 'kickoff_prompt', false],
+    ['oat_project_recap', 'generate', 'autonomous_policy', true],
+    ['oat_project_recap', 'skip', 'autonomous_policy', false],
+  ] as const)(
+    'parses only allowed %s %s/%s decisions',
+    (key, decision, source, expectedValid) => {
+      const parsed = parseStateFrontmatter(`---
+${key}:
+  decision: ${decision}
+  source: ${source}
+  decided_at: '2026-04-09T21:30:00Z'
+---
+`);
+      const product =
+        key === 'oat_project_explainer'
+          ? parsed.projectExplainer
+          : parsed.projectRecap;
+
+      expect(product === null).toBe(!expectedValid);
+    },
+  );
+
+  it.each([
+    [
+      'unknown key',
+      `oat_project_explainer:
+  decision: generate
+  source: interactive
+  decided_at: '2026-04-09T21:30:00Z'
+  extra: nope`,
+    ],
+    [
+      'invalid source',
+      `oat_project_explainer:
+  decision: generate
+  source: workflow_preference
+  decided_at: '2026-04-09T21:30:00Z'`,
+    ],
+    [
+      'invalid decision',
+      `oat_project_explainer:
+  decision: ask
+  source: interactive
+  decided_at: '2026-04-09T21:30:00Z'`,
+    ],
+    [
+      'invalid timestamp',
+      `oat_project_explainer:
+  decision: generate
+  source: interactive
+  decided_at: yesterday`,
+    ],
+  ])('normalizes an %s record to null', (_label, frontmatter) => {
+    expect(
+      parseStateFrontmatter(`---
+${frontmatter}
+---
+`),
+    ).toMatchObject({ projectExplainer: null });
+  });
+
   it('treats template placeholders and malformed YAML as empty/default values', () => {
     const placeholderContent = `---
 oat_hill_checkpoints: { OAT_HILL_CHECKPOINTS }
@@ -195,6 +299,8 @@ oat_phase: [unterminated
       projectCreated: null,
       projectCompleted: null,
       projectStateUpdated: null,
+      projectExplainer: null,
+      projectRecap: null,
       generated: false,
       template: false,
     });
