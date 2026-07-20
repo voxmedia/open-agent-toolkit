@@ -23,6 +23,57 @@ const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
 
 export const REPRESENTATIVE_WIDTHS = Object.freeze([320, 768, 1440]);
 
+export function checkSourceDumping({
+  authoredText,
+  sourceTexts,
+  shingleSize = 8,
+  maxOverlapRatio = 0.6,
+  minMatchedShingles = 3,
+}) {
+  const authoredShingles = shingles(authoredText, shingleSize);
+  const sourceShingles = new Set(
+    (Array.isArray(sourceTexts) ? sourceTexts : []).flatMap((text) =>
+      shingles(text, shingleSize),
+    ),
+  );
+  const matchedShingles = authoredShingles.filter((value) =>
+    sourceShingles.has(value),
+  ).length;
+  const overlapRatio =
+    authoredShingles.length === 0
+      ? 0
+      : matchedShingles / authoredShingles.length;
+  if (matchedShingles >= minMatchedShingles && overlapRatio > maxOverlapRatio) {
+    return {
+      valid: false,
+      issues: [
+        {
+          code: 'source-dump',
+          message:
+            'Authored narrative contains too much verbatim source text; rewrite it as audience-ready prose.',
+          details: {
+            matchedShingles,
+            authoredShingles: authoredShingles.length,
+            overlapRatio,
+          },
+        },
+      ],
+    };
+  }
+  return { valid: true, issues: [] };
+}
+
+function shingles(value, size) {
+  const words =
+    typeof value === 'string'
+      ? (value.toLowerCase().match(/[\p{L}\p{N}]+/gu) ?? [])
+      : [];
+  if (words.length < size) return [];
+  return Array.from({ length: words.length - size + 1 }, (_, index) =>
+    words.slice(index, index + size).join(' '),
+  );
+}
+
 export const BROWSER_PROBE_EVALUATE = `(() => {
   const root = document.documentElement;
   const clippedX = [...document.querySelectorAll('body *')]

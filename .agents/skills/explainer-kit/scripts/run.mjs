@@ -9,7 +9,7 @@ import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
-import { auditArtifactSet } from './lib/qa.mjs';
+import { auditArtifactSet, checkSourceDumping } from './lib/qa.mjs';
 import {
   loadRecipe,
   shouldStopDiscovery,
@@ -84,9 +84,15 @@ export async function runExplainer(request, options = {}) {
       });
       await executeStage(run, 'content', options, async () => {
         state.discovery = await runDiscovery(recipe, state.factBase, options);
-        state.contentModels = recipe.artifacts.map((artifact) =>
-          createContentModel(recipe, artifact, run.slug, state.factBase),
-        );
+        if (run.request.mode === 'unattended') {
+          const authored = await createAuthoredContent(state, options.author);
+          state.contentModels = authored.models;
+          state.authorResultPaths = authored.resultPaths;
+        } else {
+          state.contentModels = recipe.artifacts.map((artifact) =>
+            createContentModel(recipe, artifact, run.slug, state.factBase),
+          );
+        }
         for (const model of state.contentModels) {
           const validation = validateContentModel(recipe, model);
           if (!validation.valid) {
@@ -107,6 +113,7 @@ export async function runExplainer(request, options = {}) {
       run,
       run.request.mode,
       options.reviewedSource,
+      state.authorResultPaths,
     );
     if (!state.approval.canResume) {
       return resultFor(state);
@@ -555,6 +562,116 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
   };
 }
 
+async function createAuthoredContent(state, author) {
+  if (typeof author !== 'function') {
+    throw codedError(
+      'E_AUTHOR_REQUIRED',
+      'Unattended runs require an explicit author callback.',
+    );
+  }
+
+  const authored = [];
+  for (const artifact of state.recipe.artifacts) {
+    const resultPath = `source/author/${artifact.id}.json`;
+    const authorRequest = {
+      schemaVersion: 'explainer-kit.author-request/v1',
+      run: { runId: state.run.runId, slug: state.run.slug },
+      recipe: {
+        id: state.recipe.id,
+        version: state.recipe.version,
+        requiredNarrative: [...state.recipe.requiredNarrative],
+      },
+      artifact: {
+        id: artifact.id,
+        type: artifact.type,
+      },
+      narrativeOutline: state.recipe.requiredNarrative.map((id) => ({
+        id,
+        title: humanize(id),
+      })),
+      factBase: structuredClone(state.factBase),
+      discovery: structuredClone(state.discovery),
+    };
+    const requestValidation = validateContract('author-request', authorRequest);
+    if (!requestValidation.valid) {
+      throw codedError(
+        'E_AUTHOR_REQUEST',
+        contractErrorMessage('author request', requestValidation.errors),
+      );
+    }
+
+    const result = await author(structuredClone(authorRequest));
+    const resultValidation = validateContract('author-result', result);
+    if (!resultValidation.valid) {
+      throw codedError(
+        'E_AUTHOR_RESULT',
+        contractErrorMessage('author result', resultValidation.errors),
+      );
+    }
+    const sectionIds = result.content.sections.map(({ id }) => id);
+    if (
+      result.artifactId !== artifact.id ||
+      sectionIds.length !== state.recipe.requiredNarrative.length ||
+      state.recipe.requiredNarrative.some(
+        (id, index) => sectionIds[index] !== id,
+      )
+    ) {
+      throw codedError(
+        'E_AUTHOR_RESULT',
+        `Author result for ${artifact.id} must contain the exact required section IDs in order.`,
+      );
+    }
+    const dumpCheck = checkSourceDumping({
+      authoredText: result.content.sections
+        .map(({ prose }) => prose)
+        .join('\n\n'),
+      sourceTexts: [
+        ...state.factBase.claims,
+        ...state.factBase.unresolvedClaims,
+      ].map(({ text }) => text),
+    });
+    if (!dumpCheck.valid) {
+      throw codedError(
+        'E_SOURCE_DUMP',
+        dumpCheck.issues.map(({ message }) => message).join('; '),
+      );
+    }
+
+    authored.push({
+      result: structuredClone(result),
+      resultPath,
+      model: {
+        artifactId: artifact.id,
+        slug: state.run.slug,
+        title: result.content.title,
+        description: result.content.description,
+        ...(result.content.eyebrow && { eyebrow: result.content.eyebrow }),
+        ...(result.content.footer && { footer: result.content.footer }),
+        sections: result.content.sections.map(({ id, title, prose }) => ({
+          id,
+          title,
+          content: prose,
+        })),
+        artifactLinks: result.content.artifactLinks ?? [],
+      },
+    });
+  }
+
+  for (const item of authored) {
+    await writeJsonAtomic(state.run.runRoot, item.resultPath, item.result);
+  }
+  return {
+    models: authored.map(({ model }) => model),
+    resultPaths: authored.map(({ resultPath }) => resultPath),
+  };
+}
+
+function contractErrorMessage(label, errors) {
+  return `Invalid ${label}: ${errors
+    .map(({ path, message }) => `${path}: ${message}`)
+    .join('; ')}`;
+}
+
 function createContentModel(recipe, artifact, slug, factBase) {
   const facts = [
     ...factBase.claims.map(({ text, sections }) => ({ text, sections })),
@@ -734,9 +851,12 @@ async function parseCli(argv) {
       if (!path) throw new Error('--reviewed-source requires a JSON path.');
       options.reviewedSource = JSON.parse(await readFile(path, 'utf8'));
     } else if (
-      ['--critic-module', '--publish-module', '--durability-module'].includes(
-        value,
-      )
+      [
+        '--author-module',
+        '--critic-module',
+        '--publish-module',
+        '--durability-module',
+      ].includes(value)
     ) {
       const path = argv[++index];
       if (!path) throw new Error(`${value} requires a module path.`);
@@ -752,7 +872,7 @@ async function parseCli(argv) {
   }
   if (!requestPath) {
     throw new Error(
-      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
+      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--author-module <mjs>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
     );
   }
   return { requestPath, options };

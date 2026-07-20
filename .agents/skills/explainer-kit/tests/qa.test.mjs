@@ -7,6 +7,7 @@ import {
   auditArtifactSet,
   checkArtifactCohesion,
   checkHtmlStructure,
+  checkSourceDumping,
   runBrowserProbes,
 } from '../scripts/lib/qa.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
@@ -94,6 +95,42 @@ test('rejects unresolved tokens, configured leaks and non-inline assets', async 
       code,
     );
   }
+});
+
+test('detects verbatim source dumping without rejecting concise factual prose', () => {
+  const rawSource =
+    'The W6 migration moved project records into durable reference storage. The archive verifier checks every immutable package hash before deleting the active project. Operators can retry safely after a failed verification.';
+
+  const legitimate = checkSourceDumping({
+    authoredText:
+      'W6 now preserves recap evidence in durable reference storage. Archive verification happens before project deletion, so a failed check remains recoverable.',
+    sourceTexts: [rawSource],
+  });
+  assert.deepEqual(legitimate, {
+    valid: true,
+    issues: [],
+  });
+
+  const dumped = checkSourceDumping({
+    authoredText: rawSource,
+    sourceTexts: [rawSource],
+  });
+  assert.equal(dumped.valid, false);
+  assert.equal(dumped.issues[0].code, 'source-dump');
+  assert.match(dumped.issues[0].message, /rewrite|verbatim/i);
+
+  const boundary = checkSourceDumping({
+    authoredText:
+      'alpha beta gamma delta epsilon zeta eta theta iota kappa lambda',
+    sourceTexts: [
+      'alpha beta gamma delta epsilon zeta eta theta changed words here',
+    ],
+    shingleSize: 4,
+    maxOverlapRatio: 0.5,
+    minMatchedShingles: 3,
+  });
+  assert.equal(boundary.valid, false);
+  assert.equal(boundary.issues[0].details.matchedShingles, 5);
 });
 
 test('rejects unbalanced tags, unreadable headings and unsafe links', () => {

@@ -30,6 +30,14 @@ claims, sources, overrides, and the freshness policy. It returns:
 No provider name, command, credential, or dispatch protocol is part of this
 contract.
 
+Every unattended run also requires a provider-neutral author callback. An
+in-process caller supplies `options.author(request)`; a JSON-only CLI caller
+uses `--author-module author.mjs`. The core invokes it once per recipe artifact
+with an `AuthorRequestV1` containing the exact narrative outline, reconciled
+fact base, and bounded-discovery context. It must return an `AuthorResultV1`
+with every required section in order, non-empty prose, and non-secret
+provenance. The executable callback is never persisted in `run-request.json`.
+
 ## Explicit source forms
 
 - `factBase.mode: supplied` points to a valid `FactBaseV1` JSON file. The core
@@ -47,8 +55,9 @@ contract.
   reconciles the loaded claims and invokes the critic exactly once.
 
 An unattended request asserts that its explicit source artifacts are already
-approved. It does not prompt. Interactive review and same-run approval/resume
-are introduced separately and are not part of this contract.
+approved. It does not prompt, and it fails before narrative serialization when
+the author is absent, returns an invalid result, or copies excessive verbatim
+source text. Interactive review and same-run approval/resume remain unchanged.
 
 ## Pipeline and retained package
 
@@ -56,7 +65,7 @@ The core executes:
 
 1. validate request and recipe
 2. reconcile or check the fact base
-3. apply bounded discovery and create recipe content
+3. apply bounded discovery and obtain or create recipe content
 4. resolve one theme
 5. render typed artifacts
 6. run structural and optional browser QA

@@ -12,6 +12,8 @@ const SCHEMA_FILES = {
   'durability-evidence': 'durability-evidence.schema.json',
   'publish-request': 'publish-request.schema.json',
   'publish-receipt': 'publish-receipt.schema.json',
+  'author-request': 'author-request.schema.json',
+  'author-result': 'author-result.schema.json',
 };
 
 const SCHEMAS = Object.fromEntries(
@@ -447,6 +449,46 @@ function validateCrossRecord(kind, value, context, errors) {
         'art-direction-required',
         'Retaining raw art direction requires theme.artDirection.',
       );
+    }
+  }
+
+  if (kind === 'author-request') {
+    const requiredNarrative = Array.isArray(value.recipe?.requiredNarrative)
+      ? value.recipe.requiredNarrative
+      : [];
+    const outlineIds = Array.isArray(value.narrativeOutline)
+      ? value.narrativeOutline.map((section) => section?.id)
+      : [];
+    if (
+      requiredNarrative.length !== outlineIds.length ||
+      requiredNarrative.some((id, index) => outlineIds[index] !== id)
+    ) {
+      add(
+        errors,
+        '$.narrativeOutline',
+        'narrative-outline-mismatch',
+        'Author request narrative outline must exactly match recipe requiredNarrative order.',
+      );
+    }
+  }
+
+  if (kind === 'author-result') {
+    for (const [index, section] of (Array.isArray(value.content?.sections)
+      ? value.content.sections
+      : []
+    ).entries()) {
+      if (
+        isObject(section) &&
+        typeof section.prose === 'string' &&
+        section.prose.trim().length === 0
+      ) {
+        add(
+          errors,
+          `$.content.sections[${index}].prose`,
+          'empty-prose',
+          'Authored section prose must contain non-whitespace text.',
+        );
+      }
     }
   }
 
