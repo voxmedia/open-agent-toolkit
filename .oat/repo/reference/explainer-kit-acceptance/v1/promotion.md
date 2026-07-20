@@ -1,5 +1,10 @@
 # Explainer-kit v1 promotion decision
 
+> Historical acceptance record: this approval applies only to the immutable
+> `0.2.3` RC identified below. Reconciliation with newer `main` inputs in
+> `dfe4b527` advanced the release set to `0.2.6`; promotion now requires a new
+> post-merge RC and rerun of both external gates.
+
 **Decision:** approved for promotion
 **Recorded:** 2026-07-19
 

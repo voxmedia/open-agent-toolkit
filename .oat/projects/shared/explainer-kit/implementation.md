@@ -1185,6 +1185,32 @@ remaining blocker. Re-review passed with zero findings; canonical artifact:
 
 ---
 
+## Post-Completion Integration Reconciliation
+
+### 2026-07-19 — Current-main merge
+
+- Merged current `origin/main` into `tkstang/explainer-kit` as `dfe4b527`.
+- Preserved current-main final-gate enforcement, reviewer reconnaissance, and
+  provider synchronization while retaining the explainer lifecycle hooks.
+- Moved implementation-tail recap instructions from the top-level
+  `oat-project-implement` skill into its existing
+  `references/completion-and-closeout.md` route. This satisfies current-main's
+  progressive-disclosure boundary without changing recap order or semantics.
+- Advanced `oat-project-implement` to `2.1.7` and all five lockstep public
+  packages to `0.2.6`.
+- Regenerated provider views and `.oat/sync/manifest.json`.
+- Verification passed:
+  - `pnpm format`
+  - `pnpm lint`
+  - `pnpm type-check`
+  - `pnpm test` (3,268 CLI tests plus workspace smoke suites)
+  - `pnpm release:validate` (five `0.2.6` package archives and 65 browser
+    measurements)
+  - retained external acceptance validator (`--gate all`)
+- Release implication: the accepted `0.2.3` RC and evidence remain immutable
+  historical records, but the reconciled source and package identities require
+  a new RC and external acceptance rerun after merge to `main`.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

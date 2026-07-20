@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 5b2c153b
+oat_last_commit: dfe4b527
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -34,17 +34,17 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-19T20:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T01:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Implementation complete — promotion approved
+**Status:** Implementation complete — reconciled integration PR ready
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-19
 
@@ -111,6 +111,13 @@ Implementation complete — 38/38 tasks
 - ✓ Packaged `scripts/publish.mjs` S3/CDN smoke gate passed against the exact RC
 - ✓ Combined acceptance, release validation, and full test suite passed
 - ✓ Frozen RC approved for unchanged promotion
+- ✓ Current `main` reconciled in merge commit `dfe4b527`
+- ✓ Lockstep public package versions advanced to `0.2.6`
+- ✓ Post-reconciliation format, lint, type-check, full tests, release dry-run,
+  retained acceptance validation, and browser visual validation passed
+- ⚠ The accepted `0.2.3` RC remains immutable historical evidence; reconciliation
+  changed release inputs, so promotion now requires a post-merge `0.2.6` refreeze
+  and acceptance rerun
 
 ## Blockers
 
@@ -118,5 +125,5 @@ None.
 
 ## Next Milestone
 
-Implementation is complete. The next lifecycle action is user-directed project
-review, documentation/summary, or final PR preparation.
+Open and merge the reconciled integration PR, then freeze a release candidate
+from merged `main` and rerun the external wrapper and publish acceptance gates.
