@@ -40,7 +40,7 @@ oat_generated: false
 | Phase 5: Validation + release       | completed | 5     | 5/5       |
 | Phase 6: Explainer integration      | completed | 4     | 4/4       |
 
-**Total:** 40/40 tasks completed
+**Total:** 41/41 tasks completed
 
 ---
 
@@ -254,6 +254,13 @@ SUPERSEDED + FINALIZED (2026-07-19 evening): explainer PR #166 merged; post-merg
 
 **Shipped:** `9be02819` (recap default = program close; per-wave deferral dispositions), `ec66872d` (checkpoint + deferral + versions 1.7.1/1.3.1), fix `70d00635` (program recap → program ledger). Review R1 1-Important → R2 clean; the complete-before-merge vs deferred-archive seam explicitly reconciled. Parked with operator: demote BL-260720-add-oat-project-complete-auto.
 
+### Revision Received: W6 recap-defects handoff (p-rev5)
+
+**Date:** 2026-07-20
+**Source:** references/w6-recap-defects-handoff-2026-07-20.md (defect 2 HIGH: no content-authoring seam; wave-side ask only — both core defects routed to the explainer batch with report-back requested on the seam interface).
+
+**Shipped:** `8b735858` — caller-owns-prose-authoring paragraphs in both recap-caller sections (insertion-only; run-19af6e55 evidence; two compliant paths; upstream seam cited as pending). Review: bounded round PASS clean. Follow-up pending: update "pending" citation to the concrete seam contract when the explainer batch reports back.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below._
@@ -279,6 +286,7 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | p06    | oat-phase-implementer-gpt-5-6-sol-high (2 continuations)    | 4/4   | R1 PASS → extension R2 FAIL (1 Important) → R3 PASS              | 1 (`ed5ca542`)                              | pass   |
 | p-rev3 | oat-phase-implementer-gpt-5-6-sol-high (1 continuation)     | 5/5   | t01-t04 PASS clean + t05 addendum PASS                           | 0                                           | pass   |
 | p-rev4 | oat-phase-implementer-gpt-5-6-sol-high (1 fix continuation) | 2/2   | R1 changes-requested (1 Important) → R2 PASS                     | 1 (`70d00635`)                              | pass   |
+| p-rev5 | oat-phase-implementer-gpt-5-6-sol-high (continuation)       | 1/1   | bounded round PASS clean                                         | 0                                           | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).

@@ -920,6 +920,7 @@ Caller sections state: prose authoring is CALLER-owned (like critic execution an
 | p-rev3 | code     | passed          | 2026-07-20 | reviews/code-prev3-review-2026-07-20T143119Z.md (+ addendum 143712Z) |
 | p-rev4 | code     | fixes_completed | 2026-07-20 | reviews/code-prev4-review-2026-07-20T154506Z.md                      |
 | p-rev4 | code     | passed          | 2026-07-20 | reviews/code-prev4-review-round2-2026-07-20T154934Z.md               |
+| p-rev5 | code     | passed          | 2026-07-20 | reviews/code-prev5-review-2026-07-20T170942Z.md                      |
 | plan   | artifact | passed          | 2026-07-18 | -                                                                    |
 | spec   | artifact | pending         | -          | -                                                                    |
 | design | artifact | passed          | 2026-07-18 | -                                                                    |
