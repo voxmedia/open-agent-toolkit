@@ -6,6 +6,7 @@ import {
   readdir,
   rm,
   symlink,
+  writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, relative, sep } from 'node:path';
@@ -155,6 +156,36 @@ test('initializes all stages as pending with an incomplete outcome', async () =>
       'publish',
     ].map((id) => ({ id, status: 'pending' })),
   );
+});
+
+test('removes a stale manifest before reinitializing a reused slug', async () => {
+  const outputRoot = await temporaryDirectory();
+  const firstRun = await initializeRun(request(outputRoot));
+  const firstRecord = JSON.parse(
+    await readFile(firstRun.buildRecordPath, 'utf8'),
+  );
+  await writeManifestAtomic(firstRun, manifest(firstRun, firstRecord));
+
+  const secondRun = await initializeRun(request(outputRoot));
+
+  assert.notEqual(secondRun.runId, firstRun.runId);
+  await assert.rejects(readFile(secondRun.manifestPath, 'utf8'), {
+    code: 'ENOENT',
+  });
+});
+
+test('refuses to clear an existing slug directory it does not own', async () => {
+  const outputRoot = await temporaryDirectory();
+  const runRoot = join(outputRoot, 'demo-project');
+  const sentinel = join(runRoot, 'user-notes.txt');
+  await mkdir(runRoot);
+  await writeFile(sentinel, 'keep me');
+
+  await assert.rejects(
+    initializeRun(request(outputRoot)),
+    /prior Explainer Kit run/i,
+  );
+  assert.equal(await readFile(sentinel, 'utf8'), 'keep me');
 });
 
 test('updates stages monotonically and rejects regressions or reordering', async () => {

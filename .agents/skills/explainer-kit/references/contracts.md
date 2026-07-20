@@ -36,7 +36,10 @@ contract.
   performs only the lightweight consistency and freshness check and never
   invokes the critic.
 - `factBase.mode: federated` names explicit source bindings. File locators
-  contain JSON with a `claims` array of `{ "id", "text", "locator"? }`.
+  contain JSON with a `claims` array of
+  `{ "id", "text", "locator"?, "sections"? }`. Optional `sections` values
+  are recipe `requiredNarrative` IDs; untagged claims remain shared across
+  every required section.
   Non-file bindings require a caller-supplied `sourceLoader(source)` callback.
   Every binding names its recipe `role` and `sourceSetId`. Multiple documents
   may share one source-set ID; recipe cardinality counts distinct sets, not

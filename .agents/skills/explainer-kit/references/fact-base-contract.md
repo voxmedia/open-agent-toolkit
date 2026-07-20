@@ -58,11 +58,16 @@ Each source document contains a schema-compatible source and extracted claims:
       observedAt,
       authoritativeFor,
     },
-    claims: [{ id, text, locator }],
+    claims: [{ id, text, locator, sections }],
   }],
   overrides: [{ claimId, decision, confirmedAt }],
 }
 ```
+
+Optional `sections` entries are recipe `requiredNarrative` IDs. Tagged claims
+are routed only to those sections; untagged claims remain shared context for
+every required section. Federated reconciliation preserves shared scope when
+any agreeing selected observation is untagged.
 
 For conflicting text under one claim ID, an `authoritativeFor` declaration
 wins first. Otherwise the newest `observedAt` wins. A tie remains

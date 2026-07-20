@@ -166,10 +166,10 @@ export async function verifyRebuildability(artifact, runRoot) {
       await writeFileAtomic(runRoot, artifact.renderedPath, original);
     }
     return { verified: true, reason: null };
-  } catch (error) {
+  } catch (caught) {
     return {
       verified: false,
-      reason: `Deterministic replay failed: ${errorMessage(error)}`,
+      reason: `Deterministic replay failed: ${errorMessage(caught)}`,
     };
   }
 }

@@ -52,7 +52,7 @@ test('runs the packaged adapter against the user-scoped packaged core', async ()
   const result = await runJson(fixture.adapterRunArgs);
 
   assert.equal(result.compatibility.coreRoot, fixture.coreRoot);
-  assert.equal(result.compatibility.installedVersion, '1.0.0');
+  assert.equal(result.compatibility.installedVersion, '1.0.1');
   assert.equal(result.request.recipe.id, 'project-explainer');
   assert.equal(result.result.outcome, 'built-not-durable');
   assert.equal(result.manifest.schemaVersion, 'explainer-kit.manifest/v1');
@@ -78,7 +78,7 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
   const compatibleSkill = await readFile(skillPath, 'utf8');
   await writeFile(
     skillPath,
-    compatibleSkill.replace(/^version: 1\.0\.0$/m, 'version: 0.9.0'),
+    compatibleSkill.replace(/^version: 1\.0\.1$/m, 'version: 0.9.0'),
   );
   const incompatible = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(incompatible.outcome, 'failed');

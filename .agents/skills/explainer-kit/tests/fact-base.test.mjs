@@ -125,7 +125,13 @@ test('federated mode applies authoritative and fresher source precedence with ci
             observedAt: '2026-07-17T19:00:00Z',
             authoritativeFor: ['status'],
           }),
-          claims: [{ id: 'status', text: 'The rollout is active.' }],
+          claims: [
+            {
+              id: 'status',
+              text: 'The rollout is active.',
+              sections: ['program-overview'],
+            },
+          ],
         },
       ],
     },
@@ -133,6 +139,7 @@ test('federated mode applies authoritative and fresher source precedence with ci
   );
 
   assert.equal(result.factBase.claims[0].text, 'The rollout is active.');
+  assert.deepEqual(result.factBase.claims[0].sections, ['program-overview']);
   assert.deepEqual(result.factBase.claims[0].citations, [
     {
       sourceId: 'live',
@@ -141,6 +148,41 @@ test('federated mode applies authoritative and fresher source precedence with ci
   ]);
   assert.deepEqual(result.factBase.unresolvedClaims, []);
   assert.equal(validateContract('fact-base', result.factBase).valid, true);
+});
+
+test('federated mode preserves global scope when an agreeing source is untagged', async () => {
+  const result = await processFactBase(
+    {
+      mode: 'federated',
+      freshnessPolicy: 'live-wins',
+      sourceDocuments: [
+        {
+          source: source('plan'),
+          claims: [{ id: 'status', text: 'The rollout is active.' }],
+        },
+        {
+          source: source('live'),
+          claims: [
+            {
+              id: 'status',
+              text: 'The rollout is active.',
+              sections: ['program-overview'],
+            },
+          ],
+        },
+      ],
+    },
+    {
+      now: NOW,
+      critic: async () => ({
+        criticId: 'contract-critic',
+        executedAt: NOW,
+        findings: [],
+      }),
+    },
+  );
+
+  assert.equal('sections' in result.factBase.claims[0], false);
 });
 
 test('federated mode leaves equally authoritative contradictions unresolved', async () => {
