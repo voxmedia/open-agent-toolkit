@@ -806,7 +806,7 @@ Source: Orc-repo 4-wave program handoff (`references/2026-07-20-wave-skills-firs
 
 **Step 1:** Fix the wave-0/1 precedent wording (Step 4 plan gate + closeout final gate + step 6.5): plan gates MAY PROCEED at `fixes_completed`; every gate row MUST flip to `passed` once its fix dispositions carry verification records (B5) — `passed` is the only terminal state for gate rows; step 6.5's restore-watch presumes it.
 
-**Step 2: Verify** — `rg -n "only terminal state" .agents/skills/oat-wave-execute/SKILL.md`; commit `fix(prev3-t01): gate rows terminate at passed - proceed-point vs terminal state (S8)`.
+**Step 2: Verify** — `rg -U -n "only\s+terminal\s+state" .agents/skills/oat-wave-execute/SKILL.md` (wrap-tolerant); commit `fix(prev3-t01): gate rows terminate at passed - proceed-point vs terminal state (S8)`.
 
 ### Task prev3-t02: (revision) Merge + fix-round discipline (S5, S7)
 
