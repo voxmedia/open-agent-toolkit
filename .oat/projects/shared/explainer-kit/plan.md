@@ -1825,7 +1825,44 @@ git add .agents/skills/explainer-kit/styles .agents/skills/explainer-kit/schemas
 git commit -m "feat(prev1-t03): add curated explainer styles"
 ```
 
-### Task prev1-t04: (revision) Validate the packaged revision with the live W6 recap
+### Task prev1-t04: (revision) Normalize generated Codex config indentation
+
+**Files:**
+
+- Modify: `packages/cli/src/providers/codex/codec/config-merge.ts`
+- Modify: `packages/cli/src/providers/codex/codec/config-merge.test.ts`
+- Modify: `packages/cli/src/providers/codex/codec/sync-extension.test.ts`
+- Modify: `.codex/config.toml`
+
+**Step 1: Add a failing formatting contract**
+
+Assert that merged and fully generated Codex project configs keep every table
+header and key/value line left-aligned while preserving TOML semantics,
+unmanaged settings, idempotency, and multiline string contents.
+
+**Step 2: Normalize serializer output safely**
+
+Apply Codex-config-specific formatting after `@iarna/toml` serialization. Do
+not change the generic role-file serializer or rely on a direct hand-edit of
+generated `.codex/config.toml`. Regenerate the checked-in project config through
+the Codex extension path.
+
+**Step 3: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli test -- config-merge.test.ts sync-extension.test.ts`
+
+Expected: generated config parses identically, is idempotent, and contains no
+unexpected leading indentation outside string content.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/providers/codex/codec/config-merge.ts packages/cli/src/providers/codex/codec/config-merge.test.ts packages/cli/src/providers/codex/codec/sync-extension.test.ts .codex/config.toml
+git commit -m "fix(prev1-t04): normalize codex config indentation"
+```
+
+### Task prev1-t05: (revision) Validate the packaged revision with the live W6 recap
 
 **Files:**
 
@@ -1872,7 +1909,7 @@ normal review receive loop, and rerun affected gates.
 
 ```bash
 git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
-git commit -m "chore(prev1-t04): validate explainer revision"
+git commit -m "chore(prev1-t05): validate explainer revision"
 ```
 
 ## Implementation Complete
@@ -1884,10 +1921,10 @@ git commit -m "chore(prev1-t04): validate explainer revision"
 - Phase 3: 9 tasks — OAT adapter and lifecycle/archive integration
 - Phase 4: 9 tasks — publishing, compatibility, docs, release validation
 - Phase 5: 4 tasks — frozen RC and external acceptance
-- Phase p-rev1: 4 tasks — complete-package durability, authored content,
-  curated styles, and live W6 acceptance
+- Phase p-rev1: 5 tasks — complete-package durability, authored content,
+  curated styles, Codex config formatting, and live W6 acceptance
 
-**Total: 42 tasks**
+**Total: 43 tasks**
 
 Revision 1 is ready for implementation from `prev1-t01`. The original project
 remains active until the follow-up PR, live W6 acceptance, wave promotion, and

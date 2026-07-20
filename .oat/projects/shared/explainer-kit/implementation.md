@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-20
-oat_current_task_id: prev1-t01
+oat_current_task_id: prev1-t04
 oat_generated: false
 ---
 
@@ -31,9 +31,9 @@ oat_generated: false
 | Phase 3    | complete    | 9     | 9/9       |
 | Phase 4    | complete    | 9     | 9/9       |
 | Phase 5    | completed   | 4     | 4/4       |
-| Revision 1 | in_progress | 4     | 0/4       |
+| Revision 1 | in_progress | 5     | 3/5       |
 
-**Total:** 38/42 tasks completed
+**Total:** 41/43 tasks completed
 
 ---
 
@@ -1085,7 +1085,7 @@ this candidate must not be used for external acceptance.
 
 **Status:** in_progress
 **Started:** 2026-07-20
-**Current task:** `prev1-t01`
+**Current task:** `prev1-t04`
 
 ### Revision Received: Inline Feedback
 
@@ -1103,7 +1103,8 @@ this candidate must not be used for external acceptance.
 - Prove the packaged revision through full repository gates and a live Stoa W6
   recap/archive regression before promotion and project completion.
 
-**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`,
+`prev1-t05`
 
 **Migrated artifacts:**
 
@@ -1111,8 +1112,22 @@ this candidate must not be used for external acceptance.
 - `references/revision-1-theme-previews/`
 - Existing W6 handoff and theme-reference files under `references/`
 
-**Next:** Execute revision tasks via `oat-project-implement`, starting with
-`prev1-t01`.
+### Task Outcomes
+
+| Task      | Status    | Commit     | Verification                                                   |
+| --------- | --------- | ---------- | -------------------------------------------------------------- |
+| prev1-t01 | completed | `4f456a91` | Core contracts/run tests and CLI archive tests passed          |
+| prev1-t02 | completed | `8708f4d3` | Schema, approval, QA, and run integration tests passed         |
+| prev1-t03 | completed | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed    |
+| prev1-t04 | pending   | —          | Added from operator feedback after the initial phase dispatch  |
+| prev1-t05 | blocked   | —          | Retained W6 archive and real author module unavailable locally |
+
+The aggregate gate reached `pnpm test` but hit one five-second timeout in
+`post-implement-sequence-contracts.test.ts`; the isolated retry passed. A full
+phase gate still must pass before review.
+
+**Next:** Complete the generated Codex config formatting task, then restore the
+retained W6 archive from its recorded S3 snapshot and resume acceptance.
 
 ---
 
@@ -1125,6 +1140,30 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 2 — 2026-07-20T22:09:56Z
+
+- Branch: `tkstang/fix-w6-recap-path`
+- Tier: 1, policy-resolved Cursor CLI route
+- Request: `dispatch-p-rev1-20260720-01`
+- Phase base: `9204742be899b9f133a9e99be56215798083f2a4`
+- Outcome: blocked after 3/4 originally dispatched tasks
+- Fix loops: 0
+- Reviewer: not launched because the phase did not complete
+
+| Phase  | Verdict | Task commits                       | Review  |
+| ------ | ------- | ---------------------------------- | ------- |
+| p-rev1 | blocked | `4f456a91`, `8708f4d3`, `d8dec777` | pending |
+
+Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown
+provenance=unknown model_axis=selected:gpt-5.6-sol-high
+effort_axis=not-applicable dispatch_policy=high
+dispatch_ceiling=gpt-5.6-sol-high
+target=oat-phase-implementer-gpt-5-6-sol-high
+
+Outstanding: `prev1-t04` was added from operator feedback after dispatch.
+Former `prev1-t04` became `prev1-t05` and remains blocked on the retained Stoa
+W6 archive and a real author module.
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
