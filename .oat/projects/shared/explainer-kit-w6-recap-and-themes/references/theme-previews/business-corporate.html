@@ -16,9 +16,10 @@
   for "why it matters", controlled elevation, polished tables/cards.
 
   WHAT THIS REFINES BEYOND THE DEMO (curated whole, not a recolor):
-   - Navigation upgraded from scroll-snap to a fixed-viewport deck with
-     prev/next controls, brand mark, live counter, progress rail, hash deep-
-     links, and full keyboard control (matches THE reference's chrome).
+   - Navigation upgraded from scroll-snap to a fixed-viewport horizontal deck
+     with directional enter/exit motion, prev/next controls, brand mark, live
+     counter, progress rail, hash deep-links, and full keyboard control
+     (matches THE reference's chrome).
    - Tightened typographic hierarchy + vertical rhythm; tabular-nums on stats;
      serif display with negative tracking; mono eyebrows with an accent tick.
    - Elevation is disciplined: one hairline border + one tinted wash per
@@ -110,6 +111,7 @@
         font-family: var(--sans);
         font-size: 16px;
         line-height: 1.6;
+        overflow: hidden;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
         /* subtle top wash so the white canvas reads intentional, not blank */
@@ -277,12 +279,19 @@
         padding: 4.8rem 6vw 4.4rem;
         opacity: 0;
         visibility: hidden;
-        transform: translateY(10px);
+        transform: translateX(4rem);
         transition:
           opacity 0.4s ease,
           transform 0.4s ease,
           visibility 0.4s;
+        overflow-x: hidden;
         overflow-y: auto;
+      }
+      .slide.before {
+        transform: translateX(-4rem);
+      }
+      .slide.after {
+        transform: translateX(4rem);
       }
       .slide.active {
         opacity: 1;
@@ -851,6 +860,10 @@
         .slide {
           transform: none;
         }
+        .slide.before,
+        .slide.after {
+          transform: none;
+        }
       }
 
       /* ===== print ===== */
@@ -913,7 +926,7 @@
             <div class="n">11</div>
             <div class="l">implementation lanes</div>
           </div>
-          <div class="stat" style="--edge: var(--c-a)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">13</div>
             <div class="l">backlog items cleared</div>
           </div>
@@ -1417,7 +1430,7 @@ $ <span class="tok-cmd">pnpm update -r</span>   <span class="tok-good"># → 0.2
             <div class="n">10</div>
             <div class="l">passed review round one (p11 one bounded loop)</div>
           </div>
-          <div class="stat" style="--edge: var(--c-good)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">12</div>
             <div class="l">serialized merges, zero conflicts</div>
           </div>
@@ -1511,7 +1524,6 @@ $ <span class="tok-cmd">pnpm update -r</span>   <span class="tok-good"># → 0.2
         var bar = document.getElementById('bar');
         var prevBtn = document.getElementById('prev');
         var nextBtn = document.getElementById('next');
-        var reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
         tot.textContent = String(total).padStart(2, '0');
 
         function pad(n) {
@@ -1522,6 +1534,9 @@ $ <span class="tok-cmd">pnpm update -r</span>   <span class="tok-good"># → 0.2
           idx = Math.max(0, Math.min(total - 1, i));
           slides.forEach(function (s, n) {
             s.classList.toggle('active', n === idx);
+            s.classList.toggle('before', n < idx);
+            s.classList.toggle('after', n > idx);
+            s.setAttribute('aria-hidden', n === idx ? 'false' : 'true');
           });
           cur.textContent = pad(idx + 1);
           bar.style.width = (total > 1 ? (idx / (total - 1)) * 100 : 100) + '%';
@@ -1543,6 +1558,11 @@ $ <span class="tok-cmd">pnpm update -r</span>   <span class="tok-good"># → 0.2
 
         document.addEventListener('keydown', function (e) {
           if (e.metaKey || e.ctrlKey || e.altKey) return;
+          if (
+            e.target instanceof Element &&
+            e.target.closest('button, a, input, textarea, select')
+          )
+            return;
           switch (e.key) {
             case 'ArrowRight':
             case 'ArrowDown':

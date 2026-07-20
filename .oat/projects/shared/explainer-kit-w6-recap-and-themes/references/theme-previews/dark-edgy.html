@@ -16,9 +16,9 @@
     display headings and sans for body — the family's serif/sans/mono grammar is
     intact, just re-weighted toward mono. Clearly distinct from Navy/Ocean, which
     is serif-led editorial.
-  - Terminal texture without cyberpunk: hairline borders, tight square-ish radii,
-    a faint dot-grid canvas wash, `//` and `$` prompt markers, corner ticks on
-    the title. No glitch, no scanlines, no neon overload — premium and sharp.
+  - Terminal character without cyberpunk: solid canvas, hairline borders, tight
+    square-ish radii, `//` and `$` prompt markers, and corner ticks on the title.
+    No texture, glitch, scanlines, or neon overload — premium and sharp.
   - Code wells are DARKER than the canvas (#0a0e14 < #0d1117) — the signature
     move. Syntax tokens use the reference palette (violet/green/amber/cyan).
 
@@ -31,9 +31,11 @@
     warm #f0b878 (wash .06)
     serif ui-serif/Source Serif Pro · sans system · mono JetBrains Mono
 
-  NO-MOTION DISCIPLINE
-    Slide changes are instant; only the progress bar eases. prefers-reduced-motion
-    removes all transitions and smooth scrolling. No autoplay, no looping motion.
+  NAVIGATION + NO-MOTION DISCIPLINE
+    One fixed-viewport slide is active at a time, with restrained horizontal
+    enter/exit direction and per-slide vertical overflow for short screens.
+    prefers-reduced-motion removes all transitions and positional motion. No
+    autoplay or looping motion.
 
   SELF-CONTAINED: inline CSS + JS only. No CDN, no webfonts fetched, no remote
   images (CSS/SVG/emoji only). Keyboard navigable with visible focus.
@@ -95,25 +97,19 @@
       html,
       body {
         margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
       }
       body {
         background: var(--bg);
-        /* faint dot-grid — terminal texture, very low contrast */
-        background-image: radial-gradient(
-          var(--border-soft) 1px,
-          transparent 1px
-        );
-        background-size: 22px 22px;
-        background-attachment: fixed;
         color: var(--text);
         font-family: var(--sans);
         line-height: 1.55;
         font-feature-settings: 'ss01', 'cv11';
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        scroll-snap-type: y proximity;
-        overflow-x: hidden;
-        overflow-y: scroll;
+        overflow: hidden;
       }
       ::selection {
         background: var(--accent-dim);
@@ -145,14 +141,35 @@
 
       /* ---- slide frame ---- */
       .slide {
-        min-height: 100vh;
-        scroll-snap-align: start;
+        position: fixed;
+        inset: 0;
+        z-index: 10;
         display: flex;
         flex-direction: column;
-        justify-content: center;
-        padding: 8vh 8vw 10vh;
-        border-bottom: 1px solid var(--border-soft);
-        position: relative;
+        justify-content: safe center;
+        padding: 4.8rem 6vw 4.4rem;
+        opacity: 0;
+        visibility: hidden;
+        transform: translateX(4rem);
+        transition:
+          opacity 0.32s ease,
+          transform 0.32s ease,
+          visibility 0.32s;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        -webkit-overflow-scrolling: touch;
+      }
+      .slide.before {
+        transform: translateX(-4rem);
+      }
+      .slide.after {
+        transform: translateX(4rem);
+      }
+      .slide.active {
+        opacity: 1;
+        visibility: visible;
+        transform: none;
       }
       .slide .inner {
         width: 100%;
@@ -617,7 +634,7 @@
       /* chrome */
       #progress {
         position: fixed;
-        top: 0;
+        bottom: 0;
         left: 0;
         height: 3px;
         width: 0;
@@ -649,15 +666,12 @@
       }
       .counter {
         position: fixed;
-        bottom: 1rem;
+        top: 0.85rem;
         right: 1.2rem;
         font-family: var(--mono);
         font-size: 0.72rem;
         color: var(--text-dim);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 6px;
-        padding: 0.2rem 0.55rem;
+        letter-spacing: 0.1em;
         font-variant-numeric: tabular-nums;
         z-index: 50;
       }
@@ -668,7 +682,7 @@
       .nav {
         position: fixed;
         bottom: 0.95rem;
-        right: 6.2rem;
+        right: 1.2rem;
         z-index: 50;
         display: flex;
         gap: 0.4rem;
@@ -721,7 +735,7 @@
 
       @media (max-width: 900px) {
         .slide {
-          padding: 7vh 6vw 9vh;
+          padding: 4.6rem 6vw 5rem;
         }
         .slide h2 {
           font-size: 1.9rem;
@@ -732,7 +746,7 @@
         .stats,
         .stats.three,
         .grid3 {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr 1fr;
         }
         .grid2 {
           grid-template-columns: 1fr;
@@ -743,9 +757,20 @@
         .stages .arrow {
           transform: rotate(90deg);
         }
-        .hint,
-        .nav {
+        .hint {
           display: none;
+        }
+      }
+      @media (max-width: 560px) {
+        .stats,
+        .stats.three,
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+        .brand {
+          max-width: calc(100vw - 7rem);
+          overflow: hidden;
+          white-space: nowrap;
         }
       }
 
@@ -756,17 +781,40 @@
           transition: none !important;
           animation: none !important;
         }
+        .slide,
+        .slide.before,
+        .slide.after {
+          transform: none;
+        }
       }
 
       @media print {
+        :root {
+          --bg: #ffffff;
+          --surface: #f7f8fa;
+          --surface-2: #eef0f4;
+          --code-bg: #f4f6f9;
+          --border: #d8dde3;
+          --border-soft: #e9ecf0;
+          --text: #1a1f29;
+          --text-dim: #4a5568;
+          --text-muted: #8b94a3;
+          --accent-glow: transparent;
+        }
         body {
-          scroll-snap-type: none;
           background: #fff;
+          overflow: visible;
         }
         .slide {
+          position: static;
+          opacity: 1;
+          visibility: visible;
+          transform: none;
           min-height: auto;
           page-break-after: always;
-          border: none;
+          padding: 2rem;
+          border-bottom: 1px solid var(--border-soft);
+          overflow: visible;
         }
         #progress,
         .counter,
@@ -783,7 +831,7 @@
     <div class="brand"><span class="dot"></span>STOA · W6 RECAP</div>
 
     <!-- ============ SLIDE 1 — TITLE ============ -->
-    <section class="slide title">
+    <section class="slide title" data-i="1">
       <div class="inner">
         <div class="title-frame">
           <div class="eyebrow">
@@ -809,7 +857,7 @@
             <div class="n">11</div>
             <div class="l">implementation lanes</div>
           </div>
-          <div class="stat" style="--edge: var(--c-a)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">13</div>
             <div class="l">backlog items cleared</div>
           </div>
@@ -826,7 +874,7 @@
     </section>
 
     <!-- ============ SLIDE 2 — WHAT SHIPPED: CORRECTNESS ============ -->
-    <section class="slide">
+    <section class="slide" data-i="2">
       <div class="inner">
         <div class="eyebrow">What shipped · correctness fixes</div>
         <h2>Four writes that can no longer go wrong quietly</h2>
@@ -904,7 +952,7 @@
     </section>
 
     <!-- ============ SLIDE 3 — WHAT SHIPPED: PARITY, PROOF, TRUTH ============ -->
-    <section class="slide">
+    <section class="slide" data-i="3">
       <div class="inner">
         <div class="eyebrow">What shipped · parity, proof &amp; truth</div>
         <h2>Interfaces told the truth, a refactor proved itself</h2>
@@ -1002,7 +1050,7 @@
     </section>
 
     <!-- ============ SLIDE 4 — FINAL-GATE STORY ============ -->
-    <section class="slide">
+    <section class="slide" data-i="4">
       <div class="inner">
         <div class="eyebrow">The final gate · three rounds</div>
         <h2>Fan-in gates catch what lane reviews cannot</h2>
@@ -1057,7 +1105,7 @@
     </section>
 
     <!-- ============ SLIDE 5 — p10 STOP ARC ============ -->
-    <section class="slide">
+    <section class="slide" data-i="5">
       <div class="inner">
         <div class="eyebrow">
           The p10 STOP arc
@@ -1116,7 +1164,7 @@
     </section>
 
     <!-- ============ SLIDE 6 — ROOT CAUSE COMPLETED ============ -->
-    <section class="slide">
+    <section class="slide" data-i="6">
       <div class="inner">
         <div class="eyebrow">Root cause · completed</div>
         <h2>The program-long config-revert mystery, solved</h2>
@@ -1192,7 +1240,7 @@
     </section>
 
     <!-- ============ SLIDE 7 — ACCEPTANCE EVIDENCE ============ -->
-    <section class="slide">
+    <section class="slide" data-i="7">
       <div class="inner">
         <div class="eyebrow">Acceptance evidence · promotion proof</div>
         <h2>Zero regression on the promoted skills</h2>
@@ -1239,7 +1287,7 @@
     </section>
 
     <!-- ============ SLIDE 8 — NUMBERS ============ -->
-    <section class="slide">
+    <section class="slide" data-i="8">
       <div class="inner">
         <div class="eyebrow">By the numbers</div>
         <h2>Eleven lanes, no conflicts, one clean merge target</h2>
@@ -1252,7 +1300,7 @@
             <div class="n">10</div>
             <div class="l">passed review round one (p11 one bounded loop)</div>
           </div>
-          <div class="stat" style="--edge: var(--c-good)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">12</div>
             <div class="l">serialized merges, zero conflicts</div>
           </div>
@@ -1290,7 +1338,7 @@
     </section>
 
     <!-- ============ SLIDE 9 — WHAT'S NEXT ============ -->
-    <section class="slide">
+    <section class="slide" data-i="9">
       <div class="inner">
         <div class="eyebrow">What's next</div>
         <h2>Merge, run the runbook, close the promotion</h2>
@@ -1338,69 +1386,108 @@
       <button id="prev" aria-label="Previous slide">&larr;</button>
       <button id="next" aria-label="Next slide">&rarr;</button>
     </div>
-    <div class="counter" id="counter"><b>1</b> / 9</div>
+    <div class="counter"><b id="cur">01</b> / <span id="tot">09</span></div>
     <div class="hint">
       <kbd>←</kbd> <kbd>→</kbd> / <kbd>space</kbd> to navigate
     </div>
 
     <script>
-      const slides = [...document.querySelectorAll('.slide')];
-      const counter = document.getElementById('counter');
-      const progress = document.getElementById('progress');
-      const prevBtn = document.getElementById('prev');
-      const nextBtn = document.getElementById('next');
-      const reduceMotion = window.matchMedia(
-        '(prefers-reduced-motion: reduce)',
-      ).matches;
-      let i = 0;
-      const paint = () => {
-        counter.innerHTML = '<b>' + (i + 1) + '</b> / ' + slides.length;
-        progress.style.width = ((i + 1) / slides.length) * 100 + '%';
-        prevBtn.disabled = i === 0;
-        nextBtn.disabled = i === slides.length - 1;
-      };
-      const set = (n) => {
-        i = Math.max(0, Math.min(slides.length - 1, n));
-        paint();
-      };
-      const go = (n) => {
-        set(n);
-        slides[i].scrollIntoView({
-          behavior: reduceMotion ? 'auto' : 'smooth',
+      (function () {
+        var slides = Array.prototype.slice.call(
+          document.querySelectorAll('.slide'),
+        );
+        var total = slides.length;
+        var idx = 0;
+        var cur = document.getElementById('cur');
+        var tot = document.getElementById('tot');
+        var bar = document.getElementById('progress');
+        var prevBtn = document.getElementById('prev');
+        var nextBtn = document.getElementById('next');
+        var syncingHash = false;
+
+        function pad(n) {
+          return String(n).padStart(2, '0');
+        }
+
+        function indexFromHash() {
+          var value = parseInt((location.hash || '').replace('#', ''), 10);
+          return isNaN(value) ? 0 : Math.max(0, Math.min(total - 1, value - 1));
+        }
+
+        function show(nextIndex, updateHash) {
+          idx = Math.max(0, Math.min(total - 1, nextIndex));
+          slides.forEach(function (slide, n) {
+            slide.classList.toggle('active', n === idx);
+            slide.classList.toggle('before', n < idx);
+            slide.classList.toggle('after', n > idx);
+            slide.setAttribute('aria-hidden', n === idx ? 'false' : 'true');
+          });
+          cur.textContent = pad(idx + 1);
+          tot.textContent = pad(total);
+          bar.style.width = (total > 1 ? (idx / (total - 1)) * 100 : 100) + '%';
+          prevBtn.disabled = idx === 0;
+          nextBtn.disabled = idx === total - 1;
+          slides[idx].scrollTop = 0;
+
+          if (updateHash !== false && location.hash !== '#' + (idx + 1)) {
+            syncingHash = true;
+            history.replaceState(null, '', '#' + (idx + 1));
+            syncingHash = false;
+          }
+        }
+
+        function next() {
+          show(idx + 1);
+        }
+
+        function prev() {
+          show(idx - 1);
+        }
+
+        nextBtn.addEventListener('click', next);
+        prevBtn.addEventListener('click', prev);
+
+        document.addEventListener('keydown', function (event) {
+          if (event.metaKey || event.ctrlKey || event.altKey) return;
+          if (
+            event.target instanceof Element &&
+            event.target.closest('button, a, input, textarea, select')
+          ) {
+            return;
+          }
+
+          switch (event.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+            case 'PageDown':
+            case ' ':
+            case 'Spacebar':
+              event.preventDefault();
+              next();
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+            case 'PageUp':
+              event.preventDefault();
+              prev();
+              break;
+            case 'Home':
+              event.preventDefault();
+              show(0);
+              break;
+            case 'End':
+              event.preventDefault();
+              show(total - 1);
+              break;
+          }
         });
-      };
-      prevBtn.addEventListener('click', () => go(i - 1));
-      nextBtn.addEventListener('click', () => go(i + 1));
-      addEventListener('keydown', (e) => {
-        if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
-          e.preventDefault();
-          go(i + 1);
-        }
-        if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
-          e.preventDefault();
-          go(i - 1);
-        }
-        if (e.key === 'Home') {
-          e.preventDefault();
-          go(0);
-        }
-        if (e.key === 'End') {
-          e.preventDefault();
-          go(slides.length - 1);
-        }
-      });
-      const io = new IntersectionObserver(
-        (es) =>
-          es.forEach((e) => {
-            if (e.isIntersecting) {
-              i = slides.indexOf(e.target);
-              paint();
-            }
-          }),
-        { threshold: 0.5 },
-      );
-      slides.forEach((s) => io.observe(s));
-      paint();
+
+        addEventListener('hashchange', function () {
+          if (!syncingHash) show(indexFromHash(), false);
+        });
+
+        show(indexFromHash(), false);
+      })();
     </script>
   </body>
 </html>

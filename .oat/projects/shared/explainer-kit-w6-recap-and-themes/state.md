@@ -69,7 +69,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-20T17:41:58.158Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T18:27:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T19:56:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,10 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ W6 defect handoff and operator default-theme feedback reconciled
 - ✓ Structured per-artifact author seam direction approved
 - ✓ Four shared-content Opus theme previews generated
-- ⧗ Awaiting operator review of the four theme previews
+- ✓ First theme review accepted the overall direction
+- ✓ Revised per-row accent rhythm, navigation consistency, and Dark/Edgy canvas
+- ✓ Revised previews passed desktop/mobile Chromium validation
+- ⧗ Awaiting operator confirmation of the revised previews
 
 ## Blockers
 
@@ -106,4 +109,4 @@ None
 
 ## Next Milestone
 
-Capture theme-preview feedback, then produce the lightweight design
+Confirm the revised theme previews, then produce the lightweight design

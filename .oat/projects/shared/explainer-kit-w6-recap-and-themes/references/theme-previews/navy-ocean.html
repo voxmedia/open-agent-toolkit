@@ -20,8 +20,8 @@
     - Washes over fills: low-alpha blue tints for highlighted regions; hairline
       cool borders; layered panel elevation (canvas < panel < elevated).
     - Restrained "ocean" atmosphere: faint fixed radial depth-glows + a thin
-      tidal rule under eyebrows. Motion is calm (gentle fades), and fully
-      disabled under prefers-reduced-motion.
+      tidal rule under eyebrows. Fixed-viewport slides move horizontally with
+      calm fades, and motion is fully disabled under prefers-reduced-motion.
 
   TOKENS (authoritative Navy/Ocean set, from default-theme-feedback.md):
     canvas #0e1420 · panel #161d2b · elevated #1e2635 · border #2a3547 /
@@ -93,6 +93,9 @@
       html,
       body {
         margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
       }
       body {
         background: var(--bg);
@@ -101,9 +104,7 @@
         line-height: 1.55;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        scroll-snap-type: y proximity;
-        overflow-x: hidden;
-        overflow-y: scroll;
+        overflow: hidden;
       }
       /* Restrained ocean atmosphere — fixed depth-glows behind the deck. */
       body::before {
@@ -153,14 +154,38 @@
 
       /* ---- slide frame ---- */
       .slide {
-        min-height: 100vh;
-        scroll-snap-align: start;
+        position: fixed;
+        inset: 0;
+        z-index: 10;
         display: flex;
         flex-direction: column;
         justify-content: center;
-        padding: 8vh 8vw 10vh;
-        border-bottom: 1px solid var(--border-soft);
-        position: relative;
+        padding: 4.8rem 8vw 4.4rem;
+        overflow-x: hidden;
+        overflow-y: auto;
+        overscroll-behavior: contain;
+        opacity: 0;
+        visibility: hidden;
+        pointer-events: none;
+        transform: translateX(7vw);
+        transition:
+          opacity 0.38s ease,
+          transform 0.38s cubic-bezier(0.4, 0, 0.2, 1),
+          visibility 0s linear 0.38s;
+      }
+      .slide.before {
+        transform: translateX(-7vw);
+      }
+      .slide.after {
+        transform: translateX(7vw);
+      }
+      .slide.active {
+        z-index: 20;
+        opacity: 1;
+        visibility: visible;
+        pointer-events: auto;
+        transform: translateX(0);
+        transition-delay: 0s;
       }
       .slide .inner {
         width: 100%;
@@ -526,22 +551,22 @@
       /* chrome */
       #progress {
         position: fixed;
-        top: 0;
+        bottom: 0;
         left: 0;
         height: 3px;
         width: 0;
         background: linear-gradient(90deg, var(--accent), var(--c-c));
         box-shadow: 0 0 12px var(--accent-glow);
-        z-index: 50;
-        transition: width 0.3s ease;
+        z-index: 60;
+        transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
       }
       .brand {
         position: fixed;
-        top: 1rem;
-        left: 1.2rem;
-        z-index: 50;
+        top: 1.35rem;
+        left: 1.8rem;
+        z-index: 60;
         font-family: var(--mono);
-        font-size: 0.64rem;
+        font-size: 0.66rem;
         text-transform: uppercase;
         letter-spacing: 0.16em;
         color: var(--text-muted);
@@ -556,43 +581,48 @@
         background: var(--accent);
         box-shadow: 0 0 8px var(--accent-glow);
       }
+      .brand b {
+        color: var(--text-dim);
+        font-weight: 600;
+      }
       .counter {
         position: fixed;
-        bottom: 1rem;
-        right: 1.2rem;
+        top: 1.35rem;
+        right: 1.8rem;
         font-family: var(--mono);
         font-size: 0.72rem;
         color: var(--text-dim);
-        background: var(--surface);
-        border: 1px solid var(--border);
-        border-radius: 999px;
-        padding: 0.25rem 0.7rem;
-        z-index: 50;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 0.1em;
+        z-index: 60;
       }
       .counter b {
         color: var(--accent-bright);
+        font-weight: 600;
       }
       .nav {
         position: fixed;
-        bottom: 1rem;
-        left: 1.2rem;
-        z-index: 50;
+        bottom: 1.25rem;
+        right: 1.8rem;
+        z-index: 60;
         display: flex;
-        gap: 0.4rem;
+        gap: 0.5rem;
       }
       .nav button {
-        width: 36px;
-        height: 32px;
+        width: 40px;
+        height: 36px;
         border-radius: 8px;
         background: var(--surface);
         border: 1px solid var(--border);
         color: var(--text-dim);
         cursor: pointer;
-        font-size: 1rem;
+        font-size: 1.05rem;
+        line-height: 1;
         transition:
           color 0.14s,
           border-color 0.14s,
-          background 0.14s;
+          background 0.14s,
+          transform 0.14s;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -601,21 +631,37 @@
         color: var(--accent-bright);
         border-color: var(--accent-edge);
         background: var(--surface-2);
+        transform: translateY(-1px);
+      }
+      .nav button:disabled {
+        opacity: 0.3;
+        cursor: default;
+        transform: none;
       }
       .hint {
         position: fixed;
-        bottom: 1rem;
-        left: 50%;
-        transform: translateX(-50%);
+        bottom: 1.4rem;
+        left: 1.8rem;
         font-family: var(--mono);
-        font-size: 0.64rem;
+        font-size: 0.66rem;
         color: var(--text-muted);
-        z-index: 50;
+        letter-spacing: 0.05em;
+        z-index: 60;
+      }
+      .hint kbd {
+        font-family: var(--mono);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-bottom-width: 2px;
+        border-radius: 4px;
+        padding: 0.05em 0.4em;
+        color: var(--text-dim);
+        font-size: 0.95em;
       }
 
       @media (max-width: 900px) {
         .slide {
-          padding: 7vh 6vw 9vh;
+          padding: 4.6rem 6vw 5rem;
         }
         .slide h2 {
           font-size: 1.9rem;
@@ -626,7 +672,7 @@
         .stats,
         .stats.three,
         .grid3 {
-          grid-template-columns: 1fr;
+          grid-template-columns: 1fr 1fr;
         }
         .grid2 {
           grid-template-columns: 1fr;
@@ -641,32 +687,56 @@
           display: none;
         }
       }
+      @media (max-width: 560px) {
+        .stats,
+        .stats.three,
+        .grid3 {
+          grid-template-columns: 1fr;
+        }
+        .brand b {
+          display: none;
+        }
+        code {
+          white-space: normal;
+          overflow-wrap: anywhere;
+        }
+      }
 
       /* restrained motion — honor the user's reduced-motion preference */
       @media (prefers-reduced-motion: reduce) {
-        html {
-          scroll-behavior: auto !important;
-        }
         * {
           transition: none !important;
           scroll-behavior: auto !important;
         }
-        #progress {
-          transition: none !important;
+        .slide,
+        .slide.before,
+        .slide.after {
+          transform: none;
         }
       }
 
       @media print {
+        html,
         body {
-          scroll-snap-type: none;
+          width: auto;
+          height: auto;
+          overflow: visible;
         }
         body::before {
           display: none;
         }
         .slide {
+          position: static;
+          display: flex;
+          opacity: 1;
+          visibility: visible;
+          pointer-events: auto;
+          transform: none;
           min-height: auto;
           page-break-after: always;
-          border: none;
+          overflow: visible;
+          padding: 2rem;
+          border-bottom: 1px solid var(--border-soft);
         }
         #progress,
         .counter,
@@ -680,10 +750,10 @@
   </head>
   <body>
     <div id="progress"></div>
-    <div class="brand"><span class="dot"></span>Stoa · Wave 6</div>
+    <div class="brand"><span class="dot"></span><b>Stoa Wave 6</b> · recap</div>
 
     <!-- ============ SLIDE 1 — TITLE ============ -->
-    <section class="slide title">
+    <section class="slide title" data-i="1">
       <div class="inner">
         <div class="eyebrow">
           Stoa Wave 6 · Recap <span class="pill first">packaged rails</span>
@@ -707,7 +777,7 @@
             <div class="n">11</div>
             <div class="l">implementation lanes</div>
           </div>
-          <div class="stat" style="--edge: var(--c-a)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">13</div>
             <div class="l">backlog items cleared</div>
           </div>
@@ -724,7 +794,7 @@
     </section>
 
     <!-- ============ SLIDE 2 — WHAT SHIPPED: CORRECTNESS ============ -->
-    <section class="slide">
+    <section class="slide" data-i="2">
       <div class="inner">
         <div class="eyebrow">What shipped · correctness fixes</div>
         <h2>Four writes that can no longer go wrong quietly</h2>
@@ -802,7 +872,7 @@
     </section>
 
     <!-- ============ SLIDE 3 — WHAT SHIPPED: PARITY, PROOF, TRUTH ============ -->
-    <section class="slide">
+    <section class="slide" data-i="3">
       <div class="inner">
         <div class="eyebrow">What shipped · parity, proof &amp; truth</div>
         <h2>Interfaces told the truth, a refactor proved itself</h2>
@@ -900,7 +970,7 @@
     </section>
 
     <!-- ============ SLIDE 4 — FINAL-GATE STORY ============ -->
-    <section class="slide">
+    <section class="slide" data-i="4">
       <div class="inner">
         <div class="eyebrow">The final gate · three rounds</div>
         <h2>Fan-in gates catch what lane reviews cannot</h2>
@@ -955,7 +1025,7 @@
     </section>
 
     <!-- ============ SLIDE 5 — p10 STOP ARC ============ -->
-    <section class="slide">
+    <section class="slide" data-i="5">
       <div class="inner">
         <div class="eyebrow">
           The p10 STOP arc
@@ -1014,7 +1084,7 @@
     </section>
 
     <!-- ============ SLIDE 6 — ROOT CAUSE COMPLETED ============ -->
-    <section class="slide">
+    <section class="slide" data-i="6">
       <div class="inner">
         <div class="eyebrow">Root cause · completed</div>
         <h2>The program-long config-revert mystery, solved</h2>
@@ -1069,7 +1139,7 @@
     </section>
 
     <!-- ============ SLIDE 7 — ACCEPTANCE EVIDENCE ============ -->
-    <section class="slide">
+    <section class="slide" data-i="7">
       <div class="inner">
         <div class="eyebrow">Acceptance evidence · promotion proof</div>
         <h2>Zero regression on the promoted skills</h2>
@@ -1116,7 +1186,7 @@
     </section>
 
     <!-- ============ SLIDE 8 — NUMBERS ============ -->
-    <section class="slide">
+    <section class="slide" data-i="8">
       <div class="inner">
         <div class="eyebrow">By the numbers</div>
         <h2>Eleven lanes, no conflicts, one clean merge target</h2>
@@ -1129,7 +1199,7 @@
             <div class="n">10</div>
             <div class="l">passed review round one (p11 one bounded loop)</div>
           </div>
-          <div class="stat" style="--edge: var(--c-good)">
+          <div class="stat" style="--edge: var(--c-meta)">
             <div class="n">12</div>
             <div class="l">serialized merges, zero conflicts</div>
           </div>
@@ -1167,7 +1237,7 @@
     </section>
 
     <!-- ============ SLIDE 9 — WHAT'S NEXT ============ -->
-    <section class="slide">
+    <section class="slide" data-i="9">
       <div class="inner">
         <div class="eyebrow">What's next</div>
         <h2>Merge, run the runbook, close the promotion</h2>
@@ -1215,64 +1285,101 @@
       <button id="prev" type="button" aria-label="Previous slide">‹</button>
       <button id="next" type="button" aria-label="Next slide">›</button>
     </div>
-    <div class="counter" id="counter"><b>1</b> / 9</div>
-    <div class="hint">← → / space to navigate</div>
+    <div class="counter"><b id="cur">01</b> / <span id="tot">09</span></div>
+    <div class="hint"><kbd>→</kbd> next · <kbd>←</kbd> back</div>
 
     <script>
-      const slides = [...document.querySelectorAll('.slide')];
-      const counter = document.getElementById('counter');
-      const progress = document.getElementById('progress');
-      const prevBtn = document.getElementById('prev');
-      const nextBtn = document.getElementById('next');
-      const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-      let i = 0;
-      const paint = () => {
-        counter.innerHTML = '<b>' + (i + 1) + '</b> / ' + slides.length;
-        progress.style.width = ((i + 1) / slides.length) * 100 + '%';
-      };
-      const set = (n) => {
-        i = Math.max(0, Math.min(slides.length - 1, n));
-        paint();
-      };
-      const go = (n) => {
-        set(n);
-        slides[i].scrollIntoView({
-          behavior: reduce ? 'auto' : 'smooth',
+      (function () {
+        var slides = Array.prototype.slice.call(
+          document.querySelectorAll('.slide'),
+        );
+        var total = slides.length;
+        var idx = -1;
+        var cur = document.getElementById('cur');
+        var tot = document.getElementById('tot');
+        var bar = document.getElementById('progress');
+        var prevBtn = document.getElementById('prev');
+        var nextBtn = document.getElementById('next');
+        tot.textContent = String(total).padStart(2, '0');
+
+        function pad(n) {
+          return String(n).padStart(2, '0');
+        }
+
+        function indexFromHash() {
+          var parsed = parseInt((location.hash || '').replace('#', ''), 10);
+          return isNaN(parsed) ? 0 : parsed - 1;
+        }
+
+        function show(i, updateHash) {
+          idx = Math.max(0, Math.min(total - 1, i));
+          slides.forEach(function (slide, n) {
+            slide.classList.toggle('active', n === idx);
+            slide.classList.toggle('before', n < idx);
+            slide.classList.toggle('after', n > idx);
+            slide.setAttribute('aria-hidden', n === idx ? 'false' : 'true');
+          });
+          cur.textContent = pad(idx + 1);
+          bar.style.width = (total > 1 ? (idx / (total - 1)) * 100 : 100) + '%';
+          prevBtn.disabled = idx === 0;
+          nextBtn.disabled = idx === total - 1;
+          if (updateHash !== false) {
+            history.replaceState(null, '', '#' + (idx + 1));
+          }
+          slides[idx].scrollTop = 0;
+        }
+
+        function next() {
+          show(idx + 1);
+        }
+
+        function prev() {
+          show(idx - 1);
+        }
+
+        prevBtn.addEventListener('click', prev);
+        nextBtn.addEventListener('click', next);
+
+        document.addEventListener('keydown', function (e) {
+          if (e.metaKey || e.ctrlKey || e.altKey) return;
+          if (
+            e.target instanceof Element &&
+            e.target.closest('button, a, input, textarea, select')
+          ) {
+            return;
+          }
+          switch (e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+            case 'PageDown':
+            case ' ':
+            case 'Spacebar':
+              e.preventDefault();
+              next();
+              break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+            case 'PageUp':
+              e.preventDefault();
+              prev();
+              break;
+            case 'Home':
+              e.preventDefault();
+              show(0);
+              break;
+            case 'End':
+              e.preventDefault();
+              show(total - 1);
+              break;
+          }
         });
-      };
-      prevBtn.addEventListener('click', () => go(i - 1));
-      nextBtn.addEventListener('click', () => go(i + 1));
-      addEventListener('keydown', (e) => {
-        if (e.metaKey || e.ctrlKey || e.altKey) return;
-        if (['ArrowRight', 'ArrowDown', ' ', 'PageDown'].includes(e.key)) {
-          e.preventDefault();
-          go(i + 1);
-        }
-        if (['ArrowLeft', 'ArrowUp', 'PageUp'].includes(e.key)) {
-          e.preventDefault();
-          go(i - 1);
-        }
-        if (e.key === 'Home') {
-          e.preventDefault();
-          go(0);
-        }
-        if (e.key === 'End') {
-          e.preventDefault();
-          go(slides.length - 1);
-        }
-      });
-      const io = new IntersectionObserver(
-        (es) =>
-          es.forEach((e) => {
-            if (e.isIntersecting) {
-              i = slides.indexOf(e.target);
-              paint();
-            }
-          }),
-        { threshold: 0.5 },
-      );
-      slides.forEach((s) => io.observe(s));
-      paint();
+
+        addEventListener('hashchange', function () {
+          show(indexFromHash(), false);
+        });
+
+        show(indexFromHash());
+      })();
     </script>
   </body>
 </html>

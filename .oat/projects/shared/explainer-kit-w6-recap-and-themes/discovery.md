@@ -56,6 +56,19 @@ all artifacts in one run-level result?
 **Decision:** The core invokes the author once per recipe artifact and validates
 the returned section IDs and prose before serializing retained Markdown.
 
+### Question 4: Theme preview feedback
+
+**Q:** What should change after reviewing the first four shared-content
+previews?
+**A:** The overall direction is right. Remove Dark/Edgy's dotted background;
+avoid repeating the same accent color within a visible card/stat row; and use
+the same horizontal slide navigation across all four decks rather than mixing
+one horizontal deck with three vertical decks.
+**Decision:** Revise all four previews with non-repeating per-row accent
+sequences and fixed-viewport horizontal navigation. Dark/Edgy uses a solid
+canvas with depth supplied by panels, code wells, hairlines, and restrained
+cyan cues.
+
 ## Solution Space
 
 ### Approach 1: Integrated release-quality follow-on _(Recommended)_
@@ -168,6 +181,11 @@ palette/profile callers.
    content and remain review artifacts until the operator accepts them.
 7. **Default visibility:** Unattended fallback to shipped defaults must produce
    a manifest warning when no explicit theme is configured.
+8. **Deck interaction:** Curated deck styles share fixed-viewport horizontal
+   navigation, including keyboard controls, progress/counter chrome, responsive
+   overflow, and reduced-motion behavior.
+9. **Accent rhythm:** Colors may repeat across a deck when semantically useful,
+   but not within the same visible card/stat row.
 
 ## Constraints
 
@@ -223,8 +241,8 @@ palette/profile callers.
 
 ## Open Questions
 
-- **Theme acceptance:** What changes, if any, does the operator request after
-  reviewing the four Opus previews?
+- **Theme acceptance:** Do the revised previews resolve accent repetition,
+  navigation consistency, and Dark/Edgy canvas feedback?
 - **Compatibility:** Should named `style` be additive alongside
   `palette`/`visualProfile`, or should the old fields be formally deprecated in
   v1 while remaining accepted?
