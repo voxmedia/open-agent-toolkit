@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.2.1
+version: 1.3.0
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -104,8 +104,11 @@ target (same disclaimer as the plan indexes).
 2. Update the status ledger row: PR, merge SHA, completion-record link.
 3. Note next-wave unblocks ("W3 merged → W4 token-cost unblocked").
 4. Commit with the wave's closeout bookkeeping.
-5. Optionally run the mechanical program-recap explainer caller described below,
-   then add its manifest `runId` and `outcome` to the wave ledger row.
+5. An autonomous orchestrator NEVER silently drops the optional program recap.
+   Wave-close records exactly one disposition in the ledger: either run the
+   mechanical caller below and record its manifest `runId` and `outcome`, or add
+   `recap: not run — {reason}`. Silent discretion is indistinguishable from
+   oversight (Orc program-recap evidence).
 
 ### Program-close explainer caller
 

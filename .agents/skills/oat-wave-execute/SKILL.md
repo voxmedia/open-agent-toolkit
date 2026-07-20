@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.6.2
+version: 1.7.0
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -103,7 +103,9 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    oxfmt re-padding makes it silently no-op. Use anchored regex + a substitution
    count assertion + a post-state grep, every time. This discipline caught its
    own subsequent no-ops twice in wave 2; treat an assert failure as normal
-   operation, not an incident.
+   operation, not an incident. Orc reproduced the failure at wave-close: regex
+   replacement missed oxfmt padding, and an asserted line-based transform was
+   required.
 10. **Integration gates after every fan-in:** they are the only detector for
     cumulative-timing defect classes. Never skip them because every lane passed
     independently; the wave-5 embed-teardown defect was caught only after fan-in.
@@ -335,6 +337,10 @@ archival and before the project-archive seal (`oat-project-complete`) — never
 archive anything first.
 
 1. **Final verification** — integration DoD gates green on the integration branch.
+   If the repo has no CI, record a one-line explicit waiver in the wave plan:
+   `merge gate = local DoD only`. The CI-introducing wave's first green run
+   certifies the cumulative merged tree and MUST be recorded as closure of that
+   waiver; do not re-run earlier gates retroactively (Orc W1–W2 evidence).
 2. **End-of-run synthesis in `orchestration-log.md`, then roll it up into
    `summary.md`** (this is the "before any archive step" gate): convention
    verdicts with evidence, adjustments-as-rules for later waves, graduated-entries
