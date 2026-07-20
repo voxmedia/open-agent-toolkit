@@ -1,0 +1,77 @@
+{
+  "name": "dark-edgy",
+  "defaultMode": "dark",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#f3f5f7",
+        "panel": "#ffffff",
+        "elevated": "#e6eaee"
+      },
+      "ink": { "primary": "#17202b", "muted": "#4f5c6d", "inverse": "#0d1117" },
+      "accent": { "primary": "#4eb4b9", "secondary": "#4f91ad" },
+      "status": {
+        "success": "#9fd68a",
+        "warning": "#f0b878",
+        "danger": "#ff9aa2",
+        "info": "#7ddce0"
+      },
+      "diagramSeries": ["#397a98", "#8d591d", "#4e872f", "#7654a8"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#0d1117",
+        "panel": "#161b22",
+        "elevated": "#1c232c"
+      },
+      "ink": { "primary": "#d9e0e8", "muted": "#aeb8c7", "inverse": "#0d1117" },
+      "accent": { "primary": "#7ddce0", "secondary": "#6fb7d8" },
+      "status": {
+        "success": "#9fd68a",
+        "warning": "#f0b878",
+        "danger": "#ff9aa2",
+        "info": "#7ddce0"
+      },
+      "diagramSeries": ["#7ddce0", "#f0b878", "#6fb7d8", "#c4a4f0"]
+    }
+  },
+  "typography": {
+    "sans": ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+    "serif": ["ui-serif", "Georgia", "serif"],
+    "mono": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+    "scale": {
+      "caption": "0.8125rem",
+      "body": "0.9375rem",
+      "title": "1.375rem",
+      "display": "2rem"
+    },
+    "lineHeight": { "caption": 1.35, "body": 1.5, "title": 1.2, "display": 1.1 }
+  },
+  "spacing": {
+    "unit": 3,
+    "scale": { "xs": 3, "sm": 6, "md": 12, "lg": 18, "xl": 30 }
+  },
+  "geometry": { "radius": { "sm": 2, "md": 4, "lg": 8 }, "borderWidth": 1 },
+  "elevation": {
+    "shadows": {
+      "low": "0 1px 2px rgb(0 0 0 / 0.22)",
+      "high": "0 12px 30px rgb(0 0 0 / 0.38)"
+    }
+  },
+  "density": "compact",
+  "motion": {
+    "enabled": true,
+    "durationMs": { "fast": 100, "normal": 180, "slow": 280 },
+    "easing": {
+      "standard": "ease",
+      "emphasized": "cubic-bezier(0.2, 0.8, 0.2, 1)"
+    },
+    "reducedMotion": "disable-nonessential"
+  },
+  "diagrams": {
+    "lineWidth": 2,
+    "nodeGap": 24,
+    "arrowStyle": "straight",
+    "labelTreatment": "boxed"
+  }
+}

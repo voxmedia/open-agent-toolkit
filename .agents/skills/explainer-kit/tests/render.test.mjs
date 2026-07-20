@@ -190,6 +190,10 @@ test('deck substitution preserves horizontal paging, no-JS, and print behavior',
   assert.match(html, /@media print/);
   assert.match(html, /break-after:\s*page/);
   assert.match(html, /<section class="slide"/);
+  assert.match(html, /id="deck-progress"/);
+  assert.match(html, /role="progressbar"/);
+  assert.match(html, /history\.replaceState/);
+  assert.match(html, /location\.hash/);
 });
 
 test('rejects unknown templates, invalid themes and render strategies', async () => {

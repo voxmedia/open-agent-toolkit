@@ -46,13 +46,11 @@ function configGetter(entries = {}) {
       calls.push(key);
       const entry = entries[key] ?? {
         value:
-          key === 'explainers.defaults.palette'
-            ? 'neutral'
-            : key === 'explainers.defaults.visualProfile'
-              ? 'clean'
-              : key.startsWith('workflow.')
-                ? 'ask'
-                : null,
+          key === 'explainers.defaults.style'
+            ? 'clean-neutral'
+            : key.startsWith('workflow.')
+              ? 'ask'
+              : null,
         source: 'default',
       };
       return { status: 'ok', key, ...entry };
@@ -63,6 +61,10 @@ function configGetter(entries = {}) {
 test('reads every supported value and source through oat config get --json', async () => {
   const repoRoot = await fixture();
   const getter = configGetter({
+    'explainers.defaults.style': {
+      value: 'business-corporate',
+      source: 'user',
+    },
     'explainers.defaults.palette': { value: 'ocean', source: 'user' },
     'explainers.defaults.visualProfile': {
       value: 'editorial',
@@ -90,8 +92,40 @@ test('reads every supported value and source through oat config get --json', asy
     await realpath(join(repoRoot, 'shared-theme.json')),
   );
   assert.deepEqual(resolved.warnings, [
-    'explainers.defaults.themeBundlePath overrides configured palette and visual profile.',
+    'Palette and visual profile configuration is deprecated; use explainers.defaults.style.',
+    'explainers.defaults.themeBundlePath overrides configured style, palette, and visual profile.',
   ]);
+});
+
+test('resolves named style precedence and leaves an omitted selection for the core default', async () => {
+  const repoRoot = await fixture();
+  const omitted = await resolveExplainerConfig({
+    repoRoot,
+    getConfig: configGetter().get,
+  });
+  assert.deepEqual(omitted.theme, {});
+
+  const styled = await resolveExplainerConfig({
+    repoRoot,
+    getConfig: configGetter({
+      'explainers.defaults.style': {
+        value: 'navy-ocean',
+        source: 'shared',
+      },
+      'explainers.defaults.palette': { value: 'ember', source: 'local' },
+      'explainers.defaults.visualProfile': {
+        value: 'technical',
+        source: 'user',
+      },
+    }).get,
+  });
+  assert.deepEqual(styled.theme, {
+    style: 'navy-ocean',
+    palette: 'ember',
+    visualProfile: 'technical',
+  });
+  assert.ok(styled.warnings.some((warning) => /style wins/i.test(warning)));
+  assert.ok(styled.warnings.some((warning) => /deprecated/i.test(warning)));
 });
 
 test('applies only allowed runtime overrides without mutating CLI results', async () => {
@@ -105,6 +139,7 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
     repoRoot,
     getConfig: getter.get,
     runtimeOverrides: {
+      'explainers.defaults.style': 'dark-edgy',
       'explainers.defaults.palette': 'sunset',
       'explainers.publish.provider': 's3-static',
       'explainers.publish.s3Uri': 's3://runtime-bucket/explainers/',
@@ -115,6 +150,7 @@ test('applies only allowed runtime overrides without mutating CLI results', asyn
   });
 
   assert.equal(stored['explainers.defaults.palette'].value, 'neutral');
+  assert.equal(resolved.theme.style, 'dark-edgy');
   assert.equal(resolved.theme.palette, 'sunset');
   assert.equal(resolved.sources['explainers.defaults.palette'], 'runtime');
   assert.equal(resolved.publish.s3Uri, 's3://runtime-bucket/explainers');

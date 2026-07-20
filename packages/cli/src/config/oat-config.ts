@@ -53,7 +53,14 @@ export interface OatArchiveConfig {
   awsRegion?: string;
 }
 
+export type OatExplainerStyle =
+  | 'clean-neutral'
+  | 'business-corporate'
+  | 'navy-ocean'
+  | 'dark-edgy';
+
 export interface OatExplainerDefaultsConfig {
+  style?: OatExplainerStyle;
   palette?: string;
   visualProfile?: string;
   themeBundlePath?: string;
@@ -215,6 +222,12 @@ const VALID_POST_IMPLEMENT_STEPS: readonly WorkflowPostImplementStep[] = [
   'summary',
   'document',
   'pr',
+];
+const VALID_EXPLAINER_STYLES: readonly OatExplainerStyle[] = [
+  'clean-neutral',
+  'business-corporate',
+  'navy-ocean',
+  'dark-edgy',
 ];
 const LEGACY_POST_IMPLEMENT_SEQUENCES: Readonly<
   Record<
@@ -525,6 +538,13 @@ function normalizeExplainersConfig(
   const next: OatExplainersConfig = {};
   if (isRecord(parsed.defaults)) {
     const defaults: OatExplainerDefaultsConfig = {};
+    const style = trimNonEmptyString(parsed.defaults.style);
+    if (
+      style !== undefined &&
+      (VALID_EXPLAINER_STYLES as readonly string[]).includes(style)
+    ) {
+      defaults.style = style as OatExplainerStyle;
+    }
     const palette = trimNonEmptyString(parsed.defaults.palette);
     if (palette !== undefined) {
       defaults.palette = palette;

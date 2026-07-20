@@ -1277,6 +1277,7 @@ describe('resolveEffectiveConfig', () => {
             version: 1,
             explainers: {
               defaults: {
+                style: 'business-corporate',
                 palette: 'ocean',
                 themeBundlePath: 'themes/shared.json',
               },
@@ -1292,7 +1293,10 @@ describe('resolveEffectiveConfig', () => {
           ({
             version: 1,
             explainers: {
-              defaults: { visualProfile: 'technical' },
+              defaults: {
+                style: 'navy-ocean',
+                visualProfile: 'technical',
+              },
               publish: { awsProfile: 'local-sso' },
             },
             workflow: {
@@ -1304,6 +1308,7 @@ describe('resolveEffectiveConfig', () => {
             version: 1,
             explainers: {
               defaults: {
+                style: 'dark-edgy',
                 palette: 'violet',
                 visualProfile: 'editorial',
               },
@@ -1320,6 +1325,10 @@ describe('resolveEffectiveConfig', () => {
     );
 
     expect(result.resolved).toMatchObject({
+      'explainers.defaults.style': {
+        value: 'navy-ocean',
+        source: 'local',
+      },
       'explainers.defaults.palette': { value: 'ocean', source: 'shared' },
       'explainers.defaults.visualProfile': {
         value: 'technical',
@@ -1366,9 +1375,13 @@ describe('resolveEffectiveConfig', () => {
     const result = await resolveEffectiveConfig(repoRoot, userConfigDir, {});
 
     expect(result.resolved).toMatchObject({
-      'explainers.defaults.palette': { value: 'neutral', source: 'default' },
+      'explainers.defaults.style': {
+        value: 'clean-neutral',
+        source: 'default',
+      },
+      'explainers.defaults.palette': { value: null, source: 'default' },
       'explainers.defaults.visualProfile': {
-        value: 'clean',
+        value: null,
         source: 'default',
       },
       'explainers.defaults.themeBundlePath': {

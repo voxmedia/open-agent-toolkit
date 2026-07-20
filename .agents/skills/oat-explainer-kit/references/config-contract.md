@@ -9,8 +9,9 @@ constructing an `explainer-kit.run-request/v1`.
 
 | Key                                    | Stored scopes       | Built-in default |
 | -------------------------------------- | ------------------- | ---------------- |
-| `explainers.defaults.palette`          | local, shared, user | `neutral`        |
-| `explainers.defaults.visualProfile`    | local, shared, user | `clean`          |
+| `explainers.defaults.style`            | local, shared, user | `clean-neutral`  |
+| `explainers.defaults.palette`          | local, shared, user | unset            |
+| `explainers.defaults.visualProfile`    | local, shared, user | unset            |
 | `explainers.defaults.themeBundlePath`  | local, shared       | unset            |
 | `explainers.publish.provider`          | shared              | unset            |
 | `explainers.publish.s3Uri`             | shared              | unset            |
@@ -20,7 +21,7 @@ constructing an `explainer-kit.run-request/v1`.
 | `workflow.explainers.projectExplainer` | local, shared, user | `ask`            |
 | `workflow.explainers.projectRecap`     | local, shared, user | `ask`            |
 
-Explicit runtime inputs may override these ten keys for one invocation. They
+Explicit runtime inputs may override these eleven keys for one invocation. They
 do not write config. Recipe, slug, fact-base path, output root, per-run art
 direction, and private wrapper lanes are invocation inputs rather than config
 keys and are rejected from the runtime config-override map.
@@ -33,9 +34,13 @@ path follows the same repository confinement; a local absolute path may point
 outside the repository. Runtime paths follow the local rule. User config cannot
 set a theme bundle path.
 
-When a theme bundle path is present it replaces named palette and visual-profile
-selection and produces a warning. The adapter passes the resolved canonical
-path as `theme.suppliedBundlePath`.
+The four curated styles are `clean-neutral`, `business-corporate`,
+`navy-ocean`, and `dark-edgy`. A theme bundle path has highest precedence,
+followed by an explicit style. Legacy palette and visual-profile fields remain
+accepted as an advanced compatibility path and produce deprecation warnings.
+When no source explicitly configures any selection, the adapter leaves the
+request theme empty so the core records its visible `clean-neutral` fallback
+warning. The adapter passes a resolved bundle as `theme.suppliedBundlePath`.
 
 ## Publish block
 

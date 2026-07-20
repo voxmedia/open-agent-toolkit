@@ -10,6 +10,12 @@ const PALETTE_NAMES = new Set([
   'violet',
 ]);
 const PROFILE_NAMES = new Set(['clean', 'editorial', 'technical']);
+const STYLE_NAMES = new Set([
+  'clean-neutral',
+  'business-corporate',
+  'navy-ocean',
+  'dark-edgy',
+]);
 const RENDER_STRATEGIES = new Set(['default-only', 'user-switchable']);
 const DEFAULT_MODES = new Set(['light', 'dark']);
 const MODE_ROLES = ['surface', 'ink', 'accent', 'status', 'diagramSeries'];
@@ -20,20 +26,28 @@ export async function resolveTheme(selection = {}) {
   const renderStrategy = selection.renderStrategy ?? 'default-only';
   const warnings = [];
   let theme;
+  const hasLegacySelection = ['palette', 'visualProfile'].some(
+    (key) => selection[key] !== undefined,
+  );
+  if (hasLegacySelection) {
+    warnings.push(
+      'Palette and visual profile selection is deprecated; use a curated style.',
+    );
+  }
 
   if (selection.suppliedBundlePath !== undefined) {
     theme = await resolveSuppliedBundle(selection.suppliedBundlePath);
     if (
-      ['palette', 'visualProfile', 'artDirection', 'defaultMode'].some(
+      ['style', 'palette', 'visualProfile', 'artDirection', 'defaultMode'].some(
         (key) => selection[key] !== undefined,
       )
     ) {
       warnings.push(
-        'Supplied bundle wins over palette, visual profile, art direction, and default mode selections.',
+        'Supplied bundle wins over style, palette, visual profile, art direction, and default mode selections.',
       );
     }
   } else {
-    theme = await resolveNamedTheme(selection);
+    theme = await resolveNamedTheme(selection, warnings);
   }
 
   assertResolvedTheme(theme);
@@ -48,7 +62,49 @@ export async function resolveTheme(selection = {}) {
   };
 }
 
-async function resolveNamedTheme(selection) {
+async function resolveNamedTheme(selection, warnings) {
+  if (
+    selection.style !== undefined ||
+    (selection.palette === undefined && selection.visualProfile === undefined)
+  ) {
+    const styleName = selection.style ?? 'clean-neutral';
+    assertNamedSelection(styleName, STYLE_NAMES, 'style');
+    if (selection.style === undefined) {
+      warnings.push(
+        'No explicit style was selected; defaulted to clean-neutral.',
+      );
+    }
+    if (
+      selection.style !== undefined &&
+      (selection.palette !== undefined || selection.visualProfile !== undefined)
+    ) {
+      warnings.push(
+        'Curated style wins over deprecated palette and visual profile selections.',
+      );
+    }
+    const style = await loadBundledJson('styles', styleName);
+    assertStyle(style, styleName);
+    const theme = {
+      schemaVersion: 'explainer-kit.theme/v1',
+      name: style.name,
+      defaultMode: selection.defaultMode ?? style.defaultMode,
+      modes: structuredClone(style.modes),
+      provenance: { style: styleName, derived: false },
+      typography: structuredClone(style.typography),
+      spacing: structuredClone(style.spacing),
+      geometry: structuredClone(style.geometry),
+      elevation: structuredClone(style.elevation),
+      density: style.density,
+      motion: structuredClone(style.motion),
+      diagrams: structuredClone(style.diagrams),
+    };
+    if (selection.artDirection !== undefined) {
+      applyArtDirection(theme, selection.artDirection);
+    }
+    theme.bundleHash = canonicalHash(theme);
+    return theme;
+  }
+
   const paletteName = selection.palette ?? 'neutral';
   const profileName = selection.visualProfile ?? 'clean';
   assertNamedSelection(paletteName, PALETTE_NAMES, 'palette');
@@ -135,6 +191,7 @@ function assertSelection(selection) {
     throw new TypeError('Theme selection must be an object.');
   }
   const allowed = new Set([
+    'style',
     'palette',
     'visualProfile',
     'suppliedBundlePath',
@@ -158,6 +215,47 @@ function assertSelection(selection) {
   ) {
     throw new Error('Unsupported theme default mode.');
   }
+}
+
+function assertStyle(style, expectedName) {
+  const expectedKeys = [
+    'name',
+    'defaultMode',
+    'modes',
+    'typography',
+    'spacing',
+    'geometry',
+    'elevation',
+    'density',
+    'motion',
+    'diagrams',
+  ];
+  if (
+    !isObject(style) ||
+    style.name !== expectedName ||
+    !hasExactKeys(style, expectedKeys) ||
+    !DEFAULT_MODES.has(style.defaultMode) ||
+    !isObject(style.modes) ||
+    !hasExactKeys(style.modes, ['light', 'dark'])
+  ) {
+    throw new Error(`Bundled style ${expectedName} has an invalid shape.`);
+  }
+  for (const mode of Object.values(style.modes)) {
+    assertMode(mode);
+  }
+  assertProfile(
+    {
+      name: expectedName,
+      typography: style.typography,
+      spacing: style.spacing,
+      geometry: style.geometry,
+      elevation: style.elevation,
+      density: style.density,
+      motion: style.motion,
+      diagrams: style.diagrams,
+    },
+    expectedName,
+  );
 }
 
 function assertNamedSelection(value, allowed, label) {

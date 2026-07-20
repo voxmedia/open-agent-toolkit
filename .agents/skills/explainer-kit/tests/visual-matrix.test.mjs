@@ -15,6 +15,41 @@ import {
   selectReleaseVisualMatrix,
 } from '../scripts/render-qa.mjs';
 
+const RELEASE_STYLES = [
+  'clean-neutral',
+  'business-corporate',
+  'navy-ocean',
+  'dark-edgy',
+];
+
+test('curated style inventory renders every artifact class distinctly', async () => {
+  const styles = await jsonNames(new URL('../styles/', import.meta.url));
+  assert.deepEqual(styles, [...RELEASE_STYLES].sort());
+
+  const hashes = new Set();
+  for (const style of RELEASE_STYLES) {
+    const { theme } = await resolveTheme({ style });
+    hashes.add(theme.bundleHash);
+    for (const artifact of RELEASE_ARTIFACTS) {
+      const rendered = await renderArtifact({
+        recipeArtifact: artifact,
+        content: contentFor(artifact.id),
+        theme,
+        renderStrategy: 'default-only',
+      });
+      assert.deepEqual(
+        checkHtmlStructure({
+          id: `${style}:${artifact.type}`,
+          type: artifact.type,
+          html: rendered.html,
+        }),
+        { valid: true, issues: [] },
+      );
+    }
+  }
+  assert.equal(hashes.size, RELEASE_STYLES.length);
+});
+
 test('selects a bounded release matrix covering every palette and mode', () => {
   const matrix = selectReleaseVisualMatrix();
   const paletteCases = matrix.filter(({ axis }) => axis === 'palette-mode');
