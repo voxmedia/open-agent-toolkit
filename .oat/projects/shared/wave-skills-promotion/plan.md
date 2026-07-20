@@ -906,6 +906,8 @@ Source: operator direction after the Orc program: (1) recap belongs at PROGRAM s
 | p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md                      |
 | p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md                      |
 | p-rev3 | code     | passed          | 2026-07-20 | reviews/code-prev3-review-2026-07-20T143119Z.md (+ addendum 143712Z) |
+| p-rev4 | code     | fixes_completed | 2026-07-20 | reviews/code-prev4-review-2026-07-20T154506Z.md                      |
+| p-rev4 | code     | passed          | 2026-07-20 | reviews/code-prev4-review-round2-2026-07-20T154934Z.md               |
 | plan   | artifact | passed          | 2026-07-18 | -                                                                    |
 | spec   | artifact | pending         | -          | -                                                                    |
 | design | artifact | passed          | 2026-07-18 | -                                                                    |
