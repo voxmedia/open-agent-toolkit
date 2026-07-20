@@ -598,6 +598,7 @@ interface ProjectRecapManifest {
   source: {
     factBasePath: string;
     factBaseHash: string;
+    authorResultPaths?: string[];
   };
   theme: {
     path: string;
@@ -626,9 +627,25 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     );
   }
 
+  const requiredProvenancePaths = [
+    'run-request.json',
+    'source/content-approval.json',
+  ];
+  const recordedImmutablePaths = Object.keys(value.immutableHashes);
+  const missingLegacyPaths = requiredProvenancePaths.filter(
+    (relativePath) => !(relativePath in value.immutableHashes),
+  );
+  if (missingLegacyPaths.length > 0) {
+    throw new CliError(
+      `Selected project recap uses a legacy manifest missing immutable coverage for ${missingLegacyPaths.join(', ')}; regenerate the recap package before archival.`,
+    );
+  }
+
   const expectedImmutablePaths = new Set([
+    ...requiredProvenancePaths,
     value.source.factBasePath,
     'source/fact-base.md',
+    ...(value.source.authorResultPaths ?? []),
     value.theme.path,
     ...value.artifacts.flatMap((artifact) => [
       artifact.contentPath,
@@ -638,7 +655,6 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
         : []),
     ]),
   ]);
-  const recordedImmutablePaths = Object.keys(value.immutableHashes);
   if (
     expectedImmutablePaths.size === 0 ||
     expectedImmutablePaths.size !== recordedImmutablePaths.length ||
@@ -703,11 +719,13 @@ function isProjectRecapManifestV1(
     !hasExactKeys(
       value.source,
       ['factBasePath', 'factBaseHash', 'inputHashes'],
-      ['sourceRevision'],
+      ['sourceRevision', 'authorResultPaths'],
     ) ||
     !isSafeRelativePath(value.source.factBasePath) ||
     !isSha256(value.source.factBaseHash) ||
     !isHashMap(value.source.inputHashes) ||
+    (value.source.authorResultPaths !== undefined &&
+      !isUniqueSafePathArray(value.source.authorResultPaths)) ||
     (value.source.sourceRevision !== undefined &&
       !isNonEmptyString(value.source.sourceRevision)) ||
     !isRecord(value.theme) ||

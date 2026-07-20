@@ -38,6 +38,7 @@ export async function runExplainer(request, options = {}) {
     inputHashes: {},
     contentModels: [],
     contentPaths: new Map(),
+    authorResultPaths: [],
     theme: null,
     renderStrategy: run.request.theme.renderStrategy,
     rendered: [],
@@ -534,6 +535,9 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
       factBasePath: 'source/fact-base.json',
       factBaseHash: state.factBaseHash,
       inputHashes: state.inputHashes,
+      ...(state.authorResultPaths.length > 0 && {
+        authorResultPaths: state.authorResultPaths,
+      }),
     },
     theme: {
       path: 'theme.resolved.json',
@@ -614,8 +618,11 @@ function validateRecipeSources(recipe, binding) {
 
 async function immutableHashesFor(state) {
   const paths = [
+    'run-request.json',
     'source/fact-base.json',
     'source/fact-base.md',
+    'source/content-approval.json',
+    ...state.authorResultPaths,
     ...state.contentPaths.values(),
     ...(state.theme ? ['theme.resolved.json'] : []),
     ...state.artifacts

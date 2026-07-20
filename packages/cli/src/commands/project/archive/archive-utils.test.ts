@@ -67,8 +67,11 @@ describe('archive utils', () => {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
     const files = {
+      'run-request.json': '{"mode":"unattended"}\n',
       'source/fact-base.json': '{"claims":[]}\n',
       'source/fact-base.md': '# Facts\n',
+      'source/content-approval.json': '{"status":"approved"}\n',
+      'source/author/recap.json': '{"author":{"id":"fixture"}}\n',
       'source/content/recap.md': `# ${runName}\n`,
       'theme.resolved.json': '{"name":"neutral"}\n',
       'site/index.html': `<h1>${runName}</h1>\n`,
@@ -99,6 +102,7 @@ describe('archive utils', () => {
           factBasePath: 'source/fact-base.json',
           factBaseHash: immutableHashes['source/fact-base.json'],
           inputHashes: {},
+          authorResultPaths: ['source/author/recap.json'],
         },
         theme: {
           path: 'theme.resolved.json',
@@ -363,7 +367,7 @@ describe('archive utils', () => {
         exportRoot,
         manifest: {
           relativePath: 'manifest.json',
-          verifiedArtifactCount: 5,
+          verifiedArtifactCount: 8,
         },
       });
       await expect(
@@ -603,6 +607,45 @@ describe('archive utils', () => {
 
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
+
+  it.each(['run-request.json', 'source/content-approval.json'])(
+    'rejects legacy recap manifests that omit immutable %s coverage',
+    async (relativePath) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath);
+      const manifest = JSON.parse(
+        await readFile(recap.manifestPath, 'utf8'),
+      ) as {
+        immutableHashes: Record<string, string>;
+      };
+      delete manifest.immutableHashes[relativePath];
+      await writeFile(
+        recap.manifestPath,
+        `${JSON.stringify(manifest)}\n`,
+        'utf8',
+      );
+
+      await expect(
+        archiveProjectOnCompletion(
+          {
+            repoRoot,
+            projectPath,
+            projectName: 'demo',
+            projectsRoot: '.oat/projects/shared',
+            projectRecapRun: recap.relativeRunPath,
+            s3SyncOnComplete: false,
+          },
+          { timestamp: () => '2026-04-01T12:34:56Z' },
+        ),
+      ).rejects.toThrow(
+        new RegExp(`legacy.*${relativePath.replaceAll('.', '\\.')}`, 'i'),
+      );
+
+      await expect(access(projectPath)).resolves.toBeUndefined();
+    },
+  );
 
   it('rolls back only its recap export when the later archive copy fails', async () => {
     const repoRoot = await createRepoRoot();

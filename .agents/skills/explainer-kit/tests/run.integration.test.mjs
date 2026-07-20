@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   access,
   mkdir,
@@ -303,6 +304,18 @@ test('runs both canonical recipes config-free from directories without .oat file
       manifest.artifacts.every(({ status }) => status === 'built'),
       true,
     );
+    for (const relativePath of [
+      'run-request.json',
+      'source/content-approval.json',
+    ]) {
+      assert.equal(
+        manifest.immutableHashes[relativePath],
+        `sha256:${createHash('sha256')
+          .update(await readFile(join(result.runRoot, relativePath)))
+          .digest('hex')}`,
+        relativePath,
+      );
+    }
     assert.doesNotMatch(
       await readFile(join(result.runRoot, 'run-request.json'), 'utf8'),
       /Private transient direction/,

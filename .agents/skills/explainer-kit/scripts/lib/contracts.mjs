@@ -502,9 +502,17 @@ function validateCrossRecord(kind, value, context, errors) {
       );
     }
 
+    const requiredProvenance = [
+      'run-request.json',
+      'source/content-approval.json',
+    ];
     const expectedImmutable = new Set([
+      ...requiredProvenance,
       value.source?.factBasePath,
       'source/fact-base.md',
+      ...(Array.isArray(value.source?.authorResultPaths)
+        ? value.source.authorResultPaths
+        : []),
       value.theme?.path,
       ...(Array.isArray(value.artifacts)
         ? value.artifacts.flatMap((artifact) => [
@@ -520,6 +528,17 @@ function validateCrossRecord(kind, value, context, errors) {
     const recordedImmutable = isObject(value.immutableHashes)
       ? new Set(Object.keys(value.immutableHashes))
       : new Set();
+    const missingLegacyPaths = requiredProvenance.filter(
+      (path) => !recordedImmutable.has(path),
+    );
+    if (missingLegacyPaths.length > 0) {
+      add(
+        errors,
+        '$.immutableHashes',
+        'legacy-manifest-incomplete',
+        `Legacy manifest is missing immutable coverage for ${missingLegacyPaths.join(', ')}; regenerate the recap package before archival.`,
+      );
+    }
     if (
       expectedImmutable.size !== recordedImmutable.size ||
       [...expectedImmutable].some((path) => !recordedImmutable.has(path))
