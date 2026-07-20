@@ -97,6 +97,11 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
 10. **Integration gates after every fan-in:** they are the only detector for
     cumulative-timing defect classes. Never skip them because every lane passed
     independently; the wave-5 embed-teardown defect was caught only after fan-in.
+11. **Fix rounds are APPEND-ONLY:** never amend a reviewed SHA; amendment
+    invalidates stored review verdicts that cite that commit. Every fix-round brief
+    MUST state that fixes land in an append-only commit. A worker that refuses an
+    instruction to amend a reviewed SHA is honoring its role contract (Orc p10
+    precedent).
 
 Plus inherited invariants: commit-verification via `git log` before retrying after
 any ambiguous hook outcome; every agent runs the repo's formatter on markdown it
@@ -155,7 +160,12 @@ reconciliation that waives a source-plan requirement is a plan-gate Important
 
 ### Step 3: Scaffold the wrapper project
 
-1. `oat project new wave-N-execution --mode quick --no-commit`.
+1. Probe the installed scaffold interface first with `oat project new --help`.
+   If `--no-commit` is present, run
+   `oat project new wave-N-execution --mode quick --no-commit`. If the flag is
+   absent because of version skew, run the command without it, expect the scaffold
+   to auto-commit, record that generated commit, and land the wrapper artifacts in
+   a follow-up commit (Orc W1 scaffold evidence).
 2. **Verify scaffold substitution AND advance the lifecycle** in `state.md`.
    On oat ≥0.1.65, verify that the basic scaffold placeholders
    (`{ OAT_HILL_CHECKPOINTS }`, `{ OAT_PHASE }`, `{ OAT_WORKFLOW_MODE }`) were
@@ -268,10 +278,13 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   example: `pnpm format:fix`).
 - **Merge choreography:** after all group verdicts — serialized `git merge
 --no-ff` in plan order, rebasing each phase branch on the updated tip first
-  (rules 2–3). Immediately before EVERY `git merge`, run `pwd` and
-  `git branch --show-current` and assert that they identify the intended repo
-  root and integration branch; stop on either mismatch. This closes the
-  cwd-persistence wrong-branch failure observed in wave 5. Integration DoD gates
+  (rules 2–3). Compound the hard pre-merge guard and merge into ONE shell
+  invocation immediately before EVERY merge:
+  `cd /abs/repo/root && [ "$(git branch --show-current)" = "wave-N-execution" ] || exit 1 && git merge --no-ff …`.
+  The explicit `cd` repairs the healable cwd dimension; branch drift is
+  non-healable and hard-aborts. Advisory `pwd`/branch prints in separate
+  invocations proved worthless in the Orc W2 incident; this guard prevented two
+  repeats there, including p10. Integration DoD gates
   after fan-in run TO COMPLETION BEFORE any group bookkeeping edits start
   (DR-260714-integration-gates-run-before);
   then the group bookkeeping commit. Before dispatch, inspect every worktree's
