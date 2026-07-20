@@ -378,14 +378,19 @@ archive anything first.
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the
    program ledger records the merge (PR, SHA, completion-record link) and flips
-   the wave's plan rows to `done`. Optionally generate the program recap using
-   the mechanical explainer caller below.
+   the wave's plan rows to `done`. Per-wave recaps are default-OFF: run one only
+   on explicit operator request; otherwise record
+   `recap: deferred to program close` in the wave ledger. When this wave
+   completes the final pending wave, offer or run the program recap using the
+   mechanical explainer caller below. The program recap is generated from the
+   reconciled program artifact and ALL wave records.
 
-#### Optional program-recap explainer caller
+#### Program-close recap explainer caller
 
-The orchestrator owns fact-base synthesis. It synthesizes an
+The orchestrator owns fact-base synthesis. At program close it synthesizes an
 `explainer-kit.fact-base/v1` document from the reconciled execution-program
-artifact, wave summaries, and completion records. Its required keys are exactly:
+artifact, ALL wave summaries, and ALL completion records. Its required keys are
+exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose

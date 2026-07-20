@@ -104,18 +104,23 @@ target (same disclaimer as the plan indexes).
 2. Update the status ledger row: PR, merge SHA, completion-record link.
 3. Note next-wave unblocks ("W3 merged → W4 token-cost unblocked").
 4. Commit with the wave's closeout bookkeeping.
-5. An autonomous orchestrator NEVER silently drops the optional program recap.
-   Wave-close records exactly one disposition in the ledger: either run the
-   mechanical caller below and record its manifest `runId` and `outcome`, or add
-   `recap: not run — {reason}`. Silent discretion is indistinguishable from
-   oversight (Orc program-recap evidence).
+5. Default recap scope is the PROGRAM, not the individual wave. Until the wave
+   that completes the final pending wave, run a per-wave recap only on explicit
+   operator request; otherwise record `recap: deferred to program close` in that
+   wave's ledger row. At program close, offer or run the program-recap caller
+   below from the reconciled execution-program artifact and ALL wave records,
+   then record its manifest `runId` and `outcome` in the program ledger. If the
+   program recap is not run, record `recap: not run — {reason}` there. Every
+   optional step gets an explicit disposition; silence is indistinguishable
+   from oversight (Orc program-recap evidence).
 
 ### Program-close explainer caller
 
-At wave-close or program-close, the orchestrator owns fact-base synthesis. It
-synthesizes an `explainer-kit.fact-base/v1` document from the reconciled
-execution-program artifact, wave summaries, and completion records. Its required
-keys are exactly:
+At program close by default, or for a per-wave recap explicitly requested by the
+operator, the orchestrator owns fact-base synthesis. For the default program
+recap it synthesizes an `explainer-kit.fact-base/v1` document from the reconciled
+execution-program artifact, ALL wave summaries, and ALL completion records. Its
+required keys are exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
