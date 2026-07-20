@@ -1,0 +1,2332 @@
+<!doctype html>
+<!--
+  IDENTITY DATA-SYNCING — ENGINEERING EXPLAINER
+  Single self-contained HTML file (engineering-explainer house style, dark-technical palette).
+  Source of truth: .oat/projects/shared/data-syncing/{discovery,spec,design,plan}.md + research/.
+  Status: documents the PRE-IMPLEMENTATION design (plan complete, implementation in progress).
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Identity data-syncing — how the sync plane works</title>
+    <meta
+      name="description"
+      content="An engineer's tour of the one-way Firebase identity sync plane built for the Identity Store Split: capture, policy, queues, ledger, backfill, reconciliation, pruning, and cutover."
+    />
+    <style>
+      /* ===== PALETTE: executive light ===== */
+      :root {
+        --bg: #f4f6f9;
+        --bg-elev: #ffffff;
+        --bg-elev-2: #eef1f5;
+        --border: #dde2ea;
+        --border-soft: #e9edf2;
+        --text: #16202e;
+        --text-dim: #4b5563;
+        --text-muted: #8a94a3;
+        --accent: #1b4f8a;
+        --accent-bright: #2f6fce;
+        --accent-dim: rgba(27, 79, 138, 0.08);
+        --accent-edge: rgba(27, 79, 138, 0.35);
+        --accent-glow: rgba(27, 79, 138, 0.1);
+        --warn: #b45309;
+        --warn-bg: rgba(180, 83, 9, 0.06);
+        --code-bg: #f1f4f8;
+        --serif:
+          ui-serif, 'Source Serif Pro', 'Iowan Old Style', Georgia, serif;
+        --sans:
+          -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', Roboto,
+          sans-serif;
+        --mono: 'JetBrains Mono', 'SF Mono', 'Menlo', 'Consolas', monospace;
+      }
+
+      /* ===== LAYOUT (locked house style) ===== */
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font-family: var(--sans);
+        margin: 0;
+        padding: 0;
+        line-height: 1.65;
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      ::selection {
+        background: var(--accent-dim);
+        color: var(--accent-bright);
+      }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 220px minmax(0, 1fr) 380px;
+        gap: 2.5rem;
+        max-width: 1340px;
+        margin: 0 auto;
+        padding: 0 2rem;
+      }
+
+      .toc {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        padding: 3rem 0 2rem;
+        height: 100vh;
+        overflow-y: auto;
+        font-size: 0.85rem;
+      }
+      .toc-brand {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        color: var(--text-muted);
+        margin-bottom: 1.2rem;
+        padding-bottom: 0.8rem;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      .toc-brand .dot {
+        display: inline-block;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        margin-right: 0.5rem;
+        box-shadow: 0 0 8px var(--accent-glow);
+        vertical-align: middle;
+      }
+      .toc ol {
+        list-style: none;
+        counter-reset: toc;
+        padding: 0;
+        margin: 0;
+      }
+      .toc a {
+        counter-increment: toc;
+        display: block;
+        padding: 0.4rem 0 0.4rem 0.85rem;
+        color: var(--text-dim);
+        text-decoration: none;
+        border-left: 2px solid transparent;
+        transition:
+          color 0.15s,
+          border-color 0.15s;
+        line-height: 1.4;
+      }
+      .toc a::before {
+        content: counter(toc, decimal-leading-zero) '  ';
+        color: var(--text-muted);
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        font-variant-numeric: tabular-nums;
+      }
+      .toc a:hover {
+        color: var(--text);
+      }
+      .toc a.active {
+        color: var(--accent);
+        border-left-color: var(--accent);
+      }
+      .toc a.active::before {
+        color: var(--accent);
+      }
+
+      .body {
+        max-width: 720px;
+        padding: 4rem 0 6rem;
+      }
+      header.intro {
+        margin-bottom: 3rem;
+        padding-bottom: 2rem;
+        border-bottom: 1px solid var(--border-soft);
+      }
+      header.intro .eyebrow {
+        color: var(--accent);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        margin-bottom: 1rem;
+      }
+      h1 {
+        font-family: var(--serif);
+        font-size: 2.8rem;
+        line-height: 1.1;
+        font-weight: 600;
+        margin: 0 0 1rem;
+        letter-spacing: -0.015em;
+        color: var(--text);
+      }
+      .deck {
+        color: var(--text-dim);
+        font-size: 1.15rem;
+        line-height: 1.55;
+        max-width: 620px;
+        margin: 0;
+      }
+      .byline {
+        margin-top: 1.5rem;
+        font-family: var(--mono);
+        font-size: 0.75rem;
+        color: var(--text-muted);
+        display: flex;
+        gap: 1.5rem;
+        flex-wrap: wrap;
+      }
+      .byline span {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.4rem;
+      }
+      .byline strong {
+        color: var(--text-dim);
+        font-weight: 500;
+      }
+
+      section {
+        margin: 4rem 0;
+        scroll-margin-top: 2rem;
+      }
+      section .num {
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--accent);
+        text-transform: uppercase;
+        letter-spacing: 0.16em;
+        margin-bottom: 0.6rem;
+        display: block;
+      }
+      h2 {
+        font-family: var(--serif);
+        font-size: 1.85rem;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        margin: 0 0 0.5rem;
+        line-height: 1.2;
+        color: var(--text);
+      }
+      h2 + .lede {
+        color: var(--text-dim);
+        font-size: 1.02rem;
+        margin: 0 0 1.5rem;
+        line-height: 1.55;
+      }
+      h3 {
+        font-family: var(--sans);
+        font-size: 1.05rem;
+        font-weight: 600;
+        margin: 2rem 0 0.75rem;
+        color: var(--text);
+        letter-spacing: -0.003em;
+      }
+      h3 .substep {
+        color: var(--text-muted);
+        font-family: var(--mono);
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        margin-right: 0.5rem;
+        font-weight: 500;
+      }
+      p {
+        margin: 0.85rem 0;
+        color: var(--text);
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+        border-bottom: 1px dotted var(--accent-edge);
+        transition: border-color 0.15s;
+      }
+      a:hover {
+        border-bottom-color: var(--accent);
+      }
+
+      p code,
+      li code,
+      td code {
+        font-family: var(--mono);
+        font-size: 0.84em;
+        background: var(--bg-elev);
+        border: 1px solid var(--border-soft);
+        padding: 0.08em 0.4em;
+        border-radius: 4px;
+        color: var(--accent);
+        white-space: nowrap;
+      }
+
+      ul,
+      ol {
+        padding-left: 1.4rem;
+        margin: 0.8rem 0;
+      }
+      li {
+        margin: 0.35rem 0;
+        color: var(--text);
+      }
+      ul li::marker {
+        color: var(--text-muted);
+      }
+
+      .snippet {
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        margin: 1.4rem 0;
+        overflow: hidden;
+        background: var(--code-bg);
+      }
+      .snippet-toggle {
+        width: 100%;
+        background: var(--bg-elev);
+        color: var(--text-dim);
+        border: none;
+        border-bottom: 1px solid transparent;
+        padding: 0.7rem 1rem;
+        text-align: left;
+        cursor: pointer;
+        font-family: var(--sans);
+        font-size: 0.84rem;
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        transition: background 0.12s;
+      }
+      .snippet-toggle:hover {
+        background: var(--bg-elev-2);
+      }
+      .snippet-toggle::before {
+        content: '▸';
+        color: var(--text-muted);
+        transition: transform 0.18s;
+        font-size: 0.8rem;
+      }
+      .snippet.open .snippet-toggle::before {
+        transform: rotate(90deg);
+      }
+      .snippet.open .snippet-toggle {
+        border-bottom-color: var(--border);
+      }
+      .snippet-toggle .label {
+        color: var(--text);
+        font-weight: 500;
+      }
+      .snippet-toggle .meta {
+        color: var(--text-muted);
+        margin-left: auto;
+        font-family: var(--mono);
+        font-size: 0.73rem;
+      }
+      .snippet pre {
+        margin: 0;
+        padding: 1.1rem 1rem;
+        font-family: var(--mono);
+        font-size: 0.82rem;
+        line-height: 1.65;
+        color: var(--text);
+        overflow-x: auto;
+        background: var(--code-bg);
+      }
+      .snippet:not(.open) pre {
+        display: none;
+      }
+
+      .tok-key {
+        color: #6f42c1;
+      }
+      .tok-type {
+        color: var(--accent);
+      }
+      .tok-str {
+        color: #0e7490;
+      }
+      .tok-num {
+        color: #b45309;
+      }
+      .tok-com {
+        color: var(--text-muted);
+        font-style: italic;
+      }
+      .tok-punct {
+        color: var(--text-dim);
+      }
+      .tok-fn {
+        color: #b7791f;
+      }
+      .tok-prop {
+        color: #6d5bc0;
+      }
+      .tok-kw {
+        color: #cf222e;
+      }
+
+      .callout {
+        border-left: 3px solid var(--warn);
+        background: var(--warn-bg);
+        padding: 0.85rem 1.1rem;
+        margin: 1.4rem 0;
+        font-size: 0.96rem;
+        border-radius: 0 6px 6px 0;
+      }
+      .callout .callout-label {
+        color: var(--warn);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+        margin-bottom: 0.3rem;
+        display: block;
+      }
+      .callout.info {
+        border-left-color: var(--accent);
+        background: rgba(27, 79, 138, 0.06);
+      }
+      .callout.info .callout-label {
+        color: var(--accent);
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 1.2rem 0;
+        font-size: 0.92rem;
+        border: 1px solid var(--border);
+        border-radius: 8px;
+        overflow: hidden;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 0.6rem 0.8rem;
+        border-bottom: 1px solid var(--border-soft);
+        vertical-align: top;
+      }
+      th {
+        background: var(--bg-elev);
+        color: var(--text-dim);
+        font-weight: 500;
+        font-size: 0.78rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+      tr:last-child td {
+        border-bottom: none;
+      }
+      tbody tr:hover {
+        background: var(--bg-elev);
+      }
+
+      aside.diagram-rail {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        padding: 4rem 0 2rem;
+        height: 100vh;
+      }
+      .diagram-card {
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 1.2rem;
+      }
+      .diagram-label {
+        font-family: var(--mono);
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--text-muted);
+        margin-bottom: 0.35rem;
+      }
+      .diagram-title {
+        color: var(--text);
+        font-size: 0.95rem;
+        font-weight: 600;
+        margin-bottom: 0.9rem;
+        min-height: 1.3em;
+      }
+      .diagram-svg {
+        background: var(--code-bg);
+        border: 1px solid var(--border-soft);
+        border-radius: 8px;
+        padding: 0.8rem;
+      }
+      .diagram-svg svg {
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+      .step-caption {
+        margin-top: 0.9rem;
+        padding-top: 0.8rem;
+        border-top: 1px dashed var(--border);
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        line-height: 1.5;
+        color: var(--text-dim);
+        min-height: 2.5em;
+      }
+      .step-caption .step-n {
+        color: var(--accent);
+        margin-right: 0.5rem;
+      }
+      .legend {
+        margin-top: 0.9rem;
+        padding-top: 0.8rem;
+        border-top: 1px dashed var(--border);
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        color: var(--text-muted);
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+      .legend .item {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.3rem;
+      }
+      .legend .swatch {
+        display: inline-block;
+        width: 10px;
+        height: 10px;
+        border-radius: 2px;
+      }
+      .legend .swatch.active {
+        background: var(--accent);
+        box-shadow: 0 0 6px var(--accent-glow);
+      }
+      .legend .swatch.idle {
+        background: var(--bg-elev-2);
+        border: 1px solid var(--border);
+      }
+
+      .node rect {
+        fill: var(--bg-elev-2);
+        stroke: var(--border);
+        stroke-width: 1;
+        transition: all 0.45s cubic-bezier(0.4, 0, 0.2, 1);
+      }
+      .node text {
+        fill: var(--text-dim);
+        font-family: var(--sans);
+        font-size: 9.5px;
+        font-weight: 500;
+        transition: fill 0.45s;
+        text-anchor: middle;
+        dominant-baseline: middle;
+        pointer-events: none;
+      }
+      .node text.sub {
+        font-size: 7.5px;
+        fill: var(--text-muted);
+      }
+      .node.active rect {
+        fill: var(--accent-dim);
+        stroke: var(--accent);
+        stroke-width: 1.5;
+        filter: drop-shadow(0 0 8px var(--accent-glow));
+      }
+      .node.active text {
+        fill: var(--accent);
+      }
+      .node.active text.sub {
+        fill: var(--accent-bright);
+      }
+
+      .edge {
+        stroke: var(--border);
+        stroke-width: 1.1;
+        fill: none;
+        transition:
+          stroke 0.45s,
+          stroke-width 0.45s;
+        marker-end: url(#arrow);
+      }
+      .edge.active {
+        stroke: var(--accent);
+        stroke-width: 1.8;
+        marker-end: url(#arrow-active);
+      }
+      .edge.dashed {
+        stroke-dasharray: 4 3;
+      }
+      .edge-label {
+        fill: var(--text-muted);
+        font-family: var(--mono);
+        font-size: 7.5px;
+        transition: fill 0.45s;
+        pointer-events: none;
+      }
+      .edge-label.active {
+        fill: var(--accent);
+      }
+
+      .pill {
+        display: inline-block;
+        font-family: var(--mono);
+        font-size: 0.7rem;
+        padding: 0.15rem 0.5rem;
+        border-radius: 99px;
+        background: var(--bg-elev);
+        border: 1px solid var(--border);
+        color: var(--text-dim);
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+      }
+      .pill.accent {
+        color: var(--accent);
+        border-color: var(--accent-edge);
+      }
+      .pill.warn {
+        color: var(--warn);
+        border-color: rgba(180, 83, 9, 0.45);
+      }
+
+      footer.foot {
+        margin-top: 5rem;
+        padding-top: 2rem;
+        border-top: 1px solid var(--border-soft);
+        font-family: var(--mono);
+        font-size: 0.74rem;
+        color: var(--text-muted);
+      }
+      .diagram-mobile {
+        display: none;
+        margin: 1.5rem 0;
+      }
+
+      @media (max-width: 1180px) {
+        .layout {
+          grid-template-columns: 200px minmax(0, 1fr);
+          gap: 2rem;
+        }
+        aside.diagram-rail {
+          display: none;
+        }
+        .diagram-mobile {
+          display: block;
+        }
+      }
+      @media (max-width: 880px) {
+        .layout {
+          grid-template-columns: 1fr;
+          gap: 0;
+          padding: 0 1.2rem;
+        }
+        .toc {
+          position: static;
+          height: auto;
+          padding: 1.5rem 0 1rem;
+          border-bottom: 1px solid var(--border-soft);
+        }
+        .toc-detail {
+          display: none;
+        }
+        .toc-summary {
+          display: block;
+          font-size: 0.85rem;
+          color: var(--accent);
+          cursor: pointer;
+        }
+        .toc.open ol {
+          display: block;
+          margin-top: 1rem;
+        }
+        .toc:not(.open) ol {
+          display: none;
+        }
+        h1 {
+          font-size: 2.1rem;
+        }
+        h2 {
+          font-size: 1.5rem;
+        }
+        .body {
+          padding: 1.5rem 0 4rem;
+        }
+        .deck {
+          font-size: 1.05rem;
+        }
+      }
+      @media (min-width: 881px) {
+        .toc-summary {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="layout">
+      <!-- ============== TOC ============== -->
+      <nav class="toc" id="toc">
+        <div class="toc-brand">
+          <span class="dot"></span>Identity data-syncing
+        </div>
+        <span
+          class="toc-summary"
+          onclick="document.getElementById('toc').classList.toggle('open')"
+          >☰ Sections</span
+        >
+        <ol class="toc-detail">
+          <li><a href="#why" data-target="why">Why this exists</a></li>
+          <li>
+            <a href="#problem" data-target="problem"
+              >The shape of the problem</a
+            >
+          </li>
+          <li>
+            <a href="#architecture" data-target="architecture"
+              >Architecture at a glance</a
+            >
+          </li>
+          <li>
+            <a href="#policy" data-target="policy"
+              >Policy: who syncs, what travels</a
+            >
+          </li>
+          <li>
+            <a href="#firestore-write" data-target="firestore-write"
+              >Life of a Firestore write</a
+            >
+          </li>
+          <li>
+            <a href="#auth-mutation" data-target="auth-mutation"
+              >Life of an Auth mutation</a
+            >
+          </li>
+          <li>
+            <a href="#failure" data-target="failure">Life of a failure</a>
+          </li>
+          <li>
+            <a href="#seed" data-target="seed"
+              >The seed: backfill &amp; the no-gap invariant</a
+            >
+          </li>
+          <li>
+            <a href="#reconcile" data-target="reconcile"
+              >Reconciliation &amp; pruning</a
+            >
+          </li>
+          <li>
+            <a href="#readiness" data-target="readiness"
+              >Readiness gates &amp; passivity</a
+            >
+          </li>
+          <li><a href="#cutover" data-target="cutover">Cutover day</a></li>
+          <li>
+            <a href="#glossary" data-target="glossary"
+              >Glossary &amp; going deeper</a
+            >
+          </li>
+        </ol>
+      </nav>
+
+      <!-- ============== BODY ============== -->
+      <main class="body">
+        <header class="intro">
+          <div class="eyebrow">An engineer's tour · Identity Store Split</div>
+          <h1>The identity sync plane, end to end</h1>
+          <p class="deck">
+            Vox Media is splitting its one shared Firebase identity project in
+            two: one company keeps it, the other stands up a new one. Until
+            cutover, the source project stays the truth — and a new sync plane
+            inside <code>identity-cloud-functions</code> keeps the destination
+            continuously current. This is how it captures every write, survives
+            every failure, seeds the baseline, repairs the drift, and proves
+            it's safe to flip.
+          </p>
+          <div class="byline">
+            <span><strong>Read time</strong> ~15 min</span>
+            <span><strong>Audience</strong> engineers</span>
+            <span
+              ><strong>Status</strong> design complete · implementation in
+              progress</span
+            >
+            <span><strong>Last touched</strong> 2026-06-09</span>
+          </div>
+        </header>
+
+        <!-- ============ 01 WHY ============ -->
+        <section
+          id="why"
+          data-active-nodes="auth-src,identity-db,nymag-db,auth-dst,fs-dst"
+          data-active-edges=""
+          data-title="Two projects, one-way sync"
+          data-caption="Source stays the truth. Destination receives a continuously-current copy until cutover."
+        >
+          <span class="num">Section 01</span>
+          <h2>Why this exists</h2>
+          <p class="lede">
+            Vox Media is splitting. The brands can share a company history —
+            they can't share a Firebase project.
+          </p>
+
+          <p>
+            Today, every Vox Media brand authenticates against one shared
+            Firebase project, <code>vox-media-identity</code>: one Auth pool of
+            roughly <strong>4.7 million users</strong>, plus named Firestore
+            databases (<code>identity</code>, <code>nymag</code>,
+            <code>eater</code>, <code>games</code>) holding profile metadata,
+            login history, entitlements, and operational queues. Two groupings
+            are splitting apart: <strong>SpinCo</strong> — New York Magazine
+            (nymag.com, The Cut, Vulture, Curbed, Grub Street, Strategist,
+            Intelligencer) plus Vox.com and their apps — and
+            <strong>PubCo</strong> — Eater, The Verge, and SB Nation plus their
+            apps (now PMX, a PMC subsidiary). One grouping keeps
+            <code>vox-media-identity</code>; the other stands up a new Firebase
+            project. Which company stays and which moves is not yet decided —
+            this explainer walks one open direction,
+            <strong>SpinCo moves</strong>, as a worked example; the mirror case
+            (PubCo moves) is symmetric, swapping which side's clients flip.
+          </p>
+
+          <p>
+            A bulk export/import alone can't do this. Users keep logging in,
+            changing emails, buying subscriptions, and deleting accounts between
+            any snapshot and the actual cutover. So this project builds a
+            <strong>live, one-way sync plane</strong>: every SpinCo-applicable
+            write to the source project mirrors into the destination,
+            continuously, until cutover day. The non-negotiables, fixed during
+            discovery:
+          </p>
+
+          <ul>
+            <li>
+              <strong>UIDs are preserved exactly.</strong> Duet sessions, Coral,
+              Jukebox, Supporting Cast, and every Firestore document ID key off
+              the Firebase UID. A changed UID breaks everything downstream.
+            </li>
+            <li>
+              <strong>Sync is one-way, source → destination.</strong> The old
+              project remains the source of truth until cutover. There is no
+              reverse sync — not even as a rollback mechanism.
+            </li>
+            <li>
+              <strong>Sync failures never block source writes.</strong> A
+              destination outage must be invisible to a user logging in to
+              nymag.com.
+            </li>
+            <li>
+              <strong>But every failure is observable.</strong> Non-blocking
+              must not mean silent. Every failed mirror lands somewhere an
+              operator can inspect and replay it.
+            </li>
+          </ul>
+
+          <div class="callout info">
+            <span class="callout-label">Scope boundary</span>
+            This workstream owns the sync plane in
+            <code>identity-cloud-functions</code>: capture, policy, queues,
+            ledger, backfill tooling, reconciliation, pruning, and readiness
+            checks. Destination project provisioning, Duet's env swap, NYMag's
+            app release, and legal sign-off are gates the same operator
+            satisfies — but they're not code in this repo.
+          </div>
+        </section>
+
+        <!-- ============ 02 PROBLEM ============ -->
+        <section
+          id="problem"
+          data-active-nodes="duet,nymweb,nymapp,handlers,auth-src,identity-db,nymag-db"
+          data-active-edges="e-duet-id,e-web-handlers,e-app-nymag,e-login"
+          data-title="Many writers, one pool"
+          data-caption="Duet writes identity directly. NYMag web calls this repo's functions. The NYMag app writes nymag/delete_users from the device."
+        >
+          <span class="num">Section 02</span>
+          <h2>The shape of the problem</h2>
+          <p class="lede">
+            Three facts make this harder than "add a hook to the login handler"
+            — and each one shaped the architecture.
+          </p>
+
+          <h3>
+            <span class="substep">Fact 1</span>Most identity writes don't come
+            from this repo
+          </h3>
+          <p>
+            Research across the codebases found that <strong>Duet</strong> (the
+            web platform behind vox.com and the network sites) writes
+            <code>user_metadata</code>, <code>user_profiles</code>,
+            <code>fcm_tokens</code>, <code>promotions</code>, and entitlement
+            grants directly into the <code>identity</code> database with its own
+            Admin SDK credentials — never passing through a handler here.
+            <strong>NYMag web</strong> (a separate Amphora stack, not Duet)
+            calls this repo's <code>processLogin</code> and
+            <code>sendEmail</code> functions. And the
+            <strong>NYMag mobile app</strong> writes
+            <code>delete_users/{uid}</code> into the named
+            <code>nymag</code> database straight from the device via the client
+            Firestore SDK. Any design that only instruments this repo's handlers
+            silently misses most of the data.
+          </p>
+
+          <h3>
+            <span class="substep">Fact 2</span>Users aren't labeled by brand
+          </h3>
+          <p>
+            A <code>user_metadata</code> document is keyed by UID, not brand.
+            One document can carry vox.com membership entitlements
+            <em>and</em> SB Nation community data. Vox's paying
+            <em>members</em> are identifiable
+            (<code>entitlements.vox_memberships</code>) — but that signal covers
+            members only, not the full vox.com population, and NYMag users
+            aren't attributable either (Chorus-era web accounts have no per-site
+            login attribution). No brand's full population is positively
+            filterable, so "sync only SpinCo users" is partly impossible: the
+            design has to treat <em>filtering</em> as policy with fallbacks —
+            broad copy plus best-effort prune — not as a clean predicate.
+          </p>
+
+          <h3>
+            <span class="substep">Fact 3</span>Auth changes can be invisible
+          </h3>
+          <p>
+            Firebase offers no second-gen trigger for Auth record updates. A
+            user changing their password or email through the client SDK touches
+            no code this repo controls and no Firestore document. Whatever the
+            design does, some class of change can only be caught by
+            <em>periodically comparing</em> source and destination — there is no
+            incremental Auth export.
+          </p>
+
+          <div class="callout">
+            <span class="callout-label">The forcing function</span>
+            Fact 1 forces database-level capture (triggers, not handler hooks).
+            Fact 2 forces an explicit, auditable policy layer. Fact 3 forces a
+            reconciliation backstop. The whole architecture falls out of these
+            three.
+          </div>
+        </section>
+
+        <!-- ============ 03 ARCHITECTURE ============ -->
+        <section
+          id="architecture"
+          data-active-nodes="capture,queues,control,recon,backfill"
+          data-active-edges="e-id-cap,e-cap-q"
+          data-title="Three planes"
+          data-caption="Source data plane · destination data plane · control plane. Control state lives OUTSIDE the captured databases."
+        >
+          <span class="num">Section 03</span>
+          <h2>Architecture at a glance</h2>
+          <p class="lede">
+            A trigger-first hybrid: broad Firestore triggers for what triggers
+            can see, queued write-through for what they can't, reconciliation
+            for what nothing can see live.
+          </p>
+
+          <p>The design splits the world into three durable planes:</p>
+          <ul>
+            <li>
+              <strong>Source data plane</strong> — the existing project's Auth
+              pool and named Firestore databases. Untouched semantics; still the
+              truth. (Beyond Auth + the named DBs, two adjacent surfaces sit out
+              of this sync's scope: SB Nation's separate Firebase
+              <strong>Data Connect</strong> SQL database for sports data, on the
+              PubCo/SBN side, and a standing BigQuery export of
+              <code>user_metadata</code> — see Section 08.)
+            </li>
+            <li>
+              <strong>Destination data plane</strong> — the new destination
+              project's Auth and Firestore, treated as a
+              <em>passive sink</em> during the sync window.
+            </li>
+            <li>
+              <strong>Control plane</strong> — sync policy, the failure ledger,
+              watermarks, tombstones, manifests, and readiness records. It lives
+              in a <strong>separate sync-control datastore</strong>,
+              deliberately outside the captured databases — because a trigger
+              that can see its own bookkeeping writes is a feedback loop.
+            </li>
+          </ul>
+
+          <p>
+            The moving parts, in build order (the plan's six phases): the
+            <strong>policy layer and control plane</strong> first (one policy
+            authority consulted by everything, plus the ledger and bookkeeping
+            models), then the <strong>queue/worker layer</strong> (Firebase task
+            queue functions backed by Cloud Tasks), then the
+            <strong>capture layer</strong> (broad
+            <code>onDocumentWritten</code> triggers on <code>identity</code> and
+            <code>nymag</code>, plus enqueue hooks in repo-owned handlers)
+            together with the <strong>destination writer</strong> (idempotent,
+            UID-preserving), then <strong>backfill tooling</strong>, the
+            <strong>reconciliation &amp; pruning layer</strong>, and finally
+            <strong>readiness/cutover controls</strong>.
+          </p>
+
+          <p>
+            Why trigger-first? Because it was <em>proven</em> before it was
+            chosen. A staging spike (T0.1) deployed a v2 trigger bound to the
+            named <code>identity</code> database, observed live events with
+            correct context at ~1.2s steady-state latency, and — usefully —
+            watched a 10-write burst arrive complete but
+            <strong>out of order</strong>. That single observation is why
+            idempotency keys and source-event-time conflict resolution are
+            load-bearing requirements, not nice-to-haves.
+          </p>
+
+          <div class="callout info">
+            <span class="callout-label">Queue choice</span>
+            Cloud Tasks won over Pub/Sub deliberately: per-queue
+            rate/concurrency limits fit the per-provider throttling needs, and
+            nothing here needs fan-out. Cloud Tasks' one gap — it
+            <em>deletes</em> tasks after retry exhaustion, leaving no failure
+            inventory — is closed by the ledger rule in Section 07.
+          </div>
+        </section>
+
+        <!-- ============ 04 POLICY ============ -->
+        <section
+          id="policy"
+          data-active-nodes="capture,control"
+          data-active-edges="e-cap-ledger"
+          data-title="Policy decides"
+          data-caption="One SyncPolicyVersion drives live sync, backfill, reconciliation, AND pruning. Unknown surfaces fail closed."
+        >
+          <span class="num">Section 04</span>
+          <h2>Policy: who syncs, what travels</h2>
+          <p class="lede">
+            Filtering has two independent axes — and conflating them was an
+            early design bug that discovery caught and fixed.
+          </p>
+
+          <p>
+            <strong>Axis 1 — user/record selection:</strong> which documents and
+            Auth records sync at all.
+            <strong>Axis 2 — field-level redaction:</strong> which fields
+            <em>inside</em> a selected document travel. They're separate because
+            of the mixed-document hazard: even under the narrowest selection, a
+            SpinCo user's <code>user_metadata</code> doc can carry
+            <code>siteData.sbnation_com</code> — PubCo data that shouldn't leak
+            into the destination project unexamined.
+          </p>
+
+          <p>
+            Every surface (a database/path/operation family) gets exactly one
+            mode in the active policy:
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Mode</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><code>selective</code></td>
+                <td>
+                  Sync only records matching the brand predicate (e.g. Vox
+                  paying <em>members</em> via entitlements — a member-only
+                  signal, not a full-population filter).
+                </td>
+              </tr>
+              <tr>
+                <td><code>mirror_time_redact</code></td>
+                <td>Sync the record, strip named fields at write time.</td>
+              </tr>
+              <tr>
+                <td><code>broad</code></td>
+                <td>
+                  Sync everything — requires a recorded legal approval
+                  reference.
+                </td>
+              </tr>
+              <tr>
+                <td><code>copy_then_prune</code></td>
+                <td>
+                  Copy broadly now, prune over-copy in the destination before
+                  cutover. Also legal-gated.
+                </td>
+              </tr>
+              <tr>
+                <td><code>excluded</code></td>
+                <td>
+                  Never copy. Games, Eater data, Chorus migration collections.
+                  Static — never relies on pruning.
+                </td>
+              </tr>
+              <tr>
+                <td><code>expected_drift</code></td>
+                <td>
+                  Differences here are known and accepted (deliberately unsynced
+                  state); parity checks record them instead of flagging
+                  failures.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            Three rules give the policy teeth. First,
+            <strong>exactly one policy version is active</strong> per
+            source/destination pair, and broad modes require a recorded
+            <code>legalApprovalRef</code> wherever PubCo PII can enter the
+            destination. Second,
+            <strong
+              >workers re-resolve the active policy at execution time</strong
+            >
+            — a task captured under a looser policy cannot mirror a field the
+            policy has since forbidden. Third,
+            <strong>unknown surfaces fail closed</strong>: when the broad
+            trigger sees a collection nobody classified (say, Duet ships a new
+            one next quarter), it records <code>policy_unknown</code> and
+            production readiness blocks until someone classifies it.
+          </p>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >SyncPolicyVersion — the one policy authority</span
+              ><span class="meta">TypeScript · design.md</span>
+            </button>
+            <pre><span class="tok-key">interface</span> <span class="tok-type">SyncPolicyVersion</span> {
+  <span class="tok-prop">policyId</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">sourceProjectId</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">destinationProjectId</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">status</span>: <span class="tok-str">"draft"</span> | <span class="tok-str">"active"</span> | <span class="tok-str">"retired"</span>;
+  <span class="tok-prop">legalApprovalRef</span>?: <span class="tok-type">string</span>;
+  <span class="tok-prop">surfaces</span>: <span class="tok-type">SyncSurfacePolicy</span>[];
+}
+
+<span class="tok-key">interface</span> <span class="tok-type">SyncSurfacePolicy</span> {
+  <span class="tok-prop">surfaceId</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">database</span>?: <span class="tok-type">string</span>;
+  <span class="tok-prop">pathPattern</span>?: <span class="tok-type">string</span>;
+  <span class="tok-prop">mode</span>: <span class="tok-str">"selective"</span> | <span class="tok-str">"broad"</span> | <span class="tok-str">"copy_then_prune"</span>
+      | <span class="tok-str">"mirror_time_redact"</span> | <span class="tok-str">"excluded"</span> | <span class="tok-str">"expected_drift"</span>;
+  <span class="tok-prop">selectionPredicate</span>?: <span class="tok-type">BrandPredicate</span>;
+  <span class="tok-prop">redactionRules</span>?: <span class="tok-type">RedactionRule</span>[];
+  <span class="tok-prop">pruneRules</span>?: <span class="tok-type">PruneRule</span>[];
+  <span class="tok-prop">legalApprovalRef</span>?: <span class="tok-type">string</span>;  <span class="tok-com">// required for broad / copy_then_prune</span>
+}</pre>
+          </div>
+
+          <div class="callout">
+            <span class="callout-label"
+              >Why copy-then-prune is a mode, not a failure</span
+            >
+            NYMag's unattributable residual population makes perfect mirror-time
+            filtering impossible for some surfaces. The accepted stance: prefer
+            selective sync where the predicate is clean, fall back to broad copy
+            + destination-side pruning where it isn't — provided the over-copy
+            is legally approved, visible, bounded, and pruned before cutover.
+            Reconciliation's over-copy detection feeds the prune list.
+          </div>
+        </section>
+
+        <!-- ============ 05 FIRESTORE WRITE ============ -->
+        <section
+          id="firestore-write"
+          data-active-nodes="identity-db,nymag-db,capture,fs-dst"
+          data-active-edges="e-id-cap,e-nymag-cap,e-cap-fsdst"
+          data-title="Life of a Firestore write"
+          data-caption="Any writer → named DB → broad trigger → policy → idempotent destination mirror. ~1.2s steady-state in staging."
+        >
+          <span class="num">Section 05</span>
+          <h2>Life of a Firestore write</h2>
+          <p class="lede">
+            The mainline flow — and the one that catches Duet's writes without
+            Duet knowing the sync plane exists.
+          </p>
+
+          <p>
+            A write lands in the source <code>identity</code> database. Maybe
+            <code>processLogin</code> stamped a login origin; maybe Duet granted
+            an entitlement; maybe the NYMag app queued a deletion in
+            <code>nymag</code>. The writer doesn't matter — that's the point.
+            The flow:
+          </p>
+
+          <ol>
+            <li>
+              The <strong>broad trigger</strong> for that database fires
+              (<code>onDocumentWritten</code>, catch-all path, one trigger per
+              in-scope named DB: <code>identity</code> and <code>nymag</code>).
+              It normalizes the event into a <code>SourceMutation</code> —
+              database, path, operation, event ID, source event time,
+              before/after existence.
+            </li>
+            <li>
+              The <strong>policy layer</strong> classifies the path.
+              <code>excluded</code> → drop. Unknown →
+              <code>policy_unknown</code> record, no destination write. In-scope
+              → apply selection and redaction.
+            </li>
+            <li>
+              The <strong>destination writer</strong> applies an idempotent
+              write: compare source event time / write version, check tombstones
+              (Section 09), then last-writer-wins. Simple mirrors happen in the
+              trigger path; anything heavier is enqueued.
+            </li>
+            <li>
+              Any failure produces a <strong>ledger record</strong> (Section
+              07).
+            </li>
+          </ol>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >The capture trigger shape — named-DB binding proven by T0.1;
+                broad path pattern validated during implementation</span
+              ><span class="meta">TypeScript · firebase-functions v5</span>
+            </button>
+            <pre><span class="tok-key">import</span> { <span class="tok-fn">onDocumentWritten</span> } <span class="tok-key">from</span> <span class="tok-str">"firebase-functions/v2/firestore"</span>;
+
+<span class="tok-com">// One broad trigger per in-scope named database.</span>
+<span class="tok-com">// Catches EVERY writer: this repo, Duet, the NYMag app, anything.</span>
+<span class="tok-com">// T0.1 proved the database binding (on a single test collection);</span>
+<span class="tok-com">// the broad document pattern below is validated during implementation.</span>
+<span class="tok-key">export default</span> <span class="tok-fn">onDocumentWritten</span>(
+  { <span class="tok-prop">database</span>: <span class="tok-str">"identity"</span>, <span class="tok-prop">document</span>: <span class="tok-str">"{collection}/{docId=**}"</span> },
+  <span class="tok-key">async</span> (event) =&gt; {
+    <span class="tok-key">const</span> mutation = <span class="tok-fn">normalize</span>(event);   <span class="tok-com">// → SourceMutation</span>
+    <span class="tok-key">const</span> verdict  = <span class="tok-fn">classify</span>(mutation); <span class="tok-com">// → policy decision</span>
+    <span class="tok-com">// mirror | enqueue | record policy_unknown | drop</span>
+  }
+);</pre>
+          </div>
+
+          <p>
+            Two design decisions here deserve their reasoning spelled out.
+            <strong>Broad capture beat enumerated collections</strong> because
+            an enumerated list reintroduces the original gap: when Duet adds
+            another <code>fcm_tokens</code>-style collection, an enumerated
+            trigger never sees it, but a catch-all forces it through
+            classification. And
+            <strong>the trigger handler stays thin</strong> — normalize,
+            classify, mirror-or-enqueue. No Auth calls, no external side
+            effects, no scans. Login traffic alone writes ~4 documents per login
+            (<code>user_metadata</code>, <code>login_origins</code>,
+            <code>email_ips</code>, <code>ip_emails</code>), so this path runs
+            hot; a <code>SyncVolumeEstimate</code> with real invocation counts
+            is a required gate before production enablement. The provisional
+            production targets are deliberately looser than the staging sample
+            suggests: p95 mirror enqueue under 60 seconds, alerting at 5 minutes
+            of sustained lag — to be recalibrated after staging volume tests.
+          </p>
+
+          <div class="callout">
+            <span class="callout-label"
+              >Delivery semantics are evidence, not assumption</span
+            >
+            The T0.1 burst test delivered 10/10 events with no duplicates — but
+            out of write order. Design therefore assumes
+            <em>at-least-once, unordered</em> delivery everywhere: deterministic
+            idempotency keys per mutation, conflict resolution by source event
+            time, never by arrival order. A clean sample doesn't soften a
+            platform contract.
+          </div>
+        </section>
+
+        <!-- ============ 06 AUTH MUTATION ============ -->
+        <section
+          id="auth-mutation"
+          data-active-nodes="handlers,auth-src,identity-db,capture,queues,auth-dst,recon"
+          data-active-edges="e-handlers-auth,e-handlers-q,e-q-authdst,e-id-cap,e-recon-src,e-recon-dst"
+          data-title="Life of an Auth mutation"
+          data-caption="Three capture layers: write-through where we own the code, the metadata signal for signups, daily reconciliation for everything else."
+        >
+          <span class="num">Section 06</span>
+          <h2>Life of an Auth mutation</h2>
+          <p class="lede">
+            Firestore triggers can't see Firebase Auth. So Auth gets a
+            three-layer model, ordered by how much we can observe.
+          </p>
+
+          <h3>
+            <span class="substep">Layer 1</span>Write-through for repo-owned
+            mutations
+          </h3>
+          <p>
+            Where this repo performs the Auth change itself —
+            <code>importUsers</code> in the Memberful and Chorus flows,
+            <code>updateUser</code> in Chorus sync, the
+            <code>onDelete</code> cleanup — the same handler
+            <strong
+              >enqueues destination Auth work after the source operation
+              succeeds</strong
+            >. The worker imports/updates/deletes the destination record with
+            the UID, password hash, provider links, and custom claims preserved.
+            The handler never waits on the destination; enqueue-and-return.
+          </p>
+
+          <h3>
+            <span class="substep">Layer 2</span>The metadata-create signal for
+            normal signups
+          </h3>
+          <p>
+            A normal client signup creates the Auth record
+            <em>inside the platform</em> — no repo code performs it. But
+            <code>beforeUserCreated</code> (a blocking hook that must never do
+            cross-project I/O) writes
+            <code>identity/user_metadata/{uid}</code> for every platform-native
+            signup (imports bypass it — that's Layer 1's job). That Firestore
+            create is visible to the broad trigger — so it doubles as the
+            <strong>async signal</strong> to enqueue a destination Auth import
+            for the new user. Indirect, but it turns the most common create path
+            into a captured one.
+          </p>
+
+          <h3>
+            <span class="substep">Layer 3</span>Daily reconciliation for
+            everything invisible
+          </h3>
+          <p>
+            Client-SDK email and password changes, bulk deletes (which skip the
+            v1 <code>onDelete</code> trigger entirely), metadata writes that
+            failed, and destination over-copies — none of these emit any
+            capturable event. A scheduled job does a
+            <strong>full Auth export and diff</strong> (there is no incremental
+            export at ~4.7M users) using the <em>same selection policy</em> as
+            live sync, then enqueues repairs through the
+            <em>same</em> queue/ledger path. One mechanism closes four gaps at
+            once.
+          </p>
+
+          <p>
+            Reconciliation's cost sets an honest ceiling: it's hours-to-daily
+            work, not live capture. The accepted staleness windows are explicit:
+            <strong>24–48h provisional drift</strong> for password hashes,
+            <code>emailVerified</code>, and provider links. Email changes carry
+            the same window but are
+            <strong>flagged as the class most likely to need tightening</strong>
+            — and if product tolerance demands a tighter window than
+            reconciliation can deliver, the named consequence is a write-through
+            dependency in Duet or the client Auth paths. A recorded fork, not a
+            surprise.
+          </p>
+
+          <div class="callout info">
+            <span class="callout-label"
+              >Why not just hook beforeUserCreated for everything?</span
+            >
+            Two reasons: <code>importUsers</code> deliberately bypasses blocking
+            hooks (so Memberful/Chorus users would be invisible), and blocking
+            hooks run inside the signup latency budget — the design forbids any
+            inline cross-project I/O there, even if T0.1's spike had failed and
+            made inline writes tempting.
+          </div>
+        </section>
+
+        <!-- ============ 07 FAILURE ============ -->
+        <section
+          id="failure"
+          data-active-nodes="queues,control,capture"
+          data-active-edges="e-q-ledger,e-cap-ledger"
+          data-title="Life of a failure"
+          data-caption="Ack-only-after-success-or-ledger: a task may not vanish from retry until its failure is durably recorded."
+        >
+          <span class="num">Section 07</span>
+          <h2>Life of a failure</h2>
+          <p class="lede">
+            The system's central promise — "non-blocking but fully observable" —
+            is enforced by one rule and one datastore.
+          </p>
+
+          <p>
+            The rule:
+            <strong
+              >a queued task returns terminal success only after the destination
+              work succeeded, was intentionally dispositioned, or a ledger
+              record has been persisted.</strong
+            >
+            Cloud Tasks deletes tasks after retry exhaustion — queue state is
+            transport, not memory — so the worker must write the ledger
+            <em>before</em> acking a terminal failure. Silent loss becomes
+            structurally impossible rather than procedurally avoided.
+          </p>
+
+          <p>
+            The failure taxonomy covers every link in the chain, including the
+            meta-failures:
+          </p>
+          <ul>
+            <li>
+              <strong>Enqueue failure</strong> — the handler couldn't even queue
+              the work. That's a sync failure too; it writes the ledger
+              directly.
+            </li>
+            <li>
+              <strong>Destination write failure</strong> — transient ones retry
+              via Cloud Tasks; terminal ones ledger-then-ack.
+            </li>
+            <li>
+              <strong>Policy mismatch</strong> — policy tightened while a task
+              waited; the worker applies the tighter policy and records the
+              divergence.
+            </li>
+            <li>
+              <strong>Ledger write failure</strong> — the failure record itself
+              failed. A dedicated high-signal metric,
+              <code>LEDGER_WRITE_FAILED</code>, alerts on the one case the
+              ledger can't cover itself.
+            </li>
+          </ul>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >FailureLedgerRecord — the operator's source of truth</span
+              ><span class="meta">TypeScript · trimmed</span>
+            </button>
+            <pre><span class="tok-key">interface</span> <span class="tok-type">FailureLedgerRecord</span> {
+  <span class="tok-prop">idempotencyKey</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">status</span>: <span class="tok-str">"pending"</span> | <span class="tok-str">"retrying"</span> | <span class="tok-str">"terminal_failed"</span> | <span class="tok-str">"replayed"</span>
+        | <span class="tok-str">"resolved"</span> | <span class="tok-str">"ignored_expected_drift"</span>
+        | <span class="tok-str">"policy_unknown"</span> | <span class="tok-str">"policy_mismatch"</span> | <span class="tok-str">"pruned"</span>;
+  <span class="tok-prop">failureClass</span>: <span class="tok-str">"enqueue_failed"</span> | <span class="tok-str">"destination_write_failed"</span>
+        | <span class="tok-str">"terminal_queue_failed"</span> | <span class="tok-str">"ledger_write_failed"</span> | <span class="tok-com">/* … */</span>;
+  <span class="tok-com">// searchable by: user/record, path, operation, project, status</span>
+  <span class="tok-prop">database</span>?: <span class="tok-type">string</span>;  <span class="tok-prop">path</span>?: <span class="tok-type">string</span>;  <span class="tok-prop">uid</span>?: <span class="tok-type">string</span>;
+  <span class="tok-prop">errorCode</span>?: <span class="tok-type">string</span>;  <span class="tok-prop">attemptCount</span>: <span class="tok-type">number</span>;
+  <span class="tok-prop">firstSeenAt</span>: <span class="tok-type">string</span>;  <span class="tok-prop">replayedAt</span>?: <span class="tok-type">string</span>;
+  <span class="tok-prop">payloadPointer</span>?: <span class="tok-type">string</span>;  <span class="tok-com">// pointer, not payload — re-read source on replay</span>
+}</pre>
+          </div>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >Idempotency key scheme — deterministic per mutation class</span
+              ><span class="meta">construction rules</span>
+            </button>
+            <pre><span class="tok-com">// Firestore</span>
+<span class="tok-str">firestore:${database}:${path}:set</span>
+<span class="tok-str">firestore:${database}:${path}:delete</span>
+<span class="tok-com">// Auth (UID-keyed; importUsers is idempotent by uid)</span>
+<span class="tok-str">auth:${uid}:import</span> · <span class="tok-str">auth:${uid}:update</span> · <span class="tok-str">auth:${uid}:delete</span>
+<span class="tok-com">// External side effects (hashes — no raw PII in identifiers)</span>
+<span class="tok-str">side_effect:jukebox:${uid}</span>
+<span class="tok-str">side_effect:supporting_cast:${uid}:remove:${priceId}</span>
+<span class="tok-str">side_effect:mongo:${emailHash}:delete</span></pre>
+          </div>
+
+          <p>
+            Replay is an audited operator action: look up the ledger record by
+            key,
+            <strong>re-read the current source state where available</strong>
+            (never prefer a stale payload over a possible re-read), and enqueue
+            again — with <code>requestedBy</code> and
+            <code>reason</code> recorded. External side effects get one extra
+            guard: a <code>SideEffectExecutionRecord</code> checked before every
+            provider call, because Supporting Cast and Jukebox won't deduplicate
+            retries for you.
+          </p>
+        </section>
+
+        <!-- ============ 08 SEED ============ -->
+        <section
+          id="seed"
+          data-active-nodes="backfill,fs-dst,auth-dst,control,capture"
+          data-active-edges="e-bf-dst,e-bf-authdst,e-cap-fsdst"
+          data-title="Backfill seeds the baseline"
+          data-caption="Invariant: liveCaptureEnabledAt ≤ seedSnapshotTime. Capture first, then snapshot — never a write gap."
+        >
+          <span class="num">Section 08</span>
+          <h2>The seed: backfill &amp; the no-gap invariant</h2>
+          <p class="lede">
+            Live sync is the delta layer around a bulk seed — and one ordering
+            rule decides whether the combination is correct.
+          </p>
+
+          <p>
+            Nobody mirrors 4.7M users through triggers. The destination baseline
+            comes from <strong>backfill tooling</strong>, in scope for this
+            project (single operator — there's no separate migration team): a
+            documented runbook of <code>gcloud</code>/Firebase CLI commands for
+            broad surfaces, plus repo-resident scripts where native tooling
+            can't do the job — Auth seeding via Admin SDK
+            <code>importUsers</code> batches (the CLI drops custom claims),
+            policy-aware Firestore copy for selective/redacted surfaces, and
+            parity checks.
+          </p>
+
+          <p>
+            The correctness of "seed + live delta" hangs on a single invariant,
+            schema-validated in the handoff record:
+          </p>
+
+          <div class="callout">
+            <span class="callout-label">The no-gap invariant</span>
+            <code>liveCaptureEnabledAt&nbsp;≤&nbsp;seedSnapshotTime</code>.
+            Enable capture <em>first</em>, then take the seed snapshot (PITR's
+            <code>--snapshot-time</code> can even snapshot the past). Writes
+            landing during the overlap apply twice — harmlessly, because
+            destination writes are idempotent and last-writer-wins by source
+            time. The reverse order leaves a window where writes are captured by
+            <em>nothing</em>: invisible until some future reconciliation maybe
+            finds them.
+          </div>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >BackfillHandoff — the seed/live boundary as data</span
+              ><span class="meta">TypeScript</span>
+            </button>
+            <pre><span class="tok-key">interface</span> <span class="tok-type">BackfillHandoff</span> {
+  <span class="tok-prop">handoffId</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">policyId</span>: <span class="tok-type">string</span>;            <span class="tok-com">// MUST match live sync's policy</span>
+  <span class="tok-prop">liveCaptureEnabledAt</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">seedSnapshotTime</span>: <span class="tok-type">string</span>;     <span class="tok-com">// validated: capture ≤ snapshot</span>
+  <span class="tok-prop">includedSurfaces</span>: <span class="tok-type">string</span>[];
+  <span class="tok-prop">excludedSurfaces</span>: <span class="tok-type">string</span>[];
+  <span class="tok-prop">expectedDrift</span>: <span class="tok-type">string</span>[];
+  <span class="tok-prop">parityResults</span>: <span class="tok-type">ParityResult</span>[];
+  <span class="tok-prop">status</span>: <span class="tok-str">"running"</span> | <span class="tok-str">"passed"</span> | <span class="tok-str">"failed"</span> | <span class="tok-str">"blocked"</span>;
+}</pre>
+          </div>
+
+          <p>
+            The seed consumes the <em>same</em>
+            <code>SyncPolicyVersion</code> as live sync — same selection, same
+            redaction, same exclusions. That's not tidiness; it's what makes the
+            parity gate meaningful. If seed and live sync filtered differently,
+            every count comparison would drown in expected mismatches and real
+            drift would hide in the noise. The one operational hazard the
+            tooling treats with special care: Auth export files contain 4.7M
+            emails <em>plus password hashes</em>. They are
+            <strong>GCS-only</strong> — no local copies — with tight IAM, access
+            logging, and lifecycle auto-deletion after import verification. A
+            second, standing PII copy lives outside the seed entirely: an
+            ongoing BigQuery export of <code>user_metadata</code> (the analytics
+            feed — distinct from the BigQuery <em>parity</em>-diff tooling) is a
+            live downstream mirror of the identity store, and cutover has to
+            decide whether it gets repointed or re-pinned so it doesn't keep
+            mirroring the source after the flip.
+          </p>
+        </section>
+
+        <!-- ============ 09 RECONCILE & PRUNE ============ -->
+        <section
+          id="reconcile"
+          data-active-nodes="recon,queues,control,auth-src,auth-dst"
+          data-active-edges="e-recon-src,e-recon-dst,e-recon-q"
+          data-title="Repair the drift, prune the over-copy"
+          data-caption="Daily diff → repairs through the SAME queue/ledger path. Over-copy inventory → manifest-driven pruning."
+        >
+          <span class="num">Section 09</span>
+          <h2>Reconciliation &amp; pruning</h2>
+          <p class="lede">
+            Two halves of the same loop: find what live sync missed, and remove
+            what broad copy brought along.
+          </p>
+
+          <p>
+            <strong>Reconciliation</strong> runs daily: export source Auth, diff
+            against the destination for in-scope users, and enqueue repairs —
+            Auth field drift, missed signups whose metadata write failed, bulk
+            deletes that fired no trigger, and records the predicate says
+            shouldn't be in the destination at all. Repairs flow through the
+            same queues and ledger as live sync; there is deliberately no
+            second, quieter repair path that could disagree with the first.
+          </p>
+
+          <p>
+            <strong>Pruning</strong> is the cleanup half of the
+            <code>copy_then_prune</code> bargain. Reconciliation and policy
+            evaluation generate an <strong>over-copy inventory</strong>; the
+            inventory generates a <strong>prune manifest</strong>; and
+            destructive pruning runs <em>only</em> from a generated manifest —
+            never from an ad-hoc query an operator types at 2am. Manifests
+            support dry-run and resume, record who ran them and why, and a
+            <strong>pre-cutover prune gate</strong> blocks readiness until
+            remaining over-copy is removed or explicitly dispositioned.
+          </p>
+
+          <div class="snippet">
+            <button class="snippet-toggle">
+              <span class="label"
+                >DestinationTombstone — why deleted users stay deleted</span
+              ><span class="meta">TypeScript</span>
+            </button>
+            <pre><span class="tok-key">interface</span> <span class="tok-type">DestinationTombstone</span> {
+  <span class="tok-prop">key</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">targetType</span>: <span class="tok-str">"auth_user"</span> | <span class="tok-str">"firestore_doc"</span>;
+  <span class="tok-prop">deletedAtSourceTime</span>: <span class="tok-type">string</span>;
+  <span class="tok-prop">sourceEventId</span>: <span class="tok-type">string</span>;
+}
+<span class="tok-com">// Every destination create/update checks for a newer tombstone first.</span>
+<span class="tok-com">// A stale retry arriving after a delete is ignored or ledgered as stale —</span>
+<span class="tok-com">// unordered delivery must never resurrect a deleted user.</span></pre>
+          </div>
+
+          <div class="callout info">
+            <span class="callout-label"
+              >Safety stack for destructive tooling</span
+            >
+            Explicit <code>--source-project</code> /
+            <code>--destination-project</code> / <code>--policy-id</code> flags
+            · dry-run required before execute · manifests generated from policy
+            output only · audited operator reason. Single-operator migrations
+            don't get code review at run time; the guardrails have to live in
+            the tools.
+          </div>
+        </section>
+
+        <!-- ============ 10 READINESS ============ -->
+        <section
+          id="readiness"
+          data-active-nodes="control,auth-dst,fs-dst,queues"
+          data-active-edges=""
+          data-title="Fail closed"
+          data-caption="15 readiness gates. Destination side effects stay OFF until cutover assigns a single owner per integration."
+        >
+          <span class="num">Section 10</span>
+          <h2>Readiness gates &amp; passivity</h2>
+          <p class="lede">
+            Sync cannot be enabled by enthusiasm. It fails closed until the
+            destination provably satisfies a readiness contract.
+          </p>
+
+          <p>
+            The readiness check is an IAM-protected entrypoint that verifies
+            <strong>15 gates</strong>:
+          </p>
+          <ul>
+            <li>
+              Destination Auth import/hash/provider readiness · the named
+              Firestore databases and their locations · cross-project IAM
+            </li>
+            <li>
+              Secrets and config — including the project-literal replacement
+              work · the control store and ledger location · Cloud Tasks queues
+              · GCS export bucket controls
+            </li>
+            <li>
+              Destination <code>sendEmail</code>/<code>processLogin</code>
+              deployed <em>before</em> NYMag web's env flip ·
+              <code>FIREBASE_CLOUD_FUNCTION_SECRET</code> continuity for its
+              JWT-authed function calls · authorized domains for the full NYMag
+              brand-domain family (nymag, thecut, vulture, grubstreet,
+              intelligencer, curbed, strategist)
+            </li>
+            <li>
+              Destination passivity · the backfill handoff invariant · the
+              <code>SyncVolumeEstimate</code> · the prune gate
+            </li>
+            <li>
+              The <code>(default)</code>-database recount — a legacy relic
+              classified stale on read-only evidence (17 documents untouched
+              since mid-2024), with owner confirmation and the pre-cutover
+              recount as the residual controls
+            </li>
+          </ul>
+          <p>
+            Any failure blocks enablement. The same fail-closed posture applies
+            at cutover: readiness isn't claimed until representative
+            <em>client</em> paths resolve against the destination (Section 11).
+          </p>
+
+          <p>
+            <strong>Destination passivity</strong> is the other standing rule.
+            During the sync window, the destination project is a data sink: its
+            scheduled jobs, webhooks, and side-effect triggers stay disabled or
+            gated. The hazard is concrete — if
+            <code>reconcilePatreonMembers</code> ever ran in both projects, the
+            shared Patreon refresh-token rotation would produce mutual
+            <code>invalid_grant</code> failures and double entitlement
+            revocations; Memberful can only point its webhook at one project;
+            Mailgun would double-send. Each external side effect gets exactly
+            <strong>one owning project at a time</strong>, and ownership
+            transfers are explicit cutover steps — enforced by deploy gating and
+            config flags, not operator memory.
+          </p>
+
+          <div class="callout">
+            <span class="callout-label"
+              >One repo, two projects, different behavior</span
+            >
+            This repo's code historically gated behavior on project literals —
+            <code>GCLOUD_PROJECT === "vox-media-identity"</code> controls the
+            NYMag Mongo cleanup and Mailgun validation; the tenant ID rides on
+            another literal. Deployed unmodified to the destination, those
+            branches silently no-op. Replacing them with destination-aware
+            config is in-scope implementation work, and the cutover smoke tests
+            exercise exactly these behaviors.
+          </div>
+        </section>
+
+        <!-- ============ 11 CUTOVER ============ -->
+        <section
+          id="cutover"
+          data-active-nodes="duet,nymweb,nymapp,auth-dst,fs-dst"
+          data-active-edges=""
+          data-title="Cutover: the clients flip"
+          data-caption="Duet env swap · NYMag web env flip (atomic — function URLs derive from project ID) · NYMag app forced update."
+        >
+          <span class="num">Section 11</span>
+          <h2>Cutover day</h2>
+          <p class="lede">
+            When the gates are green, cutover is three client flips of the
+            moving company's clients — each with a different shape, all
+            validated against the destination first.
+          </p>
+
+          <p>
+            This walks the <strong>SpinCo-moves</strong> direction, so the
+            clients that flip are Duet, NYMag web, and the NYMag app; the
+            inventory below is deliberately scoped to those moving clients. In
+            the mirror direction (PubCo moves), the flipping clients would
+            instead be Eater — whose React Native app superseded an earlier
+            native Swift iOS app — The Verge, and SB Nation, and the staying
+            side becomes a no-op.
+          </p>
+
+          <p>
+            Three clients consume the identity project, and each was
+            investigated in its own codebase rather than assumed:
+          </p>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Client</th>
+                <th>What it is</th>
+                <th>The flip</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Duet</strong> (vox.com + network sites)</td>
+                <td>
+                  Web platform; Redis-backed sessions; reads destination Auth +
+                  Firestore on account pages and session refresh.
+                </td>
+                <td>
+                  Env swap. Regular pages survive on Duet-signed sessions;
+                  account paths need destination data present — which is the
+                  whole point of the sync.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>NYMag web</strong> (<code>nymag/sites</code>)</td>
+                <td>
+                  Separate Amphora stack — <em>not</em> Duet. Own Redis sessions
+                  + Mongo profile store; calls this repo's
+                  <code>processLogin</code>/<code>sendEmail</code>.
+                </td>
+                <td>
+                  One env change. Its function URLs derive from
+                  <code>FIREBASE_AUTH_PROJECT_ID</code>, so auth config and
+                  function targets flip <em>atomically</em> — provided the
+                  destination has those functions deployed first.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>NYMag mobile</strong></td>
+                <td>
+                  Expo/React Native app; routes identity through
+                  <code>nymag/sites</code>; writes
+                  <code>nymag/delete_users</code> client-side.
+                </td>
+                <td>
+                  Forced-update release with new Firebase config files.
+                  Config-only — no app code changes.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <p>
+            Cutover readiness is proven by
+            <strong>representative client paths against the destination</strong
+            >: Duet session refresh, email check/change, auth-link sending,
+            entitlement and metadata reads; NYMag web login across all four
+            providers, <code>/oauth/user/profile</code>, and function
+            round-trips; the mobile <code>/mobile/*</code> chain. Users should
+            expect one re-login — refresh tokens are project-bound and die at
+            the flip; that cost was accepted explicitly. Then side effects
+            activate <strong>one owner at a time</strong>, and the sequencing
+            follows the program's de-risking order: vox.com first (reversible,
+            proves the runbook), NYMag web second, NYMag apps last (the
+            irreversible forced update, on a proven path).
+          </p>
+
+          <div class="callout info">
+            <span class="callout-label">Rollback, before and after</span>
+            Before cutover: trivially safe — disable destination writes; the
+            source was never not the truth; repair or reseed the destination at
+            leisure. After cutover: a separate explicit decision, because
+            reverse sync is out of scope by design. The gates exist precisely so
+            that the "after" case starts from proven parity.
+          </div>
+        </section>
+
+        <!-- ============ 12 GLOSSARY ============ -->
+        <section
+          id="glossary"
+          data-active-nodes=""
+          data-active-edges=""
+          data-title="System map"
+          data-caption="The full sync plane. Scroll any section to light up its path."
+        >
+          <span class="num">Section 12</span>
+          <h2>Glossary &amp; going deeper</h2>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Term</th>
+                <th>Meaning</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>SpinCo</strong></td>
+                <td>
+                  New York Magazine (nymag.com, The Cut, Vulture, Curbed, Grub
+                  Street, Strategist, Intelligencer) + Vox.com and their apps.
+                  One of the two groupings splitting apart.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>PubCo</strong></td>
+                <td>
+                  Eater, The Verge, SB Nation and their apps (now PMX, a PMC
+                  subsidiary). The other grouping. One grouping keeps
+                  <code>vox-media-identity</code> and the other stands up the
+                  new project; which company stays vs. moves is not yet decided.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Duet</strong></td>
+                <td>
+                  Vox Media's web platform (vox.com and network sites). Writes
+                  identity Firestore directly via Admin SDK — the original
+                  external-writer problem.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Named database</strong></td>
+                <td>
+                  A non-default Firestore database within a project
+                  (<code>identity</code>, <code>nymag</code>,
+                  <code>eater</code>, <code>games</code>). Triggers bind to
+                  exactly one.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>SBN Data Connect</strong></td>
+                <td>
+                  SB Nation's separate Firebase Data Connect (PostgreSQL-backed)
+                  database for sports data — a distinct surface on the PubCo/SBN
+                  side, out of this sync's scope and handled separately.
+                </td>
+              </tr>
+              <tr>
+                <td>
+                  <strong><code>user_metadata</code> BigQuery export</strong>
+                </td>
+                <td>
+                  A standing analytics export of <code>user_metadata</code> into
+                  BigQuery — a live, PII-bearing downstream copy of the identity
+                  store, distinct from the BigQuery parity-diff tooling.
+                  Repointed or re-pinned at cutover.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>T0.1</strong></td>
+                <td>
+                  The staging spike that proved v2 triggers bind to named
+                  databases. Verdict GO; ~1.2s latency; unordered burst delivery
+                  observed.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Control plane / control store</strong></td>
+                <td>
+                  Where policy, ledger, watermarks, tombstones, and manifests
+                  live — outside captured databases, to prevent trigger feedback
+                  loops.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Surface</strong></td>
+                <td>
+                  A database/path/operation family that policy classifies as one
+                  unit (e.g., <code>identity:user_metadata</code> writes).
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Over-copy</strong></td>
+                <td>
+                  Data in the destination that the active policy says shouldn't
+                  be there — expected under <code>copy_then_prune</code>,
+                  inventoried and pruned before cutover.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Tombstone</strong></td>
+                <td>
+                  A durable destination delete-marker that stops stale,
+                  late-arriving writes from resurrecting deleted users or
+                  documents.
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Parity gate</strong></td>
+                <td>
+                  The evidence bundle (Auth counts, per-collection counts,
+                  content diffs, drained ledger) that must be green before
+                  cutover readiness is claimed.
+                </td>
+              </tr>
+            </tbody>
+          </table>
+
+          <h3>Going deeper</h3>
+          <ul>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/design.md"
+                ><code>.oat/projects/shared/data-syncing/design.md</code></a
+              >
+              — the full design: 8 components, 10 data models, every decision
+              with rationale.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/discovery.md"
+                ><code>.oat/projects/shared/data-syncing/discovery.md</code></a
+              >
+              — 20 key decisions with the Q&amp;A trail that produced them.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/spec.md"
+                ><code>.oat/projects/shared/data-syncing/spec.md</code></a
+              >
+              — FR1–FR16, NFR1–NFR7, and the requirement→task index.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/plan.md"
+                ><code>.oat/projects/shared/data-syncing/plan.md</code></a
+              >
+              — 64 tasks across 8 phases.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/research/crud-sync-surface-analysis.md"
+                ><code>research/crud-sync-surface-analysis.md</code></a
+              >
+              — every mutation surface in this repo, with file:line evidence.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/research/parallel-research-synthesis.md"
+                ><code>research/parallel-research-synthesis.md</code></a
+              >
+              — the 8-lane research program (Duet sessions, Auth constraints,
+              queues, backfill, downstream integrations).
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/research/t01-named-db-trigger-spike-report.md"
+                ><code>research/t01-named-db-trigger-spike-report.md</code></a
+              >
+              — the spike that closed the architecture's biggest unknown.
+            </li>
+            <li>
+              <a
+                href="https://github.com/voxmedia/identity-cloud-functions/blob/data-syncing/.oat/projects/shared/data-syncing/research/nymag-client-integration-analysis.md"
+                ><code>research/nymag-client-integration-analysis.md</code></a
+              >
+              — NYMag web + mobile integration, with file:line evidence.
+            </li>
+          </ul>
+        </section>
+
+        <footer class="foot">
+          Identity data-syncing — engineering explainer · last updated
+          2026-06-09 · documents the pre-implementation design (plan complete) ·
+          written for engineers.
+        </footer>
+      </main>
+
+      <!-- ============== DIAGRAM RAIL ============== -->
+      <aside class="diagram-rail" id="diagram-rail">
+        <div class="diagram-card">
+          <div class="diagram-label">SYSTEM MAP</div>
+          <div class="diagram-title" id="diagram-title">
+            The identity sync plane
+          </div>
+          <div class="diagram-svg">
+            <svg viewBox="0 0 360 470" xmlns="http://www.w3.org/2000/svg">
+              <defs>
+                <marker
+                  id="arrow"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" fill="#dde2ea" />
+                </marker>
+                <marker
+                  id="arrow-active"
+                  viewBox="0 0 10 10"
+                  refX="9"
+                  refY="5"
+                  markerWidth="6"
+                  markerHeight="6"
+                  orient="auto-start-reverse"
+                >
+                  <path d="M0,0 L10,5 L0,10 z" fill="#1b4f8a" />
+                </marker>
+              </defs>
+
+              <!-- ===== Band A: client writers ===== -->
+              <g class="node" data-id="duet">
+                <rect x="8" y="12" width="104" height="34" rx="6" />
+                <text x="60" y="25">Duet</text>
+                <text class="sub" x="60" y="37">vox.com · web</text>
+              </g>
+              <g class="node" data-id="nymweb">
+                <rect x="128" y="12" width="104" height="34" rx="6" />
+                <text x="180" y="25">NYMag web</text>
+                <text class="sub" x="180" y="37">nymag/sites</text>
+              </g>
+              <g class="node" data-id="nymapp">
+                <rect x="248" y="12" width="104" height="34" rx="6" />
+                <text x="300" y="25">NYMag app</text>
+                <text class="sub" x="300" y="37">iOS · Android</text>
+              </g>
+
+              <!-- ===== Band B: source project ===== -->
+              <g class="node" data-id="auth-src">
+                <rect x="8" y="88" width="100" height="36" rx="6" />
+                <text x="58" y="102">Auth (source)</text>
+                <text class="sub" x="58" y="114">~4.7M users</text>
+              </g>
+              <g class="node" data-id="identity-db">
+                <rect x="124" y="88" width="108" height="36" rx="6" />
+                <text x="178" y="102">identity DB</text>
+                <text class="sub" x="178" y="114">named Firestore</text>
+              </g>
+              <g class="node" data-id="nymag-db">
+                <rect x="248" y="88" width="104" height="36" rx="6" />
+                <text x="300" y="102">nymag DB</text>
+                <text class="sub" x="300" y="114">delete_users</text>
+              </g>
+              <g class="node" data-id="handlers">
+                <rect x="8" y="156" width="100" height="34" rx="6" />
+                <text x="58" y="169">ICF handlers</text>
+                <text class="sub" x="58" y="181">this repo</text>
+              </g>
+
+              <!-- ===== Band C: sync plane ===== -->
+              <g class="node" data-id="capture">
+                <rect x="68" y="232" width="122" height="38" rx="6" />
+                <text x="129" y="246">Capture + policy</text>
+                <text class="sub" x="129" y="259">
+                  triggers · classify · redact
+                </text>
+              </g>
+              <g class="node" data-id="queues">
+                <rect x="208" y="232" width="122" height="38" rx="6" />
+                <text x="269" y="246">Queues → workers</text>
+                <text class="sub" x="269" y="259">Cloud Tasks</text>
+              </g>
+
+              <!-- ===== Band D: control / recon / backfill ===== -->
+              <g class="node" data-id="control">
+                <rect x="8" y="308" width="136" height="38" rx="6" />
+                <text x="76" y="322">Control store</text>
+                <text class="sub" x="76" y="335">
+                  policy · ledger · tombstones
+                </text>
+              </g>
+              <g class="node" data-id="recon">
+                <rect x="160" y="308" width="106" height="38" rx="6" />
+                <text x="213" y="322">Reconciliation</text>
+                <text class="sub" x="213" y="335">daily Auth diff</text>
+              </g>
+              <g class="node" data-id="backfill">
+                <rect x="282" y="308" width="72" height="38" rx="6" />
+                <text x="318" y="322">Backfill</text>
+                <text class="sub" x="318" y="335">seed CLI</text>
+              </g>
+
+              <!-- ===== Band E: destination project ===== -->
+              <g class="node" data-id="auth-dst">
+                <rect x="52" y="404" width="112" height="38" rx="6" />
+                <text x="108" y="418">Auth (dest)</text>
+                <text class="sub" x="108" y="431">UIDs preserved</text>
+              </g>
+              <g class="node" data-id="fs-dst">
+                <rect x="186" y="404" width="126" height="38" rx="6" />
+                <text x="249" y="418">Firestore (dest)</text>
+                <text class="sub" x="249" y="431">identity · nymag</text>
+              </g>
+
+              <!-- ===== Edges ===== -->
+              <!-- clients → source -->
+              <path class="edge" data-id="e-login" d="M52,46 L54,86" />
+              <text class="edge-label" data-id="e-login" x="14" y="66">
+                sign-ins
+              </text>
+              <path
+                class="edge"
+                data-id="e-duet-id"
+                d="M76,46 C100,62 140,70 166,86"
+              />
+              <text class="edge-label" data-id="e-duet-id" x="92" y="62">
+                admin SDK
+              </text>
+              <path
+                class="edge"
+                data-id="e-web-handlers"
+                d="M168,46 C120,72 80,108 62,154"
+              />
+              <text class="edge-label" data-id="e-web-handlers" x="104" y="92">
+                processLogin
+              </text>
+              <path class="edge" data-id="e-app-nymag" d="M300,46 L300,86" />
+              <text class="edge-label" data-id="e-app-nymag" x="306" y="66">
+                delete_users
+              </text>
+
+              <!-- handlers ↔ source / queues -->
+              <path
+                class="edge"
+                data-id="e-handlers-auth"
+                d="M58,154 L58,126"
+              />
+              <text class="edge-label" data-id="e-handlers-auth" x="63" y="143">
+                importUsers
+              </text>
+              <path
+                class="edge"
+                data-id="e-handlers-q"
+                d="M108,178 C180,200 230,212 256,230"
+              />
+              <text class="edge-label" data-id="e-handlers-q" x="160" y="204">
+                enqueue
+              </text>
+
+              <!-- source DBs → capture -->
+              <path
+                class="edge"
+                data-id="e-id-cap"
+                d="M174,126 C166,162 146,196 134,230"
+              />
+              <text class="edge-label" data-id="e-id-cap" x="92" y="174">
+                onDocWritten
+              </text>
+              <path
+                class="edge"
+                data-id="e-nymag-cap"
+                d="M298,126 C288,172 200,200 162,230"
+              />
+              <text class="edge-label" data-id="e-nymag-cap" x="240" y="180">
+                onDocWritten
+              </text>
+
+              <!-- capture → queues / dest / ledger -->
+              <path class="edge" data-id="e-cap-q" d="M192,251 L206,251" />
+              <path
+                class="edge"
+                data-id="e-cap-fsdst"
+                d="M126,272 C124,330 200,366 240,402"
+              />
+              <text class="edge-label" data-id="e-cap-fsdst" x="136" y="350">
+                idempotent mirror
+              </text>
+              <path
+                class="edge"
+                data-id="e-cap-ledger"
+                d="M108,272 C96,284 86,294 80,306"
+              />
+              <text class="edge-label" data-id="e-cap-ledger" x="18" y="292">
+                policy_unknown
+              </text>
+
+              <!-- queues → dest / ledger -->
+              <path
+                class="edge"
+                data-id="e-q-authdst"
+                d="M262,272 C240,330 160,366 122,402"
+              />
+              <text class="edge-label" data-id="e-q-authdst" x="216" y="350">
+                auth · side effects
+              </text>
+              <path
+                class="edge"
+                data-id="e-q-ledger"
+                d="M226,272 C180,292 130,300 116,308"
+              />
+              <text class="edge-label" data-id="e-q-ledger" x="146" y="294">
+                terminal → ledger
+              </text>
+
+              <!-- reconciliation -->
+              <path
+                class="edge dashed"
+                data-id="e-recon-src"
+                d="M196,308 C140,260 80,180 60,126"
+              />
+              <text class="edge-label" data-id="e-recon-src" x="84" y="226">
+                auth:export diff
+              </text>
+              <path
+                class="edge dashed"
+                data-id="e-recon-dst"
+                d="M198,346 C170,368 144,384 122,402"
+              />
+              <text class="edge-label" data-id="e-recon-dst" x="126" y="376">
+                diff
+              </text>
+              <path
+                class="edge"
+                data-id="e-recon-q"
+                d="M226,308 C242,296 252,284 260,274"
+              />
+              <text class="edge-label" data-id="e-recon-q" x="248" y="296">
+                repairs
+              </text>
+
+              <!-- backfill -->
+              <path
+                class="edge"
+                data-id="e-bf-dst"
+                d="M312,346 C300,368 276,386 258,402"
+              />
+              <text class="edge-label" data-id="e-bf-dst" x="296" y="376">
+                seed
+              </text>
+              <path
+                class="edge dashed"
+                data-id="e-bf-authdst"
+                d="M286,346 C220,376 160,392 136,402"
+              />
+              <text class="edge-label" data-id="e-bf-authdst" x="186" y="388">
+                import
+              </text>
+            </svg>
+          </div>
+          <div class="step-caption" id="step-caption">
+            <span class="step-n">▸</span>The full sync plane. Scroll any section
+            to light up its path.
+          </div>
+          <div class="legend">
+            <span class="item"><span class="swatch active"></span>Active</span>
+            <span class="item"
+              ><span class="swatch idle"></span>Background</span
+            >
+          </div>
+        </div>
+      </aside>
+    </div>
+
+    <script>
+      (function () {
+        document.querySelectorAll('.snippet-toggle').forEach((btn) => {
+          btn.addEventListener('click', () => {
+            btn.parentElement.classList.toggle('open');
+          });
+        });
+
+        const sections = Array.from(document.querySelectorAll('section[id]'));
+        const tocLinks = document.querySelectorAll('.toc a');
+        const diagramTitle = document.getElementById('diagram-title');
+        const stepCaption = document.getElementById('step-caption');
+        const allNodes = document.querySelectorAll('.node');
+        const allEdges = document.querySelectorAll('.edge');
+        const allEdgeLabels = document.querySelectorAll('.edge-label');
+
+        function applySection(section) {
+          const activeNodes = new Set(
+            (section.dataset.activeNodes || '')
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean),
+          );
+          const activeEdges = new Set(
+            (section.dataset.activeEdges || '')
+              .split(',')
+              .map((s) => s.trim())
+              .filter(Boolean),
+          );
+
+          allNodes.forEach((n) =>
+            n.classList.toggle('active', activeNodes.has(n.dataset.id)),
+          );
+          allEdges.forEach((e) =>
+            e.classList.toggle('active', activeEdges.has(e.dataset.id)),
+          );
+          allEdgeLabels.forEach((l) =>
+            l.classList.toggle('active', activeEdges.has(l.dataset.id)),
+          );
+
+          if (section.dataset.title)
+            diagramTitle.textContent = section.dataset.title;
+          if (section.dataset.caption) {
+            stepCaption.innerHTML =
+              '<span class="step-n">▸</span>' + section.dataset.caption;
+          }
+
+          const id = section.id;
+          tocLinks.forEach((a) =>
+            a.classList.toggle('active', a.dataset.target === id),
+          );
+        }
+
+        let current = sections[0];
+        if (current) applySection(current);
+
+        const visibility = new Map();
+        const io = new IntersectionObserver(
+          (entries) => {
+            entries.forEach((e) =>
+              visibility.set(e.target, e.intersectionRatio),
+            );
+            let best = null;
+            let bestRatio = -1;
+            sections.forEach((s) => {
+              const ratio = visibility.get(s) || 0;
+              if (ratio > bestRatio) {
+                bestRatio = ratio;
+                best = s;
+              }
+            });
+            if (best && best !== current && bestRatio > 0) {
+              current = best;
+              applySection(best);
+            }
+          },
+          {
+            rootMargin: '-15% 0px -55% 0px',
+            threshold: [0, 0.1, 0.25, 0.5, 0.75, 1],
+          },
+        );
+        sections.forEach((s) => io.observe(s));
+
+        tocLinks.forEach((a) => {
+          a.addEventListener('click', (ev) => {
+            const id = a.dataset.target;
+            const target = document.getElementById(id);
+            if (target) {
+              ev.preventDefault();
+              history.replaceState(null, '', '#' + id);
+              target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              applySection(target);
+              document.getElementById('toc').classList.remove('open');
+            }
+          });
+        });
+      })();
+    </script>
+  </body>
+</html>
