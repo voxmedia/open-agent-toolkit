@@ -357,9 +357,23 @@ archive anything first.
 6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
-7. **`oat-project-complete` BEFORE merge** (standing order: review → complete →
-   merge; an open PR is expected, not a blocker — the archive-aware PR body sync
-   handles it).
+7. **The full `oat-project-complete` PROCESS before merge** (standing order:
+   review → complete → merge; an open PR is expected, not a blocker — the
+   archive-aware PR body sync handles it). The requirement is the whole
+   completion tail, named explicitly: `oat project complete-state` →
+   `oat project archive` (the CLI owns the local archive move, the summary
+   export, and the S3 sync when `s3SyncOnComplete` is configured) →
+   active-project pointer clear → the completion bookkeeping commit. Running
+   `oat project complete-state` ALONE does NOT satisfy this step: in the Orc
+   first run all four wrapper projects were left lifecycle-complete but
+   unarchived until an operator audit asked (S10). Under autonomous execution
+   the interactive completion skill is model-invisible
+   (`disable-model-invocation: true`), so the orchestrator cannot invoke it;
+   execute its SKILL.md as a document instead, resolving its gates from config
+   (`workflow.archiveOnComplete`, `workflow.createPrOnComplete`), until an
+   `oat-project-complete-auto` companion ships
+   (BL-260720-add-oat-project-complete-auto) — this step then repoints to it
+   for autonomous runs.
 8. **After the operator merges:** reconcile (squash-merge means content-diff the
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the
