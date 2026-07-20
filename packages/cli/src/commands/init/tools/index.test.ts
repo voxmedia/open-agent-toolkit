@@ -1713,6 +1713,34 @@ describe('buildToolPacksSectionBody', () => {
     expect(body).not.toContain('configured HiLL checkpoint');
   });
 
+  it('includes PJM routing and decision guidance when project-management is selected', () => {
+    const body = buildToolPacksSectionBody([
+      { pack: 'project-management', scope: 'project' },
+    ]);
+
+    expect(body).toContain('### Project Management');
+    expect(body).toContain('.oat/repo/AGENTS.md');
+    expect(body).toContain('`pjm/` for active state');
+    expect(body).toContain('`reference/` for durable records');
+    expect(body).toContain('### Decision Records');
+    expect(body).toContain('.oat/repo/reference/decisions/index.md');
+    expect(body).toContain('oat-pjm-decision');
+    expect(body).toContain('oat decision new');
+    expect(body).toContain('oat pjm init');
+    expect(body).toContain('oat decision regenerate-index');
+  });
+
+  it('omits PJM guidance when project-management is not selected', () => {
+    const body = buildToolPacksSectionBody([
+      { pack: 'workflows', scope: 'project' },
+    ]);
+
+    expect(body).not.toContain('### Project Management');
+    expect(body).not.toContain('.oat/repo/AGENTS.md');
+    expect(body).not.toContain('### Decision Records');
+    expect(body).not.toContain('.oat/repo/reference/decisions/index.md');
+  });
+
   it('marks core pack as user-scoped in AGENTS section', () => {
     const body = buildToolPacksSectionBody([
       { pack: 'core', scope: 'user' },

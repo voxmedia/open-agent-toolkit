@@ -833,6 +833,9 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
     (p) => p.scope === 'user' || p.scope === 'both',
   );
   const hasWorkflows = packs.some((p) => p.pack === 'workflows');
+  const hasProjectManagement = packs.some(
+    (p) => p.pack === 'project-management',
+  );
 
   const lines = [
     '## Tool Packs',
@@ -870,6 +873,24 @@ export function buildToolPacksSectionBody(packs: PackScopeInfo[]): string {
       '- This guidance applies only to OAT project lifecycle execution, such as `oat-project-implement`, and OAT project review/receive flows. It does not apply to non-OAT tasks or ad-hoc work outside the OAT project workflow.',
       '- When executing an OAT project implementation or OAT project review workflow, do not stop at task boundaries, phase boundaries, or other clean checkpoints unless the configured HiLL checkpoint has been reached, a real blocker exists, or explicit user input is required.',
       '- Status summaries, completed bookkeeping, and "clean boundary" pauses are not valid stop reasons. After updating tracking artifacts, continue execution until an allowed stop condition applies.',
+    );
+  }
+
+  if (hasProjectManagement) {
+    lines.push(
+      '',
+      '### Project Management',
+      '',
+      '- Repository planning and durable context live under `.oat/repo/`.',
+      '- Consult it when prioritizing or planning work, checking the backlog, starting or closing tracked work, or looking for established repository context.',
+      '- Start with `.oat/repo/AGENTS.md`; it routes to `pjm/` for active state and `reference/` for durable records.',
+      '- If the surface is missing, initialize it with `oat pjm init`.',
+      '',
+      '### Decision Records',
+      '',
+      '- Before finalizing a durable repository decision, review `.oat/repo/reference/decisions/index.md` and any relevant records.',
+      '- When the user asks to record a durable decision or confirms a proposed capture, use `oat-pjm-decision`; use `oat decision new` for the CLI path.',
+      '- Do not hand-edit the generated decision index; run `oat decision regenerate-index` after record changes.',
     );
   }
 
