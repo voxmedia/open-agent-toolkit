@@ -1,12 +1,12 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-20
 oat_generated: false
 ---
 
-# Discovery: explainer-kit-w6-recap-and-themes
+# Revision 1 Discovery Record
 
 ## Phase Guardrails (Discovery)
 
@@ -280,8 +280,9 @@ palette/profile callers.
   - **Mitigation Ideas:** Preserve an advanced compatibility axis, define whole
     style bundles, and gate implementation on shared-content preview approval.
 
-## Next Steps
+## Disposition
 
-Review the four Opus theme previews, capture the operator's requested changes,
-then produce a lightweight design covering the immutable package, author
-contracts/data flow, content QA, named-style compatibility, and testing.
+The operator accepted the revised four-style baseline and directed this work
+into `p-rev1` of the original `explainer-kit` project. The executable contract
+now lives in the original project's `plan.md`; this file is retained as the
+decision record.

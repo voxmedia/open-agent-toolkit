@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: dfe4b527
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['discovery', 'design'] # Configured: which phases require
 oat_hill_completed: ['discovery', 'design'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -34,31 +34,31 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T01:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T21:54:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Implementation complete — reconciled integration PR ready
+**Status:** Revision 1 in progress
 **Started:** 2026-07-16
-**Last Updated:** 2026-07-19
+**Last Updated:** 2026-07-20
 
 ## Current Phase
 
-Implementation complete — 38/38 tasks
+Revision 1 — 38/42 tasks complete; next task `prev1-t01`
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (complete; late artifact findings resolved)
-- **Implementation:** `implementation.md` (complete; 38/38 tasks)
+- **Plan:** `plan.md` (Revision 1 added; 42 total tasks)
+- **Implementation:** `implementation.md` (in progress; 38/42 tasks)
 
 ## Progress
 
@@ -115,9 +115,13 @@ Implementation complete — 38/38 tasks
 - ✓ Lockstep public package versions advanced to `0.2.6`
 - ✓ Post-reconciliation format, lint, type-check, full tests, release dry-run,
   retained acceptance validation, and browser visual validation passed
-- ⚠ The accepted `0.2.3` RC remains immutable historical evidence; reconciliation
-  changed release inputs, so promotion now requires a post-merge `0.2.6` refreeze
-  and acceptance rerun
+- ✓ PR #166 merged to `main`
+- ✓ Post-merge `0.2.6` RC passed private-wrapper and packaged S3/CDN acceptance
+- ✓ First live unattended Stoa W6 recap exposed complete-package hashing and
+  content-authoring defects before project completion
+- ✓ Four curated shared-content theme previews accepted after revision
+- ✓ Revision 1 feedback migrated into the original project
+- ⧗ Execute `prev1-t01` through `prev1-t04`
 
 ## Blockers
 
@@ -125,5 +129,5 @@ None.
 
 ## Next Milestone
 
-Open and merge the reconciled integration PR, then freeze a release candidate
-from merged `main` and rerun the external wrapper and publish acceptance gates.
+Implement Revision 1, pass the live W6 recap/archive regression, open the
+follow-up PR, complete wave promotion, then complete and archive this project.

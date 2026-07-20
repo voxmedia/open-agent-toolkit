@@ -1,9 +1,9 @@
 ---
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-19
-oat_current_task_id: null
+oat_last_updated: 2026-07-20
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | complete  | 6     | 6/6       |
-| Phase 2 | complete  | 10    | 10/10     |
-| Phase 3 | complete  | 9     | 9/9       |
-| Phase 4 | complete  | 9     | 9/9       |
-| Phase 5 | completed | 4     | 4/4       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | complete    | 6     | 6/6       |
+| Phase 2    | complete    | 10    | 10/10     |
+| Phase 3    | complete    | 9     | 9/9       |
+| Phase 4    | complete    | 9     | 9/9       |
+| Phase 5    | completed   | 4     | 4/4       |
+| Revision 1 | in_progress | 4     | 0/4       |
 
-**Total:** 38/38 tasks completed
+**Total:** 38/42 tasks completed
 
 ---
 
@@ -1079,6 +1080,39 @@ this candidate must not be used for external acceptance.
   browser-backed visual measurements.
 - `pnpm test` passed across all six workspace packages; the root smoke suite
   passed 129/129 with zero failures.
+
+## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
+
+**Status:** in_progress
+**Started:** 2026-07-20
+**Current task:** `prev1-t01`
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-07-20
+**Source:** Operator feedback plus first live unattended Stoa W6 recap evidence
+
+**Changes requested:**
+
+- Hash and verify the complete immutable recap package so lifecycle archive
+  succeeds without weakening validation.
+- Require a structured caller-supplied author for unattended content, retain
+  provenance, and reject obvious raw-source dumping.
+- Replace the default palette/profile front door with four accepted curated
+  styles while preserving a documented legacy compatibility path.
+- Prove the packaged revision through full repository gates and a live Stoa W6
+  recap/archive regression before promotion and project completion.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`
+
+**Migrated artifacts:**
+
+- `references/revision-1-discovery.md`
+- `references/revision-1-theme-previews/`
+- Existing W6 handoff and theme-reference files under `references/`
+
+**Next:** Execute revision tasks via `oat-project-implement`, starting with
+`prev1-t01`.
 
 ---
 

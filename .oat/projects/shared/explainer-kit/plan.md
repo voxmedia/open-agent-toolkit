@@ -1,11 +1,11 @@
 ---
 oat_plan_source: spec-driven
-oat_status: complete
+oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-17
+oat_last_updated: 2026-07-20
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_parallel_groups: []
 oat_plan_hill_phases: ['p05']
 oat_auto_review_at_hill_checkpoints: true
@@ -1642,6 +1642,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p03    | code     | passed          | 2026-07-18 | reviews/p03-review-2026-07-18T120653Z.md                    |
 | p04    | code     | passed          | 2026-07-18 | reviews/p04-reconciliation-review-2026-07-18T200037Z.md     |
 | p05    | code     | pending         | -          | -                                                           |
+| p-rev1 | code     | pending         | -          | -                                                           |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -1649,6 +1650,230 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
+
+## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
+
+Source: inline operator feedback and first live unattended Stoa W6 recap
+evidence (2026-07-20)
+
+**Revision contract:**
+
+- Preserve schema-v1 compatibility through additive fields and explicit legacy
+  diagnostics.
+- Require provider-neutral authored content for every unattended run; keep the
+  existing interactive review path.
+- Add named `style` selection as the default front door while continuing to
+  accept legacy `palette`/`visualProfile` selections with deprecation warnings.
+- Treat the accepted four shared-content previews under
+  `references/revision-1-theme-previews/` as the visual baseline.
+
+### Task prev1-t01: (revision) Hash the complete immutable recap package
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+
+**Step 1: Add failing cross-boundary fixtures**
+
+Reproduce the W6 archive failure with a completed recap whose manifest omits
+`run-request.json` and `source/content-approval.json`. Assert that newly
+generated manifests cover every retained immutable input/provenance file and
+that the CLI archive validator verifies the same set.
+
+**Step 2: Align generation and validation**
+
+Expand core immutable hashing to include the privacy-safe persisted request,
+content approval, and any retained author-provenance record introduced by
+`prev1-t02`. Keep the core schema/runtime validator and TypeScript archive
+validator aligned on one documented v1 coverage contract. Historical
+incomplete manifests must fail with a targeted legacy-manifest diagnostic;
+do not weaken archive validation or silently invent hashes.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs && pnpm --filter @open-agent-toolkit/cli test -- archive-utils.test.ts`
+
+Expected: complete-package manifests archive successfully; omitted, stale, or
+tampered immutable files fail deterministically.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/schemas/manifest.schema.json .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts .agents/skills/explainer-kit/references/contracts.md
+git commit -m "fix(prev1-t01): hash complete recap packages"
+```
+
+### Task prev1-t02: (revision) Require structured authored content for unattended runs
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/schemas/author-request.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/author-result.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/content-approval.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/content-approval.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/SKILL.md`
+
+**Step 1: Freeze the author contracts**
+
+Define a versioned per-artifact request containing the recipe, required
+narrative outline, reconciled fact base, and discovery context. Define a
+structured result with exact section IDs, authored prose, and non-secret author
+provenance. Keep the persisted run request data-only; resolve callbacks
+in-process through `options.author` and in JSON-only CLI callers through
+`--author-module`.
+
+**Step 2: Fail closed and retain provenance**
+
+Invoke the author once per recipe artifact. Every unattended run without an
+author must fail at the content stage before generated narrative is written.
+Validate section completeness and prose before serialization, retain the
+validated author record, and leave the interactive reviewed-source path
+unchanged.
+
+**Step 3: Add a source-dumping backstop**
+
+Add deterministic normalized word-shingle overlap checks against raw source
+artifacts. Calibrate thresholds with concise legitimate W6 prose, obvious
+verbatim dumps, and boundary fixtures; report actionable diagnostics without
+making the heuristic a substitute for the mandatory author seam.
+
+**Step 4: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/content-approval.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+Expected: unattended no-author and source-dump fixtures fail without narrative;
+in-process and CLI-module authors produce validated content and provenance.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/schemas/author-request.schema.json .agents/skills/explainer-kit/schemas/author-result.schema.json .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/scripts/lib/content-approval.mjs .agents/skills/explainer-kit/scripts/lib/qa.mjs .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/explainer-kit/tests/content-approval.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/references/contracts.md .agents/skills/explainer-kit/SKILL.md
+git commit -m "feat(prev1-t02): require unattended content authors"
+```
+
+### Task prev1-t03: (revision) Ship four curated named styles
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/styles/clean-neutral.json`
+- Create: `.agents/skills/explainer-kit/styles/business-corporate.json`
+- Create: `.agents/skills/explainer-kit/styles/navy-ocean.json`
+- Create: `.agents/skills/explainer-kit/styles/dark-edgy.json`
+- Modify: `.agents/skills/explainer-kit/schemas/run-request.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/theme.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/theme.mjs`
+- Modify: `.agents/skills/explainer-kit/templates/deck-shell.html`
+- Modify: `.agents/skills/explainer-kit/tests/theme.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/templates.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/visual-matrix.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-config.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/config-paths.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/config-contract.md`
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+
+**Step 1: Add named-style compatibility**
+
+Add optional `style` selection with the four curated names. An explicit
+supplied bundle retains highest precedence; explicit `style` wins over legacy
+matrix fields; legacy `palette`/`visualProfile` remains accepted as an advanced
+compatibility path and emits a deprecation warning. An omitted selection uses
+`clean-neutral` and records a visible default-selection warning.
+
+**Step 2: Implement whole-system style bundles**
+
+Translate the accepted previews into complete style contracts spanning color,
+typography, density, geometry, component accents, and motion. All decks use
+fixed-viewport horizontal navigation, accessible controls, hash/counter
+synchronization, localized short-screen overflow, print layout, and
+reduced-motion behavior. Accent colors may recur semantically across a deck but
+must not duplicate within one visible card/stat row. Dark/Edgy uses a solid
+canvas with no dot texture.
+
+**Step 3: Verify**
+
+Run:
+`node --test .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/templates.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs && pnpm --filter @open-agent-toolkit/cli test -- oat-config.test.ts resolve.test.ts`
+
+Expected: all four styles are visually distinct and pass desktop/mobile,
+keyboard, reduced-motion, print, overflow, leak, and compatibility checks.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/styles .agents/skills/explainer-kit/schemas/run-request.schema.json .agents/skills/explainer-kit/schemas/theme.schema.json .agents/skills/explainer-kit/scripts/lib/theme.mjs .agents/skills/explainer-kit/templates/deck-shell.html .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/templates.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/explainer-kit/tests/visual-matrix.test.mjs .agents/skills/oat-explainer-kit/scripts/resolve-config.mjs .agents/skills/oat-explainer-kit/tests/config-paths.test.mjs .agents/skills/oat-explainer-kit/references/config-contract.md packages/cli/src/config/oat-config.ts packages/cli/src/config/oat-config.test.ts packages/cli/src/config/resolve.ts packages/cli/src/config/resolve.test.ts apps/oat-docs/docs/cli-utilities/configuration.md
+git commit -m "feat(prev1-t03): add curated explainer styles"
+```
+
+### Task prev1-t04: (revision) Validate the packaged revision with the live W6 recap
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `.oat/sync/manifest.json`
+- Modify: `.oat/projects/shared/explainer-kit/implementation.md`
+- Create: `.oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md`
+
+**Step 1: Reconcile shipped versions**
+
+Bump each changed canonical skill once and advance all five public packages in
+lockstep from merged-main `0.2.9` to `0.2.10`. Refresh generated provider views
+and package-version metadata.
+
+**Step 2: Run repository release gates**
+
+Run:
+`oat sync --scope all && pnpm format && pnpm lint && pnpm type-check && pnpm test && pnpm release:validate`
+
+Expected: provider views match canonical skills and every required repository
+and publishable-package gate passes.
+
+**Step 3: Run the first-consumer regression**
+
+Execute the retained Stoa W6 recap inputs through the packaged candidate with a
+real author module and one accepted curated style. Verify authored,
+publishable-quality narrative; complete immutable hashes; successful
+`oat project archive --project-recap-run`; visual gates; and no undeclared
+archive mutations. Record exact candidate identity and sanitized evidence.
+
+**Step 4: Review**
+
+Run a fresh-context final review over `p-rev1`, resolve any findings through the
+normal review receive loop, and rerun affected gates.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
+git commit -m "chore(prev1-t04): validate explainer revision"
+```
 
 ## Implementation Complete
 
@@ -1659,12 +1884,14 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 - Phase 3: 9 tasks — OAT adapter and lifecycle/archive integration
 - Phase 4: 9 tasks — publishing, compatibility, docs, release validation
 - Phase 5: 4 tasks — frozen RC and external acceptance
+- Phase p-rev1: 4 tasks — complete-package durability, authored content,
+  curated styles, and live W6 acceptance
 
-**Total: 38 tasks**
+**Total: 42 tasks**
 
-Ready for implementation. The configured cross-family gate was explicitly
-waived by the user after manual review and acceptance of the late artifact's
-fixes.
+Revision 1 is ready for implementation from `prev1-t01`. The original project
+remains active until the follow-up PR, live W6 acceptance, wave promotion, and
+project completion are finished.
 
 ## References
 
@@ -1672,4 +1899,6 @@ fixes.
 - Specification: `spec.md`
 - Discovery: `discovery.md`
 - Reference drafts: `references/skill-drafts/`
+- Revision 1 discovery: `references/revision-1-discovery.md`
+- Revision 1 visual baseline: `references/revision-1-theme-previews/`
 - Collaboration log: `brainstorming/2026-07-16-collab-log.md`
