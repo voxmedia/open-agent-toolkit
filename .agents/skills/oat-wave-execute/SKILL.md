@@ -196,8 +196,12 @@ Run the cross-runtime artifact gate with a **bounded** prompt (rule 6): review t
 wrapper artifacts for plan invariants, contract consistency, frontmatter validity,
 and whether any task restates/narrows its source plan — the external plans are
 immutable inputs, NOT review targets. Disposition findings in-artifact
-(gate-invoked artifact review), commit, and proceed at `fixes_completed` per
-wave-0/1 precedent.
+(gate-invoked artifact review) and commit. A plan gate MAY PROCEED at
+`fixes_completed` per the wave-0/1 precedent, but that is a proceed point, not a
+terminal state. Every gate row MUST flip to `passed` once all fix dispositions
+carry the stored verification records required by the fix-disposition contract below;
+`passed` is the only
+terminal state for gate rows (Orc operator-audit S8).
 
 ### Step 5: Execute via `oat-project-implement`
 
@@ -306,8 +310,12 @@ archive anything first.
 3. **Serialized backlog archival** — `oat backlog archive` with real summaries,
    one commit.
 4. **Root final review.**
-5. **Cross-runtime final gate** — judgment-sweep dispositions; watch for the known
-   gate row-stomp on the final Reviews row (restore `passed` if regressed).
+5. **Cross-runtime final gate** — judgment-sweep dispositions; after every fix
+   disposition has its required stored verification record, flip the row to
+   `passed`. A final
+   gate MUST NOT remain at `fixes_completed`: `passed` is the only terminal
+   state for gate rows. The known final-Reviews-row restore-watch presumes this
+   flow (restore `passed` if row-stomp regresses it; Orc operator-audit S8).
 6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
