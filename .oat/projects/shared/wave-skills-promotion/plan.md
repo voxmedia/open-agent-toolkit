@@ -860,34 +860,35 @@ Source: Orc-repo 4-wave program handoff (`references/2026-07-20-wave-skills-firs
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p01-review-2026-07-18T164109Z.md        |
-| p01    | code     | passed          | 2026-07-18 | reviews/archived/code-p01-review-round2-2026-07-18T165109Z.md |
-| p02    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p02-review-2026-07-18T171810Z.md        |
-| p02    | code     | passed          | 2026-07-18 | reviews/archived/code-p02-review-round2-2026-07-18T172343Z.md |
-| p03    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p03-review-2026-07-18T174325Z.md        |
-| p03    | code     | passed          | 2026-07-18 | reviews/archived/code-p03-review-round2-2026-07-18T174858Z.md |
-| p04    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p04-review-2026-07-18T175753Z.md        |
-| p04    | code     | passed          | 2026-07-18 | reviews/archived/code-p04-review-round2-2026-07-18T180320Z.md |
-| p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p05-review-2026-07-18T183116Z.md        |
-| p05    | code     | passed          | 2026-07-18 | reviews/archived/code-p05-review-round2-2026-07-18T183353Z.md |
-| p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/p05-review-2026-07-18T184321Z.md             |
-| p05    | code     | passed          | 2026-07-18 | reviews/archived/p05-review-2026-07-18T185045Z.md             |
-| p06    | code     | fixes_completed | 2026-07-19 | reviews/code-p06-review-round2-2026-07-19T010226Z.md          |
-| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-round3-2026-07-19T010826Z.md          |
-| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-2026-07-19T004731Z.md                 |
-| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T191920Z.md           |
-| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md    |
-| p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md               |
-| p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md               |
-| plan   | artifact | passed          | 2026-07-18 | -                                                             |
-| spec   | artifact | pending         | -          | -                                                             |
-| design | artifact | passed          | 2026-07-18 | -                                                             |
-| plan   | artifact | passed          | 2026-07-18 | -                                                             |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T141952Z.md   |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T142403Z.md   |
-| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T150023Z.md   |
+| Scope  | Type     | Status          | Date       | Artifact                                                             |
+| ------ | -------- | --------------- | ---------- | -------------------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p01-review-2026-07-18T164109Z.md               |
+| p01    | code     | passed          | 2026-07-18 | reviews/archived/code-p01-review-round2-2026-07-18T165109Z.md        |
+| p02    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p02-review-2026-07-18T171810Z.md               |
+| p02    | code     | passed          | 2026-07-18 | reviews/archived/code-p02-review-round2-2026-07-18T172343Z.md        |
+| p03    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p03-review-2026-07-18T174325Z.md               |
+| p03    | code     | passed          | 2026-07-18 | reviews/archived/code-p03-review-round2-2026-07-18T174858Z.md        |
+| p04    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p04-review-2026-07-18T175753Z.md               |
+| p04    | code     | passed          | 2026-07-18 | reviews/archived/code-p04-review-round2-2026-07-18T180320Z.md        |
+| p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/code-p05-review-2026-07-18T183116Z.md               |
+| p05    | code     | passed          | 2026-07-18 | reviews/archived/code-p05-review-round2-2026-07-18T183353Z.md        |
+| p05    | code     | fixes_completed | 2026-07-18 | reviews/archived/p05-review-2026-07-18T184321Z.md                    |
+| p05    | code     | passed          | 2026-07-18 | reviews/archived/p05-review-2026-07-18T185045Z.md                    |
+| p06    | code     | fixes_completed | 2026-07-19 | reviews/code-p06-review-round2-2026-07-19T010226Z.md                 |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-round3-2026-07-19T010826Z.md                 |
+| p06    | code     | passed          | 2026-07-19 | reviews/code-p06-review-2026-07-19T004731Z.md                        |
+| final  | code     | fixes_completed | 2026-07-18 | reviews/archived/final-review-2026-07-18T191920Z.md                  |
+| final  | code     | passed          | 2026-07-18 | reviews/archived/final-review-round2-2026-07-18T193844Z.md           |
+| p-rev1 | code     | passed          | 2026-07-18 | reviews/code-prev1-review-2026-07-18T221306Z.md                      |
+| p-rev2 | code     | passed          | 2026-07-18 | reviews/code-prev2-review-2026-07-18T234907Z.md                      |
+| p-rev3 | code     | passed          | 2026-07-20 | reviews/code-prev3-review-2026-07-20T143119Z.md (+ addendum 143712Z) |
+| plan   | artifact | passed          | 2026-07-18 | -                                                                    |
+| spec   | artifact | pending         | -          | -                                                                    |
+| design | artifact | passed          | 2026-07-18 | -                                                                    |
+| plan   | artifact | passed          | 2026-07-18 | -                                                                    |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T141952Z.md          |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T142403Z.md          |
+| plan   | artifact | passed          | 2026-07-18 | reviews/archived/artifact-plan-review-2026-07-18T150023Z.md          |
 
 _Design-row provenance: operator-relayed external review by the stoa-side packet author (2026-07-18); no artifact file was produced — verdict and amendments recorded in the design revision commit `5237cd57`._
 

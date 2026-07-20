@@ -40,7 +40,7 @@ oat_generated: false
 | Phase 5: Validation + release       | completed | 5     | 5/5       |
 | Phase 6: Explainer integration      | completed | 4     | 4/4       |
 
-**Total:** 33/33 tasks completed
+**Total:** 38/38 tasks completed
 
 ---
 
@@ -239,6 +239,13 @@ SUPERSEDED + FINALIZED (2026-07-19 evening): explainer PR #166 merged; post-merg
 **Source:** references/w6-migration-report-2026-07-18.md (2 findings: installer exec-bit defect via npm mode-stripping; runbook §2 stale-view gap) + §1 content-verify improvement
 
 **New tasks added:** prev2-t01..t03 — completed same day: 2533d6a0 (chmod fix, both install paths, RED→GREEN on 0644 fixtures), 10481e1a (runbook hardening), f9257c72 (lockstep 0.2.1). Review: round 1 PASS clean; reviewer confirmed the fix would have prevented stoa's defect on both paths.
+
+### Revision Received: Orc first-consumer handoff (signals 1-10)
+
+**Date:** 2026-07-20
+**Source:** references/2026-07-20-wave-skills-first-run-handoff.md (4-wave autonomous program, PRs #24-27; fan-in-gate pattern reproduced 4-for-4) + operator recap-disposition observation + log-verified Q&A.
+
+**Shipped (p-rev3, 5 tasks):** gate-row terminal-state fix (S8) `503d034f`; same-shell compound merge guard + append-only fix rounds + --no-commit probe (S5,S7) `f92bc8db`; worktree commit fallback, background gate posture, pipefail, single-writer artifacts (S1-S4) `7e32eac4`; CI waiver + rule-9 second citation + optional-step disposition + versions 1.7.0/1.3.0 `9a8c8a80`; closeout full completion tail (S10) `3f47e5a7`. Reviews: t01-t04 clean; t05 addendum clean. Routed elsewhere: S9 (explainer recap sections) → explainer fix batch; -auto companion → BL-260720-add-oat-project-complete-auto (three-layer firing guard per operator).
 
 ## Orchestration Runs
 
