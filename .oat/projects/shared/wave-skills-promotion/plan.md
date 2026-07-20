@@ -848,6 +848,14 @@ Source: Orc-repo 4-wave program handoff (`references/2026-07-20-wave-skills-firs
 
 **Verify** — version greps; `oat sync --scope all` clean; `pnpm lint`; commit `feat(prev3-t04): CI waiver rule, optional-step disposition, versions 1.7.0/1.3.0`.
 
+### Task prev3-t05: (revision) Closeout step 7 names the full completion tail (S10)
+
+**Files:** `.agents/skills/oat-wave-execute/SKILL.md`
+
+**Step 1:** Rewrite closeout step 7: the requirement is the full `oat-project-complete` PROCESS, not its nearest CLI command — name the tail explicitly (complete-state → `oat project archive` [CLI-owned local move + summary export + S3 sync when `s3SyncOnComplete`] → active-pointer clear → bookkeeping commit), state that `oat project complete-state` ALONE does not satisfy it (Orc first-run evidence: 4 wrapper projects left unarchived until operator audit), and note that under autonomous execution the interactive skill is model-invisible (`disable-model-invocation: true`) — execute its SKILL.md as a document, resolving gates from config, until an `oat-project-complete-auto` companion exists (see backlog).
+
+**Step 2: Verify** — `rg -U -n "complete-state.*alone|full.*tail|archive" .agents/skills/oat-wave-execute/SKILL.md | head`; commit `fix(prev3-t05): closeout step 7 names the full completion tail (S10)`.
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -1014,9 +1022,9 @@ Source: stoa W6-migration report (references/w6-migration-report-2026-07-18.md) 
 - Phase 6: 4 tasks - §4 explainer integration + its own release choreography (RC-gated)
 - Phase p-rev1: 3 tasks - PR #158 Bugbot revision
 - Phase p-rev2: 3 tasks - stoa migration findings (installer exec-bit, runbook, 0.2.1)
-- Phase p-rev3: 4 tasks - Orc first-consumer feedback (1.7.0/1.3.0)
+- Phase p-rev3: 5 tasks - Orc first-consumer feedback (1.7.0/1.3.0)
 
-**Total: 37 tasks**
+**Total: 38 tasks**
 
 Ready for code review and merge.
 

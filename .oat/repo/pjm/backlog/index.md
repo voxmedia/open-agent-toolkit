@@ -70,6 +70,7 @@
 | ---------------------------------------- | ----------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
 | BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                        | open   | high     | feature | M        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                               | open   | high     | feature | L        |
+| BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts  | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches          | open   | high     | feature | M        |
 | BL-260720-fix-cross-machine-flakiness    | Fix cross-machine flakiness in explainer visual-validation release gate | open   | high     | task    | S        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch  | open   | high     | feature | M        |
