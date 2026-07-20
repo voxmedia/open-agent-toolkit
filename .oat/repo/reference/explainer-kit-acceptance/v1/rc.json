@@ -1,37 +1,37 @@
 {
   "schemaVersion": "explainer-kit.release-candidate/v1",
-  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
-  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+  "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
+  "commit": "1f9be47e94ccda5d7304e66502f8bb1b88aa06d3",
   "packages": [
     {
       "name": "@open-agent-toolkit/cli",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-cli-0.2.3.tgz",
-      "sha256": "sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-cli-0.2.6.tgz",
+      "sha256": "sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390"
     },
     {
       "name": "@open-agent-toolkit/control-plane",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-control-plane-0.2.3.tgz",
-      "sha256": "sha256:59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-control-plane-0.2.6.tgz",
+      "sha256": "sha256:82d1e7f96517e53b78bb6387dddf20a201d5a8dae4dcdba0b860cc85c1e361aa"
     },
     {
       "name": "@open-agent-toolkit/docs-config",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-docs-config-0.2.3.tgz",
-      "sha256": "sha256:3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-docs-config-0.2.6.tgz",
+      "sha256": "sha256:1e3b52ae6bc66728db2a3e1a5c93e9723939ca2bc8781e1418e376b0c0d320a3"
     },
     {
       "name": "@open-agent-toolkit/docs-theme",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-docs-theme-0.2.3.tgz",
-      "sha256": "sha256:493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-docs-theme-0.2.6.tgz",
+      "sha256": "sha256:e9eb1a3c4553f9674974df4557be49122883dd0a6f3d7b22a9b8b6f3c39dd662"
     },
     {
       "name": "@open-agent-toolkit/docs-transforms",
-      "version": "0.2.3",
-      "artifact": "open-agent-toolkit-docs-transforms-0.2.3.tgz",
-      "sha256": "sha256:a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd"
+      "version": "0.2.6",
+      "artifact": "open-agent-toolkit-docs-transforms-0.2.6.tgz",
+      "sha256": "sha256:eb991736bac0b143879a727f5826511086cbed7f3a8d1ff3763f9844fa328c96"
     }
   ],
   "skills": [

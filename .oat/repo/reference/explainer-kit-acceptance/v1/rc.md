@@ -2,8 +2,8 @@
 
 ## Frozen identity
 
-- Code commit: `da1e7a713adac4743368addf206aa780a94871ba`
-- RC ID: `sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+- Code commit: `1f9be47e94ccda5d7304e66502f8bb1b88aa06d3`
+- RC ID: `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
 - Identity record: `rc.json`
 - Retained local artifacts: `dist/explainer-kit-rc/`
 - Candidate changes reported by the builder: none
@@ -17,11 +17,11 @@ here.
 
 | Package                               | Version | Retained artifact                              | SHA-256                                                            |
 | ------------------------------------- | ------- | ---------------------------------------------- | ------------------------------------------------------------------ |
-| `@open-agent-toolkit/cli`             | `0.2.3` | `open-agent-toolkit-cli-0.2.3.tgz`             | `dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1` |
-| `@open-agent-toolkit/control-plane`   | `0.2.3` | `open-agent-toolkit-control-plane-0.2.3.tgz`   | `59a708f7caae17b8255aecf9659152c588578b5ef7a4892ecb48bc78664ea0f5` |
-| `@open-agent-toolkit/docs-config`     | `0.2.3` | `open-agent-toolkit-docs-config-0.2.3.tgz`     | `3b9d42d38a29be41fe3cca8a8ed3fc4606f7688035d2c85355c65934353dbd0f` |
-| `@open-agent-toolkit/docs-theme`      | `0.2.3` | `open-agent-toolkit-docs-theme-0.2.3.tgz`      | `493993025bd639909200695a499fd8bb4d2edc192563c05dbfdbbdf90236c9b0` |
-| `@open-agent-toolkit/docs-transforms` | `0.2.3` | `open-agent-toolkit-docs-transforms-0.2.3.tgz` | `a77344ba084e3c267ddf485febd280661e9487e4ff5b29b07753869250f7a2dd` |
+| `@open-agent-toolkit/cli`             | `0.2.6` | `open-agent-toolkit-cli-0.2.6.tgz`             | `ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390` |
+| `@open-agent-toolkit/control-plane`   | `0.2.6` | `open-agent-toolkit-control-plane-0.2.6.tgz`   | `82d1e7f96517e53b78bb6387dddf20a201d5a8dae4dcdba0b860cc85c1e361aa` |
+| `@open-agent-toolkit/docs-config`     | `0.2.6` | `open-agent-toolkit-docs-config-0.2.6.tgz`     | `1e3b52ae6bc66728db2a3e1a5c93e9723939ca2bc8781e1418e376b0c0d320a3` |
+| `@open-agent-toolkit/docs-theme`      | `0.2.6` | `open-agent-toolkit-docs-theme-0.2.6.tgz`      | `e9eb1a3c4553f9674974df4557be49122883dd0a6f3d7b22a9b8b6f3c39dd662` |
+| `@open-agent-toolkit/docs-transforms` | `0.2.6` | `open-agent-toolkit-docs-transforms-0.2.6.tgz` | `eb991736bac0b143879a727f5826511086cbed7f3a8d1ff3763f9844fa328c96` |
 
 ## Skills
 
@@ -54,38 +54,29 @@ here.
 
 ## Operator notes
 
-This final candidate was refrozen after PR #161/p06 reconciliation. It
+This candidate was frozen from merged `main` after explainer-kit PR #166. It
 supersedes RC
-`sha256:f212d630a2e1f8dfeb42f7d1aa4a4522f485848143dd43a702313c792050b854`
-at code commit `534a408eed0080bcf653a6dde3abc1dd612f0ccb`. External acceptance must use the
-new RC ID and retained `0.2.3` package tarballs; evidence for the superseded RC
-does not apply.
+`sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb`
+at code commit `da1e7a713adac4743368addf206aa780a94871ba`. External acceptance must use the
+new RC ID and exact retained `0.2.6` package tarballs; evidence for the
+superseded RC remains historical and does not promote this candidate.
 
 The operator-owned wrapper runbook must pin:
 
 ```json
 {
-  "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
-  "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+  "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
+  "commit": "1f9be47e94ccda5d7304e66502f8bb1b88aa06d3",
   "subtreeSha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
 }
 ```
 
 Two same-machine builds produced byte-identical records and all five tarballs.
-A cache-bypassed Mini rebuild matched four package tarballs, every archive
-entry, 1,254 of 1,257 CLI file hashes, both skill subtrees, all eight schemas,
-and all four recipes. The only differences were ordering within three generated
-`.d.ts` files: one string-literal union, inferred Zod object properties, and one
-effort union. Node `22.17.0`, pnpm `10.13.1`, and TypeScript `5.9.3` matched;
-runtime JavaScript and declaration maps were byte-identical.
-
-The cross-machine difference is therefore recorded as semantically benign
-declaration-emission ordering outside the explainer surfaces. It does not
-change the frozen identity: acceptance must consume the exact retained
-`dc1f2d82…93b1` CLI tarball bytes and verify the `2cf98952…b654`
-`oat-explainer-kit` subtree, rather than substitute a rebuilt whole tarball.
-Normalized Mini evidence is tracked on `origin/wave-skills-promotion` at
-`36e98b05`.
+The explainer skill subtrees, all eight schemas, and all four recipes are
+unchanged from the previously accepted candidate. Acceptance must consume the
+exact retained `ec3ff847…91390` CLI tarball bytes and verify the
+`2cf98952…b654` `oat-explainer-kit` subtree rather than substitute a rebuilt
+whole tarball.
 
 ## Operator verification
 

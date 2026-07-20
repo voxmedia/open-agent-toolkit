@@ -1211,6 +1211,23 @@ remaining blocker. Re-review passed with zero findings; canonical artifact:
   historical records, but the reconciled source and package identities require
   a new RC and external acceptance rerun after merge to `main`.
 
+### 2026-07-19 — Post-merge RC freeze
+
+- PR #166 merged to `main` as
+  `1f9be47e94ccda5d7304e66502f8bb1b88aa06d3`.
+- Built the final `0.2.6` package set from that exact merge commit.
+- Rebuilt the candidate in the same clean checkout and byte-compared the two
+  records; both produced RC
+  `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`.
+- The `explainer-kit` and `oat-explainer-kit` subtree hashes remain unchanged
+  from the accepted candidate. Package hashes changed because the reconciled
+  release includes intervening current-main functionality.
+- Updated `rc.json`, `rc.md`, and the personal-wrapper migration runbook with
+  the final pins.
+- The prior wrapper and publish evidence intentionally no longer validates
+  against `rc.json`; it must be replaced by fresh evidence for this RC before
+  promotion.
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

@@ -2,8 +2,10 @@
 
 > Historical acceptance record: this approval applies only to the immutable
 > `0.2.3` RC identified below. Reconciliation with newer `main` inputs in
-> `dfe4b527` advanced the release set to `0.2.6`; promotion now requires a new
-> post-merge RC and rerun of both external gates.
+> `dfe4b527` advanced the release set to `0.2.6`. Post-merge RC
+> `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
+> is frozen and awaiting rerun of both external gates; it is not yet approved
+> by this record.
 
 **Decision:** approved for promotion
 **Recorded:** 2026-07-19

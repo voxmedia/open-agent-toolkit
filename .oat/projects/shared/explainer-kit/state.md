@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
-oat_last_commit: dfe4b527
-oat_blockers: []
+oat_last_commit: 1f9be47e
+oat_blockers:
+  - Awaiting post-merge private-wrapper and packaged publish acceptance for RC sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -34,17 +35,17 @@ oat_dispatch_policy:
 oat_workflow_mode: spec-driven # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_docs_updated: null # null | skipped | complete — documentation sync status
-oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: merged # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T01:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T02:05:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-kit
 
-**Status:** Implementation complete — reconciled integration PR ready
+**Status:** Implementation merged — post-merge RC awaiting acceptance
 **Started:** 2026-07-16
 **Last Updated:** 2026-07-19
 
@@ -118,12 +119,16 @@ Implementation complete — 38/38 tasks
 - ⚠ The accepted `0.2.3` RC remains immutable historical evidence; reconciliation
   changed release inputs, so promotion now requires a post-merge `0.2.6` refreeze
   and acceptance rerun
+- ✓ PR #166 merged to `main` as `1f9be47e`
+- ✓ Post-merge `0.2.6` RC built twice with byte-identical identity
+  `sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903`
 
 ## Blockers
 
-None.
+- Awaiting private-wrapper and packaged S3/CDN acceptance against the exact
+  retained post-merge RC bytes.
 
 ## Next Milestone
 
-Open and merge the reconciled integration PR, then freeze a release candidate
-from merged `main` and rerun the external wrapper and publish acceptance gates.
+Rerun the external wrapper and packaged publish acceptance gates, update wave
+p06 evidence and promotion state, then complete the explainer-kit project.

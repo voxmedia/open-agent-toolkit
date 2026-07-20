@@ -31,7 +31,7 @@ this repository.
 - Confirm the rollback backup exists at
   `~/.agents/skills-backup/oat-explainer-kit-0.4.1` before changing the installed
   wrapper.
-- Use the post-p06 final explainer-kit RC for acceptance. At final-RC freeze,
+- Use the post-PR-#166 final explainer-kit RC for acceptance. At final-RC freeze,
   fill all three placeholders in the installed wrapper's `config.json`
   `finalRc` block (`rcId`, `commit`, `subtreeSha256`); the acceptance harness
   reads them from there and carries them into the sanitized acceptance record.
@@ -39,8 +39,8 @@ this repository.
 
   ```json
   {
-    "rcId": "sha256:985d0abdac8245376d56dc16d5f263324ffb070d4157f51e0a65504eddee62bb",
-    "commit": "da1e7a713adac4743368addf206aa780a94871ba",
+    "rcId": "sha256:7fea9e53033608ec1e7bf3d07d6124e32f5f7b9e91af61fd3e2799cfae501903",
+    "commit": "1f9be47e94ccda5d7304e66502f8bb1b88aa06d3",
     "subtreeSha256": "sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654"
   }
   ```
@@ -50,15 +50,15 @@ this repository.
 - The gate-open RC recorded the `package/assets/skills/oat-explainer-kit`
   subtree as
   `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`.
-  This is the contract-basis subtree pin; acceptance must use the corresponding
-  subtree hash from the post-p06 final RC after that RC is frozen.
+  This is the contract-basis subtree pin and remains unchanged in the final
+  post-merge RC.
 
 ## Rebuild and verify the skill subtree
 
 Acceptance pins the skill subtree, not the whole CLI tarball.
 
 1. Create a temporary worktree at frozen commit
-   `da1e7a713adac4743368addf206aa780a94871ba`.
+   `1f9be47e94ccda5d7304e66502f8bb1b88aa06d3`.
 2. In that worktree, run:
 
    ```bash
@@ -72,16 +72,15 @@ Acceptance pins the skill subtree, not the whole CLI tarball.
    byte-compare the subtree against the rebuild. The result must be
    `sha256:2cf98952c03a60eaf1853fcb9968c0258c2349e35c8f679d16003bbceec5b654`.
 5. For acceptance, use the exact retained CLI tarball whose whole-file hash is
-   `sha256:dc1f2d82885f21d2aa649330c6b6f75962e79e689f47138aafb539caae5793b1`.
+   `sha256:ec3ff847440b1471cd093a3f2a54175edac348d8356e248d6581a3c4b3291390`.
    Do not substitute a rebuilt whole tarball.
 
-Cross-machine provenance is resolved. A cache-bypassed Mini rebuild matched
-every path, 1,254 of 1,257 CLI files, both skill subtrees, all schemas, and all
-recipes. The only whole-tarball differences were ordering within three
-generated declaration files; runtime JavaScript, declaration maps, toolchain
-versions, and all explainer surfaces matched. The variance is semantically
-benign but remains recorded; exact frozen bytes are still required for
-acceptance.
+Previous cross-machine investigation established that whole-tarball rebuilds
+can differ through semantically benign TypeScript declaration ordering even
+when runtime and explainer surfaces match. Two same-machine builds of this
+final RC produced byte-identical records and tarballs. Acceptance therefore
+uses the exact retained CLI bytes and independently verifies the unchanged
+explainer subtree rather than substituting a rebuild.
 
 ## Install and migrate the wrapper
 
