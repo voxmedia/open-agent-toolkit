@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-18
-oat_current_task_id: p06-t01 # RC gate open (f212d630); gate-open plan revision next
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -40,7 +40,7 @@ oat_generated: false
 | Phase 5: Validation + release       | completed | 5     | 5/5       |
 | Phase 6: Explainer integration      | completed | 4     | 4/4       |
 
-**Total:** 38/38 tasks completed
+**Total:** 40/40 tasks completed
 
 ---
 
@@ -247,6 +247,13 @@ SUPERSEDED + FINALIZED (2026-07-19 evening): explainer PR #166 merged; post-merg
 
 **Shipped (p-rev3, 5 tasks):** gate-row terminal-state fix (S8) `503d034f`; same-shell compound merge guard + append-only fix rounds + --no-commit probe (S5,S7) `f92bc8db`; worktree commit fallback, background gate posture, pipefail, single-writer artifacts (S1-S4) `7e32eac4`; CI waiver + rule-9 second citation + optional-step disposition + versions 1.7.0/1.3.0 `9a8c8a80`; closeout full completion tail (S10) `3f47e5a7`. Reviews: t01-t04 clean; t05 addendum clean. Routed elsewhere: S9 (explainer recap sections) → explainer fix batch; -auto companion → BL-260720-add-oat-project-complete-auto (three-layer firing guard per operator).
 
+### Revision Received: operator program-boundary design (p-rev4)
+
+**Date:** 2026-07-20
+**Source:** operator direction — program-scope recap (not per-wave); autonomous archive-tail deferral with ONE human-gated program-end checkpoint.
+
+**Shipped:** `9be02819` (recap default = program close; per-wave deferral dispositions), `ec66872d` (checkpoint + deferral + versions 1.7.1/1.3.1), fix `70d00635` (program recap → program ledger). Review R1 1-Important → R2 clean; the complete-before-merge vs deferred-archive seam explicitly reconciled. Parked with operator: demote BL-260720-add-oat-project-complete-auto.
+
 ## Orchestration Runs
 
 _Each run from `oat-project-implement` appends an entry below._
@@ -260,17 +267,18 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 - Branch: `wave-skills-promotion`; Tier 1 (Cursor-native subagents); policy managed/high → `gpt-5.6-sol-high` (enforced, model arg); retry limit 2 (default).
 - Phase Outcomes:
 
-| Phase  | Implementer                                              | Tasks | Review                                                           | Fix loops                                   | Result |
-| ------ | -------------------------------------------------------- | ----- | ---------------------------------------------------------------- | ------------------------------------------- | ------ |
-| p01    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0)  | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
-| p02    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)              | 1 (provenance citation restore, `7601d2d6`) | pass   |
-| p03    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)               | 1 (owner lines, `2d889c19`)                 | pass   |
-| p04    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix) | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS           | 1 (ownership wording, `1a6359ec`)           | pass   |
-| p05    | oat-phase-implementer-gpt-5-6-sol-high                   | 5/5   | round 1 FAIL (1 Important — root bookkeeping gap) → round 2 PASS | 1 root-side (`1e336990`, impl record)       | pass   |
-| p-rev1 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (1 Medium, root-fixed inline)                       | 0                                           | pass   |
-| p-rev2 | oat-phase-implementer-gpt-5-6-sol-high                   | 3/3   | round 1 PASS (0/0/0/0 — first clean round 1)                     | 0                                           | pass   |
-| p06    | oat-phase-implementer-gpt-5-6-sol-high (2 continuations) | 4/4   | R1 PASS → extension R2 FAIL (1 Important) → R3 PASS              | 1 (`ed5ca542`)                              | pass   |
-| p-rev3 | oat-phase-implementer-gpt-5-6-sol-high (1 continuation)  | 5/5   | t01-t04 PASS clean + t05 addendum PASS                           | 0                                           | pass   |
+| Phase  | Implementer                                                 | Tasks | Review                                                           | Fix loops                                   | Result |
+| ------ | ----------------------------------------------------------- | ----- | ---------------------------------------------------------------- | ------------------------------------------- | ------ |
+| p01    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix)    | 4/4   | round 1 FAIL (1 Critical, 1 Important) → round 2 PASS (0/0/0/0)  | 1 (installer mode-preservation, `3aa46d5c`) | pass   |
+| p02    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix)    | 9/9   | round 1 FAIL (1 Important) → round 2 PASS (0/0/0/0)              | 1 (provenance citation restore, `7601d2d6`) | pass   |
+| p03    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix)    | 3/3   | round 1 FAIL (1 Critical) → round 2 PASS (0/0/0/0)               | 1 (owner lines, `2d889c19`)                 | pass   |
+| p04    | oat-phase-implementer-gpt-5-6-sol-high (resumed for fix)    | 2/2   | round 1 changes-requested (1 Important) → round 2 PASS           | 1 (ownership wording, `1a6359ec`)           | pass   |
+| p05    | oat-phase-implementer-gpt-5-6-sol-high                      | 5/5   | round 1 FAIL (1 Important — root bookkeeping gap) → round 2 PASS | 1 root-side (`1e336990`, impl record)       | pass   |
+| p-rev1 | oat-phase-implementer-gpt-5-6-sol-high                      | 3/3   | round 1 PASS (1 Medium, root-fixed inline)                       | 0                                           | pass   |
+| p-rev2 | oat-phase-implementer-gpt-5-6-sol-high                      | 3/3   | round 1 PASS (0/0/0/0 — first clean round 1)                     | 0                                           | pass   |
+| p06    | oat-phase-implementer-gpt-5-6-sol-high (2 continuations)    | 4/4   | R1 PASS → extension R2 FAIL (1 Important) → R3 PASS              | 1 (`ed5ca542`)                              | pass   |
+| p-rev3 | oat-phase-implementer-gpt-5-6-sol-high (1 continuation)     | 5/5   | t01-t04 PASS clean + t05 addendum PASS                           | 0                                           | pass   |
+| p-rev4 | oat-phase-implementer-gpt-5-6-sol-high (1 fix continuation) | 2/2   | R1 changes-requested (1 Important) → R2 PASS                     | 1 (`70d00635`)                              | pass   |
 
 - Dispatch stamps: `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high` · `Dispatch: scope=p01 action=review role=reviewer producer=oat-phase-implementer-gpt-5-6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
 - Selection reason: native-catalog; candidates: [gpt-5.6-sol-high]. Fix continuation resumed the original implementer handle (continuation event 1); re-review resumed the original reviewer handle (round 2).
