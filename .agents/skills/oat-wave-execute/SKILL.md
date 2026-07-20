@@ -419,8 +419,9 @@ synthesized fact-base file through `factBase` with the required keys
 After the run, read the `explainer-kit.manifest/v1` document. Its required keys
 are exactly:
 `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
-Record the manifest's `runId` and `outcome` in the wave ledger row. Publishing is
-human-gated; this caller never invokes publish.
+Record the default program recap's manifest `runId` and `outcome` in the
+program ledger; use a wave ledger row only for an explicitly requested per-wave
+recap. Publishing is human-gated; this caller never invokes publish.
 
 ## Success Criteria
 
