@@ -172,49 +172,131 @@ async function probePage(browser, url, request) {
   }
 }
 
-async function probeKeyboard(page, request) {
-  await page.keyboard.press('Tab');
-  const tab = await page.evaluate(() => {
-    const focused =
-      document.activeElement !== document.body &&
-      document.activeElement !== document.documentElement;
-    const visibleFocusable = [
+export async function primeKeyboardFocus(page) {
+  await page.bringToFront();
+  await page.mouse.click(1, 1);
+  await page.evaluate(() => {
+    window.focus();
+    const body = document.body;
+    const originalTabIndex = body.getAttribute('tabindex');
+    try {
+      body.setAttribute('tabindex', '-1');
+      body.focus({ preventScroll: true });
+    } finally {
+      if (originalTabIndex === null) {
+        body.removeAttribute('tabindex');
+      } else {
+        body.setAttribute('tabindex', originalTabIndex);
+      }
+    }
+  });
+}
+
+export async function pressTabFromDocument(
+  page,
+  { pressTab = () => page.keyboard.press('Tab') } = {},
+) {
+  for (let attempt = 0; attempt < 2; attempt += 1) {
+    await primeKeyboardFocus(page);
+    await pressTab();
+    const advanced = await page.evaluate(() => {
+      const focused =
+        document.activeElement !== document.body &&
+        document.activeElement !== document.documentElement;
+      const visibleFocusable = [
+        ...document.querySelectorAll(
+          'a[href], button, input, select, textarea, [tabindex]',
+        ),
+      ].some((element) => {
+        const style = getComputedStyle(element);
+        return (
+          style.display !== 'none' &&
+          style.visibility !== 'hidden' &&
+          element.getClientRects().length > 0
+        );
+      });
+      return focused || !visibleFocusable;
+    });
+    if (advanced) return true;
+    await page.waitForTimeout(25);
+  }
+  return page.evaluate(() => {
+    const visibleControls = [
       ...document.querySelectorAll(
         'a[href], button, input, select, textarea, [tabindex]',
       ),
-    ].some((element) => {
+    ].filter((element) => {
+      if (!(element instanceof HTMLElement) || element.matches(':disabled')) {
+        return false;
+      }
       const style = getComputedStyle(element);
-      return (
-        style.display !== 'none' &&
-        style.visibility !== 'hidden' &&
-        element.getClientRects().length > 0
-      );
+      return style.display !== 'none' && style.visibility !== 'hidden';
     });
-    return focused || !visibleFocusable;
+    return (
+      visibleControls.length === 0 ||
+      visibleControls.some((element) => element.tabIndex >= 0)
+    );
   });
+}
+
+async function probeKeyboard(page, request) {
+  const tab = await pressTabFromDocument(page);
   if (!request.keyboard.arrows) return { tab };
 
   const arrows = {};
   for (const key of request.keyboard.arrows) {
-    const positive = key === 'ArrowRight' || key === 'ArrowDown';
-    const resetKey = positive ? 'ArrowLeft' : 'ArrowRight';
-    for (let index = 0; index < 10; index += 1) {
-      await page.keyboard.press(resetKey);
-    }
-    await page.waitForTimeout(10);
-    const before = await deckCounter(page);
-    await page.keyboard.press(key);
-    await page.waitForTimeout(10);
-    const after = await deckCounter(page);
-    arrows[key] = positive ? after > before : after < before;
+    arrows[key] = await probeArrowKey(page, key);
   }
   return { tab, arrows };
 }
 
-async function deckCounter(page) {
+export async function probeArrowKey(page, key) {
+  const positive = key === 'ArrowRight' || key === 'ArrowDown';
+  const makeRoomKey = positive ? 'ArrowLeft' : 'ArrowRight';
+  await page.bringToFront();
+  let before = await deckPosition(page);
+  for (let attempt = 0; attempt < 5; attempt += 1) {
+    const hasRoom = positive
+      ? before.current < before.total
+      : before.current > 1;
+    if (hasRoom) break;
+    await page.keyboard.press(makeRoomKey);
+    before = await deckPosition(page);
+    if (positive ? before.current < before.total : before.current > 1) {
+      break;
+    }
+    await page.waitForTimeout(25);
+    before = await deckPosition(page);
+  }
+  if (positive ? before.current >= before.total : before.current <= 1) {
+    return false;
+  }
+  for (let attempt = 0; attempt < 3; attempt += 1) {
+    await page.keyboard.press(key);
+    let after = await deckPosition(page);
+    if (
+      positive ? after.current > before.current : after.current < before.current
+    ) {
+      return true;
+    }
+    await page.waitForTimeout(25);
+    after = await deckPosition(page);
+    if (
+      positive ? after.current > before.current : after.current < before.current
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function deckPosition(page) {
   return page.evaluate(() => {
     const text = document.querySelector('#deck-counter')?.textContent ?? '';
-    return Number.parseInt(text.split('/')[0], 10);
+    const [current, total] = text
+      .split('/')
+      .map((value) => Number.parseInt(value, 10));
+    return { current, total };
   });
 }
 

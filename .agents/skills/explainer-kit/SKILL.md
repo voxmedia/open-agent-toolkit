@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 1.0.0
+version: 1.0.1
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
@@ -55,6 +55,8 @@ discovery, theme resolution, rendering, QA, and manifest/build-record
 persistence. It runs without OAT files or ambient configuration. Supplied fact
 bases receive only lightweight consistency/freshness checks. Federated inputs
 require a provider-neutral critic callback and invoke it exactly once.
+Optional claim `sections` tags route facts to matching recipe narrative
+sections; untagged claims remain shared context for every required section.
 
 Unattended calls use explicit, already-approved source artifacts, persist their
 review provenance in `source/content-approval.json`, and never prompt.

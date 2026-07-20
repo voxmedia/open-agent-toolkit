@@ -199,6 +199,46 @@ test('rejection persists corrections and explicit approval resumes the same run'
   assert.match(rendered, /Corrected implementation status\./);
 });
 
+test('resume rejects a changed fact-base binding', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = { ...fixture.request, mode: 'interactive' };
+  await runExplainer(interactiveRequest, {
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Correct the implementation status.'],
+    },
+  });
+  const replacementFactBasePath = join(fixture.cwd, 'replacement-facts.json');
+  await writeFile(
+    replacementFactBasePath,
+    `${JSON.stringify(suppliedFactBase(), null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    runExplainer(
+      {
+        ...interactiveRequest,
+        factBase: {
+          ...interactiveRequest.factBase,
+          path: replacementFactBasePath,
+        },
+      },
+      {
+        now: () => '2026-07-17T20:05:00Z',
+        reviewedSource: {
+          decision: 'approve',
+          reviewedAt: '2026-07-17T20:05:00Z',
+          reviewer: 'operator',
+        },
+      },
+    ),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+});
+
 test('unattended lifecycle sources persist review provenance without prompting', async () => {
   const fixture = await suppliedFixture('project-recap');
   const prompt = mock.fn(() => {
@@ -268,6 +308,105 @@ test('runs both canonical recipes config-free from directories without .oat file
       /Private transient direction/,
     );
   }
+});
+
+test('reusing a completed slug starts a clean independent run', async () => {
+  const fixture = await suppliedFixture();
+  const first = await runExplainer(fixture.request, { now: () => NOW });
+
+  const second = await runExplainer(fixture.request, {
+    now: () => '2026-07-17T21:00:00Z',
+  });
+
+  assert.equal(first.outcome, 'built-not-durable');
+  assert.equal(
+    second.outcome,
+    'built-not-durable',
+    JSON.stringify(second.errors),
+  );
+  assert.notEqual(second.runId, first.runId);
+  const manifest = JSON.parse(await readFile(second.manifestPath, 'utf8'));
+  assert.equal(manifest.runId, second.runId);
+});
+
+test('routes tagged program claims to matching narrative sections', async () => {
+  const fixture = await suppliedFixture('program-recap');
+  const taggedFactBase = suppliedFactBase();
+  taggedFactBase.claims = [
+    {
+      ...taggedFactBase.claims[0],
+      id: 'shared',
+      text: 'Shared program context.',
+    },
+    {
+      ...taggedFactBase.claims[0],
+      id: 'overview',
+      text: 'Program overview only.',
+      sections: ['program-overview'],
+    },
+    {
+      ...taggedFactBase.claims[0],
+      id: 'outcomes',
+      text: 'Per-wave outcomes only.',
+      sections: ['per-wave-outcomes'],
+    },
+  ];
+  taggedFactBase.unresolvedClaims = [
+    {
+      id: 'follow-up',
+      text: 'Owner confirmation is pending.',
+      reason: 'needs-confirmation',
+      citations: [{ sourceId: 'project', locator: 'approved-project.md:2' }],
+      sections: ['follow-up-ledger'],
+    },
+  ];
+  assert.equal(validateContract('fact-base', taggedFactBase).valid, true);
+  await writeFile(
+    fixture.factBasePath,
+    `${JSON.stringify(taggedFactBase, null, 2)}\n`,
+  );
+
+  const result = await runExplainer(fixture.request, { now: () => NOW });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const markdown = await readFile(
+    join(result.runRoot, 'source/content/program-recap.md'),
+    'utf8',
+  );
+  const headings = [...markdown.matchAll(/^## (.+)$/gm)];
+  const sections = new Map(
+    headings.map((heading, index) => [
+      heading[1],
+      markdown
+        .slice(
+          heading.index + heading[0].length,
+          headings[index + 1]?.index ?? markdown.length,
+        )
+        .trim(),
+    ]),
+  );
+  assert.match(sections.get('Program Overview'), /Shared program context/);
+  assert.match(sections.get('Program Overview'), /Program overview only/);
+  assert.doesNotMatch(
+    sections.get('Program Overview'),
+    /Per-wave outcomes only/,
+  );
+  assert.equal(sections.get('Wave Map'), 'Shared program context.');
+  assert.match(sections.get('Per Wave Outcomes'), /Shared program context/);
+  assert.match(sections.get('Per Wave Outcomes'), /Per-wave outcomes only/);
+  assert.doesNotMatch(
+    sections.get('Per Wave Outcomes'),
+    /Program overview only/,
+  );
+  assert.match(sections.get('Follow Up Ledger'), /Shared program context/);
+  assert.match(
+    sections.get('Follow Up Ledger'),
+    /Needs confirmation: Owner confirmation is pending/,
+  );
 });
 
 test('federates explicit sources and invokes only the provider-neutral critic seam', async () => {
@@ -390,7 +529,9 @@ test('confines atomic package writes from symlinked site, content, nested ancest
     const runRoot = join(fixture.outputRoot, fixture.request.slug);
 
     if (scenario === 'site') {
-      await mkdir(runRoot, { recursive: true });
+      const seeded = await runExplainer(fixture.request, { now: () => NOW });
+      assert.equal(seeded.outcome, 'built-not-durable');
+      await rm(join(runRoot, 'site'), { recursive: true });
       await symlink(outside, join(runRoot, 'site'));
     }
 

@@ -227,7 +227,9 @@ async function loadResumableRun(request) {
     persistedRequest.slug !== normalized.slug ||
     persistedRequest.recipe?.id !== normalized.recipe.id ||
     persistedRequest.recipe?.version !== normalized.recipe.version ||
-    persistedRequest.mode !== normalized.mode
+    persistedRequest.mode !== normalized.mode ||
+    canonicalHash(persistedRequest.factBase) !==
+      canonicalHash(normalized.factBase)
   ) {
     throw codedError(
       'E_APPROVAL_RESUME',
@@ -551,12 +553,25 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
 
 function createContentModel(recipe, artifact, slug, factBase) {
   const facts = [
-    ...factBase.claims.map(({ text }) => text),
-    ...factBase.unresolvedClaims.map(
-      ({ text }) => `Needs confirmation: ${text}`,
+    ...factBase.claims.map(({ text, sections }) => ({ text, sections })),
+    ...factBase.unresolvedClaims.map(({ text, sections }) => ({
+      text: `Needs confirmation: ${text}`,
+      sections,
+    })),
+  ];
+  const unknownSections = [
+    ...new Set(
+      facts
+        .flatMap(({ sections }) => sections ?? [])
+        .filter((section) => !recipe.requiredNarrative.includes(section)),
     ),
   ];
-  const summary = facts.length > 0 ? facts.join(' ') : 'No confirmed facts.';
+  if (unknownSections.length > 0) {
+    throw codedError(
+      'E_CONTENT',
+      `Unknown narrative section tags: ${unknownSections.join(', ')}`,
+    );
+  }
   return {
     artifactId: artifact.id,
     slug,
@@ -564,11 +579,19 @@ function createContentModel(recipe, artifact, slug, factBase) {
     description: `Approved-source ${humanize(recipe.id).toLowerCase()}.`,
     eyebrow: 'Explainer Kit',
     footer: 'Generated from the retained reconciled fact base.',
-    sections: recipe.requiredNarrative.map((id) => ({
-      id,
-      title: humanize(id),
-      content: summary,
-    })),
+    sections: recipe.requiredNarrative.map((id) => {
+      const sectionFacts = facts
+        .filter(({ sections }) => !sections || sections.includes(id))
+        .map(({ text }) => text);
+      return {
+        id,
+        title: humanize(id),
+        content:
+          sectionFacts.length > 0
+            ? sectionFacts.join(' ')
+            : 'No confirmed facts.',
+      };
+    }),
     artifactLinks: [],
   };
 }

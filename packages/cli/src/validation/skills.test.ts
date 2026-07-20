@@ -731,13 +731,16 @@ describe('validateOatSkills', () => {
     expect(invalidVersions).toEqual([]);
   });
 
-  it('starts the explainer skill family at version 1.0.0', async () => {
-    for (const skillName of ['explainer-kit', 'oat-explainer-kit']) {
+  it('tracks the current explainer skill family versions', async () => {
+    for (const [skillName, expectedVersion] of [
+      ['explainer-kit', '1.0.1'],
+      ['oat-explainer-kit', '1.0.0'],
+    ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
       );
       expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim(), skillName).toBe(
-        '1.0.0',
+        expectedVersion,
       );
     }
   });

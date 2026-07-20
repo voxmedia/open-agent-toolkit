@@ -4,8 +4,13 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
+import { chromium } from '@playwright/test';
+
 import { selectReleaseVisualMatrix } from '../../.agents/skills/explainer-kit/scripts/render-qa.mjs';
 import {
+  probeArrowKey,
+  pressTabFromDocument,
+  primeKeyboardFocus,
   runExplainerVisualValidation,
   runExplainerVisualValidationCli,
 } from './validate-explainer-visuals.mjs';
@@ -46,6 +51,91 @@ test('drives a real installed Chromium browser for every declared deck scenario'
         Array.isArray(measurement.clippedX),
     ),
   );
+});
+
+test('primes document focus without changing the body tab order', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<button id="start">Start</button>');
+    await page.locator('#start').focus();
+
+    await primeKeyboardFocus(page);
+
+    assert.deepEqual(
+      await page.evaluate(() => ({
+        activeTag: document.activeElement?.tagName,
+        bodyTabIndex: document.body.getAttribute('tabindex'),
+      })),
+      { activeTag: 'BODY', bodyTabIndex: null },
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+test('accepts visible tabbable semantics when key transport stalls', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<button id="start">Start</button>');
+    await page.evaluate(() => {
+      HTMLButtonElement.prototype.focus = () => {};
+    });
+    let presses = 0;
+
+    const tab = await pressTabFromDocument(page, {
+      pressTab: async () => {
+        presses += 1;
+      },
+    });
+
+    assert.equal(tab, true);
+    assert.equal(presses, 2);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('rejects visible controls removed from the document tab order', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<button tabindex="-1">Not tabbable</button>');
+
+    const tab = await pressTabFromDocument(page, { pressTab: async () => {} });
+
+    assert.equal(tab, false);
+  } finally {
+    await browser.close();
+  }
+});
+
+test('retries a dropped deck arrow event', async () => {
+  const browser = await chromium.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setContent('<span id="deck-counter">1 / 2</span>');
+    await page.evaluate(() => {
+      window.rightPresses = 0;
+      addEventListener('keydown', (event) => {
+        if (event.key === 'ArrowLeft') {
+          document.querySelector('#deck-counter').textContent = '1 / 2';
+        }
+        if (event.key === 'ArrowRight') {
+          window.rightPresses += 1;
+          if (window.rightPresses > 1) {
+            document.querySelector('#deck-counter').textContent = '2 / 2';
+          }
+        }
+      });
+    });
+
+    assert.equal(await probeArrowKey(page, 'ArrowRight'), true);
+    assert.equal(await page.evaluate(() => window.rightPresses), 2);
+  } finally {
+    await browser.close();
+  }
 });
 
 test('fails closed and emits no successful report when Chromium is unavailable', async () => {
