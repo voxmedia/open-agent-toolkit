@@ -135,6 +135,20 @@ execution-program artifact, ALL wave summaries, and ALL completion records. Its
 required keys are exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
 
+The caller also owns CONTENT AUTHORING, exactly as it owns critic execution and
+fact-base synthesis: the kit's pipeline validates structure and fact
+consistency, but nothing in it owns prose quality. An unattended recap run
+without a caller-supplied authoring path emits raw federated artifact text as
+deck prose (stoa W6 live evidence, run-19af6e55: implementation.md pasted
+verbatim, frontmatter included, tables flattened to run-on prose — every
+automated gate passed it). Until the explainer-kit ships its authoring seam (a
+caller-supplied author callback / `authorModulePath`, pending upstream),
+wave-close/program-close recap callers MUST either author the content document
+from the synthesized fact base plus the recipe outline (LLM-authored from
+summary/synthesis material, as the operator-approved W6 rebuild demonstrates)
+or NOT run the unattended build, recording the skip disposition per the
+optional-step rule.
+
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
 required keys are exactly:
 `schemaVersion, recipe, slug, outputRoot, factBase, mode`. Set `recipe` to
