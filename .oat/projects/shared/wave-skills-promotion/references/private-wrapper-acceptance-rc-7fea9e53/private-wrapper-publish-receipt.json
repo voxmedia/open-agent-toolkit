@@ -1,0 +1,25 @@
+{
+  "schemaVersion": "explainer-kit.publish-receipt/v1",
+  "provider": "s3-static",
+  "publishedAt": "2026-07-20T02:15:54.889Z",
+  "roots": {
+    "s3Uri": "s3://tkstang-open-agent-toolkit/explainers/acceptance-rc-7fea9e53",
+    "publicBaseUrl": "https://dy4vzrzaexuy5.cloudfront.net/explainers/acceptance-rc-7fea9e53"
+  },
+  "sentinel": {
+    "relativePath": ".explainer-kit-sentinel/run-5510b6de-ba63-41a8-b6fd-d166247f2506-775257bb96599659cd71c0319f319944.txt",
+    "uploadVerified": true,
+    "publicVerified": true,
+    "deleted": true
+  },
+  "artifacts": [
+    {
+      "relativePath": "site/initiatives/acceptance-run/index.html",
+      "hash": "sha256:4f59d3d2502da483376ce4ae40942f2e980cdb66bb370d5de15c7e49fb3edcce",
+      "s3Uri": "s3://tkstang-open-agent-toolkit/explainers/acceptance-rc-7fea9e53/initiatives/acceptance-run/index.html",
+      "publicUrl": "https://dy4vzrzaexuy5.cloudfront.net/explainers/acceptance-rc-7fea9e53/initiatives/acceptance-run/index.html",
+      "httpStatus": 200,
+      "contentType": "text/html; charset=utf-8"
+    }
+  ]
+}
