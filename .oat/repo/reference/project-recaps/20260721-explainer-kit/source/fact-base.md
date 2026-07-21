@@ -3,13 +3,12 @@
 ## Confirmed claims
 
 - **design:** ---
-  oat_status: complete
-  oat_ready_for: oat-project-plan
-  oat_blockers: []
-  oat_last_updated: 2026-07-17
-  oat_generated: false
-  oat_template: false
-
+oat_status: complete
+oat_ready_for: oat-project-plan
+oat_blockers: []
+oat_last_updated: 2026-07-17
+oat_generated: false
+oat_template: false
 ---
 
 # Design: explainer-kit
@@ -1639,13 +1638,12 @@ RC; only then is release promotion allowed.
 - Conventions: `.oat/repo/knowledge/conventions.md`
 - Testing: `.oat/repo/knowledge/testing.md`
 - **implementation:** ---
-  oat_status: complete
-  oat_ready_for: oat-project-pr-final
-  oat_blockers: []
-  oat_last_updated: 2026-07-21
-  oat_current_task_id: null
-  oat_generated: false
-
+oat_status: complete
+oat_ready_for: oat-project-pr-final
+oat_blockers: []
+oat_last_updated: 2026-07-21
+oat_current_task_id: null
+oat_generated: false
 ---
 
 # Implementation: explainer-kit
@@ -3170,22 +3168,21 @@ were applied directly.
 - Design: `design.md`
 - Spec: `spec.md`
 - **plan:** ---
-  oat_plan_source: spec-driven
-  oat_status: complete
-  oat_ready_for: oat-project-implement
-  oat_blockers: []
-  oat_last_updated: 2026-07-20
-  oat_phase: plan
-  oat_phase_status: complete
-  oat_plan_parallel_groups: []
-  oat_plan_hill_phases: ['p05']
-  oat_auto_review_at_hill_checkpoints: true
-  oat_import_reference: null
-  oat_import_source_path: null
-  oat_import_provider: null
-  oat_generated: false
-  oat_template: false
-
+oat_plan_source: spec-driven
+oat_status: complete
+oat_ready_for: oat-project-implement
+oat_blockers: []
+oat_last_updated: 2026-07-20
+oat_phase: plan
+oat_phase_status: complete
+oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_generated: false
+oat_template: false
 ---
 
 # Implementation Plan: explainer-kit
@@ -5303,13 +5300,12 @@ project completion are finished.
 - Revision 1 visual baseline: `references/revision-1-theme-previews/`
 - Collaboration log: `brainstorming/2026-07-16-collab-log.md`
 - **spec:** ---
-  oat_status: complete
-  oat_ready_for: oat-project-design
-  oat_blockers: []
-  oat_last_updated: 2026-07-16
-  oat_generated: false
-  oat_template: false
-
+oat_status: complete
+oat_ready_for: oat-project-design
+oat_blockers: []
+oat_last_updated: 2026-07-16
+oat_generated: false
+oat_template: false
 ---
 
 # Specification: explainer-kit
@@ -5850,15 +5846,14 @@ selection, lifecycle call sites, and implementation sequencing are resolved in
 - Knowledge base: `.oat/repo/knowledge/project-index.md`
 - Repository guidance: `AGENTS.md`
 - **summary:** ---
-  oat_status: complete
-  oat_ready_for: null
-  oat_blockers: []
-  oat_last_updated: 2026-07-21
-  oat_generated: true
-  oat_summary_last_task: prev1-t10
-  oat_summary_revision_count: 1
-  oat_summary_includes_revisions: [p-rev1]
-
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-07-21
+oat_generated: true
+oat_summary_last_task: prev1-t10
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: explainer-kit

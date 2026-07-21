@@ -24,7 +24,12 @@
         "danger": "#bd3a2c",
         "info": "#2f56c9"
       },
-      "diagramSeries": ["#2f56c9", "#965108", "#0e7180", "#6a4fc4"]
+      "diagramSeries": [
+        "#2f56c9",
+        "#965108",
+        "#0e7180",
+        "#6a4fc4"
+      ]
     },
     "dark": {
       "surface": {
@@ -47,7 +52,12 @@
         "danger": "#fca5a5",
         "info": "#93c5fd"
       },
-      "diagramSeries": ["#93c5fd", "#fde047", "#5eead4", "#c4b5fd"]
+      "diagramSeries": [
+        "#93c5fd",
+        "#fde047",
+        "#5eead4",
+        "#c4b5fd"
+      ]
     }
   },
   "provenance": {
@@ -55,9 +65,23 @@
     "derived": false
   },
   "typography": {
-    "sans": ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
-    "serif": ["ui-serif", "Georgia", "serif"],
-    "mono": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+    "sans": [
+      "system-ui",
+      "-apple-system",
+      "BlinkMacSystemFont",
+      "sans-serif"
+    ],
+    "serif": [
+      "ui-serif",
+      "Georgia",
+      "serif"
+    ],
+    "mono": [
+      "ui-monospace",
+      "SFMono-Regular",
+      "Consolas",
+      "monospace"
+    ],
     "scale": {
       "caption": "0.875rem",
       "body": "1rem",

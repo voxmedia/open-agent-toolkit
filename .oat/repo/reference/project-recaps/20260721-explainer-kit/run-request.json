@@ -16,7 +16,10 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/plan.md",
         "role": "project",
         "sourceSetId": "explainer-kit",
-        "authoritativeFor": ["phases", "validation-approach"]
+        "authoritativeFor": [
+          "phases",
+          "validation-approach"
+        ]
       },
       {
         "id": "design",
@@ -24,7 +27,11 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/design.md",
         "role": "project",
         "sourceSetId": "explainer-kit",
-        "authoritativeFor": ["planned-architecture", "decisions", "risks"]
+        "authoritativeFor": [
+          "planned-architecture",
+          "decisions",
+          "risks"
+        ]
       },
       {
         "id": "spec",
@@ -32,7 +39,10 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/spec.md",
         "role": "project",
         "sourceSetId": "explainer-kit",
-        "authoritativeFor": ["original-request", "requirements"]
+        "authoritativeFor": [
+          "original-request",
+          "requirements"
+        ]
       },
       {
         "id": "implementation",
@@ -53,7 +63,9 @@
         "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/summary.md",
         "role": "project",
         "sourceSetId": "explainer-kit",
-        "authoritativeFor": ["outcome"]
+        "authoritativeFor": [
+          "outcome"
+        ]
       }
     ]
   },

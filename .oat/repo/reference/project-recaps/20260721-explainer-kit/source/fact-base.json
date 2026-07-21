@@ -10,7 +10,10 @@
       "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/plan.md",
       "role": "project",
       "sourceSetId": "explainer-kit",
-      "authoritativeFor": ["phases", "validation-approach"],
+      "authoritativeFor": [
+        "phases",
+        "validation-approach"
+      ],
       "hash": "sha256:3444b7ecb403cc30366c0ac02b90c8f7f7cf7d8a2e0245380f2b8ed8cb83643b",
       "observedAt": "2026-07-21T12:27:57.487Z"
     },
@@ -20,7 +23,11 @@
       "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/design.md",
       "role": "project",
       "sourceSetId": "explainer-kit",
-      "authoritativeFor": ["planned-architecture", "decisions", "risks"],
+      "authoritativeFor": [
+        "planned-architecture",
+        "decisions",
+        "risks"
+      ],
       "hash": "sha256:ddc2510521a62879c651921f005756c75999fde5c56a565d798383dc03094ae8",
       "observedAt": "2026-07-21T12:27:57.487Z"
     },
@@ -30,7 +37,10 @@
       "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/spec.md",
       "role": "project",
       "sourceSetId": "explainer-kit",
-      "authoritativeFor": ["original-request", "requirements"],
+      "authoritativeFor": [
+        "original-request",
+        "requirements"
+      ],
       "hash": "sha256:790bd4b07ede2ec277f2d5d8d18b3a56346a095150fd4ac790085bb49541ddcc",
       "observedAt": "2026-07-21T12:27:57.487Z"
     },
@@ -55,7 +65,9 @@
       "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/summary.md",
       "role": "project",
       "sourceSetId": "explainer-kit",
-      "authoritativeFor": ["outcome"],
+      "authoritativeFor": [
+        "outcome"
+      ],
       "hash": "sha256:430b7cda8d7a0f570ad3e819bec56b6d343cd2e8609415a2d0750098641f081e",
       "observedAt": "2026-07-21T12:27:57.486Z"
     },

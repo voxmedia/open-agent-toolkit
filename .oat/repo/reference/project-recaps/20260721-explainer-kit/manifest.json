@@ -18,7 +18,9 @@
       "inputs/summary": "sha256:430b7cda8d7a0f570ad3e819bec56b6d343cd2e8609415a2d0750098641f081e",
       "inputs/critic-sol-completion-critic": "sha256:c39cc0933ea55aec818d89abc90e0065f401c01b059c079f355e2b04fb2ad3dd"
     },
-    "authorResultPaths": ["source/author/project-recap.json"]
+    "authorResultPaths": [
+      "source/author/project-recap.json"
+    ]
   },
   "theme": {
     "path": "theme.resolved.json",
@@ -69,5 +71,7 @@
     "path": "build-record.json",
     "hash": "sha256:dad3829408054410b8bef60dd86dc05c6c15f6d6cc6c64df7607c9665015824e"
   },
-  "warnings": ["No explicit style was selected; defaulted to clean-neutral."]
+  "warnings": [
+    "No explicit style was selected; defaulted to clean-neutral."
+  ]
 }
