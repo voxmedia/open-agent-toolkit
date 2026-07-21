@@ -169,9 +169,7 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
     read('.agents/skills/oat-explainer-kit/references/migration.md'),
     read('.agents/skills/explainer-kit/SKILL.md'),
     read('.agents/skills/oat-explainer-kit/SKILL.md'),
-    read(
-      '.oat/projects/shared/explainer-kit/references/skill-drafts/personal-explainer-kit/presets.example.json',
-    ),
+    read('tools/smoke/explainer-kit/fixtures/presets.example.json'),
     readCorePublicTree(),
   ]);
 
