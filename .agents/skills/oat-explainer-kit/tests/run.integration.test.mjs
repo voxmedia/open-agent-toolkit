@@ -21,6 +21,7 @@ const SOURCE_SKILLS_ROOT = resolve(
   '..',
   '..',
 );
+const SOURCE_REPO_ROOT = resolve(SOURCE_SKILLS_ROOT, '..', '..');
 const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
 
 afterEach(async () => {
@@ -241,6 +242,56 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     locator: canonicalProjectRoot,
   });
   assert.equal(basename(adapterResult.compatibility.coreRoot), 'explainer-kit');
+});
+
+test('resolves curated style through the real CLI-backed config path', async () => {
+  const fixture = await createFixture();
+  const binRoot = join(fixture.root, 'bin');
+  await mkdir(binRoot, { recursive: true });
+  await mkdir(join(fixture.repoRoot, '.git'));
+  await writeFile(
+    join(fixture.repoRoot, '.oat', 'config.json'),
+    `${JSON.stringify({
+      version: 1,
+      explainers: { defaults: { style: 'navy-ocean' } },
+    })}\n`,
+  );
+  await writeFile(
+    join(binRoot, 'oat'),
+    `#!/bin/sh
+lock="${join(binRoot, 'oat-config.lock')}"
+while ! mkdir "$lock" 2>/dev/null; do
+  sleep 0.05
+done
+trap 'rmdir "$lock"' EXIT INT TERM
+"${join(SOURCE_REPO_ROOT, 'node_modules', '.bin', 'tsx')}" --tsconfig "${join(
+      SOURCE_REPO_ROOT,
+      'packages',
+      'cli',
+      'tsconfig.json',
+    )}" "${join(SOURCE_REPO_ROOT, 'packages', 'cli', 'src', 'index.ts')}" "$@"
+`,
+    { mode: 0o755 },
+  );
+  const originalPath = process.env.PATH;
+  process.env.PATH = `${binRoot}:${originalPath ?? ''}`;
+
+  try {
+    const adapterResult = await runOatExplainer({
+      adapterRoot: fixture.adapterRoot,
+      userSkillsRoot: fixture.userSkillsRoot,
+      repoRoot: fixture.repoRoot,
+      invocation: 'project',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-recap',
+      slug: 'cli-config-style',
+      mode: 'unattended',
+    });
+
+    assert.equal(adapterResult.request.theme.style, 'navy-ocean');
+  } finally {
+    process.env.PATH = originalPath;
+  }
 });
 
 test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
