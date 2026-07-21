@@ -76,6 +76,10 @@ First p-rev1 re-review received: prior C1 and I1 resolved; C2 propagation works 
 
 Completed narrowed re-review fixes prev1-t09 and prev1-t10 in commits 5a753029 and 3bf11f25. Design alignment, author-cardinality TDD, and full serial repository/release gates passed; narrowed re-review is next.
 
+### 2026-07-21 · structural · oat-project-review-provide · reviews/2026-07-21-p-rev1-code-rereview-2.md
+
+Narrowed p-rev1 re-review passed with zero findings; all Revision 1 review findings are resolved and the follow-up PR is ready.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

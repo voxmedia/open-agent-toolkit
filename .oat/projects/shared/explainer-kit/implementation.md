@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-pr-final
 oat_blockers: []
 oat_last_updated: 2026-07-21
 oat_current_task_id: null
@@ -1160,7 +1160,10 @@ author seams before core invocation while preserving interactive omission and
 direct/module success. The authoritative design matches Revision 1 and the
 prior review artifact is whitespace-clean.
 
-**Next:** Run the narrowed fresh-context re-review.
+**Final re-review:** Passed with zero Critical, Important, Medium, or Minor
+findings. All prior Revision 1 findings are resolved.
+
+**Next:** Open the follow-up PR.
 
 ---
 
