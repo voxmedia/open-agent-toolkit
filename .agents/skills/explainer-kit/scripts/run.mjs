@@ -259,9 +259,14 @@ async function loadResumableRun(request) {
 }
 
 async function hydrateResumableState(state) {
-  state.factBase = await readJson(
-    join(state.run.runRoot, 'source/fact-base.json'),
-  );
+  const [factBase, approval] = await Promise.all([
+    readJson(join(state.run.runRoot, 'source/fact-base.json')),
+    readJson(join(state.run.runRoot, 'source/content-approval.json')),
+  ]);
+  state.factBase = factBase;
+  state.authorResultPaths = Array.isArray(approval.authorResultPaths)
+    ? [...approval.authorResultPaths]
+    : [];
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
   state.contentModels = [];

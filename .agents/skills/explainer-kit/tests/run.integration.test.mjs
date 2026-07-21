@@ -311,6 +311,36 @@ test('unattended lifecycle sources persist review provenance without prompting',
   ]);
 });
 
+test('unattended resume reloads persisted author provenance', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const initial = await runExplainer(fixture.request, { now: () => NOW });
+  const buildRecordPath = join(initial.runRoot, 'build-record.json');
+  const buildRecord = JSON.parse(await readFile(buildRecordPath, 'utf8'));
+  buildRecord.stages = buildRecord.stages.map((stage) =>
+    ['theme', 'render', 'qa', 'durability', 'publish'].includes(stage.id)
+      ? { id: stage.id, status: 'pending', outputPaths: [], warnings: [] }
+      : stage,
+  );
+  buildRecord.outcome = 'incomplete';
+  delete buildRecord.completedAt;
+  await writeFile(buildRecordPath, `${JSON.stringify(buildRecord, null, 2)}\n`);
+
+  const resumed = await runExplainer(fixture.request, {
+    now: () => '2026-07-17T20:05:00Z',
+  });
+
+  assert.equal(
+    resumed.outcome,
+    'built-not-durable',
+    JSON.stringify(resumed.errors),
+  );
+  assert.equal(resumed.runId, initial.runId);
+  const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
+  assert.deepEqual(manifest.source.authorResultPaths, [
+    'source/author/project-recap.json',
+  ]);
+});
+
 test('unattended runs fail before narrative output when no author is supplied', async () => {
   const fixture = await suppliedFixture('project-recap');
 
