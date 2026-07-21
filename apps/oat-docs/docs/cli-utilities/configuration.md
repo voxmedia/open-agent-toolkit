@@ -106,25 +106,33 @@ The `oat-explainer-kit` adapter owns two typed config groups. Build and publish
 plumbing uses `explainers.*`; project lifecycle preferences use
 `workflow.explainers.*`.
 
-| Key                                    | Type                 | Stored scopes       | Default         |
-| -------------------------------------- | -------------------- | ------------------- | --------------- |
-| `explainers.defaults.style`            | curated style name   | local, shared, user | `clean-neutral` |
-| `explainers.defaults.palette`          | non-empty string     | local, shared, user | unset           |
-| `explainers.defaults.visualProfile`    | non-empty string     | local, shared, user | unset           |
-| `explainers.defaults.themeBundlePath`  | path                 | local, shared       | unset           |
-| `explainers.publish.provider`          | `s3-static`          | shared              | unset           |
-| `explainers.publish.s3Uri`             | `s3://` URI          | shared              | unset           |
-| `explainers.publish.publicBaseUrl`     | HTTPS URL            | shared              | unset           |
-| `explainers.publish.awsRegion`         | non-empty string     | shared              | unset           |
-| `explainers.publish.awsProfile`        | non-empty string     | local, user         | unset           |
-| `workflow.explainers.projectExplainer` | `always\|ask\|never` | local, shared, user | `ask`           |
-| `workflow.explainers.projectRecap`     | `always\|ask\|never` | local, shared, user | `ask`           |
+| Key                                    | Type                         | Stored scopes       | Default         |
+| -------------------------------------- | ---------------------------- | ------------------- | --------------- |
+| `explainers.defaults.style`            | curated style name           | local, shared, user | `clean-neutral` |
+| `explainers.defaults.palette`          | nullable string (deprecated) | local, shared, user | `null`          |
+| `explainers.defaults.visualProfile`    | nullable string (deprecated) | local, shared, user | `null`          |
+| `explainers.defaults.themeBundlePath`  | path                         | local, shared       | unset           |
+| `explainers.publish.provider`          | `s3-static`                  | shared              | unset           |
+| `explainers.publish.s3Uri`             | `s3://` URI                  | shared              | unset           |
+| `explainers.publish.publicBaseUrl`     | HTTPS URL                    | shared              | unset           |
+| `explainers.publish.awsRegion`         | non-empty string             | shared              | unset           |
+| `explainers.publish.awsProfile`        | non-empty string             | local, user         | unset           |
+| `workflow.explainers.projectExplainer` | `always\|ask\|never`         | local, shared, user | `ask`           |
+| `workflow.explainers.projectRecap`     | `always\|ask\|never`         | local, shared, user | `ask`           |
 
 Stored values resolve `local > shared > user > default` where the key permits
 each scope. Explicit runtime inputs take precedence for one invocation without
 mutating stored config. Use `oat config get <key> --json` to inspect both the
 resolved value and its source, and `oat config describe <key>` for its exact
 scope and type contract.
+
+For example:
+
+```bash
+oat config set explainers.defaults.style navy-ocean --shared
+oat config get explainers.defaults.style --json
+oat config describe explainers.defaults.style
+```
 
 Shared theme-bundle paths must be repository-relative. Local paths may be
 repository-relative or absolute; user config cannot set a theme-bundle path.
