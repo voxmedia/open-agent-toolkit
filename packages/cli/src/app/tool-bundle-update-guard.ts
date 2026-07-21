@@ -1,7 +1,10 @@
 import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
-import { win32 } from 'node:path';
 
+import {
+  formatGlobalCliInstallCommand,
+  resolveGlobalCliInstallerInvocation,
+} from '@app/global-cli-installer';
 import { resolveUpdateAvailability } from '@app/update-notifier';
 import { confirmAction } from '@commands/shared/shared.prompts';
 import { CliError } from '@errors/index';
@@ -126,46 +129,6 @@ export function isBundledToolMutationCommand(command: Command): boolean {
   return path[0] === 'tools' && (path[1] === 'install' || path[1] === 'update');
 }
 
-interface InstallerInvocation {
-  file: string;
-  args: string[];
-}
-
-function resolveInstallerInvocation(
-  options: ToolBundleUpdateGuardOptions,
-  dependencies: ToolBundleUpdateGuardDependencies,
-  packageVersion: string,
-): InstallerInvocation | null {
-  const npmArgs = ['install', '--global', packageVersion];
-  if (dependencies.platform !== 'win32') {
-    return { file: 'npm', args: npmArgs };
-  }
-
-  const environmentPath = options.env.npm_execpath?.trim();
-  const standardPath = win32.join(
-    win32.dirname(dependencies.nodeExecutable),
-    'node_modules',
-    'npm',
-    'bin',
-    'npm-cli.js',
-  );
-  const npmCliPath = [environmentPath, standardPath].find(
-    (candidate) =>
-      candidate !== undefined &&
-      win32.isAbsolute(candidate) &&
-      win32.basename(candidate).toLowerCase() === 'npm-cli.js' &&
-      dependencies.fileExists(candidate),
-  );
-  if (!npmCliPath) {
-    return null;
-  }
-
-  return {
-    file: dependencies.nodeExecutable,
-    args: [npmCliPath, ...npmArgs],
-  };
-}
-
 export async function guardBundledToolMutation(
   options: ToolBundleUpdateGuardOptions,
   overrides: Partial<ToolBundleUpdateGuardDependencies> = {},
@@ -187,7 +150,12 @@ export async function guardBundledToolMutation(
       'can only install its own bundled tool versions. The available CLI may ' +
       'bundle newer tool versions.',
   );
-  const installCommand = `npm install --global ${CLI_PACKAGE}@${availableVersion}`;
+  const packageSpec = `${CLI_PACKAGE}@${availableVersion}`;
+  const installCommand = formatGlobalCliInstallCommand(
+    packageSpec,
+    options.argv,
+    options.env,
+  );
   let accepted = false;
   try {
     accepted = await dependencies.confirmAction(
@@ -209,11 +177,13 @@ export async function guardBundledToolMutation(
     return false;
   }
 
-  const invocation = resolveInstallerInvocation(
-    options,
-    dependencies,
-    `${CLI_PACKAGE}@${availableVersion}`,
-  );
+  const invocation = resolveGlobalCliInstallerInvocation(packageSpec, {
+    argv: options.argv,
+    env: options.env,
+    platform: dependencies.platform,
+    nodeExecutable: dependencies.nodeExecutable,
+    fileExists: dependencies.fileExists,
+  });
   if (!invocation) {
     throw new CliError(
       'Could not locate npm-cli.js for a shell-free Windows update. ' +

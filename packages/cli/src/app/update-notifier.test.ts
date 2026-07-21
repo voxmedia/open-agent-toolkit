@@ -462,6 +462,29 @@ describe('maybeNotifyAboutUpdate', () => {
     expect(harness.logger.warn).toHaveBeenCalledOnce();
   });
 
+  it('suggests pnpm when the running CLI is pnpm-managed', async () => {
+    const harness = createHarness({
+      cache: {
+        checkedAt: NOW.toISOString(),
+        latestVersion: '2.0.0',
+      },
+      options: {
+        argv: [
+          '/Users/me/Library/pnpm/oat',
+          '/Users/me/Library/pnpm/global/5/node_modules/@open-agent-toolkit/cli/dist/index.js',
+          'status',
+        ],
+      },
+    });
+
+    await maybeNotifyAboutUpdate(harness.options, harness.dependencies);
+
+    expect(harness.logger.warn).toHaveBeenCalledWith(
+      'Update available: 1.0.0 → 2.0.0\n' +
+        'Run: pnpm add -g @open-agent-toolkit/cli@latest',
+    );
+  });
+
   it('emits the exact notice and atomically records the complete cache snapshot', async () => {
     const harness = createHarness({
       cache: {
@@ -474,7 +497,7 @@ describe('maybeNotifyAboutUpdate', () => {
 
     expect(harness.logger.warn).toHaveBeenCalledWith(
       'Update available: 1.0.0 → 2.0.0\n' +
-        'Run: npm install -g @open-agent-toolkit/cli@latest',
+        'Run: npm install --global @open-agent-toolkit/cli@latest',
     );
     expect(harness.atomicWriteJson).toHaveBeenCalledOnce();
     expect(harness.atomicWriteJson).toHaveBeenCalledWith(

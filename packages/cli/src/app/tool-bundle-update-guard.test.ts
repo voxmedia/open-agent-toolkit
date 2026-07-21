@@ -202,6 +202,27 @@ describe('guardBundledToolMutation', () => {
     );
   });
 
+  it('uses pnpm when the running CLI is pnpm-managed', async () => {
+    const harness = createHarness({
+      confirmed: true,
+      options: {
+        argv: [
+          '/Users/me/Library/pnpm/oat',
+          '/Users/me/Library/pnpm/global/5/node_modules/@open-agent-toolkit/cli/dist/index.js',
+          'init',
+        ],
+      },
+    });
+
+    await guardBundledToolMutation(harness.options, harness.dependencies);
+
+    expect(harness.installCli).toHaveBeenCalledWith(
+      'pnpm',
+      ['add', '-g', '@open-agent-toolkit/cli@1.2.3'],
+      { shell: false, stdio: 'inherit' },
+    );
+  });
+
   it.each([
     ['named update', 'oat tools update oat-project-implement'],
     ['pack update', 'oat tools update --pack workflows'],
