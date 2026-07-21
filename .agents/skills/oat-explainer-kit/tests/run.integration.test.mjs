@@ -38,6 +38,7 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
   const adapterRoot = join(repoRoot, '.agents', 'skills', 'oat-explainer-kit');
   const userSkillsRoot = join(root, 'home', '.agents', 'skills');
   const coreRoot = join(userSkillsRoot, 'explainer-kit');
+  const coreInvocationMarker = join(root, 'core-invoked');
   await mkdir(projectRoot, { recursive: true });
   await mkdir(adapterRoot, { recursive: true });
   await mkdir(join(coreRoot, 'scripts'), { recursive: true });
@@ -64,6 +65,9 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
         import { join } from 'node:path';
 
         export async function runExplainer(request, options) {
+          await writeFile(${JSON.stringify(coreInvocationMarker)}, 'invoked\\n', {
+            flag: 'a',
+          });
           const loaded = [];
           if (request.factBase.mode === 'federated') {
             for (const source of request.factBase.sources) {
@@ -119,7 +123,12 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
     adapterRoot,
     userSkillsRoot,
     coreRoot,
+    coreInvocationMarker,
   };
+}
+
+async function fixtureAuthor({ artifact }) {
+  return { source: 'fixture', artifactId: artifact.id };
 }
 
 function getConfig(key) {
@@ -225,6 +234,7 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     recipe: 'project-recap',
     slug: 'demo-recap',
     getConfig,
+    author: fixtureAuthor,
     mode: 'unattended',
   });
   const canonicalProjectRoot = await realpath(fixture.projectRoot);
@@ -290,6 +300,7 @@ trap 'rmdir "$lock"' EXIT INT TERM
       activeProject: '.oat/projects/shared/demo',
       recipe: 'project-recap',
       slug: 'cli-config-style',
+      author: fixtureAuthor,
       mode: 'unattended',
     });
 
@@ -361,18 +372,24 @@ test('rejects missing, invalid, and conflicting author module inputs at the adap
     recipe: 'project-recap',
     slug: 'author-contract',
     getConfig,
+    author: fixtureAuthor,
     mode: 'unattended',
   };
 
   await assert.rejects(
     runOatExplainer({
       ...context,
+      author: undefined,
       authorModulePath: join(fixture.root, 'missing-author.mjs'),
     }),
     /unable to load.*author module/i,
   );
   await assert.rejects(
-    runOatExplainer({ ...context, authorModulePath: invalidModulePath }),
+    runOatExplainer({
+      ...context,
+      author: undefined,
+      authorModulePath: invalidModulePath,
+    }),
     /author module must export an author function/i,
   );
   await assert.rejects(
@@ -383,36 +400,57 @@ test('rejects missing, invalid, and conflicting author module inputs at the adap
     }),
     /only one.*author/i,
   );
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
   await assert.rejects(
     runOatExplainer({
       ...context,
+      author: undefined,
       coreOptions: { author: async () => ({}) },
     }),
     /coreOptions\.author is not supported/i,
   );
 });
 
-test('preserves the actual core no-author failure for unattended adapter runs', async () => {
+test('rejects an omitted unattended author before invoking the core', async () => {
+  const fixture = await createFixture();
+  await assert.rejects(
+    runOatExplainer({
+      adapterRoot: fixture.adapterRoot,
+      userSkillsRoot: fixture.userSkillsRoot,
+      repoRoot: fixture.repoRoot,
+      invocation: 'project',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-recap',
+      slug: 'missing-author',
+      getConfig,
+      mode: 'unattended',
+    }),
+    /unattended.*exactly one.*author/i,
+  );
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
+});
+
+test('allows an interactive adapter call without an author', async () => {
   const fixture = await createFixture();
   const adapterResult = await runOatExplainer({
-    adapterRoot: SOURCE_ADAPTER_ROOT,
-    userSkillsRoot: SOURCE_SKILLS_ROOT,
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
     repoRoot: fixture.repoRoot,
     invocation: 'project',
     activeProject: '.oat/projects/shared/demo',
     recipe: 'project-recap',
-    slug: 'missing-author',
+    slug: 'interactive-no-author',
     getConfig,
-    critic: async () => ({
-      criticId: 'missing-author-test',
-      executedAt: '2026-07-20T12:00:00.000Z',
-      findings: [],
-    }),
-    mode: 'unattended',
+    mode: 'interactive',
   });
 
-  assert.equal(adapterResult.result.outcome, 'failed');
-  assert.equal(adapterResult.result.errors[0].code, 'E_AUTHOR_REQUIRED');
+  assert.equal(adapterResult.result.outcome, 'built-not-durable');
+  assert.equal(adapterResult.result.authored, null);
+  assert.match(await readFile(fixture.coreInvocationMarker, 'utf8'), /invoked/);
 });
 
 test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
@@ -497,6 +535,7 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     recipe: 'project-explainer',
     slug: 'critic-contract',
     getConfig,
+    author: fixtureAuthor,
     mode: 'unattended',
   };
 
@@ -544,6 +583,7 @@ test('passes a supplied fact base through the normalized adapter request', async
     slug: 'supplied-recap',
     suppliedFactBasePath: factBasePath,
     getConfig,
+    author: fixtureAuthor,
     mode: 'unattended',
   });
   const canonicalFactBasePath = await realpath(factBasePath);
@@ -567,6 +607,7 @@ test('propagates failed core results when no manifest was produced', async () =>
     recipe: 'project-recap',
     slug: 'core-failure',
     getConfig,
+    author: fixtureAuthor,
     mode: 'unattended',
   });
 
@@ -621,6 +662,7 @@ test('does not inspect ambient private configuration', async () => {
       requestedKeys.push(key);
       return getConfig(key);
     },
+    author: fixtureAuthor,
     mode: 'unattended',
   });
 

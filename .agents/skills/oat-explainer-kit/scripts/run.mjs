@@ -110,14 +110,15 @@ export async function runOatExplainer({
     throw error;
   }
 
-  const lifecycleCritic = await resolveLifecycleCritic({
-    critic,
-    criticModulePath,
-    coreOptions,
-  });
   const lifecycleAuthor = await resolveLifecycleAuthor({
     author,
     authorModulePath,
+    coreOptions,
+    mode: request.mode,
+  });
+  const lifecycleCritic = await resolveLifecycleCritic({
+    critic,
+    criticModulePath,
     coreOptions,
   });
   const result = await core.runExplainer(request, {
@@ -148,6 +149,7 @@ async function resolveLifecycleAuthor({
   author,
   authorModulePath,
   coreOptions,
+  mode,
 }) {
   if (coreOptions?.author !== undefined) {
     throw new TypeError(
@@ -163,8 +165,18 @@ async function resolveLifecycleAuthor({
     );
   }
 
+  if (author === undefined && authorModulePath === undefined) {
+    if (mode === 'unattended') {
+      const error = new Error(
+        'Unattended OAT explainer runs require exactly one provider-neutral author callback or author module entry point.',
+      );
+      error.code = 'E_AUTHOR_REQUIRED';
+      throw error;
+    }
+    return null;
+  }
   if (authorModulePath === undefined) {
-    return author ?? null;
+    return author;
   }
   if (
     typeof authorModulePath !== 'string' ||
