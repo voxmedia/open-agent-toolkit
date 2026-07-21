@@ -69,14 +69,20 @@ artifact is required. An explicit supplied fact-base path bypasses artifact
 federation and is passed through as `factBase.mode: supplied`.
 
 Unattended project runs pass `approved-oat-artifacts` provenance to the core's
-content-approval seam and never prompt. Federated runs still require an
-explicit provider-neutral critic callback. In-process callers may supply
-`critic` (or `coreOptions.critic` for compatibility); JSON/CLI callers supply
-`criticModulePath` naming a module whose `critic` export implements the same
-provider-neutral request/result contract. Supply exactly one critic seam.
-Approval provenance does not bypass fact reconciliation. Do not read private
-presets, vault files, provider configuration, or ambient destination
-configuration.
+content-approval seam and never prompt. Every unattended run also requires
+exactly one provider-neutral author seam: in-process callers supply `author`,
+while JSON/CLI callers supply `authorModulePath` naming a module with an
+`author` function export. The adapter validates and resolves that executable
+input before passing it to `core.runExplainer`; callbacks and module paths never
+enter the persisted run request.
+
+Federated runs still require an explicit provider-neutral critic callback.
+In-process callers may supply `critic` (or `coreOptions.critic` for
+compatibility); JSON/CLI callers supply `criticModulePath` naming a module whose
+`critic` export implements the same provider-neutral request/result contract.
+Supply exactly one critic seam. Approval provenance does not bypass fact
+reconciliation. Do not read private presets, vault files, provider
+configuration, or ambient destination configuration.
 
 ## Progress Indicators (User-Facing)
 

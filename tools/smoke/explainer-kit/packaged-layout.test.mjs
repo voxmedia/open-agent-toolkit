@@ -50,6 +50,10 @@ test('runs a config-free project explainer from the packaged core only', async (
 });
 
 test('runs the packaged adapter against the user-scoped packaged core', async () => {
+  assert.equal(
+    fixture.adapterRunArgs.script,
+    `${fixture.adapterRoot}/scripts/run.mjs`,
+  );
   const result = await runJson(fixture.adapterRunArgs);
 
   assert.equal(result.compatibility.coreRoot, fixture.coreRoot);

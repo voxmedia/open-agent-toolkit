@@ -70,6 +70,10 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
               loaded.push(await options.sourceLoader(source));
             }
           }
+          const authored =
+            typeof options.author === 'function'
+              ? await options.author({ artifact: { id: request.recipe.id } })
+              : null;
           const runRoot = join(request.outputRoot, request.slug);
           const manifestPath = join(runRoot, 'manifest.json');
           const buildRecordPath = join(runRoot, 'build-record.json');
@@ -101,6 +105,7 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
             outcome: 'built-not-durable',
             warnings: ['core-warning'],
             reviewedSource: options.reviewedSource,
+            authored,
           };
         }
       `,
@@ -294,9 +299,127 @@ trap 'rmdir "$lock"' EXIT INT TERM
   }
 });
 
+test('passes direct and module authors through the adapter boundary', async () => {
+  const directFixture = await createFixture();
+  const directResult = await runOatExplainer({
+    adapterRoot: directFixture.adapterRoot,
+    userSkillsRoot: directFixture.userSkillsRoot,
+    repoRoot: directFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'direct-author',
+    getConfig,
+    author: async ({ artifact }) => ({
+      source: 'direct',
+      artifactId: artifact.id,
+    }),
+    mode: 'unattended',
+  });
+  assert.deepEqual(directResult.result.authored, {
+    source: 'direct',
+    artifactId: 'project-recap',
+  });
+
+  const moduleFixture = await createFixture();
+  const authorModulePath = join(moduleFixture.root, 'author.mjs');
+  await writeFile(
+    authorModulePath,
+    `export async function author({ artifact }) {
+  return { source: 'module', artifactId: artifact.id };
+}
+`,
+  );
+  const moduleResult = await runOatExplainer({
+    adapterRoot: moduleFixture.adapterRoot,
+    userSkillsRoot: moduleFixture.userSkillsRoot,
+    repoRoot: moduleFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'module-author',
+    getConfig,
+    authorModulePath,
+    mode: 'unattended',
+  });
+  assert.deepEqual(moduleResult.result.authored, {
+    source: 'module',
+    artifactId: 'project-recap',
+  });
+});
+
+test('rejects missing, invalid, and conflicting author module inputs at the adapter boundary', async () => {
+  const fixture = await createFixture();
+  const invalidModulePath = join(fixture.root, 'invalid-author.mjs');
+  await writeFile(invalidModulePath, 'export const author = "invalid";\n');
+  const context = {
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'author-contract',
+    getConfig,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      authorModulePath: join(fixture.root, 'missing-author.mjs'),
+    }),
+    /unable to load.*author module/i,
+  );
+  await assert.rejects(
+    runOatExplainer({ ...context, authorModulePath: invalidModulePath }),
+    /author module must export an author function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      author: async () => ({}),
+      authorModulePath: invalidModulePath,
+    }),
+    /only one.*author/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      coreOptions: { author: async () => ({}) },
+    }),
+    /coreOptions\.author is not supported/i,
+  );
+});
+
+test('preserves the actual core no-author failure for unattended adapter runs', async () => {
+  const fixture = await createFixture();
+  const adapterResult = await runOatExplainer({
+    adapterRoot: SOURCE_ADAPTER_ROOT,
+    userSkillsRoot: SOURCE_SKILLS_ROOT,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'missing-author',
+    getConfig,
+    critic: async () => ({
+      criticId: 'missing-author-test',
+      executedAt: '2026-07-20T12:00:00.000Z',
+      findings: [],
+    }),
+    mode: 'unattended',
+  });
+
+  assert.equal(adapterResult.result.outcome, 'failed');
+  assert.equal(adapterResult.result.errors[0].code, 'E_AUTHOR_REQUIRED');
+});
+
 test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
   const fixture = await createFixture();
+  const authorModulePath = join(fixture.root, 'lifecycle-author.mjs');
   const criticModulePath = join(fixture.root, 'lifecycle-critic.mjs');
+  await writeValidAuthorModule(authorModulePath);
   await writeFile(
     criticModulePath,
     `
@@ -323,6 +446,7 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     activeProject: '.oat/projects/shared/demo',
     recipe: 'project-recap',
     slug: 'actual-core-recap',
+    authorModulePath,
     criticModulePath,
     getConfig,
     mode: 'unattended',
@@ -344,6 +468,9 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
   assert.ok(
     factBase.sources.some(({ id }) => id === 'critic:lifecycle-test-critic'),
   );
+  assert.deepEqual(adapterResult.manifest.source.authorResultPaths, [
+    'source/author/project-recap.json',
+  ]);
 });
 
 test('rejects invalid critic module and callback contracts at the adapter boundary', async () => {
@@ -510,3 +637,31 @@ test('does not inspect ambient private configuration', async () => {
     readFile(join(fixture.repoRoot, '.private', 'explainer.json'), 'utf8'),
   );
 });
+
+async function writeValidAuthorModule(path) {
+  await writeFile(
+    path,
+    `export async function author(request) {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v1',
+    artifactId: request.artifact.id,
+    content: {
+      title: 'Lifecycle-authored recap',
+      description: 'A concise project narrative synthesized from reconciled facts.',
+      sections: request.narrativeOutline.map(({ id, title }, index) => ({
+        id,
+        title,
+        prose: \`Section \${index + 1} explains the validated \${title.toLowerCase()} evidence and its project impact for readers.\`,
+      })),
+      artifactLinks: [],
+    },
+    provenance: {
+      authorId: 'adapter-lifecycle-author',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'provider-neutral-module',
+    },
+  };
+}
+`,
+  );
+}

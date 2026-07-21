@@ -51,7 +51,6 @@ export async function createPackagedLayout() {
     const requestPath = join(root, 'core-request.json');
     const authorModulePath = join(root, 'author.mjs');
     const criticModulePath = join(root, 'critic.mjs');
-    const adapterRunnerPath = join(root, 'adapter-runner.mjs');
     const adapterContextPath = join(root, 'adapter-context.json');
     await Promise.all([
       writeJson(factBasePath, suppliedFactBase()),
@@ -67,7 +66,6 @@ export async function createPackagedLayout() {
 }
 `,
       ),
-      writeAdapterRunner(adapterRunnerPath),
     ]);
     await writeJson(requestPath, {
       schemaVersion: 'explainer-kit.run-request/v1',
@@ -122,7 +120,7 @@ export async function createPackagedLayout() {
         env,
       },
       adapterRunArgs: {
-        script: adapterRunnerPath,
+        script: join(adapterRoot, 'scripts', 'run.mjs'),
         args: ['--context', adapterContextPath],
         cwd: repoRoot,
         env,
@@ -215,48 +213,6 @@ async function writeAuthorModule(path) {
 }
 `,
   );
-}
-
-async function writeAdapterRunner(path) {
-  await writeFile(
-    path,
-    `#!/usr/bin/env node
-import { readFile } from 'node:fs/promises';
-import { pathToFileURL } from 'node:url';
-
-if (process.argv.length !== 4 || process.argv[2] !== '--context') {
-  throw new Error('Usage: adapter-runner.mjs --context <adapter-context.json>');
-}
-const contextPath = process.argv[3];
-const context = JSON.parse(await readFile(contextPath, 'utf8'));
-const adapter = await import(
-  pathToFileURL(\`\${context.adapterRoot}/scripts/run.mjs\`).href
-);
-const authorModule = await import(pathToFileURL(context.authorModulePath).href);
-delete context.authorModulePath;
-
-try {
-  const result = await adapter.runOatExplainer({
-    ...context,
-    coreOptions: { author: authorModule.author },
-  });
-  process.stdout.write(\`\${JSON.stringify(result, null, 2)}\\n\`);
-  process.exitCode = result.result.outcome === 'failed' ? 1 : 0;
-} catch (error) {
-  process.stderr.write(
-    \`\${JSON.stringify({
-      outcome: 'failed',
-      errors: [{
-        code: error.code ?? 'E_ADAPTER',
-        message: error instanceof Error ? error.message : String(error),
-      }],
-    }, null, 2)}\\n\`,
-  );
-  process.exitCode = 1;
-}
-`,
-  );
-  await chmod(path, 0o755);
 }
 
 function isolatedEnvironment({ userRoot, binRoot }) {
