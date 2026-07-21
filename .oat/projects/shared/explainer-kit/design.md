@@ -13,12 +13,13 @@ oat_template: false
 
 The implementation keeps the proven engine/adapter split from discovery and
 makes the boundary concrete. `explainer-kit` is a canonical generic skill with
-bundled schemas, recipes, templates, validators, QA helpers, and an
-`s3-static` connector. It receives a complete run request, produces a tracked
-artifact package, and reads no OAT, user, vault, or destination config.
-`oat-explainer-kit` resolves OAT configuration and project state, derives
-canonical paths, binds OAT artifacts to generic recipe inputs, and invokes the
-core.
+bundled schemas, recipes, curated styles, templates, validators, QA helpers,
+and an `s3-static` connector. It receives a complete run request plus transient
+provider-neutral execution seams, produces a tracked artifact package, and
+reads no OAT, user, vault, or destination config. `oat-explainer-kit` resolves
+OAT configuration and project state, derives canonical paths, binds OAT
+artifacts to generic recipe inputs, validates unattended author cardinality,
+and invokes the core.
 
 The stable extension seam is deliberately small: versioned inputs in; a
 versioned artifact tree, manifest, build record, and optional publish receipt
@@ -42,13 +43,16 @@ implementation as the OAT adapter.
 
 **Key Components:**
 
-- **Core Orchestrator:** Runs fact-base, content, theme, build, QA, durability,
-  and optional publish stages from explicit inputs.
+- **Core Orchestrator:** Runs fact-base, authored content, theme, build, QA,
+  durability, and optional publish stages from explicit inputs. Every
+  unattended run requires one provider-neutral author callback; interactive
+  runs retain the human review path.
 - **Contract Validators:** Validate strict versioned JSON contracts, safe
   paths, hashes, and cross-record consistency.
 - **Recipe Registry:** Defines generic source requirements, minimum narrative
   content, artifact types, and template bindings.
-- **Theme Resolver:** Compiles named selections, supplied bundles, and optional
+- **Theme Resolver:** Compiles one of four curated named styles, supplied
+  bundles, deprecated palette/profile compatibility selections, and optional
   art direction into one concrete resolved theme.
 - **Render and QA Assets:** Neutral production shells, build orchestration,
   structural checks, browser probes, and cohesion checks.
@@ -78,8 +82,8 @@ Direct/private caller ──────────────┤
                                     ▼
                               explainer-kit
  ┌───────────┐  ┌─────────┐  ┌──────────┐  ┌─────────────┐
- │ fact base │→ │ content │→ │ resolved │→ │ render + QA │
- │ + critic  │  │ models  │  │ theme    │  │             │
+ │ fact base │→ │ author/ │→ │ resolved │→ │ render + QA │
+ │ + critic  │  │ review  │  │ style    │  │             │
  └───────────┘  └─────────┘  └──────────┘  └──────┬──────┘
                                                    ▼
                                          artifact package
@@ -107,12 +111,18 @@ Direct/private caller ──────────────┤
 4. A supplied fact base receives a light consistency/freshness check. Otherwise
    the core federates sources, reconciles contradictions, runs the critic, and
    records operator overrides.
-5. The recipe produces one approved content model per artifact. Interactive
-   runs retain the existing Markdown review gate; unattended lifecycle recipes
-   use their already-approved project artifacts and record that review source.
-6. Theme selection compiles to `theme.resolved.json`. Raw natural-language art
-   direction remains transient; only its hash and the resolved bundle hash are
-   stored by default.
+5. The recipe produces one approved content model per artifact. For every
+   unattended run, the core invokes a provider-neutral author once per artifact
+   with a validated `AuthorRequestV1`, validates the structured
+   `AuthorResultV1`, rejects section-local source dumping, and retains the
+   result as provenance before writing Markdown. Interactive runs may omit an
+   author and retain the existing Markdown review gate.
+6. Curated style selection compiles to `theme.resolved.json`; `clean-neutral`
+   is the visible default. A supplied bundle has highest precedence, an
+   explicit style wins over deprecated palette/profile compatibility inputs,
+   and default or deprecated selection emits a warning. Raw natural-language
+   art direction remains transient; only its hash and the resolved bundle hash
+   are stored by default.
 7. Builders render into `site/`, then structural, browser-layout, accessibility,
    and cross-set checks run. Every stage updates `build-record.json`
    atomically.
@@ -131,10 +141,14 @@ Direct/private caller ──────────────┤
 
 ```text
 <output-root>/<slug>/
+├── run-request.json
 ├── source/
 │   ├── fact-base.md
 │   ├── fact-base.json
 │   ├── overrides.json
+│   ├── content-approval.json
+│   ├── author/
+│   │   └── <artifact-id>.json
 │   └── content/
 │       └── <artifact-id>.md
 ├── theme.resolved.json
@@ -219,6 +233,8 @@ archive-aware PR links point to the tracked recap export.
 
 - Locate only bundled assets relative to the core skill directory.
 - Validate the complete run request before creating the run directory.
+- Require an author callback for unattended runs before narrative output while
+  keeping the core's own fail-closed behavior independent of adapters.
 - Execute stages in order and preserve successful intermediates.
 - Maintain atomic manifest/build-record updates.
 - Enforce human gates for interactive content approval and all publishing.
@@ -228,10 +244,18 @@ archive-aware PR links point to the tracked recap export.
 
 ```typescript
 interface ExplainerCore {
-  run(request: ExplainerRunRequestV1): Promise<ExplainerRunResultV1>;
+  run(
+    request: ExplainerRunRequestV1,
+    options?: ExplainerCoreRunOptionsV1,
+  ): Promise<ExplainerRunResultV1>;
   recordDurability(
     request: DurabilityEvidenceRequestV1,
   ): Promise<ExplainerRunResultV1>;
+}
+
+interface ExplainerCoreRunOptionsV1 {
+  author?: ExplainerAuthorV1;
+  critic?: ProviderNeutralCriticV1;
 }
 
 interface ExplainerRunResultV1 {
@@ -270,8 +294,8 @@ boundary.
 
 **Responsibilities:**
 
-- Validate request, fact-base metadata, theme, manifest, build record, and
-  publish receipt.
+- Validate request, fact-base metadata, author request/result, theme, manifest,
+  build record, durability evidence, publish request, and publish receipt.
 - Reject unknown required schema versions and unknown object keys.
 - Normalize hashes, URLs, roots, and relative paths.
 - Enforce cross-record invariants such as artifact hash agreement and
@@ -287,7 +311,11 @@ type ContractKind =
   | 'theme'
   | 'manifest'
   | 'build-record'
-  | 'publish-receipt';
+  | 'durability-evidence'
+  | 'publish-request'
+  | 'publish-receipt'
+  | 'author-request'
+  | 'author-result';
 
 interface ValidationResult {
   valid: boolean;
@@ -314,7 +342,11 @@ rendering.
 - Reconcile federated sources with explicit freshness precedence.
 - Run adversarial contradiction and stale-snapshot checks.
 - Record operator-confirmed overrides separately from raw sources.
-- Convert recipe narrative requirements into per-artifact Markdown content.
+- Construct one validated author request per artifact for unattended runs.
+- Validate exact section IDs, substantive prose, artifact identity, and
+  non-secret provenance before serializing per-artifact Markdown content.
+- Reject section-local normalized word-shingle overlap that indicates source
+  dumping while allowing concise fact-preserving prose.
 - Apply the plain-language edit and maintain consistent terms/numbers.
 
 **Interfaces:**
@@ -334,15 +366,66 @@ interface SourceBindingV1 {
   revision?: string;
   authoritativeFor?: string[];
 }
+
+type ExplainerAuthorV1 = (
+  request: AuthorRequestV1,
+) => AuthorResultV1 | Promise<AuthorResultV1>;
+
+interface AuthorRequestV1 {
+  schemaVersion: 'explainer-kit.author-request/v1';
+  run: { runId: string; slug: string };
+  recipe: {
+    id: string;
+    version: string;
+    requiredNarrative: string[];
+  };
+  artifact: {
+    id: string;
+    type: 'hub' | 'diagram' | 'explainer' | 'deck' | 'catalog';
+  };
+  narrativeOutline: Array<{ id: string; title: string }>;
+  factBase: FactBaseV1;
+  discovery: {
+    rounds: number;
+    findings: string[];
+    reason: 'not-requested' | 'two-empty-rounds' | 'hard-maximum';
+  };
+}
+
+interface AuthorResultV1 {
+  schemaVersion: 'explainer-kit.author-result/v1';
+  artifactId: string;
+  content: {
+    title: string;
+    description: string;
+    eyebrow?: string;
+    footer?: string;
+    sections: Array<{ id: string; title: string; prose: string }>;
+    artifactLinks?: Array<{
+      id: string;
+      type: 'hub' | 'diagram' | 'explainer' | 'deck' | 'catalog';
+      label: string;
+    }>;
+  };
+  provenance: {
+    authorId: string;
+    generatedAt: string;
+    method?: string;
+    model?: string;
+  };
+}
 ```
 
 **Design Decisions:**
 
 - `fact-base.md` is human-readable; `fact-base.json` stores citations, source
   hashes, unresolved claims, and contract metadata.
+- Executable author callbacks and module paths remain transient and never enter
+  `run-request.json`; validated author results are retained under
+  `source/author/` and covered by immutable hashes.
+- Every unattended run requires an author, regardless of recipe. Interactive
+  runs may omit one because explicit human review still gates rendering.
 - Content Markdown remains tracked even when rendered HTML is ignored.
-- Lifecycle recipes can treat approved OAT artifacts as reviewed source,
-  avoiding a new interactive gate during autonomous completion.
 
 ### Recipe Registry
 
@@ -390,12 +473,15 @@ v1 request, fact-base, theme, or manifest contracts.
 
 ### Theme Resolver
 
-**Purpose:** Convert flexible selection inputs into one replayable concrete
-theme.
+**Purpose:** Convert a curated style or compatibility selection into one
+replayable concrete theme.
 
 **Responsibilities:**
 
-- Load bundled named palettes and profiles or a caller-supplied bundle.
+- Load one of `clean-neutral`, `business-corporate`, `navy-ocean`, or
+  `dark-edgy`, or a caller-supplied bundle.
+- Continue loading named palettes and profiles only for deprecated
+  compatibility callers.
 - Apply natural-language art direction as a compile-time transformation.
 - Validate semantic completeness, contrast, numeric ranges, and template
   compatibility.
@@ -404,13 +490,14 @@ theme.
 
 **Resolution Order:**
 
-1. Explicit resolved theme bundle runtime input
-2. Runtime palette/profile/art-direction selection
-3. Adapter-resolved configured defaults
-4. Bundled neutral default
+1. Explicit resolved theme bundle input
+2. Explicit curated `style`
+3. Deprecated palette/profile compatibility selection when no style is present
+4. Bundled `clean-neutral` default
 
-A supplied bundle wins over named selections. If both are present, the resolver
-uses the bundle and emits a warning.
+A supplied bundle wins over all named selections. An explicit style wins over
+deprecated palette/profile inputs. Each conflict, use of legacy inputs, and
+implicit fallback to `clean-neutral` emits a visible warning.
 
 **Design Decisions:**
 
@@ -420,7 +507,9 @@ uses the bundle and emits a warning.
   rendering choice, while the resolved bundle always contains both validated
   modes. Render strategy is excluded from bundle identity and derived-preset
   promotion.
-- V1 ships a small matrix to keep visual QA bounded.
+- V1 ships four complete curated systems spanning color, typography, density,
+  geometry, component accents, motion, and diagram treatment. The old
+  palette/profile matrix remains compatibility-only.
 - Raw art direction is excluded from public records unless the caller
   explicitly opts into retaining it in a private output.
 
@@ -518,6 +607,9 @@ core contract.
 - Derive project/non-project output roots.
 - Bind OAT artifacts to generic recipe source roles.
 - Resolve lifecycle intent and invoke the core.
+- Accept either an in-process `author` or JSON-safe `authorModulePath`; reject
+  two seams in all modes and reject zero seams for unattended calls before
+  core invocation. Interactive calls may omit both.
 - Own one shared tracked-run finalizer so planning, implementation, and
   completion callers do not improvise commit/durability choreography.
 
@@ -547,18 +639,19 @@ manifest.
 
 **Config Surface:**
 
-| Key                                    | Type                   | Allowed scopes    | Built-in |
-| -------------------------------------- | ---------------------- | ----------------- | -------- |
-| `explainers.defaults.palette`          | non-empty string       | local/shared/user | neutral  |
-| `explainers.defaults.visualProfile`    | non-empty string       | local/shared/user | clean    |
-| `explainers.defaults.themeBundlePath`  | path                   | local/shared      | unset    |
-| `explainers.publish.provider`          | `s3-static`            | shared            | unset    |
-| `explainers.publish.s3Uri`             | normalized `s3://` URI | shared            | unset    |
-| `explainers.publish.publicBaseUrl`     | `https://` URL         | shared            | unset    |
-| `explainers.publish.awsRegion`         | non-empty string       | shared            | unset    |
-| `explainers.publish.awsProfile`        | non-empty string       | local/user        | unset    |
-| `workflow.explainers.projectExplainer` | `always\|ask\|never`   | local/shared/user | ask      |
-| `workflow.explainers.projectRecap`     | `always\|ask\|never`   | local/shared/user | ask      |
+| Key                                    | Type                                                       | Allowed scopes    | Built-in      |
+| -------------------------------------- | ---------------------------------------------------------- | ----------------- | ------------- |
+| `explainers.defaults.style`            | `clean-neutral\|business-corporate\|navy-ocean\|dark-edgy` | local/shared/user | clean-neutral |
+| `explainers.defaults.palette`          | non-empty string or null (deprecated)                      | local/shared/user | null          |
+| `explainers.defaults.visualProfile`    | non-empty string or null (deprecated)                      | local/shared/user | null          |
+| `explainers.defaults.themeBundlePath`  | path                                                       | local/shared      | unset         |
+| `explainers.publish.provider`          | `s3-static`                                                | shared            | unset         |
+| `explainers.publish.s3Uri`             | normalized `s3://` URI                                     | shared            | unset         |
+| `explainers.publish.publicBaseUrl`     | `https://` URL                                             | shared            | unset         |
+| `explainers.publish.awsRegion`         | non-empty string                                           | shared            | unset         |
+| `explainers.publish.awsProfile`        | non-empty string                                           | local/user        | unset         |
+| `workflow.explainers.projectExplainer` | `always\|ask\|never`                                       | local/shared/user | ask           |
+| `workflow.explainers.projectRecap`     | `always\|ask\|never`                                       | local/shared/user | ask           |
 
 Shared `themeBundlePath` must be repository-relative. Local may be
 repository-relative or absolute. User config intentionally has no path-based
@@ -569,8 +662,13 @@ silently changing local config.
 
 **Cross-Field Rules:**
 
-- Named defaults are valid independently; a theme bundle path overrides them
+- A theme bundle path overrides configured style and compatibility selections
   with a warning.
+- An explicitly configured or runtime style overrides deprecated
+  palette/profile selections with a warning.
+- Palette/profile remain accepted only as nullable deprecated compatibility
+  inputs. If no bundle, explicit style, or legacy input is present, the core
+  selects `clean-neutral` and records a default-selection warning.
 - Publish is build-only when `provider` is absent.
 - If `provider` is set, `s3Uri`, `publicBaseUrl`, and `awsRegion` are required.
 - `awsProfile` may remain absent to use the standard AWS credential chain.
@@ -706,7 +804,10 @@ interface ExplainerRunRequestV1 {
 }
 
 interface ThemeSelectionV1 {
+  style?: 'clean-neutral' | 'business-corporate' | 'navy-ocean' | 'dark-edgy';
+  /** @deprecated Compatibility only; prefer style. */
   palette?: string;
+  /** @deprecated Compatibility only; prefer style. */
   visualProfile?: string;
   suppliedBundlePath?: string;
   artDirection?: string;
@@ -754,6 +855,23 @@ interface DurabilityEvidenceRequestV1 {
 **Storage:** The normalized request is persisted in privacy-safe form under the
 run root. Sensitive/transient values are redacted.
 
+### Author Request and Result
+
+The core constructs `AuthorRequestV1` from the validated recipe, artifact,
+narrative outline, reconciled fact base, and bounded discovery result. It
+invokes the provider-neutral author once per artifact and accepts only a
+matching `AuthorResultV1` with exactly the required section IDs and substantive
+prose. The callback or module locator is executable invocation state and is
+never persisted in the run request.
+
+For unattended calls, direct core callers provide `options.author`; the core
+independently fails closed with `E_AUTHOR_REQUIRED` if it is absent. The core
+CLI resolves `--author-module`. The OAT adapter accepts either `author` or
+`authorModulePath`, validates exactly one for unattended mode before core
+invocation, and allows neither for interactive mode. Validated results and
+non-secret provenance are retained at `source/author/<artifact-id>.json` and
+included in `manifest.immutableHashes`.
+
 ### Resolved Theme
 
 ```typescript
@@ -779,7 +897,10 @@ interface ResolvedThemeV1 {
     dark: ThemeColorsV1;
   };
   provenance: {
+    style?: 'clean-neutral' | 'business-corporate' | 'navy-ocean' | 'dark-edgy';
+    /** @deprecated Present only for compatibility selections. */
     palette?: string;
+    /** @deprecated Present only for compatibility selections. */
     visualProfile?: string;
     derived: boolean;
     instructionHash?: string;
@@ -838,9 +959,11 @@ interface ArtifactManifestV1 {
     factBaseHash: string;
     sourceRevision?: string;
     inputHashes: Record<string, string>;
+    authorResultPaths?: string[];
   };
   theme: { path: 'theme.resolved.json'; hash: string; derived: boolean };
   artifacts: ArtifactEntryV1[];
+  immutableHashes: Record<string, string>;
   outcome: 'built-durable' | 'built-not-durable' | 'failed' | 'incomplete';
   buildRecord: { path: 'build-record.json'; hash: string };
   publishReceipt?: { path: 'publish-receipt.json'; hash: string };
@@ -875,6 +998,9 @@ interface ArtifactEntryV1 {
 **Validation Rules:**
 
 - Paths are relative to the run root; rendered paths must be under `site/`.
+- `immutableHashes` covers the persisted request, fact-base JSON and Markdown,
+  content approval, retained author results, serialized content, resolved
+  theme, and built artifacts using exact file bytes.
 - `built` requires a hash and existing output.
 - `rebuildable: true` requires complete rebuild metadata.
 - `built-durable` requires durable evidence for every required
@@ -987,8 +1113,10 @@ frontmatter.
 
 **Method:** Agent skill invocation
 
-**Request:** `ExplainerRunRequestV1` or compatibility `EXPLAINER_*` values that
-normalize to it.
+**Request:** `ExplainerRunRequestV1` plus transient execution options.
+Unattended callers provide `options.author` in-process or `--author-module` on
+the core CLI. Compatibility `EXPLAINER_*` values normalize to the same
+data-only request.
 
 **Response:** `ExplainerRunResultV1` plus the persisted artifact package.
 
@@ -998,6 +1126,10 @@ normalize to it.
 - `E_PATH_ESCAPE`: path leaves its declared root
 - `E_RECIPE_UNSUPPORTED`: unknown recipe/version
 - `E_FACT_BASE`: reconciliation or supplied-base validation failure
+- `E_AUTHOR_REQUIRED`: unattended invocation omitted an author
+- `E_AUTHOR_REQUEST`: constructed author input violates its contract
+- `E_AUTHOR_RESULT`: author output is malformed or incomplete
+- `E_SOURCE_DUMP`: an authored section copies excessive source wording
 - `E_THEME`: incomplete/invalid resolved theme
 - `E_RENDER`: required artifact rendering failure
 - `E_QA`: structural/render/cohesion failure
@@ -1023,6 +1155,10 @@ optional runtime overrides.
 
 - Missing core or incompatible version: fail closed with utility-pack
   install/update command.
+- Unattended author cardinality other than exactly one: fail at the adapter
+  boundary before core invocation. Interactive invocations may omit an author.
+- Invalid author module or export: fail at the adapter boundary without
+  persisting the module path.
 - Invalid config scope/value: point to `oat config describe <key>`.
 - Incomplete publish block: continue only if the user explicitly chooses a
   build-only run; lifecycle auto-runs default to build-only.
@@ -1031,10 +1167,11 @@ optional runtime overrides.
 
 ### OAT Config API
 
-The CLI registry adds the ten keys in the config table. `get --json` must
+The CLI registry adds the eleven keys in the config table. `get --json` must
 return `{key, value, source}`. `set` enforces allowed surface and scalar type.
 `describe` documents precedence, scope, default, owning command, and
-cross-field validation ownership.
+cross-field validation ownership. `style` is the primary visual-selection key;
+palette/profile remain nullable and explicitly deprecated.
 
 ### Project State API
 
@@ -1088,6 +1225,8 @@ policy remains external infrastructure.
 - `awsProfile` is restricted to local/user config.
 - Raw art-direction text, raw prompts, environment dumps, and credentials are
   excluded from manifests/build records.
+- Author callbacks and module paths are never persisted. Retained author
+  results contain only validated content and non-secret provenance.
 - Fact bases may contain sensitive project facts; publishing uploads only
   `site/`, never `source/` or build records.
 - Public templates receive escaped content and validated CSS/token values.
@@ -1172,10 +1311,11 @@ No database is introduced.
 
 ### Logging
 
-- Info: stage transitions, artifact counts, selected named palette/profile,
-  output paths, and verified URLs.
-- Warn: overrides, unresolved facts, cohesion deviations, non-durable output,
-  optional artifact failures, and autonomous policy corrections.
+- Info: stage transitions, artifact counts, selected curated style, output
+  paths, and verified URLs.
+- Warn: overrides, deprecated palette/profile use, implicit style fallback,
+  unresolved facts, cohesion deviations, non-durable output, optional artifact
+  failures, and autonomous policy corrections.
 - Error: concise code/message plus durable record path and recovery steps.
 - Never log raw credentials, raw environment, or raw art-direction text by
   default.
@@ -1188,11 +1328,11 @@ No database is introduced.
 | ---- | ------------------ | ------------------------------------------------------------------------ |
 | FR1  | integration        | Packaged core with no OAT; invalid schema/path/publish inputs            |
 | FR2  | integration        | Federated contradictions; supplied fact base; override noise suppression |
-| FR3  | integration        | Both canonical recipes; parameterized source roles; engineer tour        |
-| FR4  | unit + visual      | Dual-mode bundle; default-only/switchable rendering; AA and matrix QA    |
+| FR3  | integration        | Recipes; per-artifact author contracts; unattended fail-closed behavior  |
+| FR4  | unit + visual      | Four curated styles; legacy compatibility; dual-mode/accessibility QA    |
 | FR5  | unit + integration | Stage transitions; two-commit evidence; relocation and rebuildability    |
 | FR6  | integration + e2e  | Root normalization; sentinel; MIME; live URL receipt                     |
-| FR7  | unit + integration | Config registry, scopes, sources, precedence, cross-field errors         |
+| FR7  | unit + integration | Style config/precedence; deprecated legacy inputs; cross-field errors    |
 | FR8  | unit + integration | Active roots; archive export/hash verification; symlinks and traversal   |
 | FR9  | unit + integration | Autonomous/interactive precedence, ask-once persistence, stale conflict  |
 | FR10 | integration        | Forced render and durability failures still allow project completion     |
@@ -1210,8 +1350,9 @@ No database is introduced.
 ### Unit Tests
 
 - Contract normalization and strict schema failures
-- Theme merging, canonical serialization, hash stability, and contrast
-- Config key parsing, surfaces, source precedence, and defaults
+- Author request/result validation, exact section IDs, and source-dump bounds
+- Curated style/compatibility merging, canonical hashes, and contrast
+- Config key parsing, surfaces, style precedence, deprecations, and defaults
 - Lifecycle decision validation and resolution table
 - Artifact status/durability derivation
 - Corresponding-root and relative-path mapping
@@ -1224,6 +1365,8 @@ modules receive explicit table-driven cases.
 
 - Real temporary directories for core request-to-manifest runs
 - Supplied and federated fact-base fixtures
+- Direct and module authors, omitted/conflicting author seams, retained
+  provenance, and section-local source-dump rejection
 - Forced failures at every stage with artifact preservation assertions
 - Installed utility/workflows pack layouts
 - Adapter use of `oat config get --json`
@@ -1249,8 +1392,9 @@ modules receive explicit table-driven cases.
 
 ### Visual QA Matrix
 
-- Every curated palette in both supported modes against the house shell
-- Every visual profile against at least one prose, deck, and diagram artifact
+- Every curated style in both supported modes against the house shell
+- Every curated style against prose, deck, and diagram artifact classes
+- Representative deprecated palette/profile combinations for compatibility
 - Every new/changed template across desktop and narrow viewport
 - Full matrix only for release candidates or changes to shared semantic tokens
 
@@ -1320,8 +1464,9 @@ republish under the typed v1 layout without destructive collisions.
 
 ## Open Questions
 
-No design-blocking questions remain. Implementation may tune the exact curated
-palette/profile names, browser viewport list, and rebuild spot-check sample
+No design-blocking questions remain. The four curated style IDs and
+palette/profile deprecation behavior are frozen Revision 1 contracts.
+Implementation may tune the browser viewport list and rebuild spot-check sample
 size without changing the contracts or acceptance boundaries.
 
 ## Implementation Phases
@@ -1348,7 +1493,7 @@ recipes.
 **Tasks:**
 
 - Evolve the fact-base/content pipeline and recipe registry from the drafts.
-- Implement theme resolution, curated palettes/profiles, and
+- Implement four curated styles, deprecated palette/profile compatibility, and
   default-only/user-switchable render strategies.
 - Neutralize production templates and externalize examples.
 - Implement manifest/build-record persistence, render QA, leak checks, and

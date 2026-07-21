@@ -9,11 +9,11 @@ oat_project: /Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-ki
 
 # Code Review: p-rev1
 
-**Reviewed:** 2026-07-21T02:05:46Z  
+**Reviewed:** 2026-07-21T02:05:46Z
 **Scope:** Revision 1 implementation and bounded root evidence,
-`9204742be899b9f133a9e99be56215798083f2a4..fde97026`  
+`9204742be899b9f133a9e99be56215798083f2a4..fde97026`
 **Primary task commits:** `4f456a91`, `8708f4d3`, `d8dec777`, `0895a8c0`,
-`5f7206bd`  
+`5f7206bd`
 **Files in authoritative diff:** 58
 
 ## Summary
