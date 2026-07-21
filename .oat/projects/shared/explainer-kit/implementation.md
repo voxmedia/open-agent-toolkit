@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-21
-oat_current_task_id: null
+oat_current_task_id: prev1-t06
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | complete  | 6     | 6/6       |
-| Phase 2    | complete  | 10    | 10/10     |
-| Phase 3    | complete  | 9     | 9/9       |
-| Phase 4    | complete  | 9     | 9/9       |
-| Phase 5    | completed | 4     | 4/4       |
-| Revision 1 | complete  | 5     | 5/5       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | complete    | 6     | 6/6       |
+| Phase 2    | complete    | 10    | 10/10     |
+| Phase 3    | complete    | 9     | 9/9       |
+| Phase 4    | complete    | 9     | 9/9       |
+| Phase 5    | completed   | 4     | 4/4       |
+| Revision 1 | in_progress | 8     | 5/8       |
 
-**Total:** 43/43 tasks completed
+**Total:** 43/46 tasks completed
 
 ---
 
@@ -1083,10 +1083,9 @@ this candidate must not be used for external acceptance.
 
 ## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-20
-**Completed:** 2026-07-21
-**Current task:** None
+**Current task:** `prev1-t06`
 
 ### Revision Received: Inline Feedback
 
@@ -1105,7 +1104,7 @@ this candidate must not be used for external acceptance.
   recap/archive regression before promotion and project completion.
 
 **New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`,
-`prev1-t05`
+`prev1-t05`, `prev1-t06`, `prev1-t07`, `prev1-t08`
 
 **Migrated artifacts:**
 
@@ -1122,6 +1121,9 @@ this candidate must not be used for external acceptance.
 | prev1-t03 | completed | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed              |
 | prev1-t04 | completed | `0895a8c0` | Codex config codec and full repository verification passed               |
 | prev1-t05 | completed | `5f7206bd` | Packaged W6 recap, archive, release, visual, and repository gates passed |
+| prev1-t06 | pending   | —          | Public curated-style config review fix                                   |
+| prev1-t07 | pending   | —          | OAT adapter author-seam review fix                                       |
+| prev1-t08 | pending   | —          | Section-local source-dump QA review fix                                  |
 
 The first aggregate attempt hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed all 18
@@ -1133,7 +1135,13 @@ paths, exported successfully through `oat project archive
 --project-recap-run`, and left the retained archive unchanged. See
 `references/revision-1-w6-acceptance.md`.
 
-**Next:** Run the root-owned fresh-context Revision 1 review.
+**Review:** The fresh-context review found two Critical and one Important
+defect. Findings are recorded in
+`reviews/2026-07-21-p-rev1-code-review.md` and converted into `prev1-t06`
+through `prev1-t08`.
+
+**Next:** Execute the three review-fix tasks, rerun all acceptance gates, and
+repeat the fresh-context review.
 
 ---
 

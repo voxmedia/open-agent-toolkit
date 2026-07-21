@@ -1642,7 +1642,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p03    | code     | passed          | 2026-07-18 | reviews/p03-review-2026-07-18T120653Z.md                    |
 | p04    | code     | passed          | 2026-07-18 | reviews/p04-reconciliation-review-2026-07-18T200037Z.md     |
 | p05    | code     | pending         | -          | -                                                           |
-| p-rev1 | code     | pending         | -          | -                                                           |
+| p-rev1 | code     | received        | 2026-07-21 | reviews/2026-07-21-p-rev1-code-review.md                    |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -1925,6 +1925,113 @@ git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/S
 git commit -m "chore(prev1-t05): validate explainer revision"
 ```
 
+### Task prev1-t06: (review fix) Expose curated style through the public config CLI
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Prove `explainers.defaults.style` is a real get/set key at local, shared, and
+user scopes; accepted values are the four curated style IDs; invalid values
+fail; and the adapter resolves the default through the real CLI-backed config
+path. Assert the legacy palette/profile catalog entries are nullable and
+deprecated rather than advertised as the primary defaults.
+
+**Step 2: Implement (GREEN)**
+
+Add the style key to the public catalog, ordering, validation, and scope
+handling. Preserve legacy palette/profile compatibility without presenting it
+as the default front door.
+
+**Step 3: Verify**
+
+Run the focused config and adapter tests, then formatting and lint.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev1-t06): expose curated style config"
+```
+
+### Task prev1-t07: (review fix) Propagate unattended authors through the OAT adapter
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `tools/smoke/explainer-kit/fixtures/package-root.mjs`
+- Modify: `tools/smoke/explainer-kit/packaged-layout.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Cover direct `author`, JSON-safe `authorModulePath`, missing/invalid module,
+direct-plus-module conflict, validated export shape, actual-core execution, and
+the official adapter CLI path. The smoke test must not use a custom runner to
+inject `coreOptions.author`.
+
+**Step 2: Implement (GREEN)**
+
+Resolve exactly one provider-neutral author seam at the adapter boundary and
+pass it to `core.runExplainer`. Keep executable callbacks out of persisted run
+requests and preserve interactive behavior.
+
+**Step 3: Verify**
+
+Run focused adapter/core and packaged-layout smoke tests, then formatting and
+lint.
+
+**Step 4: Commit**
+
+```bash
+git commit -m "fix(prev1-t07): propagate adapter author seam"
+```
+
+### Task prev1-t08: (review fix) Reject section-local source dumping
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Prove one verbatim section among several original sections is rejected, concise
+fact-preserving prose remains valid, and the finding identifies the offending
+section. Use reconciled fact-base claim text as the privacy-safe comparison
+corpus; raw source documents remain outside the author and retained-package
+contract.
+
+**Step 2: Implement (GREEN)**
+
+Score authored sections independently against the fact-base corpus, retaining
+the aggregate check only if it adds coverage without diluting section-local
+failures.
+
+**Step 3: Verify**
+
+Run focused QA/core integration tests, then every repository and release gate
+serially. Re-run the packaged W6 acceptance and confirm the retained archive is
+unchanged.
+
+**Step 4: Re-review**
+
+Repeat the fresh-context `p-rev1` review and require zero Critical, Important,
+and Medium findings.
+
+**Step 5: Commit**
+
+```bash
+git commit -m "fix(prev1-t08): detect section source dumping"
+```
+
 ## Implementation Complete
 
 **Summary:**
@@ -1934,10 +2041,11 @@ git commit -m "chore(prev1-t05): validate explainer revision"
 - Phase 3: 9 tasks — OAT adapter and lifecycle/archive integration
 - Phase 4: 9 tasks — publishing, compatibility, docs, release validation
 - Phase 5: 4 tasks — frozen RC and external acceptance
-- Phase p-rev1: 5 tasks — complete-package durability, authored content,
-  curated styles, Codex config formatting, and live W6 acceptance
+- Phase p-rev1: 8 tasks — complete-package durability, authored content,
+  curated styles, Codex config formatting, live W6 acceptance, and three
+  final-review fixes
 
-**Total: 43 tasks**
+**Total: 46 tasks**
 
 Revision 1 is ready for implementation from `prev1-t01`. The original project
 remains active until the follow-up PR, live W6 acceptance, wave promotion, and

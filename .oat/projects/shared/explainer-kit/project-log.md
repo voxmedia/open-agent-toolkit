@@ -60,6 +60,10 @@ Expanded prev1-t05 after the real W6 package exposed two acceptance-contract gap
 
 Revision 1 implementation completed 43/43 tasks; packaged W6 acceptance and archive export passed. Fresh-context final review is next.
 
+### 2026-07-21 · structural · oat-project-review-provide · reviews/2026-07-21-p-rev1-code-review.md
+
+Fresh-context p-rev1 review received: 2 Critical and 1 Important finding. Converted into prev1-t06 through prev1-t08 for public style config, adapter author propagation, and section-local source-copy QA.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
