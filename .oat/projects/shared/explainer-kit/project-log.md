@@ -64,6 +64,10 @@ Revision 1 implementation completed 43/43 tasks; packaged W6 acceptance and arch
 
 Fresh-context p-rev1 review received: 2 Critical and 1 Important finding. Converted into prev1-t06 through prev1-t08 for public style config, adapter author propagation, and section-local source-copy QA.
 
+### 2026-07-21 · structural · oat-project-review-receive · aa74980f
+
+Completed all three p-rev1 review fixes in commits 3d9ce8b4, 2c8c0fa5, and aa74980f. Full serial repository/release gates and rebuilt packaged W6 acceptance passed; fresh-context re-review is next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

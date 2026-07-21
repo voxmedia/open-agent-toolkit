@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-21
-oat_current_task_id: prev1-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | complete    | 6     | 6/6       |
-| Phase 2    | complete    | 10    | 10/10     |
-| Phase 3    | complete    | 9     | 9/9       |
-| Phase 4    | complete    | 9     | 9/9       |
-| Phase 5    | completed   | 4     | 4/4       |
-| Revision 1 | in_progress | 8     | 5/8       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | complete  | 6     | 6/6       |
+| Phase 2    | complete  | 10    | 10/10     |
+| Phase 3    | complete  | 9     | 9/9       |
+| Phase 4    | complete  | 9     | 9/9       |
+| Phase 5    | completed | 4     | 4/4       |
+| Revision 1 | complete  | 8     | 8/8       |
 
-**Total:** 43/46 tasks completed
+**Total:** 46/46 tasks completed
 
 ---
 
@@ -1083,9 +1083,10 @@ this candidate must not be used for external acceptance.
 
 ## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-20
-**Current task:** `prev1-t06`
+**Completed:** 2026-07-21
+**Current task:** None
 
 ### Revision Received: Inline Feedback
 
@@ -1121,9 +1122,9 @@ this candidate must not be used for external acceptance.
 | prev1-t03 | completed | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed              |
 | prev1-t04 | completed | `0895a8c0` | Codex config codec and full repository verification passed               |
 | prev1-t05 | completed | `5f7206bd` | Packaged W6 recap, archive, release, visual, and repository gates passed |
-| prev1-t06 | pending   | —          | Public curated-style config review fix                                   |
-| prev1-t07 | pending   | —          | OAT adapter author-seam review fix                                       |
-| prev1-t08 | pending   | —          | Section-local source-dump QA review fix                                  |
+| prev1-t06 | completed | `3d9ce8b4` | 132 config tests and adapter/package integration passed                  |
+| prev1-t07 | completed | `2c8c0fa5` | Adapter author seam and official packaged CLI smoke passed               |
+| prev1-t08 | completed | `aa74980f` | Section-local source-dump QA and full acceptance gates passed            |
 
 The first aggregate attempt hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed all 18
@@ -1140,8 +1141,13 @@ defect. Findings are recorded in
 `reviews/2026-07-21-p-rev1-code-review.md` and converted into `prev1-t06`
 through `prev1-t08`.
 
-**Next:** Execute the three review-fix tasks, rerun all acceptance gates, and
-repeat the fresh-context review.
+**Fix verification:** All repository and release gates passed serially. The
+rebuilt `0.2.10` candidate reran the real W6 recap and archive export with
+eight immutable paths, six distinct authored sections, and no retained-source
+archive mutation. The updated candidate identity is recorded in
+`references/revision-1-w6-acceptance.md`.
+
+**Next:** Repeat the fresh-context Revision 1 review.
 
 ---
 
@@ -1154,6 +1160,25 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 5 — 2026-07-21T02:12:00Z
+
+- Branch: `tkstang/fix-w6-recap-path`
+- Tier: 1, policy-resolved Cursor CLI route
+- Request: `dispatch-p-rev1-review-fixes-20260720-01`
+- Phase base: `8b5b87f3`
+- Outcome: passed for `prev1-t06` through `prev1-t08`
+- Task commits: `3d9ce8b4`, `2c8c0fa5`, `aa74980f`
+- Verification: 3,284 CLI tests, 129 smoke tests, lint, type-check, format,
+  five-package release validation, 65 visual measurements, rebuilt packaged
+  W6 recap, successful archive export, and unchanged retained source archive
+- Reviewer: pending fresh-context re-review
+
+Dispatch: scope=p-rev1-review-fixes action=implementation role=implementer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high
+effort_axis=not-applicable dispatch_policy=high
+dispatch_ceiling=gpt-5.6-sol-high
+target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run 4 — 2026-07-21T00:04:00Z
 

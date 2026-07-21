@@ -8,17 +8,18 @@ used a copied working fixture; the restored source archive remained read-only.
 
 ## Candidate Identity
 
-| Component                     | Identity                                                                          |
-| ----------------------------- | --------------------------------------------------------------------------------- |
-| Source base                   | `a0594b484b99c3aae2504f2f134dfd76ca7e4255` plus the bounded `prev1-t05` task diff |
-| CLI package                   | `@open-agent-toolkit/cli@0.2.10`                                                  |
-| CLI tarball SHA-256           | `cd3adc364ba8fd3d8663b0ddbd047ad8c966e40cf04b39c34df6de6dc09fcf42`                |
-| Control-plane package         | `@open-agent-toolkit/control-plane@0.2.10`                                        |
-| Control-plane tarball SHA-256 | `e71ff657be1f51849421398a1120b1ffa3b09c61115af32e99a796be693f30e8`                |
-| Core skill                    | `explainer-kit@1.0.2`                                                             |
-| Adapter skill                 | `oat-explainer-kit@1.0.1`                                                         |
-| Recipe                        | `project-recap@1`                                                                 |
-| Curated style                 | `clean-neutral`                                                                   |
+| Component                     | Identity                                                                  |
+| ----------------------------- | ------------------------------------------------------------------------- |
+| Source commit                 | `aa74980faf91223b506e8e58eaac300bc8d74802`                                |
+| Candidate identity            | `sha256:4f76f60800e1e9224963b919987eb0e679955e36a8a6a9e05f4cf1401d49af9a` |
+| CLI package                   | `@open-agent-toolkit/cli@0.2.10`                                          |
+| CLI tarball SHA-256           | `c47edfe19e70f69446ad1c076be43ec29616d54f000778c03f71eac780d209a9`        |
+| Control-plane package         | `@open-agent-toolkit/control-plane@0.2.10`                                |
+| Control-plane tarball SHA-256 | `e71ff657be1f51849421398a1120b1ffa3b09c61115af32e99a796be693f30e8`        |
+| Core skill                    | `explainer-kit@1.0.2`                                                     |
+| Adapter skill                 | `oat-explainer-kit@1.0.1`                                                 |
+| Recipe                        | `project-recap@1`                                                         |
+| Curated style                 | `clean-neutral`                                                           |
 
 The candidate was installed into an isolated temporary consumer from the two
 recorded tarballs. `oat --version` and the installed package manifest both
@@ -41,7 +42,7 @@ path-and-byte composite SHA-256 before and after acceptance:
 
 ## Authored Recap
 
-- Run ID: `run-b87b0606-42fc-4129-92f8-2d78fb12fbed`
+- Run ID: `run-b384ae83-b499-4c95-b317-9ac120cbb3c4`
 - Outcome: `built-not-durable`
 - Approval: `approved`
 - Warnings: none
@@ -104,7 +105,7 @@ The following gates passed serially:
 - `pnpm format`;
 - `pnpm lint`;
 - `pnpm type-check`;
-- `pnpm test` (including 262 CLI files and 3,277 CLI tests plus repository
+- `pnpm test` (including 3,284 CLI tests plus repository
   smoke tests); and
 - `pnpm release:validate` for all five public packages and the 65-measurement
   visual gate.

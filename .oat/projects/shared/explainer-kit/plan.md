@@ -1642,7 +1642,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p03    | code     | passed          | 2026-07-18 | reviews/p03-review-2026-07-18T120653Z.md                    |
 | p04    | code     | passed          | 2026-07-18 | reviews/p04-reconciliation-review-2026-07-18T200037Z.md     |
 | p05    | code     | pending         | -          | -                                                           |
-| p-rev1 | code     | received        | 2026-07-21 | reviews/2026-07-21-p-rev1-code-review.md                    |
+| p-rev1 | code     | fixes_completed | 2026-07-21 | reviews/2026-07-21-p-rev1-code-review.md                    |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -1927,6 +1927,8 @@ git commit -m "chore(prev1-t05): validate explainer revision"
 
 ### Task prev1-t06: (review fix) Expose curated style through the public config CLI
 
+**Status:** complete
+
 **Files:**
 
 - Modify: `packages/cli/src/commands/config/index.ts`
@@ -1958,6 +1960,8 @@ git commit -m "fix(prev1-t06): expose curated style config"
 ```
 
 ### Task prev1-t07: (review fix) Propagate unattended authors through the OAT adapter
+
+**Status:** complete
 
 **Files:**
 
@@ -1993,6 +1997,8 @@ git commit -m "fix(prev1-t07): propagate adapter author seam"
 ```
 
 ### Task prev1-t08: (review fix) Reject section-local source dumping
+
+**Status:** complete
 
 **Files:**
 
