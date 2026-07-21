@@ -416,12 +416,19 @@ consistency, but nothing in it owns prose quality. An unattended recap run
 without a caller-supplied authoring path emits raw federated artifact text as
 deck prose (stoa W6 live evidence, run-19af6e55: implementation.md pasted
 verbatim, frontmatter included, tables flattened to run-on prose — every
-automated gate passed it). Until the explainer-kit ships its authoring seam (a
-caller-supplied author callback / `authorModulePath`, pending upstream), recap
-callers MUST either author the content document from the synthesized fact base
-plus the recipe outline (LLM-authored from summary/synthesis material, as the
-operator-approved W6 rebuild demonstrates) or NOT run the unattended build,
-recording the skip disposition per the optional-step rule.
+automated gate passed it). The explainer-kit now enforces this seam: every
+unattended run requires exactly one provider-neutral author seam — in-process
+callers supply an `author(request)` callback; JSON/CLI callers supply
+`authorModulePath` naming a module with an `author` function export. The core
+invokes it once per recipe artifact with an `explainer-kit.author-request/v1`
+document and expects an `explainer-kit.author-result/v1` reply; runs fail if
+the author is absent, returns an invalid result, or copies excessive verbatim
+source text. Recap callers MUST satisfy that seam by authoring content from
+the synthesized fact base plus the recipe outline (LLM-authored from
+summary/synthesis material, as the operator-approved W6 rebuild demonstrates)
+or NOT run the unattended build, recording the skip disposition per the
+optional-step rule. Callbacks and module paths never enter the persisted run
+request.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
 required keys are exactly:
