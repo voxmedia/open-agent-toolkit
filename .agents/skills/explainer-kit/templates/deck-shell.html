@@ -118,6 +118,20 @@
         outline: 2px solid var(--accent);
         outline-offset: 2px;
       }
+      .deck-progress {
+        position: fixed;
+        z-index: 4;
+        inset: auto 0 0;
+        height: 0.25rem;
+        background: var(--panel);
+      }
+      .deck-progress__bar {
+        display: block;
+        width: 0;
+        height: 100%;
+        background: var(--accent);
+        transition: width 180ms ease;
+      }
       html:not(.js) .deck {
         display: block;
         height: auto;
@@ -138,6 +152,17 @@
       @media (prefers-reduced-motion: reduce) {
         .deck {
           scroll-behavior: auto;
+        }
+        .deck-progress__bar {
+          transition: none;
+        }
+      }
+      @media (max-height: 42rem) {
+        .slide {
+          padding-block: 1.5rem 4rem;
+        }
+        .slide__content {
+          overflow-y: auto;
         }
       }
       @media print {
@@ -166,6 +191,9 @@
         .deck-controls {
           display: none;
         }
+        .deck-progress {
+          display: none;
+        }
       }
     </style>
   </head>
@@ -183,21 +211,43 @@
         →
       </button>
     </nav>
+    <div
+      class="deck-progress"
+      id="deck-progress"
+      role="progressbar"
+      aria-label="Slide progress"
+      aria-valuemin="1"
+    >
+      <span class="deck-progress__bar"></span>
+    </div>
     <script>
       (() => {
         const deck = document.querySelector('.deck');
         const slides = [...document.querySelectorAll('.slide')];
         const counter = document.querySelector('#deck-counter');
+        const progress = document.querySelector('#deck-progress');
+        const progressBar = progress.querySelector('.deck-progress__bar');
+        const previous = document.querySelector('[data-direction="-1"]');
+        const next = document.querySelector('[data-direction="1"]');
+        const reducedMotion = matchMedia(
+          '(prefers-reduced-motion: reduce)',
+        ).matches;
         let current = 0;
 
         const update = (index) => {
           current = Math.max(0, Math.min(slides.length - 1, index));
           counter.textContent = `${current + 1} / ${slides.length}`;
+          progress.setAttribute('aria-valuemax', String(slides.length));
+          progress.setAttribute('aria-valuenow', String(current + 1));
+          progressBar.style.width = `${((current + 1) / slides.length) * 100}%`;
+          previous.disabled = current === 0;
+          next.disabled = current === slides.length - 1;
+          history.replaceState(null, '', `#slide-${current + 1}`);
         };
         const go = (index) => {
           update(index);
           slides[current]?.scrollIntoView({
-            behavior: 'smooth',
+            behavior: reducedMotion ? 'auto' : 'smooth',
             block: 'nearest',
             inline: 'start',
           });
@@ -226,7 +276,12 @@
           { root: deck, threshold: 0.6 },
         );
         slides.forEach((slide) => observer.observe(slide));
-        update(0);
+        const requested = location.hash.match(/^#slide-(\d+)$/);
+        go(requested ? Number(requested[1]) - 1 : 0);
+        addEventListener('hashchange', () => {
+          const match = location.hash.match(/^#slide-(\d+)$/);
+          if (match) go(Number(match[1]) - 1);
+        });
       })();
     </script>
   </body>

@@ -120,6 +120,9 @@ describe('codex sync extension', () => {
     );
     expect(roleFile).toContain('developer_instructions');
     expect(configFile).toContain('multi_agent = true');
+    expect(configFile).not.toMatch(
+      /^[ \t]+(?:\[[^\r\n]+\]|[A-Za-z0-9_-]+\s*=)/mu,
+    );
 
     const secondPlan = await computeCodexProjectExtensionPlan(
       root,

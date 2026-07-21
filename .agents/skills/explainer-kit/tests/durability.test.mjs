@@ -111,8 +111,11 @@ test('verifies commit blobs at manifest hashes without creating a commit', async
   ]);
 });
 
-test('rejects commit evidence that omits or mismatches retained source, content, or theme files', async () => {
+test('rejects commit evidence that omits or mismatches any immutable package file', async () => {
   for (const omitted of [
+    'run-request.json',
+    'source/content-approval.json',
+    'source/author/hub.json',
     'source/fact-base.json',
     'source/fact-base.md',
     'source/content/hub.md',
@@ -148,6 +151,26 @@ test('rejects commit evidence that omits or mismatches retained source, content,
   );
   assert.equal(result.durable, false);
   assert.ok(result.errors.some(({ code }) => code === 'hash-mismatch'));
+
+  const mismatchedProvenance = await createCommittedRun();
+  mismatchedProvenance.manifest.immutableHashes['run-request.json'] =
+    `sha256:${'e'.repeat(64)}`;
+  await writeRecords(
+    mismatchedProvenance.runRoot,
+    mismatchedProvenance.manifest,
+    mismatchedProvenance.buildRecord,
+  );
+  const provenanceResult = await recordDurability(
+    commitRequest(mismatchedProvenance, mismatchedProvenance.artifactCommit),
+    { now: () => NOW },
+  );
+  assert.equal(provenanceResult.durable, false);
+  assert.ok(
+    provenanceResult.errors.some(
+      ({ code, message }) =>
+        code === 'hash-mismatch' && message.includes('run-request.json'),
+    ),
+  );
 });
 
 test('preserves built-not-durable when a commit blob hash does not match', async () => {
@@ -296,10 +319,20 @@ async function createRun() {
   tempDirs.push(runRoot);
   await mkdir(join(runRoot, 'site'), { recursive: true });
   await mkdir(join(runRoot, 'source/content'), { recursive: true });
+  await mkdir(join(runRoot, 'source/author'), { recursive: true });
+  await writeFile(join(runRoot, 'run-request.json'), '{"slug":"demo"}\n');
   await writeFile(join(runRoot, 'site/index.html'), 'stable output', 'utf8');
   await writeFile(join(runRoot, 'source/input.txt'), 'stable input', 'utf8');
   await writeFile(join(runRoot, 'source/fact-base.json'), '{"facts":[]}\n');
   await writeFile(join(runRoot, 'source/fact-base.md'), '# Fact base\n');
+  await writeFile(
+    join(runRoot, 'source/content-approval.json'),
+    '{"status":"approved"}\n',
+  );
+  await writeFile(
+    join(runRoot, 'source/author/hub.json'),
+    '{"author":"fixture"}\n',
+  );
   await writeFile(join(runRoot, 'source/content/hub.md'), '# Hub\n');
   await writeFile(
     join(runRoot, 'theme.resolved.json'),
@@ -332,6 +365,7 @@ async function createRun() {
       inputHashes: {
         'source/input.txt': await fileHash(join(runRoot, 'source/input.txt')),
       },
+      authorResultPaths: ['source/author/hub.json'],
     },
     theme: {
       path: 'theme.resolved.json',
@@ -351,6 +385,9 @@ async function createRun() {
       },
     ],
     immutableHashes: await hashesFor(runRoot, [
+      'run-request.json',
+      'source/content-approval.json',
+      'source/author/hub.json',
       'source/fact-base.json',
       'source/fact-base.md',
       'source/content/hub.md',

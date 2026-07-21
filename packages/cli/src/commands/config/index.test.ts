@@ -654,9 +654,10 @@ describe('oat config', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('lists and describes all ten explainer configuration keys', async () => {
+  it('lists and describes all eleven explainer configuration keys', async () => {
     const root = await createRepoRoot();
     const expectedKeys = [
+      'explainers.defaults.style',
       'explainers.defaults.palette',
       'explainers.defaults.visualProfile',
       'explainers.defaults.themeBundlePath',
@@ -691,6 +692,7 @@ describe('oat config', () => {
     const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
     tempDirs.push(home);
     const cases = [
+      ['explainers.defaults.style', 'clean-neutral', '--local'],
       ['explainers.defaults.palette', 'ocean', '--user'],
       ['explainers.defaults.visualProfile', 'technical', '--local'],
       ['explainers.defaults.themeBundlePath', 'themes/shared.json', '--shared'],
@@ -732,6 +734,106 @@ describe('oat config', () => {
   });
 
   it.each([
+    'clean-neutral',
+    'business-corporate',
+    'navy-ocean',
+    'dark-edgy',
+  ] as const)('accepts curated explainer style %s', async (style) => {
+    const root = await createRepoRoot();
+    const { command, capture } = createHarness({ cwd: root });
+
+    await runCommand(command, [
+      'set',
+      'explainers.defaults.style',
+      style,
+      '--local',
+    ]);
+
+    expect(capture.error).toEqual([]);
+    expect(process.exitCode).toBe(0);
+    expect(
+      JSON.parse(
+        await readFile(join(root, '.oat', 'config.local.json'), 'utf8'),
+      ),
+    ).toMatchObject({ explainers: { defaults: { style } } });
+  });
+
+  it('sets and gets curated explainer styles at local, shared, and user scopes', async () => {
+    const root = await createRepoRoot();
+    const home = await mkdtemp(join(tmpdir(), 'oat-config-home-'));
+    tempDirs.push(home);
+
+    for (const [style, scope] of [
+      ['business-corporate', '--user'],
+      ['navy-ocean', '--shared'],
+      ['dark-edgy', '--local'],
+    ] as const) {
+      const setHarness = createHarness({ cwd: root, home });
+      await runCommand(setHarness.command, [
+        'set',
+        'explainers.defaults.style',
+        style,
+        scope,
+      ]);
+      expect(setHarness.capture.error, scope).toEqual([]);
+      expect(process.exitCode, scope).toBe(0);
+    }
+
+    const getHarness = createHarness({ cwd: root, home });
+    await runCommand(
+      getHarness.command,
+      ['get', 'explainers.defaults.style'],
+      ['--json'],
+    );
+    expect(getHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      key: 'explainers.defaults.style',
+      value: 'dark-edgy',
+      source: 'local',
+    });
+  });
+
+  it('describes curated style as the default front door and legacy selections as nullable deprecated compatibility', async () => {
+    const root = await createRepoRoot();
+
+    const styleHarness = createHarness({ cwd: root });
+    await runCommand(
+      styleHarness.command,
+      ['describe', 'explainers.defaults.style'],
+      ['--json'],
+    );
+    expect(styleHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'ok',
+      entries: [
+        expect.objectContaining({
+          key: 'explainers.defaults.style',
+          defaultValue: 'clean-neutral',
+          type: 'clean-neutral | business-corporate | navy-ocean | dark-edgy',
+        }),
+      ],
+    });
+
+    for (const key of [
+      'explainers.defaults.palette',
+      'explainers.defaults.visualProfile',
+    ] as const) {
+      const legacyHarness = createHarness({ cwd: root });
+      await runCommand(legacyHarness.command, ['describe', key], ['--json']);
+      expect(legacyHarness.capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        entries: [
+          expect.objectContaining({
+            key,
+            defaultValue: 'null',
+            description: expect.stringMatching(/deprecated/i),
+          }),
+        ],
+      });
+    }
+  });
+
+  it.each([
+    ['explainers.defaults.style', 'not-curated', '--local'],
     ['explainers.defaults.themeBundlePath', '/absolute/theme.json', '--shared'],
     ['explainers.defaults.themeBundlePath', 'themes/user.json', '--user'],
     ['explainers.publish.provider', 's3-static', '--local'],

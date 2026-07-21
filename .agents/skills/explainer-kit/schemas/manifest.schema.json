@@ -43,7 +43,13 @@
         "factBasePath": { "$ref": "#/$defs/safeRelativePath" },
         "factBaseHash": { "$ref": "#/$defs/hash" },
         "sourceRevision": { "type": "string", "minLength": 1 },
-        "inputHashes": { "$ref": "#/$defs/hashMap" }
+        "inputHashes": { "$ref": "#/$defs/hashMap" },
+        "authorResultPaths": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/safeRelativePath" },
+          "minItems": 1,
+          "uniqueItems": true
+        }
       }
     },
     "theme": {

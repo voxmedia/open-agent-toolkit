@@ -32,6 +32,8 @@ export async function runOatExplainer({
   defaultMode,
   renderStrategy,
   retainRawArtDirection = false,
+  author,
+  authorModulePath,
   critic,
   criticModulePath,
   coreOptions = {},
@@ -108,6 +110,12 @@ export async function runOatExplainer({
     throw error;
   }
 
+  const lifecycleAuthor = await resolveLifecycleAuthor({
+    author,
+    authorModulePath,
+    coreOptions,
+    mode: request.mode,
+  });
   const lifecycleCritic = await resolveLifecycleCritic({
     critic,
     criticModulePath,
@@ -115,6 +123,7 @@ export async function runOatExplainer({
   });
   const result = await core.runExplainer(request, {
     ...coreOptions,
+    ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
     reviewedSource: bound.reviewedSource,
@@ -134,6 +143,65 @@ export async function runOatExplainer({
     result,
     outputRoot,
   };
+}
+
+async function resolveLifecycleAuthor({
+  author,
+  authorModulePath,
+  coreOptions,
+  mode,
+}) {
+  if (coreOptions?.author !== undefined) {
+    throw new TypeError(
+      'coreOptions.author is not supported at the OAT adapter boundary; supply author directly.',
+    );
+  }
+  if (author !== undefined && typeof author !== 'function') {
+    throw new TypeError('author must be a function when supplied.');
+  }
+  if (author !== undefined && authorModulePath !== undefined) {
+    throw new Error(
+      'Supply only one provider-neutral author callback or author module entry point.',
+    );
+  }
+
+  if (author === undefined && authorModulePath === undefined) {
+    if (mode === 'unattended') {
+      const error = new Error(
+        'Unattended OAT explainer runs require exactly one provider-neutral author callback or author module entry point.',
+      );
+      error.code = 'E_AUTHOR_REQUIRED';
+      throw error;
+    }
+    return null;
+  }
+  if (authorModulePath === undefined) {
+    return author;
+  }
+  if (
+    typeof authorModulePath !== 'string' ||
+    authorModulePath.trim().length === 0
+  ) {
+    throw new TypeError('authorModulePath must be a non-empty path.');
+  }
+
+  let authorModule;
+  try {
+    authorModule = await import(
+      pathToFileURL(resolve(authorModulePath.trim())).href
+    );
+  } catch (cause) {
+    throw new Error(
+      `Unable to load provider-neutral author module at ${authorModulePath}.`,
+      { cause },
+    );
+  }
+  if (typeof authorModule.author !== 'function') {
+    throw new TypeError(
+      'Provider-neutral author module must export an author function.',
+    );
+  }
+  return authorModule.author;
 }
 
 async function resolveLifecycleCritic({

@@ -1,0 +1,77 @@
+{
+  "name": "business-corporate",
+  "defaultMode": "light",
+  "modes": {
+    "light": {
+      "surface": {
+        "canvas": "#ffffff",
+        "panel": "#f7f8fa",
+        "elevated": "#eef0f4"
+      },
+      "ink": { "primary": "#1a1f29", "muted": "#4a5568", "inverse": "#ffffff" },
+      "accent": { "primary": "#1b4f8a", "secondary": "#2f6fce" },
+      "status": {
+        "success": "#197a56",
+        "warning": "#965108",
+        "danger": "#b83226",
+        "info": "#1b4f8a"
+      },
+      "diagramSeries": ["#2f6fce", "#965108", "#0f7180", "#6b4fbf"]
+    },
+    "dark": {
+      "surface": {
+        "canvas": "#121a26",
+        "panel": "#1b2533",
+        "elevated": "#293649"
+      },
+      "ink": { "primary": "#f4f7fb", "muted": "#c5cfdb", "inverse": "#121a26" },
+      "accent": { "primary": "#8fc2ff", "secondary": "#75d6df" },
+      "status": {
+        "success": "#8ce0b9",
+        "warning": "#ffd17a",
+        "danger": "#ffaaa3",
+        "info": "#8fc2ff"
+      },
+      "diagramSeries": ["#8fc2ff", "#ffd17a", "#75d6df", "#c5a9ff"]
+    }
+  },
+  "typography": {
+    "sans": ["system-ui", "-apple-system", "BlinkMacSystemFont", "sans-serif"],
+    "serif": ["Charter", "Bitstream Charter", "Georgia", "serif"],
+    "mono": ["ui-monospace", "SFMono-Regular", "Consolas", "monospace"],
+    "scale": {
+      "caption": "0.875rem",
+      "body": "1.0625rem",
+      "title": "1.75rem",
+      "display": "2.75rem"
+    },
+    "lineHeight": { "caption": 1.5, "body": 1.7, "title": 1.2, "display": 1.05 }
+  },
+  "spacing": {
+    "unit": 5,
+    "scale": { "xs": 5, "sm": 10, "md": 20, "lg": 30, "xl": 50 }
+  },
+  "geometry": { "radius": { "sm": 4, "md": 8, "lg": 12 }, "borderWidth": 1 },
+  "elevation": {
+    "shadows": {
+      "low": "0 1px 2px rgb(26 31 41 / 0.08)",
+      "high": "0 10px 28px rgb(26 31 41 / 0.18)"
+    }
+  },
+  "density": "spacious",
+  "motion": {
+    "enabled": true,
+    "durationMs": { "fast": 140, "normal": 220, "slow": 360 },
+    "easing": {
+      "standard": "ease-out",
+      "emphasized": "cubic-bezier(0.16, 1, 0.3, 1)"
+    },
+    "reducedMotion": "disable-nonessential"
+  },
+  "diagrams": {
+    "lineWidth": 1.5,
+    "nodeGap": 40,
+    "arrowStyle": "curved",
+    "labelTreatment": "inline"
+  }
+}

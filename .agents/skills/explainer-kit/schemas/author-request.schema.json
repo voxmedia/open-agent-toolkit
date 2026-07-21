@@ -1,0 +1,85 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.author-request/v1",
+  "title": "AuthorRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "run",
+    "recipe",
+    "artifact",
+    "narrativeOutline",
+    "factBase",
+    "discovery"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.author-request/v1" },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["runId", "slug"],
+      "properties": {
+        "runId": { "type": "string", "minLength": 1 },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+        }
+      }
+    },
+    "recipe": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "version", "requiredNarrative"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "version": { "type": "string", "minLength": 1 },
+        "requiredNarrative": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    },
+    "artifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "type"],
+      "properties": {
+        "id": { "type": "string", "minLength": 1 },
+        "type": { "enum": ["hub", "diagram", "explainer", "deck", "catalog"] }
+      }
+    },
+    "narrativeOutline": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title"],
+        "properties": {
+          "id": { "type": "string", "minLength": 1 },
+          "title": { "type": "string", "minLength": 1 }
+        }
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "factBase": { "$ref": "explainer-kit.fact-base/v1" },
+    "discovery": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["rounds", "findings", "reason"],
+      "properties": {
+        "rounds": { "type": "integer", "minimum": 0 },
+        "findings": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 }
+        },
+        "reason": {
+          "enum": ["not-requested", "two-empty-rounds", "hard-maximum"]
+        }
+      }
+    }
+  }
+}

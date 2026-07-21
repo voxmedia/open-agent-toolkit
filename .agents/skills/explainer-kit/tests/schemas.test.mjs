@@ -18,6 +18,8 @@ const schemas = {
   'durability-evidence': 'explainer-kit.durability-evidence/v1',
   'publish-request': 'explainer-kit.publish-request/v1',
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
+  'author-request': 'explainer-kit.author-request/v1',
+  'author-result': 'explainer-kit.author-result/v1',
 };
 
 async function loadSchema(name) {
@@ -131,5 +133,33 @@ test('durability request and publish receipt declare unique path evidence', asyn
   assert.equal(
     receipt.$defs.artifact.properties.relativePath.$ref,
     '#/$defs/safeRelativePath',
+  );
+});
+
+test('author contracts require structured per-artifact narrative and provenance', async () => {
+  const request = await loadSchema('author-request');
+  const result = await loadSchema('author-result');
+
+  assert.deepEqual(request.required, [
+    'schemaVersion',
+    'run',
+    'recipe',
+    'artifact',
+    'narrativeOutline',
+    'factBase',
+    'discovery',
+  ]);
+  assert.equal(request.properties.narrativeOutline.minItems, 1);
+  assert.deepEqual(result.required, [
+    'schemaVersion',
+    'artifactId',
+    'content',
+    'provenance',
+  ]);
+  assert.equal(result.properties.content.properties.sections.minItems, 1);
+  assert.equal(
+    result.properties.content.properties.sections.items.properties.prose
+      .minLength,
+    1,
   );
 });

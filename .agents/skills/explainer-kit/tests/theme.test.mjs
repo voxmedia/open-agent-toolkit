@@ -10,6 +10,12 @@ import { resolveTheme } from '../scripts/lib/theme.mjs';
 
 const PALETTES = ['neutral', 'ocean', 'ember', 'forest', 'violet'];
 const PROFILES = ['clean', 'editorial', 'technical'];
+const STYLES = [
+  'clean-neutral',
+  'business-corporate',
+  'navy-ocean',
+  'dark-edgy',
+];
 const COLOR_ROLES = ['surface', 'ink', 'accent', 'status', 'diagramSeries'];
 const tempDirs = [];
 
@@ -19,29 +25,61 @@ afterEach(async () => {
   );
 });
 
-test('uses neutral and clean defaults with one default presentation mode', async () => {
+test('uses clean-neutral by default with a visible warning', async () => {
   const resolved = await resolveTheme();
 
-  assert.equal(resolved.theme.name, 'neutral-clean');
+  assert.equal(resolved.theme.name, 'clean-neutral');
   assert.equal(resolved.theme.defaultMode, 'light');
   assert.deepEqual(resolved.theme.provenance, {
-    palette: 'neutral',
-    visualProfile: 'clean',
+    style: 'clean-neutral',
     derived: false,
   });
   assert.equal(resolved.renderStrategy, 'default-only');
   assert.deepEqual(resolved.presentationModes, ['light']);
-  assert.deepEqual(resolved.warnings, []);
+  assert.ok(
+    resolved.warnings.some((warning) =>
+      /default.*clean-neutral/i.test(warning),
+    ),
+  );
   assert.equal(validateContract('theme', resolved.theme).valid, true);
 });
 
-test('ships exactly the curated palette and profile matrix', async () => {
+test('ships four distinct whole-system styles', async () => {
+  const themes = await Promise.all(
+    STYLES.map(async (style) => (await resolveTheme({ style })).theme),
+  );
+
+  assert.deepEqual(
+    themes.map(({ name }) => name),
+    STYLES,
+  );
+  assert.equal(new Set(themes.map(({ bundleHash }) => bundleHash)).size, 4);
+  assert.deepEqual(
+    themes.map(({ provenance }) => provenance.style),
+    STYLES,
+  );
+  assert.equal(
+    themes.find(({ name }) => name === 'dark-edgy').modes.dark.surface.canvas,
+    '#0d1117',
+  );
+  assert.doesNotMatch(
+    JSON.stringify(themes.find(({ name }) => name === 'dark-edgy')),
+    /dot texture|radial-gradient/i,
+  );
+  await assert.rejects(resolveTheme({ style: 'vintage' }), /style/i);
+});
+
+test('keeps the curated palette and profile matrix as a deprecated compatibility path', async () => {
   for (const palette of PALETTES) {
     for (const visualProfile of PROFILES) {
-      const { theme } = await resolveTheme({ palette, visualProfile });
+      const { theme, warnings } = await resolveTheme({
+        palette,
+        visualProfile,
+      });
       assert.equal(theme.name, `${palette}-${visualProfile}`);
       assert.equal(theme.provenance.palette, palette);
       assert.equal(theme.provenance.visualProfile, visualProfile);
+      assert.ok(warnings.some((warning) => /deprecated/i.test(warning)));
     }
   }
 
@@ -49,6 +87,32 @@ test('ships exactly the curated palette and profile matrix', async () => {
   await assert.rejects(
     resolveTheme({ visualProfile: 'cinematic' }),
     /profile/i,
+  );
+});
+
+test('supplied bundles win over style, and style wins over legacy matrix fields', async () => {
+  const styled = await resolveTheme({
+    style: 'navy-ocean',
+    palette: 'ember',
+    visualProfile: 'technical',
+  });
+  assert.equal(styled.theme.name, 'navy-ocean');
+  assert.ok(styled.warnings.some((warning) => /style wins/i.test(warning)));
+  assert.ok(styled.warnings.some((warning) => /deprecated/i.test(warning)));
+
+  const directory = await mkdtemp(join(tmpdir(), 'explainer-style-'));
+  tempDirs.push(directory);
+  const suppliedPath = join(directory, 'supplied.json');
+  const supplied = (await resolveTheme({ style: 'business-corporate' })).theme;
+  await writeFile(suppliedPath, JSON.stringify(supplied), 'utf8');
+  const resolved = await resolveTheme({
+    suppliedBundlePath: suppliedPath,
+    style: 'dark-edgy',
+  });
+
+  assert.equal(resolved.theme.name, 'business-corporate');
+  assert.ok(
+    resolved.warnings.some((warning) => /supplied bundle wins/i.test(warning)),
   );
 });
 

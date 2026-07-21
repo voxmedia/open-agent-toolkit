@@ -31,6 +31,14 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.10` ships the public Explainer Kit family: a config-blind
+  `explainer-kit` core and OAT lifecycle adapter with versioned fact-base,
+  author, theme, manifest, durability, archive, and publish contracts. Four
+  curated styles replace the palette/profile matrix as the default front door;
+  unattended runs require one provider-neutral author seam; complete immutable
+  byte coverage supports safe recap export. A packaged Stoa Wave 6 recap,
+  private-wrapper migration, live S3/CDN smoke, cross-machine visual gate, and
+  zero-finding final review all passed.
 - CLI `0.2.4` enables task-class-aware reviewer-local reconnaissance for broad
   reviews. Read-only, non-recursive evidence lanes keep `recon` authority while
   independent model-class floors distinguish deterministic checks from
@@ -54,9 +62,9 @@ copying their content here. -->
   fixture, and a W6 handoff runbook. Fresh installs now preserve nested
   skill-script execute bits (`copyDirectory` mode fix), and
   `oat project validate-plan` documents the singleton-group rule with the
-  ungrouped-phase alternative. Stoa's wave 6 on the packaged skills is the
-  pending zero-regression acceptance gate; explainer integration (p06)
-  follows against the frozen explainer-kit v1 RC.
+  ungrouped-phase alternative. Stoa Wave 6 completed on the packaged skills
+  and supplied the first-consumer recap/archive acceptance for the promoted
+  Explainer Kit revision.
 - CLI `0.1.76` makes Cursor skills native-read from project and user
   `.agents/skills` roots while retaining `.cursor/skills` as an explicit
   Cursor-only extension and migration surface. Interactive `init` and `status`

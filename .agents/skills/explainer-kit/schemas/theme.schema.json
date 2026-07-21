@@ -178,6 +178,14 @@
       "additionalProperties": false,
       "required": ["derived"],
       "properties": {
+        "style": {
+          "enum": [
+            "clean-neutral",
+            "business-corporate",
+            "navy-ocean",
+            "dark-edgy"
+          ]
+        },
         "palette": { "type": "string", "minLength": 1 },
         "visualProfile": { "type": "string", "minLength": 1 },
         "derived": { "type": "boolean" },

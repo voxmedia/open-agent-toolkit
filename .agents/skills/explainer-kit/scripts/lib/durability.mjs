@@ -457,21 +457,9 @@ function requiredArtifacts(manifest) {
 }
 
 function immutablePackage(manifest) {
-  const expectedPaths = [
-    manifest.source.factBasePath,
-    'source/fact-base.md',
-    ...manifest.artifacts.map(({ contentPath }) => contentPath),
-    manifest.theme.path,
-    ...manifest.artifacts
-      .filter(
-        ({ status, renderedPath }) =>
-          status === 'built' && typeof renderedPath === 'string',
-      )
-      .map(({ renderedPath }) => renderedPath),
-  ];
-  return [...new Set(expectedPaths)].map((path) => ({
+  return Object.entries(manifest.immutableHashes).map(([path, hash]) => ({
     path,
-    hash: manifest.immutableHashes[path],
+    hash,
   }));
 }
 

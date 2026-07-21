@@ -7,6 +7,7 @@ import { resolveSourceAwarePath } from './resolve-paths.mjs';
 const execFileAsync = promisify(execFile);
 
 export const EXPLAINER_CONFIG_KEYS = Object.freeze([
+  'explainers.defaults.style',
   'explainers.defaults.palette',
   'explainers.defaults.visualProfile',
   'explainers.defaults.themeBundlePath',
@@ -22,6 +23,12 @@ export const EXPLAINER_CONFIG_KEYS = Object.freeze([
 const CONFIG_KEY_SET = new Set(EXPLAINER_CONFIG_KEYS);
 const SOURCES = new Set(['local', 'shared', 'user', 'env', 'default']);
 const PREFERENCES = new Set(['always', 'ask', 'never']);
+const STYLES = new Set([
+  'clean-neutral',
+  'business-corporate',
+  'navy-ocean',
+  'dark-edgy',
+]);
 
 export async function resolveExplainerConfig({
   repoRoot,
@@ -54,6 +61,22 @@ export async function resolveExplainerConfig({
   const bundlePath = nullableString(
     values['explainers.defaults.themeBundlePath'],
   );
+  const style = nullableString(values['explainers.defaults.style']);
+  if (style && !STYLES.has(style)) {
+    throw new Error(
+      'explainers.defaults.style must name a curated explainer style.',
+    );
+  }
+  const palette = nullableString(values['explainers.defaults.palette']);
+  const visualProfile = nullableString(
+    values['explainers.defaults.visualProfile'],
+  );
+  const hasLegacySelection = palette !== null || visualProfile !== null;
+  if (hasLegacySelection) {
+    warnings.push(
+      'Palette and visual profile configuration is deprecated; use explainers.defaults.style.',
+    );
+  }
   if (bundlePath) {
     theme.suppliedBundlePath = await resolveSourceAwarePath({
       repoRoot,
@@ -61,19 +84,35 @@ export async function resolveExplainerConfig({
       source: sources['explainers.defaults.themeBundlePath'],
       field: 'explainers.defaults.themeBundlePath',
     });
-    if (
-      nullableString(values['explainers.defaults.palette']) ||
-      nullableString(values['explainers.defaults.visualProfile'])
-    ) {
+    if (style || palette || visualProfile) {
       warnings.push(
-        'explainers.defaults.themeBundlePath overrides configured palette and visual profile.',
+        'explainers.defaults.themeBundlePath overrides configured style, palette, and visual profile.',
       );
     }
   } else {
-    theme.palette =
-      nullableString(values['explainers.defaults.palette']) ?? 'neutral';
-    theme.visualProfile =
-      nullableString(values['explainers.defaults.visualProfile']) ?? 'clean';
+    const explicitStyle =
+      style && sources['explainers.defaults.style'] !== 'default'
+        ? style
+        : null;
+    if (explicitStyle) {
+      theme.style = explicitStyle;
+    }
+    if (palette) {
+      theme.palette = palette;
+    }
+    if (visualProfile) {
+      theme.visualProfile = visualProfile;
+    }
+    if (explicitStyle && hasLegacySelection) {
+      warnings.push(
+        'explainers.defaults.style wins over deprecated palette and visual profile configuration.',
+      );
+    }
+    if (!explicitStyle && !hasLegacySelection) {
+      warnings.push(
+        'No explicit explainer style is configured; the core will default to clean-neutral.',
+      );
+    }
   }
 
   const publish = resolvePublish(values);
@@ -214,6 +253,11 @@ function normalizeRuntimeValue(key, value) {
   const normalized = value.trim();
   if (key === 'explainers.publish.provider' && normalized !== 's3-static') {
     throw new Error(`${key} runtime override must be s3-static.`);
+  }
+  if (key === 'explainers.defaults.style' && !STYLES.has(normalized)) {
+    throw new Error(
+      `${key} runtime override must name a curated explainer style.`,
+    );
   }
   if (key.startsWith('workflow.explainers.') && !PREFERENCES.has(normalized)) {
     throw new Error(`${key} runtime override must be always, ask, or never.`);

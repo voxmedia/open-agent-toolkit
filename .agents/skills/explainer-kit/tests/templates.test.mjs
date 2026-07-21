@@ -169,6 +169,23 @@ test('deck supports both arrow pairs and readable no-JS and print layouts', asyn
   );
 });
 
+test('deck synchronizes fixed controls, progress, counter, and hash navigation', async () => {
+  const html = await template('deck-shell.html');
+
+  assert.match(html, /\.deck-controls\s*\{[^}]*position:\s*fixed/i);
+  assert.match(html, /id="deck-progress"/);
+  assert.match(html, /role="progressbar"/);
+  assert.match(html, /id="deck-counter"[^>]*aria-live="polite"/);
+  assert.match(html, /history\.replaceState\([^,]+,[^,]+,\s*`#slide-/);
+  assert.match(html, /location\.hash\.match\(/);
+  assert.match(html, /setAttribute\(['"]aria-valuenow['"]/);
+  assert.match(html, /prefers-reduced-motion:\s*reduce/);
+  assert.match(
+    html,
+    /@media\s*\(max-height:[^)]+\)\s*\{[\s\S]*\.slide__content\s*\{[^}]*overflow-y:\s*auto/i,
+  );
+});
+
 test('worked examples are quarantined under examples and use RFC 2606 domains', async () => {
   const expected = [
     'examples/project-explainer/fact-base.md',

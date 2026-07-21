@@ -80,6 +80,10 @@ export async function runPrivateWrapper({
 
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
   assertConsumableManifest(manifest, result, preResolved.request);
+  const authorProvenance = await readAuthorProvenance(
+    result.runRoot,
+    manifest.source?.authorResultPaths,
+  );
   if (typeof publishManifest !== 'function') {
     throw new Error('The wrapper post-run stage requires publishManifest.');
   }
@@ -143,10 +147,33 @@ export async function runPrivateWrapper({
     request: preResolved.request,
     result,
     manifest,
+    authorProvenance,
     publishReceipt,
     links,
     postRun,
   };
+}
+
+async function readAuthorProvenance(runRoot, authorResultPaths) {
+  if (!Array.isArray(authorResultPaths) || authorResultPaths.length === 0) {
+    throw new Error('Unattended wrapper run did not retain author provenance.');
+  }
+  return Promise.all(
+    authorResultPaths.map(async (relativePath) => {
+      const result = JSON.parse(
+        await readFile(`${runRoot}/${relativePath}`, 'utf8'),
+      );
+      if (
+        typeof result.provenance?.authorId !== 'string' ||
+        typeof result.provenance?.method !== 'string'
+      ) {
+        throw new Error(
+          `Retained author result is missing provenance: ${relativePath}.`,
+        );
+      }
+      return structuredClone(result.provenance);
+    }),
+  );
 }
 
 function assertConsumableReceipt(receipt, manifest) {

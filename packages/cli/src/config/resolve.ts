@@ -57,8 +57,9 @@ const DEFAULT_SHARED_CONFIG = {
   },
   explainers: {
     defaults: {
-      palette: 'neutral',
-      visualProfile: 'clean',
+      style: 'clean-neutral',
+      palette: null,
+      visualProfile: null,
       themeBundlePath: null,
     },
     publish: {
