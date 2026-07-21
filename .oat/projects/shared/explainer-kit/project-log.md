@@ -56,6 +56,10 @@ Expanded prev1-t05 to include packages/cli/src/validation/skills.test.ts after t
 
 Expanded prev1-t05 after the real W6 package exposed two acceptance-contract gaps: smoke harnesses must supply the required unattended author, and archive validation must keep canonical fact-base/theme hashes distinct from immutable file-byte hashes while still enforcing complete path coverage.
 
+### 2026-07-21 · structural · oat-project-implement · 5f7206bd
+
+Revision 1 implementation completed 43/43 tasks; packaged W6 acceptance and archive export passed. Fresh-context final review is next.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

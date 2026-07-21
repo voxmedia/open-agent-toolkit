@@ -1864,7 +1864,7 @@ git commit -m "fix(prev1-t04): normalize codex config indentation"
 
 ### Task prev1-t05: (revision) Validate the packaged revision with the live W6 recap
 
-**Status:** in_progress
+**Status:** complete
 
 **Files:**
 
