@@ -1,7 +1,7 @@
 ---
 id: BL-260720-fix-cross-machine-flakiness
 title: Fix cross-machine flakiness in explainer visual-validation release gate
-status: open
+status: closed
 priority: high
 scope: task
 scope_estimate: S
@@ -11,7 +11,7 @@ labels:
   - reproducibility
 assignee: null
 created: 2026-07-20T14:01:28.009Z
-updated: 2026-07-20T14:01:28.009Z
+updated: '2026-07-21T04:18:16Z'
 associated_issues: []
 external_plans: []
 ---

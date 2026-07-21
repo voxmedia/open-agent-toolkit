@@ -8,6 +8,7 @@
 
 ## Completed Items
 
+- 2026-07-21 — BL-260720-fix-cross-machine-flakiness — Fix cross-machine flakiness in explainer visual-validation release gate — Stabilized the explainer visual release gate across machines with focus priming, semantic tabbability fallback, and retry-safe deck movement; Mini and 65-measurement release validation pass.
 - 2026-07-19 — BL-260719-avoid-final-gate-reruns — Avoid final-gate reruns for merge-only updates — Added versioned rolling effective-delta fingerprints so unchanged base integration preserves a passed implementation gate while changed deltas fail closed.
 - 2026-07-18 — BL-260708-enable-oat-reviewer-subagent — Enable oat-reviewer subagent orchestration for faster broad reviews — Enabled bounded reviewer-local reconnaissance for faster broad reviews while preserving primary-reviewer judgment and evidence validation.
 - 2026-07-18 — BL-260718-add-tracked-config-guard — Add tracked-config guard against managed-file reverts — root-caused to stale locally-resolved CLI in consuming repo; dependency hygiene there is the cure; CLI-level guard unnecessary
