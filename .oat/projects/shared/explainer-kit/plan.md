@@ -1643,7 +1643,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p04    | code     | passed          | 2026-07-18 | reviews/p04-reconciliation-review-2026-07-18T200037Z.md     |
 | p05    | code     | pending         | -          | -                                                           |
 | p-rev1 | code     | fixes_completed | 2026-07-21 | reviews/2026-07-21-p-rev1-code-review.md                    |
-| p-rev1 | code     | received        | 2026-07-21 | reviews/2026-07-21-p-rev1-code-rereview.md                  |
+| p-rev1 | code     | fixes_completed | 2026-07-21 | reviews/2026-07-21-p-rev1-code-rereview.md                  |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -2041,6 +2041,8 @@ git commit -m "fix(prev1-t08): detect section source dumping"
 
 ### Task prev1-t09: (re-review fix) Align the authoritative design with Revision 1
 
+**Status:** complete
+
 **Files:**
 
 - Modify: `.oat/projects/shared/explainer-kit/design.md`
@@ -2068,6 +2070,8 @@ git commit -m "docs(prev1-t09): align revision design"
 ```
 
 ### Task prev1-t10: (re-review fix) Enforce author cardinality at the adapter boundary
+
+**Status:** complete
 
 **Files:**
 

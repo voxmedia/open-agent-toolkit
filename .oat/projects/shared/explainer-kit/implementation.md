@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-21
-oat_current_task_id: prev1-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | complete    | 6     | 6/6       |
-| Phase 2    | complete    | 10    | 10/10     |
-| Phase 3    | complete    | 9     | 9/9       |
-| Phase 4    | complete    | 9     | 9/9       |
-| Phase 5    | completed   | 4     | 4/4       |
-| Revision 1 | in_progress | 10    | 8/10      |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | complete  | 6     | 6/6       |
+| Phase 2    | complete  | 10    | 10/10     |
+| Phase 3    | complete  | 9     | 9/9       |
+| Phase 4    | complete  | 9     | 9/9       |
+| Phase 5    | completed | 4     | 4/4       |
+| Revision 1 | complete  | 10    | 10/10     |
 
-**Total:** 46/48 tasks completed
+**Total:** 48/48 tasks completed
 
 ---
 
@@ -1083,9 +1083,10 @@ this candidate must not be used for external acceptance.
 
 ## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-20
-**Current task:** `prev1-t09`
+**Completed:** 2026-07-21
+**Current task:** None
 
 ### Revision Received: Inline Feedback
 
@@ -1125,8 +1126,8 @@ this candidate must not be used for external acceptance.
 | prev1-t06 | completed | `3d9ce8b4` | 132 config tests and adapter/package integration passed                  |
 | prev1-t07 | completed | `2c8c0fa5` | Adapter author seam and official packaged CLI smoke passed               |
 | prev1-t08 | completed | `aa74980f` | Section-local source-dump QA and full acceptance gates passed            |
-| prev1-t09 | pending   | —          | Authoritative design and prior-review formatting re-review fix           |
-| prev1-t10 | pending   | —          | Mode-aware adapter author-cardinality re-review fix                      |
+| prev1-t09 | completed | `5a753029` | Design alignment, formatting, diff check, and contract assertions passed |
+| prev1-t10 | completed | `3bf11f25` | Author-cardinality TDD and all serial repository/release gates passed    |
 
 The first aggregate attempt hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed all 18
@@ -1154,8 +1155,12 @@ substantive C2 propagation path working. It found one Important stale-design
 issue, one Medium omitted-author boundary issue, and one formatting-only
 Minor. These are converted into `prev1-t09` and `prev1-t10`.
 
-**Next:** Complete the two bounded re-review fixes and run the narrowed
-re-review.
+**Final fix verification:** The adapter now rejects zero or two unattended
+author seams before core invocation while preserving interactive omission and
+direct/module success. The authoritative design matches Revision 1 and the
+prior review artifact is whitespace-clean.
+
+**Next:** Run the narrowed fresh-context re-review.
 
 ---
 
@@ -1168,6 +1173,25 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 6 — 2026-07-21T03:22:00Z
+
+- Branch: `tkstang/fix-w6-recap-path`
+- Tier: 1, policy-resolved Cursor CLI route
+- Request: `dispatch-p-rev1-rereview-fixes-20260720-01`
+- Phase base: `7ea3936f`
+- Outcome: passed for `prev1-t09` and `prev1-t10`
+- Task commits: `5a753029`, `3bf11f25`
+- Verification: design contract assertions, author-cardinality TDD, 19 focused
+  adapter/package tests, repository-local sync, format, lint, type-check, full
+  tests, five-package release validation, and 65 visual measurements
+- Reviewer: pending narrowed fresh-context re-review
+
+Dispatch: scope=p-rev1-rereview-fixes action=implementation role=implementer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high
+effort_axis=not-applicable dispatch_policy=high
+dispatch_ceiling=gpt-5.6-sol-high
+target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run 5 — 2026-07-21T02:12:00Z
 
