@@ -16,7 +16,17 @@ export interface GlobalCliInstallerInvocation {
 }
 
 function normalizePathForDetection(path: string): string {
-  return path.replaceAll('\\', '/').toLowerCase();
+  return path.replaceAll('\\', '/').toLowerCase().replace(/\/+$/, '');
+}
+
+function isUnderNormalizedPath(
+  normalizedCandidate: string,
+  normalizedHome: string,
+): boolean {
+  return (
+    normalizedCandidate === normalizedHome ||
+    normalizedCandidate.startsWith(`${normalizedHome}/`)
+  );
 }
 
 function detectFromPath(
@@ -56,7 +66,12 @@ export function detectGlobalCliPackageManager(
   if (pnpmHome) {
     const normalizedHome = normalizePathForDetection(pnpmHome);
     for (const candidate of candidates) {
-      if (normalizePathForDetection(candidate).startsWith(normalizedHome)) {
+      if (
+        isUnderNormalizedPath(
+          normalizePathForDetection(candidate),
+          normalizedHome,
+        )
+      ) {
         return 'pnpm';
       }
     }
@@ -81,14 +96,30 @@ function installArgsForManager(
   }
 }
 
-function executableForManager(
-  manager: GlobalCliPackageManager,
-  platform: NodeJS.Platform,
-): string {
-  if (platform === 'win32') {
-    return `${manager}.cmd`;
-  }
+function executableForManager(manager: GlobalCliPackageManager): string {
   return manager;
+}
+
+function resolveWindowsManagerInvocation(
+  manager: GlobalCliPackageManager,
+  packageSpec: string,
+  options: GlobalCliInstallerOptions,
+): GlobalCliInstallerInvocation | null {
+  if (manager === 'npm') {
+    return resolveNpmWindowsInvocation(packageSpec, options);
+  }
+
+  const comspec = options.env.ComSpec?.trim() || 'cmd.exe';
+  return {
+    file: comspec,
+    args: [
+      '/d',
+      '/s',
+      '/c',
+      manager,
+      ...installArgsForManager(manager, packageSpec),
+    ],
+  };
 }
 
 function resolveNpmWindowsInvocation(
@@ -144,12 +175,12 @@ export function resolveGlobalCliInstallerInvocation(
   options: GlobalCliInstallerOptions,
 ): GlobalCliInstallerInvocation | null {
   const manager = detectGlobalCliPackageManager(options.argv, options.env);
-  if (manager === 'npm' && options.platform === 'win32') {
-    return resolveNpmWindowsInvocation(packageSpec, options);
+  if (options.platform === 'win32') {
+    return resolveWindowsManagerInvocation(manager, packageSpec, options);
   }
 
   return {
-    file: executableForManager(manager, options.platform),
+    file: executableForManager(manager),
     args: installArgsForManager(manager, packageSpec),
   };
 }

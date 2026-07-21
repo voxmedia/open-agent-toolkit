@@ -24,6 +24,12 @@ describe('detectGlobalCliPackageManager', () => {
       'pnpm',
     ],
     [
+      'pnpm home without sibling prefix collision',
+      ['/users/me/library/pnpm-custom/bin/oat'],
+      { PNPM_HOME: '/Users/me/Library/pnpm' },
+      'npm',
+    ],
+    [
       'bun global install',
       [
         '/Users/me/.bun/install/global/node_modules/@open-agent-toolkit/cli/dist/index.js',
@@ -130,18 +136,26 @@ describe('resolveGlobalCliInstallerInvocation', () => {
     });
   });
 
-  it('uses pnpm.cmd on Windows when the running CLI is pnpm-managed', () => {
+  it('launches pnpm through cmd.exe on Windows', () => {
     expect(
       resolveGlobalCliInstallerInvocation('@open-agent-toolkit/cli@1.2.3', {
         argv: ['C:\\Users\\me\\AppData\\Local\\pnpm\\oat.cmd'],
-        env: {},
+        env: { ComSpec: 'C:\\Windows\\System32\\cmd.exe' },
         platform: 'win32',
         nodeExecutable: 'C:\\Program Files\\nodejs\\node.exe',
         fileExists: () => false,
       }),
     ).toEqual({
-      file: 'pnpm.cmd',
-      args: ['add', '-g', '@open-agent-toolkit/cli@1.2.3'],
+      file: 'C:\\Windows\\System32\\cmd.exe',
+      args: [
+        '/d',
+        '/s',
+        '/c',
+        'pnpm',
+        'add',
+        '-g',
+        '@open-agent-toolkit/cli@1.2.3',
+      ],
     });
   });
 });
