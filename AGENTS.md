@@ -63,10 +63,10 @@
 
 ### Technology Stack
 
-- **Runtime**: Node.js 22.17.0 with TypeScript 5.8.3
+- **Runtime**: Node.js 22.17.0 with TypeScript 7; TypeScript 6 remains available through the compatibility API alias
 - **Development**: tsx for direct TypeScript execution with hot reloading
 - **Build**: Turborepo 2.7.6 with TypeScript compilation to `dist/`
-- **Linting/Formatting**: oxlint + oxfmt (configured via .oxlintrc.json and .oxfmtrc.jsonc)
+- **Linting/Formatting**: oxlint + tsgolint type-aware checks + oxfmt (configured via .oxlintrc.json and .oxfmtrc.jsonc)
 
 ### Build System
 
