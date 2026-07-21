@@ -68,6 +68,10 @@ Fresh-context p-rev1 review received: 2 Critical and 1 Important finding. Conver
 
 Completed all three p-rev1 review fixes in commits 3d9ce8b4, 2c8c0fa5, and aa74980f. Full serial repository/release gates and rebuilt packaged W6 acceptance passed; fresh-context re-review is next.
 
+### 2026-07-21 · structural · oat-project-review-provide · reviews/2026-07-21-p-rev1-code-rereview.md
+
+First p-rev1 re-review received: prior C1 and I1 resolved; C2 propagation works but omitted unattended author is not rejected at the adapter boundary. Added prev1-t09 for stale design/minor formatting and prev1-t10 for exact author cardinality.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

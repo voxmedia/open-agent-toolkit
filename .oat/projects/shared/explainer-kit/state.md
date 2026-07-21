@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: aa74980f
+oat_current_task: prev1-t09
+oat_last_commit: 283600e8
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -38,7 +38,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-21T02:58:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-21T03:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,15 +50,15 @@ oat_generated: false
 
 ## Current Phase
 
-Revision 1 — 46/46 tasks complete; re-review pending
+Revision 1 re-review fixes — 46/48 tasks complete; next task `prev1-t09`
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (Revision 1 review fixes added; 46 total tasks)
-- **Implementation:** `implementation.md` (complete; 46/46 tasks)
+- **Plan:** `plan.md` (Revision 1 re-review fixes added; 48 total tasks)
+- **Implementation:** `implementation.md` (in progress; 46/48 tasks)
 
 ## Progress
 
@@ -128,7 +128,8 @@ Revision 1 — 46/46 tasks complete; re-review pending
 - ✓ Packaged W6 acceptance and archive export passed in `prev1-t05`
 - ⚠ Fresh-context Revision 1 review found 2 Critical and 1 Important defect
 - ✓ Review fixes `prev1-t06` through `prev1-t08` completed
-- ⧗ Fresh-context Revision 1 re-review pending
+- ⚠ First re-review found 1 Important, 1 Medium, and 1 Minor issue
+- ⧗ Re-review fixes `prev1-t09` and `prev1-t10` pending
 
 ## Blockers
 
@@ -136,4 +137,5 @@ None.
 
 ## Next Milestone
 
-Pass the fresh-context Revision 1 re-review, then open the follow-up PR.
+Complete the two bounded re-review fixes, pass narrowed re-review, then open
+the follow-up PR.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-21
-oat_current_task_id: null
+oat_current_task_id: prev1-t09
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | complete  | 6     | 6/6       |
-| Phase 2    | complete  | 10    | 10/10     |
-| Phase 3    | complete  | 9     | 9/9       |
-| Phase 4    | complete  | 9     | 9/9       |
-| Phase 5    | completed | 4     | 4/4       |
-| Revision 1 | complete  | 8     | 8/8       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | complete    | 6     | 6/6       |
+| Phase 2    | complete    | 10    | 10/10     |
+| Phase 3    | complete    | 9     | 9/9       |
+| Phase 4    | complete    | 9     | 9/9       |
+| Phase 5    | completed   | 4     | 4/4       |
+| Revision 1 | in_progress | 10    | 8/10      |
 
-**Total:** 46/46 tasks completed
+**Total:** 46/48 tasks completed
 
 ---
 
@@ -1083,10 +1083,9 @@ this candidate must not be used for external acceptance.
 
 ## Phase p-rev1: Revision 1 — W6 recap durability, authored content, and curated styles
 
-**Status:** complete
+**Status:** in_progress
 **Started:** 2026-07-20
-**Completed:** 2026-07-21
-**Current task:** None
+**Current task:** `prev1-t09`
 
 ### Revision Received: Inline Feedback
 
@@ -1105,7 +1104,8 @@ this candidate must not be used for external acceptance.
   recap/archive regression before promotion and project completion.
 
 **New tasks added:** `prev1-t01`, `prev1-t02`, `prev1-t03`, `prev1-t04`,
-`prev1-t05`, `prev1-t06`, `prev1-t07`, `prev1-t08`
+`prev1-t05`, `prev1-t06`, `prev1-t07`, `prev1-t08`, `prev1-t09`,
+`prev1-t10`
 
 **Migrated artifacts:**
 
@@ -1125,6 +1125,8 @@ this candidate must not be used for external acceptance.
 | prev1-t06 | completed | `3d9ce8b4` | 132 config tests and adapter/package integration passed                  |
 | prev1-t07 | completed | `2c8c0fa5` | Adapter author seam and official packaged CLI smoke passed               |
 | prev1-t08 | completed | `aa74980f` | Section-local source-dump QA and full acceptance gates passed            |
+| prev1-t09 | pending   | —          | Authoritative design and prior-review formatting re-review fix           |
+| prev1-t10 | pending   | —          | Mode-aware adapter author-cardinality re-review fix                      |
 
 The first aggregate attempt hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed all 18
@@ -1147,7 +1149,13 @@ eight immutable paths, six distinct authored sections, and no retained-source
 archive mutation. The updated candidate identity is recorded in
 `references/revision-1-w6-acceptance.md`.
 
-**Next:** Repeat the fresh-context Revision 1 review.
+**Re-review:** The first re-review confirmed C1 and I1 resolved and the
+substantive C2 propagation path working. It found one Important stale-design
+issue, one Medium omitted-author boundary issue, and one formatting-only
+Minor. These are converted into `prev1-t09` and `prev1-t10`.
+
+**Next:** Complete the two bounded re-review fixes and run the narrowed
+re-review.
 
 ---
 

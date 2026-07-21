@@ -1643,6 +1643,7 @@ git commit -m "chore(p05-t04): approve explainer v1 promotion"
 | p04    | code     | passed          | 2026-07-18 | reviews/p04-reconciliation-review-2026-07-18T200037Z.md     |
 | p05    | code     | pending         | -          | -                                                           |
 | p-rev1 | code     | fixes_completed | 2026-07-21 | reviews/2026-07-21-p-rev1-code-review.md                    |
+| p-rev1 | code     | received        | 2026-07-21 | reviews/2026-07-21-p-rev1-code-rereview.md                  |
 | final  | code     | pending         | -          | -                                                           |
 | spec   | artifact | pending         | -          | -                                                           |
 | design | artifact | pending         | -          | -                                                           |
@@ -2038,6 +2039,65 @@ and Medium findings.
 git commit -m "fix(prev1-t08): detect section source dumping"
 ```
 
+### Task prev1-t09: (re-review fix) Align the authoritative design with Revision 1
+
+**Files:**
+
+- Modify: `.oat/projects/shared/explainer-kit/design.md`
+- Modify: `.oat/projects/shared/explainer-kit/reviews/2026-07-21-p-rev1-code-review.md`
+
+**Step 1: Reconcile the design**
+
+Update component responsibilities, contract kinds, author request/result
+interfaces, curated-style theme selection/provenance, config precedence, and
+requirement-to-test mapping. Preserve palette/profile only as deprecated
+compatibility inputs.
+
+**Step 2: Clean review formatting**
+
+Remove trailing whitespace from the prior review artifact without changing its
+substantive findings.
+
+**Step 3: Verify and commit**
+
+Run formatting, `git diff --check`, and targeted text assertions for the
+Revision 1 contracts.
+
+```bash
+git commit -m "docs(prev1-t09): align revision design"
+```
+
+### Task prev1-t10: (re-review fix) Enforce author cardinality at the adapter boundary
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1: Write tests (RED)**
+
+Prove unattended adapter calls reject zero or two author seams before invoking
+the core, while interactive calls permit zero. Retain direct and module author
+success cases.
+
+**Step 2: Implement (GREEN)**
+
+Make author cardinality validation mode-aware at the adapter boundary without
+weakening the core's independent failure behavior.
+
+**Step 3: Verify**
+
+Run focused adapter and packaged smoke tests, then all repository and release
+gates serially.
+
+**Step 4: Re-review and commit**
+
+Commit the bounded fix, then repeat a narrowed fresh-context re-review.
+
+```bash
+git commit -m "fix(prev1-t10): require unattended adapter author"
+```
+
 ## Implementation Complete
 
 **Summary:**
@@ -2047,11 +2107,11 @@ git commit -m "fix(prev1-t08): detect section source dumping"
 - Phase 3: 9 tasks — OAT adapter and lifecycle/archive integration
 - Phase 4: 9 tasks — publishing, compatibility, docs, release validation
 - Phase 5: 4 tasks — frozen RC and external acceptance
-- Phase p-rev1: 8 tasks — complete-package durability, authored content,
-  curated styles, Codex config formatting, live W6 acceptance, and three
-  final-review fixes
+- Phase p-rev1: 10 tasks — complete-package durability, authored content,
+  curated styles, Codex config formatting, live W6 acceptance, and five
+  review fixes
 
-**Total: 46 tasks**
+**Total: 48 tasks**
 
 Revision 1 is ready for implementation from `prev1-t01`. The original project
 remains active until the follow-up PR, live W6 acceptance, wave promotion, and
