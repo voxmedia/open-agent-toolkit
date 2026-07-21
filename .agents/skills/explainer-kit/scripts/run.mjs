@@ -622,9 +622,10 @@ async function createAuthoredContent(state, author) {
       );
     }
     const dumpCheck = checkSourceDumping({
-      authoredText: result.content.sections
-        .map(({ prose }) => prose)
-        .join('\n\n'),
+      authoredSections: result.content.sections.map(({ id, prose }) => ({
+        id,
+        text: prose,
+      })),
       sourceTexts: [
         ...state.factBase.claims,
         ...state.factBase.unresolvedClaims,

@@ -133,6 +133,40 @@ test('detects verbatim source dumping without rejecting concise factual prose', 
   assert.equal(boundary.issues[0].details.matchedShingles, 5);
 });
 
+test('scores source dumping per section so unrelated prose cannot dilute a copied section', () => {
+  const copied =
+    'The archive verifier checks every immutable package hash before deleting the active project. Operators can retry safely after a failed verification.';
+  assert.deepEqual(
+    checkSourceDumping({
+      authoredSections: [
+        {
+          id: 'archive',
+          text: 'Archive verification now precedes project deletion, preserving a safe retry path when retained evidence does not match.',
+        },
+      ],
+      sourceTexts: [copied],
+    }),
+    { valid: true, issues: [] },
+  );
+
+  const report = checkSourceDumping({
+    authoredSections: [
+      { id: 'archive', text: copied },
+      {
+        id: 'outcomes',
+        text: 'Teams received a concise operational summary organized around decisions, outcomes, follow-up work, ownership, and remaining uncertainty. The explanation uses audience-ready language and avoids repeating implementation details.',
+      },
+    ],
+    sourceTexts: [copied],
+  });
+
+  assert.equal(report.valid, false);
+  assert.equal(report.issues.length, 1);
+  assert.equal(report.issues[0].code, 'source-dump');
+  assert.equal(report.issues[0].details.sectionId, 'archive');
+  assert.equal(report.issues[0].details.overlapRatio, 1);
+});
+
 test('rejects unbalanced tags, unreadable headings and unsafe links', () => {
   const html = fixture(
     '<h1> </h1><h3>Skipped level</h3><section><a href="">Empty</a><a href="/root/path">Root</a><a href="javascript:alert(1)">Unsafe</a>',

@@ -376,7 +376,7 @@ test('unattended author receives structured per-artifact context and retains val
   assert.ok(manifest.immutableHashes['source/author/project-recap.json']);
 });
 
-test('unattended authors must return complete prose sections without source dumping', async () => {
+test('unattended authors must return complete prose and cannot dilute a dumped section', async () => {
   const invalidFixture = await suppliedFixture('project-recap');
   const invalid = await runExplainerCore(invalidFixture.request, {
     author: async (authorRequest) =>
@@ -406,10 +406,12 @@ test('unattended authors must return complete prose sections without source dump
   const dumped = await runExplainerCore(dumpFixture.request, {
     author: async (authorRequest) => {
       const result = authorResult(authorRequest);
-      result.content.sections = result.content.sections.map((section) => ({
-        ...section,
-        prose: dumpedProse,
-      }));
+      result.content.sections = result.content.sections.map(
+        (section, index) => ({
+          ...section,
+          prose: index === 0 ? dumpedProse : section.prose,
+        }),
+      );
       return result;
     },
     now: () => NOW,
