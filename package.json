@@ -45,6 +45,7 @@
     "lint-staged": "^15.2.11",
     "oxfmt": "^0.36.0",
     "oxlint": "^1.51.0",
+    "oxlint-tsgolint": "^7.0.2001",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.21.0",
     "turbo": "^2.7.6",
