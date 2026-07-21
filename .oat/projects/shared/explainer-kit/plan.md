@@ -1877,6 +1877,12 @@ git commit -m "fix(prev1-t04): normalize codex config indentation"
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `tools/smoke/explainer-kit/packaged-layout.test.mjs`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+- Modify: `tools/smoke/explainer-kit/fixtures/package-root.mjs`
+- Modify: `tools/smoke/explainer-kit/fixtures/private-wrapper.mjs`
 - Modify: `.oat/sync/manifest.json`
 - Modify: `.oat/projects/shared/explainer-kit/implementation.md`
 - Create: `.oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md`
@@ -1902,6 +1908,10 @@ real author module and one accepted curated style. Verify authored,
 publishable-quality narrative; complete immutable hashes; successful
 `oat project archive --project-recap-run`; visual gates; and no undeclared
 archive mutations. Record exact candidate identity and sanitized evidence.
+The archive validator must preserve the manifest contract's canonical
+fact-base/theme hashes while independently verifying complete file-byte
+coverage through `immutableHashes`; do not require those distinct hash
+semantics to be byte-identical.
 
 **Step 4: Review**
 
@@ -1911,7 +1921,7 @@ normal review receive loop, and rerun affected gates.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json packages/cli/src/validation/skills.test.ts .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json packages/cli/src/validation/skills.test.ts packages/cli/src/commands/project/archive/archive-utils.ts packages/cli/src/commands/project/archive/archive-utils.test.ts tools/smoke/explainer-kit/packaged-layout.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs tools/smoke/explainer-kit/fixtures/package-root.mjs tools/smoke/explainer-kit/fixtures/private-wrapper.mjs .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
 git commit -m "chore(prev1-t05): validate explainer revision"
 ```
 
