@@ -36,7 +36,24 @@
       "mediaType": "text/html",
       "status": "built",
       "hash": "sha256:5df6c87860b4ba1be47a919709c206d4ad7b7bf10437092813e8ab1e86485d6f",
-      "rebuildable": false
+      "rebuildable": false,
+      "durableEvidence": [
+        {
+          "kind": "commit",
+          "ref": "039b1d94aa4ec002a3e51d05bfc3fb164319df99",
+          "paths": [
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/run-request.json",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/source/fact-base.json",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/source/fact-base.md",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/source/content-approval.json",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/source/author/project-recap.json",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/source/content/project-recap.md",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/theme.resolved.json",
+            ".oat/repo/reference/project-recaps/20260721-explainer-kit/site/initiatives/explainer-kit-final-recap/index.html"
+          ],
+          "attestedAt": "2026-07-21T12:42:17.174Z"
+        }
+      ]
     }
   ],
   "immutableHashes": {
@@ -49,10 +66,10 @@
     "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
     "site/initiatives/explainer-kit-final-recap/index.html": "sha256:5df6c87860b4ba1be47a919709c206d4ad7b7bf10437092813e8ab1e86485d6f"
   },
-  "outcome": "built-not-durable",
+  "outcome": "built-durable",
   "buildRecord": {
     "path": "build-record.json",
-    "hash": "sha256:ceed1f830657a3afc540dedd068d654b272a5252d2b80e881f62a9ad5f45e2b3"
+    "hash": "sha256:dad3829408054410b8bef60dd86dc05c6c15f6d6cc6c64df7607c9665015824e"
   },
   "warnings": [
     "No explicit style was selected; defaulted to clean-neutral."
