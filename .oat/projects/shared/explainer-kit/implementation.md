@@ -1,9 +1,12 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - task_id: prev1-t05
+    reason: 'Restore the retained wave-6-execution archive and supply a real author module.'
+    since: 2026-07-20
 oat_last_updated: 2026-07-20
-oat_current_task_id: prev1-t04
+oat_current_task_id: prev1-t05
 oat_generated: false
 ---
 
@@ -24,16 +27,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | complete    | 6     | 6/6       |
-| Phase 2    | complete    | 10    | 10/10     |
-| Phase 3    | complete    | 9     | 9/9       |
-| Phase 4    | complete    | 9     | 9/9       |
-| Phase 5    | completed   | 4     | 4/4       |
-| Revision 1 | in_progress | 5     | 3/5       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | complete  | 6     | 6/6       |
+| Phase 2    | complete  | 10    | 10/10     |
+| Phase 3    | complete  | 9     | 9/9       |
+| Phase 4    | complete  | 9     | 9/9       |
+| Phase 5    | completed | 4     | 4/4       |
+| Revision 1 | blocked   | 5     | 4/5       |
 
-**Total:** 41/43 tasks completed
+**Total:** 42/43 tasks completed
 
 ---
 
@@ -1085,7 +1088,7 @@ this candidate must not be used for external acceptance.
 
 **Status:** in_progress
 **Started:** 2026-07-20
-**Current task:** `prev1-t04`
+**Current task:** `prev1-t05`
 
 ### Revision Received: Inline Feedback
 
@@ -1119,15 +1122,15 @@ this candidate must not be used for external acceptance.
 | prev1-t01 | completed | `4f456a91` | Core contracts/run tests and CLI archive tests passed          |
 | prev1-t02 | completed | `8708f4d3` | Schema, approval, QA, and run integration tests passed         |
 | prev1-t03 | completed | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed    |
-| prev1-t04 | pending   | —          | Added from operator feedback after the initial phase dispatch  |
+| prev1-t04 | completed | `0895a8c0` | Codex config codec and full repository verification passed     |
 | prev1-t05 | blocked   | —          | Retained W6 archive and real author module unavailable locally |
 
 The aggregate gate reached `pnpm test` but hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed. A full
 phase gate still must pass before review.
 
-**Next:** Complete the generated Codex config formatting task, then restore the
-retained W6 archive from its recorded S3 snapshot and resume acceptance.
+**Next:** Restore the retained W6 archive from its recorded S3 snapshot, supply
+a real author module, and resume acceptance.
 
 ---
 
@@ -1140,6 +1143,23 @@ _- Parallel Groups list_
 _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
+
+### Run 3 — 2026-07-20T23:33:00Z
+
+- Branch: `tkstang/fix-w6-recap-path`
+- Tier: 1, policy-resolved Cursor CLI route
+- Request: `dispatch-p-rev1-codex-indent-20260720-01`
+- Phase base: `cb4449c0`
+- Outcome: passed for bounded continuation `prev1-t04`
+- Task commit: `0895a8c0`
+- Verification: 3,276 tests, lint, type-check, and format passed
+- Reviewer: deferred until `prev1-t05` completes
+
+Dispatch: scope=p-rev1-codex-indent action=implementation role=implementer
+producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high
+effort_axis=not-applicable dispatch_policy=high
+dispatch_ceiling=gpt-5.6-sol-high
+target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run 2 — 2026-07-20T22:09:56Z
 

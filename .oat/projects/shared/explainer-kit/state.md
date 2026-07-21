@@ -1,7 +1,10 @@
 ---
-oat_current_task: prev1-t04
-oat_last_commit: d8dec777
-oat_blockers: []
+oat_current_task: prev1-t05
+oat_last_commit: 0895a8c0
+oat_blockers:
+  - task_id: prev1-t05
+    reason: 'Restore the retained wave-6-execution archive and supply a real author module.'
+    since: 2026-07-20
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -38,7 +41,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T23:23:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-20T23:49:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -50,7 +53,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision 1 — 41/43 tasks complete; next task `prev1-t04`
+Revision 1 — 42/43 tasks complete; `prev1-t05` blocked
 
 ## Artifacts
 
@@ -58,7 +61,7 @@ Revision 1 — 41/43 tasks complete; next task `prev1-t04`
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (Revision 1 added; 43 total tasks)
-- **Implementation:** `implementation.md` (in progress; 41/43 tasks)
+- **Implementation:** `implementation.md` (blocked; 42/43 tasks)
 
 ## Progress
 
@@ -123,7 +126,7 @@ Revision 1 — 41/43 tasks complete; next task `prev1-t04`
 - ✓ Revision 1 feedback migrated into the original project
 - ✓ Complete-package hashing, unattended authoring, and four curated styles
   implemented in `prev1-t01` through `prev1-t03`
-- ⧗ Normalize generated Codex config indentation in `prev1-t04`
+- ✓ Generated Codex config indentation normalized in `prev1-t04`
 - ⧗ Restore the retained W6 archive and author module for `prev1-t05`
 
 ## Blockers
@@ -132,5 +135,5 @@ None.
 
 ## Next Milestone
 
-Complete `prev1-t04`, restore the retained W6 acceptance inputs for
-`prev1-t05`, pass review and release gates, then open the follow-up PR.
+Restore the retained W6 acceptance inputs for `prev1-t05`, pass review and
+release gates, then open the follow-up PR.

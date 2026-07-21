@@ -44,6 +44,10 @@ Entries are chronological and append-only.
 
 Phase implementer completed prev1-t01 through prev1-t03 and stopped before acceptance; see implementation.md Run 2 for the W6 archive and author-module boundary.
 
+### 2026-07-21 · structural · oat-project-implement · prev1-t04
+
+Generated Codex config formatting passed in commit 0895a8c0; Revision 1 now waits only on the W6 acceptance inputs recorded in implementation.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
