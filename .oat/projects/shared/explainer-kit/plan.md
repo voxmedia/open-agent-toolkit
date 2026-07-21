@@ -1876,6 +1876,7 @@ git commit -m "fix(prev1-t04): normalize codex config indentation"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 - Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `.oat/sync/manifest.json`
 - Modify: `.oat/projects/shared/explainer-kit/implementation.md`
 - Create: `.oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md`
@@ -1910,7 +1911,7 @@ normal review receive loop, and rerun affected gates.
 **Step 5: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json packages/cli/assets/public-package-versions.json packages/cli/src/validation/skills.test.ts .oat/sync/manifest.json .oat/projects/shared/explainer-kit/implementation.md .oat/projects/shared/explainer-kit/references/revision-1-w6-acceptance.md
 git commit -m "chore(prev1-t05): validate explainer revision"
 ```
 
