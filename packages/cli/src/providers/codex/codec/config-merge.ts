@@ -30,6 +30,63 @@ export interface CodexConfigMergeResult {
 }
 
 type TomlObject = Record<string, unknown>;
+type MultilineStringDelimiter = '"""' | "'''";
+
+function isEscapedBasicStringDelimiter(line: string, index: number): boolean {
+  let backslashCount = 0;
+  for (let cursor = index - 1; cursor >= 0 && line[cursor] === '\\'; cursor--) {
+    backslashCount += 1;
+  }
+  return backslashCount % 2 === 1;
+}
+
+function scanMultilineStringDelimiter(
+  line: string,
+  initialDelimiter: MultilineStringDelimiter | null,
+): MultilineStringDelimiter | null {
+  let delimiter = initialDelimiter;
+
+  for (let index = 0; index < line.length - 2; index++) {
+    if (delimiter === null) {
+      const candidate = line.slice(index, index + 3);
+      if (
+        (candidate === '"""' && !isEscapedBasicStringDelimiter(line, index)) ||
+        candidate === "'''"
+      ) {
+        delimiter = candidate;
+        index += 2;
+      }
+      continue;
+    }
+
+    if (
+      line.startsWith(delimiter, index) &&
+      (delimiter === "'''" || !isEscapedBasicStringDelimiter(line, index))
+    ) {
+      delimiter = null;
+      index += 2;
+    }
+  }
+
+  return delimiter;
+}
+
+function normalizeCodexConfigIndentation(content: string): string {
+  let multilineDelimiter: MultilineStringDelimiter | null = null;
+
+  return content
+    .split('\n')
+    .map((line) => {
+      const normalizedLine =
+        multilineDelimiter === null ? line.trimStart() : line;
+      multilineDelimiter = scanMultilineStringDelimiter(
+        normalizedLine,
+        multilineDelimiter,
+      );
+      return normalizedLine;
+    })
+    .join('\n');
+}
 
 function parseConfig(content: string | null): TomlObject {
   if (!content || content.trim() === '') {
@@ -115,7 +172,9 @@ export function mergeCodexConfig({
     }
   }
 
-  const mergedContent = stringifyToml(nextConfig);
+  const mergedContent = normalizeCodexConfigIndentation(
+    stringifyToml(nextConfig),
+  );
   const changed = (existingContent ?? '').trimEnd() !== mergedContent.trimEnd();
 
   return {

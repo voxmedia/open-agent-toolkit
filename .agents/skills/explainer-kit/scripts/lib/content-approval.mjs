@@ -12,7 +12,12 @@ const DECISIONS = new Map([
   ['rejected', 'rejected'],
 ]);
 
-export async function resolveContentApproval(run, mode, reviewedSource) {
+export async function resolveContentApproval(
+  run,
+  mode,
+  reviewedSource,
+  authorResultPaths,
+) {
   assertRun(run);
   if (!MODES.has(mode)) {
     throw new Error('Content approval mode must be interactive or unattended.');
@@ -21,6 +26,7 @@ export async function resolveContentApproval(run, mode, reviewedSource) {
   const previous = await readPrevious(run);
   let record;
   if (mode === 'unattended') {
+    assertAuthorResultPaths(authorResultPaths);
     const provenance =
       reviewedSource ?? approvedSourceProvenance(run.request.factBase);
     assertProvenance(provenance);
@@ -30,6 +36,7 @@ export async function resolveContentApproval(run, mode, reviewedSource) {
       mode,
       status: 'approved',
       reviewedSource: structuredClone(provenance),
+      authorResultPaths: [...authorResultPaths],
       attempts: previous?.attempts ?? [],
     };
   } else if (reviewedSource === undefined) {
@@ -160,6 +167,24 @@ function assertProvenance(value) {
   ) {
     throw new Error(
       'Reviewed source provenance requires non-empty kind and locator values.',
+    );
+  }
+}
+
+function assertAuthorResultPaths(value) {
+  if (
+    !Array.isArray(value) ||
+    value.length === 0 ||
+    new Set(value).size !== value.length ||
+    value.some(
+      (path) =>
+        typeof path !== 'string' ||
+        !/^source\/author\/[^/]+\.json$/.test(path) ||
+        path.includes('..'),
+    )
+  ) {
+    throw new Error(
+      'Unattended content approval requires unique source/author result paths.',
     );
   }
 }

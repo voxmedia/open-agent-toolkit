@@ -3,6 +3,10 @@ import {
   type CommandContext,
   type GlobalOptions,
 } from '@app/command-context';
+import {
+  type UpsertSectionResult,
+  upsertAgentsMdSection,
+} from '@commands/shared/agents-md';
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   canonicalPathsForPack,
@@ -12,6 +16,10 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import {
+  buildProjectManagementAgentsSectionBody,
+  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+} from './agents-guidance';
 import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
@@ -85,6 +93,22 @@ export function createInitToolsProjectManagementCommand(
             targetRoot,
             force: options.force,
           });
+          didInstall = true;
+
+          let agentsGuidanceAction: UpsertSectionResult['action'] | undefined;
+          let agentsGuidanceWarning: string | undefined;
+          try {
+            const agentsGuidanceResult = await upsertAgentsMdSection(
+              targetRoot,
+              PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+              buildProjectManagementAgentsSectionBody(),
+            );
+            agentsGuidanceAction = agentsGuidanceResult.action;
+          } catch (error) {
+            const message =
+              error instanceof Error ? error.message : String(error);
+            agentsGuidanceWarning = `Could not update AGENTS.md project-management guidance: ${message}`;
+          }
 
           if (context.json) {
             context.logger.json({
@@ -93,6 +117,9 @@ export function createInitToolsProjectManagementCommand(
               targetRoot,
               assetsRoot,
               result,
+              ...(agentsGuidanceWarning === undefined
+                ? {}
+                : { warnings: [agentsGuidanceWarning] }),
             });
           } else {
             context.logger.info('Installed project-management tool pack.');
@@ -103,9 +130,19 @@ export function createInitToolsProjectManagementCommand(
             context.logger.info(
               `Templates: copied=${result.copiedTemplates.length}, updated=${result.updatedTemplates.length}, skipped=${result.skippedTemplates.length}`,
             );
+            if (
+              agentsGuidanceAction !== undefined &&
+              agentsGuidanceAction !== 'no-change'
+            ) {
+              context.logger.info(
+                `AGENTS.md project-management section ${agentsGuidanceAction}.`,
+              );
+            }
+            if (agentsGuidanceWarning !== undefined) {
+              context.logger.warn(agentsGuidanceWarning);
+            }
             context.logger.info('Run: oat sync --scope project');
           }
-          didInstall = true;
           process.exitCode = 0;
         } catch (error) {
           const message =

@@ -57,6 +57,43 @@ test('plans a dedicated immutable artifact commit followed by evidence and one p
   assert.match(plan.push.instruction, /both commits together/i);
 });
 
+test('plans evidence for every manifest immutable hash path', async () => {
+  const fixture = await createRun();
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  manifest.immutableHashes = Object.fromEntries(
+    [
+      'run-request.json',
+      'source/fact-base.json',
+      'source/fact-base.md',
+      'source/content-approval.json',
+      'source/author/recap.json',
+      'source/content/recap.md',
+      'theme.resolved.json',
+      'site/index.html',
+    ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
+  );
+  await writeFile(
+    fixture.manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+
+  const plan = await planTrackedRunFinalization(
+    request(fixture, 'completion-bookkeeping'),
+    {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+      artifactCommit: SHA,
+    },
+  );
+
+  assert.deepEqual(
+    plan.attestation.request.evidence.paths,
+    Object.keys(manifest.immutableHashes).map(
+      (path) => `.oat/projects/shared/demo/explainers/recap/${path}`,
+    ),
+  );
+});
+
 test('reuses a completion bookkeeping commit without planning another artifact commit', async () => {
   const fixture = await createRun();
   const plan = await planTrackedRunFinalization(
@@ -246,6 +283,15 @@ async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
     recipe: { id: 'project-recap', version: '1' },
     source: { factBasePath: 'source/fact-base.json' },
     theme: { path: 'theme.resolved.json' },
+    immutableHashes: Object.fromEntries(
+      [
+        'source/fact-base.json',
+        'source/fact-base.md',
+        'source/content/recap.md',
+        'theme.resolved.json',
+        'site/index.html',
+      ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
+    ),
     artifacts: [
       {
         contentPath: 'source/content/recap.md',

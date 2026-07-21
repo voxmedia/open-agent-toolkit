@@ -166,10 +166,10 @@ export async function verifyRebuildability(artifact, runRoot) {
       await writeFileAtomic(runRoot, artifact.renderedPath, original);
     }
     return { verified: true, reason: null };
-  } catch (error) {
+  } catch (caught) {
     return {
       verified: false,
-      reason: `Deterministic replay failed: ${errorMessage(error)}`,
+      reason: `Deterministic replay failed: ${errorMessage(caught)}`,
     };
   }
 }
@@ -457,21 +457,9 @@ function requiredArtifacts(manifest) {
 }
 
 function immutablePackage(manifest) {
-  const expectedPaths = [
-    manifest.source.factBasePath,
-    'source/fact-base.md',
-    ...manifest.artifacts.map(({ contentPath }) => contentPath),
-    manifest.theme.path,
-    ...manifest.artifacts
-      .filter(
-        ({ status, renderedPath }) =>
-          status === 'built' && typeof renderedPath === 'string',
-      )
-      .map(({ renderedPath }) => renderedPath),
-  ];
-  return [...new Set(expectedPaths)].map((path) => ({
+  return Object.entries(manifest.immutableHashes).map(([path, hash]) => ({
     path,
-    hash: manifest.immutableHashes[path],
+    hash,
   }));
 }
 

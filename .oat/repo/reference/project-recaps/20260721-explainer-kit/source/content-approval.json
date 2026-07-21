@@ -1,0 +1,12 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v1",
+  "runId": "run-3fa57f0a-6d45-41e5-9840-a914207629b1",
+  "mode": "unattended",
+  "status": "approved",
+  "reviewedSource": {
+    "kind": "approved-oat-artifacts",
+    "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit"
+  },
+  "authorResultPaths": ["source/author/project-recap.json"],
+  "attempts": []
+}

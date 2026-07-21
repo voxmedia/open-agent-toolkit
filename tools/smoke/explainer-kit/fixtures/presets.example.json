@@ -1,0 +1,14 @@
+{
+  "_comment": "Public smoke fixture for the private-wrapper migration contract.",
+  "presets": {
+    "personal-oat": {
+      "artifactsRoot": "",
+      "s3Bucket": "tkstang-open-agent-toolkit",
+      "s3Prefix": "explainers",
+      "publicBaseUrl": "https://dy4vzrzaexuy5.cloudfront.net",
+      "auth": "profile",
+      "lanes": [],
+      "gdocsAccount": ""
+    }
+  }
+}

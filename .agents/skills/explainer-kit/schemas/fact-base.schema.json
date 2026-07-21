@@ -46,6 +46,15 @@
       "type": "string",
       "pattern": "^sha256:[a-f0-9]{64}$"
     },
+    "sectionIds": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "source": {
       "type": "object",
       "additionalProperties": false,
@@ -85,6 +94,7 @@
         "id": { "type": "string", "minLength": 1 },
         "text": { "type": "string", "minLength": 1 },
         "status": { "enum": ["confirmed", "overridden"] },
+        "sections": { "$ref": "#/$defs/sectionIds" },
         "citations": {
           "type": "array",
           "items": { "$ref": "#/$defs/citation" },
@@ -108,6 +118,7 @@
             "needs-confirmation"
           ]
         },
+        "sections": { "$ref": "#/$defs/sectionIds" },
         "citations": {
           "type": "array",
           "items": { "$ref": "#/$defs/citation" },

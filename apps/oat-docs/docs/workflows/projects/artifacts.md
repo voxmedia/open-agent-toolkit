@@ -44,13 +44,25 @@ different retention contracts:
 - A selected final `project-recap` is a durable completion record. Before a
   shared project is removed, archive copies the complete selected run to
   `.oat/repo/reference/project-recaps/<YYYYMMDD-project-slug>/`, verifies its
-  manifest artifact hashes, and reports that tracked export path. Summary and
-  PR links use this export, never the gitignored local archive.
+  immutable package hashes, and reports that tracked export path. Summary and
+  PR links use this export, never the gitignored local archive. Lifecycle
+  callers identify the selected project-relative run with:
+
+  ```bash
+  oat project archive <project-path> \
+    --project-recap-run explainers/<recap-slug>
+  ```
 
 The archive exports at most one selected recap package. It preserves structured
 failure outcomes and successful intermediates, rejects an existing dated
-destination, and fails before deleting the active project if copy or hash
-verification fails.
+destination, and requires the selected path to stay under the project's
+`explainers/` directory with a `project-recap` manifest. Verification covers
+the exact retained bytes for the privacy-safe request, content approval, fact
+base JSON and Markdown, declared author results, authored Markdown, resolved
+theme, and every built artifact. Canonical fact-base and theme hashes remain
+normalized-object identities; `manifest.immutableHashes` independently covers
+serialized file bytes. Missing, stale, or tampered coverage fails before the
+active project is deleted.
 
 Local-scope projects are not archived through this export path. Their explainer
 packages inherit the local project's untracked posture and remain

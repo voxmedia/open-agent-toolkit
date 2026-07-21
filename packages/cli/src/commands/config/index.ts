@@ -100,6 +100,7 @@ type ConfigKey =
   | 'documentation.requireForProjectCompletion'
   | 'documentation.root'
   | 'documentation.tooling'
+  | 'explainers.defaults.style'
   | 'explainers.defaults.palette'
   | 'explainers.defaults.themeBundlePath'
   | 'explainers.defaults.visualProfile'
@@ -216,6 +217,7 @@ const KEY_ORDER: ConfigKey[] = [
   'documentation.tooling',
   'documentation.config',
   'documentation.requireForProjectCompletion',
+  'explainers.defaults.style',
   'explainers.defaults.palette',
   'explainers.defaults.visualProfile',
   'explainers.defaults.themeBundlePath',
@@ -515,28 +517,43 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     description: 'Whether the workflows tool pack is installed.',
   },
   {
+    key: 'explainers.defaults.style',
+    group: 'Explainer Defaults (3-layer: local > shared > user)',
+    file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
+    scope: 'local, shared, or user',
+    type: 'clean-neutral | business-corporate | navy-ocean | dark-edgy',
+    defaultValue: 'clean-neutral',
+    mutability: 'read/write',
+    owningCommand:
+      'oat config set explainers.defaults.style <style> [--local|--shared|--user]',
+    description:
+      'Curated default style for explainer builds; this is the primary visual-selection front door.',
+  },
+  {
     key: 'explainers.defaults.palette',
     group: 'Explainer Defaults (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'local, shared, or user',
-    type: 'non-empty string',
-    defaultValue: 'neutral',
+    type: 'non-empty string | null',
+    defaultValue: 'null',
     mutability: 'read/write',
     owningCommand:
       'oat config set explainers.defaults.palette <value> [--local|--shared|--user]',
-    description: 'Named default color palette for explainer builds.',
+    description:
+      'Deprecated nullable compatibility selection for a named color palette; prefer explainers.defaults.style.',
   },
   {
     key: 'explainers.defaults.visualProfile',
     group: 'Explainer Defaults (3-layer: local > shared > user)',
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'local, shared, or user',
-    type: 'non-empty string',
-    defaultValue: 'clean',
+    type: 'non-empty string | null',
+    defaultValue: 'null',
     mutability: 'read/write',
     owningCommand:
       'oat config set explainers.defaults.visualProfile <value> [--local|--shared|--user]',
-    description: 'Named default visual profile for explainer builds.',
+    description:
+      'Deprecated nullable compatibility selection for a named visual profile; prefer explainers.defaults.style.',
   },
   {
     key: 'explainers.defaults.themeBundlePath',
@@ -1115,6 +1132,20 @@ function parseExplainerValue(
     }
     return value;
   }
+  if (key === 'explainers.defaults.style') {
+    const styles = [
+      'clean-neutral',
+      'business-corporate',
+      'navy-ocean',
+      'dark-edgy',
+    ];
+    if (!styles.includes(value)) {
+      throw new Error(
+        `Invalid value for ${key}: expected one of ${styles.join(' | ')}, got '${rawValue}'.`,
+      );
+    }
+    return value;
+  }
   if (key === 'explainers.publish.provider') {
     if (value !== 's3-static') {
       throw new Error(
@@ -1227,6 +1258,7 @@ function validateSurfaceForKey(key: ConfigKey, surface: ConfigSurface): void {
 
   if (key.startsWith('explainers.')) {
     const allowed: ConfigSurface[] =
+      key === 'explainers.defaults.style' ||
       key === 'explainers.defaults.palette' ||
       key === 'explainers.defaults.visualProfile'
         ? ['shared', 'local', 'user']
@@ -1291,6 +1323,7 @@ function defaultSurfaceForKey(key: ConfigKey): ConfigSurface {
     return 'user';
   }
   if (
+    key === 'explainers.defaults.style' ||
     key === 'explainers.defaults.palette' ||
     key === 'explainers.defaults.visualProfile' ||
     key === 'explainers.defaults.themeBundlePath' ||

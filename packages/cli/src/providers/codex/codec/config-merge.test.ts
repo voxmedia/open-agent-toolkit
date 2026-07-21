@@ -113,6 +113,62 @@ describe('mergeCodexConfig', () => {
     expect(result.removedRoles).toEqual(['oat-old']);
   });
 
+  it('left-aligns merged config structure without changing multiline string contents', () => {
+    const existing = [
+      'title = "Custom"',
+      'narrative = """',
+      'first line',
+      '  indented = keep',
+      '    [not.a.table]',
+      'last line"""',
+      '[agents.custom]',
+      'description = "Keep me"',
+      'config_file = "agents/custom.toml"',
+      '',
+    ].join('\n');
+
+    const first = mergeCodexConfig({
+      existingContent: existing,
+      desiredRoles: [managedRole],
+    });
+    const second = mergeCodexConfig({
+      existingContent: first.mergedContent,
+      desiredRoles: [managedRole],
+    });
+    const structureOnly = first.mergedContent.replace(
+      /(?:'''|""")[\s\S]*?(?:'''|""")/g,
+      '""""""',
+    );
+
+    expect(structureOnly).not.toMatch(/^[ \t]+(?:\[|[A-Za-z0-9_-]+\s*=)/mu);
+    expect(first.mergedContent).toContain(
+      [
+        'narrative = """',
+        'first line',
+        '  indented = keep',
+        '    [not.a.table]',
+        'last line"""',
+      ].join('\n'),
+    );
+    expect(TOML.parse(first.mergedContent)).toEqual({
+      ...TOML.parse(existing),
+      features: { multi_agent: true },
+      agents: {
+        custom: {
+          description: 'Keep me',
+          config_file: 'agents/custom.toml',
+        },
+        max_depth: 2,
+        'oat-reviewer': {
+          description: 'Reviewer',
+          config_file: 'agents/oat-reviewer.toml',
+        },
+      },
+    });
+    expect(second.changed).toBe(false);
+    expect(second.mergedContent).toBe(first.mergedContent);
+  });
+
   it('merges a single role idempotently', () => {
     const role = {
       roleName: 'oat-reviewer-gpt-5-6-sol-xhigh',

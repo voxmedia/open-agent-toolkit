@@ -2,6 +2,7 @@ import { canonicalHash, validateContract } from './contracts.mjs';
 
 const FACT_BASE_VERSION = 'explainer-kit.fact-base/v1';
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
+const SECTION_ID_PATTERN = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const FINDING_REASONS = new Set([
   'contradictory',
   'stale',
@@ -107,6 +108,7 @@ async function processFederated(binding, { critic, now }) {
         text: override.decision,
         status: 'overridden',
         citations: citationsFor(entries),
+        ...sectionMetadata(entries),
       });
       continue;
     }
@@ -251,7 +253,8 @@ function collectObservations(documents, sourceById) {
         typeof claim.id !== 'string' ||
         claim.id.length === 0 ||
         typeof claim.text !== 'string' ||
-        claim.text.length === 0
+        claim.text.length === 0 ||
+        !validSections(claim.sections)
       ) {
         throw new Error(
           `Source ${document.source.id} contains an invalid claim.`,
@@ -263,6 +266,7 @@ function collectObservations(documents, sourceById) {
         text: claim.text,
         source: sourceById.get(document.source.id),
         locator: claim.locator ?? document.source.locator,
+        ...(claim.sections && { sections: [...claim.sections] }),
       });
       observations.set(claim.id, entries);
     }
@@ -307,6 +311,7 @@ function resolveObservations(claimId, entries) {
         text: entries[0].text,
         status: 'confirmed',
         citations: citationsFor(entries),
+        ...sectionMetadata(entries),
       },
     };
   }
@@ -341,6 +346,9 @@ function resolveObservations(claimId, entries) {
         citations: citationsFor(
           entries.filter(({ text }) => text === winner.entry.text),
         ),
+        ...sectionMetadata(
+          entries.filter(({ text }) => text === winner.entry.text),
+        ),
       },
     };
   }
@@ -352,6 +360,7 @@ function resolveObservations(claimId, entries) {
       text: `Conflicting values: ${[...byText.keys()].sort().join(' | ')}`,
       reason: 'contradictory',
       citations: citationsFor(entries),
+      ...sectionMetadata(entries),
     },
   };
 }
@@ -441,6 +450,7 @@ function integrateCriticFindings({
     }
 
     const claimIndex = claims.findIndex(({ id }) => id === finding.claimId);
+    const existingClaim = claimIndex >= 0 ? claims[claimIndex] : null;
     if (claimIndex >= 0) {
       claims.splice(claimIndex, 1);
     }
@@ -449,6 +459,7 @@ function integrateCriticFindings({
       text: finding.text,
       reason: finding.classification,
       citations,
+      ...(existingClaim?.sections && { sections: existingClaim.sections }),
     });
   }
 }
@@ -487,6 +498,29 @@ function uniqueCitations(citations) {
         ]),
     ).values(),
   ];
+}
+
+function validSections(sections) {
+  return (
+    sections === undefined ||
+    (Array.isArray(sections) &&
+      sections.length > 0 &&
+      new Set(sections).size === sections.length &&
+      sections.every(
+        (section) =>
+          typeof section === 'string' && SECTION_ID_PATTERN.test(section),
+      ))
+  );
+}
+
+function sectionMetadata(entries) {
+  if (entries.some(({ sections }) => sections === undefined)) {
+    return {};
+  }
+  const sections = [
+    ...new Set(entries.flatMap((entry) => entry.sections ?? [])),
+  ].sort();
+  return sections.length > 0 ? { sections } : {};
 }
 
 function byId(left, right) {

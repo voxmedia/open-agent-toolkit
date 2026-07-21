@@ -86,7 +86,10 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
     publishManifest,
     writeStoaNote,
     syncGoogleDoc,
-    coreOptions: { now: () => NOW },
+    coreOptions: {
+      author: providerNeutralAuthor,
+      now: () => NOW,
+    },
   });
 
   assert.equal(wrapped.preResolved.preset.publicBaseUrl, PERSONAL_PUBLIC_ROOT);
@@ -131,6 +134,14 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   assert.equal(writeStoaNote.mock.callCount(), 1);
   assert.equal(syncGoogleDoc.mock.callCount(), 1);
   assert.equal(publishManifest.mock.callCount(), 1);
+  assert.deepEqual(wrapped.authorProvenance, [
+    {
+      authorId: 'private-wrapper-provider-neutral-author',
+      generatedAt: NOW,
+      method: 'structured-evidence-synthesis',
+      model: 'private-wrapper-author/v1',
+    },
+  ]);
   assert.equal(
     wrapped.publishReceipt.schemaVersion,
     'explainer-kit.publish-receipt/v1',
@@ -158,9 +169,7 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
     read('.agents/skills/oat-explainer-kit/references/migration.md'),
     read('.agents/skills/explainer-kit/SKILL.md'),
     read('.agents/skills/oat-explainer-kit/SKILL.md'),
-    read(
-      '.oat/projects/shared/explainer-kit/references/skill-drafts/personal-explainer-kit/presets.example.json',
-    ),
+    read('tools/smoke/explainer-kit/fixtures/presets.example.json'),
     readCorePublicTree(),
   ]);
 
@@ -182,8 +191,8 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 1\.0\.0$/m);
-  assert.match(adapterSkill, /^version: 1\.0\.0$/m);
+  assert.match(coreSkill, /^version: 1\.0\.2$/m);
+  assert.match(adapterSkill, /^version: 1\.0\.1$/m);
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
 
@@ -229,5 +238,28 @@ function suppliedFactBase() {
     ],
     unresolvedClaims: [],
     overrides: [],
+  };
+}
+
+async function providerNeutralAuthor(request) {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v1',
+    artifactId: request.artifact.id,
+    content: {
+      title: 'Private Wrapper Compatibility',
+      description:
+        'A provider-neutral wrapper run built from approved private inputs.',
+      sections: request.narrativeOutline.map(({ id, title }) => ({
+        id,
+        title,
+        prose: `The private wrapper author synthesized the ${title.toLowerCase()} section from approved evidence before the wrapper consumed the versioned manifest.`,
+      })),
+    },
+    provenance: {
+      authorId: 'private-wrapper-provider-neutral-author',
+      generatedAt: NOW,
+      method: 'structured-evidence-synthesis',
+      model: 'private-wrapper-author/v1',
+    },
   };
 }

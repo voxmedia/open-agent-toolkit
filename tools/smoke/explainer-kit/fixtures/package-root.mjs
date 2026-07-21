@@ -49,10 +49,12 @@ export async function createPackagedLayout() {
 
     const factBasePath = join(root, 'approved-fact-base.json');
     const requestPath = join(root, 'core-request.json');
+    const authorModulePath = join(root, 'author.mjs');
     const criticModulePath = join(root, 'critic.mjs');
     const adapterContextPath = join(root, 'adapter-context.json');
     await Promise.all([
       writeJson(factBasePath, suppliedFactBase()),
+      writeAuthorModule(authorModulePath),
       writeFile(
         criticModulePath,
         `export async function critic() {
@@ -92,6 +94,7 @@ export async function createPackagedLayout() {
       activeProject: projectRelative,
       recipe: 'project-explainer',
       slug: 'packaged-adapter',
+      authorModulePath,
       criticModulePath,
       mode: 'unattended',
     });
@@ -112,7 +115,7 @@ export async function createPackagedLayout() {
       requestPath,
       coreRunArgs: {
         script: join(coreRoot, 'scripts', 'run.mjs'),
-        args: ['--request', requestPath],
+        args: ['--request', requestPath, '--author-module', authorModulePath],
         cwd: root,
         env,
       },
@@ -182,6 +185,34 @@ process.stdout.write(JSON.stringify({
 `,
   );
   await chmod(path, 0o755);
+}
+
+async function writeAuthorModule(path) {
+  await writeFile(
+    path,
+    `export async function author(request) {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v1',
+    artifactId: request.artifact.id,
+    content: {
+      title: 'Packaged Project Explainer',
+      description: 'A packaged execution generated from approved project evidence.',
+      sections: request.narrativeOutline.map(({ id, title }) => ({
+        id,
+        title,
+        prose: \`The packaged author synthesized the \${title.toLowerCase()} section from approved project evidence while preserving the destination-neutral explainer contract.\`,
+      })),
+    },
+    provenance: {
+      authorId: 'packaged-layout-provider-neutral-author',
+      generatedAt: '${NOW}',
+      method: 'structured-evidence-synthesis',
+      model: 'packaged-layout-author/v1',
+    },
+  };
+}
+`,
+  );
 }
 
 function isolatedEnvironment({ userRoot, binRoot }) {

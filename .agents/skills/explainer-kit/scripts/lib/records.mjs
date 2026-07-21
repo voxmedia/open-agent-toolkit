@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
+import { readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { validateContract } from './contracts.mjs';
@@ -70,6 +70,7 @@ export async function initializeRun(request) {
     request: normalizedRequest,
   };
 
+  await clearRunRoot(run);
   await writeJsonAtomic(run.runRoot, 'build-record.json', buildRecord);
   await writeJsonAtomic(
     run.runRoot,
@@ -224,6 +225,58 @@ function assertRun(run) {
   ) {
     throw new TypeError('Run must be returned by initializeRun().');
   }
+}
+
+async function clearRunRoot(run) {
+  const entries = await readdir(run.runRoot, { withFileTypes: true });
+  if (entries.length === 0) return;
+  await assertOwnedRunRoot(run);
+  const removable = [];
+  for (const entry of entries) {
+    const path = join(run.runRoot, entry.name);
+    if (!(await containsSymlink(path, entry))) {
+      removable.push(path);
+    }
+  }
+  await Promise.all(
+    removable.map((path) => rm(path, { recursive: true, force: true })),
+  );
+}
+
+async function assertOwnedRunRoot(run) {
+  try {
+    const [persistedRequest, persistedRecord] = await Promise.all([
+      readJson(join(run.runRoot, 'run-request.json')),
+      readJson(join(run.runRoot, 'build-record.json')),
+    ]);
+    assertValidContract('run-request', persistedRequest);
+    assertValidContract('build-record', persistedRecord);
+    if (
+      persistedRequest.slug !== run.slug ||
+      persistedRequest.outputRoot !== run.outputRoot
+    ) {
+      throw new Error('Prior run identity does not match this slug.');
+    }
+  } catch {
+    throw new Error(
+      'Existing slug directory is not a prior Explainer Kit run; refusing to clear it.',
+    );
+  }
+}
+
+async function containsSymlink(path, entry) {
+  if (entry.isSymbolicLink()) return true;
+  if (!entry.isDirectory()) return false;
+  for (const child of await readdir(path, { withFileTypes: true })) {
+    if (await containsSymlink(join(path, child.name), child)) {
+      return true;
+    }
+  }
+  return false;
+}
+
+async function readJson(path) {
+  return JSON.parse(await readFile(path, 'utf8'));
 }
 
 function isObject(value) {

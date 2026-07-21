@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   access,
   mkdir,
@@ -14,7 +15,10 @@ import { join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
-import { runExplainer } from '../scripts/run.mjs';
+import {
+  runExplainer as runExplainerCore,
+  runExplainerCli,
+} from '../scripts/run.mjs';
 
 const NOW = '2026-07-17T20:00:00Z';
 const HASH = `sha256:${'a'.repeat(64)}`;
@@ -59,6 +63,41 @@ function suppliedFactBase() {
     unresolvedClaims: [],
     overrides: [],
   };
+}
+
+function authorResult(authorRequest, overrides = {}) {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v1',
+    artifactId: authorRequest.artifact.id,
+    content: {
+      title: `Authored ${authorRequest.recipe.id}`,
+      description:
+        'A concise account synthesized from the reconciled evidence.',
+      eyebrow: 'Explainer Kit',
+      footer: 'Authored from validated project evidence.',
+      sections: authorRequest.narrativeOutline.map(({ id, title }, index) => ({
+        id,
+        title,
+        prose: `Section ${index + 1} explains the verified ${title.toLowerCase()} in concise, audience-ready language.`,
+      })),
+      artifactLinks: [],
+    },
+    provenance: {
+      authorId: 'fixture-author',
+      generatedAt: NOW,
+      method: 'test-callback',
+    },
+    ...overrides,
+  };
+}
+
+async function runExplainer(request, options = {}) {
+  return runExplainerCore(request, {
+    ...(request.mode === 'unattended' && typeof options.author !== 'function'
+      ? { author: async (authorRequest) => authorResult(authorRequest) }
+      : {}),
+    ...options,
+  });
 }
 
 function request({ outputRoot, factBasePath, recipe = 'project-explainer' }) {
@@ -199,6 +238,46 @@ test('rejection persists corrections and explicit approval resumes the same run'
   assert.match(rendered, /Corrected implementation status\./);
 });
 
+test('resume rejects a changed fact-base binding', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = { ...fixture.request, mode: 'interactive' };
+  await runExplainer(interactiveRequest, {
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Correct the implementation status.'],
+    },
+  });
+  const replacementFactBasePath = join(fixture.cwd, 'replacement-facts.json');
+  await writeFile(
+    replacementFactBasePath,
+    `${JSON.stringify(suppliedFactBase(), null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    runExplainer(
+      {
+        ...interactiveRequest,
+        factBase: {
+          ...interactiveRequest.factBase,
+          path: replacementFactBasePath,
+        },
+      },
+      {
+        now: () => '2026-07-17T20:05:00Z',
+        reviewedSource: {
+          decision: 'approve',
+          reviewedAt: '2026-07-17T20:05:00Z',
+          reviewer: 'operator',
+        },
+      },
+    ),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+});
+
 test('unattended lifecycle sources persist review provenance without prompting', async () => {
   const fixture = await suppliedFixture('project-recap');
   const prompt = mock.fn(() => {
@@ -227,6 +306,206 @@ test('unattended lifecycle sources persist review provenance without prompting',
   );
   assert.equal(approval.status, 'approved');
   assert.deepEqual(approval.reviewedSource, reviewedSource);
+  assert.deepEqual(approval.authorResultPaths, [
+    'source/author/project-recap.json',
+  ]);
+});
+
+test('unattended resume reloads persisted author provenance', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const initial = await runExplainer(fixture.request, { now: () => NOW });
+  const buildRecordPath = join(initial.runRoot, 'build-record.json');
+  const buildRecord = JSON.parse(await readFile(buildRecordPath, 'utf8'));
+  buildRecord.stages = buildRecord.stages.map((stage) =>
+    ['theme', 'render', 'qa', 'durability', 'publish'].includes(stage.id)
+      ? { id: stage.id, status: 'pending', outputPaths: [], warnings: [] }
+      : stage,
+  );
+  buildRecord.outcome = 'incomplete';
+  delete buildRecord.completedAt;
+  await writeFile(buildRecordPath, `${JSON.stringify(buildRecord, null, 2)}\n`);
+
+  const resumed = await runExplainer(fixture.request, {
+    now: () => '2026-07-17T20:05:00Z',
+  });
+
+  assert.equal(
+    resumed.outcome,
+    'built-not-durable',
+    JSON.stringify(resumed.errors),
+  );
+  assert.equal(resumed.runId, initial.runId);
+  const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
+  assert.deepEqual(manifest.source.authorResultPaths, [
+    'source/author/project-recap.json',
+  ]);
+});
+
+test('unattended runs fail before narrative output when no author is supplied', async () => {
+  const fixture = await suppliedFixture('project-recap');
+
+  const result = await runExplainerCore(fixture.request, { now: () => NOW });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_AUTHOR_REQUIRED');
+  await assert.rejects(
+    access(join(result.runRoot, 'source/content/project-recap.md')),
+  );
+  await assert.rejects(
+    access(join(result.runRoot, 'source/author/project-recap.json')),
+  );
+});
+
+test('unattended author receives structured per-artifact context and retains validated provenance', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const requests = [];
+  const author = mock.fn(async (authorRequest) => {
+    requests.push(authorRequest);
+    return authorResult(authorRequest);
+  });
+
+  const result = await runExplainerCore(fixture.request, {
+    author,
+    discover: async ({ round }) =>
+      round === 1 ? ['Archive validation exposed incomplete hashes.'] : [],
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.equal(author.mock.callCount(), 1);
+  assert.equal(requests[0].schemaVersion, 'explainer-kit.author-request/v1');
+  assert.equal(requests[0].artifact.id, 'project-recap');
+  assert.deepEqual(
+    requests[0].narrativeOutline.map(({ id }) => id),
+    requests[0].recipe.requiredNarrative,
+  );
+  assert.equal(
+    requests[0].factBase.schemaVersion,
+    'explainer-kit.fact-base/v1',
+  );
+  assert.deepEqual(requests[0].discovery.findings, [
+    'Archive validation exposed incomplete hashes.',
+  ]);
+
+  const authorPath = join(result.runRoot, 'source/author/project-recap.json');
+  const retained = JSON.parse(await readFile(authorPath, 'utf8'));
+  assert.equal(retained.provenance.authorId, 'fixture-author');
+  const markdown = await readFile(
+    join(result.runRoot, 'source/content/project-recap.md'),
+    'utf8',
+  );
+  assert.match(markdown, /audience-ready language/);
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.deepEqual(manifest.source.authorResultPaths, [
+    'source/author/project-recap.json',
+  ]);
+  assert.ok(manifest.immutableHashes['source/author/project-recap.json']);
+});
+
+test('unattended authors must return complete prose and cannot dilute a dumped section', async () => {
+  const invalidFixture = await suppliedFixture('project-recap');
+  const invalid = await runExplainerCore(invalidFixture.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        content: {
+          ...authorResult(authorRequest).content,
+          sections: authorResult(authorRequest).content.sections.slice(1),
+        },
+      }),
+    now: () => NOW,
+  });
+  assert.equal(invalid.outcome, 'failed');
+  assert.equal(invalid.errors[0].code, 'E_AUTHOR_RESULT');
+  await assert.rejects(
+    access(join(invalid.runRoot, 'source/content/project-recap.md')),
+  );
+
+  const dumpFixture = await suppliedFixture('project-recap');
+  const dumpFactBase = suppliedFactBase();
+  const dumpedProse =
+    'The archive verifier checks every immutable retained input and provenance hash before deleting the active project so operators can retry safely after any mismatch.';
+  dumpFactBase.claims[0].text = dumpedProse;
+  await writeFile(
+    dumpFixture.factBasePath,
+    `${JSON.stringify(dumpFactBase, null, 2)}\n`,
+  );
+  const dumped = await runExplainerCore(dumpFixture.request, {
+    author: async (authorRequest) => {
+      const result = authorResult(authorRequest);
+      result.content.sections = result.content.sections.map(
+        (section, index) => ({
+          ...section,
+          prose: index === 0 ? dumpedProse : section.prose,
+        }),
+      );
+      return result;
+    },
+    now: () => NOW,
+  });
+  assert.equal(dumped.outcome, 'failed');
+  assert.equal(dumped.errors[0].code, 'E_SOURCE_DUMP');
+  await assert.rejects(
+    access(join(dumped.runRoot, 'source/content/project-recap.md')),
+  );
+});
+
+test('CLI resolves an explicit author module without persisting executable callbacks', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const requestPath = join(fixture.cwd, 'request.json');
+  const authorModulePath = join(fixture.cwd, 'author.mjs');
+  await writeFile(requestPath, `${JSON.stringify(fixture.request, null, 2)}\n`);
+  await writeFile(
+    authorModulePath,
+    `export default async function author(request) {
+      return {
+        schemaVersion: 'explainer-kit.author-result/v1',
+        artifactId: request.artifact.id,
+        content: {
+          title: 'CLI-authored recap',
+          description: 'A concise retained narrative.',
+          sections: request.narrativeOutline.map(({ id, title }, index) => ({
+            id,
+            title,
+            prose: \`CLI section \${index + 1} summarizes validated evidence for readers.\`
+          })),
+          artifactLinks: []
+        },
+        provenance: {
+          authorId: 'cli-fixture-author',
+          generatedAt: '${NOW}',
+          method: 'module'
+        }
+      };
+    }\n`,
+  );
+  const logs = [];
+
+  const exitCode = await runExplainerCli(
+    ['--request', requestPath, '--author-module', authorModulePath],
+    { log: (value) => logs.push(value) },
+  );
+
+  assert.equal(exitCode, 0, logs.join('\n'));
+  const result = JSON.parse(logs.at(-1));
+  assert.equal(result.outcome, 'built-not-durable');
+  const persistedRequest = await readFile(
+    join(result.runRoot, 'run-request.json'),
+    'utf8',
+  );
+  assert.doesNotMatch(persistedRequest, /author-module|author\.mjs/);
+  assert.equal(
+    JSON.parse(
+      await readFile(
+        join(result.runRoot, 'source/author/project-recap.json'),
+        'utf8',
+      ),
+    ).provenance.authorId,
+    'cli-fixture-author',
+  );
 });
 
 test('runs both canonical recipes config-free from directories without .oat files', async () => {
@@ -263,11 +542,132 @@ test('runs both canonical recipes config-free from directories without .oat file
       manifest.artifacts.every(({ status }) => status === 'built'),
       true,
     );
+    for (const relativePath of [
+      'run-request.json',
+      'source/content-approval.json',
+    ]) {
+      assert.equal(
+        manifest.immutableHashes[relativePath],
+        `sha256:${createHash('sha256')
+          .update(await readFile(join(result.runRoot, relativePath)))
+          .digest('hex')}`,
+        relativePath,
+      );
+    }
     assert.doesNotMatch(
       await readFile(join(result.runRoot, 'run-request.json'), 'utf8'),
       /Private transient direction/,
     );
   }
+});
+
+test('reusing a completed slug starts a clean independent run', async () => {
+  const fixture = await suppliedFixture();
+  const first = await runExplainer(fixture.request, { now: () => NOW });
+
+  const second = await runExplainer(fixture.request, {
+    now: () => '2026-07-17T21:00:00Z',
+  });
+
+  assert.equal(first.outcome, 'built-not-durable');
+  assert.equal(
+    second.outcome,
+    'built-not-durable',
+    JSON.stringify(second.errors),
+  );
+  assert.notEqual(second.runId, first.runId);
+  const manifest = JSON.parse(await readFile(second.manifestPath, 'utf8'));
+  assert.equal(manifest.runId, second.runId);
+});
+
+test('routes tagged program claims to matching narrative sections', async () => {
+  const fixture = await suppliedFixture('program-recap');
+  const taggedFactBase = suppliedFactBase();
+  taggedFactBase.claims = [
+    {
+      ...taggedFactBase.claims[0],
+      id: 'shared',
+      text: 'Shared program context.',
+    },
+    {
+      ...taggedFactBase.claims[0],
+      id: 'overview',
+      text: 'Program overview only.',
+      sections: ['program-overview'],
+    },
+    {
+      ...taggedFactBase.claims[0],
+      id: 'outcomes',
+      text: 'Per-wave outcomes only.',
+      sections: ['per-wave-outcomes'],
+    },
+  ];
+  taggedFactBase.unresolvedClaims = [
+    {
+      id: 'follow-up',
+      text: 'Owner confirmation is pending.',
+      reason: 'needs-confirmation',
+      citations: [{ sourceId: 'project', locator: 'approved-project.md:2' }],
+      sections: ['follow-up-ledger'],
+    },
+  ];
+  assert.equal(validateContract('fact-base', taggedFactBase).valid, true);
+  await writeFile(
+    fixture.factBasePath,
+    `${JSON.stringify(taggedFactBase, null, 2)}\n`,
+  );
+
+  const result = await runExplainer(
+    { ...fixture.request, mode: 'interactive' },
+    {
+      now: () => NOW,
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: NOW,
+        reviewer: 'fixture-reviewer',
+      },
+    },
+  );
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const markdown = await readFile(
+    join(result.runRoot, 'source/content/program-recap.md'),
+    'utf8',
+  );
+  const headings = [...markdown.matchAll(/^## (.+)$/gm)];
+  const sections = new Map(
+    headings.map((heading, index) => [
+      heading[1],
+      markdown
+        .slice(
+          heading.index + heading[0].length,
+          headings[index + 1]?.index ?? markdown.length,
+        )
+        .trim(),
+    ]),
+  );
+  assert.match(sections.get('Program Overview'), /Shared program context/);
+  assert.match(sections.get('Program Overview'), /Program overview only/);
+  assert.doesNotMatch(
+    sections.get('Program Overview'),
+    /Per-wave outcomes only/,
+  );
+  assert.equal(sections.get('Wave Map'), 'Shared program context.');
+  assert.match(sections.get('Per Wave Outcomes'), /Shared program context/);
+  assert.match(sections.get('Per Wave Outcomes'), /Per-wave outcomes only/);
+  assert.doesNotMatch(
+    sections.get('Per Wave Outcomes'),
+    /Program overview only/,
+  );
+  assert.match(sections.get('Follow Up Ledger'), /Shared program context/);
+  assert.match(
+    sections.get('Follow Up Ledger'),
+    /Needs confirmation: Owner confirmation is pending/,
+  );
 });
 
 test('federates explicit sources and invokes only the provider-neutral critic seam', async () => {
@@ -390,7 +790,9 @@ test('confines atomic package writes from symlinked site, content, nested ancest
     const runRoot = join(fixture.outputRoot, fixture.request.slug);
 
     if (scenario === 'site') {
-      await mkdir(runRoot, { recursive: true });
+      const seeded = await runExplainer(fixture.request, { now: () => NOW });
+      assert.equal(seeded.outcome, 'built-not-durable');
+      await rm(join(runRoot, 'site'), { recursive: true });
       await symlink(outside, join(runRoot, 'site'));
     }
 

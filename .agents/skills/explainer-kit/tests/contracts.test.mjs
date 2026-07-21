@@ -133,6 +133,7 @@ function manifest() {
       factBasePath: 'fact-base.json',
       factBaseHash: HASH_A,
       inputHashes: { 'plan.md': HASH_A },
+      authorResultPaths: ['source/author/hub.json'],
     },
     theme: { path: 'theme.resolved.json', hash: HASH_A, derived: false },
     artifacts: [
@@ -147,6 +148,9 @@ function manifest() {
       },
     ],
     immutableHashes: {
+      'run-request.json': HASH_A,
+      'source/content-approval.json': HASH_A,
+      'source/author/hub.json': HASH_A,
       'fact-base.json': HASH_A,
       'source/fact-base.md': HASH_A,
       'theme.resolved.json': HASH_A,
@@ -275,6 +279,33 @@ test('rejects unsafe paths, invalid render strategies, and duplicate paths', () 
       (error) => error.code === 'duplicate-artifact-path',
     ),
   );
+});
+
+test('requires complete immutable request, approval, and author provenance coverage', () => {
+  for (const relativePath of [
+    'run-request.json',
+    'source/content-approval.json',
+    'source/author/hub.json',
+  ]) {
+    const incomplete = manifest();
+    delete incomplete.immutableHashes[relativePath];
+
+    const result = validateContract('manifest', incomplete);
+    const expectedCode = relativePath.startsWith('source/author/')
+      ? 'immutable-package-incomplete'
+      : 'legacy-manifest-incomplete';
+
+    assert.equal(result.valid, false, relativePath);
+    assert.ok(
+      result.errors.some(
+        (error) =>
+          error.code === expectedCode &&
+          (expectedCode !== 'legacy-manifest-incomplete' ||
+            error.message.includes(relativePath)),
+      ),
+      `${relativePath}: ${JSON.stringify(result.errors)}`,
+    );
+  }
 });
 
 test('rejects non-POSIX and unsafe path values across public contracts', () => {

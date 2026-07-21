@@ -97,13 +97,26 @@ test('unattended approval records lifecycle provenance without prompting', async
     run,
     'unattended',
     reviewedSource,
+    ['source/author/project-explainer.json'],
   );
 
   assert.equal(approval.status, 'approved');
   assert.equal(approval.canResume, true);
   const persisted = await readApproval(run);
   assert.deepEqual(persisted.reviewedSource, reviewedSource);
+  assert.deepEqual(persisted.authorResultPaths, [
+    'source/author/project-explainer.json',
+  ]);
   assert.equal(persisted.attempts.length, 0);
+});
+
+test('unattended approval rejects missing author provenance', async () => {
+  const run = await makeRun('unattended');
+
+  await assert.rejects(
+    resolveContentApproval(run, 'unattended'),
+    /author result paths/i,
+  );
 });
 
 test('rejects invalid modes and malformed explicit review decisions', async () => {

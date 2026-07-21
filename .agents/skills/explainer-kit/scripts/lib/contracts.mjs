@@ -12,6 +12,8 @@ const SCHEMA_FILES = {
   'durability-evidence': 'durability-evidence.schema.json',
   'publish-request': 'publish-request.schema.json',
   'publish-receipt': 'publish-receipt.schema.json',
+  'author-request': 'author-request.schema.json',
+  'author-result': 'author-result.schema.json',
 };
 
 const SCHEMAS = Object.fromEntries(
@@ -450,6 +452,46 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
+  if (kind === 'author-request') {
+    const requiredNarrative = Array.isArray(value.recipe?.requiredNarrative)
+      ? value.recipe.requiredNarrative
+      : [];
+    const outlineIds = Array.isArray(value.narrativeOutline)
+      ? value.narrativeOutline.map((section) => section?.id)
+      : [];
+    if (
+      requiredNarrative.length !== outlineIds.length ||
+      requiredNarrative.some((id, index) => outlineIds[index] !== id)
+    ) {
+      add(
+        errors,
+        '$.narrativeOutline',
+        'narrative-outline-mismatch',
+        'Author request narrative outline must exactly match recipe requiredNarrative order.',
+      );
+    }
+  }
+
+  if (kind === 'author-result') {
+    for (const [index, section] of (Array.isArray(value.content?.sections)
+      ? value.content.sections
+      : []
+    ).entries()) {
+      if (
+        isObject(section) &&
+        typeof section.prose === 'string' &&
+        section.prose.trim().length === 0
+      ) {
+        add(
+          errors,
+          `$.content.sections[${index}].prose`,
+          'empty-prose',
+          'Authored section prose must contain non-whitespace text.',
+        );
+      }
+    }
+  }
+
   if (kind === 'manifest') {
     const paths = [];
     for (const artifact of Array.isArray(value.artifacts)
@@ -502,9 +544,17 @@ function validateCrossRecord(kind, value, context, errors) {
       );
     }
 
+    const requiredProvenance = [
+      'run-request.json',
+      'source/content-approval.json',
+    ];
     const expectedImmutable = new Set([
+      ...requiredProvenance,
       value.source?.factBasePath,
       'source/fact-base.md',
+      ...(Array.isArray(value.source?.authorResultPaths)
+        ? value.source.authorResultPaths
+        : []),
       value.theme?.path,
       ...(Array.isArray(value.artifacts)
         ? value.artifacts.flatMap((artifact) => [
@@ -520,6 +570,17 @@ function validateCrossRecord(kind, value, context, errors) {
     const recordedImmutable = isObject(value.immutableHashes)
       ? new Set(Object.keys(value.immutableHashes))
       : new Set();
+    const missingLegacyPaths = requiredProvenance.filter(
+      (path) => !recordedImmutable.has(path),
+    );
+    if (missingLegacyPaths.length > 0) {
+      add(
+        errors,
+        '$.immutableHashes',
+        'legacy-manifest-incomplete',
+        `Legacy manifest is missing immutable coverage for ${missingLegacyPaths.join(', ')}; regenerate the recap package before archival.`,
+      );
+    }
     if (
       expectedImmutable.size !== recordedImmutable.size ||
       [...expectedImmutable].some((path) => !recordedImmutable.has(path))

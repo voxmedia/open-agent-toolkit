@@ -13,6 +13,7 @@ import {
   createInitToolsCommand,
   formatReconcileSummary,
 } from './index';
+import { buildProjectManagementAgentsSectionBody } from './project-management/agents-guidance';
 import { PACK_METADATA } from './shared/skill-manifest';
 
 interface HarnessOptions {
@@ -1151,18 +1152,25 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('calls upsertAgentsMdSection with workflows key and selected packs', async () => {
+  it('writes tool-pack and project-management AGENTS sections', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
-    expect(upsertAgentsMdSection).toHaveBeenCalledWith(
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(2);
+    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
+      1,
       '/tmp/workspace',
       'tools',
       expect.stringContaining('Tool Packs'),
+    );
+    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
+      2,
+      '/tmp/workspace',
+      'project-management',
+      expect.stringContaining('### Decision Records'),
     );
   });
 
@@ -1211,7 +1219,7 @@ describe('createInitToolsCommand', () => {
       interactive: false,
     });
 
-    upsertAgentsMdSection.mockResolvedValueOnce({ action: 'no-change' });
+    upsertAgentsMdSection.mockResolvedValue({ action: 'no-change' });
 
     await runCommand(command, [], ['--scope', 'all']);
 
@@ -1225,7 +1233,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(1);
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(2);
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toContain('_(user scope)_');
     expect(body).toContain('`~/.agents/skills/`');
@@ -1711,6 +1719,32 @@ describe('buildToolPacksSectionBody', () => {
 
     expect(body).not.toContain('### Workflow Execution Continuation');
     expect(body).not.toContain('configured HiLL checkpoint');
+  });
+
+  it('builds the project-management routing and decision guidance', () => {
+    const body = buildProjectManagementAgentsSectionBody();
+
+    expect(body).toContain('### Project Management');
+    expect(body).toContain('.oat/repo/AGENTS.md');
+    expect(body).toContain('`pjm/` for active state');
+    expect(body).toContain('`reference/` for durable records');
+    expect(body).toContain('### Decision Records');
+    expect(body).toContain('.oat/repo/reference/decisions/index.md');
+    expect(body).toContain('oat-pjm-decision');
+    expect(body).toContain('oat decision new');
+    expect(body).toContain('oat pjm init');
+    expect(body).toContain('oat decision regenerate-index');
+  });
+
+  it('keeps PJM guidance out of the tool-pack listing section', () => {
+    const body = buildToolPacksSectionBody([
+      { pack: 'project-management', scope: 'project' },
+    ]);
+
+    expect(body).not.toContain('### Project Management');
+    expect(body).not.toContain('.oat/repo/AGENTS.md');
+    expect(body).not.toContain('### Decision Records');
+    expect(body).not.toContain('.oat/repo/reference/decisions/index.md');
   });
 
   it('marks core pack as user-scoped in AGENTS section', () => {

@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 1.0.0
+version: 1.0.2
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
@@ -55,9 +55,17 @@ discovery, theme resolution, rendering, QA, and manifest/build-record
 persistence. It runs without OAT files or ambient configuration. Supplied fact
 bases receive only lightweight consistency/freshness checks. Federated inputs
 require a provider-neutral critic callback and invoke it exactly once.
+Optional claim `sections` tags route facts to matching recipe narrative
+sections; untagged claims remain shared context for every required section.
 
-Unattended calls use explicit, already-approved source artifacts, persist their
-review provenance in `source/content-approval.json`, and never prompt.
+Unattended calls use explicit, already-approved source artifacts and require a
+provider-neutral author callback once per recipe artifact. In-process callers
+supply `options.author`; JSON-only CLI callers supply `--author-module`. The
+core validates exact narrative sections and non-secret author provenance,
+rejects excessive verbatim source overlap, retains each validated result under
+`source/author/`, persists review provenance in
+`source/content-approval.json`, and never prompts. Keep executable callback
+references out of the persisted run request.
 
 Interactive runs stop with an `incomplete` outcome after writing
 `source/content/*.md`. Review and correct that Markdown, then provide an

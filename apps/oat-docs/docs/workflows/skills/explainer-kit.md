@@ -20,37 +20,80 @@ OAT lifecycle callers use the adapter.
 
 ## Recipes
 
-The v1 project recipes serve different lifecycle jobs:
+The core ships four versioned recipes:
 
-| Recipe              | Lifecycle use                                      | Required narrative                                                                                                    |
-| ------------------- | -------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `project-explainer` | Working explanation after project planning         | planned architecture, decisions, risks, phases, and validation approach                                               |
-| `project-recap`     | Final record after implementation and final review | original request, key agent decisions, as-built architecture, implementation record, validation evidence, and outcome |
+| Recipe              | Use                                                    | Required narrative                                                                                                    |
+| ------------------- | ------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `project-explainer` | Working explanation after project planning             | planned architecture, decisions, risks, phases, and validation approach                                               |
+| `project-recap`     | Final record after implementation and final review     | original request, key agent decisions, as-built architecture, implementation record, validation evidence, and outcome |
+| `program-recap`     | Bird's-eye record of a multi-wave delivery program     | program overview, wave map and outcomes, convention evolution, aggregate numbers, and follow-up ledger                |
+| `engineer-tour`     | Engineer-facing orientation to a codebase and its flow | orientation, architecture, execution flow, key code, and validation                                                   |
 
-Both recipes bind one project source set. The adapter binds `plan.md`,
-`design.md`, and `spec.md` for a project explainer; a project recap can also
-include `implementation.md` and `summary.md`.
+The OAT project lifecycle owns `project-explainer` and `project-recap`. Both
+bind one project source set. The adapter binds `plan.md`, `design.md`, and
+`spec.md` for a project explainer; a project recap can also include
+`implementation.md` and `summary.md`. Wave callers supply the program source
+set for `program-recap`; direct core callers can use `engineer-tour` without
+adding an OAT dependency.
 
-## Themes
+## Content authoring and review
 
-Every artifact set uses one resolved theme. The bundled defaults are the
-`neutral` palette and `clean` visual profile. The core also ships the `ocean`,
-`ember`, `forest`, and `violet` palettes plus `editorial` and `technical`
-profiles.
+Every unattended run requires one provider-neutral author. The core invokes
+the author once per recipe artifact with the exact narrative outline,
+reconciled fact base, and bounded-discovery context. It accepts only a
+schema-valid result with the required section IDs, substantive prose, and
+non-secret provenance. Each section is checked independently for excessive
+verbatim overlap with the fact base so one copied section cannot be hidden by
+otherwise original prose.
 
-A caller may select named palette/profile values, supply a validated theme
-bundle, or provide per-run art direction. A supplied bundle takes precedence
-over named selections. The resolved concrete bundle is retained with the run;
-raw art-direction text is not retained by default. Themes contain validated
-light and dark modes, while the render strategy chooses either the default mode
-or a user-switchable result.
+In-process core callers supply `options.author`; core CLI callers use
+`--author-module`. The OAT adapter accepts either an in-process `author` or an
+`authorModulePath` and rejects zero or two seams for unattended runs before it
+invokes the core. Callback and module paths are transient. Validated results
+are retained under `source/author/` and covered by the run's immutable hashes.
+
+Interactive runs may omit an author. They pause after writing
+`source/content/*.md`, require an explicit content-review decision, and resume
+the same run only after approval. Content approval never authorizes publishing.
+
+## Curated styles and themes
+
+Every artifact set uses one resolved theme. The primary selection surface is
+one of four complete curated styles:
+
+- `clean-neutral` — restrained neutral default
+- `business-corporate` — structured corporate presentation
+- `navy-ocean` — navy-led technical and operational presentation
+- `dark-edgy` — solid dark canvas with high-contrast editorial accents
+
+A caller may select a style, supply a validated theme bundle, or provide
+per-run art direction. A supplied bundle takes precedence over a style. Legacy
+`palette` and `visualProfile` inputs remain nullable compatibility fields, but
+an explicit style wins and legacy use emits a deprecation warning. When no
+selection is explicit, the core uses `clean-neutral` and records the fallback.
+
+The resolved concrete bundle is retained with the run; raw art-direction text
+is not retained by default. Every bundle contains validated light and dark
+modes. The render strategy chooses either the default mode or a user-switchable
+result without changing the bundle identity.
 
 ## Build, durability, and publish
 
 Missing publish configuration means build-only. A completed build writes the
-source package, resolved theme, `manifest.json`, `build-record.json`, and the
-rendered `site/` tree. Rendering or publishing failures preserve successful
+privacy-safe request, content approval, fact base, author results, authored
+content, resolved theme, `manifest.json`, `build-record.json`, and the rendered
+`site/` tree. Rendering or publishing failures preserve successful
 intermediates and recovery information.
+
+`manifest.immutableHashes` covers the exact retained bytes for
+`run-request.json`, content approval, fact-base JSON and Markdown, declared
+author results, authored Markdown, the resolved theme, and every built
+artifact. Canonical fact-base and theme hashes identify normalized objects;
+they are intentionally distinct from serialized file-byte hashes. The mutable
+manifest and build record are excluded from their own durability evidence and
+are committed separately after verification. Older v1 manifests without
+complete coverage fail with a legacy-manifest diagnostic and must be
+regenerated.
 
 Build success and durability are separate:
 
@@ -69,7 +112,7 @@ content type and SHA-256 response bytes at public URLs, and writes
 fragments. Publishing is additive and does not run a root-wide destructive
 sync.
 
-Release validation drives the bounded palette/profile/template matrix in a real
+Release validation drives the bounded curated-style/template matrix in a real
 installed Chromium browser and retains machine-readable viewport, clipping,
 motion, keyboard, no-JavaScript, and print measurements. The gate fails closed
 when no supported browser executable is available.

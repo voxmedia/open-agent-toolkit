@@ -1,0 +1,70 @@
+{
+  "schemaVersion": "explainer-kit.run-request/v1",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "slug": "explainer-kit-final-recap",
+  "outputRoot": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/explainers",
+  "factBase": {
+    "mode": "federated",
+    "freshnessPolicy": "live-wins",
+    "sources": [
+      {
+        "id": "plan",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/plan.md",
+        "role": "project",
+        "sourceSetId": "explainer-kit",
+        "authoritativeFor": ["phases", "validation-approach"]
+      },
+      {
+        "id": "design",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/design.md",
+        "role": "project",
+        "sourceSetId": "explainer-kit",
+        "authoritativeFor": ["planned-architecture", "decisions", "risks"]
+      },
+      {
+        "id": "spec",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/spec.md",
+        "role": "project",
+        "sourceSetId": "explainer-kit",
+        "authoritativeFor": ["original-request", "requirements"]
+      },
+      {
+        "id": "implementation",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/implementation.md",
+        "role": "project",
+        "sourceSetId": "explainer-kit",
+        "authoritativeFor": [
+          "key-agent-decisions",
+          "as-built-architecture",
+          "implementation-record",
+          "validation-evidence"
+        ]
+      },
+      {
+        "id": "summary",
+        "kind": "file",
+        "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/explainer-kit/.oat/projects/shared/explainer-kit/summary.md",
+        "role": "project",
+        "sourceSetId": "explainer-kit",
+        "authoritativeFor": ["outcome"]
+      }
+    ]
+  },
+  "durability": {
+    "strategy": "none"
+  },
+  "privacy": {
+    "retainRawArtDirection": false
+  },
+  "mode": "unattended",
+  "theme": {
+    "renderStrategy": "default-only"
+  }
+}

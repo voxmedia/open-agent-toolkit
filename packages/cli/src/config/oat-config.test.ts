@@ -2271,6 +2271,7 @@ describe('oat-config', () => {
           version: 1,
           explainers: {
             defaults: {
+              style: ' business-corporate ',
               palette: ' ocean ',
               visualProfile: ' editorial ',
               themeBundlePath: 'themes/team.json',
@@ -2296,6 +2297,7 @@ describe('oat-config', () => {
       await expect(readOatConfig(repoRoot)).resolves.toMatchObject({
         explainers: {
           defaults: {
+            style: 'business-corporate',
             palette: 'ocean',
             visualProfile: 'editorial',
             themeBundlePath: 'themes/team.json',
@@ -2327,6 +2329,7 @@ describe('oat-config', () => {
         version: 1,
         explainers: {
           defaults: {
+            style: 'navy-ocean',
             palette: 'violet',
             visualProfile: 'clean',
             themeBundlePath: '/tmp/private-theme.json',
@@ -2357,6 +2360,7 @@ describe('oat-config', () => {
       await expect(readOatLocalConfig(repoRoot)).resolves.toMatchObject({
         explainers: {
           defaults: {
+            style: 'navy-ocean',
             palette: 'violet',
             visualProfile: 'clean',
             themeBundlePath: '/tmp/private-theme.json',
@@ -2367,12 +2371,29 @@ describe('oat-config', () => {
       await expect(readUserConfig(userConfigDir)).resolves.toMatchObject({
         explainers: {
           defaults: {
+            style: 'navy-ocean',
             palette: 'violet',
             visualProfile: 'clean',
           },
           publish: { awsProfile: 'work-sso' },
         },
       });
+    });
+
+    it('drops unknown named explainer styles', async () => {
+      const repoRoot = await createRepoRoot();
+      await writeFile(
+        join(repoRoot, '.oat', 'config.json'),
+        JSON.stringify({
+          version: 1,
+          explainers: { defaults: { style: 'vintage' } },
+        }),
+        'utf8',
+      );
+
+      await expect(readOatConfig(repoRoot)).resolves.not.toHaveProperty(
+        'explainers.defaults.style',
+      );
     });
   });
 });

@@ -71,6 +71,10 @@ import {
 } from './install-state';
 import { createInitToolsProjectManagementCommand } from './project-management';
 import {
+  buildProjectManagementAgentsSectionBody,
+  PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+} from './project-management/agents-guidance';
+import {
   installProjectManagement as defaultInstallProjectManagement,
   type InstallProjectManagementOptions,
   type InstallProjectManagementResult,
@@ -1319,12 +1323,30 @@ export async function runInitTools(
       'tools',
       sectionBody,
     );
+    const projectManagementSectionResult = selectedPacks.includes(
+      'project-management',
+    )
+      ? await dependencies.upsertAgentsMdSection(
+          projectRoot,
+          PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
+          buildProjectManagementAgentsSectionBody(),
+        )
+      : null;
     // Migrate: remove legacy <!-- OAT workflows --> section if present
     await dependencies.removeAgentsMdSection(projectRoot, 'workflows');
 
     if (!context.json && sectionResult.action !== 'no-change') {
       context.logger.info(
         `AGENTS.md tool packs section ${sectionResult.action}.`,
+      );
+    }
+    if (
+      !context.json &&
+      projectManagementSectionResult !== null &&
+      projectManagementSectionResult.action !== 'no-change'
+    ) {
+      context.logger.info(
+        `AGENTS.md project-management section ${projectManagementSectionResult.action}.`,
       );
     }
 

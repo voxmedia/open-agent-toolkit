@@ -106,18 +106,19 @@ The `oat-explainer-kit` adapter owns two typed config groups. Build and publish
 plumbing uses `explainers.*`; project lifecycle preferences use
 `workflow.explainers.*`.
 
-| Key                                    | Type                 | Stored scopes       | Default   |
-| -------------------------------------- | -------------------- | ------------------- | --------- |
-| `explainers.defaults.palette`          | non-empty string     | local, shared, user | `neutral` |
-| `explainers.defaults.visualProfile`    | non-empty string     | local, shared, user | `clean`   |
-| `explainers.defaults.themeBundlePath`  | path                 | local, shared       | unset     |
-| `explainers.publish.provider`          | `s3-static`          | shared              | unset     |
-| `explainers.publish.s3Uri`             | `s3://` URI          | shared              | unset     |
-| `explainers.publish.publicBaseUrl`     | HTTPS URL            | shared              | unset     |
-| `explainers.publish.awsRegion`         | non-empty string     | shared              | unset     |
-| `explainers.publish.awsProfile`        | non-empty string     | local, user         | unset     |
-| `workflow.explainers.projectExplainer` | `always\|ask\|never` | local, shared, user | `ask`     |
-| `workflow.explainers.projectRecap`     | `always\|ask\|never` | local, shared, user | `ask`     |
+| Key                                    | Type                         | Stored scopes       | Default         |
+| -------------------------------------- | ---------------------------- | ------------------- | --------------- |
+| `explainers.defaults.style`            | curated style name           | local, shared, user | `clean-neutral` |
+| `explainers.defaults.palette`          | nullable string (deprecated) | local, shared, user | `null`          |
+| `explainers.defaults.visualProfile`    | nullable string (deprecated) | local, shared, user | `null`          |
+| `explainers.defaults.themeBundlePath`  | path                         | local, shared       | unset           |
+| `explainers.publish.provider`          | `s3-static`                  | shared              | unset           |
+| `explainers.publish.s3Uri`             | `s3://` URI                  | shared              | unset           |
+| `explainers.publish.publicBaseUrl`     | HTTPS URL                    | shared              | unset           |
+| `explainers.publish.awsRegion`         | non-empty string             | shared              | unset           |
+| `explainers.publish.awsProfile`        | non-empty string             | local, user         | unset           |
+| `workflow.explainers.projectExplainer` | `always\|ask\|never`         | local, shared, user | `ask`           |
+| `workflow.explainers.projectRecap`     | `always\|ask\|never`         | local, shared, user | `ask`           |
 
 Stored values resolve `local > shared > user > default` where the key permits
 each scope. Explicit runtime inputs take precedence for one invocation without
@@ -125,10 +126,23 @@ mutating stored config. Use `oat config get <key> --json` to inspect both the
 resolved value and its source, and `oat config describe <key>` for its exact
 scope and type contract.
 
+For example:
+
+```bash
+oat config set explainers.defaults.style navy-ocean --shared
+oat config get explainers.defaults.style --json
+oat config describe explainers.defaults.style
+```
+
 Shared theme-bundle paths must be repository-relative. Local paths may be
 repository-relative or absolute; user config cannot set a theme-bundle path.
-A supplied bundle takes precedence over named palette and profile defaults and
-produces a warning.
+A supplied bundle takes precedence over all named selections. Otherwise choose
+one of `clean-neutral`, `business-corporate`, `navy-ocean`, or `dark-edgy` with
+`explainers.defaults.style`. An explicit style takes precedence over legacy
+`palette` and `visualProfile` values. Those matrix fields remain available for
+advanced compatibility but emit deprecation warnings. When no source explicitly
+selects a theme, the core uses `clean-neutral` and records a visible fallback
+warning.
 
 Publishing remains build-only when `explainers.publish.provider` is unset.
 When it is `s3-static`, `s3Uri`, `publicBaseUrl`, and `awsRegion` are all

@@ -39,6 +39,7 @@ test('runs a config-free project explainer from the packaged core only', async (
   assert.equal(result.outcome, 'built-not-durable');
   assert.equal(result.errors, undefined);
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  await assertAuthoredRun(result.runRoot, manifest);
   const request = await readFile(fixture.requestPath, 'utf8');
   assert.equal(manifest.schemaVersion, 'explainer-kit.manifest/v1');
   assert.equal(manifest.recipe.id, 'project-explainer');
@@ -49,13 +50,18 @@ test('runs a config-free project explainer from the packaged core only', async (
 });
 
 test('runs the packaged adapter against the user-scoped packaged core', async () => {
+  assert.equal(
+    fixture.adapterRunArgs.script,
+    `${fixture.adapterRoot}/scripts/run.mjs`,
+  );
   const result = await runJson(fixture.adapterRunArgs);
 
   assert.equal(result.compatibility.coreRoot, fixture.coreRoot);
-  assert.equal(result.compatibility.installedVersion, '1.0.0');
+  assert.equal(result.compatibility.installedVersion, '1.0.2');
   assert.equal(result.request.recipe.id, 'project-explainer');
   assert.equal(result.result.outcome, 'built-not-durable');
   assert.equal(result.manifest.schemaVersion, 'explainer-kit.manifest/v1');
+  await assertAuthoredRun(result.result.runRoot, result.manifest);
   assert.doesNotMatch(
     JSON.stringify(result),
     new RegExp(escapeRegExp(fixture.sourceCheckoutRoot)),
@@ -78,7 +84,7 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
   const compatibleSkill = await readFile(skillPath, 'utf8');
   await writeFile(
     skillPath,
-    compatibleSkill.replace(/^version: 1\.0\.0$/m, 'version: 0.9.0'),
+    compatibleSkill.replace(/^version: 1\.0\.2$/m, 'version: 0.9.0'),
   );
   const incompatible = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(incompatible.outcome, 'failed');
@@ -107,6 +113,24 @@ async function runJsonFailure(invocation) {
     assert.equal(error.code, 1);
     return JSON.parse(error.stderr);
   }
+}
+
+async function assertAuthoredRun(runRoot, manifest) {
+  assert.deepEqual(manifest.source.authorResultPaths, [
+    'source/author/project-explainer.json',
+  ]);
+  const authorResult = JSON.parse(
+    await readFile(
+      `${runRoot}/${manifest.source.authorResultPaths[0]}`,
+      'utf8',
+    ),
+  );
+  assert.deepEqual(authorResult.provenance, {
+    authorId: 'packaged-layout-provider-neutral-author',
+    generatedAt: '2026-07-18T14:00:00.000Z',
+    method: 'structured-evidence-synthesis',
+    model: 'packaged-layout-author/v1',
+  });
 }
 
 function escapeRegExp(value) {
