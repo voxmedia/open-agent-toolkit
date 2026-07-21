@@ -1864,9 +1864,7 @@ git commit -m "fix(prev1-t04): normalize codex config indentation"
 
 ### Task prev1-t05: (revision) Validate the packaged revision with the live W6 recap
 
-**Status:** blocked
-**Blocker:** Restore the retained `wave-6-execution` archive from its recorded
-S3 snapshot and supply a real W6 author module.
+**Status:** in_progress
 
 **Files:**
 

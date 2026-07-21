@@ -1,10 +1,7 @@
 ---
 oat_current_task: prev1-t05
 oat_last_commit: 0895a8c0
-oat_blockers:
-  - task_id: prev1-t05
-    reason: 'Restore the retained wave-6-execution archive and supply a real author module.'
-    since: 2026-07-20
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -41,7 +38,7 @@ oat_pr_status: merged # null | ready | open | closed | merged — actual PR stat
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/166 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-16T17:54:10.666Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-20T23:49:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-21T00:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -53,7 +50,7 @@ oat_generated: false
 
 ## Current Phase
 
-Revision 1 — 42/43 tasks complete; `prev1-t05` blocked
+Revision 1 — 42/43 tasks complete; `prev1-t05` in progress
 
 ## Artifacts
 
@@ -61,7 +58,7 @@ Revision 1 — 42/43 tasks complete; `prev1-t05` blocked
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (Revision 1 added; 43 total tasks)
-- **Implementation:** `implementation.md` (blocked; 42/43 tasks)
+- **Implementation:** `implementation.md` (in progress; 42/43 tasks)
 
 ## Progress
 
@@ -127,7 +124,8 @@ Revision 1 — 42/43 tasks complete; `prev1-t05` blocked
 - ✓ Complete-package hashing, unattended authoring, and four curated styles
   implemented in `prev1-t01` through `prev1-t03`
 - ✓ Generated Codex config indentation normalized in `prev1-t04`
-- ⧗ Restore the retained W6 archive and author module for `prev1-t05`
+- ✓ Retained W6 archive restored from its recorded S3 snapshot
+- ⧗ Run packaged W6 acceptance with a real author module in `prev1-t05`
 
 ## Blockers
 
@@ -135,5 +133,5 @@ None.
 
 ## Next Milestone
 
-Restore the retained W6 acceptance inputs for `prev1-t05`, pass review and
-release gates, then open the follow-up PR.
+Run the retained W6 acceptance inputs for `prev1-t05`, pass review and release
+gates, then open the follow-up PR.

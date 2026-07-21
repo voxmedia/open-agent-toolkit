@@ -1,10 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - task_id: prev1-t05
-    reason: 'Restore the retained wave-6-execution archive and supply a real author module.'
-    since: 2026-07-20
+oat_blockers: []
 oat_last_updated: 2026-07-20
 oat_current_task_id: prev1-t05
 oat_generated: false
@@ -27,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | complete  | 6     | 6/6       |
-| Phase 2    | complete  | 10    | 10/10     |
-| Phase 3    | complete  | 9     | 9/9       |
-| Phase 4    | complete  | 9     | 9/9       |
-| Phase 5    | completed | 4     | 4/4       |
-| Revision 1 | blocked   | 5     | 4/5       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | complete    | 6     | 6/6       |
+| Phase 2    | complete    | 10    | 10/10     |
+| Phase 3    | complete    | 9     | 9/9       |
+| Phase 4    | complete    | 9     | 9/9       |
+| Phase 5    | completed   | 4     | 4/4       |
+| Revision 1 | in_progress | 5     | 4/5       |
 
 **Total:** 42/43 tasks completed
 
@@ -1117,20 +1114,20 @@ this candidate must not be used for external acceptance.
 
 ### Task Outcomes
 
-| Task      | Status    | Commit     | Verification                                                   |
-| --------- | --------- | ---------- | -------------------------------------------------------------- |
-| prev1-t01 | completed | `4f456a91` | Core contracts/run tests and CLI archive tests passed          |
-| prev1-t02 | completed | `8708f4d3` | Schema, approval, QA, and run integration tests passed         |
-| prev1-t03 | completed | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed    |
-| prev1-t04 | completed | `0895a8c0` | Codex config codec and full repository verification passed     |
-| prev1-t05 | blocked   | —          | Retained W6 archive and real author module unavailable locally |
+| Task      | Status      | Commit     | Verification                                                |
+| --------- | ----------- | ---------- | ----------------------------------------------------------- |
+| prev1-t01 | completed   | `4f456a91` | Core contracts/run tests and CLI archive tests passed       |
+| prev1-t02 | completed   | `8708f4d3` | Schema, approval, QA, and run integration tests passed      |
+| prev1-t03 | completed   | `d8dec777` | Theme, render, visual, adapter, and CLI config tests passed |
+| prev1-t04 | completed   | `0895a8c0` | Codex config codec and full repository verification passed  |
+| prev1-t05 | in_progress | —          | Retained W6 archive restored from its recorded S3 snapshot  |
 
 The aggregate gate reached `pnpm test` but hit one five-second timeout in
 `post-implement-sequence-contracts.test.ts`; the isolated retry passed. A full
 phase gate still must pass before review.
 
-**Next:** Restore the retained W6 archive from its recorded S3 snapshot, supply
-a real author module, and resume acceptance.
+**Next:** Build the packaged candidate, run the retained W6 inputs with a real
+author module, then complete review and release acceptance.
 
 ---
 
