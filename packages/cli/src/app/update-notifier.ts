@@ -1,6 +1,7 @@
 import { readFile as readFileDefault } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { formatGlobalCliInstallCommand } from '@app/global-cli-installer';
 import { readUserConfig, type UserConfig } from '@config/oat-config';
 import { atomicWriteJson } from '@fs/io';
 import type { CliLogger } from '@ui/logger';
@@ -231,10 +232,15 @@ function shouldNotify(
   );
 }
 
-function formatNotice(currentVersion: string, latestVersion: string): string {
+function formatNotice(
+  currentVersion: string,
+  latestVersion: string,
+  argv: string[],
+  env: NodeJS.ProcessEnv,
+): string {
   return (
     `Update available: ${currentVersion} → ${latestVersion}\n` +
-    'Run: npm install -g @open-agent-toolkit/cli@latest'
+    `Run: ${formatGlobalCliInstallCommand('@open-agent-toolkit/cli@latest', argv, env)}`
   );
 }
 
@@ -349,7 +355,12 @@ export async function maybeNotifyAboutUpdate(
     ) {
       try {
         options.logger.warn(
-          formatNotice(options.currentVersion, state.latestVersion),
+          formatNotice(
+            options.currentVersion,
+            state.latestVersion,
+            options.argv,
+            options.env,
+          ),
         );
         state.cache = {
           ...state.cache,
