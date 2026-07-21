@@ -49,10 +49,13 @@ export async function createPackagedLayout() {
 
     const factBasePath = join(root, 'approved-fact-base.json');
     const requestPath = join(root, 'core-request.json');
+    const authorModulePath = join(root, 'author.mjs');
     const criticModulePath = join(root, 'critic.mjs');
+    const adapterRunnerPath = join(root, 'adapter-runner.mjs');
     const adapterContextPath = join(root, 'adapter-context.json');
     await Promise.all([
       writeJson(factBasePath, suppliedFactBase()),
+      writeAuthorModule(authorModulePath),
       writeFile(
         criticModulePath,
         `export async function critic() {
@@ -64,6 +67,7 @@ export async function createPackagedLayout() {
 }
 `,
       ),
+      writeAdapterRunner(adapterRunnerPath),
     ]);
     await writeJson(requestPath, {
       schemaVersion: 'explainer-kit.run-request/v1',
@@ -92,6 +96,7 @@ export async function createPackagedLayout() {
       activeProject: projectRelative,
       recipe: 'project-explainer',
       slug: 'packaged-adapter',
+      authorModulePath,
       criticModulePath,
       mode: 'unattended',
     });
@@ -112,12 +117,12 @@ export async function createPackagedLayout() {
       requestPath,
       coreRunArgs: {
         script: join(coreRoot, 'scripts', 'run.mjs'),
-        args: ['--request', requestPath],
+        args: ['--request', requestPath, '--author-module', authorModulePath],
         cwd: root,
         env,
       },
       adapterRunArgs: {
-        script: join(adapterRoot, 'scripts', 'run.mjs'),
+        script: adapterRunnerPath,
         args: ['--context', adapterContextPath],
         cwd: repoRoot,
         env,
@@ -179,6 +184,76 @@ process.stdout.write(JSON.stringify({
   value: values[key] ?? null,
   source: 'default',
 }));
+`,
+  );
+  await chmod(path, 0o755);
+}
+
+async function writeAuthorModule(path) {
+  await writeFile(
+    path,
+    `export async function author(request) {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v1',
+    artifactId: request.artifact.id,
+    content: {
+      title: 'Packaged Project Explainer',
+      description: 'A packaged execution generated from approved project evidence.',
+      sections: request.narrativeOutline.map(({ id, title }) => ({
+        id,
+        title,
+        prose: \`The packaged author synthesized the \${title.toLowerCase()} section from approved project evidence while preserving the destination-neutral explainer contract.\`,
+      })),
+    },
+    provenance: {
+      authorId: 'packaged-layout-provider-neutral-author',
+      generatedAt: '${NOW}',
+      method: 'structured-evidence-synthesis',
+      model: 'packaged-layout-author/v1',
+    },
+  };
+}
+`,
+  );
+}
+
+async function writeAdapterRunner(path) {
+  await writeFile(
+    path,
+    `#!/usr/bin/env node
+import { readFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
+
+if (process.argv.length !== 4 || process.argv[2] !== '--context') {
+  throw new Error('Usage: adapter-runner.mjs --context <adapter-context.json>');
+}
+const contextPath = process.argv[3];
+const context = JSON.parse(await readFile(contextPath, 'utf8'));
+const adapter = await import(
+  pathToFileURL(\`\${context.adapterRoot}/scripts/run.mjs\`).href
+);
+const authorModule = await import(pathToFileURL(context.authorModulePath).href);
+delete context.authorModulePath;
+
+try {
+  const result = await adapter.runOatExplainer({
+    ...context,
+    coreOptions: { author: authorModule.author },
+  });
+  process.stdout.write(\`\${JSON.stringify(result, null, 2)}\\n\`);
+  process.exitCode = result.result.outcome === 'failed' ? 1 : 0;
+} catch (error) {
+  process.stderr.write(
+    \`\${JSON.stringify({
+      outcome: 'failed',
+      errors: [{
+        code: error.code ?? 'E_ADAPTER',
+        message: error instanceof Error ? error.message : String(error),
+      }],
+    }, null, 2)}\\n\`,
+  );
+  process.exitCode = 1;
+}
 `,
   );
   await chmod(path, 0o755);

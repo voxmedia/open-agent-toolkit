@@ -51,10 +51,12 @@ describe('archive utils', () => {
   async function createRecapPackage(
     projectPath: string,
     {
+      distinctCanonicalHashes = false,
       outcome = 'built-not-durable',
       recipeId = 'project-recap',
       runName = 'selected-run',
     }: {
+      distinctCanonicalHashes?: boolean;
       outcome?: 'built-not-durable' | 'failed' | 'incomplete';
       recipeId?: string;
       runName?: string;
@@ -100,13 +102,17 @@ describe('archive utils', () => {
         createdAt: '2026-04-01T12:34:56.000Z',
         source: {
           factBasePath: 'source/fact-base.json',
-          factBaseHash: immutableHashes['source/fact-base.json'],
+          factBaseHash: distinctCanonicalHashes
+            ? `sha256:${'b'.repeat(64)}`
+            : immutableHashes['source/fact-base.json'],
           inputHashes: {},
           authorResultPaths: ['source/author/recap.json'],
         },
         theme: {
           path: 'theme.resolved.json',
-          hash: immutableHashes['theme.resolved.json'],
+          hash: distinctCanonicalHashes
+            ? `sha256:${'c'.repeat(64)}`
+            : immutableHashes['theme.resolved.json'],
           derived: false,
         },
         artifacts: [
@@ -383,6 +389,30 @@ describe('archive utils', () => {
       );
     },
   );
+
+  it('accepts distinct canonical object hashes while verifying complete file-byte coverage', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      distinctCanonicalHashes: true,
+    });
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(8);
+    await expect(access(projectPath)).rejects.toThrow();
+  });
 
   it('preserves existing behavior when no recap run is selected', async () => {
     const repoRoot = await createRepoRoot();

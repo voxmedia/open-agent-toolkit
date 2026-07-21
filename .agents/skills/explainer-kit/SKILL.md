@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 1.0.1
+version: 1.0.2
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*

@@ -661,9 +661,6 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     [...expectedImmutablePaths].some(
       (relativePath) => !(relativePath in value.immutableHashes),
     ) ||
-    value.source.factBaseHash !==
-      value.immutableHashes[value.source.factBasePath] ||
-    value.theme.hash !== value.immutableHashes[value.theme.path] ||
     value.artifacts.some(
       (artifact) =>
         artifact.status === 'built' &&
