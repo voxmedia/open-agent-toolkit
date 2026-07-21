@@ -246,22 +246,18 @@ function commitCommands(paths, subject) {
 }
 
 function immutablePackagePaths(manifest) {
-  const paths = [
-    manifest.source?.factBasePath,
-    'source/fact-base.md',
-    ...(manifest.artifacts ?? []).map(({ contentPath }) => contentPath),
-    manifest.theme?.path,
-    ...(manifest.artifacts ?? [])
-      .filter(
-        ({ status, renderedPath }) =>
-          status === 'built' && typeof renderedPath === 'string',
-      )
-      .map(({ renderedPath }) => renderedPath),
-  ];
-  if (paths.some((path) => typeof path !== 'string' || path.length === 0)) {
+  if (
+    !manifest.immutableHashes ||
+    typeof manifest.immutableHashes !== 'object' ||
+    Array.isArray(manifest.immutableHashes)
+  ) {
+    throw new Error('Manifest does not identify immutable package hashes.');
+  }
+  const paths = Object.keys(manifest.immutableHashes);
+  if (paths.length === 0) {
     throw new Error('Manifest does not identify a complete immutable package.');
   }
-  return [...new Set(paths)];
+  return paths;
 }
 
 function resolveRunPath(runRoot, path) {

@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-3fa57f0a-6d45-41e5-9840-a914207629b1",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-07-21T12:27:57.419Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": [
+        "run-request.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.447Z",
+      "completedAt": "2026-07-21T12:27:57.459Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": [
+        "source/fact-base.json",
+        "source/fact-base.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.471Z",
+      "completedAt": "2026-07-21T12:27:57.514Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/content/project-recap.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.523Z",
+      "completedAt": "2026-07-21T12:27:57.573Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": [
+        "theme.resolved.json"
+      ],
+      "warnings": [
+        "No explicit style was selected; defaulted to clean-neutral."
+      ],
+      "startedAt": "2026-07-21T12:27:57.594Z",
+      "completedAt": "2026-07-21T12:27:57.619Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/explainer-kit-final-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.628Z",
+      "completedAt": "2026-07-21T12:27:57.652Z"
+    },
+    {
+      "id": "qa",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/explainer-kit-final-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.662Z",
+      "completedAt": "2026-07-21T12:27:57.673Z"
+    },
+    {
+      "id": "durability",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.683Z",
+      "completedAt": "2026-07-21T12:27:57.683Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-21T12:27:57.693Z",
+      "completedAt": "2026-07-21T12:27:57.693Z"
+    }
+  ],
+  "outcome": "built-not-durable",
+  "completedAt": "2026-07-21T12:27:57.693Z"
+}

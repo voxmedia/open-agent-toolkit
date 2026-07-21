@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-3fa57f0a-6d45-41e5-9840-a914207629b1",
+  "slug": "explainer-kit-final-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-21T12:27:57.703Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:02040195b910b2a8e97c4bd10baf9f5353b9e67a9779c6615c525fcf197e8c49",
+    "inputHashes": {
+      "inputs/plan": "sha256:3444b7ecb403cc30366c0ac02b90c8f7f7cf7d8a2e0245380f2b8ed8cb83643b",
+      "inputs/design": "sha256:ddc2510521a62879c651921f005756c75999fde5c56a565d798383dc03094ae8",
+      "inputs/spec": "sha256:790bd4b07ede2ec277f2d5d8d18b3a56346a095150fd4ac790085bb49541ddcc",
+      "inputs/implementation": "sha256:4ae9341e0acf71fd45ab3af8a79dd53fc7acbdc797bb75bf421a3b70001c0e46",
+      "inputs/summary": "sha256:430b7cda8d7a0f570ad3e819bec56b6d343cd2e8609415a2d0750098641f081e",
+      "inputs/critic-sol-completion-critic": "sha256:c39cc0933ea55aec818d89abc90e0065f401c01b059c079f355e2b04fb2ad3dd"
+    },
+    "authorResultPaths": [
+      "source/author/project-recap.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.md",
+      "renderedPath": "site/initiatives/explainer-kit-final-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:5df6c87860b4ba1be47a919709c206d4ad7b7bf10437092813e8ab1e86485d6f",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:894519cb0417268b7793fca3c0f1de7950c8745ccfe152482e7b827799d5657f",
+    "source/fact-base.json": "sha256:884be7973dcee84bc9ad364fe70092abcaf53142d1e78a5e45902f1ff3ab27e3",
+    "source/fact-base.md": "sha256:ca58809186f6eb3dd22377398155249c6bcc099fc6b41e4fd2097a5daf570f76",
+    "source/content-approval.json": "sha256:2f908aab3a3621aac767c7dc1ac09eff008f91b8c22d10ac699b759db4dc5d4a",
+    "source/author/project-recap.json": "sha256:79ce4621da74f033718c5e80032435f5480eb0d836ed3f4b40217eed779e58b8",
+    "source/content/project-recap.md": "sha256:383be04e1b12e62bea26faac8af7f084a4ed85aab963206e794a73413f873c45",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/explainer-kit-final-recap/index.html": "sha256:5df6c87860b4ba1be47a919709c206d4ad7b7bf10437092813e8ab1e86485d6f"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:ceed1f830657a3afc540dedd068d654b272a5252d2b80e881f62a9ad5f45e2b3"
+  },
+  "warnings": [
+    "No explicit style was selected; defaulted to clean-neutral."
+  ]
+}
