@@ -11,8 +11,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -69,25 +69,25 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-22T19:07:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-22T20:23:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: subagent-orchestration
 
-**Status:** Discovery
+**Status:** Design review
 **Started:** 2026-07-22
 **Last Updated:** 2026-07-22
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Lightweight design complete and awaiting holistic user review
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (validated)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
+- **Design:** `design.md` (complete draft)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -97,7 +97,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ Execution artifacts scaffolded
 - ✓ Prior project dossier imported for review
 - ✓ Product direction validated
-- ⧗ Awaiting design-depth decision
+- ✓ Lightweight design drafted and self-reviewed
+- ⧗ Awaiting user review
 
 ## Blockers
 
@@ -105,4 +106,4 @@ None
 
 ## Next Milestone
 
-Resolve design depth and prepare the execution plan
+Approve or revise the lightweight design, then prepare the execution plan

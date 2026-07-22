@@ -58,6 +58,16 @@ scope and decisions?
 **Decision:** Discovery has explicit user buy-in and can advance to the
 design-depth decision.
 
+### Question 5: Design depth and interaction
+
+**Q:** Should quick start proceed directly to planning, produce a lightweight
+design, or promote to the spec-driven workflow?
+**A:** Produce a lightweight design, then switch from the persisted
+collaborative preference to draft-and-review for this project.
+**Decision:** Create one focused design covering architecture, component
+boundaries, additive evidence fields, failure behavior, and testing. Present
+the complete draft for holistic user review.
+
 ## Solution Space
 
 ### Approach 1: Split guidance from mechanics without renaming _(Recommended)_
@@ -120,6 +130,7 @@ policy and reserve Fable for exceptional work.
    default; reserve Fable for exceptional escalation.
 6. **Invocation posture:** Expose the generic guidance skill to both users and
    agents while keeping dispatch mechanics internal.
+7. **Design depth:** Use a lightweight draft-and-review design before planning.
 
 ## Constraints
 
@@ -158,8 +169,7 @@ policy and reserve Fable for exceptional work.
 
 ## Open Questions
 
-No unresolved product questions remain from the imported handoff. The chosen
-direction still requires final validation before discovery closes.
+No unresolved product questions remain from the imported handoff.
 
 ## Assumptions
 
@@ -191,5 +201,5 @@ direction still requires final validation before discovery closes.
 
 ## Next Steps
 
-Resolve the open product decisions one at a time, validate the chosen split,
-then choose whether a lightweight design is warranted before planning.
+Review the lightweight design draft, incorporate any requested changes, then
+generate the quick implementation plan.
