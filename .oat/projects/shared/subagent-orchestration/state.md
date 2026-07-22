@@ -69,7 +69,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-22T18:46:11Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-22T19:07:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -96,12 +96,13 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Prior project dossier imported for review
-- ⧗ Discussing open product decisions
+- ✓ Product direction validated
+- ⧗ Awaiting design-depth decision
 
 ## Blockers
 
-Naming and Claude model-ladder decisions remain open.
+None
 
 ## Next Milestone
 
-Validate the chosen split and resolve design depth
+Resolve design depth and prepare the execution plan

@@ -50,6 +50,14 @@ only, or an internal dependency?
 **Decision:** Preserve the imported skill's public, self-contained invocation
 posture. Keep the OAT dispatch machinery internal and non-invocable.
 
+### Question 4: Direction validation
+
+**Q:** Does the synthesized project direction accurately capture the intended
+scope and decisions?
+**A:** Yes; lock in the direction.
+**Decision:** Discovery has explicit user buy-in and can advance to the
+design-depth decision.
+
 ## Solution Space
 
 ### Approach 1: Split guidance from mechanics without renaming _(Recommended)_
