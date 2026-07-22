@@ -143,6 +143,11 @@ depending on OAT launch machinery.
   Claude route for hard-reasoning and consequential work; Fable is reserved
   for exceptional escalation. Provider-native effort notes must remain
   separate from the task-class mapping.
+- The imported Claude draft's cyber-sensitive exception must be reframed:
+  Opus-first is the general rule, and Fable's stronger cyber classifier is
+  supporting operational evidence rather than an exception that switches the
+  default. Preserve the caveat that stronger classifier behavior is not a
+  capability weakness.
 - The skill contains no OAT project state, lifecycle, launch, recovery, or
   record-writing policy.
 
@@ -183,6 +188,44 @@ one authorized, evidenced launch.
 - Current Cursor outer-lifecycle and reviewer-local safeguards are preserved
   verbatim in meaning, including replacement eligibility only after an actual
   pre-start rejection.
+
+### Consumer Migration
+
+**Purpose:** Move every active selection consumer to the two-layer loading
+contract so no caller mistakes mechanics-only references for model guidance.
+
+**Responsibilities:**
+
+- Inventory canonical instructions and validation code that reference
+  `oat-dispatch-subagents/references` or otherwise describe the old
+  single-reference contract.
+- Update direct selection consumers to load generic principles, exactly one
+  provider selection reference, and the matching mechanics reference.
+- Preserve mechanics-only references where a consumer is intentionally
+  discussing launch controls, but ensure that any model-selection step also
+  names the generic guidance source.
+- Cover at least the canonical reviewer agent, project planning and
+  implementation skills, Cursor Cloud orientation, dispatch adapters, and CLI
+  skill validation. Generated Claude and Cursor views follow through sync.
+- Exclude historical provenance tables and archived project artifacts from
+  active-instruction migration while keeping their references intact.
+
+**Interfaces:**
+
+- Canonical `.agents` instructions are the source of truth.
+- Repo-wide reference inventory is the acceptance input; provider sync
+  propagates canonical edits.
+- Validation rejects active selection instructions that still treat
+  `oat-dispatch-subagents/references/provider-*.md` as a complete selection
+  source.
+
+**Design Decisions:**
+
+- Consumer updates are part of this project, not a follow-up, because the
+  ownership split would otherwise leave active callers with incomplete
+  guidance.
+- Tests distinguish selection-purpose references from valid mechanics-purpose
+  references rather than banning every occurrence of the dispatch path.
 
 ### Distribution and Synchronization
 
@@ -321,7 +364,13 @@ workflow.
   user-invocable posture, and provider-reference loading contract.
 - Validate the dispatch skill's internal posture and progressive loading of
   principles, one selection reference, and one mechanics reference.
-- Validate the Opus-first Claude matrix and exceptional Fable disposition.
+- Validate structural matrix invariants: all five task classes, independent
+  effort notes, and correctly ordered freshness metadata.
+- Validate the durable Opus-first policy and exceptional Fable disposition
+  without freezing every dated incumbent name or row value.
+- If exact dated mappings need fixture coverage, keep them in one
+  refresh-owned fixture whose update obligation is documented by the guidance
+  refresh workflow.
 - Validate freshness metadata and evidence-refresh triggers.
 
 ### Ownership-Boundary Tests
@@ -364,3 +413,10 @@ workflow.
   `references/prior-project/skills/subagent-orchestration/`
 - Imported dispatch draft:
   `references/prior-project/skills/oat-subagent-dispatch/`
+- Downstream coordination: after canonical guidance ships, refresh the
+  operator's non-sync-managed vault matrix and global-file record so they do
+  not continue to describe the rejected Fable-first policy. Private-repository
+  copies remain the responsibility of their existing sync process.
+- Workflow bookkeeping: quick-mode lightweight design keeps
+  `oat_ready_for: null`; implementation readiness is established only by the
+  reviewed, completed plan.

@@ -1,5 +1,5 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-22
@@ -143,6 +143,8 @@ policy and reserve Fable for exceptional work.
   frontmatter version advanced once for the final PR diff.
 - Bundled skill changes are shipped CLI functionality and therefore require the
   repository's lockstep public-package version update and release validation.
+- Quick-mode design keeps `oat_ready_for: null`; the completed plan owns
+  implementation readiness.
 
 ## Success Criteria
 

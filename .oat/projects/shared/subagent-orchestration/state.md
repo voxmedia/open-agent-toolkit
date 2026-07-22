@@ -69,7 +69,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-22T20:23:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-22T23:13:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -81,7 +81,7 @@ oat_generated: false
 
 ## Current Phase
 
-Lightweight design complete and awaiting holistic user review
+Lightweight design review amendments applied
 
 ## Artifacts
 
@@ -98,7 +98,8 @@ Lightweight design complete and awaiting holistic user review
 - ✓ Prior project dossier imported for review
 - ✓ Product direction validated
 - ✓ Lightweight design drafted and self-reviewed
-- ⧗ Awaiting user review
+- ✓ Artifact review findings dispositioned
+- ⧗ Awaiting re-review or approval to continue
 
 ## Blockers
 
@@ -106,4 +107,4 @@ None
 
 ## Next Milestone
 
-Approve or revise the lightweight design, then prepare the execution plan
+Re-review the amended design or approve it for planning
