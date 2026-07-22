@@ -42,6 +42,14 @@ retain the current Opus-first policy, or defer the matrix pending more evidence?
 default Claude route for hard-reasoning and consequential work. Keep Fable as
 the exceptional escalation route rather than the default.
 
+### Question 3: Guidance skill invocation
+
+**Q:** Should the generic guidance skill be user-invocable, agent-discoverable
+only, or an internal dependency?
+**A:** Make it user-invocable and agent-discoverable.
+**Decision:** Preserve the imported skill's public, self-contained invocation
+posture. Keep the OAT dispatch machinery internal and non-invocable.
+
 ## Solution Space
 
 ### Approach 1: Split guidance from mechanics without renaming _(Recommended)_
@@ -102,6 +110,8 @@ policy and reserve Fable for exceptional work.
    generic rename separately.
 5. **Claude routing:** Keep Opus as the hard-reasoning and consequential
    default; reserve Fable for exceptional escalation.
+6. **Invocation posture:** Expose the generic guidance skill to both users and
+   agents while keeping dispatch mechanics internal.
 
 ## Constraints
 
@@ -140,8 +150,8 @@ policy and reserve Fable for exceptional work.
 
 ## Open Questions
 
-- **Invocation posture:** Should the generic guidance skill remain directly
-  user-invocable, or primarily act as a discoverable dependency?
+No unresolved product questions remain from the imported handoff. The chosen
+direction still requires final validation before discovery closes.
 
 ## Assumptions
 
