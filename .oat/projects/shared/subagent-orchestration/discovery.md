@@ -23,8 +23,15 @@ handoff, and review the proposal collaboratively before planning.
 
 ## Clarifying Questions
 
-Discussion is in progress. The first decision is whether to preserve the
-existing dispatch-skill name or combine the guidance split with a rename.
+### Question 1: Dispatch skill naming
+
+**Q:** Should this project preserve `oat-dispatch-subagents`, rename it now, or
+defer the naming migration?
+**A:** Keep `oat-dispatch-subagents` for this project and evaluate a rename
+separately.
+**Decision:** Implement only the guidance-versus-mechanics ownership split.
+Treat any dispatch-skill rename as a separate migration with its own consumer
+and compatibility review.
 
 ## Solution Space
 
@@ -60,10 +67,10 @@ and needs a tightly controlled follow-up.
 
 ### Chosen Direction
 
-**Approach:** Pending discussion.
-**Rationale:** Approach 1 is the current recommendation because it realizes the
-handoff's central progressive-disclosure decision without adding rename risk.
-**User validated:** No.
+**Approach:** Approach 1 — split guidance from mechanics without renaming.
+**Rationale:** This realizes the handoff's central progressive-disclosure
+decision without coupling it to a broad naming migration.
+**User validated:** Yes.
 
 ## Options Considered
 
@@ -81,6 +88,8 @@ That mapping remains review-required rather than settled.
    and dispatch records.
 3. **Imported material:** The complete prior dossier is retained as review
    input, not treated as implementation-ready source.
+4. **Naming:** Keep `oat-dispatch-subagents` in this project and evaluate a
+   generic rename separately.
 
 ## Constraints
 
@@ -119,14 +128,10 @@ That mapping remains review-required rather than settled.
 
 ## Open Questions
 
-- **Naming:** Keep `oat-dispatch-subagents`, rename it in this project, or defer
-  the rename to a separate migration?
 - **Claude ladder:** Is Fable the preferred hard-reasoning and consequential
   default, with Opus reserved for economy and cyber-sensitive workflows?
 - **Invocation posture:** Should the generic guidance skill remain directly
   user-invocable, or primarily act as a discoverable dependency?
-- **Compatibility:** Does any external OAT consumer require a transition alias
-  if the dispatch skill is renamed?
 
 ## Assumptions
 
