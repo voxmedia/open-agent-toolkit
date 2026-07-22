@@ -33,6 +33,15 @@ separately.
 Treat any dispatch-skill rename as a separate migration with its own consumer
 and compatibility review.
 
+### Question 2: Claude routing ladder
+
+**Q:** Should the generic guidance adopt the imported Fable-first ladder,
+retain the current Opus-first policy, or defer the matrix pending more evidence?
+**A:** Keep Opus first and reserve Fable for exceptional work.
+**Decision:** Revise the imported Claude provider draft so Opus remains the
+default Claude route for hard-reasoning and consequential work. Keep Fable as
+the exceptional escalation route rather than the default.
+
 ## Solution Space
 
 ### Approach 1: Split guidance from mechanics without renaming _(Recommended)_
@@ -77,7 +86,8 @@ decision without coupling it to a broad naming migration.
 The imported dossier also proposes a dated Claude effort ladder that prefers
 Fable for general hard-reasoning and consequential non-cyber work while
 retaining Opus as an economy route and cyber-sensitive operational default.
-That mapping remains review-required rather than settled.
+The project will not adopt that mapping. It will retain the current Opus-first
+policy and reserve Fable for exceptional work.
 
 ## Key Decisions
 
@@ -90,6 +100,8 @@ That mapping remains review-required rather than settled.
    input, not treated as implementation-ready source.
 4. **Naming:** Keep `oat-dispatch-subagents` in this project and evaluate a
    generic rename separately.
+5. **Claude routing:** Keep Opus as the hard-reasoning and consequential
+   default; reserve Fable for exceptional escalation.
 
 ## Constraints
 
@@ -128,8 +140,6 @@ That mapping remains review-required rather than settled.
 
 ## Open Questions
 
-- **Claude ladder:** Is Fable the preferred hard-reasoning and consequential
-  default, with Opus reserved for economy and cyber-sensitive workflows?
 - **Invocation posture:** Should the generic guidance skill remain directly
   user-invocable, or primarily act as a discoverable dependency?
 
