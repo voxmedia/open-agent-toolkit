@@ -1,6 +1,6 @@
 ---
 name: oat-wave-program
-version: 1.2.1
+version: 1.3.1
 description: Use when decomposing a corpus of external implementation plans into an ordered wave program — coverage inventory, dependency mapping, wave composition, and the durable execution-program artifact that oat-wave-execute consumes and updates.
 argument-hint: '[new|refresh|wave-close <wave-id>] (default: refresh against the current artifact)'
 disable-model-invocation: false
@@ -104,16 +104,50 @@ target (same disclaimer as the plan indexes).
 2. Update the status ledger row: PR, merge SHA, completion-record link.
 3. Note next-wave unblocks ("W3 merged → W4 token-cost unblocked").
 4. Commit with the wave's closeout bookkeeping.
-5. Optionally run the mechanical program-recap explainer caller described below,
-   then add its manifest `runId` and `outcome` to the wave ledger row.
+5. Default recap scope is the PROGRAM, not the individual wave. Until the wave
+   that completes the final pending wave, run a per-wave recap only on explicit
+   operator request; otherwise record `recap: deferred to program close` in that
+   wave's ledger row. At program close, offer or run the program-recap caller
+   below from the reconciled execution-program artifact and ALL wave records,
+   then record its manifest `runId` and `outcome` in the program ledger. If the
+   program recap is not run, record `recap: not run — {reason}` there. Every
+   optional step gets an explicit disposition; silence is indistinguishable
+   from oversight (Orc program-recap evidence).
+6. When the final wave's ledger row flips to `done` and all wave merges are
+   recorded, stop at exactly one HUMAN-GATED program completion checkpoint,
+   including in autonomous runs:
+   "All waves are merged and the program is complete. Run the completion tail
+   (oat-project-complete: archive + S3 + pointer clear) across all N wave wrapper
+   projects now?" On yes, run the full deferred tail for each wrapper via
+   `oat-project-complete-auto` when it ships, or execute the interactive skill's
+   `SKILL.md` as a document until then, and flip every
+   `completion tail: deferred to program close` ledger disposition to `done`. On
+   no or defer, record the standing deferral and its owner in the program ledger.
+   This is the program completion gate and mirrors the recap publish gate; never
+   answer it autonomously or repeat it once per wave.
 
 ### Program-close explainer caller
 
-At wave-close or program-close, the orchestrator owns fact-base synthesis. It
-synthesizes an `explainer-kit.fact-base/v1` document from the reconciled
-execution-program artifact, wave summaries, and completion records. Its required
-keys are exactly:
+At program close by default, or for a per-wave recap explicitly requested by the
+operator, the orchestrator owns fact-base synthesis. For the default program
+recap it synthesizes an `explainer-kit.fact-base/v1` document from the reconciled
+execution-program artifact, ALL wave summaries, and ALL completion records. Its
+required keys are exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+
+The caller also owns CONTENT AUTHORING, exactly as it owns critic execution and
+fact-base synthesis: the kit's pipeline validates structure and fact
+consistency, but nothing in it owns prose quality. An unattended recap run
+without a caller-supplied authoring path emits raw federated artifact text as
+deck prose (stoa W6 live evidence, run-19af6e55: implementation.md pasted
+verbatim, frontmatter included, tables flattened to run-on prose — every
+automated gate passed it). Until the explainer-kit ships its authoring seam (a
+caller-supplied author callback / `authorModulePath`, pending upstream),
+wave-close/program-close recap callers MUST either author the content document
+from the synthesized fact base plus the recipe outline (LLM-authored from
+summary/synthesis material, as the operator-approved W6 rebuild demonstrates)
+or NOT run the unattended build, recording the skip disposition per the
+optional-step rule.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
 required keys are exactly:

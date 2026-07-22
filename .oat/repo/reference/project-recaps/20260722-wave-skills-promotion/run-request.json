@@ -1,0 +1,82 @@
+{
+  "schemaVersion": "explainer-kit.run-request/v1",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "slug": "wave-skills-promotion-final-recap",
+  "outputRoot": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/explainers",
+  "factBase": {
+    "mode": "federated",
+    "freshnessPolicy": "live-wins",
+    "sources": [
+      {
+        "id": "plan",
+        "kind": "file",
+        "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/plan.md",
+        "role": "project",
+        "sourceSetId": "wave-skills-promotion",
+        "authoritativeFor": [
+          "phases",
+          "validation-approach"
+        ]
+      },
+      {
+        "id": "design",
+        "kind": "file",
+        "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/design.md",
+        "role": "project",
+        "sourceSetId": "wave-skills-promotion",
+        "authoritativeFor": [
+          "planned-architecture",
+          "decisions",
+          "risks"
+        ]
+      },
+      {
+        "id": "spec",
+        "kind": "file",
+        "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/spec.md",
+        "role": "project",
+        "sourceSetId": "wave-skills-promotion",
+        "authoritativeFor": [
+          "original-request",
+          "requirements"
+        ]
+      },
+      {
+        "id": "implementation",
+        "kind": "file",
+        "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/implementation.md",
+        "role": "project",
+        "sourceSetId": "wave-skills-promotion",
+        "authoritativeFor": [
+          "key-agent-decisions",
+          "as-built-architecture",
+          "implementation-record",
+          "validation-evidence"
+        ]
+      },
+      {
+        "id": "summary",
+        "kind": "file",
+        "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion/summary.md",
+        "role": "project",
+        "sourceSetId": "wave-skills-promotion",
+        "authoritativeFor": [
+          "outcome"
+        ]
+      }
+    ]
+  },
+  "durability": {
+    "strategy": "none"
+  },
+  "privacy": {
+    "retainRawArtDirection": false
+  },
+  "mode": "unattended",
+  "theme": {
+    "renderStrategy": "default-only"
+  }
+}

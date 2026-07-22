@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.6.2
+version: 1.7.1
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -60,8 +60,12 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    Bare `merge(...)` fails commitlint. Keep headers ≤ 100 chars.
 3. **Clean orchestrator tree before group merges** — a dirty unrelated file leaves
    `git merge --no-ff` uncommitted and drags the full hook chain into recovery.
-   Gate reviewers now COMMIT their own artifacts (waves 2–3 evidence): keep the
-   tree clean around gate runs and expect a gate-authored commit on return.
+   When a gate reviewer runs in the primary checkout, it MUST COMMIT its own
+   artifact.
+   From a linked worktree, `.git` points to metadata outside the review sandbox and
+   that commit can fail silently; the ORCHESTRATOR commits the gate artifact on
+   the reviewer's behalf. Keep the tree clean around either path (both consumers:
+   stoa waves 2–3; Orc W1–W4).
 4. **Pre-declare CUMULATIVE churn in every brief:** declarations cover everything
    landed since each source plan's AUTHORED COMMIT (drift checks compare against
    that commit, not the group base), naming files + rough regions. Zero false
@@ -75,6 +79,12 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    waves (~6+ lanes), prefer per-phase gates over one monolithic final gate; if a
    final gate must cover the whole wave, scope its prompt to the integration
    diff plus the review-chain artifacts, not a re-review of every lane.
+   **Gate dispatch posture (standing rule alongside rules 6 and 8):** dispatch
+   gates in the BACKGROUND by default with a completion watcher because
+   orchestrator-host foreground ceilings (for example, 600 seconds) are shorter than
+   legitimate wave-scoped reviews. Use foreground only for demonstrably short scopes.
+   Rule 8 remains the recovery path; it worked on the one timeout in Orc W2 and was
+   not needed again in W2–W4.
 7. **Guard every formatter-ignored-file × staged-glob interaction:** a
    single-glob staged-file task can fail when every matched file is ignored by
    the repo's formatter. Audit every glob task and pair canonical-file
@@ -93,10 +103,26 @@ cross-lane synthesis, the end-of-run synthesis, and all user checkpoints.
    oxfmt re-padding makes it silently no-op. Use anchored regex + a substitution
    count assertion + a post-state grep, every time. This discipline caught its
    own subsequent no-ops twice in wave 2; treat an assert failure as normal
-   operation, not an incident.
+   operation, not an incident. Orc reproduced the failure at wave-close: regex
+   replacement missed oxfmt padding, and an asserted line-based transform was
+   required.
 10. **Integration gates after every fan-in:** they are the only detector for
     cumulative-timing defect classes. Never skip them because every lane passed
     independently; the wave-5 embed-teardown defect was caught only after fan-in.
+11. **Fix rounds are APPEND-ONLY:** never amend a reviewed SHA; amendment
+    invalidates stored review verdicts that cite that commit. Every fix-round brief
+    MUST state that fixes land in an append-only commit. A worker that refuses an
+    instruction to amend a reviewed SHA is honoring its role contract (Orc p10
+    precedent).
+12. **Piped DoD/gate verification must preserve the raw failure:** run every piped
+    verification chain under `set -o pipefail`, or capture the raw command's exit
+    code before filtering. In Orc W4, `pnpm test | grep` returned the filter's zero
+    while the test run contained one failure.
+13. **Review artifacts are single-writer until committed:** an uncommitted review
+    artifact is exclusively owned by whichever agent is live on it. Orchestrator
+    dispositions land as immediate commits or wait until every agent touching the
+    artifact terminates. Do not use lock or timestamp-suffix conventions; they
+    fragment the review chain that final gates audit (Orc W4 final-gate evidence).
 
 Plus inherited invariants: commit-verification via `git log` before retrying after
 any ambiguous hook outcome; every agent runs the repo's formatter on markdown it
@@ -155,7 +181,12 @@ reconciliation that waives a source-plan requirement is a plan-gate Important
 
 ### Step 3: Scaffold the wrapper project
 
-1. `oat project new wave-N-execution --mode quick --no-commit`.
+1. Probe the installed scaffold interface first with `oat project new --help`.
+   If `--no-commit` is present, run
+   `oat project new wave-N-execution --mode quick --no-commit`. If the flag is
+   absent because of version skew, run the command without it, expect the scaffold
+   to auto-commit, record that generated commit, and land the wrapper artifacts in
+   a follow-up commit (Orc W1 scaffold evidence).
 2. **Verify scaffold substitution AND advance the lifecycle** in `state.md`.
    On oat ≥0.1.65, verify that the basic scaffold placeholders
    (`{ OAT_HILL_CHECKPOINTS }`, `{ OAT_PHASE }`, `{ OAT_WORKFLOW_MODE }`) were
@@ -196,8 +227,12 @@ Run the cross-runtime artifact gate with a **bounded** prompt (rule 6): review t
 wrapper artifacts for plan invariants, contract consistency, frontmatter validity,
 and whether any task restates/narrows its source plan — the external plans are
 immutable inputs, NOT review targets. Disposition findings in-artifact
-(gate-invoked artifact review), commit, and proceed at `fixes_completed` per
-wave-0/1 precedent.
+(gate-invoked artifact review) and commit. A plan gate MAY PROCEED at
+`fixes_completed` per the wave-0/1 precedent, but that is a proceed point, not a
+terminal state. Every gate row MUST flip to `passed` once all fix dispositions
+carry the stored verification records required by the fix-disposition contract below;
+`passed` is the only
+terminal state for gate rows (Orc operator-audit S8).
 
 ### Step 5: Execute via `oat-project-implement`
 
@@ -264,10 +299,13 @@ The lifecycle skill owns execution. This skill contributes the templates it uses
   example: `pnpm format:fix`).
 - **Merge choreography:** after all group verdicts — serialized `git merge
 --no-ff` in plan order, rebasing each phase branch on the updated tip first
-  (rules 2–3). Immediately before EVERY `git merge`, run `pwd` and
-  `git branch --show-current` and assert that they identify the intended repo
-  root and integration branch; stop on either mismatch. This closes the
-  cwd-persistence wrong-branch failure observed in wave 5. Integration DoD gates
+  (rules 2–3). Compound the hard pre-merge guard and merge into ONE shell
+  invocation immediately before EVERY merge:
+  `cd /abs/repo/root && [ "$(git branch --show-current)" = "wave-N-execution" ] || exit 1 && git merge --no-ff …`.
+  The explicit `cd` repairs the healable cwd dimension; branch drift is
+  non-healable and hard-aborts. Advisory `pwd`/branch prints in separate
+  invocations proved worthless in the Orc W2 incident; this guard prevented two
+  repeats there, including p10. Integration DoD gates
   after fan-in run TO COMPLETION BEFORE any group bookkeeping edits start
   (DR-260714-integration-gates-run-before);
   then the group bookkeeping commit. Before dispatch, inspect every worktree's
@@ -299,6 +337,10 @@ archival and before the project-archive seal (`oat-project-complete`) — never
 archive anything first.
 
 1. **Final verification** — integration DoD gates green on the integration branch.
+   If the repo has no CI, record a one-line explicit waiver in the wave plan:
+   `merge gate = local DoD only`. The CI-introducing wave's first green run
+   certifies the cumulative merged tree and MUST be recorded as closure of that
+   waiver; do not re-run earlier gates retroactively (Orc W1–W2 evidence).
 2. **End-of-run synthesis in `orchestration-log.md`, then roll it up into
    `summary.md`** (this is the "before any archive step" gate): convention
    verdicts with evidence, adjustments-as-rules for later waves, graduated-entries
@@ -306,27 +348,87 @@ archive anything first.
 3. **Serialized backlog archival** — `oat backlog archive` with real summaries,
    one commit.
 4. **Root final review.**
-5. **Cross-runtime final gate** — judgment-sweep dispositions; watch for the known
-   gate row-stomp on the final Reviews row (restore `passed` if regressed).
+5. **Cross-runtime final gate** — judgment-sweep dispositions; after every fix
+   disposition has its required stored verification record, flip the row to
+   `passed`. A final
+   gate MUST NOT remain at `fixes_completed`: `passed` is the only terminal
+   state for gate rows (Orc operator-audit S8; confirmed convergently by stoa
+   W6's final-row handling). The historical row-stomp restore-watch is RETIRED:
+   the upstream stomp class was fixed in oat 0.1.65 and stoa's W6 supplied the
+   final clean observation (three gate rounds, zero stomps, watch never fired,
+   2026-07-20).
 6. **Pre-approval sequence** per `workflow.postImplementSequence`, then a single
    HiLL. File follow-up-ledger backlog items at closeout (on main post-merge, or
    pre-gate if the operator prefers them in the PR).
-7. **`oat-project-complete` BEFORE merge** (standing order: review → complete →
-   merge; an open PR is expected, not a blocker — the archive-aware PR body sync
-   handles it).
+7. **The full `oat-project-complete` PROCESS, with an explicit autonomous
+   deferral branch.** Interactive runs retain the standing per-wave order
+   review → complete → merge (an open PR is expected, not a blocker — the
+   archive-aware PR body sync handles it). The requirement remains the whole
+   completion process, named explicitly: `oat project complete-state` →
+   `oat project archive` (the CLI owns the local archive move, the summary
+   export, and the S3 sync when `s3SyncOnComplete` is configured) →
+   active-project pointer clear → the completion bookkeeping commit. Running
+   `oat project complete-state` ALONE does NOT satisfy this step: in the Orc
+   first run all four wrapper projects were left lifecycle-complete but
+   unarchived until an operator audit asked (S10).
+
+   Under autonomous execution, each wave MUST still run
+   `oat project complete-state` and its then-current project bookkeeping. The
+   archive tail — `oat project archive` (including configured S3 sync) →
+   active-project pointer clear → completion bookkeeping commit — MAY be
+   deferred to the program boundary so the wave can merge and execution can
+   continue. Record every such choice in the wave ledger exactly as
+   `completion tail: deferred to program close`; deferral is an outstanding
+   disposition, never satisfaction of the full-tail requirement. Interactive
+   per-wave full-tail completion remains valid.
+
+   The interactive completion skill is model-invisible
+   (`disable-model-invocation: true`), so an autonomous orchestrator executes
+   its `SKILL.md` as a document, resolving its gates from config
+   (`workflow.archiveOnComplete`, `workflow.createPrOnComplete`), until an
+   `oat-project-complete-auto` companion ships
+   (BL-260720-add-oat-project-complete-auto). If the archive tail is deferred,
+   that execution occurs after the one human-gated program-end checkpoint in
+   `oat-wave-program`, across every deferred wave wrapper.
+
 8. **After the operator merges:** reconcile (squash-merge means content-diff the
    branch vs main; cherry-pick stragglers), reset the working branch, clean stale
    phase branches, and run `oat-wave-program` `wave-close <wave-id>` so the
    program ledger records the merge (PR, SHA, completion-record link) and flips
-   the wave's plan rows to `done`. Optionally generate the program recap using
-   the mechanical explainer caller below.
+   the wave's plan rows to `done`. Per-wave recaps are default-OFF: run one only
+   on explicit operator request; otherwise record
+   `recap: deferred to program close` in the wave ledger. When this wave
+   completes the final pending wave, offer or run the program recap using the
+   mechanical explainer caller below. The program recap is generated from the
+   reconciled program artifact and ALL wave records.
 
-#### Optional program-recap explainer caller
+#### Program-close recap explainer caller
 
-The orchestrator owns fact-base synthesis. It synthesizes an
+The orchestrator owns fact-base synthesis. At program close it synthesizes an
 `explainer-kit.fact-base/v1` document from the reconciled execution-program
-artifact, wave summaries, and completion records. Its required keys are exactly:
+artifact, ALL wave summaries, and ALL completion records. Its required keys are
+exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
+
+The caller also owns CONTENT AUTHORING, exactly as it owns critic execution and
+fact-base synthesis: the kit's pipeline validates structure and fact
+consistency, but nothing in it owns prose quality. An unattended recap run
+without a caller-supplied authoring path emits raw federated artifact text as
+deck prose (stoa W6 live evidence, run-19af6e55: implementation.md pasted
+verbatim, frontmatter included, tables flattened to run-on prose — every
+automated gate passed it). The explainer-kit now enforces this seam: every
+unattended run requires exactly one provider-neutral author seam — in-process
+callers supply an `author(request)` callback; JSON/CLI callers supply
+`authorModulePath` naming a module with an `author` function export. The core
+invokes it once per recipe artifact with an `explainer-kit.author-request/v1`
+document and expects an `explainer-kit.author-result/v1` reply; runs fail if
+the author is absent, returns an invalid result, or copies excessive verbatim
+source text. Recap callers MUST satisfy that seam by authoring content from
+the synthesized fact base plus the recipe outline (LLM-authored from
+summary/synthesis material, as the operator-approved W6 rebuild demonstrates)
+or NOT run the unattended build, recording the skip disposition per the
+optional-step rule. Callbacks and module paths never enter the persisted run
+request.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
 required keys are exactly:
@@ -340,8 +442,9 @@ synthesized fact-base file through `factBase` with the required keys
 After the run, read the `explainer-kit.manifest/v1` document. Its required keys
 are exactly:
 `schemaVersion, runId, slug, recipe, createdAt, source, theme, artifacts, immutableHashes, outcome, buildRecord, warnings`.
-Record the manifest's `runId` and `outcome` in the wave ledger row. Publishing is
-human-gated; this caller never invokes publish.
+Record the default program recap's manifest `runId` and `outcome` in the
+program ledger; use a wave ledger row only for an explicitly requested per-wave
+recap. Publishing is human-gated; this caller never invokes publish.
 
 ## Success Criteria
 
