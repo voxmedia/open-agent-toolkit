@@ -69,11 +69,14 @@
     },
     {
       "id": "durability",
-      "status": "skipped",
-      "outputPaths": [],
+      "status": "passed",
+      "outputPaths": [
+        "manifest.json",
+        "build-record.json"
+      ],
       "warnings": [],
       "startedAt": "2026-07-22T04:09:19.647Z",
-      "completedAt": "2026-07-22T04:09:19.647Z"
+      "completedAt": "2026-07-22T04:14:00.753Z"
     },
     {
       "id": "publish",
@@ -84,6 +87,6 @@
       "completedAt": "2026-07-22T04:09:19.656Z"
     }
   ],
-  "outcome": "built-not-durable",
+  "outcome": "built-durable",
   "completedAt": "2026-07-22T04:09:19.656Z"
 }

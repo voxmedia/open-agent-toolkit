@@ -36,7 +36,24 @@
       "mediaType": "text/html",
       "status": "built",
       "hash": "sha256:ce49e2999228d4e1337ee8ef003653b72941414ec21db68a0022cc636bfe239f",
-      "rebuildable": false
+      "rebuildable": false,
+      "durableEvidence": [
+        {
+          "kind": "commit",
+          "ref": "721870e649d468c9fd1a2008762096ad1d11664c",
+          "paths": [
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/run-request.json",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/source/fact-base.json",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/source/fact-base.md",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/source/content-approval.json",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/source/author/project-recap.json",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/source/content/project-recap.md",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/theme.resolved.json",
+            ".oat/repo/reference/project-recaps/20260722-wave-skills-promotion/site/initiatives/wave-skills-promotion-final-recap/index.html"
+          ],
+          "attestedAt": "2026-07-22T04:14:00.753Z"
+        }
+      ]
     }
   ],
   "immutableHashes": {
@@ -49,10 +66,10 @@
     "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
     "site/initiatives/wave-skills-promotion-final-recap/index.html": "sha256:ce49e2999228d4e1337ee8ef003653b72941414ec21db68a0022cc636bfe239f"
   },
-  "outcome": "built-not-durable",
+  "outcome": "built-durable",
   "buildRecord": {
     "path": "build-record.json",
-    "hash": "sha256:6754a65bdd6fd43d1a6525167f96541c4b2b510b0f265680b14c23ac8ea1f3da"
+    "hash": "sha256:1a0aff755d8ab7ddd294129b15098bb1546b43f07d61a7f94e8e6f125663fbcb"
   },
   "warnings": [
     "No explicit style was selected; defaulted to clean-neutral."
