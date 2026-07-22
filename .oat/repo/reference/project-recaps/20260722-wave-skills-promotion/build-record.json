@@ -1,0 +1,89 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-ea0647db-b8d2-4802-b952-5635f7851fbf",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-07-22T04:09:19.424Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": [
+        "run-request.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.455Z",
+      "completedAt": "2026-07-22T04:09:19.464Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": [
+        "source/fact-base.json",
+        "source/fact-base.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.473Z",
+      "completedAt": "2026-07-22T04:09:19.507Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/content/project-recap.md"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.515Z",
+      "completedAt": "2026-07-22T04:09:19.558Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": [
+        "theme.resolved.json"
+      ],
+      "warnings": [
+        "No explicit style was selected; defaulted to clean-neutral."
+      ],
+      "startedAt": "2026-07-22T04:09:19.574Z",
+      "completedAt": "2026-07-22T04:09:19.593Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/wave-skills-promotion-final-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.601Z",
+      "completedAt": "2026-07-22T04:09:19.620Z"
+    },
+    {
+      "id": "qa",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/wave-skills-promotion-final-recap/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.629Z",
+      "completedAt": "2026-07-22T04:09:19.639Z"
+    },
+    {
+      "id": "durability",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.647Z",
+      "completedAt": "2026-07-22T04:09:19.647Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-22T04:09:19.656Z",
+      "completedAt": "2026-07-22T04:09:19.656Z"
+    }
+  ],
+  "outcome": "built-not-durable",
+  "completedAt": "2026-07-22T04:09:19.656Z"
+}

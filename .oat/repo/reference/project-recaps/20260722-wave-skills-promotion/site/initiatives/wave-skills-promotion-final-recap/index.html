@@ -1,0 +1,231 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, FOOTER
+  All replacement values are validated and escaped by the renderer.
+-->
+<html lang="en" data-render-strategy="default-only" data-theme-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>From Dogfood to Distribution</title>
+    <meta name="description" content="How two battle-tested wave-orchestration skills graduated from a single repo into the shipped OAT toolkit under a strict zero-regression bar." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --panel-muted: hsl(210 16% 94%);
+        --border: hsl(210 14% 82%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --success: hsl(145 45% 28%);
+        --warning: hsl(38 70% 30%);
+        --danger: hsl(0 55% 36%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 0.65rem;
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #eef1f5;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        color-scheme: light dark;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 74rem;
+        margin: auto;
+        padding: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+      }
+      .toc-label,
+      .eyebrow {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.3rem 0.7rem;
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        font-weight: 650;
+      }
+      main {
+        min-width: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        margin-block: 0.5rem 1rem;
+      }
+      h2 {
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.45rem;
+        scroll-margin-top: 1rem;
+      }
+      section {
+        margin-block: 2.5rem;
+      }
+      .cards,
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1rem;
+      }
+      .card,
+      .lane,
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout {
+        border-inline-start: 0.25rem solid var(--accent);
+      }
+      .table-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        margin-block-start: 3rem;
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 46rem) {
+        .wrap {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          gap: 0.25rem;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-label {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Page sections">
+        <div class="toc-label">Open Agent Toolkit · Project Recap</div>
+        <a href="#original-request" data-target="original-request">The Ask</a><a href="#key-agent-decisions" data-target="key-agent-decisions">Choices That Shaped It</a><a href="#as-built-architecture" data-target="as-built-architecture">How It Fits Together</a><a href="#implementation-record" data-target="implementation-record">What Got Built</a><a href="#validation-evidence" data-target="validation-evidence">Proof It Works</a><a href="#outcome" data-target="outcome">Where It Landed</a>
+      </nav>
+      <main>
+        <header>
+          <div class="eyebrow">Open Agent Toolkit · Project Recap</div>
+          <h1>From Dogfood to Distribution</h1>
+          <p>How two battle-tested wave-orchestration skills graduated from a single repo into the shipped OAT toolkit under a strict zero-regression bar.</p>
+        </header>
+        <section id="original-request"><div class="section-number">1</div><h2>The Ask</h2><p>The wave skills had earned their keep inside a single repo but lived nowhere else, existing only as repo-local copies laced with local tooling assumptions. The request was to lift both into the shared toolkit as installable, first-class workflow skills, work through a parked queue of evidence-backed refinements, and scrub away the repo-specific phrasing. The hard constraint was that none of it could change a behavior the originating execution program already depended on.</p></section><section id="key-agent-decisions"><div class="section-number">2</div><h2>Choices That Shaped It</h2><p>We moved the skills essentially intact and deferred the tempting mechanical rewrites — a dedicated wave CLI family and a compiled bootstrap command — to owned backlog rather than double the surface under test. Genericization went through neutral phrasing instead of a new config schema, keeping the original commands only as cited examples and never dropping a rule. Names stayed and version lineage continued, while later feedback pushed recap generation up to program scope and made the calling skill responsible for authoring its own prose.</p></section><section id="as-built-architecture"><div class="section-number">3</div><h2>How It Fits Together</h2><p>The program skill owns a durable execution-program artifact spanning a corpus of plans, while the execute skill runs each wave as a throwaway wrapper project, handing the real work to the project-implement lifecycle and worktree setup to its companion. Neither introduces new runtime code — both are prose skills that plug into the pack manifest, the bundle script, and provider sync like any other bundled skill. A gated final layer adds optional explainer close-callers and a program-recap recipe that stay inert anywhere the explainer kit is not present.</p></section><section id="implementation-record"><div class="section-number">4</div><h2>What Got Built</h2><p>The work landed as 41 tasks across six delivery phases and five follow-on revision phases, with each of the six queued changes committed in isolation for clean traceability. A 75-row behavioral-equivalence checklist — 69 prose rows plus six added for bundled assets — anchored the zero-regression claim, and the port flushed out two genuine installer bugs: mode preservation on directory copies, and a chmod pass to survive npm stripping execute bits at pack time. The five public packages advanced in lockstep from 0.1.73 to 0.2.12.</p></section><section id="validation-evidence"><div class="section-number">5</div><h2>Proof It Works</h2><p>A bash-3.2 mini-wave fixture exercised the full choreography — happy path and a deliberately toggled gate failure — before any external handoff, and it turned up zero skill defects. The originating repo then ran its sixth wave on the packaged skills and returned a clean zero-regression pass across all eleven lanes, with an autonomous four-wave program serving as a fully independent second consumer. One unattended recap exposed a real gap, where raw artifact text sailed through every automated gate as finished prose, which drove the caller-owns-authoring rule and an enforced author seam upstream.</p></section><section id="outcome"><div class="section-number">6</div><h2>Where It Landed</h2><p>Both skills now ship from the toolkit at oat-wave-execute 1.7.1 and oat-wave-program 1.3.1, installable and syncable in any repo, hardened through three independent consumers and five rounds of revision. Every queue item, disposition, and upstream signal is accounted for, and the deferred mechanical work is filed with owners and triggers awaiting a future second consumer.</p></section>
+        <footer>wave-skills-promotion · PR #171</footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>

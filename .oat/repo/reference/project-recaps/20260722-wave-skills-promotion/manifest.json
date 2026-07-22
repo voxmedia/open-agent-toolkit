@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-ea0647db-b8d2-4802-b952-5635f7851fbf",
+  "slug": "wave-skills-promotion-final-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-22T04:09:19.665Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:43a5b63a1fdde2dcf0ddce1d6718f3556a5a90ca8f101e8049f431d25f0ec6fb",
+    "inputHashes": {
+      "inputs/plan": "sha256:34ac2f1aecddb611b2014a9180ec4cd935711ca1eb9cf09a4d19f2ed088d9d91",
+      "inputs/design": "sha256:441eadae963e86c6790729d6314bd36b08b6a5a486c115938f4771d4dadc67f1",
+      "inputs/spec": "sha256:2c825dc7a26d2d28ea08b187ec1f886827a1a48df58f2e226751dba6f1138b1b",
+      "inputs/implementation": "sha256:e1e870884ecf437eab0e41b683dd923ec2f84455095a39a7463377c133ff695f",
+      "inputs/summary": "sha256:447567b6bc077e1e213473b3096570c5fd493c049b2609dfa721cd4541ffa160",
+      "inputs/critic-opus-completion-critic": "sha256:5921e1f3a698267a200f696fbad56ce874203ad314506387bfb7cc4f4b534c5d"
+    },
+    "authorResultPaths": [
+      "source/author/project-recap.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.md",
+      "renderedPath": "site/initiatives/wave-skills-promotion-final-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:ce49e2999228d4e1337ee8ef003653b72941414ec21db68a0022cc636bfe239f",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:a101ecc7198d1316327cafcbb5c6f56ff16fbad3a1bf0a16dafa68300382c9a6",
+    "source/fact-base.json": "sha256:f600599165a9c735f618bf79b6d5b3015e48c47931f905586ffec3e4f4f06dd6",
+    "source/fact-base.md": "sha256:728556d6150f4c181497bd6c6613c3c72f56a2256c0866a2fe6d63c5fd43097f",
+    "source/content-approval.json": "sha256:1cd7ca8cedc97388a2769e52281145f47661631d749df4a5e60b0676647082ca",
+    "source/author/project-recap.json": "sha256:32aa88c625ba3d52d8fbf3484867c44e0cb1a3f59548608afd173b8e0ac9ea70",
+    "source/content/project-recap.md": "sha256:f24469efa612c4acc7b9283cc9d4982d65245441d95dbf72b04bacc0102b16da",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/wave-skills-promotion-final-recap/index.html": "sha256:ce49e2999228d4e1337ee8ef003653b72941414ec21db68a0022cc636bfe239f"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:6754a65bdd6fd43d1a6525167f96541c4b2b510b0f265680b14c23ac8ea1f3da"
+  },
+  "warnings": [
+    "No explicit style was selected; defaulted to clean-neutral."
+  ]
+}

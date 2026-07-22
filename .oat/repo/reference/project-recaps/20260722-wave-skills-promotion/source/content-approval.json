@@ -1,0 +1,14 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v1",
+  "runId": "run-ea0647db-b8d2-4802-b952-5635f7851fbf",
+  "mode": "unattended",
+  "status": "approved",
+  "reviewedSource": {
+    "kind": "approved-oat-artifacts",
+    "locator": "/Users/tstang/orca/workspaces/open-agent-toolkit/wave-skills-promotion/.oat/projects/shared/wave-skills-promotion"
+  },
+  "authorResultPaths": [
+    "source/author/project-recap.json"
+  ],
+  "attempts": []
+}
