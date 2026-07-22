@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260722-program-scope-recap-not-per    | 2026-07-22 | accepted | Program-scope recap, not per-wave                                       | -      |
+| DR-260720-autonomous-closeout-requires   | 2026-07-20 | accepted | Autonomous closeout requires a three-layer firing guard                 | -      |
+| DR-260720-recap-callers-own-prose        | 2026-07-20 | accepted | Recap callers own prose authoring                                       | -      |
 | DR-260719-full-reviewers-are-not-recon   | 2026-07-19 | accepted | Full reviewers are not recon workers                                    | -      |
 | DR-260719-keep-final-judgment            | 2026-07-19 | accepted | Keep final judgment with the primary reviewer                           | -      |
 | DR-260719-root-owned-orchestration       | 2026-07-19 | accepted | Root-owned orchestration logging                                        | -      |

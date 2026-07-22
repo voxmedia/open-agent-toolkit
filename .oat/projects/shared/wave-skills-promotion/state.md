@@ -38,6 +38,10 @@ oat_post_implement_sequence:
   post_approval: []
   post_approval_completed: []
   failure: null
+oat_project_recap:
+  decision: generate
+  source: interactive
+  decided_at: '2026-07-22T03:57:52.791Z'
 ---
 
 # Project State: wave-skills-promotion
