@@ -550,6 +550,8 @@ fragments, and the existing lockstep `0.2.13` release.
   history; refreshed generation
   `implement-exit-refresh-20260723T162824Z-b9d97a14-342d-49f2-afd3-a9de4c64b511`
   was persisted at reviewed HEAD `3e4cc2b3`.
+- Refreshed exit-gate run `cf1b9992-38b0-4d3a-be67-10435ba5a406` was accepted
+  by the gate runtime.
 - Next action: refreshed configured gate, then approval-aware closeout.
 
 ---
