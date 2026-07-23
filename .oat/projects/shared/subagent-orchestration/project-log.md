@@ -152,6 +152,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Accepted and verified the homogeneous-wave axis-parity fix; rebased release metadata now targets 0.2.14, and the prior exit gate is stale pending refresh. See implementation.md.
 
+### 2026-07-23 · structural · pr-feedback · PR #172 Bugbot rerun
+
+Accepted and verified the engine-first consumer-load and request-selector mapping fixes in 4d59b8f7; strengthened coverage also corrected Cursor Cloud ordering. See implementation.md.
+
 ## End-of-run synthesis
 
 Overall verdict: the guidance/mechanics split shipped through all five phases, full verification, independent final review, documentation synchronization, and a refreshed cross-family exit gate with no remaining findings. Adopted adjustments included bounded fixes for autonomy/version drift, stronger contract coverage, explicit legacy-record compatibility, an operator-authorized Phase 3 recovery, and reviewed-task cherry-picks after the duplicate bootstrap-sync manifest conflict. Durable outcomes were recorded in PJM current-state/backlog surfaces and four canonical decision records; no project judgment entries or follow-up-marked observations required separate ledger or backlog graduation.

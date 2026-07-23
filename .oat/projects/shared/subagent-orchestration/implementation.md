@@ -597,6 +597,16 @@ tasks were added.
 - Targeted contract coverage passed 115/115. Full tests, lint, type-check,
   format, build, docs build, release validation, and provider-sync dry-run also
   passed.
+- Bugbot's rerun found one Medium load-order mismatch in `oat-repo-improve` and
+  one Low request/record naming ambiguity. Both were accepted and fixed in
+  `4d59b8f7`: consumers now load the dispatch engine before selection guidance,
+  and the schema maps normalized request intent to resolved provider-native
+  selector evidence.
+- Strengthening the load-order assertion exposed the same latent ordering gap
+  in Cursor Cloud, which was corrected under the same contract rather than
+  special-cased.
+- Targeted coverage again passed 115/115, followed by another clean full
+  test/lint/type-check/format/build/docs/release/sync verification run.
 - The prior final review and configured exit-gate pass are preserved as
   history but marked stale because the PR feedback fix changed implementation
   after their reviewed HEAD.
@@ -623,22 +633,23 @@ tasks were added.
 | 3     | focused utility lifecycle + docs build   | 95/95; docs build pass                           | 0      | Phase passed; 2 pre-existing link failures |
 | 4     | focused + full repository/release gates  | 249/249 focused; all repository gates passed     | 0      | Phase and release review passed            |
 | 5     | focused contracts + full tests           | 136/136 focused; full tests + 129/129 smoke pass | 0      | Final review fix and inventory fix pass    |
-| PR    | focused + full repository/release gates  | 115/115 focused; all repository gates passed     | 0      | Bugbot homogeneous-wave fix passed         |
+| PR    | focused + full repository/release gates  | 115/115 focused; all repository gates passed     | 0      | All Bugbot PR feedback fixes passed        |
 
 ## Final Summary (for PR/docs)
 
 - Shipped a portable `subagent-orchestration` guidance skill that owns durable
   task classes and model-selection principles while `oat-dispatch-subagents`
   remains responsible for provider-specific launch mechanics.
-- Migrated active lifecycle and repository-improvement consumers to load
-  principles, exactly one active-provider selection reference, and matching
-  mechanics in order.
+- Migrated active lifecycle and repository-improvement consumers to load the
+  dispatch engine, principles, exactly one active-provider selection reference,
+  and matching mechanics in order.
 - Added directional utility installation: selecting
   `oat-dispatch-subagents` includes `subagent-orchestration`, while the guidance
   skill remains independently installable.
 - Added contract tests for guidance/mechanics ownership, task-class semantics,
   consumer loading, provider recommendations, additive dispatch evidence, and
-  homogeneous recon-wave axis parity.
+  homogeneous recon-wave axis parity, including explicit request-intent to
+  selector-evidence mapping.
 - Updated active docs and generated provider assets, then advanced all five
   public packages and bundled metadata to unpublished version `0.2.14` after
   rebasing onto the published `0.2.13` release.
