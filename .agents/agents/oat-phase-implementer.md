@@ -1,6 +1,6 @@
 ---
 name: oat-phase-implementer
-version: 1.0.8
+version: 1.0.9
 description: Implements one plan phase end-to-end, commits each task separately, self-checks between tasks, and handles bounded review fixes when resumed by oat-project-implement.
 tools: Read, Write, Edit, Bash, Grep, Glob, Task
 color: cyan
@@ -60,7 +60,10 @@ read and follow:
 
 1. `.agents/skills/oat-project-dispatch-subagents/SKILL.md`;
 2. `.agents/skills/oat-dispatch-subagents/SKILL.md`; and
-3. read exactly one active-provider reference from
+3. `.agents/skills/subagent-orchestration/references/model-selection-principles.md`;
+4. read exactly one active-provider selection reference from
+   `.agents/skills/subagent-orchestration/references/`; and
+5. read the matching mechanics reference from
    `.agents/skills/oat-dispatch-subagents/references/`.
 
 Every optional launch must have a bounded objective, explicit read/write

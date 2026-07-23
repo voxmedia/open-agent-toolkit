@@ -1,6 +1,6 @@
 ---
 name: oat-project-plan-writing
-version: 1.2.16
+version: 1.2.17
 description: Use when authoring or mutating plan.md in any OAT workflow. Defines canonical format invariants — stable task IDs, required sections, review table rules, and resume guardrails.
 disable-model-invocation: true
 user-invocable: false
@@ -33,10 +33,14 @@ inherits the planning parent by default. The shared contracts own any
 catalog-aware exception, launch acceptance boundary, and dispatch record; this
 skill continues to own plan readiness and review disposition.
 
-After resolving the review provider, read exactly one active-provider
-reference from `.agents/skills/oat-dispatch-subagents/references/`
-(`provider-cursor.md`, `provider-codex.md`, or `provider-claude.md`). Do not
-merge provider mechanics.
+Read
+`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+After resolving the review provider, read exactly one active-provider selection
+reference from `.agents/skills/subagent-orchestration/references/` and the
+matching mechanics reference from
+`.agents/skills/oat-dispatch-subagents/references/` (`provider-cursor.md`,
+`provider-codex.md`, or `provider-claude.md`). Do not merge provider guidance
+or mechanics.
 
 ## Planning-Time Artifact Formatting Contract
 

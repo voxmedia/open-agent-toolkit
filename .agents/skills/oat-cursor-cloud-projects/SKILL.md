@@ -1,6 +1,6 @@
 ---
 name: oat-cursor-cloud-projects
-version: 1.0.1
+version: 1.0.2
 description: Use when OAT work is mentioned in a Cursor Cloud environment. Orients agents to cloud detection, repo-rooted project homes, user-first assets, CLI availability, and Cursor dispatch context without owning lifecycle execution.
 disable-model-invocation: false
 user-invocable: true
@@ -236,10 +236,14 @@ For Cursor review/worker dispatch:
 
 1. Read `references/cursor-cloud-mechanics.md`.
 2. Resolve and read the selected user-scope
-   `oat-dispatch-subagents/references/provider-cursor.md` by absolute path,
+   `subagent-orchestration/references/model-selection-principles.md` and
+   `subagent-orchestration/references/provider-cursor.md` by absolute path,
    falling back to repo/bundled tiers only when the user skill is absent.
-3. Let `oat-project-dispatch-subagents` adapt lifecycle scope and policy.
-4. Let `oat-dispatch-subagents` own capability, catalog, route, launch,
+3. Resolve and read the selected user-scope
+   `oat-dispatch-subagents/references/provider-cursor.md` mechanics reference
+   by absolute path, with the same fallback rule.
+4. Let `oat-project-dispatch-subagents` adapt lifecycle scope and policy.
+5. Let `oat-dispatch-subagents` own capability, catalog, route, launch,
    recovery, and generic evidence.
 
 This skill supplies identity and catalog context only. Do not restate or alter
