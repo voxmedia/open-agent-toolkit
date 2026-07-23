@@ -1,4 +1,5 @@
 import {
+  UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SCRIPTS,
   WORKFLOW_TEMPLATES,
@@ -137,6 +138,34 @@ describe('removeTools', () => {
     expect(deps.removedDirs).toEqual([
       '/project/.agents/skills/oat-brainstorm',
     ]);
+  });
+
+  it('removes both orchestration skills as explicit utility pack members', async () => {
+    const tools = UTILITY_SKILLS.map((name) =>
+      createTool({ name, pack: 'utility' }),
+    );
+    const deps = createDeps({ project: tools });
+
+    const result = await removeTools(
+      { kind: 'pack', pack: 'utility' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(UTILITY_SKILLS).toContain('oat-dispatch-subagents');
+    expect(UTILITY_SKILLS).toContain('subagent-orchestration');
+    expect(result.removed.map((tool) => tool.name)).toEqual([
+      ...UTILITY_SKILLS,
+    ]);
+    expect(deps.removedDirs).toContain(
+      '/project/.agents/skills/oat-dispatch-subagents',
+    );
+    expect(deps.removedDirs).toContain(
+      '/project/.agents/skills/subagent-orchestration',
+    );
   });
 
   it('removes workflow agents, templates, and scripts with a user-scope pack', async () => {

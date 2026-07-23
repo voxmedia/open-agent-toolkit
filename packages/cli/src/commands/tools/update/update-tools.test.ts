@@ -13,6 +13,7 @@ import {
 import {
   BRAINSTORM_SKILLS,
   DOCS_SCRIPTS,
+  UTILITY_SKILLS,
   WORKFLOW_AGENTS,
   WORKFLOW_SKILLS,
   WORKFLOW_SCRIPTS,
@@ -246,6 +247,41 @@ describe('updateTools', () => {
         deps.copies.some((copy) => copy.source.includes(`skills/${skill}`)),
       ).toBe(true);
     }
+  });
+
+  it('reconciles both orchestration skills in the utility pack', async () => {
+    const tools = [
+      createTool({
+        name: 'oat-dispatch-subagents',
+        pack: 'utility',
+        status: 'current',
+        version: '1.0.0',
+        bundledVersion: '1.0.0',
+      }),
+    ];
+    const deps = createDeps({ project: tools });
+
+    const result = await updateTools(
+      { kind: 'pack', pack: 'utility' },
+      ['project'],
+      '/cwd',
+      '/home',
+      false,
+      deps,
+    );
+
+    expect(UTILITY_SKILLS).toContain('oat-dispatch-subagents');
+    expect(UTILITY_SKILLS).toContain('subagent-orchestration');
+    expect(result.current.map((tool) => tool.name)).toEqual([
+      'oat-dispatch-subagents',
+    ]);
+    expect(result.updated.map((tool) => tool.name)).toContain(
+      'subagent-orchestration',
+    );
+    expect(deps.copies).toContainEqual({
+      source: '/assets/skills/subagent-orchestration',
+      dest: '/project/.agents/skills/subagent-orchestration',
+    });
   });
 
   it('installs missing bundled members for a targeted installed pack', async () => {

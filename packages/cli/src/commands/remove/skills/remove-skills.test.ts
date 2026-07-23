@@ -100,7 +100,21 @@ describe('createRemoveSkillsCommand', () => {
     const { command, runRemoveSkill } = createHarness({ interactive: false });
     await runCommand(command, [], ['--pack', 'utility']);
 
+    expect(UTILITY_SKILLS).toContain('oat-dispatch-subagents');
+    expect(UTILITY_SKILLS).toContain('subagent-orchestration');
     expect(runRemoveSkill).toHaveBeenCalledTimes(UTILITY_SKILLS.length);
+    expect(runRemoveSkill).toHaveBeenCalledWith(
+      expect.any(Object),
+      'oat-dispatch-subagents',
+      false,
+      expect.any(Object),
+    );
+    expect(runRemoveSkill).toHaveBeenCalledWith(
+      expect.any(Object),
+      'subagent-orchestration',
+      false,
+      expect.any(Object),
+    );
     expect(process.exitCode).toBe(0);
   });
 

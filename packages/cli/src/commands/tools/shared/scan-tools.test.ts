@@ -270,11 +270,11 @@ describe('scanTools', () => {
   it('detects utility skills pack membership', async () => {
     const deps = createMockDeps({
       readdir: async (path: string) => {
-        if (path.includes('.agents/skills')) return ['create-agnostic-skill'];
+        if (path.includes('.agents/skills')) return ['subagent-orchestration'];
         return [];
       },
       dirExists: async (path: string) => {
-        if (path.includes('assets/skills/create-agnostic-skill')) return true;
+        if (path.includes('assets/skills/subagent-orchestration')) return true;
         return false;
       },
       getSkillVersion: async () => '1.0.0',

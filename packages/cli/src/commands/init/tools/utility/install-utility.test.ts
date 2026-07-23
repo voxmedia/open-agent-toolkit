@@ -20,6 +20,9 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   });
   await mkdir(join(assetsRoot, 'skills', 'other-skill'), { recursive: true });
   await mkdir(join(assetsRoot, 'skills', 'explainer-kit'), { recursive: true });
+  await mkdir(join(assetsRoot, 'skills', 'subagent-orchestration'), {
+    recursive: true,
+  });
   await writeFile(
     join(assetsRoot, 'skills', 'oat-review-provide', 'SKILL.md'),
     '---\nname: oat-review-provide\nversion: 1.0.0\n---\n',
@@ -33,6 +36,11 @@ async function seedAssets(assetsRoot: string): Promise<void> {
   await writeFile(
     join(assetsRoot, 'skills', 'explainer-kit', 'SKILL.md'),
     '---\nname: explainer-kit\nversion: 1.0.0\n---\n',
+    'utf8',
+  );
+  await writeFile(
+    join(assetsRoot, 'skills', 'subagent-orchestration', 'SKILL.md'),
+    '---\nname: subagent-orchestration\nversion: 1.0.0\n---\n',
     'utf8',
   );
 }
@@ -88,6 +96,33 @@ describe('installUtility', () => {
         'utf8',
       ),
     ).resolves.toContain('version: 1.0.0');
+  });
+
+  it('installs orchestration guidance independently from the utility pack', async () => {
+    const root = await makeTempDir();
+    const assetsRoot = join(root, 'assets');
+    const targetRoot = join(root, 'user-target');
+    await seedAssets(assetsRoot);
+
+    const result = await installUtility({
+      assetsRoot,
+      targetRoot,
+      skills: ['subagent-orchestration'],
+    });
+
+    expect(result.copiedSkills).toEqual(['subagent-orchestration']);
+    await expect(
+      readFile(
+        join(
+          targetRoot,
+          '.agents',
+          'skills',
+          'subagent-orchestration',
+          'SKILL.md',
+        ),
+        'utf8',
+      ),
+    ).resolves.toContain('name: subagent-orchestration');
   });
 
   it('copies oat-review-provide at user scope', async () => {
