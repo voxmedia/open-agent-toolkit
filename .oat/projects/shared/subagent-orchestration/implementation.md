@@ -512,6 +512,8 @@ added.
   `final|code|final-review-2026-07-23T124954Z.md`.
 - Configured exit-gate review received with no findings and a clear deferred
   ledger.
+- Receive correlation reconciled to bookkeeping commit `835ad76c`; exit-gate
+  disposition persisted as `allowed/passed`.
 - Next action: approval-aware closeout.
 
 ---

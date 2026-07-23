@@ -34,9 +34,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -57,23 +57,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md
   handoff: 'Run oat-project-review-receive for .oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md before treating this gate review as consumed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=48a1a4df-a811-417c-be38-cc975466b1ec; handoff=Run oat-project-review-receive for .oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md before treating this gate review as consumed.; source=.oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md; scope=final; type=code; filename=final-review-2026-07-23T124954Z.md'
   receive_source_artifact: .oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md
   receive_archived_artifact: .oat/projects/shared/subagent-orchestration/reviews/archived/final-review-2026-07-23T124954Z.md
   receive_event_identity: 'final|code|final-review-2026-07-23T124954Z.md'
   receive_pre_head: 3db62d9a1a7f75fb7b01f2fe644ea37209eee9de
-  receive_commit: null
+  receive_commit: 835ad76ca1ebc04542b8aef734d18a283b326840
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-07-23T12:52:47Z'
+  updated_at: '2026-07-23T12:54:27Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T12:52:47Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T12:54:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Final lifecycle review passed; awaiting configured exit gate
+Configured implementation exit gate passed; awaiting final approval
 
 ## Artifacts
 
@@ -121,7 +121,8 @@ Final lifecycle review passed; awaiting configured exit gate
 - ✓ Phase 5 final review fix completed
 - ✓ Final verification inventory drift fixed
 - ✓ Final lifecycle re-review passed
-- ⧗ Configured implementation exit gate
+- ✓ Configured implementation exit gate passed
+- ⧗ Final implementation approval
 
 ## Blockers
 
@@ -131,4 +132,4 @@ passed.
 
 ## Next Milestone
 
-Pass configured implementation exit gate and approval-aware closeout
+Receive final implementation approval and complete lifecycle closeout
