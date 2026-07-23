@@ -29,9 +29,9 @@ user-level installation as project-level installed state.
 **Q:** Should the fix only make shared `tools.*` project-scoped, or should it
 also preserve a separate effective-availability signal for workflows that can
 use user-scoped packs?
-**A:** Pending.
-**Decision:** This determines whether the change is a narrow reconciliation fix
-or a complete separation of installation state from runtime availability.
+**A:** Preserve both concepts separately.
+**Decision:** Shared config will represent project installation while a runtime
+query will represent effective project-plus-user availability.
 
 ## Solution Space
 
@@ -73,10 +73,10 @@ availability.
 
 ### Chosen Direction
 
-**Approach:** Pending user confirmation.
+**Approach:** Separate project installation from effective availability.
 **Rationale:** Approach 1 is recommended because shared state remains
 repository-truthful while user-installed capabilities continue to work.
-**User validated:** No.
+**User validated:** Yes.
 
 ## Options Considered
 
@@ -94,6 +94,11 @@ repository-truthful while user-installed capabilities continue to work.
    scope semantics.
 3. **No empty-repo pollution:** A user-only update should not create shared repo
    config solely to cache global pack availability.
+4. **Effective capability:** Pack-gated workflows should query current
+   project-plus-user availability rather than shared config.
+5. **Empty project state:** When no project packs remain, omit the shared
+   `tools` map. Preserve any unrelated shared config and do not remove the
+   config file itself.
 
 ## Constraints
 
@@ -130,12 +135,7 @@ repository-truthful while user-installed capabilities continue to work.
 
 ## Open Questions
 
-- **Capability semantics:** Should user-scoped packs remain eligible for
-  repository workflows through an effective availability query?
-- **Shared config absence:** When no project packs exist, should reconciliation
-  remove the `tools` map from an existing shared config or retain an all-false
-  map? The plan should preserve explicit stale-flag clearing without creating a
-  new config file in an otherwise uninitialized repo.
+None.
 
 ## Assumptions
 
