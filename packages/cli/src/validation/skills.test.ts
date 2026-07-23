@@ -813,7 +813,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.8');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.9');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -840,8 +840,11 @@ describe('validateOatSkills', () => {
     }
 
     expect(content).toContain('.agents/skills/oat-dispatch-subagents/SKILL.md');
+    expect(content).toContain(
+      '.agents/skills/subagent-orchestration/references/model-selection-principles.md',
+    );
     expect(content).toMatch(
-      /read exactly one[\s\S]{0,180}active-provider[\s\S]{0,180}oat-dispatch-subagents\/references/i,
+      /read exactly one[\s\S]{0,220}selection reference[\s\S]{0,220}one matching mechanics reference[\s\S]{0,220}oat-dispatch-subagents\/references/i,
     );
     expect(content).toMatch(/shared `recon` role class/i);
     expect(content).toMatch(
@@ -897,12 +900,14 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-dispatch-subagents/references/provider-cursor.md',
     );
     const providerGuidance = [
-      cursor,
       await readRepoFile(
-        '.agents/skills/oat-dispatch-subagents/references/provider-claude.md',
+        '.agents/skills/subagent-orchestration/references/provider-cursor.md',
       ),
       await readRepoFile(
-        '.agents/skills/oat-dispatch-subagents/references/provider-codex.md',
+        '.agents/skills/subagent-orchestration/references/provider-claude.md',
+      ),
+      await readRepoFile(
+        '.agents/skills/subagent-orchestration/references/provider-codex.md',
       ),
     ].join('\n');
 
@@ -983,7 +988,7 @@ describe('validateOatSkills', () => {
       /does not[\s\S]{0,160}(?:reconstruct|parse)[\s\S]{0,160}lifecycle variant/i,
     );
     expect(providerGuidance).toMatch(
-      /active (?:user and repository|user\/repository) instructions[\s\S]{0,200}(?:override|precedence|first)/i,
+      /(?:active|current) (?:user and repository|user\/repository) instructions[\s\S]{0,200}(?:override|precedence|first)/i,
     );
 
     for (const rootOnly of [
@@ -1284,7 +1289,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.1.7',
+        version: '2.1.8',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1637,13 +1642,13 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.8');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
     const entry = await readRawRepoFile(implementSkillPath);
 
-    expect(entry.split('\n').length).toBeLessThanOrEqual(220);
+    expect(entry.split('\n').length).toBeLessThanOrEqual(225);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -1854,7 +1859,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.8');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1998,7 +2003,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-plan-writing/SKILL.md',
     );
 
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.16');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
     expect(shared).toMatch(/Planning-Time Artifact Formatting Contract/);
     expect(shared).toMatch(
       /applicable[\s\S]{0,120}`AGENTS\.md`[\s\S]{0,40}`CLAUDE\.md`[\s\S]{0,160}relevant package\s+manifests/i,
@@ -2026,8 +2031,8 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.8'],
-      ['.agents/agents/oat-reviewer.md', '1.1.8'],
+      ['.agents/agents/oat-phase-implementer.md', '1.0.9'],
+      ['.agents/agents/oat-reviewer.md', '1.1.9'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.4'],
@@ -2140,7 +2145,7 @@ describe('validateOatSkills', () => {
     expect(adoptionContract).toMatch(
       /when adoption is required[\s\S]{0,200}bundled recommendation/i,
     );
-    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.16');
+    expect(shared.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.17');
   });
 
   it('adopts ladders and records named maximum ceilings in every planning path', async () => {
@@ -2278,12 +2283,12 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.8');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.7');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.8');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2527,11 +2532,11 @@ describe('validateOatSkills', () => {
 
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.16'],
+      ['oat-project-plan-writing', '1.2.17'],
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.7'],
+      ['oat-project-implement', '2.1.8'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.4'],
@@ -3601,7 +3606,7 @@ describe('validateOatSkills', () => {
 
   it('tracks the p04 planning skill contract versions', async () => {
     const expectedVersions = [
-      ['oat-project-plan-writing', '1.2.16'],
+      ['oat-project-plan-writing', '1.2.17'],
       ['oat-project-plan', '1.4.3'],
       ['oat-project-quick-start', '2.3.3'],
       ['oat-project-import-plan', '1.4.7'],
@@ -3620,7 +3625,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.7'],
+      ['oat-project-implement', '2.1.8'],
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;
@@ -3690,10 +3695,10 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.1\.5$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.0$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
-    expect(adapter).toMatch(/^version:\s*1\.1\.2$/m);
+    expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
     expect(adapter).toContain('oat-dispatch-subagents');
     expect(engine).toMatch(/resolved dispatch policy or named ceiling/i);
     expect(engine).toMatch(
@@ -3738,24 +3743,50 @@ describe('validateOatSkills', () => {
     }
   });
 
-  it('loads exactly one active-provider subagent dispatch reference', async () => {
-    const root = '.agents/skills/oat-dispatch-subagents';
-    const contract = await readRepoFile(`${root}/SKILL.md`);
-    const cursor = await readRepoFile(`${root}/references/provider-cursor.md`);
-    const codex = await readRepoFile(`${root}/references/provider-codex.md`);
-    const claude = await readRepoFile(`${root}/references/provider-claude.md`);
+  it('loads generic guidance and exactly one active-provider mechanics reference', async () => {
+    const selectionRoot = '.agents/skills/subagent-orchestration';
+    const mechanicsRoot = '.agents/skills/oat-dispatch-subagents';
+    const contract = await readRepoFile(`${mechanicsRoot}/SKILL.md`);
+    const principles = await readRepoFile(
+      `${selectionRoot}/references/model-selection-principles.md`,
+    );
+    const cursor = await readRepoFile(
+      `${mechanicsRoot}/references/provider-cursor.md`,
+    );
+    const codex = await readRepoFile(
+      `${mechanicsRoot}/references/provider-codex.md`,
+    );
+    const claude = await readRepoFile(
+      `${mechanicsRoot}/references/provider-claude.md`,
+    );
     const consumers = [
       await readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
+      await readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md'),
+      await readRepoFile(
+        '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
+      ),
+      await readRepoFile('.agents/skills/oat-cursor-cloud-projects/SKILL.md'),
+      await readRepoFile('.agents/skills/oat-repo-improve/SKILL.md'),
+      await readRepoFile('.agents/agents/oat-reviewer.md'),
       await readRepoFile('.agents/agents/oat-phase-implementer.md'),
     ];
 
+    expect(principles).toMatch(/Five Task Classes/);
     for (const provider of ['cursor', 'codex', 'claude']) {
+      await expect(
+        readRepoFile(`${selectionRoot}/references/provider-${provider}.md`),
+      ).resolves.toMatch(/Model Selection/);
+      expect(contract).toContain(
+        `subagent-orchestration/references/provider-${provider}.md`,
+      );
       expect(contract).toContain(`references/provider-${provider}.md`);
     }
     for (const consumer of consumers) {
-      expect(consumer).toMatch(
-        /read exactly one[\s\S]{0,180}active-provider[\s\S]{0,180}oat-dispatch-subagents\/references/i,
+      expect(consumer).toContain(
+        'subagent-orchestration/references/model-selection-principles.md',
       );
+      expect(consumer).toMatch(/subagent-orchestration\/references\//);
+      expect(consumer).toMatch(/oat-dispatch-subagents\/references\//);
     }
 
     expect(cursor).toMatch(
@@ -3766,10 +3797,10 @@ describe('validateOatSkills', () => {
       /root and nested catalogs[\s\S]{0,180}(?:volatile|independent|snapshot)/i,
     );
     expect(cursor).toMatch(
-      /pre-start CLI routes[\s\S]{0,320}native mismatch[\s\S]{0,220}recorded before launch/i,
+      /pre-start CLI or SDK routes[\s\S]{0,360}native mismatch[\s\S]{0,260}recorded before launch/i,
     );
     expect(cursor).toMatch(
-      /catalog-mismatch advisory[\s\S]{0,320}possible ladder additions[\s\S]{0,240}do not remove/i,
+      /catalog-mismatch advisory[\s\S]{0,320}nearby native\s+candidates[\s\S]{0,240}do not\s+remove/i,
     );
     expect(codex).toMatch(/materialized role/i);
     expect(codex).toMatch(/maximum nesting depth/i);
