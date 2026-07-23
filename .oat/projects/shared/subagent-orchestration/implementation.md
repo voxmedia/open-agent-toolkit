@@ -485,6 +485,9 @@ None in this run entry.
   the gate runtime.
 - Exit-gate result envelope persisted with status `ok`, a correlated gate
   artifact, and an eligible receive handoff.
+- Gate-review receive intent persisted for run
+  `48a1a4df-a811-417c-be38-cc975466b1ec` and event
+  `final|code|final-review-2026-07-23T124954Z.md`.
 - Next action: configured implementation exit gate and approval-aware closeout.
 
 ---
