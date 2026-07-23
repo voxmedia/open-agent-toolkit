@@ -554,6 +554,9 @@ fragments, and the existing lockstep `0.2.13` release.
   by the gate runtime.
 - Refreshed exit-gate result envelope persisted with status `ok`, a correlated
   gate artifact, and an eligible receive handoff.
+- Refreshed gate-review receive intent persisted for run
+  `cf1b9992-38b0-4d3a-be67-10435ba5a406` and event
+  `final|code|final-review-2026-07-23T163522Z.md`.
 - Next action: refreshed configured gate, then approval-aware closeout.
 
 ---
