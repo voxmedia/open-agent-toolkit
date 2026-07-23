@@ -227,6 +227,8 @@ verify the implemented result.
 
 - Focused contract suites passed 136/136.
 - Formatting, release validation, provider sync dry-run, and diff checks passed.
+- Final verification exposed one directly caused autonomy inventory mapping;
+  fix `ab60498b` updated the canonical NG mapping and the full test suite passed.
 
 ### Task p05-t01: (review) Add explicit legacy dispatch-record fixture
 
@@ -367,9 +369,9 @@ None in this run entry.
 
 #### Phase Outcomes
 
-| Phase | Verdict     | Task Commits | Review                  | Fixes    |
-| ----- | ----------- | ------------ | ----------------------- | -------- |
-| p05   | implemented | `e92a50bd`   | final re-review pending | final M1 |
+| Phase | Verdict     | Task Commits | Review                  | Fixes                               |
+| ----- | ----------- | ------------ | ----------------------- | ----------------------------------- |
+| p05   | implemented | `e92a50bd`   | final re-review pending | M1 plus verification fix `ab60498b` |
 
 #### Dispatch Notes
 
@@ -449,6 +451,8 @@ None in this run entry.
 - Initial final lifecycle review converted one Medium compatibility gap to
   `p05-t01`; the fix added the explicit legacy Record fixture and passed all
   focused, release, and sync checks.
+- Final verification found the fixture's new autonomy-inventory prompt-site
+  hash; bounded fix `ab60498b` mapped it to NG and restored the full suite.
 - Next action: final verification, final lifecycle re-review, and configured
   implementation closeout.
 
@@ -470,6 +474,7 @@ None in this run entry.
 | 2     | focused skill contracts                  | 111/111                                          | 0      | Phase passed after fix iteration 1         |
 | 3     | focused utility lifecycle + docs build   | 95/95; docs build pass                           | 0      | Phase passed; 2 pre-existing link failures |
 | 4     | focused + full repository/release gates  | 249/249 focused; all repository gates passed     | 0      | Phase and release review passed            |
+| 5     | focused contracts + full tests           | 136/136 focused; full tests + 129/129 smoke pass | 0      | Final review fix and inventory fix pass    |
 
 ## Final Summary (for PR/docs)
 
