@@ -36,6 +36,14 @@ escalate_when:
   - security impact is consequential
 ```
 
+`reasoning_mode` and `service_tier` are normalized caller-intent fields. During
+selection, map `reasoning_mode` to the resolved
+`reasoning_mode_selector` record field and `service_tier` to the resolved
+`service_tier_selector` record field. The selector fields are launch evidence,
+not blind copies of request values: they must contain the exact
+provider-native controls actually selected, or `null` when no independent
+control was selected or exposed.
+
 `dispatch_policy` and `dispatch_ceiling` are optional resolved inputs. The
 general engine does not resolve their source.
 

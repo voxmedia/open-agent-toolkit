@@ -34,9 +34,9 @@ and evidence contracts independently maintainable.
   installable. Provider sync and bundled distribution carry the same contract.
 - Hardened structural coverage for ownership boundaries, task-class semantics,
   consumer composition, Claude routing, provider freshness, service tiers, and
-  legacy versus enriched dispatch records. PR feedback additionally made
-  homogeneous-wave equality explicit for reasoning mode, service tier, and
-  every guidance-freshness field.
+  legacy versus enriched dispatch records. PR feedback additionally pinned
+  homogeneous-wave axis equality, engine-first consumer loading, and the
+  mapping from normalized request intent to resolved selector evidence.
 - Updated user and maintainer documentation, then advanced the five public
   packages and release metadata to `0.2.14` after rebasing onto the release of
   `0.2.13`.

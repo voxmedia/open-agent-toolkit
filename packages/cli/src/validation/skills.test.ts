@@ -3835,6 +3835,7 @@ describe('validateOatSkills', () => {
         : '\n## ';
       const end = content.indexOf(headingPrefix, start + spec.heading.length);
       const loadingBlock = content.slice(start, end === -1 ? undefined : end);
+      const engineIndex = loadingBlock.indexOf('oat-dispatch-subagents');
       const principlesIndex = loadingBlock.indexOf(
         'subagent-orchestration/references/model-selection-principles.md',
       );
@@ -3868,8 +3869,12 @@ describe('validateOatSkills', () => {
       ].map((match) => match[1]?.toLowerCase());
 
       expect(start, `${spec.path} loading block`).toBeGreaterThanOrEqual(0);
-      expect(principlesIndex, `${spec.path} principles`).toBeGreaterThanOrEqual(
-        0,
+      expect(
+        engineIndex,
+        `${spec.path} dispatch engine`,
+      ).toBeGreaterThanOrEqual(0);
+      expect(principlesIndex, `${spec.path} principles`).toBeGreaterThan(
+        engineIndex,
       );
       expect(
         selectionInstruction?.index,
@@ -4180,6 +4185,8 @@ describe('validateOatSkills', () => {
     const engine = await readRepoFile(
       '.agents/skills/oat-dispatch-subagents/SKILL.md',
     );
+    const request =
+      schema.match(/^## Request[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ?? '';
     const legacyRecord =
       schema.match(/^## Legacy Record[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ??
       '';
@@ -4197,6 +4204,10 @@ describe('validateOatSkills', () => {
       'guidance_verified_at',
       'guidance_status',
     ] as const;
+    const requestSelectorMapping =
+      schema.match(
+        /`reasoning_mode` and `service_tier` are normalized[\s\S]*?(?=\n\n`dispatch_policy`)/i,
+      )?.[0] ?? '';
     const recordBaselineFields = [
       'request_id',
       'caller',
@@ -4223,6 +4234,28 @@ describe('validateOatSkills', () => {
     );
     expect(schema).toMatch(
       /legacy\s+`explicit-downgrade` example above is valid only for an unconstrained request/i,
+    );
+    for (const [requestField, recordField] of [
+      ['reasoning_mode', 'reasoning_mode_selector'],
+      ['service_tier', 'service_tier_selector'],
+    ] as const) {
+      expect(request, `request intent ${requestField}`).toMatch(
+        new RegExp(`^${requestField}:`, 'm'),
+      );
+      expect(enrichedRecord, `resolved record evidence ${recordField}`).toMatch(
+        new RegExp(`^${recordField}:`, 'm'),
+      );
+      expect(
+        requestSelectorMapping,
+        `${requestField} to ${recordField} mapping`,
+      ).toContain(`\`${requestField}\``);
+      expect(
+        requestSelectorMapping,
+        `${requestField} to ${recordField} mapping`,
+      ).toContain(`\`${recordField}\``);
+    }
+    expect(requestSelectorMapping).toMatch(
+      /launch evidence[\s\S]{0,180}not blind copies[\s\S]{0,180}provider-native controls/i,
     );
     for (const field of recordBaselineFields) {
       expect(legacyRecord, `legacy record baseline ${field}`).toMatch(

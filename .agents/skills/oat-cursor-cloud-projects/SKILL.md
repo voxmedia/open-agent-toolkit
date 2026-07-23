@@ -236,14 +236,17 @@ For Cursor review/worker dispatch:
 
 1. Read `references/cursor-cloud-mechanics.md`.
 2. Resolve and read the selected user-scope
+   `oat-dispatch-subagents/SKILL.md` by absolute path, falling back to
+   repo/bundled tiers only when the user skill is absent.
+3. Resolve and read the selected user-scope
    `subagent-orchestration/references/model-selection-principles.md` and
    `subagent-orchestration/references/provider-cursor.md` by absolute path,
-   falling back to repo/bundled tiers only when the user skill is absent.
-3. Resolve and read the selected user-scope
+   with the same fallback rule.
+4. Resolve and read the selected user-scope
    `oat-dispatch-subagents/references/provider-cursor.md` mechanics reference
    by absolute path, with the same fallback rule.
-4. Let `oat-project-dispatch-subagents` adapt lifecycle scope and policy.
-5. Let `oat-dispatch-subagents` own capability, catalog, route, launch,
+5. Let `oat-project-dispatch-subagents` adapt lifecycle scope and policy.
+6. Let `oat-dispatch-subagents` own capability, catalog, route, launch,
    recovery, and generic evidence.
 
 This skill supplies identity and catalog context only. Do not restate or alter
