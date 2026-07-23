@@ -17,126 +17,149 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
+Running `oat tools update` in a repository with no project-scoped OAT tool
+packs writes `.oat/config.json#tools` flags as `true` for packs installed only
+at user scope. Shared repository config should not present one developer's
+user-level installation as project-level installed state.
 
 ## Clarifying Questions
 
-### Question 1: {Topic}
+### Question 1: Desired scope model
 
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+**Q:** Should the fix only make shared `tools.*` project-scoped, or should it
+also preserve a separate effective-availability signal for workflows that can
+use user-scoped packs?
+**A:** Pending.
+**Decision:** This determines whether the change is a narrow reconciliation fix
+or a complete separation of installation state from runtime availability.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
+### Approach 1: Separate project installation from effective availability _(Recommended)_
 
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
+**Description:** Reconcile shared `.oat/config.json#tools` from project-scoped
+assets only. Add a runtime capability check that reports whether a pack is
+available from project or user scope, and migrate pack-gated workflows to that
+check.
 
-### Approach 1: {Strategy Name} _(Recommended)_
+**When this is the right choice:** User-scoped packs should remain usable in a
+repository without being represented as repo-owned installations.
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Tradeoffs:** More code and migration work than changing the scan filter
+alone, including updates to bundled skills and release versions.
 
-### Approach 2: {Strategy Name}
+### Approach 2: Make `tools.*` project-only without an effective signal
 
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
+**Description:** Change install, update, and remove reconciliation so shared
+config only reflects project-scoped assets.
+
+**When this is the right choice:** Pack-gated workflows should intentionally
+require repository installation even when the same pack exists at user scope.
+
+**Tradeoffs:** Smallest implementation, but existing workflows that consult
+`oat config get tools.<pack>` would stop recognizing user-scoped capabilities.
+
+### Approach 3: Persist the combined signal in local config
+
+**Description:** Keep the project-plus-user union but move it to
+`.oat/config.local.json`.
+
+**When this is the right choice:** Avoiding tracked configuration churn matters
+more than maintaining a clean distinction between installation and
+availability.
+
+**Tradeoffs:** The value remains a stale cache of filesystem state and adds
+`tools.*` semantics to another config surface.
 
 ### Chosen Direction
 
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+**Approach:** Pending user confirmation.
+**Rationale:** Approach 1 is recommended because shared state remains
+repository-truthful while user-installed capabilities continue to work.
+**User validated:** No.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- Reuse the existing tool scanner for project-only reconciliation.
+- Introduce a dedicated machine-readable capability query instead of inferring
+  effective availability from shared config.
+- Avoid persisting the project-plus-user union in repo-local config unless the
+  runtime query proves impractical.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Shared-config meaning:** `tools.*` must not claim user-only installations
+   as repository-installed packs.
+2. **Lifecycle coverage:** Installation, update, and removal must use the same
+   scope semantics.
+3. **No empty-repo pollution:** A user-only update should not create shared repo
+   config solely to cache global pack availability.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve unrelated shared configuration keys during reconciliation.
+- Keep `oat tools list` scope reporting unchanged.
+- Maintain machine-readable behavior for pack-gated workflows.
+- Update canonical skill versions for every changed `.agents/skills/*/SKILL.md`.
+- Apply lockstep version bumps to all five public packages and run
+  `pnpm release:validate`.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- User-only tool packs do not become `true` in shared repo config.
+- Project-installed packs remain accurately represented after install, update,
+  and remove operations.
+- Removing a project pack while it remains installed for the user clears the
+  shared project flag.
+- User-scoped packs remain discoverable through the chosen effective
+  availability mechanism if Approach 1 is selected.
+- Tests cover user-only, project-only, both-scope, and empty-repo cases.
+- User-facing tool-pack and configuration documentation matches the new
+  semantics.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Changing provider-sync scope behavior.
+- Redesigning the complete OAT configuration precedence model.
+- Migrating unrelated workflow preferences or local state.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- A richer structured installed-pack inventory with per-scope version metadata;
+  the current bug only requires truthful scope-aware capability state.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Capability semantics:** Should user-scoped packs remain eligible for
+  repository workflows through an effective availability query?
+- **Shared config absence:** When no project packs exist, should reconciliation
+  remove the `tools` map from an existing shared config or retain an all-false
+  map? The plan should preserve explicit stale-flag clearing without creating a
+  new config file in an otherwise uninitialized repo.
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- `.oat/config.json#tools` is intended to be repository-owned, team-shareable
+  state.
+- User-scope installation is already observable through canonical filesystem
+  scanning and does not require a repo-level cache.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **Workflow capability regression:** Making shared flags project-only could
+  hide valid user-scoped packs from workflows.
+  - **Likelihood:** High for the narrow approach
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Add and migrate to an effective capability query.
+- **Config migration ambiguity:** Existing shared `true` values may have been
+  produced from user scope.
+  - **Likelihood:** Medium
+  - **Impact:** Low
+  - **Mitigation Ideas:** Reconciliation should deterministically rewrite flags
+    from project scope on the next pack lifecycle operation.
 
 ## Next Steps
 
-Use this discovery artifact to drive the next workflow step:
-
-- **Spec-driven mode:** continue to `oat-project-design` (which confirms
-  requirements and produces both `spec.md` and `design.md`).
-- **Spec-driven mode → formalize-only:** use `oat-project-spec` standalone
-  if you want a formalized requirements artifact but aren't ready to
-  design yet.
-- **Quick mode → straight to plan:** proceed directly to `plan.md` when
-  scope is clear and no architecture decisions remain.
-- **Quick mode → optional lightweight design:** produce a focused
-  `design.md` (architecture, components, data flow, testing) before
-  planning. Choose this when discovery surfaced architecture choices
-  or component boundaries.
-- **Quick mode → promote:** escalate to spec-driven if discovery revealed
-  the scope is larger or more complex than expected.
+Confirm the capability semantics, then produce a lightweight design because the
+change crosses shared configuration ownership, runtime capability resolution,
+and bundled workflow consumers.
