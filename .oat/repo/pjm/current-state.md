@@ -31,6 +31,15 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.13` splits portable model-selection guidance from dispatch
+  mechanics. The user-invocable `subagent-orchestration` skill owns five task
+  classes, provider-specific dated selection matrices, evidence refresh, and
+  Opus-first Claude routing; internal `oat-dispatch-subagents` owns live-catalog
+  intersection, authorized launch routes, liveness, recovery, and additive
+  dispatch records. Utility subset installation is directional: selecting
+  dispatch includes guidance, while guidance remains independently installable.
+  Active lifecycle consumers load principles, one provider selection reference,
+  and matching mechanics in order.
 - CLI `0.2.10` ships the public Explainer Kit family: a config-blind
   `explainer-kit` core and OAT lifecycle adapter with versioned fact-base,
   author, theme, manifest, durability, archive, and publish contracts. Four
