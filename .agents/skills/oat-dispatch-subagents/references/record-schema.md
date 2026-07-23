@@ -220,8 +220,11 @@ lanes:
 The wave scope is the aggregate boundary. Lane scope may narrow it. Use one
 shared record only when every dispatch axis listed in the main skill,
 `task_class`, and `model_class_floor` are identical. Lane entries do not
-redefine the shared class fields. Mixed classes require separate records and
-waves.
+redefine the shared class fields. In particular, `reasoning_mode_selector`,
+`service_tier_selector`, `guidance_reference`, `guidance_version`,
+`guidance_verified_at`, and `guidance_status` must be identically present or
+absent across lanes and, when present, have identical values. Mixed classes or
+different model-guidance controls require separate records and waves.
 
 ## Optional Model-Guidance Evidence
 

@@ -31,7 +31,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.13` splits portable model-selection guidance from dispatch
+- CLI `0.2.14` splits portable model-selection guidance from dispatch
   mechanics. The user-invocable `subagent-orchestration` skill owns five task
   classes, provider-specific dated selection matrices, evidence refresh, and
   Opus-first Claude routing; internal `oat-dispatch-subagents` owns live-catalog

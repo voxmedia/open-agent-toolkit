@@ -967,6 +967,32 @@ describe('validateOatSkills', () => {
     ]) {
       expect(schema, `dispatch record ${recordField}`).toContain(recordField);
     }
+    const homogeneousWave =
+      engine.match(/^## Homogeneous Recon Waves\n([\s\S]*?)(?=^## )/m)?.[1] ??
+      '';
+    const reconWaveSchema =
+      schema.match(/^## Recon Wave\n([\s\S]*?)(?=^## )/m)?.[1] ?? '';
+    for (const waveAxis of [
+      'reasoning_mode_selector',
+      'service_tier_selector',
+      'guidance_reference',
+      'guidance_version',
+      'guidance_verified_at',
+      'guidance_status',
+    ]) {
+      expect(homogeneousWave, `homogeneous wave ${waveAxis}`).toContain(
+        waveAxis,
+      );
+      expect(reconWaveSchema, `recon-wave schema ${waveAxis}`).toContain(
+        waveAxis,
+      );
+    }
+    expect(homogeneousWave).toMatch(
+      /identically\s+present\s+or\s+absent[\s\S]{0,200}identical\s+values/i,
+    );
+    expect(reconWaveSchema).toMatch(
+      /identically\s+present\s+or\s+absent[\s\S]{0,200}identical\s+values/i,
+    );
     expect(`${engine}\n${schema}`).toMatch(
       /homogeneous[\s\S]{0,240}task_class[\s\S]{0,160}model_class_floor[\s\S]{0,180}(?:identical|match)/i,
     );

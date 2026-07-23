@@ -346,11 +346,16 @@ A homogeneous wave may share one record only when `task_class` and
 `model_class_floor` match in addition to every existing dispatch axis.
 Multiple read-only recon lanes may share one selection record only when all of
 these axes are identical: provider, dispatch context, catalog snapshot,
-selected route, role class, role selector, model, effort, authority, deadline,
-retry limit, fallback, `task_class`, and `model_class_floor`. Include a lane
-manifest with lane-specific scope, acceptance, and outcome. A recon-wave record
-repeats the shared `task_class` and `model_class_floor` beside
-`shared_dispatch_record`; lane entries do not redefine them.
+selected route, role class, role selector, model, effort, reasoning mode
+(`reasoning_mode_selector`), service tier (`service_tier_selector`), guidance
+reference (`guidance_reference`), guidance version (`guidance_version`),
+guidance verification date (`guidance_verified_at`), guidance status
+(`guidance_status`), authority, deadline, retry limit, fallback, `task_class`,
+and `model_class_floor`. Optional model-guidance fields must be identically
+present or absent across all lanes and, when present, have identical values.
+Include a lane manifest with lane-specific scope, acceptance, and outcome. A
+recon-wave record repeats the shared `task_class` and `model_class_floor`
+beside `shared_dispatch_record`; lane entries do not redefine them.
 
 If any axis differs or either class field does not match, create separate
 records and waves. The record-level scope is the aggregate wave boundary; each
