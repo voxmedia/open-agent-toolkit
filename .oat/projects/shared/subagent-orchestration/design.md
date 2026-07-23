@@ -150,6 +150,13 @@ depending on OAT launch machinery.
   Claude route for hard-reasoning and consequential work; Fable is reserved
   for exceptional escalation. Provider-native effort notes must remain
   separate from the task-class mapping.
+- The Claude reference must preserve the root-versus-volume cost asymmetry:
+  root-orchestrator calls are low-volume and coherence-critical, while bounded
+  subagents carry most execution volume and should capture routine savings.
+  Fable escalation therefore requires unresolved ambiguity, exceptional
+  novelty or consequence, or a directly relevant Fable strength whose expected
+  value justifies its incremental cost; a consequential label alone is not
+  sufficient.
 - The imported Claude draft's cyber-sensitive exception must be reframed:
   Opus-first is the general rule, and Fable's stronger cyber classifier is
   supporting operational evidence rather than an exception that switches the

@@ -79,7 +79,12 @@ one-provider loading, freshness metadata, refresh triggers, and
 candidate-qualification rules. Apply the approved Opus-first Claude policy:
 Opus is the hard-reasoning and consequential default, Fable is exceptional,
 and stronger cyber-classifier behavior is evidence rather than an inverted
-exception.
+exception. Encode the root-versus-subagent-volume cost rationale in
+`provider-claude.md`: preserve strong, low-volume root orchestration while
+capturing routine savings in higher-volume bounded subagents. Require
+unresolved ambiguity, exceptional novelty or consequence, or a directly
+relevant Fable strength that justifies incremental cost before escalating the
+root from Opus; a consequential label alone is insufficient.
 
 **Step 2: Format**
 
@@ -99,7 +104,9 @@ git diff --check -- .agents/skills/subagent-orchestration
 ```
 
 Expected: formatting and whitespace checks pass; all six canonical files are
-present with no OAT lifecycle or launch-mechanics ownership.
+present with no OAT lifecycle or launch-mechanics ownership, and the Claude
+reference records both the Opus-first rationale and concrete Fable escalation
+triggers.
 
 **Step 4: Commit**
 

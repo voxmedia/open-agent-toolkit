@@ -40,7 +40,13 @@ retain the current Opus-first policy, or defer the matrix pending more evidence?
 **A:** Keep Opus first and reserve Fable for exceptional work.
 **Decision:** Revise the imported Claude provider draft so Opus remains the
 default Claude route for hard-reasoning and consequential work. Keep Fable as
-the exceptional escalation route rather than the default.
+the exceptional escalation route rather than the default. Root-orchestrator
+calls are low-volume and coherence-critical, while most execution volume belongs
+to bounded subagents that can be routed economically by task class. Capture
+savings in the high-volume subagent layer instead of weakening the root
+orchestrator; escalate from Opus to Fable only when unresolved ambiguity,
+exceptional novelty or consequence, or a directly relevant Fable strength
+justifies the incremental cost.
 
 ### Question 3: Guidance skill invocation
 
