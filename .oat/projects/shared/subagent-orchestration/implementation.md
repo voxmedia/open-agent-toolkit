@@ -17,14 +17,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status   | Tasks | Completed |
-| ------- | -------- | ----- | --------- |
-| Phase 1 | complete | 4     | 4/4       |
-| Phase 2 | pending  | 1     | 0/1       |
-| Phase 3 | pending  | 2     | 0/2       |
-| Phase 4 | pending  | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | complete    | 4     | 4/4       |
+| Phase 2 | in_progress | 1     | 1/1       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 4/9 tasks completed
+**Total:** 5/9 tasks completed
 
 ## Planning Gate Override
 
@@ -94,13 +94,16 @@ verify the implemented result.
 
 ## Phase 2: Enforce guidance and mechanics contracts
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-23
 
 ### Task p02-t01: Harden skill boundary validation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `22ae2325dbb8f0c9763c0004e023a93efa49ad2e`
+
+**Phase review:** blocked by 2 Important findings in
+`reviews/p02-review-2026-07-23T113654Z.md`; fix iteration 1 pending.
 
 ---
 
@@ -197,7 +200,11 @@ None for Phase 1.
 - Fix iteration 1 completed both findings in `0dda1cf3`; targeted tests passed
   139/139 and the full suite passed 3,539/3,539.
 - Phase 1 re-review passed with no findings.
-- Next action: execute the declared `p02`/`p03` parallel group.
+- Phase 2 implementation completed in `22ae2325`; root review found 2
+  Important contract-coverage gaps. Fix iteration 1 is pending.
+- Phase 3 passed root review in `reviews/p03-review-2026-07-23T112224Z.md`
+  after one operator-authorized recovery.
+- Next action: fix and re-review Phase 2, then fan in the parallel group.
 
 ---
 
@@ -213,7 +220,7 @@ None for Phase 1.
 | Phase | Tests Run                                | Passed                                           | Failed | Coverage                           |
 | ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ---------------------------------- |
 | 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1 |
-| 2     | -                                        | -                                                | -      | -                                  |
+| 2     | focused skill contracts                  | 112/112                                          | 0      | Review fixes pending               |
 | 3     | -                                        | -                                                | -      | -                                  |
 | 4     | -                                        | -                                                | -      | -                                  |
 
