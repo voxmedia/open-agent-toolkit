@@ -546,7 +546,11 @@ fragments, and the existing lockstep `0.2.13` release.
   `pnpm type-check`, and `pnpm build`.
 - Post-documentation final lifecycle review passed with no findings and a clear
   deferred ledger.
-- Next action: configured gate refresh, then approval-aware closeout.
+- Prior configured gate receipt and archived artifact remain preserved as
+  history; refreshed generation
+  `implement-exit-refresh-20260723T162824Z-b9d97a14-342d-49f2-afd3-a9de4c64b511`
+  was persisted at reviewed HEAD `3e4cc2b3`.
+- Next action: refreshed configured gate, then approval-aware closeout.
 
 ---
 
