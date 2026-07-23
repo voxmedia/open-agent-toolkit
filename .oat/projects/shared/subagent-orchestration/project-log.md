@@ -144,6 +144,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Accepted fresh final lifecycle re-review after approved docs and repo-reference synchronization. Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+### 2026-07-23 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T163522Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

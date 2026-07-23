@@ -552,6 +552,8 @@ fragments, and the existing lockstep `0.2.13` release.
   was persisted at reviewed HEAD `3e4cc2b3`.
 - Refreshed exit-gate run `cf1b9992-38b0-4d3a-be67-10435ba5a406` was accepted
   by the gate runtime.
+- Refreshed exit-gate result envelope persisted with status `ok`, a correlated
+  gate artifact, and an eligible receive handoff.
 - Next action: refreshed configured gate, then approval-aware closeout.
 
 ---
