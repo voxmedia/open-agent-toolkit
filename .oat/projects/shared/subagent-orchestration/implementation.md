@@ -583,6 +583,9 @@ tasks were added.
   deferred ledger.
 - Refreshed receive correlation reconciled to bookkeeping commit `a0815ea7`;
   exit-gate disposition persisted as `allowed/passed`.
+- Freshness delta from refreshed reviewed HEAD `3e4cc2b3` classified
+  closeout-only: review ledger, lifecycle notes, structural log, gate receipt,
+  and gate state.
 - Next action: final implementation approval.
 
 ---
