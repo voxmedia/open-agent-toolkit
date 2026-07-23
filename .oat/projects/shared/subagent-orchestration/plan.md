@@ -293,6 +293,10 @@ provider references, optional additive record evidence, and active consumer
 loading. Add negative assertions for unambiguous named-model matrix markers in
 mechanics without banning generic selector or floor terminology. Assert that
 `oat-repo-improve` loads generic guidance before candidate selection.
+Explicitly cover all dispatch-record compatibility scenarios: legacy records
+with guidance fields absent, enriched records containing every optional
+guidance field, and unknown service tiers being unable to satisfy a higher
+task-class floor.
 
 **Step 2: Format**
 
@@ -587,8 +591,9 @@ pnpm run cli:source -- --json sync --scope project --dry-run
 ```
 
 Expected: the final dry-run reports no pending canonical sync changes. Cursor
-native-reads canonical `.agents/skills`, so no Cursor skill view is generated;
-Codex has no ordinary skill adapter.
+and Codex native-read canonical `.agents/skills`, so neither produces a
+mirrored skill view; Claude receives the generated skill link. This wording
+corrects the broader provider-view statement in the reviewed design.
 
 **Step 2: Run focused integration checks**
 

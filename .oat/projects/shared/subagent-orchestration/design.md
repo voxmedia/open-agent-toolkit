@@ -27,13 +27,14 @@ reference, and the matching OAT mechanics reference. The imported drafts are
 starting material only; current OAT safeguards and repository conventions take
 precedence.
 
-Both skills ship in the utility pack and are generated into provider-specific
-views from canonical `.agents` sources. Utility subset selection uses a
+Both skills ship in the utility pack from canonical `.agents` sources. Claude
+receives a generated skill link, while Cursor and Codex native-read canonical
+skills and do not receive mirrored skill views. Utility subset selection uses a
 directional dependency: selecting `oat-dispatch-subagents` automatically
 includes `subagent-orchestration`, while the self-contained guidance skill may
 be installed alone. Validation enforces that dependency, the
 selection-versus-mechanics boundary, compatibility of additive dispatch
-evidence, provider-view synchronization, and the repository's release
+evidence, provider-integration synchronization, and the repository's release
 contract.
 
 ## Architecture
@@ -46,10 +47,11 @@ OAT-managed callers continue to invoke `oat-dispatch-subagents`; that skill
 loads the guidance needed to choose a floor-satisfying target before applying
 provider-specific launch mechanics.
 
-Canonical sources remain under `.agents`. Provider-linked views and bundled
-CLI assets are generated outputs. The utility-pack installer is the dependency
-boundary: dispatch installation must expose guidance, while guidance-only
-installation remains valid.
+Canonical sources remain under `.agents`. Claude links, materialized agent
+roles, synchronization metadata, and bundled CLI assets are generated outputs;
+Cursor and Codex ordinary skills remain native-read. The utility-pack installer
+is the dependency boundary: dispatch installation must expose guidance, while
+guidance-only installation remains valid.
 
 **Key Components:**
 
@@ -87,7 +89,9 @@ OAT caller -> oat-dispatch-subagents
 
 .agents canonical skills
         |
-        +--> provider view synchronization
+        +--> Claude skill link + materialized agent synchronization
+        |
+        +--> Cursor/Codex native skill reads
         |
         +--> CLI utility-pack bundle
 ```
@@ -244,8 +248,8 @@ usable utility capability.
   dependency.
 - Keep bundle inputs and installer/remove/update behavior consistent with the
   canonical inventory.
-- Generate Claude and Cursor skill views from `.agents`; do not maintain those
-  views independently.
+- Generate the Claude skill link from `.agents`; Cursor and Codex native-read
+  canonical skills and must not gain mirrored ordinary-skill outputs.
 - Update synchronization metadata after canonical changes.
 - Apply one frontmatter version increase per changed canonical skill in the
   final PR diff.
@@ -405,7 +409,8 @@ workflow.
 - Verify subset selection auto-includes guidance when dispatch is selected and
   still permits a guidance-only installation.
 - Verify bundle consistency includes both canonical skill trees.
-- Regenerate provider views and assert no synchronization drift.
+- Regenerate provider integrations and assert no synchronization drift or
+  unexpected Cursor/Codex skill mirrors.
 - Run focused CLI skill validation, formatting, type checking, and relevant
   tests.
 - Run the repository's publishable-package release validation after the
