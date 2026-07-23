@@ -33,41 +33,41 @@ oat_dispatch_policy:
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
-# oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
-#   status: pending # pending | allowed | blocked | stale
-#   resolution: configured # configured | no_gate
-#   disposition: null # null | passed | warned | prompt_approved | no_gate
-#   config_fingerprint: '<stable hash of resolved gate declaration>'
-#   resolved_command: null
-#   resolved_description: null
-#   on_failure: block # block | prompt | warn | null
-#   max_attempts: 2
-#   attempts_completed: 0
-#   reviewed_head: null
-#   implementation_base_ref: null # exact logical base ref for effective-delta-v1
-#   implementation_fingerprint: null # new generations use sha256:effective-delta-v1:<digest>
-#   freshness_head: null # rolling accepted tree checkpoint
-#   freshness_fingerprint: null # full effective delta at freshness_head
-#   launch_state: not_started # not_started | intent_persisted | accepted | result_persisted | not_accepted
-#   launch_attempt_id: null
-#   launch_started_at: null
-#   launch_result_receipt: null
-#   gate_run_marker: null
-#   gate_run_id: null
-#   envelope_status: null # ok | blocked | review_failed | other terminal status
-#   artifact: null
-#   handoff: null
-#   receive_state: not_started # not_started | intent_persisted | completed | reconciliation_required
-#   receive_correlation: null
-#   receive_source_artifact: null
-#   receive_archived_artifact: null
-#   receive_event_identity: null
-#   receive_pre_head: null
-#   receive_commit: null
-#   receive_eligible: false
-#   receive_completed: false
-#   failure: null
-#   updated_at: '2026-07-18T00:00:00Z'
+oat_implement_exit_gate:
+  status: pending
+  resolution: configured
+  disposition: null
+  config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
+  resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
+  resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
+  on_failure: block
+  max_attempts: 2
+  attempts_completed: 0
+  reviewed_head: e3e0f02435bfa84ada2942af47f281b0addd1f40
+  implementation_base_ref: refs/remotes/origin/main
+  implementation_fingerprint: 'sha256:effective-delta-v1:a1b365db3d6b6d5aecf42726fb171a014eec81093adb2fb4506cb996cc79fe1f'
+  freshness_head: e3e0f02435bfa84ada2942af47f281b0addd1f40
+  freshness_fingerprint: 'sha256:effective-delta-v1:a1b365db3d6b6d5aecf42726fb171a014eec81093adb2fb4506cb996cc79fe1f'
+  launch_state: intent_persisted
+  launch_attempt_id: implement-exit-20260723T124207Z-cbd8ecb7-7e28-4201-b6b9-7aca32900a8c
+  launch_started_at: '2026-07-23T12:42:07Z'
+  launch_result_receipt: .oat/projects/shared/subagent-orchestration/reviews/gate-receipts/implement-exit-20260723T124207Z-cbd8ecb7-7e28-4201-b6b9-7aca32900a8c.json
+  gate_run_marker: null
+  gate_run_id: null
+  envelope_status: null
+  artifact: null
+  handoff: null
+  receive_state: not_started
+  receive_correlation: null
+  receive_source_artifact: null
+  receive_archived_artifact: null
+  receive_event_identity: null
+  receive_pre_head: null
+  receive_commit: null
+  receive_eligible: false
+  receive_completed: false
+  failure: null
+  updated_at: '2026-07-23T12:42:07Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
