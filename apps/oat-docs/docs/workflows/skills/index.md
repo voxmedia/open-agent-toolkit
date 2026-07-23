@@ -26,6 +26,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 - Capture a scoped, shippable backlog item: `oat-pjm-add-backlog-item` directly when the work is already scoped, or `oat-brainstorm` when the thought hasn't converged yet — the brainstorm dispatcher's "scoped backlog item" destination pre-fills the title / description / acceptance criteria / scope estimate / priority from the conversation and then runs `oat-pjm-add-backlog-item` with confirmed inputs
 - Manage the repo backlog and reference docs: `oat-pjm-update-repo-reference`, `oat-pjm-review-backlog`
 - Turn a repo audit, maintainability review, backlog review, backlog directory, or backlog item into standalone external implementation plans: `oat-repo-improve`. Plans land under `.oat/repo/reference/external-plans/`; execute them directly or optionally pass one to `oat-project-import-plan` for tracked OAT execution.
+- Choose what to delegate and route bounded work by task class across Codex, Claude, or Cursor: `subagent-orchestration`. It is self-contained and usable without OAT; live catalogs and current instructions take precedence over its dated provider examples.
 - Build visual project explainers and final project recaps: `oat-explainer-kit`, backed by the destination-neutral `explainer-kit` core. See [Explainer Kit](explainer-kit.md).
 - Work on docs surfaces: `authoring-docs` (general documentation baseline), `oat-docs-authoring` (targeted OAT/Fumadocs authoring), `oat-docs-bootstrap` (guided bootstrap of a new docs app), `oat-docs-analyze`, `oat-docs-apply`, and `oat-project-document`
 - Generate a shipping digest or scheduled recap: `oat-wrap-up`
@@ -123,6 +124,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 === "Scaffolding and utility"
 
+    - `subagent-orchestration`
     - `explainer-kit`
     - `oat-worktree-bootstrap`
     - `oat-worktree-bootstrap-auto`

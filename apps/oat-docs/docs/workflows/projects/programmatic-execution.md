@@ -23,7 +23,7 @@ comes from configured dispatch policy or a configured cross-family gate
 (standing, scope-bound), or from explicit user approval for the current run.
 Availability of a provider CLI is capability evidence, not authorization. See
 the route tiers in
-[Orchestration Model](orchestration-model.md#route-tiers-and-terminality) for
+[Orchestration Model](orchestration-model.md#accepted-launch-terminality) for
 how native, policy-resolved, and improvised routes are ranked, and why an
 accepted launch is terminal for automatic replacement.
 
