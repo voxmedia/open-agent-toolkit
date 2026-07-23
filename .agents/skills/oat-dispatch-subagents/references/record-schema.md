@@ -19,6 +19,8 @@ provider: codex
 dispatch_context: root-native
 dispatch_policy: economy
 dispatch_ceiling: high
+service_tier: standard
+reasoning_mode: null
 authority: read-only
 expected_output: structured-findings
 verification_evidence: file-line-references
@@ -33,6 +35,14 @@ escalate_when:
   - evidence requires cross-package reconciliation
   - security impact is consequential
 ```
+
+`reasoning_mode` and `service_tier` are normalized caller-intent fields. During
+selection, map `reasoning_mode` to the resolved
+`reasoning_mode_selector` record field and `service_tier` to the resolved
+`service_tier_selector` record field. The selector fields are launch evidence,
+not blind copies of request values: they must contain the exact
+provider-native controls actually selected, or `null` when no independent
+control was selected or exposed.
 
 `dispatch_policy` and `dispatch_ceiling` are optional resolved inputs. The
 general engine does not resolve their source.
@@ -59,6 +69,47 @@ retain the original role-based selection and fallback behavior. The legacy
 `explicit-downgrade` example above is valid only for an unconstrained request
 without task-class metadata or a declared class floor.
 
+## Legacy Record
+
+This baseline Record remains valid without optional model-guidance evidence:
+
+```yaml
+request_id: dispatch-legacy-id
+caller: oat-repo-improve
+scope: repo:packages/cli
+objective: Audit CLI correctness hotspots
+action: analysis
+role_name: repo-audit-scout
+role_class: recon
+provider: codex
+dispatch_context: root-native
+dispatch_policy: economy
+dispatch_ceiling: high
+catalog_snapshot:
+  id: root-native-legacy-1
+  source: tool-schema
+  observed_at: 2026-07-12T00:00:00Z
+authority: read-only
+role_selector: oat-recon-worker
+model_selector: opaque-provider-selector
+model_selector_granularity: opaque
+effort_selector: economical
+selection_source: native-default
+candidates_considered:
+  - opaque-provider-selector
+selection_reason: native-catalog
+selected_route: native
+deadline_seconds: 300
+retry_limit: 1
+payload: {}
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence: []
+runtime_confirmation: not-reported
+diagnostics: []
+continuation_events: []
+```
+
 ## Record
 
 ```yaml
@@ -82,6 +133,12 @@ role_selector: oat-recon-worker
 model_selector: opaque-provider-selector
 model_selector_granularity: opaque
 effort_selector: economical
+reasoning_mode_selector: null
+service_tier_selector: standard
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-21
+guidance_verified_at: 2026-07-21
+guidance_status: fresh
 selection_source: native-default
 candidates_considered:
   - opaque-provider-selector
@@ -171,5 +228,32 @@ lanes:
 The wave scope is the aggregate boundary. Lane scope may narrow it. Use one
 shared record only when every dispatch axis listed in the main skill,
 `task_class`, and `model_class_floor` are identical. Lane entries do not
-redefine the shared class fields. Mixed classes require separate records and
-waves.
+redefine the shared class fields. In particular, `reasoning_mode_selector`,
+`service_tier_selector`, `guidance_reference`, `guidance_version`,
+`guidance_verified_at`, and `guidance_status` must be identically present or
+absent across lanes and, when present, have identical values. Mixed classes or
+different model-guidance controls require separate records and waves.
+
+## Optional Model-Guidance Evidence
+
+The following fields are optional for legacy callers and required when the
+launch surface exposes the corresponding control or when dated provider
+mapping influenced selection:
+
+```yaml
+reasoning_mode_selector: null # e.g. pro, when independent of effort
+service_tier_selector: standard # e.g. standard, fast, priority
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-21
+guidance_verified_at: 2026-07-21
+guidance_status: fresh # fresh | review-required | stale
+```
+
+Keep `model_selector`, `effort_selector`, `reasoning_mode_selector`, and
+`service_tier_selector` separate even when a provider encodes several axes in
+one opaque alias. Preserve that exact alias in `model_selector` and also record
+the interpreted service tier when known.
+
+A service tier never changes `model_class_floor` or `floor_satisfaction`.
+Unknown tier semantics must be recorded as a diagnostic and may block a
+consequential route.

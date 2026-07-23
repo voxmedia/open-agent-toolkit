@@ -8,6 +8,7 @@ export const BUNDLE_INPUTS = Object.freeze({
     'create-agnostic-skill',
     'explainer-kit',
     'oat-dispatch-subagents',
+    'subagent-orchestration',
     'oat-agent-instructions-analyze',
     'oat-agent-instructions-apply',
     'oat-brainstorm',

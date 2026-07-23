@@ -1,6 +1,6 @@
 ---
 name: oat-project-dispatch-subagents
-version: 1.1.2
+version: 1.1.3
 description: Use when an OAT project lifecycle skill needs to translate project state, phase or task scope, gates, and write authority into a provider-neutral subagent dispatch.
 disable-model-invocation: true
 user-invocable: false
@@ -29,8 +29,13 @@ dispatch summary for the caller to incorporate.
 ## Required Loading
 
 Resolve and read `oat-dispatch-subagents` from the active skill catalog before
-every lifecycle dispatch. Follow its provider-reference loading rule and
-request/record contract. Do not copy provider mechanics into this adapter.
+every lifecycle dispatch. Read the generic principles from
+`subagent-orchestration/references/model-selection-principles.md`, then resolve
+the active provider and read exactly one matching selection reference from
+`subagent-orchestration/references/` plus one matching mechanics reference from
+`oat-dispatch-subagents/references/`. Follow the general engine's
+request/record contract. Do not copy provider guidance or mechanics into this
+adapter.
 
 If the engine skill is unavailable, stop before project mutation or child
 launch and tell the user to install the utility pack at the matching scope:

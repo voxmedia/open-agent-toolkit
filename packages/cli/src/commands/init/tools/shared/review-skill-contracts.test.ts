@@ -62,7 +62,7 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.8');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.9');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );

@@ -1,6 +1,6 @@
 ---
 name: oat-dispatch-subagents
-version: 1.1.5
+version: 1.2.1
 description: Use when an OAT skill or workflow needs provider-neutral selection, launch, recovery, or evidence for bounded subagent work without project lifecycle policy.
 disable-model-invocation: true
 user-invocable: false
@@ -39,7 +39,7 @@ This skill owns:
 
 - capability and authorization probing;
 - live catalog evidence and candidate intersection;
-- model, effort, role, route, authority, and deadline selection;
+- model, effort, reasoning mode, service tier, role, route, authority, and deadline selection;
 - launch acceptance, continuation, recovery, and dispatch records.
 
 Do not read OAT project state, interpret `pNN-tNN` identifiers, or add phase,
@@ -49,16 +49,35 @@ contract.
 
 ## Required Loading
 
-Read this file before every OAT-managed subagent dispatch. Resolve the active
-provider first, then read exactly one provider reference:
+Model-selection policy lives in the `subagent-orchestration` skill (same
+pack); this skill owns launch mechanics. Read this file before every
+OAT-managed subagent dispatch, then read
+`.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
+Resolve the active provider and read exactly one selection reference from
+that skill plus the matching mechanics reference from this one:
 
-- Claude: `references/provider-claude.md`
-- Codex: `references/provider-codex.md`
-- Cursor: `references/provider-cursor.md`
+- Claude: `subagent-orchestration/references/provider-claude.md`, then
+  `references/provider-claude.md`
+- Codex or direct OpenAI: `subagent-orchestration/references/provider-codex.md`,
+  then `references/provider-codex.md`
+- Cursor: `subagent-orchestration/references/provider-cursor.md`, then
+  `references/provider-cursor.md`
 
-Do not merge provider references into one policy. For an unsupported provider,
-apply this provider-neutral contract and fail closed when exact launch controls
-cannot be established.
+Do not merge provider references into one policy. The principles file contains
+the durable task-class contract; the selection reference contains dated model
+mappings; the mechanics reference contains surface-specific launch controls.
+For an unsupported provider, apply the provider-neutral contract and fail
+closed when exact launch controls cannot be established.
+
+If the `subagent-orchestration` skill is not installed, treat model guidance
+as unresolved: fail closed for class-constrained dispatch, and for
+unconstrained dispatch select only through active user and repository
+instructions intersected with the live catalog.
+
+Read `subagent-orchestration/references/evidence-and-refresh.md` when
+selection guidance is review-required or stale, when a newer model or unknown
+control is observed, or when a consequential dispatch depends on evidence that
+is not current.
 
 Read `references/record-schema.md` only when constructing or validating a
 dispatch request, dispatch record, or homogeneous recon-wave record.
@@ -150,10 +169,17 @@ Keep these controls independent in selection and evidence:
   workflow, gate, or blocked;
 - role or agent definition;
 - model selector and selector granularity;
-- effort or reasoning selector, when exposed;
+- provider-native effort or reasoning selector, when exposed;
+- reasoning mode when exposed independently of effort;
+- service tier, including fast or priority variants;
 - inheritance source and context-fork controls;
 - authority, writable roots, deadline, and retry limit;
-- route and fallback policy.
+- route and fallback policy;
+- provider-guidance version, verification date, and freshness state.
+
+Do not normalize effort labels across providers. A fast or priority tier is a
+latency control unless current provider documentation explicitly establishes a
+capability difference; it never satisfies a higher task-class floor.
 
 A materialized role may package defaults, but its record must preserve each
 configured axis separately.
@@ -226,10 +252,35 @@ the lane through `caller-inline`. An economical target is not a universal
 baseline for the `recon` role.
 
 Resolve current class examples through active user and repository instructions
-first, then the active-provider reference and live catalog, all constrained by
-the supplied policy and ceiling. Provider-reference model names are dated
-examples, not canonical requirements. Select an exact eligible target at or
-above the requested floor; never silently downgrade.
+first, then the active-provider selection reference and live catalog, all
+constrained by the supplied policy and ceiling. Named models in the guidance
+layer are dated examples, not canonical requirements. Select an exact eligible
+target at or above the requested floor; never silently downgrade.
+
+## Dated Guidance and Candidate Qualification
+
+Task-class contracts are durable. Named models in the selection references are
+dated examples. A newer model is a candidate, not an automatic upgrade.
+
+Before using a provider mapping, determine its guidance state from the
+selection-reference frontmatter and
+`subagent-orchestration/references/evidence-and-refresh.md`:
+
+- `fresh`: use the mapping after live catalog intersection;
+- `review-required`: inspect current official controls and relevant evidence
+  before changing the incumbent;
+- `stale`: do not rely on the named mapping without requalification. Retain a
+  known-good incumbent only when still available and floor-satisfying, or route
+  one class up.
+
+A replacement must satisfy the class floor, be exactly selectable in the
+launching harness, have understood effort and service-tier semantics, avoid a
+material regression on relevant evidence, and fit the route's cost, latency,
+tool, context, and safeguard requirements. When evidence is incomplete, keep
+the incumbent or route one class up. Never silently select below the floor.
+
+Record the guidance version, verification date, freshness state, and the reason
+for any incumbent change.
 
 ## Catalog Evidence
 
@@ -265,7 +316,8 @@ For every dispatch:
    or blocked route before launch.
 6. Build the complete redacted payload.
 7. Record route, selection source, selection reason, candidates, catalog
-   source, authority, and deadline.
+   source, model, effort, reasoning mode, service tier, guidance version,
+   authority, and deadline.
 8. Launch once.
 9. Record launch acceptance separately from child outcome and runtime identity.
 
@@ -294,11 +346,16 @@ A homogeneous wave may share one record only when `task_class` and
 `model_class_floor` match in addition to every existing dispatch axis.
 Multiple read-only recon lanes may share one selection record only when all of
 these axes are identical: provider, dispatch context, catalog snapshot,
-selected route, role class, role selector, model, effort, authority, deadline,
-retry limit, fallback, `task_class`, and `model_class_floor`. Include a lane
-manifest with lane-specific scope, acceptance, and outcome. A recon-wave record
-repeats the shared `task_class` and `model_class_floor` beside
-`shared_dispatch_record`; lane entries do not redefine them.
+selected route, role class, role selector, model, effort, reasoning mode
+(`reasoning_mode_selector`), service tier (`service_tier_selector`), guidance
+reference (`guidance_reference`), guidance version (`guidance_version`),
+guidance verification date (`guidance_verified_at`), guidance status
+(`guidance_status`), authority, deadline, retry limit, fallback, `task_class`,
+and `model_class_floor`. Optional model-guidance fields must be identically
+present or absent across all lanes and, when present, have identical values.
+Include a lane manifest with lane-specific scope, acceptance, and outcome. A
+recon-wave record repeats the shared `task_class` and `model_class_floor`
+beside `shared_dispatch_record`; lane entries do not redefine them.
 
 If any axis differs or either class field does not match, create separate
 records and waves. The record-level scope is the aggregate wave boundary; each

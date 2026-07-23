@@ -190,6 +190,8 @@ describe('bundle asset inventory consistency', () => {
 
   it('bundles every utility skill', () => {
     expect(UTILITY_SKILLS).toContain('explainer-kit');
+    expect(UTILITY_SKILLS).toContain('oat-dispatch-subagents');
+    expect(UTILITY_SKILLS).toContain('subagent-orchestration');
     const missing = UTILITY_SKILLS.filter(
       (skill) => !bundleSkills.includes(skill),
     );

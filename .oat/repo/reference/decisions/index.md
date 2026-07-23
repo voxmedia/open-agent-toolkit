@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260723-additive-dispatch-evidence     | 2026-07-23 | accepted | Additive dispatch evidence compatibility                                | -      |
+| DR-260723-directional-utility-dependency | 2026-07-23 | accepted | Directional utility dependency                                          | -      |
+| DR-260723-guidance-and-mechanics         | 2026-07-23 | accepted | Guidance and mechanics ownership split                                  | -      |
+| DR-260723-opus-first-claude-routing      | 2026-07-23 | accepted | Opus-first Claude routing                                               | -      |
 | DR-260722-program-scope-recap-not-per    | 2026-07-22 | accepted | Program-scope recap, not per-wave                                       | -      |
 | DR-260720-autonomous-closeout-requires   | 2026-07-20 | accepted | Autonomous closeout requires a three-layer firing guard                 | -      |
 | DR-260720-recap-callers-own-prose        | 2026-07-20 | accepted | Recap callers own prose authoring                                       | -      |

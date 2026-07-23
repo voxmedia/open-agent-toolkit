@@ -62,6 +62,22 @@ function resolveScope(context: CommandContext): UtilityScope {
   return context.scope === 'user' ? 'user' : 'project';
 }
 
+function expandUtilitySelection(selectedSkills: string[]): string[] {
+  const dispatchSkill = 'oat-dispatch-subagents';
+  const guidanceSkill = 'subagent-orchestration';
+  const dispatchIndex = selectedSkills.indexOf(dispatchSkill);
+
+  if (dispatchIndex === -1 || selectedSkills.includes(guidanceSkill)) {
+    return selectedSkills;
+  }
+
+  return [
+    ...selectedSkills.slice(0, dispatchIndex + 1),
+    guidanceSkill,
+    ...selectedSkills.slice(dispatchIndex + 1),
+  ];
+}
+
 function reportSuccess(
   context: CommandContext,
   scope: UtilityScope,
@@ -107,7 +123,7 @@ async function runInitToolsUtility(
         ? await dependencies.resolveProjectRoot(context.cwd)
         : dependencies.resolveScopeRoot('user', context.cwd, context.home);
 
-    const selectedSkills = context.interactive
+    const requestedSkills = context.interactive
       ? await dependencies.selectManyWithAbort(
           'Select utility skills to install',
           UTILITY_SKILLS.map((skill) => ({
@@ -119,13 +135,15 @@ async function runInitToolsUtility(
         )
       : [...UTILITY_SKILLS];
 
-    if (selectedSkills === null) {
+    if (requestedSkills === null) {
       if (!context.json) {
         context.logger.info('Cancelled: no utility skills installed.');
       }
       process.exitCode = 0;
       return;
     }
+
+    const selectedSkills = expandUtilitySelection(requestedSkills);
 
     if (selectedSkills.length === 0) {
       if (!context.json) {

@@ -1,0 +1,143 @@
+{
+  "outcome": "review_completed_gate_passed",
+  "status": "ok",
+  "runId": "48a1a4df-a811-417c-be38-cc975466b1ec",
+  "target": "cursor-fable-5-xhigh",
+  "project": ".oat/projects/shared/subagent-orchestration",
+  "projectResolutionSource": "declared",
+  "artifactPath": ".oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md",
+  "generatedAt": "2026-07-23T12:49:54Z",
+  "threshold": "important",
+  "blocking": false,
+  "counts": {
+    "critical": 0,
+    "important": 0,
+    "medium": 0,
+    "minor": 0
+  },
+  "reviewType": "code",
+  "scope": "final",
+  "invocation": "gate",
+  "handoff": "Run oat-project-review-receive for .oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md before treating this gate review as consumed.",
+  "diversity": {
+    "avoid": "same-family",
+    "achieved": "different-family",
+    "producer": {
+      "value": "unknown",
+      "provenance": "unknown",
+      "confidence": "unknown",
+      "family": "unknown",
+      "source": "aggregated-stamps",
+      "avoidFamilies": ["openai"],
+      "contributingScopes": ["p01", "p02", "p03", "p04", "p05"],
+      "contributingStampCount": 5
+    },
+    "reviewer": {
+      "target": "cursor-fable-5-xhigh",
+      "runtime": "cursor",
+      "family": "claude",
+      "model": "claude-fable-5-xhigh"
+    }
+  },
+  "gateInvocation": {
+    "runId": "48a1a4df-a811-417c-be38-cc975466b1ec",
+    "targetId": "cursor-fable-5-xhigh",
+    "runtime": "cursor",
+    "model": "claude-fable-5-xhigh",
+    "reasoningEffort": "provider-default",
+    "source": "exec-target-config"
+  },
+  "dispatchReport": {
+    "schemaVersion": 1,
+    "route": {
+      "scope": "final",
+      "action": "review",
+      "role": "reviewer",
+      "target": "cursor-fable-5-xhigh"
+    },
+    "policy": {
+      "status": "resolved",
+      "mode": null,
+      "name": null,
+      "source": null
+    },
+    "selection": {
+      "requestedCandidate": null,
+      "candidateTier": null,
+      "candidateIndex": null,
+      "ceilingTier": null,
+      "ceilingTarget": null,
+      "selectedValue": null,
+      "exactSelectedTarget": null,
+      "selectionMode": "gate-invocation",
+      "selectionBranch": "gate-configured-invocation",
+      "cellSource": null
+    },
+    "requestedControls": {
+      "model": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      },
+      "effort": {
+        "value": null,
+        "mechanism": "base-role",
+        "reason": "Configured gate invocation is reported separately from runtime identity."
+      }
+    },
+    "configuredDefaults": {
+      "model": null,
+      "modelSource": null,
+      "effort": null,
+      "effortSource": null
+    },
+    "gateInvocation": {
+      "runId": "48a1a4df-a811-417c-be38-cc975466b1ec",
+      "targetId": "cursor-fable-5-xhigh",
+      "runtime": "cursor",
+      "model": "claude-fable-5-xhigh",
+      "reasoningEffort": "provider-default",
+      "source": "exec-target-config"
+    },
+    "runtimeIdentity": {
+      "producer": null,
+      "model": null,
+      "effort": null,
+      "provenance": "unknown",
+      "confidence": "not-reported"
+    }
+  },
+  "corroboration": {
+    "run": "matched",
+    "project": "matched",
+    "invocation": "matched",
+    "expected": {
+      "project": ".oat/projects/shared/subagent-orchestration",
+      "invocation": {
+        "runId": "48a1a4df-a811-417c-be38-cc975466b1ec",
+        "targetId": "cursor-fable-5-xhigh",
+        "runtime": "cursor",
+        "model": "claude-fable-5-xhigh",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    },
+    "actual": {
+      "containingProject": ".oat/projects/shared/subagent-orchestration",
+      "artifactProject": ".oat/projects/shared/subagent-orchestration",
+      "normalizedArtifactProject": ".oat/projects/shared/subagent-orchestration",
+      "matchingArtifactPaths": [
+        ".oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T124954Z.md"
+      ],
+      "invocation": {
+        "runId": "48a1a4df-a811-417c-be38-cc975466b1ec",
+        "targetId": "cursor-fable-5-xhigh",
+        "runtime": "cursor",
+        "model": "claude-fable-5-xhigh",
+        "reasoningEffort": "provider-default",
+        "source": "exec-target-config"
+      }
+    }
+  },
+  "receiveEligible": true
+}

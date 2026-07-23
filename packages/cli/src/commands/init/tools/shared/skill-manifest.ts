@@ -134,6 +134,7 @@ export const UTILITY_SKILLS = [
   'create-agnostic-skill',
   'explainer-kit',
   'oat-dispatch-subagents',
+  'subagent-orchestration',
   'oat-repo-improve',
   'oat-repo-maintainability-review',
   'oat-review-provide',

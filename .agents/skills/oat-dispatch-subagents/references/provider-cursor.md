@@ -1,8 +1,10 @@
-# Cursor Subagent Dispatch
+# Cursor Dispatch Mechanics
 
-Load this reference only when the active provider is Cursor. Cursor IDE and
-Cursor CLI are separate harness contexts. Treat every observed catalog as a
-volatile snapshot, never a durable inventory.
+Load this reference only when the active provider is Cursor. Cursor IDE, CLI,
+and SDK are related but distinct dispatch contexts. Model-selection policy for
+this provider lives in `subagent-orchestration/references/provider-cursor.md`;
+read it first. Treat every observed catalog as a volatile snapshot, never a
+durable inventory.
 
 ## Control Surfaces
 
@@ -10,17 +12,21 @@ volatile snapshot, never a durable inventory.
 | ---------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------- |
 | Native Task/Subagent schema  | Agent types available for that dispatcher invocation           | CLI account eligibility or another dispatcher's native catalog |
 | `cursor-agent --list-models` | Opaque flat model IDs accepted by the account CLI and resolver | Native Task eligibility or definition-pin acceptance           |
+| Cursor SDK catalog/schema    | Models accepted by that SDK context                            | IDE or nested-native eligibility                               |
 | Cursor UI role configuration | User-selected defaults and role settings                       | Live root or nested schema without a new observation           |
 
 Root and nested catalogs are independent, volatile observations. Equality in
 one run does not establish equality in another run or nesting boundary.
 
+Record the model selector and the service tier separately even when Cursor
+encodes both in one opaque alias.
+
 ## Task-Class Resolution
 
-Apply active user and repository instructions first; they override the dated
-model-family examples in this provider reference. Intersect that guidance with
-the exact model choices advertised by the dispatcher, the supplied policy and
-ceiling, and the requested class floor:
+Apply active user and repository instructions first, then the dated class
+guidance from the active provider selection reference. Intersect that guidance
+with the exact model choices advertised by the dispatcher, the supplied policy
+and ceiling, and the requested class floor:
 
 - `mechanical-recon`: the fastest economical class suitable for deterministic
   inventories, parity, and command execution;
@@ -55,8 +61,8 @@ reconstruct either model string.
    fallback or replacement.
 6. Treat an omitted variant as deliberate parent inheritance only when the
    resolver selected no managed target.
-7. Record selected variant, mapped target, acceptance, outcome, and runtime
-   identity separately.
+7. Record selected variant, mapped target, service tier, acceptance, outcome,
+   runtime identity, and guidance version separately.
 
 ## Reviewer-Local Nested Selection
 
@@ -68,7 +74,7 @@ exists.
 
 1. Read the model choices advertised by the nested Task/Subagent dispatcher.
 2. Intersect those advertised model choices with active user and repository
-   model-class instructions, this provider reference, the supplied
+   model-class instructions, the selection reference, the supplied
    policy/ceiling, and the requested `model_class_floor`.
 3. Use the native `generalPurpose` agent type and pass the exact model choice
    advertised by the current nested dispatcher byte-for-byte.
@@ -83,8 +89,8 @@ model pins, or reconstruct a lifecycle variant. If no exact nested selector
 satisfies the floor, record `floor_satisfaction: unsatisfied` and return the
 lane for caller-inline coverage without launching a weaker worker.
 
-Do not infer Cursor IDE behavior from a headless CLI surface. Keep bounded
-mechanical recon on economical explicit targets. Stronger lanes use a
+Do not infer Cursor IDE behavior from a headless CLI or SDK surface. Keep
+bounded mechanical recon on economical explicit targets. Stronger lanes use a
 floor-satisfying target when advertised or stay with the primary reviewer.
 
 ## Dispatch Mode and Liveness
@@ -108,14 +114,15 @@ liveness, stat that specific file's mtime and size rather than inferring from a
 directory. Metadata change is observable activity evidence, not a health
 verdict.
 
-## Pre-Start CLI Routes
+## Pre-Start CLI or SDK Routes
 
 Any native mismatch is recorded before launch with the route, reason, and
 candidate set.
 
 When exact outer lifecycle role selection rejects the resolver-selected
 variant before launch, or a generic caller's current native intersection is
-unsatisfactory, a caller may use a deliberate pre-start CLI route only when:
+unsatisfactory, a caller may use a deliberate pre-start CLI or SDK route only
+when:
 
 - the caller's fallback policy allows it;
 - the exact CLI selector exists in the account catalog;
@@ -123,7 +130,7 @@ unsatisfactory, a caller may use a deliberate pre-start CLI route only when:
   candidates are recorded before launch;
 - the prompt is self-contained and authority-bounded.
 
-Verify current CLI help before use. A typical shape is:
+Verify current CLI or SDK help/schema before use. A typical CLI shape is:
 
 ```sh
 cursor-agent \
@@ -133,13 +140,13 @@ cursor-agent \
   '<self-contained bounded prompt>'
 ```
 
-CLI completion proves configured invocation completion. It does not prove an
-inner native selection or runtime model identity.
+CLI or SDK completion proves configured invocation completion. It does not
+prove an inner native selection or runtime model identity.
 
 ## Catalog-Mismatch Advisory
 
-Report configured candidates missing from the current native catalog, nearby
-native candidates as possible ladder additions, selected route, and the exact
-observation boundary. Do not remove CLI-capable candidates solely because the
-native surface cannot pin them, and do not write observed catalogs into durable
-configuration without explicit user choice.
+Report configured candidates missing from the current catalog, nearby native
+candidates, the selected route, and the exact observation boundary. Do not
+remove CLI- or SDK-capable candidates solely because another native surface
+cannot pin them. Do not persist an observed catalog without explicit user
+choice.

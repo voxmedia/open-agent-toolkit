@@ -19,17 +19,35 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 - `docs` - docs and agent-instructions governance workflows
 - `workflows` - project lifecycle skills, wave-program orchestration (`oat-wave-program`, `oat-wave-execute`), the project subagent-dispatch adapter, wrap-up reporting, reviewer agents, and core project templates
 - `ideas` - lightweight ideation and promotion flows
-- `utility` - review and repo-maintenance helpers plus the provider-neutral subagent-dispatch engine
+- `utility` - review and repo-maintenance helpers plus portable subagent-selection guidance and the provider-neutral dispatch engine
 - `project-management` - file-backed backlog/reference skills plus backlog, roadmap, current-state, file-per-record decision, and AGENTS-guide templates
 - `research` - research, analysis, comparison, and synthesis skills
 - `brainstorm` - always-on brainstorming entry point with visual companion
 
-### Cross-pack dispatch dependency
+### Orchestration guidance and dispatch dependencies
 
-The reusable dispatch contracts intentionally span two packs:
+The utility pack ships the reusable orchestration pair:
 
-- `utility` owns `oat-dispatch-subagents`, the provider-neutral engine for
-  capability checks, catalog-aware selection, launch evidence, and recovery.
+- `subagent-orchestration` owns durable task classes, model-selection
+  principles, dated provider selection matrices, and refresh evidence.
+- `oat-dispatch-subagents` owns capability checks, live catalog intersection,
+  authorized routes, launch acceptance, recovery, and dispatch records.
+
+Provider-aware callers load the generic principles plus exactly one provider
+selection reference, then the dispatch contract plus exactly one matching
+provider mechanics reference. The first reference answers which candidates
+satisfy the task-class floor; the second answers how the active provider can
+launch them. Root callers retain classification, selection judgment,
+cross-lane synthesis, and final authority.
+
+Custom utility selection has a directional dependency: choosing
+`oat-dispatch-subagents` automatically includes `subagent-orchestration`, while
+the self-contained guidance skill may be installed alone. Full utility-pack
+update and removal treat both as explicit members. Removing either skill by
+name does not implicitly remove the other.
+
+The OAT lifecycle adapter intentionally lives in a separate pack:
+
 - `workflows` owns `oat-project-dispatch-subagents`, the adapter that adds OAT
   project lifecycle context without duplicating provider mechanics.
 
@@ -41,9 +59,9 @@ oat tools install workflows
 ```
 
 The packs remain independently installable. If the workflows adapter is
-present without the utility engine, it fails closed and reports the missing
+present without the utility contracts, it fails closed and reports the missing
 dependency instead of inventing a fallback route. Non-project analytical
-skills can use the utility engine directly.
+skills can use the utility guidance and dispatch layers directly.
 
 ### Cross-pack explainer dependency
 

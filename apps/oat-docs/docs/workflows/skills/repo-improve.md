@@ -56,4 +56,16 @@ Failure to publish a backlog item or issue does not invalidate a successfully wr
 
 ## Orchestration
 
-Full repository audits use `oat-dispatch-subagents` for bounded read-only reconnaissance while the root agent retains vetting, prioritization, and plan writing. Dispatch is native-first. Configured project/workflow policy may authorize required CLI or cross-runtime routes; an agent-improvised alternate route requires explicit current-run approval.
+Full repository audits use bounded read-only reconnaissance while the root
+agent retains classification, vetting, prioritization, cross-lane synthesis,
+and plan writing. Before launch, the caller loads the durable task classes and
+model-selection principles from `subagent-orchestration` plus exactly one
+active-provider selection reference.
+
+The internal `oat-dispatch-subagents` skill then owns capability checks, live
+catalog intersection, exact route selection, launch acceptance, recovery, and
+dispatch records. It loads exactly one matching provider mechanics reference;
+selection and mechanics references are not merged into one universal provider
+contract. Dispatch is native-first. Configured project/workflow policy may
+authorize required CLI or cross-runtime routes; an agent-improvised alternate
+route requires explicit current-run approval.

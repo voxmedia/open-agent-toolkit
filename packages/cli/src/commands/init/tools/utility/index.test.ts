@@ -141,6 +141,36 @@ describe('createInitToolsUtilityCommand', () => {
     );
   });
 
+  it('expands dispatch selections to include orchestration guidance', async () => {
+    const { command, installUtility } = createHarness({
+      interactive: true,
+      selectResponses: [['oat-dispatch-subagents']],
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skills: ['oat-dispatch-subagents', 'subagent-orchestration'],
+      }),
+    );
+  });
+
+  it('allows orchestration guidance to be selected alone', async () => {
+    const { command, installUtility } = createHarness({
+      interactive: true,
+      selectResponses: [['subagent-orchestration']],
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(installUtility).toHaveBeenCalledWith(
+      expect.objectContaining({
+        skills: ['subagent-orchestration'],
+      }),
+    );
+  });
+
   it('--scope user works', async () => {
     const { command, installUtility } = createHarness({ interactive: false });
 
