@@ -369,9 +369,9 @@ None in this run entry.
 
 #### Phase Outcomes
 
-| Phase | Verdict     | Task Commits | Review                  | Fixes                               |
-| ----- | ----------- | ------------ | ----------------------- | ----------------------------------- |
-| p05   | implemented | `e92a50bd`   | final re-review pending | M1 plus verification fix `ab60498b` |
+| Phase | Verdict | Task Commits | Review                                                | Fixes                               |
+| ----- | ------- | ------------ | ----------------------------------------------------- | ----------------------------------- |
+| p05   | passed  | `e92a50bd`   | `reviews/archived/final-review-2026-07-23T123440Z.md` | M1 plus verification fix `ab60498b` |
 
 #### Dispatch Notes
 
@@ -387,7 +387,8 @@ None in this run entry.
 
 #### Outstanding Items
 
-- Final lifecycle re-review of the completed M1 fix.
+- None. The two known docs fragments predate the branch and remain outside this
+  project's findings.
 
 <!-- orchestration-runs-end -->
 
@@ -414,7 +415,30 @@ None in this run entry.
   assert baseline fields plus absence of optional guidance evidence. Task scope:
   Minor.
 
-**Fix status:** completed in `e92a50bd`; final re-review pending.
+**Fix status:** completed in `e92a50bd`; final re-review passed.
+
+---
+
+## Final Re-review Received: final
+
+**Date:** 2026-07-23
+**Review artifact:**
+`reviews/archived/final-review-2026-07-23T123440Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 0
+- Minor: 0
+
+**Deferred ledger:**
+
+- M1 resolved by `e92a50bd`.
+- Directly caused autonomy inventory drift resolved by `ab60498b`.
+- No deferred Medium or Minor remains.
+
+**Disposition:** final lifecycle review passed.
 
 ---
 
@@ -453,8 +477,8 @@ None in this run entry.
   focused, release, and sync checks.
 - Final verification found the fixture's new autonomy-inventory prompt-site
   hash; bounded fix `ab60498b` mapped it to NG and restored the full suite.
-- Next action: final verification, final lifecycle re-review, and configured
-  implementation closeout.
+- Final lifecycle re-review passed with no findings.
+- Next action: configured implementation exit gate and approval-aware closeout.
 
 ---
 
