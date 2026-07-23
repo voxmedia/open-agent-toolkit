@@ -483,6 +483,8 @@ None in this run entry.
   `implement-exit-20260723T124207Z-cbd8ecb7-7e28-4201-b6b9-7aca32900a8c`.
 - Exit-gate run `48a1a4df-a811-417c-be38-cc975466b1ec` was accepted by
   the gate runtime.
+- Exit-gate result envelope persisted with status `ok`, a correlated gate
+  artifact, and an eligible receive handoff.
 - Next action: configured implementation exit gate and approval-aware closeout.
 
 ---
