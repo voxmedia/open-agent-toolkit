@@ -521,8 +521,10 @@ added.
   backlog context were refreshed.
 - Because those documentation commits followed the passing configured gate,
   its freshness state was marked stale before approval.
-- Next action: final verification, lifecycle review, configured gate refresh,
-  then approval-aware closeout.
+- Post-documentation final verification passed: `pnpm test`, `pnpm lint`,
+  `pnpm type-check`, and `pnpm build`.
+- Next action: lifecycle review, configured gate refresh, then approval-aware
+  closeout.
 
 ---
 
