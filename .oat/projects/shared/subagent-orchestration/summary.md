@@ -1,44 +1,112 @@
 ---
-oat_generated: false
-purpose: project-observations
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
 oat_last_updated: 2026-07-23
+oat_generated: true
+oat_summary_last_task: p05-t01
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
-# Project Log: subagent-orchestration
+# Summary: subagent-orchestration
 
-This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+## Overview
 
-## Logging contract
+This project separated portable model-selection guidance from OAT's subagent
+launch machinery. It preserves one canonical source for task classification and
+provider routing while keeping OAT-specific authorization, launch, recovery,
+and evidence contracts independently maintainable.
 
-Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+## What Was Implemented
 
-Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+- Added the user-invocable, self-contained `subagent-orchestration` skill with
+  five task classes, durable selection principles, provider-specific dated
+  guidance, and explicit evidence-refresh rules.
+- Reduced `oat-dispatch-subagents` to mechanics ownership while preserving
+  capability probing, live-catalog intersection, native-first routing,
+  acceptance terminality, recovery, and fail-closed behavior.
+- Migrated active reviewer, implementer, planning, lifecycle-adapter, Cursor
+  Cloud, and repository-improvement consumers to load generic principles, one
+  provider selection reference, and matching mechanics in order.
+- Added directional utility installation: selecting dispatch automatically
+  includes guidance, while the guidance skill remains independently
+  installable. Provider sync and bundled distribution carry the same contract.
+- Hardened structural coverage for ownership boundaries, task-class semantics,
+  consumer composition, Claude routing, provider freshness, service tiers, and
+  legacy versus enriched dispatch records.
+- Updated user and maintainer documentation, then advanced the five public
+  packages and release metadata to `0.2.13`.
 
-```text
-Observation: What happened and the supporting evidence.
-Impact: Why it mattered or what workaround was required.
-Recommendation: What should change or be preserved.
-```
+## Key Decisions
 
-Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+- **Guidance and mechanics ownership split.** Portable task classification,
+  model-selection principles, dated provider mappings, and refresh evidence
+  belong to `subagent-orchestration`; OAT dispatch retains authorization,
+  launch, liveness, recovery, and record mechanics. This avoids duplicated,
+  drifting model policy without weakening launch safeguards.
+- **Directional utility dependency.** Installing `oat-dispatch-subagents`
+  includes `subagent-orchestration`, but guidance may be installed alone.
+  Dispatch therefore fails closed when required guidance is unavailable while
+  non-OAT users can consume the portable layer independently.
+- **Opus-first Claude routing.** Opus remains the hard-reasoning and
+  consequential default; Fable is an exceptional escalation for unresolved
+  ambiguity, novelty, consequence, or a directly relevant strength. Cost
+  savings belong primarily in the higher-volume bounded-subagent layer rather
+  than the low-volume root orchestrator.
+- **Additive dispatch evidence compatibility.** New guidance, reasoning,
+  service-tier, and freshness evidence remains optional so legacy records stay
+  valid. Canonical legacy and enriched fixtures make that compatibility
+  executable rather than implicit.
 
-## Entry format
+## Design Deltas
 
-Judgment entries:
+- The quick-start planning gate proceeded under an explicit operator override
+  after its received findings were fixed. Independent phase, final lifecycle,
+  and cross-family exit-gate reviews subsequently passed.
+- Phase 3's normal merge encountered a duplicate bootstrap-sync manifest
+  conflict. The two reviewed task commits were cherry-picked and the integrated
+  contract and docs checks passed.
 
-```text
-### 2026-07-23 · <project|general> · <bug|friction|worked-well|feedback> · <area>
-```
+## Notable Challenges
 
-Structural entries:
+- Phase 1 exposed directly caused autonomy-inventory and reviewer-version
+  contract drift; a bounded fix restored the full suite.
+- The first Phase 3 dispatch carried stale boundaries and stopped without
+  edits. An operator-authorized fresh attempt used the canonical plan and
+  completed successfully.
+- Final verification found that the new legacy-record fixture added one prompt
+  site to the autonomy inventory. Mapping it as non-gating schema evidence
+  restored all repository tests.
 
-```text
-### 2026-07-23 · structural · <producer> · <ref>
-```
+## Tradeoffs Made
 
-## Entries
+- The existing `oat-dispatch-subagents` name was retained to keep the ownership
+  split reviewable; a generic dispatch-engine rename remains separate work.
+- Volatile provider matrices stay in canonical skill references instead of
+  being duplicated in global instructions or the docs site. Live catalogs and
+  current user or repository instructions always take precedence.
 
-Entries are chronological and append-only.
+## Integration Notes
+
+- Utility installers, update/remove flows, provider synchronization, and active
+  OAT consumers all rely on the two-layer contract.
+- Cursor and Codex read canonical skills directly; Claude receives the
+  generated canonical skill link. Generated agent roles consume the same
+  loading order.
+- Final verification passed workspace tests, lint, type-check, package and docs
+  builds, release validation, registry checks, local docs-link crawling, and
+  provider-sync dry runs. Final lifecycle and Fable exit-gate reviews reported
+  no findings.
+
+## Follow-up Items
+
+- Evaluate a generic dispatch-skill rename as a separate compatibility
+  migration if naming consistency becomes worth the consumer churn.
+- Consider user-scope installation of the portable guidance skill after the
+  project-level distribution has operating evidence.
+
+## Workflow Observations
 
 ### 2026-07-23 · structural · oat gate review · plan
 
@@ -147,7 +215,3 @@ Accepted fresh final lifecycle re-review after approved docs and repo-reference 
 ### 2026-07-23 · structural · oat gate review · final
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/subagent-orchestration/reviews/final-review-2026-07-23T163522Z.md
-
-## End-of-run synthesis
-
-Overall verdict: the guidance/mechanics split shipped through all five phases, full verification, independent final review, documentation synchronization, and a refreshed cross-family exit gate with no remaining findings. Adopted adjustments included bounded fixes for autonomy/version drift, stronger contract coverage, explicit legacy-record compatibility, an operator-authorized Phase 3 recovery, and reviewed-task cherry-picks after the duplicate bootstrap-sync manifest conflict. Durable outcomes were recorded in PJM current-state/backlog surfaces and four canonical decision records; no project judgment entries or follow-up-marked observations required separate ledger or backlog graduation.
