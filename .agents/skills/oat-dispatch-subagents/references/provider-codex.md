@@ -1,20 +1,23 @@
-# Codex Subagent Dispatch
+# Codex Dispatch Mechanics
 
-Load this reference only when the active provider is Codex. Current user-level
-or repository instructions override model examples in this file.
+Load this reference only when the active provider is Codex or a direct OpenAI
+API route. Model-selection policy for this provider lives in
+`subagent-orchestration/references/provider-codex.md`; read it first.
 
 ## Independent Controls
 
 Codex may expose independent native controls for:
 
 - registered agent type;
-- model and reasoning effort;
+- exact model and `reasoning.effort`;
+- `reasoning.mode`, including `pro` where supported;
 - service tier and forked context;
 - maximum nesting depth;
 - sandbox and scoped writable roots.
 
 A materialized role may package defaults, but preserve role, model, effort,
-service tier, fork behavior, and authority as separate configured axes.
+reasoning mode, service tier, fork behavior, and authority as separate
+configured axes.
 
 ## Native Topology
 
@@ -28,13 +31,14 @@ grant filesystem authority.
 
 ## Exact Native Selection
 
-1. Read live registered roles and model/effort selectors.
+1. Read live registered roles and model, effort, service-tier, and reasoning-mode selectors.
 2. Read effective depth and sandbox configuration.
 3. Resolve one configured candidate allowed by policy and ceiling.
 4. Use the exact registered role as `agent_type` only when guaranteed by the
    live host.
 5. Use the fork mode allowed by the live schema for explicit overrides.
 6. Record materialized configuration and live schema as distinct sources.
+7. Record the provider-guidance version and freshness state.
 
 Prefer economical high-effort workers for narrow, independently verifiable
 recon. Move to a context-heavier worker when success depends on reconciling
@@ -44,10 +48,10 @@ many files must be searched.
 
 ## Task-Class Resolution
 
-Apply active user and repository instructions first; they override the dated
-model-family examples in this provider reference. Intersect that guidance with
-the live model/effort selectors, registered roles, supplied policy and ceiling,
-and requested class floor:
+Apply active user and repository instructions first, then the dated class
+guidance from the active provider selection reference. Intersect that guidance
+with the live model/effort selectors, registered roles, supplied policy and
+ceiling, and requested class floor:
 
 - `mechanical-recon`: an economical class and effort suitable for
   deterministic inventories, parity, and command execution;
@@ -102,6 +106,7 @@ codex exec \
   '<self-contained bounded prompt>'
 ```
 
-Honor the caller's authorization boundary. Record model, effort, sandbox, and
-route as configured invocation evidence; do not infer runtime identity from a
-successful process alone.
+Add a service tier or reasoning mode only through controls shown by the current
+CLI/schema. Honor the caller's authorization boundary. Record every selector
+as configured invocation evidence; do not infer runtime identity from process
+success alone.

@@ -19,6 +19,8 @@ provider: codex
 dispatch_context: root-native
 dispatch_policy: economy
 dispatch_ceiling: high
+service_tier: standard
+reasoning_mode: null
 authority: read-only
 expected_output: structured-findings
 verification_evidence: file-line-references
@@ -82,6 +84,12 @@ role_selector: oat-recon-worker
 model_selector: opaque-provider-selector
 model_selector_granularity: opaque
 effort_selector: economical
+reasoning_mode_selector: null
+service_tier_selector: standard
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-21
+guidance_verified_at: 2026-07-21
+guidance_status: fresh
 selection_source: native-default
 candidates_considered:
   - opaque-provider-selector
@@ -173,3 +181,27 @@ shared record only when every dispatch axis listed in the main skill,
 `task_class`, and `model_class_floor` are identical. Lane entries do not
 redefine the shared class fields. Mixed classes require separate records and
 waves.
+
+## Optional Model-Guidance Evidence
+
+The following fields are optional for legacy callers and required when the
+launch surface exposes the corresponding control or when dated provider
+mapping influenced selection:
+
+```yaml
+reasoning_mode_selector: null # e.g. pro, when independent of effort
+service_tier_selector: standard # e.g. standard, fast, priority
+guidance_reference: subagent-orchestration/references/provider-codex.md
+guidance_version: 2026-07-21
+guidance_verified_at: 2026-07-21
+guidance_status: fresh # fresh | review-required | stale
+```
+
+Keep `model_selector`, `effort_selector`, `reasoning_mode_selector`, and
+`service_tier_selector` separate even when a provider encodes several axes in
+one opaque alias. Preserve that exact alias in `model_selector` and also record
+the interpreted service tier when known.
+
+A service tier never changes `model_class_floor` or `floor_satisfaction`.
+Unknown tier semantics must be recorded as a diagnostic and may block a
+consequential route.

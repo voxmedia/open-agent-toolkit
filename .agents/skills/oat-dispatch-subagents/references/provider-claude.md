@@ -1,7 +1,8 @@
-# Claude Subagent Dispatch
+# Claude Dispatch Mechanics
 
-Load this reference only when the active provider is Claude. Current
-user-level or repository instructions override model examples in this file.
+Load this reference only when the active provider is Claude. Model-selection
+policy for this provider lives in
+`subagent-orchestration/references/provider-claude.md`; read it first.
 
 ## Control Surfaces
 
@@ -33,10 +34,10 @@ satisfy a universal catalog rule.
 
 ## Task-Class Resolution
 
-Apply active user and repository instructions first; they override the dated
-model-family examples in this provider reference. Intersect the resulting
-class guidance with the live native model enum and the supplied policy and
-ceiling. Select one exact accepted alias at or above the requested floor:
+Apply active user and repository instructions first, then the dated class
+guidance from the active provider selection reference. Intersect the resulting
+guidance with the live native model enum and the supplied policy and ceiling.
+Select one exact accepted alias at or above the requested floor:
 
 - `mechanical-recon`: the fastest economical class suitable for deterministic
   inventories, parity, and command execution;
@@ -59,7 +60,9 @@ prohibited. Record the exact selector and `floor_satisfaction`.
   required and native controls cannot express it.
 - Record selector granularity such as `tier-alias` or `exact-model-id`.
 - Record native effort as `not-exposed`, not globally `not-applicable`.
+- Record service tier separately; fast Claude routes are latency purchases.
 - Keep acceptance, outcome, runtime identity, and continuation separate.
+- Record the provider-guidance version and freshness state.
 
 Verify current `claude --help` before using a CLI route. Preserve the caller's
 authority and construct a self-contained bounded prompt.
