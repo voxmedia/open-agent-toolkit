@@ -129,6 +129,9 @@ _No implementation orchestration runs yet._
 
 - Planning handoff completed.
 - Gate findings were fixed and the operator waived the clean Fable re-review.
+- Implementation preflight selected Tier 1 Cursor subagents under the managed
+  `high` policy.
+- HiLL is configured for `p04` only, with automatic checkpoint review enabled.
 - Next task: `p01-t01`.
 
 ---
