@@ -53,16 +53,23 @@ does not launch a third tier.
 
 ## Dispatch Layers
 
-Every lifecycle launch flows through two contracts:
+Every lifecycle launch composes three responsibilities:
 
 1. `oat-project-dispatch-subagents` resolves project state, role policy,
    ceilings, scope, files, commits, worktrees, and checkpoints.
-2. `oat-dispatch-subagents` resolves capabilities, catalogs, exact routes,
-   launch acceptance, continuation, and generic evidence.
+2. `subagent-orchestration` supplies the durable task classes and
+   model-selection principles. The caller loads exactly one active-provider
+   selection reference for dated candidates and refresh evidence.
+3. `oat-dispatch-subagents` resolves capabilities, live catalogs, exact
+   routes, launch acceptance, continuation, recovery, and dispatch records. It
+   loads exactly one matching provider mechanics reference.
 
-The lifecycle workflow remains authoritative for synthesis and state mutation.
-The dispatch engine does not edit `plan.md`, `implementation.md`, or project
-state.
+The selection and mechanics references form a two-reference provider contract:
+the first owns model guidance, while the second owns provider control surfaces.
+They are loaded together for dispatch but never collapsed into one universal
+matrix. The lifecycle workflow remains authoritative for classification,
+selection judgment, synthesis, and state mutation. The dispatch engine does
+not edit `plan.md`, `implementation.md`, or project state.
 
 ```mermaid
 sequenceDiagram

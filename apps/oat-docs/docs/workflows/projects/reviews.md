@@ -276,8 +276,8 @@ task class sets its minimum model-capability floor:
 File count alone does not justify escalation. Interpretation and policy
 judgment either use an adequate stronger class or remain with the primary
 reviewer. Active user and repository instructions, the active-provider
-guidance, and the live nested catalog resolve current model examples; the
-canonical reviewer does not promise named models.
+selection guidance, and the live nested catalog resolve current model
+examples; the canonical reviewer does not promise named models.
 
 Reviewer-local fan-out is limited to one bounded, read-only, non-recursive
 round. Each worker receives a disjoint scope, cannot modify files or spawn more
@@ -288,15 +288,22 @@ workers, and returns a compact advisory report containing:
 - gaps in the assigned scope; and
 - explicit uncertainty, including uncertainty about absence claims.
 
-Before launching these lanes, the reviewer loads the generic
-`oat-dispatch-subagents` contract and exactly one active-provider reference.
-That shared contract owns nested capability checks, worker catalog resolution,
-model and effort selection, routing, authorization, launch evidence, and
-provider-specific mechanics. It records each lane's task class, model-class
-floor, classification rationale, and floor satisfaction without assuming that
-workers inherit the primary reviewer's target. Lanes may share one wave only
-when their task classes, model floors, and all other dispatch axes match;
-mixed-class reviews use separate waves and records.
+Before launching these lanes, the reviewer loads `subagent-orchestration` for
+durable task classes and model-selection principles, then exactly one
+active-provider selection reference. The reviewer applies that guidance and
+retains the classification, authority, reconciliation, and final finding
+judgment.
+
+The reviewer separately loads the internal `oat-dispatch-subagents` contract
+and exactly one matching provider mechanics reference. That layer owns nested
+capability checks, live worker-catalog resolution, authorized routing, launch
+acceptance, recovery, and dispatch records. Selection guidance owns dated
+provider matrices and refresh evidence; dispatch mechanics do not duplicate
+them. The dispatch record preserves each reviewer-supplied task class,
+model-class floor, classification rationale, selected axes, and floor
+satisfaction without assuming workers inherit the primary reviewer's target.
+Lanes may share one wave only when their task classes, model floors, and all
+other dispatch axes match; mixed-class reviews use separate waves and records.
 
 This generic reviewer-local use is distinct from
 `oat-project-dispatch-subagents`, which is reserved for OAT lifecycle phase and
