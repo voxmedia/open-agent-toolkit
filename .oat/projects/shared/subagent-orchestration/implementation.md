@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-22
+oat_last_updated: 2026-07-23
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,98 +10,103 @@ oat_generated: false
 # Implementation: subagent-orchestration
 
 **Started:** 2026-07-22
-**Last Updated:** 2026-07-22
+**Last Updated:** 2026-07-23
 
 > This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> `oat_current_task_id` always points at the next plan task to do.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 4     | 0/4       |
+| Phase 2 | pending | 1     | 0/1       |
+| Phase 3 | pending | 2     | 0/2       |
+| Phase 4 | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/9 tasks completed
 
----
+## Planning Gate Override
 
-## Phase 1: {Phase Name}
+The configured quick-start exit gate used `onFailure: block`. Its first Fable
+attempt timed out; its second attempt produced a receive-eligible review whose
+findings were dispositioned and fixed. The operator explicitly approved
+proceeding on 2026-07-23 without the clean re-review required by the configured
+policy.
 
-**Status:** in_progress
-**Started:** 2026-07-22
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+This records an intentional lifecycle exception. The plan review remains
+`fixes_completed`, not `passed`, and later code reviews must independently
+verify the implemented result.
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Establish the canonical split
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Add portable model-selection guidance
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t02: Reduce dispatch references to mechanics
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Migrate canonical dispatch consumers
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Restore the existing skill suite to green
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Enforce guidance and mechanics contracts
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Harden skill boundary validation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Distribute and document the split
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Add directional utility dependency
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Update active orchestration documentation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Synchronize and release the integrated result
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Advance lockstep package versions
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Regenerate providers and pass release gates
 
 **Status:** pending
 **Commit:** -
@@ -110,15 +115,9 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation orchestration runs yet._
 
 <!-- orchestration-runs-end -->
 
@@ -126,85 +125,35 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-07-23
 
-### 2026-07-22
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-22
-
-**Session Start:** {time}
-
-{Continue log...}
+- Planning handoff completed.
+- Gate findings were fixed and the operator waived the clean Fable re-review.
+- Next task: `p01-t01`.
 
 ---
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review    | Source Artifact | Planned / Documented                | Actual / Accepted                        | Reason                                    | Source of Truth | Follow-up                                 |
+| ---------------- | --------------- | ----------------------------------- | ---------------------------------------- | ----------------------------------------- | --------------- | ----------------------------------------- |
+| quick-start gate | `plan.md`       | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review | `plan.md`       | Independently verify through code reviews |
 
 ## Test Results
-
-Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+Pending implementation.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`

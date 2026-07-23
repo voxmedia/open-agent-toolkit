@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-22
+oat_last_updated: 2026-07-23
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups:
   - [p02, p03]
 oat_plan_source: quick
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: subagent-orchestration
@@ -690,6 +690,14 @@ Expected: generated provider and bundle metadata are committed; ignored
 - `fixes_added`: fix tasks were added to the plan.
 - `fixes_completed`: fixes were applied and await re-review.
 - `passed`: re-review completed without unresolved blocking findings.
+
+**Configured gate disposition:** Operator-approved override on 2026-07-23. The
+first Fable gate attempt timed out; the second produced the plan review above.
+All received findings were dispositioned and the plan was corrected, but the
+operator explicitly waived the clean re-review after the configured
+`onFailure: block` attempts were exhausted. The plan review row therefore
+remains `fixes_completed`, not `passed`. This is a project-level lifecycle
+exception, not evidence that the configured gate passed.
 
 ---
 
