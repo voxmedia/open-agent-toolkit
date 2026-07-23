@@ -17,14 +17,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | complete    | 4     | 4/4       |
-| Phase 2 | in_progress | 1     | 1/1       |
-| Phase 3 | pending     | 2     | 0/2       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | complete | 1     | 1/1       |
+| Phase 3 | complete | 2     | 2/2       |
+| Phase 4 | pending  | 2     | 0/2       |
 
-**Total:** 5/9 tasks completed
+**Total:** 7/9 tasks completed
 
 ## Planning Gate Override
 
@@ -94,33 +94,75 @@ verify the implemented result.
 
 ## Phase 2: Enforce guidance and mechanics contracts
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Added durable structural coverage for orchestration guidance, mechanics,
+  provider loading, task classes, compatibility, and service-tier boundaries.
+
+**Verification:**
+
+- Focused contract suite passed 111/111 after one fix iteration.
+- Root-owned re-review passed with 0 Critical and 0 Important findings.
+
+**Notes / Decisions:**
+
+- One non-blocking Medium remains: the compatibility test uses a canonical
+  request fixture rather than an explicit legacy record fixture.
 
 ### Task p02-t01: Harden skill boundary validation
 
 **Status:** completed
 **Commit:** `22ae2325dbb8f0c9763c0004e023a93efa49ad2e`
 
-**Phase review:** fix iteration 1 completed in
-`0692243e71eb8a5e233ada48fc75f0fd134fd0a0`; re-review pending.
+**Phase review:** passed in
+`reviews/p02-review-2026-07-23T115055Z.md` after fix iteration 1.
 
 ---
 
 ## Phase 3: Distribute and document the split
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Added the directional utility dependency and explicit pack lifecycle
+  coverage.
+- Updated active orchestration documentation for the guidance/mechanics split.
+
+**Verification:**
+
+- Seven focused files passed 95/95 tests.
+- Documentation production build passed after fan-in.
+- Root-owned review passed with no findings.
+
+**Notes / Decisions:**
+
+- The original dispatch used stale boundaries and was terminal without edits;
+  the operator authorized one fresh same-target recovery.
+- Two pre-existing broken docs fragments remain outside this phase.
+- The normal `--no-ff` merge was aborted on the duplicate bootstrap-sync
+  manifest conflict; the two reviewed task commits were cherry-picked.
 
 ### Task p03-t01: Add directional utility dependency
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7c519bad` (reviewed source `bc3c81d6`)
 
 ### Task p03-t02: Update active orchestration documentation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6c818608` (reviewed source `f15b713c`)
+
+**Phase review:** passed in
+`reviews/p03-review-2026-07-23T112224Z.md`.
 
 ---
 
@@ -179,6 +221,58 @@ None in this run entry.
 
 None for Phase 1.
 
+### Run 2 — 2026-07-23T11:54:23Z {#run-2}
+
+**Branch:** `subagent-orchestration`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits                                                     | Review                                     | Fixes / Recovery                                 |
+| ----- | ------- | ---------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
+| p02   | passed  | `22ae2325`                                                       | `reviews/p02-review-2026-07-23T115055Z.md` | 1 fix iteration, `0692243e`                      |
+| p03   | passed  | source `bc3c81d6`, `f15b713c`; integrated `7c519bad`, `6c818608` | `reviews/p03-review-2026-07-23T112224Z.md` | 0 fix iterations; 1 operator-authorized recovery |
+
+#### Dispatch Notes
+
+- All implementation and review routes selected the native
+  `gpt-5.6-sol-high` materialized variant at the managed `high` ceiling;
+  ordered candidates were `gpt-5.6-sol-medium`, then `gpt-5.6-sol-high`.
+- Neither root-owned reviewer attempted reviewer-local reconnaissance.
+- Phase 2 resumed its original implementation handle for the bounded fix.
+- Phase 3's original accepted attempt stopped without edits because the root
+  supplied stale boundaries. Its fresh same-target recovery was explicitly
+  operator-authorized and linked to the original request.
+- Dispatch stamps:
+  - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p02-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p03-recovery1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+- Group: `[p02, p03]`
+- Expected base: `f1e48897be5b4417f62ffd132b80ba87728f97e3`
+- Worktrees:
+  - `p02`: `.worktrees/subagent-orchestration-p02`, bootstrap sync
+    `1668d004`, merged through `51aed2d`, then removed.
+  - `p03`: `.worktrees/subagent-orchestration-p03`, bootstrap sync
+    `199bc797`, reviewed task commits cherry-picked, then removed.
+- The Phase 3 `--no-ff` merge conflicted only because both worktrees carried an
+  equivalent bootstrap-generated `.oat/sync/manifest.json` commit. The merge
+  was aborted before the task commits were cherry-picked in plan order.
+
+#### Outstanding Items
+
+- Non-blocking Medium: add a canonical legacy dispatch-record fixture without
+  optional guidance fields.
+- Pre-existing docs fragments:
+  `implementation-execution.md#plan-declared-parallelism` and
+  `orchestration-model.md#route-tiers-and-terminality`.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -202,28 +296,33 @@ None for Phase 1.
 - Phase 1 re-review passed with no findings.
 - Phase 2 implementation completed in `22ae2325`; root review found 2
   Important contract-coverage gaps. Fix iteration 1 completed all 5 findings
-  in `0692243e`; re-review is pending.
+  in `0692243e`; re-review passed with one non-blocking Medium.
 - Phase 3 passed root review in `reviews/p03-review-2026-07-23T112224Z.md`
   after one operator-authorized recovery.
-- Next action: fix and re-review Phase 2, then fan in the parallel group.
+- Phase 2 merged through `51aed2d`; its focused suite passed 111/111.
+- Phase 3's duplicate bootstrap-sync manifest conflicted during `--no-ff`
+  merge. The merge was aborted and reviewed task commits were cherry-picked as
+  `7c519bad` and `6c818608`; 95/95 focused tests and the docs build passed.
+- Next action: execute Phase 4.
 
 ---
 
 ## Deviations from Plan / Design
 
-| Task / Review    | Source Artifact                            | Planned / Documented                | Actual / Accepted                        | Reason                                      | Source of Truth        | Follow-up                                 |
-| ---------------- | ------------------------------------------ | ----------------------------------- | ---------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------- |
-| quick-start gate | `plan.md`                                  | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review   | `plan.md`              | Independently verify through code reviews |
-| p01 review fixes | `reviews/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01 | passing code and tests | Reflected in Phase 1 summary              |
+| Task / Review    | Source Artifact                            | Planned / Documented                | Actual / Accepted                        | Reason                                                                   | Source of Truth                              | Follow-up                                 |
+| ---------------- | ------------------------------------------ | ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------- | ----------------------------------------- |
+| quick-start gate | `plan.md`                                  | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review                                | `plan.md`                                    | Independently verify through code reviews |
+| p01 review fixes | `reviews/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01                              | passing code and tests                       | Reflected in Phase 1 summary              |
+| p03 fan-in       | `plan.md`                                  | Merge passing phase with `--no-ff`  | Cherry-picked two reviewed task commits  | Duplicate bootstrap sync commits conflicted in `.oat/sync/manifest.json` | reviewed task commits and integration checks | Reflected in Phase 3 summary              |
 
 ## Test Results
 
-| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                    |
-| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------- |
-| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1          |
-| 2     | focused skill contracts                  | 111/111                                          | 0      | Fix iteration 1 complete; re-review pending |
-| 3     | -                                        | -                                                | -      | -                                           |
-| 4     | -                                        | -                                                | -      | -                                           |
+| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                   |
+| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------ |
+| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1         |
+| 2     | focused skill contracts                  | 111/111                                          | 0      | Phase passed after fix iteration 1         |
+| 3     | focused utility lifecycle + docs build   | 95/95; docs build pass                           | 0      | Phase passed; 2 pre-existing link failures |
+| 4     | -                                        | -                                                | -      | -                                          |
 
 ## Final Summary (for PR/docs)
 
