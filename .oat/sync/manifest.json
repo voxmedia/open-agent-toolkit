@@ -841,7 +841,17 @@
       "contentHash": null,
       "isFile": false,
       "lastSynced": "2026-07-20T01:39:50.385Z"
+    },
+    {
+      "canonicalPath": ".agents/skills/subagent-orchestration",
+      "providerPath": ".claude/skills/subagent-orchestration",
+      "provider": "claude",
+      "contentType": "skill",
+      "strategy": "symlink",
+      "contentHash": null,
+      "isFile": false,
+      "lastSynced": "2026-07-23T05:13:38.706Z"
     }
   ],
-  "lastUpdated": "2026-07-20T01:39:50.385Z"
+  "lastUpdated": "2026-07-23T05:13:38.706Z"
 }

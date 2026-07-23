@@ -59,7 +59,10 @@ read and follow:
 
 1. `.agents/skills/oat-project-dispatch-subagents/SKILL.md`;
 2. `.agents/skills/oat-dispatch-subagents/SKILL.md`; and
-3. read exactly one active-provider reference from
+3. `.agents/skills/subagent-orchestration/references/model-selection-principles.md`;
+4. read exactly one active-provider selection reference from
+   `.agents/skills/subagent-orchestration/references/`; and
+5. read the matching mechanics reference from
    `.agents/skills/oat-dispatch-subagents/references/`.
 
 Every optional launch must have a bounded objective, explicit read/write
