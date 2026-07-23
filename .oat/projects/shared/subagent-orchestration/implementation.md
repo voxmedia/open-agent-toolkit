@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-23
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -17,12 +17,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 4     | 4/4       |
-| Phase 2 | pending     | 1     | 0/1       |
-| Phase 3 | pending     | 2     | 0/2       |
-| Phase 4 | pending     | 2     | 0/2       |
+| Phase   | Status   | Tasks | Completed |
+| ------- | -------- | ----- | --------- |
+| Phase 1 | complete | 4     | 4/4       |
+| Phase 2 | pending  | 1     | 0/1       |
+| Phase 3 | pending  | 2     | 0/2       |
+| Phase 4 | pending  | 2     | 0/2       |
 
 **Total:** 4/9 tasks completed
 
@@ -42,8 +42,30 @@ verify the implemented result.
 
 ## Phase 1: Establish the canonical split
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Added the portable `subagent-orchestration` guidance layer.
+- Reduced `oat-dispatch-subagents` to selection/launch mechanics and additive
+  dispatch evidence.
+- Migrated all declared active consumers and restored repository contracts.
+
+**Verification:**
+
+- Focused contracts: 139/139 passed.
+- Full repository suite: 3,539/3,539 passed.
+- Type-check and formatting passed.
+- Root-owned re-review passed after one bounded fix iteration.
+
+**Notes / Decisions:**
+
+- The review fix added one canonical autonomy mapping update and one test
+  version assertion outside the original task file list. The passing
+  implementation is the source of truth; no product/design behavior changed.
 
 ### Task p01-t01: Add portable model-selection guidance
 
@@ -65,8 +87,8 @@ verify the implemented result.
 **Status:** completed
 **Commit:** `1af572393bfbf82907278a546a3f21500330e483`
 
-**Phase review:** fix iteration 1 completed in
-`0dda1cf30fbfdd2562a244cd1a45371bddc423b3`; re-review pending.
+**Phase review:** passed in
+`reviews/p01-review-2026-07-23T050810Z.md` after fix iteration 1.
 
 ---
 
@@ -120,7 +142,39 @@ verify the implemented result.
 
 <!-- orchestration-runs-start -->
 
-_No implementation orchestration runs yet._
+### Run 1 — 2026-07-23T05:08:10Z {#run-1}
+
+**Branch:** `subagent-orchestration`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits                                   | Review                                     | Fixes                   |
+| ----- | ------- | ---------------------------------------------- | ------------------------------------------ | ----------------------- |
+| p01   | passed  | `6d147042`, `9c2bcb3c`, `b6dbf91a`, `1af57239` | `reviews/p01-review-2026-07-23T050810Z.md` | 1 iteration, `0dda1cf3` |
+
+#### Dispatch Notes
+
+- Implementation: `oat-phase-implementer-gpt-5-6-sol-high`,
+  `model_axis=selected:gpt-5.6-sol-high`, `effort_axis=not-applicable`,
+  selection reason `native-catalog`.
+- Review rounds: `oat-reviewer-gpt-5-6-sol-high` at the managed high ceiling;
+  no reviewer-local reconnaissance was attempted.
+- Fix continuation resumed the original implementation handle and preserved
+  request linkage.
+- Dispatch stamps:
+  - `Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p01-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+None for Phase 1.
 
 <!-- orchestration-runs-end -->
 
@@ -142,24 +196,26 @@ _No implementation orchestration runs yet._
   assertion.
 - Fix iteration 1 completed both findings in `0dda1cf3`; targeted tests passed
   139/139 and the full suite passed 3,539/3,539.
-- Next action: re-review Phase 1.
+- Phase 1 re-review passed with no findings.
+- Next action: execute the declared `p02`/`p03` parallel group.
 
 ---
 
 ## Deviations from Plan / Design
 
-| Task / Review    | Source Artifact | Planned / Documented                | Actual / Accepted                        | Reason                                    | Source of Truth | Follow-up                                 |
-| ---------------- | --------------- | ----------------------------------- | ---------------------------------------- | ----------------------------------------- | --------------- | ----------------------------------------- |
-| quick-start gate | `plan.md`       | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review | `plan.md`       | Independently verify through code reviews |
+| Task / Review    | Source Artifact                            | Planned / Documented                | Actual / Accepted                        | Reason                                      | Source of Truth        | Follow-up                                 |
+| ---------------- | ------------------------------------------ | ----------------------------------- | ---------------------------------------- | ------------------------------------------- | ---------------------- | ----------------------------------------- |
+| quick-start gate | `plan.md`                                  | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review   | `plan.md`              | Independently verify through code reviews |
+| p01 review fixes | `reviews/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01 | passing code and tests | Reflected in Phase 1 summary              |
 
 ## Test Results
 
-| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                    |
-| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------- |
-| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Fix iteration 1 complete; re-review pending |
-| 2     | -                                        | -                                                | -      | -                                           |
-| 3     | -                                        | -                                                | -      | -                                           |
-| 4     | -                                        | -                                                | -      | -                                           |
+| Phase | Tests Run                                | Passed                                           | Failed | Coverage                           |
+| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ---------------------------------- |
+| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1 |
+| 2     | -                                        | -                                                | -      | -                                  |
+| 3     | -                                        | -                                                | -      | -                                  |
+| 4     | -                                        | -                                                | -      | -                                  |
 
 ## Final Summary (for PR/docs)
 

@@ -60,6 +60,14 @@ Accepted request review-p01-20260723T0454Z-1af57239 on target oat-reviewer-gpt-5
 
 Resumed request implement-p01-20260723T0437Z-b0cc87dd as fix-p01-r1-20260723T0500Z-5b7cae1e on the original target for findings in reviews/p01-review-2026-07-23T045715Z.md; tracking anchor implementation.md#orchestration-runs-start.
 
+### 2026-07-23 · structural · oat-project-implement · p01-rereview-dispatch
+
+Accepted request rereview-p01-20260723T0506Z-0dda1cf3 on target oat-reviewer-gpt-5-6-sol-high for fix range 5b7cae1e..0dda1cf3; tracking anchor implementation.md#orchestration-runs-start.
+
+### 2026-07-23 · structural · oat-project-implement · p01-outcome
+
+Phase p01 passed root-owned re-review after 1 fix iteration; evidence: reviews/p01-review-2026-07-23T050810Z.md and implementation.md#run-1.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
