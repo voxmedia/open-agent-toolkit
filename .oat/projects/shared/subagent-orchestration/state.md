@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T16:11:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T16:25:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Post-documentation final verification passed; awaiting lifecycle re-review
+Post-documentation final review passed; refreshing configured exit gate
 
 ## Artifacts
 
@@ -124,7 +124,8 @@ Post-documentation final verification passed; awaiting lifecycle re-review
 - ✓ Configured implementation exit gate passed
 - ✓ Project documentation sync complete
 - ✓ Post-documentation final verification passed
-- ⧗ Final lifecycle re-review after documentation changes
+- ✓ Post-documentation final lifecycle review passed
+- ⧗ Configured implementation exit gate refresh
 
 ## Blockers
 
@@ -134,4 +135,4 @@ passed.
 
 ## Next Milestone
 
-Pass final lifecycle re-review and refresh the configured exit gate
+Pass the refreshed configured exit gate and return to final approval
