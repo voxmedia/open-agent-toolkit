@@ -65,8 +65,8 @@ verify the implemented result.
 **Status:** completed
 **Commit:** `1af572393bfbf82907278a546a3f21500330e483`
 
-**Phase review:** blocked with two Important contract-drift findings in
-`reviews/p01-review-2026-07-23T045715Z.md`; fix iteration 1 pending.
+**Phase review:** fix iteration 1 completed in
+`0dda1cf30fbfdd2562a244cd1a45371bddc423b3`; re-review pending.
 
 ---
 
@@ -140,7 +140,9 @@ _No implementation orchestration runs yet._
 - Root-owned review found two Important full-suite contract drifts. Fix
   iteration 1 is bounded to the canonical autonomy mapping and reviewer-version
   assertion.
-- Next action: resume the Phase 1 implementer for the bounded fixes.
+- Fix iteration 1 completed both findings in `0dda1cf3`; targeted tests passed
+  139/139 and the full suite passed 3,539/3,539.
+- Next action: re-review Phase 1.
 
 ---
 
@@ -152,12 +154,12 @@ _No implementation orchestration runs yet._
 
 ## Test Results
 
-| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                     |
-| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | -------------------------------------------- |
-| 1     | focused skills + full suite + type-check | 107/107 focused; 3295/3297 full; type-check pass | 2      | Two phase-caused contract drifts pending fix |
-| 2     | -                                        | -                                                | -      | -                                            |
-| 3     | -                                        | -                                                | -      | -                                            |
-| 4     | -                                        | -                                                | -      | -                                            |
+| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                    |
+| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------- |
+| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Fix iteration 1 complete; re-review pending |
+| 2     | -                                        | -                                                | -      | -                                           |
+| 3     | -                                        | -                                                | -      | -                                           |
+| 4     | -                                        | -                                                | -      | -                                           |
 
 ## Final Summary (for PR/docs)
 

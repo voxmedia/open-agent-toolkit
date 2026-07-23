@@ -56,6 +56,10 @@ Accepted request implement-p01-20260723T0437Z-b0cc87dd on target oat-phase-imple
 
 Accepted request review-p01-20260723T0454Z-1af57239 on target oat-reviewer-gpt-5-6-sol-high for range b0cc87dd..1af57239; tracking anchor .oat/projects/shared/subagent-orchestration/implementation.md#orchestration-runs-start.
 
+### 2026-07-23 · structural · oat-project-implement · p01-fix1-dispatch
+
+Resumed request implement-p01-20260723T0437Z-b0cc87dd as fix-p01-r1-20260723T0500Z-5b7cae1e on the original target for findings in reviews/p01-review-2026-07-23T045715Z.md; tracking anchor implementation.md#orchestration-runs-start.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
