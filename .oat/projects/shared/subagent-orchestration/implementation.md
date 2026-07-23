@@ -586,7 +586,22 @@ tasks were added.
 - Freshness delta from refreshed reviewed HEAD `3e4cc2b3` classified
   closeout-only: review ledger, lifecycle notes, structural log, gate receipt,
   and gate state.
-- Next action: final implementation approval.
+- Rebasing PR #172 onto `origin/main` at `18c1a573` dropped the former
+  `0.2.13` package bump because that release was already upstream. Registry
+  checks confirmed `0.2.14` was unpublished for all five public packages, so
+  the branch advanced the lockstep set and bundled metadata to `0.2.14`.
+- Bugbot's Medium homogeneous-wave finding was accepted and fixed in
+  `e59be3d9`: shared recon-wave records now require equal reasoning mode,
+  service tier, and all guidance-freshness fields, including identical
+  optional-field presence.
+- Targeted contract coverage passed 115/115. Full tests, lint, type-check,
+  format, build, docs build, release validation, and provider-sync dry-run also
+  passed.
+- The prior final review and configured exit-gate pass are preserved as
+  history but marked stale because the PR feedback fix changed implementation
+  after their reviewed HEAD.
+- Next action: refresh final lifecycle review and the configured exit gate
+  before final implementation approval.
 
 ---
 
@@ -597,6 +612,7 @@ tasks were added.
 | quick-start gate | `plan.md`                                           | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review                                | `plan.md`                                    | Independently verify through code reviews |
 | p01 review fixes | `reviews/archived/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01                              | passing code and tests                       | Reflected in Phase 1 summary              |
 | p03 fan-in       | `plan.md`                                           | Merge passing phase with `--no-ff`  | Cherry-picked two reviewed task commits  | Duplicate bootstrap sync commits conflicted in `.oat/sync/manifest.json` | reviewed task commits and integration checks | Reflected in Phase 3 summary              |
+| PR rebase        | PR #172                                             | Release `0.2.13`                    | Release `0.2.14`                         | `0.2.13` was published upstream before rebase                            | npm registry and `origin/main`               | Lockstep validation passed                |
 
 ## Test Results
 
@@ -607,6 +623,7 @@ tasks were added.
 | 3     | focused utility lifecycle + docs build   | 95/95; docs build pass                           | 0      | Phase passed; 2 pre-existing link failures |
 | 4     | focused + full repository/release gates  | 249/249 focused; all repository gates passed     | 0      | Phase and release review passed            |
 | 5     | focused contracts + full tests           | 136/136 focused; full tests + 129/129 smoke pass | 0      | Final review fix and inventory fix pass    |
+| PR    | focused + full repository/release gates  | 115/115 focused; all repository gates passed     | 0      | Bugbot homogeneous-wave fix passed         |
 
 ## Final Summary (for PR/docs)
 
@@ -620,9 +637,11 @@ tasks were added.
   `oat-dispatch-subagents` includes `subagent-orchestration`, while the guidance
   skill remains independently installable.
 - Added contract tests for guidance/mechanics ownership, task-class semantics,
-  consumer loading, provider recommendations, and additive dispatch evidence.
+  consumer loading, provider recommendations, additive dispatch evidence, and
+  homogeneous recon-wave axis parity.
 - Updated active docs and generated provider assets, then advanced all five
-  public packages and bundled metadata to unpublished version `0.2.13`.
+  public packages and bundled metadata to unpublished version `0.2.14` after
+  rebasing onto the published `0.2.13` release.
 - Key surfaces: `.agents/skills/subagent-orchestration`,
   `.agents/skills/oat-dispatch-subagents`, active consumer skills,
   `packages/cli/src/validation/skills.test.ts`, CLI utility manifests/tests,

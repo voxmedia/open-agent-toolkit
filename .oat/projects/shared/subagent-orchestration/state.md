@@ -34,7 +34,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -66,14 +66,14 @@ oat_implement_exit_gate:
   receive_commit: a0815ea7d3312c788ee46690d16a353cb067db46
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-07-23T16:42:20Z'
+  failure: 'implementation_changed_after_gate: rebased Bugbot homogeneous-wave axis-parity fix and lockstep 0.2.14 release update'
+  updated_at: '2026-07-23T20:57:35Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/172' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T19:58:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T20:57:35Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — PR open; Bugbot fix verified, final gate refresh pending.
 
 ## Artifacts
 
@@ -127,8 +127,10 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Post-documentation final lifecycle review passed
 - ✓ Refreshed configured implementation exit gate passed
 - ✓ PR created
+- ✓ Rebased onto current `origin/main`
+- ✓ Bugbot homogeneous-wave axis finding fixed and verified
 - ⧗ Awaiting human review
-- ⧗ Final implementation approval
+- ⧗ Refresh final lifecycle review and configured exit gate
 
 ## Blockers
 
@@ -138,8 +140,7 @@ passed.
 
 ## Next Milestone
 
-PR is open for review.
+PR feedback fix is ready for review.
 
 - To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+- Refresh the final lifecycle review and configured exit gate before approval.
