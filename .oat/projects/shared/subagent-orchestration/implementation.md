@@ -481,6 +481,8 @@ None in this run entry.
 - Configured implementation exit-gate generation persisted at reviewed HEAD
   `e3e0f024` with launch attempt
   `implement-exit-20260723T124207Z-cbd8ecb7-7e28-4201-b6b9-7aca32900a8c`.
+- Exit-gate run `48a1a4df-a811-417c-be38-cc975466b1ec` was accepted by
+  the gate runtime.
 - Next action: configured implementation exit gate and approval-aware closeout.
 
 ---
