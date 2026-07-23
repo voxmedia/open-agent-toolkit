@@ -108,6 +108,10 @@ Accepted fresh root-owned p02 re-review for fix iteration 1, range 22ae2325..069
 
 Phase p02 outcome: pass after 1 fix iteration; task commit 22ae2325 and fix commit 0692243e; review evidence reviews/p02-review-2026-07-23T115055Z.md. One non-blocking Medium legacy-record fixture gap remains recorded.
 
+### 2026-07-23 · structural · oat-project-implement · implement-p04-20260723T1157Z-96cb638f
+
+Accepted p04 phase implementer in root worktree at base 96cb638f. Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
