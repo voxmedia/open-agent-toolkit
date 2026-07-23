@@ -28,8 +28,11 @@ starting material only; current OAT safeguards and repository conventions take
 precedence.
 
 Both skills ship in the utility pack and are generated into provider-specific
-views from canonical `.agents` sources. Validation enforces co-installation,
-the selection-versus-mechanics boundary, compatibility of additive dispatch
+views from canonical `.agents` sources. Utility subset selection uses a
+directional dependency: selecting `oat-dispatch-subagents` automatically
+includes `subagent-orchestration`, while the self-contained guidance skill may
+be installed alone. Validation enforces that dependency, the
+selection-versus-mechanics boundary, compatibility of additive dispatch
 evidence, provider-view synchronization, and the repository's release
 contract.
 
@@ -44,9 +47,9 @@ loads the guidance needed to choose a floor-satisfying target before applying
 provider-specific launch mechanics.
 
 Canonical sources remain under `.agents`. Provider-linked views and bundled
-CLI assets are generated outputs. The utility-pack manifest is the
-co-installation boundary: an OAT utility installation must expose both the
-guidance and dispatch skills together.
+CLI assets are generated outputs. The utility-pack installer is the dependency
+boundary: dispatch installation must expose guidance, while guidance-only
+installation remains valid.
 
 **Key Components:**
 
@@ -236,6 +239,9 @@ usable utility capability.
 
 - Add the generic guidance skill to the utility-pack inventory beside
   `oat-dispatch-subagents`.
+- Expand custom utility selections so choosing `oat-dispatch-subagents`
+  automatically includes `subagent-orchestration`; do not add the inverse
+  dependency.
 - Keep bundle inputs and installer/remove/update behavior consistent with the
   canonical inventory.
 - Generate Claude and Cursor skill views from `.agents`; do not maintain those
@@ -396,6 +402,8 @@ workflow.
 
 - Verify the utility pack installs, updates, and removes both skills from the
   canonical inventory.
+- Verify subset selection auto-includes guidance when dispatch is selected and
+  still permits a guidance-only installation.
 - Verify bundle consistency includes both canonical skill trees.
 - Regenerate provider views and assert no synchronization drift.
 - Run focused CLI skill validation, formatting, type checking, and relevant

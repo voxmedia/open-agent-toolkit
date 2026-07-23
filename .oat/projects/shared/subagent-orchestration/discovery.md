@@ -1,8 +1,8 @@
 ---
 oat_status: complete
-oat_ready_for: null
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
-oat_last_updated: 2026-07-22
+oat_last_updated: 2026-07-23
 oat_generated: false
 ---
 
@@ -68,6 +68,16 @@ collaborative preference to draft-and-review for this project.
 boundaries, additive evidence fields, failure behavior, and testing. Present
 the complete draft for holistic user review.
 
+### Question 6: Utility subset dependency
+
+**Q:** When utility installation selects individual skills, should guidance and
+dispatch always be paired, paired only by defaults, or modeled as a directional
+dependency?
+**A:** Use a directional dependency.
+**Decision:** Selecting `oat-dispatch-subagents` automatically includes
+`subagent-orchestration`; the self-contained guidance skill may be installed
+alone.
+
 ## Solution Space
 
 ### Approach 1: Split guidance from mechanics without renaming _(Recommended)_
@@ -131,6 +141,8 @@ policy and reserve Fable for exceptional work.
 6. **Invocation posture:** Expose the generic guidance skill to both users and
    agents while keeping dispatch mechanics internal.
 7. **Design depth:** Use a lightweight draft-and-review design before planning.
+8. **Utility dependency:** Dispatch installation implies guidance installation;
+   guidance remains independently installable.
 
 ## Constraints
 
