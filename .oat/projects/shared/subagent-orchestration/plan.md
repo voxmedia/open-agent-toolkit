@@ -675,7 +675,7 @@ Expected: generated provider and bundle metadata are committed; ignored
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
 | p01    | code     | fixes_completed | 2026-07-23 | reviews/p01-review-2026-07-23T045715Z.md                      |
 | p02    | code     | fixes_completed | 2026-07-23 | reviews/p02-review-2026-07-23T113654Z.md                      |
-| final  | code     | pending         | -          | -                                                             |
+| final  | code     | received        | 2026-07-23 | reviews/final-review-2026-07-23T121234Z.md                    |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T225632Z.md |
 | design | artifact | passed          | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T231919Z.md |
