@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-23
-oat_current_task_id: p02-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -22,9 +22,9 @@ oat_generated: false
 | Phase 1 | complete | 4     | 4/4       |
 | Phase 2 | complete | 1     | 1/1       |
 | Phase 3 | complete | 2     | 2/2       |
-| Phase 4 | pending  | 2     | 0/2       |
+| Phase 4 | complete | 2     | 2/2       |
 
-**Total:** 7/9 tasks completed
+**Total:** 9/9 tasks completed
 
 ## Planning Gate Override
 
@@ -168,18 +168,42 @@ verify the implemented result.
 
 ## Phase 4: Synchronize and release the integrated result
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Advanced the five public packages to the common unpublished version
+  `0.2.13`.
+- Refreshed bundled public-version metadata and provider-sync release metadata.
+
+**Verification:**
+
+- Five npm histories parsed successfully and did not contain `0.2.13`.
+- Focused integration tests passed 249/249.
+- Full tests, lint, type-check, formatting, builds, release validation, and
+  final sync dry-run passed.
+- Root-owned release review passed with no findings.
+
+**Notes / Decisions:**
+
+- Previously generated provider views were already current; p04-t02 changed
+  only `.oat/sync/manifest.json` release metadata.
 
 ### Task p04-t01: Advance lockstep package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8856fa4e5019ad12fd4394d5941181e4f644430b`
 
 ### Task p04-t02: Regenerate providers and pass release gates
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7d3aaab73126638f6d1b7691a3623c0988ed3f3b`
+
+**Phase review:** passed in
+`reviews/p04-review-2026-07-23T120818Z.md`.
 
 ---
 
@@ -273,6 +297,37 @@ None for Phase 1.
   `implementation-execution.md#plan-declared-parallelism` and
   `orchestration-model.md#route-tiers-and-terminality`.
 
+### Run 3 — 2026-07-23T12:10:29Z {#run-3}
+
+**Branch:** `subagent-orchestration`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits           | Review                                     | Fixes |
+| ----- | ------- | ---------------------- | ------------------------------------------ | ----- |
+| p04   | passed  | `8856fa4e`, `7d3aaab7` | `reviews/p04-review-2026-07-23T120818Z.md` | 0     |
+
+#### Dispatch Notes
+
+- Implementation and review selected the native
+  `gpt-5.6-sol-high` materialized variant at the managed `high` ceiling from
+  ordered candidates `gpt-5.6-sol-medium`, then `gpt-5.6-sol-high`.
+- The root-owned reviewer did not attempt reviewer-local reconnaissance.
+- Dispatch stamps:
+  - `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+  - `Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Non-blocking legacy dispatch-record fixture improvement from Phase 2.
+- Two pre-existing docs fragment-link failures recorded in Run 2.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -303,7 +358,11 @@ None for Phase 1.
 - Phase 3's duplicate bootstrap-sync manifest conflicted during `--no-ff`
   merge. The merge was aborted and reviewed task commits were cherry-picked as
   `7c519bad` and `6c818608`; 95/95 focused tests and the docs build passed.
-- Next action: execute Phase 4.
+- Phase 4 selected unpublished version `0.2.13`, completed two bounded commits,
+  passed all repository and release gates, and passed root review with no
+  findings.
+- Next action: final verification, final lifecycle review, and configured
+  implementation closeout.
 
 ---
 
@@ -322,11 +381,37 @@ None for Phase 1.
 | 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1         |
 | 2     | focused skill contracts                  | 111/111                                          | 0      | Phase passed after fix iteration 1         |
 | 3     | focused utility lifecycle + docs build   | 95/95; docs build pass                           | 0      | Phase passed; 2 pre-existing link failures |
-| 4     | -                                        | -                                                | -      | -                                          |
+| 4     | focused + full repository/release gates  | 249/249 focused; all repository gates passed     | 0      | Phase and release review passed            |
 
 ## Final Summary (for PR/docs)
 
-Pending implementation.
+- Shipped a portable `subagent-orchestration` guidance skill that owns durable
+  task classes and model-selection principles while `oat-dispatch-subagents`
+  remains responsible for provider-specific launch mechanics.
+- Migrated active lifecycle and repository-improvement consumers to load
+  principles, exactly one active-provider selection reference, and matching
+  mechanics in order.
+- Added directional utility installation: selecting
+  `oat-dispatch-subagents` includes `subagent-orchestration`, while the guidance
+  skill remains independently installable.
+- Added contract tests for guidance/mechanics ownership, task-class semantics,
+  consumer loading, provider recommendations, and additive dispatch evidence.
+- Updated active docs and generated provider assets, then advanced all five
+  public packages and bundled metadata to unpublished version `0.2.13`.
+- Key surfaces: `.agents/skills/subagent-orchestration`,
+  `.agents/skills/oat-dispatch-subagents`, active consumer skills,
+  `packages/cli/src/validation/skills.test.ts`, CLI utility manifests/tests,
+  project docs, package manifests, and provider-sync metadata.
+- Verification: focused suites through 249/249, full workspace tests and smoke
+  tests, lint, type-check, format, package build, docs build, release
+  validation, registry checks, and final provider-sync dry-run all passed.
+- Review fixes restored autonomy inventory/version contracts in Phase 1 and
+  strengthened semantic contract coverage in Phase 2. One non-blocking legacy
+  record-fixture improvement remains recorded.
+- Design deltas: Phase 3 used reviewed-task cherry-picks after duplicate
+  bootstrap-sync manifest conflict; the quick-start planning gate proceeded
+  under an explicit operator-approved override after all received findings were
+  fixed.
 
 ## References
 
