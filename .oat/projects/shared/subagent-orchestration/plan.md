@@ -748,7 +748,7 @@ git commit -m "fix(p05-t01): cover legacy dispatch records"
 | p01    | code     | passed          | 2026-07-23 | reviews/p01-review-2026-07-23T050810Z.md                      |
 | p02    | code     | passed          | 2026-07-23 | reviews/p02-review-2026-07-23T115055Z.md                      |
 | final  | code     | passed          | 2026-07-23 | reviews/archived/final-review-2026-07-23T123440Z.md           |
-| final  | code     | received        | 2026-07-23 | reviews/final-review-2026-07-23T124954Z.md                    |
+| final  | code     | passed          | 2026-07-23 | reviews/archived/final-review-2026-07-23T124954Z.md           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
