@@ -170,6 +170,7 @@ git commit -m "refactor(p01-t02): isolate dispatch mechanics"
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify: `.agents/skills/oat-project-dispatch-subagents/SKILL.md`
 - Modify: `.agents/skills/oat-cursor-cloud-projects/SKILL.md`
+- Modify: `.agents/skills/oat-repo-improve/SKILL.md`
 
 **Step 1: Update active instructions**
 
@@ -178,7 +179,9 @@ the generic principles, one provider selection reference, and one matching
 mechanics reference. Preserve mechanics-only pointers, including Cursor Cloud
 launch/recovery delegation. Advance each changed canonical skill or agent
 version once. Do not edit generated `.claude`, `.cursor`, or `.codex` views and
-do not rewrite historical autonomy/provenance tables.
+do not rewrite historical autonomy/provenance tables. Ensure
+`oat-repo-improve` loads generic guidance before it performs its existing
+candidate selection.
 
 **Step 2: Format**
 
@@ -191,7 +194,8 @@ pnpm exec oxfmt --write \
   .agents/skills/oat-project-plan-writing/SKILL.md \
   .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-dispatch-subagents/SKILL.md \
-  .agents/skills/oat-cursor-cloud-projects/SKILL.md
+  .agents/skills/oat-cursor-cloud-projects/SKILL.md \
+  .agents/skills/oat-repo-improve/SKILL.md
 ```
 
 **Step 3: Verify**
@@ -205,7 +209,8 @@ pnpm exec oxfmt --check \
   .agents/skills/oat-project-plan-writing/SKILL.md \
   .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-dispatch-subagents/SKILL.md \
-  .agents/skills/oat-cursor-cloud-projects/SKILL.md
+  .agents/skills/oat-cursor-cloud-projects/SKILL.md \
+  .agents/skills/oat-repo-improve/SKILL.md
 rg -n 'oat-dispatch-subagents/references' .agents/agents .agents/skills --glob '*.md'
 ```
 
@@ -222,28 +227,37 @@ git add \
   .agents/skills/oat-project-plan-writing/SKILL.md \
   .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-dispatch-subagents/SKILL.md \
-  .agents/skills/oat-cursor-cloud-projects/SKILL.md
+  .agents/skills/oat-cursor-cloud-projects/SKILL.md \
+  .agents/skills/oat-repo-improve/SKILL.md
 git commit -m "refactor(p01-t03): migrate dispatch consumers"
 ```
 
 ---
 
-## Phase 2: Enforce guidance and mechanics contracts
-
-### Task p02-t01: Rewrite skill boundary validation
+### Task p01-t04: Restore the existing skill suite to green
 
 **Files:**
 
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Establish the failing assertions**
+**Step 1: Migrate baseline assertions**
 
-Replace old assertions that source model guidance from dispatch provider
-references with assertions for the new guidance skill, five task classes,
-freshness metadata, Opus-first durable policy, mechanics-only provider
-references, additive record evidence, and all active consumer loading paths.
-Add negative assertions for unambiguous named-model matrix markers in mechanics
-without banning generic selector or floor terminology.
+Update existing assertions that pin `oat-dispatch-subagents` version `1.1.5`,
+source model guidance from dispatch provider references, or require the old
+single-reference consumer contract. Point baseline selection assertions to the
+new guidance skill, retain mechanics assertions on dispatch, and include
+`oat-repo-improve` in active consumer coverage. Keep this task limited to
+restoring existing contracts; Phase 2 adds new hardening coverage.
+
+**Step 2: Format**
+
+Run:
+
+```bash
+pnpm exec oxfmt --write packages/cli/src/validation/skills.test.ts
+```
+
+**Step 3: Verify**
 
 Run:
 
@@ -251,8 +265,34 @@ Run:
 pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts
 ```
 
-Expected: the old one-reference assumptions fail before the assertions are
-updated, then the revised test describes the approved split.
+Expected: the existing focused skill suite passes before the Phase 1 review
+boundary.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/validation/skills.test.ts
+git commit -m "test(p01-t04): migrate orchestration skill assertions"
+```
+
+---
+
+## Phase 2: Enforce guidance and mechanics contracts
+
+### Task p02-t01: Harden skill boundary validation
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add boundary-hardening assertions**
+
+Extend the now-green suite with structural checks for all five task classes,
+ordered freshness metadata, the durable Opus-first policy, mechanics-only
+provider references, optional additive record evidence, and active consumer
+loading. Add negative assertions for unambiguous named-model matrix markers in
+mechanics without banning generic selector or floor terminology. Assert that
+`oat-repo-improve` loads generic guidance before candidate selection.
 
 **Step 2: Format**
 
@@ -404,9 +444,11 @@ pnpm exec oxfmt --write \
   apps/oat-docs/docs/workflows/projects/reviews.md \
   apps/oat-docs/docs/workflows/projects/orchestration-model.md \
   apps/oat-docs/docs/contributing/skills.md \
-  apps/oat-docs/docs/cli-utilities/tool-packs.md \
-  apps/oat-docs/index.md
+  apps/oat-docs/docs/cli-utilities/tool-packs.md
 ```
+
+`apps/oat-docs/index.md` is generator-owned; `docs generate-index` is its only
+writer.
 
 **Step 3: Verify**
 
@@ -452,6 +494,35 @@ git commit -m "docs(p03-t02): explain orchestration skill split"
 Refresh release evidence against the current integrated base and npm. Choose
 the next common unpublished version for all five public packages; do not assume
 the currently projected patch version remains available.
+
+Set `RELEASE_VERSION` to the candidate and verify it is absent from every
+registry history:
+
+```bash
+export RELEASE_VERSION='<selected-version>'
+for package in \
+  @open-agent-toolkit/cli \
+  @open-agent-toolkit/control-plane \
+  @open-agent-toolkit/docs-config \
+  @open-agent-toolkit/docs-theme \
+  @open-agent-toolkit/docs-transforms; do
+  npm view "$package" versions --json > /tmp/oat-package-versions.json || exit 1
+  node -e '
+    const fs = require("node:fs");
+    const versions = [].concat(
+      JSON.parse(fs.readFileSync(process.argv[1], "utf8")),
+    );
+    if (versions.includes(process.argv[2])) {
+      console.error(`${process.argv[3]}@${process.argv[2]} is already published`);
+      process.exit(1);
+    }
+  ' /tmp/oat-package-versions.json "$RELEASE_VERSION" "$package" || exit 1
+done
+```
+
+Expected: all five registry queries succeed and the selected version is absent
+from every returned list. A query or parse failure blocks the task and is never
+treated as evidence that a version is unpublished.
 
 **Step 2: Apply and generate**
 
@@ -516,8 +587,8 @@ pnpm run cli:source -- --json sync --scope project --dry-run
 ```
 
 Expected: the final dry-run reports no pending canonical sync changes. Cursor
-skill sync remains disabled by project configuration; Codex has no ordinary
-skill adapter.
+native-reads canonical `.agents/skills`, so no Cursor skill view is generated;
+Codex has no ordinary skill adapter.
 
 **Step 2: Run focused integration checks**
 
@@ -608,12 +679,12 @@ Expected: generated provider and bundle metadata are committed; ignored
 
 **Summary:**
 
-- Phase 1: 3 tasks - canonical guidance, mechanics, and consumers
+- Phase 1: 4 tasks - canonical guidance, mechanics, consumers, and baseline tests
 - Phase 2: 1 task - skill boundary contract validation
 - Phase 3: 2 tasks - utility distribution and active documentation
 - Phase 4: 2 tasks - lockstep versioning, provider sync, and release gates
 
-**Total: 8 tasks**
+**Total: 9 tasks**
 
 Ready for code review and merge after all tasks and reviews pass.
 
