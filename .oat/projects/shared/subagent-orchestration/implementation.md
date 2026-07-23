@@ -581,7 +581,9 @@ tasks were added.
   `final|code|final-review-2026-07-23T163522Z.md`.
 - Refreshed configured exit-gate review received with no findings and a clear
   deferred ledger.
-- Next action: approval-aware closeout.
+- Refreshed receive correlation reconciled to bookkeeping commit `a0815ea7`;
+  exit-gate disposition persisted as `allowed/passed`.
+- Next action: final implementation approval.
 
 ---
 
