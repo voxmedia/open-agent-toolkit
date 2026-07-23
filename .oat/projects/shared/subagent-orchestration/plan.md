@@ -666,7 +666,7 @@ Expected: generated provider and bundle metadata are committed; ignored
 | design | artifact | passed          | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T231919Z.md |
 | p03    | code     | pending         | -          | -                                                             |
 | p04    | code     | pending         | -          | -                                                             |
-| plan   | artifact | pending         | -          | -                                                             |
+| plan   | artifact | received        | 2026-07-23 | reviews/artifact-plan-review-2026-07-23T024325Z.md            |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
