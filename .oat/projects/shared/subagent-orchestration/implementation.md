@@ -89,7 +89,7 @@ verify the implemented result.
 **Commit:** `1af572393bfbf82907278a546a3f21500330e483`
 
 **Phase review:** passed in
-`reviews/p01-review-2026-07-23T050810Z.md` after fix iteration 1.
+`reviews/archived/p01-review-2026-07-23T050810Z.md` after fix iteration 1.
 
 ---
 
@@ -121,7 +121,7 @@ verify the implemented result.
 **Commit:** `22ae2325dbb8f0c9763c0004e023a93efa49ad2e`
 
 **Phase review:** passed in
-`reviews/p02-review-2026-07-23T115055Z.md` after fix iteration 1.
+`reviews/archived/p02-review-2026-07-23T115055Z.md` after fix iteration 1.
 
 ---
 
@@ -163,7 +163,7 @@ verify the implemented result.
 **Commit:** `6c818608` (reviewed source `f15b713c`)
 
 **Phase review:** passed in
-`reviews/p03-review-2026-07-23T112224Z.md`.
+`reviews/archived/p03-review-2026-07-23T112224Z.md`.
 
 ---
 
@@ -204,7 +204,7 @@ verify the implemented result.
 **Commit:** `7d3aaab73126638f6d1b7691a3623c0988ed3f3b`
 
 **Phase review:** passed in
-`reviews/p04-review-2026-07-23T120818Z.md`.
+`reviews/archived/p04-review-2026-07-23T120818Z.md`.
 
 ---
 
@@ -252,9 +252,9 @@ verify the implemented result.
 
 #### Phase Outcomes
 
-| Phase | Verdict | Task Commits                                   | Review                                     | Fixes                   |
-| ----- | ------- | ---------------------------------------------- | ------------------------------------------ | ----------------------- |
-| p01   | passed  | `6d147042`, `9c2bcb3c`, `b6dbf91a`, `1af57239` | `reviews/p01-review-2026-07-23T050810Z.md` | 1 iteration, `0dda1cf3` |
+| Phase | Verdict | Task Commits                                   | Review                                              | Fixes                   |
+| ----- | ------- | ---------------------------------------------- | --------------------------------------------------- | ----------------------- |
+| p01   | passed  | `6d147042`, `9c2bcb3c`, `b6dbf91a`, `1af57239` | `reviews/archived/p01-review-2026-07-23T050810Z.md` | 1 iteration, `0dda1cf3` |
 
 #### Dispatch Notes
 
@@ -286,10 +286,10 @@ None for Phase 1.
 
 #### Phase Outcomes
 
-| Phase | Verdict | Task Commits                                                     | Review                                     | Fixes / Recovery                                 |
-| ----- | ------- | ---------------------------------------------------------------- | ------------------------------------------ | ------------------------------------------------ |
-| p02   | passed  | `22ae2325`                                                       | `reviews/p02-review-2026-07-23T115055Z.md` | 1 fix iteration, `0692243e`                      |
-| p03   | passed  | source `bc3c81d6`, `f15b713c`; integrated `7c519bad`, `6c818608` | `reviews/p03-review-2026-07-23T112224Z.md` | 0 fix iterations; 1 operator-authorized recovery |
+| Phase | Verdict | Task Commits                                                     | Review                                              | Fixes / Recovery                                 |
+| ----- | ------- | ---------------------------------------------------------------- | --------------------------------------------------- | ------------------------------------------------ |
+| p02   | passed  | `22ae2325`                                                       | `reviews/archived/p02-review-2026-07-23T115055Z.md` | 1 fix iteration, `0692243e`                      |
+| p03   | passed  | source `bc3c81d6`, `f15b713c`; integrated `7c519bad`, `6c818608` | `reviews/archived/p03-review-2026-07-23T112224Z.md` | 0 fix iterations; 1 operator-authorized recovery |
 
 #### Dispatch Notes
 
@@ -338,9 +338,9 @@ None for Phase 1.
 
 #### Phase Outcomes
 
-| Phase | Verdict | Task Commits           | Review                                     | Fixes |
-| ----- | ------- | ---------------------- | ------------------------------------------ | ----- |
-| p04   | passed  | `8856fa4e`, `7d3aaab7` | `reviews/p04-review-2026-07-23T120818Z.md` | 0     |
+| Phase | Verdict | Task Commits           | Review                                              | Fixes |
+| ----- | ------- | ---------------------- | --------------------------------------------------- | ----- |
+| p04   | passed  | `8856fa4e`, `7d3aaab7` | `reviews/archived/p04-review-2026-07-23T120818Z.md` | 0     |
 
 #### Dispatch Notes
 
@@ -528,7 +528,7 @@ tasks were added.
 - Phase 2 implementation completed in `22ae2325`; root review found 2
   Important contract-coverage gaps. Fix iteration 1 completed all 5 findings
   in `0692243e`; re-review passed with one non-blocking Medium.
-- Phase 3 passed root review in `reviews/p03-review-2026-07-23T112224Z.md`
+- Phase 3 passed root review in `reviews/archived/p03-review-2026-07-23T112224Z.md`
   after one operator-authorized recovery.
 - Phase 2 merged through `51aed2d`; its focused suite passed 111/111.
 - Phase 3's duplicate bootstrap-sync manifest conflicted during `--no-ff`
@@ -592,11 +592,11 @@ tasks were added.
 
 ## Deviations from Plan / Design
 
-| Task / Review    | Source Artifact                            | Planned / Documented                | Actual / Accepted                        | Reason                                                                   | Source of Truth                              | Follow-up                                 |
-| ---------------- | ------------------------------------------ | ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------- | ----------------------------------------- |
-| quick-start gate | `plan.md`                                  | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review                                | `plan.md`                                    | Independently verify through code reviews |
-| p01 review fixes | `reviews/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01                              | passing code and tests                       | Reflected in Phase 1 summary              |
-| p03 fan-in       | `plan.md`                                  | Merge passing phase with `--no-ff`  | Cherry-picked two reviewed task commits  | Duplicate bootstrap sync commits conflicted in `.oat/sync/manifest.json` | reviewed task commits and integration checks | Reflected in Phase 3 summary              |
+| Task / Review    | Source Artifact                                     | Planned / Documented                | Actual / Accepted                        | Reason                                                                   | Source of Truth                              | Follow-up                                 |
+| ---------------- | --------------------------------------------------- | ----------------------------------- | ---------------------------------------- | ------------------------------------------------------------------------ | -------------------------------------------- | ----------------------------------------- |
+| quick-start gate | `plan.md`                                           | Clean re-review after applied fixes | Proceed under explicit operator override | Operator waived another timed gate review                                | `plan.md`                                    | Independently verify through code reviews |
+| p01 review fixes | `reviews/archived/p01-review-2026-07-23T045715Z.md` | Original p01 task file lists        | Added two bounded contract-only files    | Full-suite drift was directly caused by p01                              | passing code and tests                       | Reflected in Phase 1 summary              |
+| p03 fan-in       | `plan.md`                                           | Merge passing phase with `--no-ff`  | Cherry-picked two reviewed task commits  | Duplicate bootstrap sync commits conflicted in `.oat/sync/manifest.json` | reviewed task commits and integration checks | Reflected in Phase 3 summary              |
 
 ## Test Results
 

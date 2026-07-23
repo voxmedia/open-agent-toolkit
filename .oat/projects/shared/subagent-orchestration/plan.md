@@ -736,17 +736,17 @@ git commit -m "fix(p05-t01): cover legacy dispatch records"
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | fixes_completed | 2026-07-23 | reviews/p01-review-2026-07-23T045715Z.md                      |
-| p02    | code     | fixes_completed | 2026-07-23 | reviews/p02-review-2026-07-23T113654Z.md                      |
+| p01    | code     | fixes_completed | 2026-07-23 | reviews/archived/p01-review-2026-07-23T045715Z.md             |
+| p02    | code     | fixes_completed | 2026-07-23 | reviews/archived/p02-review-2026-07-23T113654Z.md             |
 | final  | code     | fixes_completed | 2026-07-23 | reviews/archived/final-review-2026-07-23T121234Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T225632Z.md |
 | design | artifact | passed          | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T231919Z.md |
-| p03    | code     | passed          | 2026-07-23 | reviews/p03-review-2026-07-23T112224Z.md                      |
-| p04    | code     | passed          | 2026-07-23 | reviews/p04-review-2026-07-23T120818Z.md                      |
+| p03    | code     | passed          | 2026-07-23 | reviews/archived/p03-review-2026-07-23T112224Z.md             |
+| p04    | code     | passed          | 2026-07-23 | reviews/archived/p04-review-2026-07-23T120818Z.md             |
 | plan   | artifact | fixes_completed | 2026-07-23 | reviews/archived/artifact-plan-review-2026-07-23T024325Z.md   |
-| p01    | code     | passed          | 2026-07-23 | reviews/p01-review-2026-07-23T050810Z.md                      |
-| p02    | code     | passed          | 2026-07-23 | reviews/p02-review-2026-07-23T115055Z.md                      |
+| p01    | code     | passed          | 2026-07-23 | reviews/archived/p01-review-2026-07-23T050810Z.md             |
+| p02    | code     | passed          | 2026-07-23 | reviews/archived/p02-review-2026-07-23T115055Z.md             |
 | final  | code     | passed          | 2026-07-23 | reviews/archived/final-review-2026-07-23T123440Z.md           |
 | final  | code     | passed          | 2026-07-23 | reviews/archived/final-review-2026-07-23T124954Z.md           |
 | final  | code     | passed          | 2026-07-23 | reviews/archived/final-review-2026-07-23T162104Z.md           |
