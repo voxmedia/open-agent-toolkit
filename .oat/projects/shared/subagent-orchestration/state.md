@@ -1,6 +1,6 @@
 ---
-oat_current_task: null
-oat_last_commit: 7d3aaab73126638f6d1b7691a3623c0988ed3f3b
+oat_current_task: p05-t01
+oat_last_commit: 85d51a864ba9ac0253fe159f469aef77297200ec
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T12:10:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T12:19:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; awaiting final review
+Final review fix queued: Phase 5
 
 ## Artifacts
 
@@ -93,7 +93,7 @@ Implementation - Tasks complete; awaiting final review
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete and reviewed)
 - **Plan:** `plan.md` (complete — gate findings fixed; re-review waived by operator)
-- **Implementation:** `implementation.md` (tasks complete; closeout in progress)
+- **Implementation:** `implementation.md` (in progress — next task `p05-t01`)
 
 ## Progress
 
@@ -116,8 +116,9 @@ Implementation - Tasks complete; awaiting final review
 - ✓ Phase 2 re-review passed
 - ✓ Parallel Phases 2 and 3 integrated
 - ✓ Phase 4 implementation and root review passed
-- ✓ Implementation tasks complete
-- ⧗ Awaiting final lifecycle review
+- ✓ Initial final lifecycle review completed
+- ✓ Final Medium M1 converted to `p05-t01`
+- ⧗ Phase 5 final review fix
 
 ## Blockers
 
@@ -127,4 +128,4 @@ passed.
 
 ## Next Milestone
 
-Pass final lifecycle review and configured implementation closeout
+Execute `p05-t01`, then re-run final verification and lifecycle review

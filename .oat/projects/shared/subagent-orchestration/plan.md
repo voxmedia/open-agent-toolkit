@@ -7,7 +7,7 @@ oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups:
   - [p02, p03]
-oat_plan_hill_phases: [p04]
+oat_plan_hill_phases: [p05]
 oat_auto_review_at_hill_checkpoints: true
 oat_plan_source: quick
 oat_import_reference: null
@@ -669,13 +669,76 @@ Expected: generated provider and bundle metadata are committed; ignored
 
 ---
 
+## Phase 5: Final review fixes
+
+### Task p05-t01: (review) Add explicit legacy dispatch-record fixture
+
+**Files:**
+
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Modify:
+  `.agents/skills/oat-dispatch-subagents/references/record-schema.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Regenerate if changed: `.oat/sync/manifest.json`
+
+**Step 1: Understand the issue**
+
+Review finding M1: the compatibility test calls the canonical `## Request`
+example a legacy fixture while asserting the absence of six optional
+Record-only evidence fields. This cannot detect a future contract change that
+stops representing a legacy dispatch Record without those fields.
+
+Location: `packages/cli/src/validation/skills.test.ts:4157`
+
+**Step 2: Implement the fix**
+
+Add a canonical, explicitly labeled legacy dispatch-record example that retains
+the baseline Record fields while omitting `reasoning_mode_selector`,
+`service_tier_selector`, `guidance_reference`, `guidance_version`,
+`guidance_verified_at`, and `guidance_status`. Update the test to parse this
+fixture beside the enriched Record example and assert baseline presence plus
+optional-field absence/presence directly. Bump the changed
+`oat-dispatch-subagents` skill version once for this PR.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts \
+  src/commands/init/tools/shared/bundle-consistency.test.ts
+pnpm exec oxfmt --check \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  packages/cli/src/validation/skills.test.ts
+pnpm release:validate
+pnpm run cli:source -- --json sync --scope project --dry-run
+```
+
+Expected: the canonical legacy Record is exercised, all focused and release
+checks pass, and provider synchronization has no pending changes.
+
+**Step 4: Commit**
+
+```bash
+git add \
+  .agents/skills/oat-dispatch-subagents/SKILL.md \
+  .agents/skills/oat-dispatch-subagents/references/record-schema.md \
+  packages/cli/src/validation/skills.test.ts \
+  .oat/sync/manifest.json
+git commit -m "fix(p05-t01): cover legacy dispatch records"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
 | ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
 | p01    | code     | fixes_completed | 2026-07-23 | reviews/p01-review-2026-07-23T045715Z.md                      |
 | p02    | code     | fixes_completed | 2026-07-23 | reviews/p02-review-2026-07-23T113654Z.md                      |
-| final  | code     | received        | 2026-07-23 | reviews/final-review-2026-07-23T121234Z.md                    |
+| final  | code     | fixes_added     | 2026-07-23 | reviews/archived/final-review-2026-07-23T121234Z.md           |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T225632Z.md |
 | design | artifact | passed          | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T231919Z.md |
@@ -713,8 +776,9 @@ exception, not evidence that the configured gate passed.
 - Phase 2: 1 task - skill boundary contract validation
 - Phase 3: 2 tasks - utility distribution and active documentation
 - Phase 4: 2 tasks - lockstep versioning, provider sync, and release gates
+- Phase 5: 1 task - final review compatibility fix
 
-**Total: 9 tasks**
+**Total: 10 tasks**
 
 Ready for code review and merge after all tasks and reviews pass.
 

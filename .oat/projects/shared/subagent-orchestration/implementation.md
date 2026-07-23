@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-23
-oat_current_task_id: null
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -23,8 +23,9 @@ oat_generated: false
 | Phase 2 | complete | 1     | 1/1       |
 | Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | complete | 2     | 2/2       |
+| Phase 5 | pending  | 1     | 0/1       |
 
-**Total:** 9/9 tasks completed
+**Total:** 9/10 tasks completed
 
 ## Planning Gate Override
 
@@ -207,6 +208,21 @@ verify the implemented result.
 
 ---
 
+## Phase 5: Final review fixes
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: (review) Add explicit legacy dispatch-record fixture
+
+**Status:** pending
+**Commit:** -
+
+**Final review:** M1 converted to a bounded fix task from
+`reviews/archived/final-review-2026-07-23T121234Z.md`.
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -329,6 +345,32 @@ None in this run entry.
 - Two pre-existing docs fragment-link failures recorded in Run 2.
 
 <!-- orchestration-runs-end -->
+
+---
+
+## Review Received: final
+
+**Date:** 2026-07-23
+**Review artifact:**
+`reviews/archived/final-review-2026-07-23T121234Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**New tasks added:** `p05-t01`
+
+**Finding disposition:**
+
+- M1: `code_fix_required` — add a canonical legacy dispatch Record fixture and
+  assert baseline fields plus absence of optional guidance evidence. Task scope:
+  Minor.
+
+**Next:** Execute `p05-t01`, run final verification, and re-review the final
+scope.
 
 ---
 
