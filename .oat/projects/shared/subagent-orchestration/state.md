@@ -1,7 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers: ['Quick-start exit gate requires re-review']
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T01:23:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T02:48:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,14 +85,14 @@ oat_generated: false
 
 ## Current Phase
 
-Execution plan drafted and undergoing readiness review
+Plan gate findings resolved; awaiting gate re-review
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (validated)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete draft)
-- **Plan:** `plan.md` (drafted — review in progress)
+- **Plan:** `plan.md` (gate fixes applied — awaiting re-review)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
@@ -105,12 +105,14 @@ Execution plan drafted and undergoing readiness review
 - ✓ Artifact review findings dispositioned
 - ✓ Design artifact re-review passed
 - ✓ Execution plan drafted
-- ⧗ Resolving review and dispatch readiness
+- ✓ Blocking plan-review findings dispositioned
+- ⧗ Awaiting quick-start exit-gate re-review
 
 ## Blockers
 
-None
+Quick-start exit gate requires a clean re-review before the plan can be marked
+implementation-ready.
 
 ## Next Milestone
 
-Complete plan review and implementation readiness checks
+Re-run the configured quick-start exit gate

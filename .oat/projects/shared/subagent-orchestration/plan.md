@@ -122,12 +122,15 @@ git commit -m "feat(p01-t01): add subagent orchestration guidance"
 
 **Step 1: Apply the mechanics-only contract**
 
-Bump the canonical dispatch skill once to `1.2.0`. Rewrite Required Loading to
-compose generic principles, one selection reference, and one matching mechanics
-reference. Remove dated model families and recommendation matrices from the
-dispatch provider references while preserving capability, authorization,
-catalog intersection, native-first routing, liveness, acceptance, continuation,
-and no-post-acceptance-replacement safeguards. Add optional reasoning-mode,
+Bump the canonical dispatch skill once to `1.2.0`. The current provider
+references already contain no named model matrices; do not replace their bodies
+wholesale or remove Task-Class Resolution and class-floor safeguards. Rewrite
+Required Loading to compose generic principles, one selection reference, and
+one matching mechanics reference. Repair stale wording that claims dated model
+examples live in the mechanics references so it points to the new guidance
+layer instead. Preserve capability, authorization, catalog intersection,
+native-first routing, liveness, acceptance, continuation, and
+no-post-acceptance-replacement safeguards. Add optional reasoning-mode,
 service-tier, and guidance-freshness evidence to the record schema without
 invalidating legacy records.
 
@@ -148,8 +151,10 @@ pnpm exec oxfmt --check '.agents/skills/oat-dispatch-subagents/**/*.md'
 git diff --check -- .agents/skills/oat-dispatch-subagents
 ```
 
-Expected: mechanics files are formatted; selection matrices are absent; the
-Cursor pre-start rejection and no-replacement rules remain explicit.
+Expected: mechanics files are formatted; selection matrices remain absent;
+stale model-example self-references point to generic guidance; Task-Class
+Resolution, Cursor pre-start rejection, and no-replacement rules remain
+explicit.
 
 **Step 4: Commit**
 
@@ -242,12 +247,12 @@ git commit -m "refactor(p01-t03): migrate dispatch consumers"
 
 **Step 1: Migrate baseline assertions**
 
-Update existing assertions that pin `oat-dispatch-subagents` version `1.1.5`,
-source model guidance from dispatch provider references, or require the old
-single-reference consumer contract. Point baseline selection assertions to the
-new guidance skill, retain mechanics assertions on dispatch, and include
-`oat-repo-improve` in active consumer coverage. Keep this task limited to
-restoring existing contracts; Phase 2 adds new hardening coverage.
+Update existing assertions that source model guidance from dispatch provider
+paths or require the old single-reference Required Loading contract. Point
+baseline selection assertions to the new guidance skill, retain mechanics
+assertions on dispatch, and include `oat-repo-improve` in active consumer
+coverage. Keep this task limited to restoring existing contracts; a new
+dispatch version pin, if useful, belongs to the Phase 2 hardening coverage.
 
 **Step 2: Format**
 
@@ -592,8 +597,9 @@ pnpm run cli:source -- --json sync --scope project --dry-run
 
 Expected: the final dry-run reports no pending canonical sync changes. Cursor
 and Codex native-read canonical `.agents/skills`, so neither produces a
-mirrored skill view; Claude receives the generated skill link. This wording
-corrects the broader provider-view statement in the reviewed design.
+mirrored skill view; Claude receives the generated skill link, consistent with
+the reviewed design. The tracked `.cursor/skills` convenience view is outside
+provider-sync scope and intentionally unchanged by this task.
 
 **Step 2: Run focused integration checks**
 
@@ -666,7 +672,7 @@ Expected: generated provider and bundle metadata are committed; ignored
 | design | artifact | passed          | 2026-07-22 | reviews/archived/artifact-design-review-2026-07-22T231919Z.md |
 | p03    | code     | pending         | -          | -                                                             |
 | p04    | code     | pending         | -          | -                                                             |
-| plan   | artifact | received        | 2026-07-23 | reviews/artifact-plan-review-2026-07-23T024325Z.md            |
+| plan   | artifact | fixes_completed | 2026-07-23 | reviews/archived/artifact-plan-review-2026-07-23T024325Z.md   |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
