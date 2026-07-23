@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-23
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -17,14 +17,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 4     | 0/4       |
-| Phase 2 | pending | 1     | 0/1       |
-| Phase 3 | pending | 2     | 0/2       |
-| Phase 4 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 4     | 4/4       |
+| Phase 2 | pending     | 1     | 0/1       |
+| Phase 3 | pending     | 2     | 0/2       |
+| Phase 4 | pending     | 2     | 0/2       |
 
-**Total:** 0/9 tasks completed
+**Total:** 4/9 tasks completed
 
 ## Planning Gate Override
 
@@ -42,28 +42,31 @@ verify the implemented result.
 
 ## Phase 1: Establish the canonical split
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-23
 
 ### Task p01-t01: Add portable model-selection guidance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6d1470423350e6962185cf2433bd0d3342bfab72`
 
 ### Task p01-t02: Reduce dispatch references to mechanics
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9c2bcb3c5de13e688b32cd9c8aa05fd85b5b2ca7`
 
 ### Task p01-t03: Migrate canonical dispatch consumers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `b6dbf91a2c55ff2109569ee9bc78ae6d604a8f93`
 
 ### Task p01-t04: Restore the existing skill suite to green
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `1af572393bfbf82907278a546a3f21500330e483`
+
+**Phase review:** blocked with two Important contract-drift findings in
+`reviews/p01-review-2026-07-23T045715Z.md`; fix iteration 1 pending.
 
 ---
 
@@ -132,7 +135,12 @@ _No implementation orchestration runs yet._
 - Implementation preflight selected Tier 1 Cursor subagents under the managed
   `high` policy.
 - HiLL is configured for `p04` only, with automatic checkpoint review enabled.
-- Next task: `p01-t01`.
+- Phase 1 produced four verified task commits; focused tests, formatting, and
+  type-check passed.
+- Root-owned review found two Important full-suite contract drifts. Fix
+  iteration 1 is bounded to the canonical autonomy mapping and reviewer-version
+  assertion.
+- Next action: resume the Phase 1 implementer for the bounded fixes.
 
 ---
 
@@ -144,12 +152,12 @@ _No implementation orchestration runs yet._
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
+| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                     |
+| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | -------------------------------------------- |
+| 1     | focused skills + full suite + type-check | 107/107 focused; 3295/3297 full; type-check pass | 2      | Two phase-caused contract drifts pending fix |
+| 2     | -                                        | -                                                | -      | -                                            |
+| 3     | -                                        | -                                                | -      | -                                            |
+| 4     | -                                        | -                                                | -      | -                                            |
 
 ## Final Summary (for PR/docs)
 

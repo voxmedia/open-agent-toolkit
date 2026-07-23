@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p01-t04
+oat_last_commit: 1af572393bfbf82907278a546a3f21500330e483
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T04:36:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T04:59:29Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 1: establish the canonical split
+Phase 1 review fixes in progress
 
 ## Artifacts
 
@@ -93,7 +93,7 @@ Phase 1: establish the canonical split
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete and reviewed)
 - **Plan:** `plan.md` (complete — gate findings fixed; re-review waived by operator)
-- **Implementation:** `implementation.md` (in progress — next task `p01-t01`)
+- **Implementation:** `implementation.md` (in progress — Phase 1 fix iteration 1)
 
 ## Progress
 
@@ -108,7 +108,8 @@ Phase 1: establish the canonical split
 - ✓ Blocking plan-review findings dispositioned
 - ✓ Operator approved proceeding without a clean exit-gate re-review
 - ✓ Implementation dispatch and schedule preflight passed
-- ⧗ Phase 1 implementation
+- ✓ Phase 1 task commits validated
+- ⧗ Phase 1 review fixes
 
 ## Blockers
 
@@ -118,4 +119,4 @@ passed.
 
 ## Next Milestone
 
-Complete and review Phase 1
+Fix and re-review Phase 1
