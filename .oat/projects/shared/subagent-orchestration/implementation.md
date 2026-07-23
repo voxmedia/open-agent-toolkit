@@ -516,7 +516,13 @@ added.
   disposition persisted as `allowed/passed`.
 - Freshness delta from reviewed HEAD `e3e0f024` classified closeout-only:
   review ledger, lifecycle notes, structural log, gate receipt, and gate state.
-- Next action: approval-aware closeout.
+- Project documentation sync added public-skill discoverability and repaired
+  the two previously known fragment links; PJM current-state and curated
+  backlog context were refreshed.
+- Because those documentation commits followed the passing configured gate,
+  its freshness state was marked stale before approval.
+- Next action: final verification, lifecycle review, configured gate refresh,
+  then approval-aware closeout.
 
 ---
 

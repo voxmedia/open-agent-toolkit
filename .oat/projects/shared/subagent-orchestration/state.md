@@ -34,7 +34,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -66,14 +66,14 @@ oat_implement_exit_gate:
   receive_commit: 835ad76ca1ebc04542b8aef734d18a283b326840
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-07-23T12:55:34Z'
+  failure: 'implementation_changed_after_gate: approved documentation and repo-reference synchronization'
+  updated_at: '2026-07-23T16:10:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-22T17:10:16.620Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-23T16:08:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-23T16:10:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Configured implementation exit gate passed; awaiting final approval
+Documentation sync complete; refreshing final verification and review
 
 ## Artifacts
 
@@ -122,7 +122,8 @@ Configured implementation exit gate passed; awaiting final approval
 - ✓ Final verification inventory drift fixed
 - ✓ Final lifecycle re-review passed
 - ✓ Configured implementation exit gate passed
-- ⧗ Final implementation approval
+- ✓ Project documentation sync complete
+- ⧗ Final verification/review/gate refresh after documentation changes
 
 ## Blockers
 
@@ -132,4 +133,4 @@ passed.
 
 ## Next Milestone
 
-Receive final implementation approval and complete lifecycle closeout
+Refresh final verification, lifecycle review, and configured exit gate
