@@ -96,6 +96,10 @@ Phase p03 outcome: pass after operator-authorized recovery; fix-loop count 0. Ta
 
 Accepted fresh root-owned p02 review for range 1668d004..22ae2325. Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-reviewer-gpt-5-6-sol-high
 
+### 2026-07-23 · structural · oat-project-implement · p02-fix1
+
+Accepted p02 fix iteration 1 by resuming original request implement-p02-20260723T0516Z-1668d004 against review reviews/p02-review-2026-07-23T113654Z.md. Dispatch: scope=p02-fix1 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -102,8 +102,8 @@ verify the implemented result.
 **Status:** completed
 **Commit:** `22ae2325dbb8f0c9763c0004e023a93efa49ad2e`
 
-**Phase review:** blocked by 2 Important findings in
-`reviews/p02-review-2026-07-23T113654Z.md`; fix iteration 1 pending.
+**Phase review:** fix iteration 1 completed in
+`0692243e71eb8a5e233ada48fc75f0fd134fd0a0`; re-review pending.
 
 ---
 
@@ -201,7 +201,8 @@ None for Phase 1.
   139/139 and the full suite passed 3,539/3,539.
 - Phase 1 re-review passed with no findings.
 - Phase 2 implementation completed in `22ae2325`; root review found 2
-  Important contract-coverage gaps. Fix iteration 1 is pending.
+  Important contract-coverage gaps. Fix iteration 1 completed all 5 findings
+  in `0692243e`; re-review is pending.
 - Phase 3 passed root review in `reviews/p03-review-2026-07-23T112224Z.md`
   after one operator-authorized recovery.
 - Next action: fix and re-review Phase 2, then fan in the parallel group.
@@ -217,12 +218,12 @@ None for Phase 1.
 
 ## Test Results
 
-| Phase | Tests Run                                | Passed                                           | Failed | Coverage                           |
-| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ---------------------------------- |
-| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1 |
-| 2     | focused skill contracts                  | 112/112                                          | 0      | Review fixes pending               |
-| 3     | -                                        | -                                                | -      | -                                  |
-| 4     | -                                        | -                                                | -      | -                                  |
+| Phase | Tests Run                                | Passed                                           | Failed | Coverage                                    |
+| ----- | ---------------------------------------- | ------------------------------------------------ | ------ | ------------------------------------------- |
+| 1     | focused skills + full suite + type-check | 139/139 focused; 3539/3539 full; type-check pass | 0      | Phase passed after fix iteration 1          |
+| 2     | focused skill contracts                  | 111/111                                          | 0      | Fix iteration 1 complete; re-review pending |
+| 3     | -                                        | -                                                | -      | -                                           |
+| 4     | -                                        | -                                                | -      | -                                           |
 
 ## Final Summary (for PR/docs)
 
