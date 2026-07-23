@@ -68,6 +68,22 @@ Accepted request rereview-p01-20260723T0506Z-0dda1cf3 on target oat-reviewer-gpt
 
 Phase p01 passed root-owned re-review after 1 fix iteration; evidence: reviews/p01-review-2026-07-23T050810Z.md and implementation.md#run-1.
 
+### 2026-07-23 · structural · oat-project-implement · implement-p02-20260723T0516Z-1668d004
+
+Accepted p02 phase implementer dispatch in worktree .worktrees/subagent-orchestration-p02. Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### 2026-07-23 · structural · oat-project-implement · implement-p03-20260723T0516Z-199bc797
+
+Accepted p03 phase implementer dispatch in worktree .worktrees/subagent-orchestration-p03. Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### 2026-07-23 · structural · oat-project-implement · p03-outcome-implement-p03-20260723T0516Z-199bc797
+
+Phase p03 outcome: block; fix-loop count 0. Root dispatch carried stale boundaries that conflicted with canonical plan.md; accepted implementer made no changes and left .worktrees/subagent-orchestration-p03 clean at 199bc797. Recovery requires a new explicitly operator-authorized action.
+
+### 2026-07-23 · structural · oat-project-implement · implement-p03-recovery1-20260723T1112Z-199bc797
+
+Accepted operator-authorized p03 recovery in unchanged worktree .worktrees/subagent-orchestration-p03, linked to terminal request implement-p03-20260723T0516Z-199bc797. Dispatch: scope=p03-recovery1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
