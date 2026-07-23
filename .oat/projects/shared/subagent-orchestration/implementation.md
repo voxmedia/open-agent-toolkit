@@ -514,6 +514,8 @@ added.
   ledger.
 - Receive correlation reconciled to bookkeeping commit `835ad76c`; exit-gate
   disposition persisted as `allowed/passed`.
+- Freshness delta from reviewed HEAD `e3e0f024` classified closeout-only:
+  review ledger, lifecycle notes, structural log, gate receipt, and gate state.
 - Next action: approval-aware closeout.
 
 ---
