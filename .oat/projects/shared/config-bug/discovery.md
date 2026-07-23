@@ -22,6 +22,13 @@ packs writes `.oat/config.json#tools` flags as `true` for packs installed only
 at user scope. Shared repository config should not present one developer's
 user-level installation as project-level installed state.
 
+The same install/update workflow can invoke provider sync while a provider
+parent such as `.claude/skills` is itself a symlink to `.agents/skills`. Sync
+then resolves child mutations through that parent and can replace canonical
+skill directories with self-referencing symlinks. Provider mutations must fail
+safely without altering canonical content when any existing parent is a
+symlink.
+
 ## Clarifying Questions
 
 ### Question 1: Desired scope model
@@ -99,12 +106,23 @@ repository-truthful while user-installed capabilities continue to work.
 5. **Empty project state:** When no project packs remain, omit the shared
    `tools` map. Preserve any unrelated shared config and do not remove the
    config file itself.
+6. **Provider mutation safety:** Every generic provider create, update, copy,
+   and remove operation must validate its destination ancestry at apply time.
+   A symlinked or non-directory existing parent blocks the mutation.
+7. **Scope expansion:** Fold provider-path safety into this project as a
+   dedicated concern because tool lifecycle commands automatically invoke sync,
+   while keeping its implementation and tests separate from config
+   reconciliation.
 
 ## Constraints
 
 - Preserve unrelated shared configuration keys during reconciliation.
 - Keep `oat tools list` scope reporting unchanged.
 - Maintain machine-readable behavior for pack-gated workflows.
+- Preserve canonical assets and external symlink targets when a provider parent
+  is unsafe.
+- Validate again at apply time so a safe planning result cannot authorize a
+  later mutation after the filesystem changes.
 - Update canonical skill versions for every changed `.agents/skills/*/SKILL.md`.
 - Apply lockstep version bumps to all five public packages and run
   `pnpm release:validate`.
@@ -119,12 +137,17 @@ repository-truthful while user-installed capabilities continue to work.
 - User-scoped packs remain discoverable through the chosen effective
   availability mechanism if Approach 1 is selected.
 - Tests cover user-only, project-only, both-scope, and empty-repo cases.
+- Sync refuses provider-path mutations beneath a symlinked or non-directory
+  parent across symlink, copy, and remove operations.
+- Regression tests prove canonical skills and external targets remain unchanged
+  after refusal.
 - User-facing tool-pack and configuration documentation matches the new
   semantics.
 
 ## Out of Scope
 
-- Changing provider-sync scope behavior.
+- Changing provider mappings, strategies, or scope selection beyond destination
+  mutation safety.
 - Redesigning the complete OAT configuration precedence model.
 - Migrating unrelated workflow preferences or local state.
 
@@ -157,9 +180,14 @@ None.
   - **Impact:** Low
   - **Mitigation Ideas:** Reconciliation should deterministically rewrite flags
     from project scope on the next pack lifecycle operation.
+- **Plan/apply race:** Provider ancestry can change after planning.
+  - **Likelihood:** Low
+  - **Impact:** High
+  - **Mitigation Ideas:** Treat apply-time ancestry validation as the mandatory
+    safety boundary; planning diagnostics are supplemental.
 
 ## Next Steps
 
 Confirm the capability semantics, then produce a lightweight design because the
 change crosses shared configuration ownership, runtime capability resolution,
-and bundled workflow consumers.
+bundled workflow consumers, and provider-sync mutation safety.
