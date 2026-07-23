@@ -54,6 +54,19 @@ pnpm build:docs     # builds docs site and its dependencies
 
 For narrower changes, use package-specific checks when possible, but do not merge without passing the relevant workspace gates.
 
+### TypeScript and type-aware linting
+
+The workspace runs the stable TypeScript 7 compiler through the `typescript-7`
+package alias. The `typescript` package name remains aliased to the TypeScript 6
+compatibility package for tools that import the compiler API directly.
+
+`pnpm lint` runs both standard Oxlint checks and a targeted tsgolint semantic
+pass over production sources. The semantic pass enforces
+`typescript/no-floating-promises` and `typescript/no-misused-promises`; tests
+remain under the existing syntax-lint policy. Keep `pnpm type-check` as a
+separate gate because compiler diagnostics and semantic lint rules cover
+different failure modes.
+
 ## CLI and Docs-Specific Verification
 
 Common targeted checks:

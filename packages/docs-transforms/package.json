@@ -1,6 +1,6 @@
 {
   "name": "@open-agent-toolkit/docs-transforms",
-  "version": "0.2.12",
+  "version": "0.2.13",
   "private": false,
   "description": "Remark/unified transforms for OAT documentation",
   "homepage": "https://github.com/voxmedia/open-agent-toolkit/tree/main/packages/docs-transforms",
@@ -32,12 +32,12 @@
   "scripts": {
     "build": "tsc",
     "clean": "rm -rf dist",
-    "check": "oxlint . && oxfmt --check .",
-    "check:fix": "oxlint --fix . && oxfmt .",
+    "check": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt --check .",
+    "check:fix": "oxlint --fix . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' . && oxfmt .",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
-    "lint": "oxlint .",
-    "lint:fix": "oxlint --fix .",
+    "lint": "oxlint . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' .",
+    "lint:fix": "oxlint --fix . && oxlint --type-aware -A all -D typescript/no-floating-promises -D typescript/no-misused-promises --ignore-pattern '**/*.test.ts' --ignore-pattern '**/*.spec.ts' .",
     "test": "vitest run",
     "test:watch": "vitest",
     "type-check": "tsc --noEmit"
@@ -50,7 +50,8 @@
   "devDependencies": {
     "@types/mdast": "^4.0.4",
     "@types/node": "^22.10.0",
-    "typescript": "^5.8.3",
+    "typescript": "npm:@typescript/typescript6@^6.0.2",
+    "typescript-7": "npm:typescript@^7.0.2",
     "vitest": "^4.0.18"
   },
   "engines": {

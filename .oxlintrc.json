@@ -17,6 +17,8 @@
     "eslint/no-empty": "error",
     "eslint/no-shadow": "off",
     "typescript/no-explicit-any": "warn",
+    "typescript/no-floating-promises": "error",
+    "typescript/no-misused-promises": "error",
     "typescript/no-non-null-assertion": "off",
     "typescript/no-extra-non-null-assertion": "off",
     "typescript/no-unnecessary-type-constraint": "error"

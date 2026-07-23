@@ -29,6 +29,7 @@
     "resolveFullPaths": true,
     "resolveFullExtension": ".js"
   },
+  "files": [],
   "exclude": [
     "node_modules",
     "dist",
