@@ -3695,7 +3695,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.0$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.1$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
@@ -4154,8 +4154,9 @@ describe('validateOatSkills', () => {
     const engine = await readRepoFile(
       '.agents/skills/oat-dispatch-subagents/SKILL.md',
     );
-    const legacyRequest =
-      schema.match(/^## Request[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ?? '';
+    const legacyRecord =
+      schema.match(/^## Legacy Record[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ??
+      '';
     const enrichedRecord =
       schema.match(/^## Record[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ?? '';
     const optionalEvidence =
@@ -4170,25 +4171,7 @@ describe('validateOatSkills', () => {
       'guidance_verified_at',
       'guidance_status',
     ] as const;
-    const legacyBaselineFields = [
-      'request_id',
-      'caller',
-      'scope',
-      'objective',
-      'action',
-      'role',
-      'provider',
-      'dispatch_context',
-      'authority',
-      'expected_output',
-      'verification_evidence',
-      'deadline_seconds',
-      'retry_limit',
-      'authorization_scope',
-      'selection_source',
-      'fallback',
-    ] as const;
-    const enrichedBaselineFields = [
+    const recordBaselineFields = [
       'request_id',
       'caller',
       'scope',
@@ -4215,12 +4198,10 @@ describe('validateOatSkills', () => {
     expect(schema).toMatch(
       /legacy\s+`explicit-downgrade` example above is valid only for an unconstrained request/i,
     );
-    for (const field of legacyBaselineFields) {
-      expect(legacyRequest, `legacy request baseline ${field}`).toMatch(
+    for (const field of recordBaselineFields) {
+      expect(legacyRecord, `legacy record baseline ${field}`).toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
-    }
-    for (const field of enrichedBaselineFields) {
       expect(enrichedRecord, `enriched record baseline ${field}`).toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
@@ -4232,7 +4213,7 @@ describe('validateOatSkills', () => {
       expect(optionalEvidence, `optional evidence ${field}`).toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
-      expect(legacyRequest, `legacy request omits ${field}`).not.toMatch(
+      expect(legacyRecord, `legacy record omits ${field}`).not.toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
     }

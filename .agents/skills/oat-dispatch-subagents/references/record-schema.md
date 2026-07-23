@@ -61,6 +61,47 @@ retain the original role-based selection and fallback behavior. The legacy
 `explicit-downgrade` example above is valid only for an unconstrained request
 without task-class metadata or a declared class floor.
 
+## Legacy Record
+
+This baseline Record remains valid without optional model-guidance evidence:
+
+```yaml
+request_id: dispatch-legacy-id
+caller: oat-repo-improve
+scope: repo:packages/cli
+objective: Audit CLI correctness hotspots
+action: analysis
+role_name: repo-audit-scout
+role_class: recon
+provider: codex
+dispatch_context: root-native
+dispatch_policy: economy
+dispatch_ceiling: high
+catalog_snapshot:
+  id: root-native-legacy-1
+  source: tool-schema
+  observed_at: 2026-07-12T00:00:00Z
+authority: read-only
+role_selector: oat-recon-worker
+model_selector: opaque-provider-selector
+model_selector_granularity: opaque
+effort_selector: economical
+selection_source: native-default
+candidates_considered:
+  - opaque-provider-selector
+selection_reason: native-catalog
+selected_route: native
+deadline_seconds: 300
+retry_limit: 1
+payload: {}
+launch_status: accepted
+child_outcome: completed
+configured_invocation_evidence: []
+runtime_confirmation: not-reported
+diagnostics: []
+continuation_events: []
+```
+
 ## Record
 
 ```yaml
