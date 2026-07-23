@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-23
-oat_current_task_id: p05-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -23,9 +23,9 @@ oat_generated: false
 | Phase 2 | complete | 1     | 1/1       |
 | Phase 3 | complete | 2     | 2/2       |
 | Phase 4 | complete | 2     | 2/2       |
-| Phase 5 | pending  | 1     | 0/1       |
+| Phase 5 | complete | 1     | 1/1       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ## Planning Gate Override
 
@@ -210,15 +210,30 @@ verify the implemented result.
 
 ## Phase 5: Final review fixes
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-23
+
+### Phase Summary
+
+**Outcome:**
+
+- Added an explicit canonical legacy dispatch Record without optional guidance
+  evidence.
+- Updated compatibility coverage to compare the legacy and enriched Record
+  fixtures directly.
+- Bumped `oat-dispatch-subagents` from `1.2.0` to `1.2.1`.
+
+**Verification:**
+
+- Focused contract suites passed 136/136.
+- Formatting, release validation, provider sync dry-run, and diff checks passed.
 
 ### Task p05-t01: (review) Add explicit legacy dispatch-record fixture
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e92a50bd9b38a9f57698f58e9b33d351bf24048b`
 
-**Final review:** M1 converted to a bounded fix task from
+**Final review fix:** completed; final re-review pending for
 `reviews/archived/final-review-2026-07-23T121234Z.md`.
 
 ---
@@ -344,6 +359,34 @@ None in this run entry.
 - Non-blocking legacy dispatch-record fixture improvement from Phase 2.
 - Two pre-existing docs fragment-link failures recorded in Run 2.
 
+### Run 4 — 2026-07-23T12:26:31Z {#run-4}
+
+**Branch:** `subagent-orchestration`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict     | Task Commits | Review                  | Fixes    |
+| ----- | ----------- | ------------ | ----------------------- | -------- |
+| p05   | implemented | `e92a50bd`   | final re-review pending | final M1 |
+
+#### Dispatch Notes
+
+- Implementation selected native `gpt-5.6-sol-high` at the managed `high`
+  ceiling from ordered candidates `gpt-5.6-sol-medium`, then
+  `gpt-5.6-sol-high`.
+- Dispatch stamp:
+  - `Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Final lifecycle re-review of the completed M1 fix.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -369,8 +412,7 @@ None in this run entry.
   assert baseline fields plus absence of optional guidance evidence. Task scope:
   Minor.
 
-**Next:** Execute `p05-t01`, run final verification, and re-review the final
-scope.
+**Fix status:** completed in `e92a50bd`; final re-review pending.
 
 ---
 
@@ -382,7 +424,8 @@ scope.
 - Gate findings were fixed and the operator waived the clean Fable re-review.
 - Implementation preflight selected Tier 1 Cursor subagents under the managed
   `high` policy.
-- HiLL is configured for `p04` only, with automatic checkpoint review enabled.
+- HiLL is configured for final Phase 5, with automatic checkpoint review
+  enabled.
 - Phase 1 produced four verified task commits; focused tests, formatting, and
   type-check passed.
 - Root-owned review found two Important full-suite contract drifts. Fix
@@ -403,7 +446,10 @@ scope.
 - Phase 4 selected unpublished version `0.2.13`, completed two bounded commits,
   passed all repository and release gates, and passed root review with no
   findings.
-- Next action: final verification, final lifecycle review, and configured
+- Initial final lifecycle review converted one Medium compatibility gap to
+  `p05-t01`; the fix added the explicit legacy Record fixture and passed all
+  focused, release, and sync checks.
+- Next action: final verification, final lifecycle re-review, and configured
   implementation closeout.
 
 ---
@@ -447,9 +493,9 @@ scope.
 - Verification: focused suites through 249/249, full workspace tests and smoke
   tests, lint, type-check, format, package build, docs build, release
   validation, registry checks, and final provider-sync dry-run all passed.
-- Review fixes restored autonomy inventory/version contracts in Phase 1 and
-  strengthened semantic contract coverage in Phase 2. One non-blocking legacy
-  record-fixture improvement remains recorded.
+- Review fixes restored autonomy inventory/version contracts in Phase 1,
+  strengthened semantic contract coverage in Phase 2, and added explicit
+  legacy Record coverage in Phase 5.
 - Design deltas: Phase 3 used reviewed-task cherry-picks after duplicate
   bootstrap-sync manifest conflict; the quick-start planning gate proceeded
   under an explicit operator-approved override after all received findings were
