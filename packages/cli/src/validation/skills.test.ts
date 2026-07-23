@@ -3759,17 +3759,37 @@ describe('validateOatSkills', () => {
     const claude = await readRepoFile(
       `${mechanicsRoot}/references/provider-claude.md`,
     );
-    const consumers = [
-      await readRepoFile('.agents/skills/oat-project-implement/SKILL.md'),
-      await readRepoFile('.agents/skills/oat-project-plan-writing/SKILL.md'),
-      await readRepoFile(
-        '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
-      ),
-      await readRepoFile('.agents/skills/oat-cursor-cloud-projects/SKILL.md'),
-      await readRepoFile('.agents/skills/oat-repo-improve/SKILL.md'),
-      await readRepoFile('.agents/agents/oat-reviewer.md'),
-      await readRepoFile('.agents/agents/oat-phase-implementer.md'),
-    ];
+    const consumerSpecs = [
+      {
+        path: '.agents/skills/oat-project-implement/SKILL.md',
+        heading: '## Shared Subagent Dispatch Contract',
+      },
+      {
+        path: '.agents/skills/oat-project-plan-writing/SKILL.md',
+        heading: '## Shared Subagent Dispatch Contract',
+      },
+      {
+        path: '.agents/skills/oat-project-dispatch-subagents/SKILL.md',
+        heading: '## Required Loading',
+      },
+      {
+        path: '.agents/skills/oat-cursor-cloud-projects/SKILL.md',
+        heading: '### Step 4: Load Cursor Dispatch Context When Needed',
+        provider: 'cursor',
+      },
+      {
+        path: '.agents/skills/oat-repo-improve/SKILL.md',
+        heading: '### Step 2: Select Orchestration Tier',
+      },
+      {
+        path: '.agents/agents/oat-reviewer.md',
+        heading: '## Bounded Reviewer Reconnaissance',
+      },
+      {
+        path: '.agents/agents/oat-phase-implementer.md',
+        heading: '## Shared Dispatch Contract',
+      },
+    ] as const;
 
     expect(principles).toMatch(/Five Task Classes/);
     for (const provider of ['cursor', 'codex', 'claude']) {
@@ -3781,12 +3801,77 @@ describe('validateOatSkills', () => {
       );
       expect(contract).toContain(`references/provider-${provider}.md`);
     }
-    for (const consumer of consumers) {
-      expect(consumer).toContain(
+    for (const spec of consumerSpecs) {
+      const content = await readRepoFile(spec.path);
+      const start = content.indexOf(spec.heading);
+      const headingPrefix = spec.heading.startsWith('### ')
+        ? '\n### '
+        : '\n## ';
+      const end = content.indexOf(headingPrefix, start + spec.heading.length);
+      const loadingBlock = content.slice(start, end === -1 ? undefined : end);
+      const principlesIndex = loadingBlock.indexOf(
         'subagent-orchestration/references/model-selection-principles.md',
       );
-      expect(consumer).toMatch(/subagent-orchestration\/references\//);
-      expect(consumer).toMatch(/oat-dispatch-subagents\/references\//);
+      const selectionInstruction = spec.provider
+        ? loadingBlock.match(
+            new RegExp(
+              `subagent-orchestration/references/provider-${spec.provider}\\.md`,
+              'i',
+            ),
+          )
+        : loadingBlock.match(
+            /read\s+exactly\s+one\s+(?:active-provider\s+|matching\s+)?selection\s+reference/i,
+          );
+      const mechanicsInstruction = spec.provider
+        ? loadingBlock.match(
+            new RegExp(
+              `oat-dispatch-subagents/references/provider-${spec.provider}\\.md`,
+              'i',
+            ),
+          )
+        : loadingBlock.match(/matching\s+mechanics\s+reference/i);
+      const selectionProviders = [
+        ...loadingBlock.matchAll(
+          /subagent-orchestration\/references\/provider-(claude|codex|cursor)\.md/gi,
+        ),
+      ].map((match) => match[1]?.toLowerCase());
+      const mechanicsProviders = [
+        ...loadingBlock.matchAll(
+          /oat-dispatch-subagents\/references\/provider-(claude|codex|cursor)\.md/gi,
+        ),
+      ].map((match) => match[1]?.toLowerCase());
+
+      expect(start, `${spec.path} loading block`).toBeGreaterThanOrEqual(0);
+      expect(principlesIndex, `${spec.path} principles`).toBeGreaterThanOrEqual(
+        0,
+      );
+      expect(
+        selectionInstruction?.index,
+        `${spec.path} one provider selection`,
+      ).toBeGreaterThan(principlesIndex);
+      expect(
+        mechanicsInstruction?.index,
+        `${spec.path} matching provider mechanics`,
+      ).toBeGreaterThan(selectionInstruction?.index ?? Number.MAX_SAFE_INTEGER);
+      expect(
+        loadingBlock.match(
+          /read\s+exactly\s+one\s+(?:active-provider\s+|matching\s+)?selection\s+reference/gi,
+        )?.length ?? 0,
+        `${spec.path} selection cardinality`,
+      ).toBe(spec.provider ? 0 : 1);
+      expect(
+        selectionProviders.length,
+        `${spec.path} concrete selection references`,
+      ).toBeLessThanOrEqual(1);
+      expect(
+        mechanicsProviders.length,
+        `${spec.path} concrete mechanics references`,
+      ).toBeLessThanOrEqual(1);
+      if (selectionProviders.length > 0 || mechanicsProviders.length > 0) {
+        expect(selectionProviders, `${spec.path} provider pairing`).toEqual(
+          mechanicsProviders,
+        );
+      }
     }
 
     expect(cursor).toMatch(
@@ -3828,11 +3913,65 @@ describe('validateOatSkills', () => {
         await readRepoFile(`${selectionRoot}/provider-${provider}.md`),
       ]),
     );
+    const taskClassSection = principles.slice(
+      principles.indexOf('## Five Task Classes'),
+      principles.indexOf('## Default, Economy, and Escalation'),
+    );
+    const taskClassRows = [
+      ...taskClassSection.matchAll(/^\|\s*`([^`]+)`\s*\|\s*(.*?)\s*\|$/gm),
+    ].map((match) => ({
+      taskClass: match[1] ?? '',
+      qualification: match[2] ?? '',
+    }));
+    const qualificationMarkers = {
+      'mechanical-recon':
+        /deterministic[\s\S]*(?:misses are visible|cheaply verified)/i,
+      'intelligent-recon':
+        /interpretation[\s\S]*(?:plausible miss|survive mechanical validation)/i,
+      'default-implementation':
+        /bounded[\s\S]*retain[\s\S]*reconcile dispersed context/i,
+      'hard-reasoning':
+        /ambiguity[\s\S]*(?:novelty|architecture|diagnosis|competing interpretations)/i,
+      consequential:
+        /security[\s\S]*(?:release safety|irreversible)[\s\S]*(?:adversarial|foundational|expensive failure)/i,
+    } as const;
 
-    for (const taskClass of taskClasses) {
-      expect(principles, `durable class ${taskClass}`).toMatch(
-        new RegExp(`^\\|\\s*\`${taskClass}\`\\s*\\|`, 'm'),
+    expect(taskClassRows.map(({ taskClass }) => taskClass)).toEqual(
+      taskClasses,
+    );
+    for (const { taskClass, qualification } of taskClassRows) {
+      expect(qualification, `${taskClass} qualification`).toMatch(
+        qualificationMarkers[taskClass as keyof typeof qualificationMarkers],
       );
+    }
+    expect(taskClassSection).toMatch(
+      /Classify in this order:\s*deterministic verifiability,\s*silent-miss risk,\s*dispersed-context reconciliation,\s*ambiguity or novelty,\s*then consequence/i,
+    );
+    expect(taskClassSection).toMatch(/When uncertain, use the stronger class/i);
+
+    const escalationSection = principles.slice(
+      principles.indexOf('## Escalation Boundaries'),
+      principles.indexOf('## Long Context'),
+    );
+    for (const [boundary, marker] of [
+      [
+        'mechanical to intelligent recon',
+        /Mechanical to intelligent recon[\s\S]{0,160}(?:judgment|required to identify|miss would be silent)/i,
+      ],
+      [
+        'recon to default implementation',
+        /Recon to default implementation[\s\S]{0,180}retain[\s\S]{0,100}reconcil(?:e|ing) dispersed context/i,
+      ],
+      [
+        'default implementation to hard reasoning',
+        /Default implementation to hard reasoning[\s\S]{0,160}(?:ambiguity|novelty|reasoning difficulty)/i,
+      ],
+      [
+        'any class to consequential',
+        /Any class to consequential[\s\S]{0,180}(?:security|production impact|irreversibility)[\s\S]{0,120}(?:adversarial|expensive failure)/i,
+      ],
+    ] as const) {
+      expect(escalationSection, boundary).toMatch(marker);
     }
 
     for (const [provider, content] of providers) {
@@ -3918,19 +4057,61 @@ describe('validateOatSkills', () => {
     expect(claude).toMatch(
       /stronger safety classifier[\s\S]{0,180}not an\s+exception that inverts the general Opus-first policy/i,
     );
+    const costPosture = claude.slice(
+      claude.indexOf('## Root and Subagent Cost Posture'),
+      claude.indexOf('## Cyber-Sensitive Evidence'),
+    );
+    expect(costPosture).toMatch(
+      /strong, low-volume root orchestration[\s\S]{0,160}coherence-critical[\s\S]{0,180}bounded subagents carry\s+most execution volume/i,
+    );
+    expect(costPosture).toMatch(
+      /Capture routine savings in higher-volume subagents[\s\S]{0,180}instead\s+of weakening the root orchestrator/i,
+    );
   });
 
   it('keeps provider mechanics generic while retaining selectors and floors', async () => {
     const mechanicsRoot = '.agents/skills/oat-dispatch-subagents/references';
-    const namedModelMarkers = {
+    const versionedModelMarkers = {
       claude: /\b(?:Haiku|Sonnet|Opus|Fable|Mythos)\s+\d/i,
       codex: /\bGPT-\d/i,
       cursor: /\b(?:composer|gpt|claude|grok|gemini|kimi|glm)[- ]\d/i,
+    } as const;
+    const providerFamilyMarkers = {
+      claude: /\b(?:Haiku|Sonnet|Opus|Fable|Mythos)\b/i,
+      codex: /\b(?:GPT|o[134])(?:[-\s]|\b)/i,
+      cursor:
+        /\b(?:Composer|Grok|Gemini|Kimi|GLM|GPT|Haiku|Sonnet|Opus|Fable|Mythos)\b/i,
     } as const;
 
     for (const provider of ['claude', 'codex', 'cursor'] as const) {
       const mechanics = await readRepoFile(
         `${mechanicsRoot}/provider-${provider}.md`,
+      );
+      const taskClassStart = mechanics.indexOf('## Task-Class Resolution');
+      const taskClassEnd = mechanics.indexOf(
+        '\n## ',
+        taskClassStart + '## Task-Class Resolution'.length,
+      );
+      const taskClassResolution = mechanics.slice(
+        taskClassStart,
+        taskClassEnd === -1 ? undefined : taskClassEnd,
+      );
+      const recommendationParagraphs = mechanics
+        .split(/\n\n+/)
+        .filter(
+          (paragraph) =>
+            /(?:mechanical-recon|intelligent-recon|default-implementation|hard-reasoning|consequential|default|economy|escalat|recommend|prefer|choose|select|best|route)/i.test(
+              paragraph,
+            ) ||
+            (/^(?:[-*]|\d+\.)\s/m.test(paragraph) &&
+              providerFamilyMarkers[provider].test(paragraph)),
+        );
+      const recommendationTables = (
+        mechanics.match(/(?:^\|.*\|\n?){2,}/gm) ?? []
+      ).filter((table) =>
+        /(?:task class|class|model|family|default|economy|escalation|recommend|preferred|route)/i.test(
+          table.split('\n')[0] ?? '',
+        ),
       );
 
       expect(mechanics, `${provider} generic model selector`).toMatch(
@@ -3942,14 +4123,26 @@ describe('validateOatSkills', () => {
       expect(mechanics, `${provider} task-class resolution`).toMatch(
         /^## Task-Class Resolution$/m,
       );
-      expect(mechanics, `${provider} no named models`).not.toMatch(
-        namedModelMarkers[provider],
+      expect(mechanics, `${provider} no versioned named models`).not.toMatch(
+        versionedModelMarkers[provider],
       );
-      expect(mechanics, `${provider} no dated matrix heading`).not.toMatch(
-        /^## (?:Current Families|Dated Task-Class Matrix)$/m,
-      );
-      expect(mechanics, `${provider} no recommendation matrix`).not.toMatch(
-        /^\|\s*Task class\s*\|\s*Default\s*\|\s*Economy\s*\|\s*Escalation\s*\|/m,
+      expect(
+        taskClassResolution,
+        `${provider} no task-class family recommendations`,
+      ).not.toMatch(providerFamilyMarkers[provider]);
+      for (const paragraph of recommendationParagraphs) {
+        expect(
+          paragraph,
+          `${provider} no named recommendation paragraph`,
+        ).not.toMatch(providerFamilyMarkers[provider]);
+      }
+      for (const table of recommendationTables) {
+        expect(table, `${provider} no named recommendation table`).not.toMatch(
+          providerFamilyMarkers[provider],
+        );
+      }
+      expect(mechanics, `${provider} no dated selection heading`).not.toMatch(
+        /^## (?:Current Families|Dated Task-Class Matrix|Model Recommendations|Recommendation Matrix)$/m,
       );
     }
   });
@@ -3961,6 +4154,8 @@ describe('validateOatSkills', () => {
     const engine = await readRepoFile(
       '.agents/skills/oat-dispatch-subagents/SKILL.md',
     );
+    const legacyRequest =
+      schema.match(/^## Request[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ?? '';
     const enrichedRecord =
       schema.match(/^## Record[\s\S]*?```yaml\n([\s\S]*?)\n```/m)?.[1] ?? '';
     const optionalEvidence =
@@ -3975,16 +4170,61 @@ describe('validateOatSkills', () => {
       'guidance_verified_at',
       'guidance_status',
     ] as const;
-    const legacyRecord = enrichedRecord
-      .split('\n')
-      .filter(
-        (line) => !guidanceFields.some((field) => line.startsWith(`${field}:`)),
-      )
-      .join('\n');
+    const legacyBaselineFields = [
+      'request_id',
+      'caller',
+      'scope',
+      'objective',
+      'action',
+      'role',
+      'provider',
+      'dispatch_context',
+      'authority',
+      'expected_output',
+      'verification_evidence',
+      'deadline_seconds',
+      'retry_limit',
+      'authorization_scope',
+      'selection_source',
+      'fallback',
+    ] as const;
+    const enrichedBaselineFields = [
+      'request_id',
+      'caller',
+      'scope',
+      'objective',
+      'action',
+      'role_name',
+      'role_class',
+      'provider',
+      'dispatch_context',
+      'authority',
+      'role_selector',
+      'model_selector',
+      'effort_selector',
+      'selection_source',
+      'selection_reason',
+      'selected_route',
+      'launch_status',
+      'child_outcome',
+    ] as const;
 
     expect(schema).toMatch(
       /following fields are optional for legacy callers[\s\S]{0,180}dated provider\s+mapping influenced selection/i,
     );
+    expect(schema).toMatch(
+      /legacy\s+`explicit-downgrade` example above is valid only for an unconstrained request/i,
+    );
+    for (const field of legacyBaselineFields) {
+      expect(legacyRequest, `legacy request baseline ${field}`).toMatch(
+        new RegExp(`^${field}:`, 'm'),
+      );
+    }
+    for (const field of enrichedBaselineFields) {
+      expect(enrichedRecord, `enriched record baseline ${field}`).toMatch(
+        new RegExp(`^${field}:`, 'm'),
+      );
+    }
     for (const field of guidanceFields) {
       expect(enrichedRecord, `enriched record ${field}`).toMatch(
         new RegExp(`^${field}:`, 'm'),
@@ -3992,13 +4232,10 @@ describe('validateOatSkills', () => {
       expect(optionalEvidence, `optional evidence ${field}`).toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
-      expect(legacyRecord, `legacy record omits ${field}`).not.toMatch(
+      expect(legacyRequest, `legacy request omits ${field}`).not.toMatch(
         new RegExp(`^${field}:`, 'm'),
       );
     }
-    expect(legacyRecord).toMatch(/^request_id:/m);
-    expect(legacyRecord).toMatch(/^model_selector:/m);
-    expect(legacyRecord).toMatch(/^launch_status:/m);
     expect(schema).toMatch(
       /service tier never changes `model_class_floor` or `floor_satisfaction`/i,
     );
@@ -4007,23 +4244,6 @@ describe('validateOatSkills', () => {
     );
     expect(engine).toMatch(
       /fast or priority tier[\s\S]{0,180}never satisfies a higher task-class floor/i,
-    );
-  });
-
-  it('loads orchestration guidance before repo-improve candidate selection', async () => {
-    const repoImprove = await readRepoFile(
-      '.agents/skills/oat-repo-improve/SKILL.md',
-    );
-    const selectionStep = repoImprove.slice(
-      repoImprove.indexOf('### Step 2: Select Orchestration Tier'),
-      repoImprove.indexOf('### Step 3: Read and Validate Source Material'),
-    );
-
-    expect(selectionStep).toMatch(
-      /Before candidate selection[\s\S]{0,180}subagent-orchestration\/references\/model-selection-principles\.md[\s\S]{0,260}exactly one matching selection reference[\s\S]{0,260}Then read[\s\S]{0,120}oat-dispatch-subagents\/SKILL\.md[\s\S]{0,180}matching mechanics reference/i,
-    );
-    expect(selectionStep.indexOf('Before candidate selection')).toBeLessThan(
-      selectionStep.indexOf('Use these tiers:'),
     );
   });
 
