@@ -87,7 +87,7 @@ Common keys in `.oat/config.json`:
 - `archive.wrapUpExportPath` — optional tracked destination for `oat-wrap-up` reports; when unset, the skill falls back to `.oat/repo/reference/wrap-ups`
 - `archive.awsProfile` — optional AWS named profile forwarded as `AWS_PROFILE` to every `aws` invocation in archive flows
 - `archive.awsRegion` — optional AWS region forwarded as `AWS_REGION` to every `aws` invocation in archive flows
-- `tools.<pack>` — whether a bundled tool pack is currently installed in the repo or user scopes after lifecycle reconciliation
+- `tools.<pack>` — project-scoped installation state for a bundled tool pack after lifecycle reconciliation
 - `workflow.gates.skills` / `workflow.gates.execTargets` — per-skill gates and cross-runtime exec targets; manage with `oat gate`
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` — default review budgets in milliseconds
 
@@ -98,7 +98,28 @@ oat config get tools.project-management
 oat config set tools.project-management true
 ```
 
-The `tools.*` keys are primarily maintained by `oat tools install`, `oat tools update`, and `oat tools remove`, but they are intentionally visible through `oat config` so workflows and operators can inspect or override pack-state signals when needed.
+The `tools.*` group is a shared project installation snapshot, not an
+effective project-plus-user capability signal. `oat tools install`, `oat tools
+update`, and `oat tools remove` reconcile it from project-scoped canonical
+assets only. When project state is non-empty, reconciliation writes the complete
+eight-pack boolean map. When no project packs remain, it removes the group while
+preserving unrelated shared keys. User-only assets are ignored.
+
+Use `oat config get tools.<pack>` to inspect project installation state.
+`oat config set tools.<pack> ...` remains available as a shared override, but a
+later lifecycle reconciliation may replace the manual value with the canonical
+project snapshot.
+
+Use `oat tools has <pack>` for current effective availability. It checks project
+and user scopes by default; add `--scope project` or `--scope user` to isolate a
+scope, and use the global `--json` flag for the `{ pack, available, scopes }`
+result:
+
+```bash
+oat tools has project-management
+oat tools has project-management --scope user
+oat --json tools has project-management
+```
 
 ### Explainer configuration
 

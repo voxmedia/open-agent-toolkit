@@ -745,6 +745,26 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps agent-instructions delta analysis aligned with numbered steps', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-agent-instructions-analyze/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.11.2');
+    expect(content).toMatch(
+      /coverage gap assessment \(Step 4\)[^\n]*affected directories/,
+    );
+    expect(content).toMatch(
+      /drift detection \(Step 6\)[^\n]*affected directories/,
+    );
+    expect(content).toContain(
+      'Quality evaluation (Step 3) always runs on ALL instruction files regardless of mode.',
+    );
+    expect(content).toMatch(
+      /^### Step 7: Cross-Format Consistency \(Multi-Provider Only\)$/m,
+    );
+  });
+
   it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',

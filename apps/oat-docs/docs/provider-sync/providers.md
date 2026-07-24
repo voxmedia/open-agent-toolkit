@@ -116,6 +116,32 @@ than falling back to the root target or a base role.
 - Rule adoption normalizes provider filenames back to canonical `.agents/rules/*.md` entries before cross-provider fanout.
 - Cross-provider fanout is explicit via `oat sync --scope all`.
 
+## Provider mutation safety
+
+The generic sync engine validates provider destinations for every operation that
+creates or updates a symlink, creates or updates a copy, or removes a managed
+provider path. The same guard applies across provider adapters; it is not
+Claude-specific.
+
+Validation runs at three boundaries:
+
+1. During planning, before a provider operation is classified.
+2. Across the complete mutating plan before apply starts, so an already-unsafe
+   later entry cannot allow earlier provider or manifest mutations.
+3. Immediately before each entry's first filesystem mutation, so ancestry that
+   changes after preflight fails closed.
+
+A mutation is refused when its destination escapes the sync scope, equals the
+scope root, or has any existing parent that is a symbolic link or not a
+directory. The final managed destination is excluded from the ancestry walk, so
+an existing managed symlink can still be updated or removed normally.
+
+Whole-plan preflight refusal leaves provider paths, canonical content, external
+symlink targets, and manifest state unchanged. If ancestry changes after
+preflight, the affected entry fails before its first removal or write and does
+not gain manifest ownership. OAT does not traverse, unlink, or rewrite the
+unsafe parent.
+
 ## Reference artifacts
 
 - `.oat/projects/<scope>/<project>/spec.md` (FR5)
