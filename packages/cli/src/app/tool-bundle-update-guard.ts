@@ -155,6 +155,7 @@ export async function guardBundledToolMutation(
     packageSpec,
     options.argv,
     options.env,
+    dependencies.fileExists,
   );
   let accepted = false;
   try {
@@ -199,7 +200,7 @@ export async function guardBundledToolMutation(
   } catch {
     throw new CliError(
       `Failed to update the OAT CLI to ${availableVersion}. ` +
-        `No tools were changed. Fix the npm installation issue and run: ${installCommand}`,
+        `No tools were changed. Fix the package manager installation issue and run: ${installCommand}`,
       2,
     );
   }
