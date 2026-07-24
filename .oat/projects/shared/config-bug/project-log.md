@@ -92,6 +92,10 @@ Fresh p01 re-review found one Important regression-coverage gap: parent command 
 
 Planned bounded p01 review fix loop 2 within existing p01-t01 files: execute real brainstorm action in parent/wrapper regressions via a side-effect-safe seam and prove restored child persistence fails tests.
 
+### 2026-07-24 · structural · oat-project-implement · p01-review2-fix-dispatch
+
+Resumed original p01 implementer 4b0cca9a-0090-470f-99f6-bc295de05820 for bounded review fix loop 2: real-action brainstorm command regression coverage.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
