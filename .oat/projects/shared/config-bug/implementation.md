@@ -167,6 +167,8 @@ Chronological log of implementation progress.
 - Initialized the approved plan with final-phase HiLL and auto-review settings.
 - Bootstrapped clean p01 and p02 worktrees from `eea4313d` after full CLI
   baselines passed.
+- Completed p01 review-fix loop 1 in `fc1a974c`; direct user-only brainstorm
+  installs no longer create shared config.
 
 **Decisions:**
 

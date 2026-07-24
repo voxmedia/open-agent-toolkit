@@ -72,6 +72,14 @@ Review found one Important direct-brainstorm config-persistence defect; bounded 
 
 Resumed original p01 implementer for the single Important direct-brainstorm persistence finding; review fix loop 1.
 
+### 2026-07-24 · structural · oat-project-implement · p01-review1-fix-outcome
+
+Review fix loop 1 completed in fc1a974c; focused and full verification passed; re-review required.
+
+### 2026-07-24 · general · friction · Concurrent asset generation during verification
+
+Running repository formatting concurrently with the full CLI suite caused a transient scaffold-test failure while the asset bundler rewrote assets/templates/state.md. Isolating the full-suite rerun after asset generation completed produced a clean pass; verification lanes that mutate bundled assets should not overlap readers. (observed on OAT 0.2.14)
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
