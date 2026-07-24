@@ -551,7 +551,7 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 | ------ | -------- | ------- | ---------- | ----------------------------------------- |
 | p01    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p01-code-rereview-3.md |
 | p02    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p02-code-review.md     |
-| p03    | code     | pending | -          | -                                         |
+| p03    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p03-code-review.md     |
 | final  | code     | pending | -          | -                                         |
 | spec   | artifact | pending | -          | -                                         |
 | design | artifact | pending | -          | -                                         |

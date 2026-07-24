@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-24
-oat_current_task_id: p03-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | complete    | 3     | 3/3       |
-| p02   | complete    | 2     | 2/2       |
-| p03   | in_progress | 1     | 0/1       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 3     | 3/3       |
+| p02   | complete | 2     | 2/2       |
+| p03   | complete | 1     | 1/1       |
 
-**Total:** 5/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ---
 
@@ -146,13 +146,29 @@ oat_generated: false
 
 ## Phase 3: Documentation, Release, and Integrated Verification
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-24
+
+### Phase Summary
+
+**Outcome:**
+
+- Corrected the instructions-analysis delta-mode step references and bumped the
+  skill to `1.11.2`.
+- Updated six docs pages for project-only pack state, effective availability,
+  provider path safety, and recovery.
+- Bumped all public packages to `0.2.15` and regenerated release metadata.
+
+**Verification:**
+
+- Focused contracts, 3,343 CLI tests, lint, type-check, formatting, workspace
+  build, docs build, skill validation, and release validation passed.
+- Independent p03 review passed with zero findings.
 
 ### Task p03-t01: Correct bundled guidance and validate the public release
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** `cd283fe6`
 
 ---
 
@@ -246,7 +262,7 @@ Track test execution during implementation.
 | p01    | Focused + full CLI + quality       | Pass   | 0      | Planned p01 surface             |
 | p02    | Focused + full CLI + quality       | Pass   | 0      | Planned p02 surface             |
 | merged | Full CLI + lint/type/skills/format | 3342   | 0      | Integrated p01+p02 branch state |
-| p03    | -                                  | -      | -      | Pending                         |
+| p03    | Full release and docs gate set     | 3343+  | 0      | Corrected p03 surface           |
 
 ## Final Summary (for PR/docs)
 
