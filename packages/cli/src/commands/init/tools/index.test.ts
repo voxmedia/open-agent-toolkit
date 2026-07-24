@@ -1174,7 +1174,7 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('records installed tool packs in shared config without rescanning scopes', async () => {
+  it('reconciles shared config from project scope after aggregate install', async () => {
     const { command, scanTools, writeOatConfig } = createHarness({
       interactive: true,
       packSelection: [['docs']],
@@ -1183,15 +1183,24 @@ describe('createInitToolsCommand', () => {
         user: [createScannedTool('oat-docs', 'core', 'user')],
       },
     });
+    scanTools
+      .mockResolvedValueOnce([
+        createScannedTool('oat-project-new', 'workflows', 'project'),
+      ])
+      .mockResolvedValueOnce([createScannedTool('oat-docs', 'core', 'user')])
+      .mockResolvedValueOnce([
+        createScannedTool('oat-project-new', 'workflows', 'project'),
+        createScannedTool('oat-docs-analyze', 'docs', 'project'),
+      ]);
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(scanTools).toHaveBeenCalledTimes(2);
+    expect(scanTools).toHaveBeenCalledTimes(3);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
-          core: true,
+          core: false,
           ideas: false,
           docs: true,
           workflows: true,

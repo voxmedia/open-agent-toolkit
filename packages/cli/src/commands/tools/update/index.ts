@@ -17,8 +17,9 @@ import {
   type AutoSyncDependencies,
   autoSync,
 } from '@commands/tools/shared/auto-sync';
+import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
-import type { PackName, ToolInfo } from '@commands/tools/shared/types';
+import type { ToolInfo } from '@commands/tools/shared/types';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
@@ -169,39 +170,21 @@ export function createToolsUpdateCommand(
         await dependencies.copyDirWithStatus(docsSource, docsDestination, true);
       }
 
-      if (assetsRoot && (target.kind === 'all' || target.kind === 'pack')) {
+      if (assetsRoot && result.notInstalled.length === 0) {
         const repoRoot = await resolveProjectRoot(context.cwd);
-        const config = await readOatConfig(repoRoot);
-        const installedPacks = new Set<PackName>();
-        const configScopes = resolveConcreteScopes('all');
-
-        for (const scope of configScopes) {
-          const scopeRoot = await dependencies.resolveScopeRoot(
-            scope,
-            context.cwd,
-            context.home,
-          );
-          const tools = await dependencies.scanTools({
-            scope,
-            scopeRoot,
-            assetsRoot,
-          });
-
-          for (const tool of tools) {
-            if (tool.pack !== 'custom') {
-              installedPacks.add(tool.pack);
-            }
-          }
-        }
-
-        // Preserve unrelated shared config keys while rebuilding tools state
-        // from the repo-wide installed-pack scan.
-        await writeOatConfig(repoRoot, {
-          ...config,
-          tools: Object.fromEntries(
-            VALID_PACKS.map((pack) => [pack, installedPacks.has(pack)]),
-          ),
-        });
+        await reconcileProjectToolsConfig(
+          {
+            repoRoot,
+            cwd: context.cwd,
+            home: context.home,
+          },
+          {
+            resolveAssetsRoot: dependencies.resolveAssetsRoot,
+            scanTools: dependencies.scanTools,
+            readOatConfig,
+            writeOatConfig,
+          },
+        );
       }
 
       if (result.notInstalled.length > 0) {

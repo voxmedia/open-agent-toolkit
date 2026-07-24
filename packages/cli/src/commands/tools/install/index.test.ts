@@ -13,8 +13,12 @@ import { createToolsInstallCommand } from './index';
 
 function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
   const packScope = options.packScope ?? 'project';
+  const installedScopes = new Set<'project' | 'user'>([packScope]);
   const capture = createLoggerCapture();
   const syncScopes: Scope[] = [];
+  const runSync = vi.fn(async ({ scope }: { scope: Scope }) => {
+    syncScopes.push(scope);
+  });
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => ['docs'],
   );
@@ -28,12 +32,15 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
     outdatedSkills: [],
     docsStatus: 'skipped' as const,
   }));
-  const installDocs = vi.fn(async () => ({
-    copiedSkills: ['oat-docs-analyze'],
-    updatedSkills: [],
-    skippedSkills: [],
-    outdatedSkills: [],
-  }));
+  const installDocs = vi.fn(async ({ targetRoot }: { targetRoot: string }) => {
+    installedScopes.add(targetRoot === '/tmp/home' ? 'user' : 'project');
+    return {
+      copiedSkills: ['oat-docs-analyze'],
+      updatedSkills: [],
+      skippedSkills: [],
+      outdatedSkills: [],
+    };
+  });
   const installIdeas = vi.fn(async () => ({
     copiedSkills: [],
     updatedSkills: [],
@@ -89,11 +96,25 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
   }));
   const removeDirectory = vi.fn(async () => {});
   const removeFile = vi.fn(async () => {});
+  const scanTools = vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
+    installedScopes.has(scope)
+      ? [
+          {
+            name: 'oat-docs-analyze',
+            type: 'skill' as const,
+            scope,
+            version: '1.0.0',
+            bundledVersion: '1.0.0',
+            pack: 'docs' as const,
+            status: 'current' as const,
+          },
+        ]
+      : [],
+  );
+  const writeOatConfig = vi.fn(async () => {});
   const command = createToolsInstallCommand(
     {
-      runSync: async ({ scope }) => {
-        syncScopes.push(scope);
-      },
+      runSync,
     },
     {
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -109,21 +130,7 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
       resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
       resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
       resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
-      scanTools: vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
-        scope === packScope
-          ? [
-              {
-                name: 'oat-docs-analyze',
-                type: 'skill' as const,
-                scope: packScope,
-                version: '1.0.0',
-                bundledVersion: '1.0.0',
-                pack: 'docs' as const,
-                status: 'current' as const,
-              },
-            ]
-          : [],
-      ),
+      scanTools,
       selectManyWithAbort,
       selectWithAbort,
       installCore,
@@ -146,7 +153,7 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
         localPaths: [] as string[],
         tools: {},
       })),
-      writeOatConfig: vi.fn(async () => {}),
+      writeOatConfig,
       resolveLocalPaths: vi.fn(
         (config: { localPaths?: string[] }) => config.localPaths ?? [],
       ),
@@ -157,7 +164,16 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
     },
   );
 
-  return { capture, command, syncScopes, installDocs, removeDirectory };
+  return {
+    capture,
+    command,
+    syncScopes,
+    runSync,
+    scanTools,
+    writeOatConfig,
+    installDocs,
+    removeDirectory,
+  };
 }
 
 async function runCommand(
@@ -224,6 +240,25 @@ describe('createToolsInstallCommand', () => {
         scope: 'project',
         installedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
       }),
+    );
+  });
+
+  it('reconciles project config before install auto-sync', async () => {
+    const { command, runSync, writeOatConfig } = createHarness({
+      packScope: 'user',
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({
+        tools: expect.objectContaining({ docs: true }),
+      }),
+    );
+    expect(runSync).toHaveBeenCalledTimes(1);
+    expect(writeOatConfig.mock.invocationCallOrder[0]).toBeLessThan(
+      runSync.mock.invocationCallOrder[0]!,
     );
   });
 
