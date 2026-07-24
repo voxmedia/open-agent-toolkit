@@ -4,6 +4,10 @@ import type {
   MultiSelectChoice,
   SelectChoice,
 } from '@commands/shared/shared.prompts';
+import {
+  canonicalPathsForPack,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -1211,6 +1215,34 @@ describe('createInitToolsCommand', () => {
         },
       }),
     );
+  });
+
+  it('does not write shared config for a direct user-only brainstorm install', async () => {
+    const { command, scanTools, writeOatConfig } = createHarness({
+      interactive: false,
+      toolsByScope: {
+        project: [],
+        user: [],
+      },
+    });
+    const brainstormCommand = command.commands.find(
+      (subcommand) => subcommand.name() === 'brainstorm',
+    )!;
+    brainstormCommand.action(
+      async (_options: unknown, actionCommand: Command) => {
+        setInstalledCanonicalPaths(
+          actionCommand,
+          canonicalPathsForPack('brainstorm'),
+        );
+      },
+    );
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'user']);
+
+    expect(scanTools).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: 'project' }),
+    );
+    expect(writeOatConfig).not.toHaveBeenCalled();
   });
 
   it('logs AGENTS.md tool packs section update', async () => {

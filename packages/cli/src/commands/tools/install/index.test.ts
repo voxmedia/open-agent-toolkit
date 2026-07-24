@@ -4,7 +4,10 @@ import type {
   MultiSelectChoice,
   SelectChoice,
 } from '@commands/shared/shared.prompts';
-import { setInstalledCanonicalPaths } from '@commands/tools/shared/install-sync-context';
+import {
+  canonicalPathsForPack,
+  setInstalledCanonicalPaths,
+} from '@commands/tools/shared/install-sync-context';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -151,7 +154,6 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
       readOatConfig: vi.fn(async () => ({
         version: 1 as const,
         localPaths: [] as string[],
-        tools: {},
       })),
       writeOatConfig,
       resolveLocalPaths: vi.fn(
@@ -257,6 +259,72 @@ describe('createToolsInstallCommand', () => {
       }),
     );
     expect(runSync).toHaveBeenCalledTimes(1);
+    expect(writeOatConfig.mock.invocationCallOrder[0]).toBeLessThan(
+      runSync.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it('does not write shared config for tools install brainstorm at user scope', async () => {
+    const { command, runSync, writeOatConfig } = createHarness({
+      packScope: 'user',
+    });
+    const brainstormCommand = command.commands.find(
+      (subcommand) => subcommand.name() === 'brainstorm',
+    )!;
+    brainstormCommand.action(
+      async (_options: unknown, actionCommand: Command) => {
+        setInstalledCanonicalPaths(
+          actionCommand,
+          canonicalPathsForPack('brainstorm'),
+        );
+      },
+    );
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'user']);
+
+    expect(writeOatConfig).not.toHaveBeenCalled();
+    expect(runSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('reconciles a direct project brainstorm install before auto-sync', async () => {
+    const { command, runSync, scanTools, writeOatConfig } = createHarness({
+      packScope: 'user',
+    });
+    scanTools.mockImplementation(async ({ scope }) =>
+      scope === 'project'
+        ? [
+            {
+              name: 'oat-brainstorm',
+              type: 'skill' as const,
+              scope: 'project' as const,
+              version: '1.0.0',
+              bundledVersion: '1.0.0',
+              pack: 'brainstorm' as const,
+              status: 'current' as const,
+            },
+          ]
+        : [],
+    );
+    const brainstormCommand = command.commands.find(
+      (subcommand) => subcommand.name() === 'brainstorm',
+    )!;
+    brainstormCommand.action(
+      async (_options: unknown, actionCommand: Command) => {
+        setInstalledCanonicalPaths(
+          actionCommand,
+          canonicalPathsForPack('brainstorm'),
+        );
+      },
+    );
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'project']);
+
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({
+        tools: expect.objectContaining({ brainstorm: true }),
+      }),
+    );
     expect(writeOatConfig.mock.invocationCallOrder[0]).toBeLessThan(
       runSync.mock.invocationCallOrder[0]!,
     );
