@@ -31,7 +31,9 @@ The implementation will preserve current scope-aware listing and sync
 strategies while adding focused regression coverage, updating pack-gated
 canonical skills, and aligning user-facing documentation. Release bookkeeping
 will follow the repository's canonical-skill and public-package versioning
-rules.
+rules. The release phase will also correct the verified delta-mode step
+references in `oat-agent-instructions-analyze`; this is an isolated prose and
+contract-test change with no architectural effect.
 
 ## Architecture
 
@@ -218,6 +220,22 @@ project-only.
 - `oat-project-document` for project-management refresh.
 - `oat-project-summary` for project-management summary behavior.
 
+### Ancillary Instructions-Analysis Correction
+
+**Purpose:** Keep the bundled delta-mode process guidance aligned with the
+skill's actual numbered steps.
+
+**Responsibilities:**
+
+- Change the scoping sentence to reference quality Step 3, coverage Step 4, and
+  drift Step 6.
+- Preserve Step 7 as cross-format consistency.
+- Add a focused canonical-skill contract assertion and bump
+  `oat-agent-instructions-analyze` from `1.11.1` to `1.11.2`.
+
+This correction belongs to release/documentation work and does not couple to
+the pack-state or provider-safety components.
+
 ### Provider Mutation Guard
 
 **Purpose:** Prevent sync from deleting or writing canonical/external content
@@ -372,6 +390,9 @@ parent because its ownership and target may be user-managed.
 
 - Canonical skill contract tests assert pack-gated consumers use
   `oat tools has`.
+- A canonical skill contract test asserts the instructions-analysis delta-mode
+  sentence references Steps 3, 4, and 6 correctly and does not call Step 7
+  drift detection.
 - Updated tool-pack/configuration docs describe project-installed versus
   effective availability accurately.
 - Help snapshots and command registration cover `oat tools has`.

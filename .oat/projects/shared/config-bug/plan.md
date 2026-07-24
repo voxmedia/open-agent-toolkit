@@ -37,7 +37,7 @@ oxfmt/oxlint.
 
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
-- [ ] Resolve project dispatch policy
+- [x] Resolve project dispatch policy
 - [ ] Configure optional phase gate review
 - [ ] Complete plan artifact review
 
@@ -387,10 +387,12 @@ git commit -m "fix(p02-t02): block sync through symlinked provider parents"
 
 ## Phase 3: Documentation, Release, and Integrated Verification
 
-### Task p03-t01: Document semantics and validate the public release
+### Task p03-t01: Correct bundled guidance and validate the public release
 
 **Files:**
 
+- Modify: `.agents/skills/oat-agent-instructions-analyze/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
@@ -402,24 +404,43 @@ git commit -m "fix(p02-t02): block sync through symlinked provider parents"
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
 
-**Step 1: Update documentation**
+**Step 1: Correct delta-mode step references**
+
+Add a failing canonical-skill contract assertion, then update
+`oat-agent-instructions-analyze` so delta mode scopes coverage Step 4 and drift
+Step 6 while quality Step 3 remains repository-wide. Ensure Step 7 remains
+cross-format consistency and bump the skill version from `1.11.1` to `1.11.2`.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts
+```
+
+Expected: The focused contract passes with the corrected references and skill
+version.
+
+**Step 2: Update documentation**
 
 Document `tools.*` as project installation state, `oat tools has` as effective
 availability, lifecycle reconciliation behavior, and provider-parent symlink
 refusal/recovery. Remove claims that shared config represents user-scope
 availability.
 
-**Step 2: Apply lockstep release versions**
+**Step 3: Apply lockstep release versions**
 
 Bump all five public packages from `0.2.14` to `0.2.15` because the CLI and
 bundled canonical skills ship changed behavior.
 
-**Step 3: Format**
+**Step 4: Format**
 
 Run:
 
 ```bash
 pnpm exec oxfmt --write \
+  ".agents/skills/oat-agent-instructions-analyze/SKILL.md" \
+  "packages/cli/src/validation/skills.test.ts" \
   "apps/oat-docs/docs/cli-utilities/tool-packs.md" \
   "apps/oat-docs/docs/cli-utilities/configuration.md" \
   "apps/oat-docs/docs/cli-utilities/config-and-local-state.md" \
@@ -432,11 +453,12 @@ pnpm exec oxfmt --write \
   "packages/docs-transforms/package.json"
 ```
 
-**Step 4: Verify**
+**Step 5: Verify**
 
 Run:
 
 ```bash
+pnpm run oat:validate-skills
 pnpm --filter @open-agent-toolkit/cli test
 pnpm --filter @open-agent-toolkit/cli lint
 pnpm --filter @open-agent-toolkit/cli type-check
@@ -447,10 +469,12 @@ pnpm release:validate
 Expected: CLI tests/lint/type-check, repository formatting, version policy, and
 release validation all pass.
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
-git add apps/oat-docs/docs/cli-utilities \
+git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
+  packages/cli/src/validation/skills.test.ts \
+  apps/oat-docs/docs/cli-utilities \
   apps/oat-docs/docs/provider-sync/providers.md \
   apps/oat-docs/docs/reference/troubleshooting.md \
   packages/cli/package.json \
@@ -458,7 +482,7 @@ git add apps/oat-docs/docs/cli-utilities \
   packages/docs-config/package.json \
   packages/docs-theme/package.json \
   packages/docs-transforms/package.json
-git commit -m "docs(p03-t01): document scoped tools and safe provider sync"
+git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 ```
 
 ## Reviews
@@ -482,7 +506,8 @@ git commit -m "docs(p03-t01): document scoped tools and safe provider sync"
 
 - Phase 1: 3 tasks — project pack reconciliation and effective capability
 - Phase 2: 2 tasks — provider mutation path safety
-- Phase 3: 1 task — documentation, versions, and integrated verification
+- Phase 3: 1 task — bundled guidance, documentation, versions, and integrated
+  verification
 
 **Total: 6 tasks**
 

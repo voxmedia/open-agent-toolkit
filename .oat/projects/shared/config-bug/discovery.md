@@ -29,6 +29,11 @@ skill directories with self-referencing symlinks. Provider mutations must fail
 safely without altering canonical content when any existing parent is a
 symlink.
 
+The bundled `oat-agent-instructions-analyze` skill also contains stale
+delta-mode step references. Its scoping guidance must identify coverage gaps as
+Step 4, quality evaluation as Step 3, and drift detection as Step 6; Step 7 is
+cross-format consistency.
+
 ## Clarifying Questions
 
 ### Question 1: Desired scope model
@@ -113,6 +118,9 @@ repository-truthful while user-installed capabilities continue to work.
    dedicated concern because tool lifecycle commands automatically invoke sync,
    while keeping its implementation and tests separate from config
    reconciliation.
+8. **Ancillary skill correction:** Correct the verified
+   `oat-agent-instructions-analyze` delta-mode references in the release phase
+   and bump that canonical skill's version.
 
 ## Constraints
 
@@ -141,6 +149,8 @@ repository-truthful while user-installed capabilities continue to work.
   parent across symlink, copy, and remove operations.
 - Regression tests prove canonical skills and external targets remain unchanged
   after refusal.
+- Delta-mode guidance references quality Step 3, coverage Step 4, and drift Step
+  6 without incorrectly describing cross-format Step 7 as drift.
 - User-facing tool-pack and configuration documentation matches the new
   semantics.
 
