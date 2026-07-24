@@ -124,6 +124,10 @@ Fresh p03 HiLL readiness re-review passed with zero findings. Corrected six-page
 
 User approved p03 after the passing readiness re-review: six-page documentation delta, instructions-analysis correction, lockstep package bump, and full release validation.
 
+### 2026-07-24 · structural · oat-project-implement · p03-worktree-baseline
+
+Bootstrapped clean p03 worktree at dba96a60. Skill validation and docs build passed; release validation failed only on the planned lockstep 0.2.15 bump, confirming the task's release obligation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -24,11 +24,11 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p01   | complete | 3     | 3/3       |
-| p02   | complete | 2     | 2/2       |
-| p03   | pending  | 1     | 0/1       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | complete    | 3     | 3/3       |
+| p02   | complete    | 2     | 2/2       |
+| p03   | in_progress | 1     | 0/1       |
 
 **Total:** 5/6 tasks completed
 
@@ -146,12 +146,12 @@ oat_generated: false
 
 ## Phase 3: Documentation, Release, and Integrated Verification
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-24
 
 ### Task p03-t01: Correct bundled guidance and validate the public release
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 ---
@@ -197,6 +197,8 @@ Chronological log of implementation progress.
 - Integrated validation passed after serializing asset-generating checks.
 - p03 HiLL readiness re-review passed; awaiting approval of the six-page
   substantive documentation delta.
+- Approved p03 worktree baseline passed skill validation and docs build;
+  release validation reached the expected pre-bump lockstep version failure.
 
 **Decisions:**
 
