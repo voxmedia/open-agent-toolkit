@@ -557,6 +557,7 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 | 3         | OAT reviewer | 3 Important and 1 Medium | Finalized metadata, safety tests, build verification, and docs approval ownership       |
 | 4         | OAT reviewer | Clean                    | Quick-start exit gate passed                                                            |
 | 5         | OAT reviewer | 1 Important              | Added the stale lifecycle capability page to the p03 approval and implementation scope  |
+| 6         | OAT reviewer | Clean                    | p03 HiLL readiness re-review passed; six-page delta is ready for approval               |
 
 ## Implementation Complete
 
