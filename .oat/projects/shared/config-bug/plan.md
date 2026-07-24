@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-24
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_parallel_groups:
   - [p01, p02]
 oat_plan_source: quick
@@ -12,7 +12,7 @@ oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
-oat_template: true
+oat_template: false
 ---
 
 # Implementation Plan: config-bug
@@ -40,6 +40,7 @@ oxfmt/oxlint.
 - [x] Resolve project dispatch policy
 - [x] Configure optional phase gate review
 - [x] Complete plan artifact review
+- [x] Defer implementation checkpoint selection to `oat-project-implement`
 
 ## Parallelism
 
@@ -333,10 +334,13 @@ git commit -m "fix(p02-t01): guard provider mutation ancestry"
 
 **Step 1: Write failing regression tests**
 
-Reproduce `.claude/skills -> ../.agents/skills` during planning. Add stale-plan
-cases that replace a formerly real provider parent before execution. Cover
-create/update symlink, create/update copy, and remove while asserting canonical
-and external target bytes remain unchanged.
+Reproduce `.claude/skills -> ../.agents/skills` during planning. Add a
+multi-entry stale-plan case with a safe first entry and unsafe later entry to
+prove whole-plan preflight prevents all provider, canonical, external-target,
+and manifest mutation. Add a test dependency seam that swaps safe ancestry to a
+symlink after preflight but before the first filesystem mutation to prove
+per-entry revalidation fails closed. Cover create/update symlink, create/update
+copy, and remove.
 
 Run:
 
@@ -389,6 +393,13 @@ git commit -m "fix(p02-t02): block sync through symlinked provider parents"
 
 ## Phase 3: Documentation, Release, and Integrated Verification
 
+Before dispatching p03, the root reviews the five target pages against the
+implemented behavior, presents the concrete substantive documentation delta to
+the user, and records approval in `implementation.md`. The phase implementer
+must not start p03-t01 without that recorded approval. Rejection or requested
+changes remain root-owned and block dispatch rather than pausing a worker
+mid-task.
+
 ### Task p03-t01: Correct bundled guidance and validate the public release
 
 **Files:**
@@ -424,18 +435,13 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
 Expected: The focused contract passes with the corrected references and skill
 version.
 
-**Step 2: Review and approve the documentation delta**
+**Step 2: Update approved documentation and generated navigation**
 
-Compare the five target pages against discovery, design, and implemented
-behavior. Present the proposed substantive content delta to the user and obtain
-approval before editing, following the core `oat-project-document` guidance.
-
-**Step 3: Update documentation and generated navigation**
-
-Document `tools.*` as project installation state, `oat tools has` as effective
-availability, lifecycle reconciliation behavior, and provider-parent symlink
-refusal/recovery. Remove claims that shared config represents user-scope
-availability. Then run:
+Confirm `implementation.md` records the root-owned approval. Document `tools.*`
+as project installation state, `oat tools has` as effective availability,
+lifecycle reconciliation behavior, and provider-parent symlink refusal and
+recovery. Remove claims that shared config represents user-scope availability.
+Then run:
 
 ```bash
 oat docs nav sync
@@ -444,12 +450,12 @@ pnpm -w run cli:source -- docs generate-index \
   --output apps/oat-docs/index.md
 ```
 
-**Step 4: Apply lockstep release versions**
+**Step 3: Apply lockstep release versions**
 
 Bump all five public packages from `0.2.14` to `0.2.15` because the CLI and
 bundled canonical skills ship changed behavior.
 
-**Step 5: Format**
+**Step 4: Format**
 
 Run:
 
@@ -470,7 +476,7 @@ pnpm exec oxfmt --write \
   "packages/docs-transforms/package.json"
 ```
 
-**Step 6: Verify**
+**Step 5: Verify**
 
 Run:
 
@@ -480,6 +486,7 @@ pnpm --filter @open-agent-toolkit/cli test
 pnpm --filter @open-agent-toolkit/cli lint
 pnpm --filter @open-agent-toolkit/cli type-check
 pnpm format
+pnpm build
 pnpm build:docs
 pnpm release:validate
 ```
@@ -487,7 +494,7 @@ pnpm release:validate
 Expected: CLI tests/lint/type-check, repository formatting, version policy, and
 release validation all pass.
 
-**Step 7: Commit**
+**Step 6: Commit**
 
 ```bash
 git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
@@ -525,6 +532,8 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 | --------- | ------------ | ------------------------ | --------------------------------------------------------------------------------------- |
 | 1         | OAT reviewer | 2 Important and 1 Medium | Expanded direct-install reconciliation, docs workflow, and runtime-failure verification |
 | 2         | OAT reviewer | Clean                    | No further action                                                                       |
+| 3         | OAT reviewer | 3 Important and 1 Medium | Finalized metadata, safety tests, build verification, and docs approval ownership       |
+| 4         | OAT reviewer | Clean                    | Quick-start exit gate passed                                                            |
 
 ## Implementation Complete
 
