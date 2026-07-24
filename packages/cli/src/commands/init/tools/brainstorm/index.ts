@@ -19,11 +19,6 @@ import {
   type ScanToolsOptions,
 } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
-import {
-  type OatConfig,
-  readOatConfig as defaultReadOatConfig,
-  writeOatConfig as defaultWriteOatConfig,
-} from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot, resolveScopeRoot } from '@fs/paths';
 import { Command } from 'commander';
@@ -50,8 +45,6 @@ interface InitToolsBrainstormDependencies {
   ) => Promise<InstallBrainstormResult>;
   confirmAction: (message: string, ctx: PromptContext) => Promise<boolean>;
   scanTools: (options: ScanToolsOptions) => Promise<ToolInfo[]>;
-  readOatConfig: (repoRoot: string) => Promise<OatConfig>;
-  writeOatConfig: (repoRoot: string, config: OatConfig) => Promise<void>;
 }
 
 const DEFAULT_DEPENDENCIES: InitToolsBrainstormDependencies = {
@@ -62,8 +55,6 @@ const DEFAULT_DEPENDENCIES: InitToolsBrainstormDependencies = {
   installBrainstorm: defaultInstallBrainstorm,
   confirmAction,
   scanTools: defaultScanTools,
-  readOatConfig: defaultReadOatConfig,
-  writeOatConfig: defaultWriteOatConfig,
 };
 
 interface ResolvedScope {
@@ -155,15 +146,6 @@ function reportSuccess(
   context.logger.info(`Run: oat sync --scope ${scope}`);
 }
 
-async function persistConfigAfterInstall(
-  projectRoot: string,
-  dependencies: InitToolsBrainstormDependencies,
-): Promise<void> {
-  const config = await dependencies.readOatConfig(projectRoot);
-  const tools = { ...(config.tools ?? {}), brainstorm: true };
-  await dependencies.writeOatConfig(projectRoot, { ...config, tools });
-}
-
 async function runInitToolsBrainstorm(
   context: CommandContext,
   options: InitToolsBrainstormOptions,
@@ -206,11 +188,6 @@ async function runInitToolsBrainstorm(
       targetRoot,
       force: options.force,
     });
-
-    // Persist tools.brainstorm: true to .oat/config.json after a
-    // successful install so config-write semantics match the main
-    // installer flow used by `oat init tools`.
-    await persistConfigAfterInstall(projectRoot, dependencies);
 
     reportSuccess(context, scope, targetRoot, assetsRoot, result);
     process.exitCode = 0;

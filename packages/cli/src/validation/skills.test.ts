@@ -745,6 +745,26 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps agent-instructions delta analysis aligned with numbered steps', async () => {
+    const content = await readRepoFile(
+      '.agents/skills/oat-agent-instructions-analyze/SKILL.md',
+    );
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.11.2');
+    expect(content).toMatch(
+      /coverage gap assessment \(Step 4\)[^\n]*affected directories/,
+    );
+    expect(content).toMatch(
+      /drift detection \(Step 6\)[^\n]*affected directories/,
+    );
+    expect(content).toContain(
+      'Quality evaluation (Step 3) always runs on ALL instruction files regardless of mode.',
+    );
+    expect(content).toMatch(
+      /^### Step 7: Cross-Format Consistency \(Multi-Provider Only\)$/m,
+    );
+  });
+
   it('documents gate review provenance in review-provide and keeps model invocation gated', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',
@@ -2061,8 +2081,8 @@ describe('validateOatSkills', () => {
       ['.agents/agents/oat-reviewer.md', '1.1.9'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
-      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.4'],
-      ['.agents/skills/oat-project-document/SKILL.md', '1.6.1'],
+      ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
+      ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
       ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.3'],
     ] as const;
@@ -4859,6 +4879,40 @@ describe('validateOatSkills', () => {
       validatedSkillCount: 1,
       findings: [],
     });
+  });
+
+  it('requires pack-gated workflows to query effective tool availability', async () => {
+    const brainstorm = await readRepoFile(
+      '.agents/skills/oat-brainstorm/SKILL.md',
+    );
+    const destinations = await readRepoFile(
+      '.agents/skills/oat-brainstorm/references/destinations.md',
+    );
+    const projectDocument = await readRepoFile(
+      '.agents/skills/oat-project-document/SKILL.md',
+    );
+    const projectSummary = await readRepoFile(
+      '.agents/skills/oat-project-summary/SKILL.md',
+    );
+
+    for (const content of [
+      brainstorm,
+      destinations,
+      projectDocument,
+      projectSummary,
+    ]) {
+      expect(content).not.toMatch(/oat config get tools\./);
+    }
+    for (const pack of ['ideas', 'project-management', 'workflows']) {
+      expect(brainstorm).toContain(`oat tools has ${pack}`);
+      expect(destinations).toContain(`oat tools has ${pack}`);
+    }
+    expect(projectDocument).toContain('oat tools has project-management');
+    expect(projectSummary).toContain('oat tools has project-management');
+
+    for (const content of [projectDocument, projectSummary]) {
+      expect(getFrontmatterForTest(content)).toContain('Bash(oat tools:*)');
+    }
   });
 
   it('requires project-summary decision promotion to pass every record section', async () => {

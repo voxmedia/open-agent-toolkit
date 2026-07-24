@@ -5,6 +5,7 @@ import {
   readFile,
   readlink,
   rm,
+  symlink,
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -217,6 +218,40 @@ describe('sync engine integration', () => {
     await expect(
       lstat(join(root, '.claude', 'skills', 'skill-one')),
     ).rejects.toThrow();
+  });
+
+  it('refuses planning through a provider parent linked to canonical skills', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-engine-int-'));
+    tempDirs.push(root);
+    await seedCanonical(root);
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+    const canonicalSkill = join(
+      root,
+      '.agents',
+      'skills',
+      'skill-one',
+      'SKILL.md',
+    );
+    const contentBefore = await readFile(canonicalSkill, 'utf8');
+
+    const canonical = await scanCanonical(root, 'project');
+    await expect(
+      computeSyncPlan({
+        canonical,
+        adapters: [createTestAdapter()],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      }),
+    ).rejects.toThrow(/symbolic link/i);
+
+    await expect(readFile(canonicalSkill, 'utf8')).resolves.toBe(contentBefore);
   });
 
   it('removal: delete canonical → plan shows remove → execute cleans provider', async () => {

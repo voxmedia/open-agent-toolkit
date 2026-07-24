@@ -86,6 +86,31 @@ describe('computeSyncPlan', () => {
     tempDirs.length = 0;
   });
 
+  it('refuses to classify entries beneath a symlinked provider parent', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
+    tempDirs.push(root);
+    await mkdir(join(root, '.agents', 'skills', 'skill-one'), {
+      recursive: true,
+    });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(
+      join('..', '.agents', 'skills'),
+      join(root, '.claude', 'skills'),
+      'dir',
+    );
+
+    await expect(
+      computeSyncPlan({
+        canonical: [createCanonicalEntry(root, 'skill', 'skill-one')],
+        adapters: [createTestAdapter()],
+        manifest: createEmptyManifest(),
+        scope: 'project',
+        config: DEFAULT_SYNC_CONFIG,
+        scopeRoot: root,
+      }),
+    ).rejects.toThrow(/symbolic link/i);
+  });
+
   it('creates create_symlink entry when canonical exists but provider path missing', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-compute-plan-'));
     tempDirs.push(root);

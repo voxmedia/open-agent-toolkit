@@ -1,6 +1,6 @@
 ---
 name: oat-brainstorm
-version: 1.1.0
+version: 1.1.1
 description: Use when the user explicitly invokes the `brainstorm` verb, including `/oat-brainstorm`, "let's brainstorm", "brainstorm this", "can we brainstorm X", or "help me brainstorm X". For ambiguous exploratory phrasing ("I've been thinking", "what if", "help me think through"), do NOT auto-enter; respond conversationally and offer mode only after ≥2 sustained exploratory turns. Do NOT use for review, debug, PR, status, implementation, or active-workflow questions.
 disable-model-invocation: false
 user-invocable: true
@@ -97,7 +97,7 @@ These messages get a direct response, not a workflow takeover. If the model has 
 
 - Free-form exploratory conversation, one question at a time, multiple-choice when possible, 2-3 distinct approaches with a recommendation.
 - Per-question visual-companion routing (browser for visual content, terminal for text).
-- Pack and active-project detection at convergence time (`oat config get tools.<pack>` / `oat config get activeProject`).
+- Pack and active-project detection at convergence time (`oat tools has <pack>` / `oat config get activeProject`).
 - Reading downstream skill files (`oat-idea-*`, `oat-pjm-add-backlog-item`, `oat-project-*`) and following their process inline using the synthesized payload as pre-filled answers.
 - Rendering the doc-to-path artifact from `templates/brainstorm-doc.md`.
 - Active-project fold-back: appending synthesis to the chosen upstream artifact and committing — only after the safety contract (preflight, scoped staging, conditional handoff print) is satisfied.
@@ -135,7 +135,7 @@ These indicators apply only on Hard Activation (see `## Activation Contract`). O
   - `Activating brainstorm mode…`
   - `Asserting mode (blocked / allowed)…`
   - `Assessing visual need…`
-  - `Detecting installed packs and active project…`
+  - `Detecting available packs and active project…`
   - `Free brainstorming (Superpowers cadence)…`
   - `Watching for destination signals…`
   - `Satisfaction check…`
@@ -156,7 +156,7 @@ Apply the **Activation Contract**. The full Process flow (Steps 2-9) only runs o
 
 When Hard Activation triggers, the user has not already named a destination skill or artifact type. Do not route those blank-slate brainstorms to `oat-idea-ideate` merely because they may later become an idea, backlog item, project, or document.
 
-There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after visual-need assessment, so this skill works in any repo regardless of which OAT packs are installed.
+There are no preconditions to check at activation — pack detection and active-project detection happen at step 4, after visual-need assessment, so this skill works in any repo regardless of which OAT packs are available.
 
 **Soft Exploratory Path** (per Activation Contract): respond conversationally with brainstorm-quality structure (options, tradeoffs, open questions, no premature implementation, no destination guess). Do not print the banner, assert mode, run pack detection, or offer the visual companion. Track an exploratory-turn counter for the thread; on the 2nd+ consecutive exploratory turn with no concrete action requested, append the soft offer once: "If you want, I can switch into structured brainstorm mode for this." If the user accepts, transition to Hard Activation and re-enter Step 2.
 
@@ -216,9 +216,9 @@ The `active`, `declined`, and `unavailable` decisions apply for the rest of the 
 Run pack-detection and active-project resolution **once** per session, before the conversation starts. Mirrors the convention used by `oat-project-document`.
 
 ```bash
-IDEAS_INSTALLED=$(oat config get tools.ideas 2>/dev/null || echo "false")
-PJM_INSTALLED=$(oat config get tools.project-management 2>/dev/null || echo "false")
-WORKFLOWS_INSTALLED=$(oat config get tools.workflows 2>/dev/null || echo "false")
+IDEAS_INSTALLED=$(oat tools has ideas 2>/dev/null || echo "false")
+PJM_INSTALLED=$(oat tools has project-management 2>/dev/null || echo "false")
+WORKFLOWS_INSTALLED=$(oat tools has workflows 2>/dev/null || echo "false")
 ACTIVE_PROJECT=$(oat config get activeProject 2>/dev/null || echo "")
 
 ACTIVE_PROJECT_VALID="false"
@@ -626,7 +626,7 @@ End mode assertion when the split handoff completes or reports its own blocker.
 - ✅ Phase banner `OAT ▸ BRAINSTORM` is printed exactly once at activation; mode assertion follows immediately.
 - ✅ Visual-companion offer is conditional on visual need, not Node availability alone. Text-likely brainstorms set `VISUAL_COMPANION = "deferred"` and continue without mentioning the companion.
 - ✅ When a visual-companion offer is made, it is its own message with no other content. The offer is suppressed entirely (no message printed) when `node` is not on PATH.
-- ✅ Pack and active-project detection (`oat config get tools.<pack>` and `oat config get activeProject`) runs once per session at step 4, before the conversation starts.
+- ✅ Pack and active-project detection (`oat tools has <pack>` and `oat config get activeProject`) runs once per session at step 4, before the conversation starts.
 - ✅ Conversation cadence holds the Superpowers contract: one question at a time, multiple-choice preferred, 2-3 distinct approaches with a recommendation, per-question visual-companion routing.
 - ✅ Destination is identified via either trigger-phrase opportunistic surfacing (loose substring + paraphrase tolerance, not regex; ambiguity → ask) or convergence cue (pack-filtered terminal-state picker).
 - ✅ The terminal-state picker conditionally includes `Promote to N projects` only when `oat project split evaluate-signals` reports `triggered: true`; small-scope convergence keeps the option hidden.

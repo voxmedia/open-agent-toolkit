@@ -166,6 +166,7 @@ Archive lifecycle settings live here as shared repo config:
 Tool-pack installation state also lives here as shared repo config:
 
 - `tools.core`
+- `tools.brainstorm`
 - `tools.docs`
 - `tools.ideas`
 - `tools.project-management`
@@ -173,7 +174,19 @@ Tool-pack installation state also lives here as shared repo config:
 - `tools.utility`
 - `tools.workflows`
 
-Use `oat config get tools.<pack>` when you need an explicit installed-capability signal for workflows or troubleshooting. PJM diagnostics use `tools.project-management`; disabled or unset repos report PJM as skipped instead of treating absent `.oat/repo/pjm/` files as drift.
+This complete eight-pack map is the shared project installation snapshot.
+Lifecycle reconciliation derives it only from project-scoped canonical assets;
+user-only packs do not set these keys. Use `oat config get tools.<pack>` to
+inspect repository installation state.
+
+For workflow routing or troubleshooting that needs current effective
+availability, run `oat tools has <pack>`. It checks project plus user scope by
+default; use `--scope project` or `--scope user` to isolate one scope. The
+global `--json` flag returns the matching scopes with the boolean result.
+
+PJM diagnostics intentionally use project configuration where repository setup
+is the question. Disabled or unset repos report PJM as skipped instead of
+treating absent `.oat/repo/pjm/` files as drift.
 
 Workflow automation preferences are also visible through `oat config` and can be set at local, shared, or user scope. Notable review-loop keys:
 

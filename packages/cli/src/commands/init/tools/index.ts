@@ -25,8 +25,10 @@ import {
 import { readGlobalOptions } from '@commands/shared/shared.utils';
 import {
   canonicalPathsForPacks,
+  getInstalledCanonicalPaths,
   setInstalledCanonicalPaths,
 } from '@commands/tools/shared/install-sync-context';
+import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
 import type { ScanToolsOptions } from '@commands/tools/shared/scan-tools';
 import type { ToolInfo } from '@commands/tools/shared/types';
@@ -736,23 +738,6 @@ function buildPackEndStateChoices(
   return defaultChoice ? [defaultChoice, ...rest] : annotated;
 }
 
-function buildInstalledToolsConfig(
-  selectedPacks: ToolPack[],
-  installedPackStates: PackInstallStateMap,
-  existingTools: OatConfig['tools'],
-): OatConfig['tools'] {
-  const selectedPackSet = new Set(selectedPacks);
-  const tools = { ...existingTools };
-
-  for (const pack of ALL_TOOL_PACKS) {
-    tools[pack] =
-      selectedPackSet.has(pack) ||
-      installedPackStates[pack].location !== 'not-installed';
-  }
-
-  return tools;
-}
-
 function reportSuccess(
   context: CommandContext,
   packs: PackScopeInfo[],
@@ -1350,14 +1335,6 @@ export async function runInitTools(
       );
     }
 
-    const config = await dependencies.readOatConfig(projectRoot);
-    const tools = buildInstalledToolsConfig(
-      selectedPacks,
-      initialPackStates,
-      config.tools,
-    );
-    await dependencies.writeOatConfig(projectRoot, { ...config, tools });
-
     const affectedScopesList = [...affectedScopes];
     lastRunInitToolsMetadata = {
       affectedScopes: affectedScopesList,
@@ -1392,26 +1369,65 @@ export function createInitToolsCommand(
     ...overrides,
   };
 
-  return new Command('tools')
-    .description(
-      'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
-    )
-    .addCommand(createInitToolsCoreCommand())
-    .addCommand(createInitToolsIdeasCommand())
-    .addCommand(createInitToolsDocsCommand())
-    .addCommand(createInitToolsProjectManagementCommand())
-    .addCommand(createInitToolsWorkflowsCommand())
-    .addCommand(createInitToolsUtilityCommand())
-    .addCommand(createInitToolsResearchCommand())
-    .addCommand(createInitToolsBrainstormCommand())
-    .action(async (_options: unknown, command: Command) => {
-      const context = dependencies.buildCommandContext(
-        readGlobalOptions(command),
-      );
-      const selectedPacks = await runInitTools(context, dependencies);
-      setInstalledCanonicalPaths(
-        command,
-        canonicalPathsForPacks(selectedPacks),
-      );
+  async function reconcileAfterInstall(actionCommand: Command): Promise<void> {
+    if (process.exitCode !== undefined && process.exitCode !== 0) {
+      return;
+    }
+    if (getInstalledCanonicalPaths(actionCommand).length === 0) {
+      return;
+    }
+
+    const context = dependencies.buildCommandContext(
+      readGlobalOptions(actionCommand),
+    );
+    const repoRoot = await dependencies.resolveProjectRoot(context.cwd);
+    await reconcileProjectToolsConfig(
+      {
+        repoRoot,
+        cwd: context.cwd,
+        home: context.home,
+      },
+      dependencies,
+    );
+  }
+
+  const packCommands = [
+    createInitToolsCoreCommand(),
+    createInitToolsIdeasCommand(),
+    createInitToolsDocsCommand(),
+    createInitToolsProjectManagementCommand(),
+    createInitToolsWorkflowsCommand(),
+    createInitToolsUtilityCommand(),
+    createInitToolsResearchCommand(),
+    createInitToolsBrainstormCommand({
+      buildCommandContext: dependencies.buildCommandContext,
+      resolveProjectRoot: dependencies.resolveProjectRoot,
+      resolveScopeRoot: dependencies.resolveScopeRoot,
+      resolveAssetsRoot: dependencies.resolveAssetsRoot,
+      installBrainstorm: dependencies.installBrainstorm,
+      scanTools: dependencies.scanTools,
+    }),
+  ];
+  for (const packCommand of packCommands) {
+    packCommand.hook('postAction', async (_thisCommand, actionCommand) => {
+      await reconcileAfterInstall(actionCommand);
     });
+  }
+
+  const command = new Command('tools').description(
+    'Install OAT tool packs (core, ideas, docs, workflows, utility, project-management, research, brainstorm)',
+  );
+  for (const packCommand of packCommands) {
+    command.addCommand(packCommand);
+  }
+  command.action(async (_options: unknown, command: Command) => {
+    const context = dependencies.buildCommandContext(
+      readGlobalOptions(command),
+    );
+    const selectedPacks = await runInitTools(context, dependencies);
+    setInstalledCanonicalPaths(command, canonicalPathsForPacks(selectedPacks));
+    await reconcileAfterInstall(command);
+  });
+
+  return command;
 }

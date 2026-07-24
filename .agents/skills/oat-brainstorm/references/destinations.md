@@ -47,7 +47,7 @@ Always honor an explicit user-supplied path over the suggestion. Brainstorm docs
 
 ### Destination: Capture as new idea
 
-**Pack required:** `ideas` (i.e., `oat config get tools.ideas` returns `true`)
+**Pack required:** `ideas` (i.e., `oat tools has ideas` returns `true`)
 **Trigger phrases:** "capture as an idea", "this is an idea worth keeping", "let's track this as an idea", "save this as an idea", "make a new idea for this".
 **Required template fields:** `title` (slug-friendly), `summary`, `motivation` (Why Is It Interesting?), `vision` (What Would It Look Like?), `transcriptSessionNote`. Template: `.oat/templates/ideas/idea-discovery.md` (consumed via `oat-idea-new`).
 **Optional template fields:** `approachesConsidered`, `chosenDirection`, `openQuestions`, `nextSteps`.
@@ -83,7 +83,7 @@ Always honor an explicit user-supplied path over the suggestion. Brainstorm docs
 
 ### Destination: Scoped backlog item
 
-**Pack required:** `project-management` (i.e., `oat config get tools.project-management` returns `true`)
+**Pack required:** `project-management` (i.e., `oat tools has project-management` returns `true`)
 **Trigger phrases:** "track this as a backlog item", "make a ticket", "log this", "open a backlog entry", "add this to the backlog", "create a backlog item for this".
 **Required template fields:** `title` (1-line summary), `description` (problem + proposed approach), `acceptance criteria` (bullet list), `scope` (xs / s / m / l / xl), `priority` (p0 / p1 / p2 / p3). Template: `.oat/templates/backlog-item.md` (consumed via `oat-pjm-add-backlog-item`).
 **Optional template fields:** related items, target release, owner.
@@ -112,7 +112,7 @@ Confirm to write this to a new backlog item file, or tell me what to change.
 
 ### Destination: Promote to new OAT project
 
-**Pack required:** `workflows` (i.e., `oat config get tools.workflows` returns `true`)
+**Pack required:** `workflows` (i.e., `oat tools has workflows` returns `true`)
 **Trigger phrases:** "let's make this a project", "promote this to a project", "scaffold a project for this", "this is project-sized — let's start one".
 **Required template fields:** `title`, `summary` (Initial Request), `approachesConsidered` (Solution Space), `chosenDirection` (Chosen Direction), key decisions, `openQuestions`. Template: `.oat/templates/discovery.md` (consumed via `oat project new`).
 **Optional template fields:** `motivation`, `vision`, `nextSteps`.

@@ -10,6 +10,9 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260724-canonical-project-asset        | 2026-07-24 | accepted | Canonical project asset reconciliation                                  | -      |
+| DR-260724-project-state-and-runtime      | 2026-07-24 | accepted | Project state and runtime availability separation                       | -      |
+| DR-260724-provider-path-safety-boundary  | 2026-07-24 | accepted | Provider path safety boundary                                           | -      |
 | DR-260723-additive-dispatch-evidence     | 2026-07-23 | accepted | Additive dispatch evidence compatibility                                | -      |
 | DR-260723-directional-utility-dependency | 2026-07-23 | accepted | Directional utility dependency                                          | -      |
 | DR-260723-guidance-and-mechanics         | 2026-07-23 | accepted | Guidance and mechanics ownership split                                  | -      |

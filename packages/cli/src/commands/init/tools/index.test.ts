@@ -8,6 +8,20 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const configPersistence = vi.hoisted(() => ({
+  readOatConfig: vi.fn(async () => ({
+    version: 1 as const,
+    localPaths: [] as string[],
+  })),
+  writeOatConfig: vi.fn(async () => {}),
+}));
+
+vi.mock('@config/oat-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@config/oat-config')>()),
+  readOatConfig: configPersistence.readOatConfig,
+  writeOatConfig: configPersistence.writeOatConfig,
+}));
+
 import {
   buildToolPacksSectionBody,
   createInitToolsCommand,
@@ -214,11 +228,8 @@ function createHarness(options: HarnessOptions = {}) {
     all: paths,
   }));
   const applyGitignore = vi.fn(async () => ({ action: 'updated' }));
-  const readOatConfig = vi.fn(async () => ({
-    version: 1 as const,
-    localPaths: [] as string[],
-  }));
-  const writeOatConfig = vi.fn(async () => {});
+  const readOatConfig = configPersistence.readOatConfig;
+  const writeOatConfig = configPersistence.writeOatConfig;
   const resolveLocalPaths = vi.fn(
     (config: { localPaths?: string[] }) => config.localPaths ?? [],
   );
@@ -323,6 +334,8 @@ describe('createInitToolsCommand', () => {
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
+    configPersistence.readOatConfig.mockClear();
+    configPersistence.writeOatConfig.mockClear();
   });
 
   afterEach(() => {
@@ -1174,7 +1187,7 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('records installed tool packs in shared config without rescanning scopes', async () => {
+  it('reconciles shared config from project scope after aggregate install', async () => {
     const { command, scanTools, writeOatConfig } = createHarness({
       interactive: true,
       packSelection: [['docs']],
@@ -1183,15 +1196,24 @@ describe('createInitToolsCommand', () => {
         user: [createScannedTool('oat-docs', 'core', 'user')],
       },
     });
+    scanTools
+      .mockResolvedValueOnce([
+        createScannedTool('oat-project-new', 'workflows', 'project'),
+      ])
+      .mockResolvedValueOnce([createScannedTool('oat-docs', 'core', 'user')])
+      .mockResolvedValueOnce([
+        createScannedTool('oat-project-new', 'workflows', 'project'),
+        createScannedTool('oat-docs-analyze', 'docs', 'project'),
+      ]);
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(scanTools).toHaveBeenCalledTimes(2);
+    expect(scanTools).toHaveBeenCalledTimes(3);
     expect(writeOatConfig).toHaveBeenCalledWith(
       '/tmp/workspace',
       expect.objectContaining({
         tools: {
-          core: true,
+          core: false,
           ideas: false,
           docs: true,
           workflows: true,
@@ -1202,6 +1224,27 @@ describe('createInitToolsCommand', () => {
         },
       }),
     );
+  });
+
+  it('does not write shared config for a direct user-only brainstorm install', async () => {
+    const { command, installBrainstorm, scanTools, writeOatConfig } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [],
+          user: [],
+        },
+      });
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'user']);
+
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(scanTools).toHaveBeenCalledWith(
+      expect.objectContaining({ scope: 'project' }),
+    );
+    expect(writeOatConfig).not.toHaveBeenCalled();
   });
 
   it('logs AGENTS.md tool packs section update', async () => {

@@ -90,7 +90,7 @@ describe('createToolsRemoveCommand config writes', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('preserves a pack flag when that pack remains installed in user scope', async () => {
+  it('clears project state when the removed pack remains only in user scope', async () => {
     scanToolsMock.mockImplementation(async ({ scope }: { scope: string }) => {
       if (scope === 'project') {
         if (scanToolsMock.mock.calls.length === 1) {
@@ -129,16 +129,6 @@ describe('createToolsRemoveCommand config writes', () => {
 
     expect(writeOatConfig).toHaveBeenCalledWith('/tmp/workspace', {
       version: 1,
-      tools: {
-        core: false,
-        ideas: false,
-        docs: false,
-        workflows: false,
-        utility: false,
-        'project-management': true,
-        research: false,
-        brainstorm: false,
-      },
     });
     expect(process.exitCode).toBeUndefined();
   });

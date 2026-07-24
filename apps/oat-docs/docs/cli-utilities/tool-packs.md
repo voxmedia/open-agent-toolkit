@@ -11,7 +11,7 @@ This page covers CLI commands that manage bundled OAT tool packs and installed O
 
 - What it does: explains how bundled OAT packs are installed, updated, inspected, and removed.
 - When to use it: when you need to add capabilities to a repo, update installed skills, or understand which packs own which tools.
-- Primary commands: `oat tools list`, `oat tools install`, `oat tools update`, `oat tools remove`
+- Primary commands: `oat tools list`, `oat tools has`, `oat tools install`, `oat tools update`, `oat tools remove`
 
 ## Bundled packs at a glance
 
@@ -187,6 +187,28 @@ Key behavior:
 - Reports whether the tool is invocable (for skills) and whether an update is available
 - Returns exit code 1 if the tool is not found in any scope
 
+### `oat tools has <pack>`
+
+Purpose:
+
+- Check current availability of one bundled pack without treating shared config as a runtime capability cache
+
+Key behavior:
+
+- Defaults to effective availability across project and user scopes
+- Accepts `--scope project`, `--scope user`, or `--scope all`
+- Prints `true` or `false` in plain mode
+- With the global `--json` flag, emits `{ "pack": "<pack>", "available": <boolean>, "scopes": ["project", "user"] }`; `scopes` contains only locations where the pack is currently found
+- Exits `0` for every valid query, including an unavailable pack, `1` for an invalid pack or other actionable input error, and `2` for an unexpected scan or runtime failure
+
+Examples:
+
+```bash
+oat tools has project-management
+oat tools has brainstorm --scope user
+oat --json tools has workflows
+```
+
 ### `oat tools install`
 
 Purpose:
@@ -205,7 +227,7 @@ Key behavior:
 - Removing a pack from a scope happens only when you explicitly choose a narrower end-state in the interactive flow (e.g. a pack at `both` set to `project` only). All staged removals are shown in a single change summary and applied only after one batch confirmation — declining makes no changes
 - Non-interactive installs (including `--scope project`, `--scope user`, and the default pack set) are strictly additive and never remove a pack from a scope. Removal is interactive-only
 - Tracks installed vs bundled skill versions and reports outdated skills
-- Records installed pack state in shared repo config as `tools.<pack>: true` so other OAT workflows can detect installed capabilities without relying on filesystem heuristics
+- Reconciles shared repo config from project-scoped canonical assets only; a user-only install does not set `tools.<pack>: true`
 - Refreshes the managed `OAT tools` section in the repository-root `AGENTS.md`.
 - Installing the `project-management` pack—through either the aggregate picker or `oat tools install project-management`—also upserts a managed `OAT project-management` section. It points agents to `.oat/repo/AGENTS.md` for active PJM and durable-reference routing, summarizes when to consult it, and gives decision-specific guidance for reviewing and creating durable records without hand-editing the generated index.
 - Interactive runs can prompt to update selected outdated skills
@@ -226,7 +248,7 @@ Key behavior:
 - Compares installed versions against bundled versions and copies updated assets
 - For `--pack <pack>` and `--all`, an already-installed pack is reconciled to include newly added bundled skills or agents in that same scope
 - Pack-targeted updates intentionally rewrite bundled template and script companions in place, even when the pack's installed skills are already current
-- For `--pack <pack>` and `--all`, shared repo config is also reconciled from an installed-pack scan so `tools.*` reflects what is actually available and stale `true` flags are cleared
+- For `--pack <pack>` and `--all`, shared repo config is also reconciled from a project-scoped installed-pack scan so `tools.*` reflects repository installation state and stale `true` flags are cleared
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 - Reports tools that are already current, newer than bundled, or not bundled (custom)
@@ -241,19 +263,21 @@ Key behavior:
 
 - Accepts a tool name, `--pack <pack>`, or `--all` (mutually exclusive)
 - Removes skill directories and agent `.md` files from canonical locations
-- For `--pack <pack>` and `--all`, shared repo config is rewritten from a post-removal scan so `tools.<pack>` becomes `false` when a pack is no longer installed in any scope
+- For `--pack <pack>` and `--all`, shared repo config is reconciled from a post-removal project scan; removing the last project copy clears project state even when a user copy remains
 - Dry-run mode with `--dry-run`; auto-sync after mutations by default
 - Use `--no-sync` to skip auto-sync
 
 ## Shared config signal: `tools.*`
 
-Tool-pack lifecycle commands now persist pack availability in shared repo config under `.oat/config.json`.
+Tool-pack lifecycle commands maintain a project installation snapshot in shared repo config under `.oat/config.json`.
 
-- `oat tools install <pack>` writes `tools.<pack>: true`
-- `oat tools update --pack <pack>` and `oat tools update --all` rebuild the full `tools` map from installed-pack scans
-- `oat tools remove --pack <pack>` and `oat tools remove --all` rebuild the same map after removals
+- Install, update, and remove reconcile the snapshot from project-scoped canonical assets only. User-only operations never set a shared `true` flag.
+- When at least one project pack is installed, reconciliation writes the complete eight-pack boolean map: `core`, `ideas`, `docs`, `workflows`, `utility`, `project-management`, `research`, and `brainstorm`.
+- When no project packs remain, reconciliation removes the entire `tools` map. It preserves unrelated shared keys, avoids creating a default-only config file, and skips unchanged writes.
 
-This matters because other workflows can now check `oat config get tools.<pack>` instead of inferring capabilities from directory existence alone. For example, `oat-project-document` checks `tools.project-management` before auto-running repo-reference refresh work.
+Use `oat config get tools.<pack>` to inspect this project snapshot. A manual `oat config set tools.<pack> ...` value is a shared override that the next lifecycle reconciliation may replace.
+
+Use `oat tools has <pack>` when a workflow needs current effective availability from project or user scope. For example, `oat-project-document` checks `oat tools has project-management` before auto-running repo-reference refresh work.
 
 ## Workflows pack
 
@@ -378,20 +402,22 @@ Key behavior:
   and can surface it later if the conversation turns visual. Persistence paths
   use OAT-managed prefixes (`.oat/brainstorm/<session-id>/` repo-scope or
   `~/.oat/brainstorm/<session-id>/` user-scope).
-- **Terminal-state picker filtered by `tools.<pack>` config.** When the user
-  converges on a destination, the skill consults `oat config get tools.ideas`,
-  `tools.project-management`, and `tools.workflows` to filter the available
-  terminal states. Pack-gated outcomes (capture-as-idea, scoped backlog item,
-  project promotion, active-project fold-back) only appear when the
-  corresponding pack is installed.
+- **Terminal-state picker filtered by effective pack availability.** When the
+  user converges on a destination, the skill runs `oat tools has ideas`, `oat
+tools has project-management`, and `oat tools has workflows` to filter the
+  available terminal states. Pack-gated outcomes (capture-as-idea, scoped
+  backlog item, project promotion, active-project fold-back) appear when the
+  corresponding pack is available at project or user scope. The separate `oat
+config get activeProject` lookup resolves active project state.
 - **Destinations playbook.** The full set of terminal-state stanzas — trigger
   phrases, required template fields, confirmation patterns, handoff targets —
   lives at `.agents/skills/oat-brainstorm/references/destinations.md` and is
   consulted by the skill at destination-identification time.
 - **Pack lifecycle.** `oat tools install brainstorm`, `oat tools update --pack
 brainstorm`, and `oat tools remove --pack brainstorm` manage the skill plus
-  visual-companion bundle as a unit. Standard config-write semantics
-  (`tools.brainstorm: true` on install) apply.
+  visual-companion bundle as a unit. Project installs participate in the shared
+  project snapshot; user-only installs remain available through `oat tools has
+  brainstorm` without setting `tools.brainstorm` in shared config.
 
 ### Auto-sync behavior
 

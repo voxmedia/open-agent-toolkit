@@ -1,10 +1,10 @@
 ---
 name: oat-project-summary
-version: 1.3.4
+version: 1.3.5
 description: Use when the user requests or confirms summarizing an active OAT project — e.g. "summarize the project", "generate the summary", "run oat-project-summary", or confirms a previously offered summary run. Do NOT auto-invoke when implementation completes. Generates summary.md from project artifacts as institutional memory.
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Glob, Grep, AskUserQuestion
+allowed-tools: Read, Write, Bash(git:*), Bash(oat config:*), Bash(oat decision:*), Bash(oat project log:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion
 ---
 
 # Project Summary
@@ -40,7 +40,7 @@ When executing this skill, provide lightweight progress feedback so the user can
   - `[2/6] Checking project log + existing summary…`
   - `[3/6] Generating / updating summary sections…`
   - `[4/6] Rolling up project observations…`
-  - `[5/6] Promoting key decisions to reference/decisions/ (if PJM installed)…`
+  - `[5/6] Promoting key decisions to reference/decisions/ (if PJM is available)…`
   - `[6/6] Committing…`
 
 **BLOCKED Activities:**
@@ -59,7 +59,7 @@ When executing this skill, provide lightweight progress feedback so the user can
 - ✅ Offering follow-up-marked project-log entries to
   `oat-pjm-add-backlog-item`
 - ✅ Committing summary.md changes
-- ✅ Promoting the summary's Key Decisions into canonical `reference/decisions/` records via `oat decision new` (Step 7), gated on the PJM tool pack being installed
+- ✅ Promoting the summary's Key Decisions into canonical `reference/decisions/` records via `oat decision new` (Step 7), gated on the PJM tool pack being available
 
 **Self-Correction Protocol:**
 If you catch yourself:
@@ -360,10 +360,10 @@ append-based `project` → `general` promotion in Step 2.5.
 
 Run this step **after** `summary.md` (including its `## Key Decisions` section) has been written/refreshed and its frontmatter updated. It promotes the project's Key Decisions out of per-project prose and into the canonical, repo-wide `reference/decisions/` log so they stop being siloed in `summary.md`. This step is **additive and non-interactive** — it never prompts.
 
-**7.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is installed:
+**7.1 — PJM gate (auto, no prompt).** Check whether the PJM tool pack is effectively available:
 
 ```bash
-PJM_ENABLED=$(oat config get tools.project-management 2>/dev/null || echo "")
+PJM_ENABLED=$(oat tools has project-management 2>/dev/null || echo "")
 ```
 
 - If `PJM_ENABLED` is `true` → perform the promotion automatically. Do NOT ask the user.
@@ -455,7 +455,7 @@ Summary generated for {project-name}.
 Sections: {list of non-empty sections included}
 Lines: {line count}
 Mode: {fresh | incremental update}
-Decisions promoted: {N created, M skipped as already promoted | skipped (PJM not installed)}
+Decisions promoted: {N created, M skipped as already promoted | skipped (PJM unavailable)}
 
 Summary tracks: last task {task_id}, {N} revision phases
 ```
@@ -481,7 +481,7 @@ Summary tracks: last task {task_id}, {N} revision phases
   `skipped_permitted` proceeds with a note
 - Follow-up-marked project-log entries use backlog graduation separately from
   ledger graduation
-- When the PJM tool pack is installed, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
-- When the PJM tool pack is not installed, decision promotion is skipped silently with no prompt
+- When the PJM tool pack is available, each Key Decision is promoted to a canonical `reference/decisions/DR-YYMMDD-slug` record via `oat decision new` (status `accepted`), deduped on the date-independent slug so re-runs never create duplicate records
+- When the PJM tool pack is unavailable, decision promotion is skipped silently with no prompt
 - A project-recap attempt appears once in a concise Explainer Outcome section
   sourced from its manifest and build record

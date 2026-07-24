@@ -135,7 +135,7 @@ describe('createToolsUpdateCommand config writes', () => {
     process.exitCode = originalExitCode;
   });
 
-  it('preserves packs still installed in another scope after project update', async () => {
+  it('records only packs installed in project scope after project update', async () => {
     const toolsByScope: Record<string, ToolInfo[]> = {
       project: [
         createTool(),
@@ -185,7 +185,7 @@ describe('createToolsUpdateCommand config writes', () => {
       tools: {
         core: false,
         ideas: false,
-        docs: true,
+        docs: false,
         workflows: true,
         utility: false,
         'project-management': true,

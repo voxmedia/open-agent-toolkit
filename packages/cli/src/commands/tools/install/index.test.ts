@@ -9,12 +9,37 @@ import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
+const configPersistence = vi.hoisted(() => ({
+  readOatConfig: vi.fn(async () => ({
+    version: 1 as const,
+    localPaths: [] as string[],
+  })),
+  writeOatConfig: vi.fn(async () => {}),
+}));
+
+vi.mock('@config/oat-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@config/oat-config')>()),
+  readOatConfig: configPersistence.readOatConfig,
+  writeOatConfig: configPersistence.writeOatConfig,
+}));
+
 import { createToolsInstallCommand } from './index';
 
 function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
   const packScope = options.packScope ?? 'project';
+  const installedPacksByScope: Record<
+    'project' | 'user',
+    Set<'docs' | 'brainstorm'>
+  > = {
+    project: new Set(),
+    user: new Set(),
+  };
+  installedPacksByScope[packScope].add('docs');
   const capture = createLoggerCapture();
   const syncScopes: Scope[] = [];
+  const runSync = vi.fn(async ({ scope }: { scope: Scope }) => {
+    syncScopes.push(scope);
+  });
   const selectManyWithAbort = vi.fn(
     async (_message: string, _choices: MultiSelectChoice<string>[]) => ['docs'],
   );
@@ -28,12 +53,30 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
     outdatedSkills: [],
     docsStatus: 'skipped' as const,
   }));
-  const installDocs = vi.fn(async () => ({
-    copiedSkills: ['oat-docs-analyze'],
-    updatedSkills: [],
-    skippedSkills: [],
-    outdatedSkills: [],
-  }));
+  const installDocs = vi.fn(async ({ targetRoot }: { targetRoot: string }) => {
+    installedPacksByScope[targetRoot === '/tmp/home' ? 'user' : 'project'].add(
+      'docs',
+    );
+    return {
+      copiedSkills: ['oat-docs-analyze'],
+      updatedSkills: [],
+      skippedSkills: [],
+      outdatedSkills: [],
+    };
+  });
+  const installBrainstorm = vi.fn(
+    async ({ targetRoot }: { targetRoot: string }) => {
+      installedPacksByScope[
+        targetRoot === '/tmp/home' ? 'user' : 'project'
+      ].add('brainstorm');
+      return {
+        copiedSkills: ['oat-brainstorm'],
+        updatedSkills: [],
+        skippedSkills: [],
+        outdatedSkills: [],
+      };
+    },
+  );
   const installIdeas = vi.fn(async () => ({
     copiedSkills: [],
     updatedSkills: [],
@@ -89,11 +132,21 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
   }));
   const removeDirectory = vi.fn(async () => {});
   const removeFile = vi.fn(async () => {});
+  const scanTools = vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
+    [...installedPacksByScope[scope]].map((pack) => ({
+      name: pack === 'docs' ? 'oat-docs-analyze' : 'oat-brainstorm',
+      type: 'skill' as const,
+      scope,
+      version: '1.0.0',
+      bundledVersion: '1.0.0',
+      pack,
+      status: 'current' as const,
+    })),
+  );
+  const writeOatConfig = configPersistence.writeOatConfig;
   const command = createToolsInstallCommand(
     {
-      runSync: async ({ scope }) => {
-        syncScopes.push(scope);
-      },
+      runSync,
     },
     {
       buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -109,21 +162,7 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
       resolveProjectRoot: vi.fn(async () => '/tmp/workspace'),
       resolveScopeRoot: vi.fn((_scope: 'project' | 'user', _cwd, home) => home),
       resolveAssetsRoot: vi.fn(async () => '/tmp/assets'),
-      scanTools: vi.fn(async ({ scope }: { scope: 'project' | 'user' }) =>
-        scope === packScope
-          ? [
-              {
-                name: 'oat-docs-analyze',
-                type: 'skill' as const,
-                scope: packScope,
-                version: '1.0.0',
-                bundledVersion: '1.0.0',
-                pack: 'docs' as const,
-                status: 'current' as const,
-              },
-            ]
-          : [],
-      ),
+      scanTools,
       selectManyWithAbort,
       selectWithAbort,
       installCore,
@@ -133,6 +172,7 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
       installUtility,
       installProjectManagement,
       installResearch,
+      installBrainstorm,
       copyDirWithStatus: vi.fn(async () => 'skipped' as const),
       removeDirectory,
       removeFile,
@@ -141,12 +181,8 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
         all: paths,
       })),
       applyGitignore: vi.fn(async () => ({ action: 'updated' })),
-      readOatConfig: vi.fn(async () => ({
-        version: 1 as const,
-        localPaths: [] as string[],
-        tools: {},
-      })),
-      writeOatConfig: vi.fn(async () => {}),
+      readOatConfig: configPersistence.readOatConfig,
+      writeOatConfig,
       resolveLocalPaths: vi.fn(
         (config: { localPaths?: string[] }) => config.localPaths ?? [],
       ),
@@ -157,7 +193,17 @@ function createHarness(options: { packScope?: 'project' | 'user' } = {}) {
     },
   );
 
-  return { capture, command, syncScopes, installDocs, removeDirectory };
+  return {
+    capture,
+    command,
+    syncScopes,
+    runSync,
+    scanTools,
+    writeOatConfig,
+    installDocs,
+    installBrainstorm,
+    removeDirectory,
+  };
 }
 
 async function runCommand(
@@ -188,6 +234,8 @@ describe('createToolsInstallCommand', () => {
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
+    configPersistence.readOatConfig.mockClear();
+    configPersistence.writeOatConfig.mockClear();
   });
 
   afterEach(() => {
@@ -224,6 +272,72 @@ describe('createToolsInstallCommand', () => {
         scope: 'project',
         installedCanonicalPaths: ['.agents/skills/oat-docs-analyze'],
       }),
+    );
+  });
+
+  it('reconciles project config before install auto-sync', async () => {
+    const { command, runSync, writeOatConfig } = createHarness({
+      packScope: 'user',
+    });
+
+    await runCommand(command, [], ['--scope', 'project']);
+
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({
+        tools: expect.objectContaining({ docs: true }),
+      }),
+    );
+    expect(runSync).toHaveBeenCalledTimes(1);
+    expect(writeOatConfig.mock.invocationCallOrder[0]).toBeLessThan(
+      runSync.mock.invocationCallOrder[0]!,
+    );
+  });
+
+  it('does not write shared config for tools install brainstorm at user scope', async () => {
+    const { command, installBrainstorm, runSync, writeOatConfig } =
+      createHarness({
+        packScope: 'user',
+      });
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'user']);
+
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
+    expect(writeOatConfig).not.toHaveBeenCalled();
+    expect(runSync).toHaveBeenCalledTimes(1);
+  });
+
+  it('reconciles a direct project brainstorm install before auto-sync', async () => {
+    const { command, installBrainstorm, runSync, writeOatConfig } =
+      createHarness({
+        packScope: 'user',
+      });
+
+    await runCommand(command, ['brainstorm'], ['--scope', 'project']);
+
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/workspace' }),
+    );
+    expect(writeOatConfig).toHaveBeenCalledTimes(1);
+    expect(writeOatConfig).toHaveBeenCalledWith(
+      '/tmp/workspace',
+      expect.objectContaining({
+        tools: {
+          core: false,
+          ideas: false,
+          docs: false,
+          workflows: false,
+          utility: false,
+          'project-management': false,
+          research: false,
+          brainstorm: true,
+        },
+      }),
+    );
+    expect(writeOatConfig.mock.invocationCallOrder[0]).toBeLessThan(
+      runSync.mock.invocationCallOrder[0]!,
     );
   });
 
