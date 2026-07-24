@@ -1,6 +1,6 @@
 ---
 oat_status: complete
-oat_ready_for: oat-project-implement
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-24
 oat_phase: plan
