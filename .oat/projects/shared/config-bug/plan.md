@@ -79,7 +79,10 @@ validation must execute against the merged result.
 
 Cover user-only installs/updates, project-only and both-scope state, removal of
 the final project pack while a user copy remains, stale union cleanup, unrelated
-shared config preservation, and default-only config write suppression.
+shared config preservation, and default-only config write suppression. Direct
+brainstorm command-path regressions must execute the real brainstorm action
+rather than replacing its action handler, so restoring child-level config
+persistence makes the tests fail.
 
 Run:
 
@@ -526,15 +529,15 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                |
-| ------ | -------- | -------- | ---------- | --------------------------------------- |
-| p01    | code     | received | 2026-07-24 | reviews/2026-07-24-p01-code-rereview.md |
-| p02    | code     | passed   | 2026-07-24 | reviews/2026-07-24-p02-code-review.md   |
-| p03    | code     | pending  | -          | -                                       |
-| final  | code     | pending  | -          | -                                       |
-| spec   | artifact | pending  | -          | -                                       |
-| design | artifact | pending  | -          | -                                       |
-| plan   | artifact | passed   | 2026-07-24 | in-memory                               |
+| Scope  | Type     | Status      | Date       | Artifact                                |
+| ------ | -------- | ----------- | ---------- | --------------------------------------- |
+| p01    | code     | fixes_added | 2026-07-24 | reviews/2026-07-24-p01-code-rereview.md |
+| p02    | code     | passed      | 2026-07-24 | reviews/2026-07-24-p02-code-review.md   |
+| p03    | code     | pending     | -          | -                                       |
+| final  | code     | pending     | -          | -                                       |
+| spec   | artifact | pending     | -          | -                                       |
+| design | artifact | pending     | -          | -                                       |
+| plan   | artifact | passed      | 2026-07-24 | in-memory                               |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

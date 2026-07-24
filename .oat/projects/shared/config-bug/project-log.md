@@ -88,6 +88,10 @@ Accepted fresh p01 re-review dispatch 37f28848-1a4e-49f7-a101-80f07b3b046b for e
 
 Fresh p01 re-review found one Important regression-coverage gap: parent command tests stub the brainstorm child handler and would not detect restored child-level config persistence. Review fix loop 2 required.
 
+### 2026-07-24 · structural · oat-project-implement · p01-review2-fix-plan
+
+Planned bounded p01 review fix loop 2 within existing p01-t01 files: execute real brainstorm action in parent/wrapper regressions via a side-effect-safe seam and prove restored child persistence fails tests.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
