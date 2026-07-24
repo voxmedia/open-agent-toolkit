@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -61,18 +61,18 @@ oat_post_implement_sequence:
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
-  pre_approval_completed: [summary, document]
+  pre_approval_completed: [summary, document, pr]
   approval: pending
   approval_source: null
   post_approval: []
   post_approval_completed: []
   failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/174' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-23T22:58:06.264Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-24T15:23:42Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-24T15:25:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -84,7 +84,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review reconciliation
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -103,7 +103,8 @@ Implementation - Final review reconciliation
 - ✓ p03 HiLL checkpoint approved
 - ✓ Final integrated verification passed
 - ✓ Final lifecycle re-review passed
-- ⧗ Exit gate and post-implementation closeout sequence pending
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -111,4 +112,8 @@ None
 
 ## Next Milestone
 
-Resolve the exit gate and configured closeout sequence
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
