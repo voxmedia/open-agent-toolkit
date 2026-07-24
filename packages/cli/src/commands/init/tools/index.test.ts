@@ -4,13 +4,23 @@ import type {
   MultiSelectChoice,
   SelectChoice,
 } from '@commands/shared/shared.prompts';
-import {
-  canonicalPathsForPack,
-  setInstalledCanonicalPaths,
-} from '@commands/tools/shared/install-sync-context';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+const configPersistence = vi.hoisted(() => ({
+  readOatConfig: vi.fn(async () => ({
+    version: 1 as const,
+    localPaths: [] as string[],
+  })),
+  writeOatConfig: vi.fn(async () => {}),
+}));
+
+vi.mock('@config/oat-config', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@config/oat-config')>()),
+  readOatConfig: configPersistence.readOatConfig,
+  writeOatConfig: configPersistence.writeOatConfig,
+}));
 
 import {
   buildToolPacksSectionBody,
@@ -218,11 +228,8 @@ function createHarness(options: HarnessOptions = {}) {
     all: paths,
   }));
   const applyGitignore = vi.fn(async () => ({ action: 'updated' }));
-  const readOatConfig = vi.fn(async () => ({
-    version: 1 as const,
-    localPaths: [] as string[],
-  }));
-  const writeOatConfig = vi.fn(async () => {});
+  const readOatConfig = configPersistence.readOatConfig;
+  const writeOatConfig = configPersistence.writeOatConfig;
   const resolveLocalPaths = vi.fn(
     (config: { localPaths?: string[] }) => config.localPaths ?? [],
   );
@@ -327,6 +334,8 @@ describe('createInitToolsCommand', () => {
   beforeEach(() => {
     originalExitCode = process.exitCode;
     process.exitCode = undefined;
+    configPersistence.readOatConfig.mockClear();
+    configPersistence.writeOatConfig.mockClear();
   });
 
   afterEach(() => {
@@ -1218,27 +1227,20 @@ describe('createInitToolsCommand', () => {
   });
 
   it('does not write shared config for a direct user-only brainstorm install', async () => {
-    const { command, scanTools, writeOatConfig } = createHarness({
-      interactive: false,
-      toolsByScope: {
-        project: [],
-        user: [],
-      },
-    });
-    const brainstormCommand = command.commands.find(
-      (subcommand) => subcommand.name() === 'brainstorm',
-    )!;
-    brainstormCommand.action(
-      async (_options: unknown, actionCommand: Command) => {
-        setInstalledCanonicalPaths(
-          actionCommand,
-          canonicalPathsForPack('brainstorm'),
-        );
-      },
-    );
+    const { command, installBrainstorm, scanTools, writeOatConfig } =
+      createHarness({
+        interactive: false,
+        toolsByScope: {
+          project: [],
+          user: [],
+        },
+      });
 
     await runCommand(command, ['brainstorm'], ['--scope', 'user']);
 
+    expect(installBrainstorm).toHaveBeenCalledWith(
+      expect.objectContaining({ targetRoot: '/tmp/home' }),
+    );
     expect(scanTools).toHaveBeenCalledWith(
       expect.objectContaining({ scope: 'project' }),
     );

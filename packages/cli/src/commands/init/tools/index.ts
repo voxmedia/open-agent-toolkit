@@ -1399,7 +1399,14 @@ export function createInitToolsCommand(
     createInitToolsWorkflowsCommand(),
     createInitToolsUtilityCommand(),
     createInitToolsResearchCommand(),
-    createInitToolsBrainstormCommand(),
+    createInitToolsBrainstormCommand({
+      buildCommandContext: dependencies.buildCommandContext,
+      resolveProjectRoot: dependencies.resolveProjectRoot,
+      resolveScopeRoot: dependencies.resolveScopeRoot,
+      resolveAssetsRoot: dependencies.resolveAssetsRoot,
+      installBrainstorm: dependencies.installBrainstorm,
+      scanTools: dependencies.scanTools,
+    }),
   ];
   for (const packCommand of packCommands) {
     packCommand.hook('postAction', async (_thisCommand, actionCommand) => {
