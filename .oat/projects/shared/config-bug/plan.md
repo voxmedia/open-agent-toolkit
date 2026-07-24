@@ -209,6 +209,7 @@ git commit -m "feat(p01-t02): add effective tool pack capability query"
 - Modify: `.agents/skills/oat-brainstorm/references/destinations.md`
 - Modify: `.agents/skills/oat-project-document/SKILL.md`
 - Modify: `.agents/skills/oat-project-summary/SKILL.md`
+- Modify: `.agents/docs/autonomy-contract.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
 **Step 1: Write failing contract assertions**
@@ -230,7 +231,9 @@ Expected: New assertions fail against existing skill commands.
 
 Migrate brainstorm destination filtering, project documentation, and project
 summary checks. Add `Bash(oat tools:*)` where allowlists require it. Increment
-each changed canonical skill's frontmatter version once.
+each changed canonical skill's frontmatter version once. Refresh the
+autonomy-contract prompt-site mappings whose stable hashes change with the
+canonical skill text.
 
 **Step 3: Format**
 
@@ -242,6 +245,7 @@ pnpm exec oxfmt --write \
   ".agents/skills/oat-brainstorm/references/destinations.md" \
   ".agents/skills/oat-project-document/SKILL.md" \
   ".agents/skills/oat-project-summary/SKILL.md" \
+  ".agents/docs/autonomy-contract.md" \
   "packages/cli/src/validation/skills.test.ts"
 ```
 
@@ -251,7 +255,8 @@ Run:
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run \
-  src/validation/skills.test.ts
+  src/validation/skills.test.ts \
+  src/validation/autonomy-gate-inventory.test.ts
 pnpm run oat:validate-skills
 ```
 
@@ -261,6 +266,7 @@ Expected: Canonical skill contracts and metadata validate.
 
 ```bash
 git add .agents/skills/oat-brainstorm \
+  .agents/docs/autonomy-contract.md \
   .agents/skills/oat-project-document/SKILL.md \
   .agents/skills/oat-project-summary/SKILL.md \
   packages/cli/src/validation/skills.test.ts
