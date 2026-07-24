@@ -220,6 +220,8 @@ Chronological log of implementation progress.
   was corrected before resuming.
 - p03 implementation completed in `cd283fe6`; all focused, CLI, build, docs,
   formatting, skill, and release validation gates passed.
+- Merged reviewed p03 as `573b6ab5`; the final integrated branch passed the
+  complete CLI, quality, build, docs, and release gate sequence.
 
 **Decisions:**
 
