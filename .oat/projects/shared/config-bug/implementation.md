@@ -202,6 +202,8 @@ Chronological log of implementation progress.
 - Initial p03 validation found a stale bundle-contract version assertion and
   generated public-version asset outside the declared boundary; the boundary
   was corrected before resuming.
+- p03 implementation completed in `cd283fe6`; all focused, CLI, build, docs,
+  formatting, skill, and release validation gates passed.
 
 **Decisions:**
 
