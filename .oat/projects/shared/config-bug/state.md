@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-23T22:58:06.264Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-24T14:47:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-24T14:54:04Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -91,7 +91,8 @@ Implementation - Final review reconciliation
 - ✓ Phases p01, p02, and p03 implemented, reviewed, and merged
 - ✓ p03 HiLL checkpoint approved
 - ✓ Final integrated verification passed
-- ⧗ Final review bookkeeping fix awaiting re-review
+- ✓ Final lifecycle re-review passed
+- ⧗ Exit gate and post-implementation closeout sequence pending
 
 ## Blockers
 
@@ -99,4 +100,4 @@ None
 
 ## Next Milestone
 
-Pass final lifecycle re-review and close implementation
+Resolve the exit gate and configured closeout sequence
