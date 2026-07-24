@@ -39,7 +39,7 @@ oxfmt/oxlint.
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 - [x] Resolve project dispatch policy
 - [x] Configure optional phase gate review
-- [ ] Complete plan artifact review
+- [x] Complete plan artifact review
 
 ## Parallelism
 
@@ -64,8 +64,7 @@ validation must execute against the merged result.
   `packages/cli/src/commands/tools/shared/project-tools-config.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.test.ts`
-- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.ts`
-- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.test.ts`
+- Modify: `packages/cli/src/commands/tools/install/index.test.ts`
 - Modify: `packages/cli/src/commands/tools/update/index.ts`
 - Modify: `packages/cli/src/commands/tools/update/config-write.test.ts`
 - Modify: `packages/cli/src/commands/tools/remove/index.ts`
@@ -85,7 +84,7 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
   src/commands/tools/update/config-write.test.ts \
   src/commands/tools/remove/config-write.test.ts \
   src/commands/init/tools/index.test.ts \
-  src/commands/init/tools/brainstorm/index.test.ts
+  src/commands/tools/install/index.test.ts
 ```
 
 Expected: New/updated cases fail against the project-plus-user union behavior.
@@ -94,8 +93,10 @@ Expected: New/updated cases fail against the project-plus-user union behavior.
 
 Scan project canonical assets after lifecycle mutations. Write a deterministic
 full tools map only when project packs exist; otherwise remove a stale map and
-skip creating a default-only `.oat/config.json`. Route aggregate install,
-direct brainstorm install, update, and remove through the same helper.
+skip creating a default-only `.oat/config.json`. Route aggregate and every
+direct pack install through a shared parent post-action hook, then route update
+and remove through the same helper. Verify the `oat tools install` wrapper
+inherits that hook before auto-sync.
 
 **Step 3: Format**
 
@@ -107,8 +108,7 @@ pnpm exec oxfmt --write \
   "packages/cli/src/commands/tools/shared/project-tools-config.test.ts" \
   "packages/cli/src/commands/init/tools/index.ts" \
   "packages/cli/src/commands/init/tools/index.test.ts" \
-  "packages/cli/src/commands/init/tools/brainstorm/index.ts" \
-  "packages/cli/src/commands/init/tools/brainstorm/index.test.ts" \
+  "packages/cli/src/commands/tools/install/index.test.ts" \
   "packages/cli/src/commands/tools/update/index.ts" \
   "packages/cli/src/commands/tools/update/config-write.test.ts" \
   "packages/cli/src/commands/tools/remove/index.ts" \
@@ -127,6 +127,7 @@ Expected: All focused reconciliation tests pass.
 git add packages/cli/src/commands/init/tools \
   packages/cli/src/commands/tools/shared/project-tools-config.ts \
   packages/cli/src/commands/tools/shared/project-tools-config.test.ts \
+  packages/cli/src/commands/tools/install/index.test.ts \
   packages/cli/src/commands/tools/update \
   packages/cli/src/commands/tools/remove
 git commit -m "fix(p01-t01): reconcile shared tool state from project scope"
@@ -146,8 +147,9 @@ git commit -m "fix(p01-t01): reconcile shared tool state from project scope"
 **Step 1: Write failing command tests**
 
 Cover default effective scope, explicit project/user scope, both-scope JSON,
-plain `true`/`false`, a valid unavailable pack with exit `0`, and invalid packs
-with exit `1`.
+plain `true`/`false`, a valid unavailable pack with exit `0`, invalid packs
+with exit `1`, and an unexpected scanner/runtime failure with the standard
+error contract and exit `2`.
 
 Run:
 
@@ -398,6 +400,7 @@ git commit -m "fix(p02-t02): block sync through symlinked provider parents"
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
 - Modify: `apps/oat-docs/docs/provider-sync/providers.md`
 - Modify: `apps/oat-docs/docs/reference/troubleshooting.md`
+- Modify: `apps/oat-docs/index.md` (generated)
 - Modify: `packages/cli/package.json`
 - Modify: `packages/control-plane/package.json`
 - Modify: `packages/docs-config/package.json`
@@ -421,19 +424,32 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
 Expected: The focused contract passes with the corrected references and skill
 version.
 
-**Step 2: Update documentation**
+**Step 2: Review and approve the documentation delta**
+
+Compare the five target pages against discovery, design, and implemented
+behavior. Present the proposed substantive content delta to the user and obtain
+approval before editing, following the core `oat-project-document` guidance.
+
+**Step 3: Update documentation and generated navigation**
 
 Document `tools.*` as project installation state, `oat tools has` as effective
 availability, lifecycle reconciliation behavior, and provider-parent symlink
 refusal/recovery. Remove claims that shared config represents user-scope
-availability.
+availability. Then run:
 
-**Step 3: Apply lockstep release versions**
+```bash
+oat docs nav sync
+pnpm -w run cli:source -- docs generate-index \
+  --docs-dir apps/oat-docs/docs \
+  --output apps/oat-docs/index.md
+```
+
+**Step 4: Apply lockstep release versions**
 
 Bump all five public packages from `0.2.14` to `0.2.15` because the CLI and
 bundled canonical skills ship changed behavior.
 
-**Step 4: Format**
+**Step 5: Format**
 
 Run:
 
@@ -446,6 +462,7 @@ pnpm exec oxfmt --write \
   "apps/oat-docs/docs/cli-utilities/config-and-local-state.md" \
   "apps/oat-docs/docs/provider-sync/providers.md" \
   "apps/oat-docs/docs/reference/troubleshooting.md" \
+  "apps/oat-docs/index.md" \
   "packages/cli/package.json" \
   "packages/control-plane/package.json" \
   "packages/docs-config/package.json" \
@@ -453,7 +470,7 @@ pnpm exec oxfmt --write \
   "packages/docs-transforms/package.json"
 ```
 
-**Step 5: Verify**
+**Step 6: Verify**
 
 Run:
 
@@ -463,13 +480,14 @@ pnpm --filter @open-agent-toolkit/cli test
 pnpm --filter @open-agent-toolkit/cli lint
 pnpm --filter @open-agent-toolkit/cli type-check
 pnpm format
+pnpm build:docs
 pnpm release:validate
 ```
 
 Expected: CLI tests/lint/type-check, repository formatting, version policy, and
 release validation all pass.
 
-**Step 6: Commit**
+**Step 7: Commit**
 
 ```bash
 git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
@@ -477,6 +495,7 @@ git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
   apps/oat-docs/docs/cli-utilities \
   apps/oat-docs/docs/provider-sync/providers.md \
   apps/oat-docs/docs/reference/troubleshooting.md \
+  apps/oat-docs/index.md \
   packages/cli/package.json \
   packages/control-plane/package.json \
   packages/docs-config/package.json \
@@ -487,18 +506,25 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status  | Date       | Artifact  |
+| ------ | -------- | ------- | ---------- | --------- |
+| p01    | code     | pending | -          | -         |
+| p02    | code     | pending | -          | -         |
+| p03    | code     | pending | -          | -         |
+| final  | code     | pending | -          | -         |
+| spec   | artifact | pending | -          | -         |
+| design | artifact | pending | -          | -         |
+| plan   | artifact | passed  | 2026-07-24 | in-memory |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
+
+### Artifact Review
+
+| Iteration | Reviewer     | Outcome                  | Action                                                                                  |
+| --------- | ------------ | ------------------------ | --------------------------------------------------------------------------------------- |
+| 1         | OAT reviewer | 2 Important and 1 Medium | Expanded direct-install reconciliation, docs workflow, and runtime-failure verification |
+| 2         | OAT reviewer | Clean                    | No further action                                                                       |
 
 ## Implementation Complete
 
