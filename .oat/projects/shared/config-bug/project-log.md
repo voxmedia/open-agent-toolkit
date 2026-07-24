@@ -136,6 +136,10 @@ Accepted p03 implementer dispatch d5cbda60-de1e-4bb4-9db1-8313e280a0d1 in config
 
 p03 stopped before commit after validation exposed two required undeclared files: the pinned agent-instructions bundle-contract test and generated public-package-versions asset. Corrected the boundary and replaced MkDocs-only nav sync with Fumadocs source index generation.
 
+### 2026-07-24 · structural · oat-project-implement · p03-fix1-dispatch
+
+Resumed original p03 implementer d5cbda60-de1e-4bb4-9db1-8313e280a0d1 with corrected validation, generated-asset, and Fumadocs index boundaries.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
