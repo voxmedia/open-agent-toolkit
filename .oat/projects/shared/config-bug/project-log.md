@@ -132,6 +132,10 @@ Bootstrapped clean p03 worktree at dba96a60. Skill validation and docs build pas
 
 Accepted p03 implementer dispatch d5cbda60-de1e-4bb4-9db1-8313e280a0d1 in config-bug-p03 after approval and clean baseline validation.
 
+### 2026-07-24 · structural · oat-project-implement · p03-boundary-correction
+
+p03 stopped before commit after validation exposed two required undeclared files: the pinned agent-instructions bundle-contract test and generated public-package-versions asset. Corrected the boundary and replaced MkDocs-only nav sync with Fumadocs source index generation.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

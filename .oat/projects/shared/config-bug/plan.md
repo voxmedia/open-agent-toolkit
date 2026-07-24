@@ -230,7 +230,8 @@ Run:
 
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run \
-  src/validation/skills.test.ts
+  src/validation/skills.test.ts \
+  src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts
 ```
 
 Expected: New assertions fail against existing skill commands.
@@ -422,6 +423,8 @@ mid-task.
 
 - Modify: `.agents/skills/oat-agent-instructions-analyze/SKILL.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify:
+  `packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts`
 - Modify: `apps/oat-docs/docs/cli-utilities/tool-packs.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
@@ -434,6 +437,7 @@ mid-task.
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json` (generated)
 
 **Step 1: Correct delta-mode step references**
 
@@ -441,6 +445,8 @@ Add a failing canonical-skill contract assertion, then update
 `oat-agent-instructions-analyze` so delta mode scopes coverage Step 4 and drift
 Step 6 while quality Step 3 remains repository-wide. Ensure Step 7 remains
 cross-format consistency and bump the skill version from `1.11.1` to `1.11.2`.
+Update the existing bundled-agent-instructions contract's pinned version in the
+same change.
 
 Run:
 
@@ -461,10 +467,11 @@ recovery. Remove claims that shared config represents user-scope availability.
 Update both lifecycle-guide references to `oat-project-document` so they name
 `oat tools has project-management` as the effective runtime check rather than
 the shared `tools.project-management` snapshot.
-Then run:
+This app uses Fumadocs, so the framework-equivalent navigation sync is source
+index generation; `oat docs nav sync` is MkDocs-only and must not be run here.
+Run:
 
 ```bash
-oat docs nav sync
 pnpm -w run cli:source -- docs generate-index \
   --docs-dir apps/oat-docs/docs \
   --output apps/oat-docs/index.md
@@ -473,7 +480,8 @@ pnpm -w run cli:source -- docs generate-index \
 **Step 3: Apply lockstep release versions**
 
 Bump all five public packages from `0.2.14` to `0.2.15` because the CLI and
-bundled canonical skills ship changed behavior.
+bundled canonical skills ship changed behavior. Regenerate and include
+`packages/cli/assets/public-package-versions.json`.
 
 **Step 4: Format**
 
@@ -483,6 +491,7 @@ Run:
 pnpm exec oxfmt --write \
   ".agents/skills/oat-agent-instructions-analyze/SKILL.md" \
   "packages/cli/src/validation/skills.test.ts" \
+  "packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts" \
   "apps/oat-docs/docs/cli-utilities/tool-packs.md" \
   "apps/oat-docs/docs/cli-utilities/configuration.md" \
   "apps/oat-docs/docs/cli-utilities/config-and-local-state.md" \
@@ -494,7 +503,8 @@ pnpm exec oxfmt --write \
   "packages/control-plane/package.json" \
   "packages/docs-config/package.json" \
   "packages/docs-theme/package.json" \
-  "packages/docs-transforms/package.json"
+  "packages/docs-transforms/package.json" \
+  "packages/cli/assets/public-package-versions.json"
 ```
 
 **Step 5: Verify**
@@ -520,6 +530,7 @@ release validation all pass.
 ```bash
 git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
   packages/cli/src/validation/skills.test.ts \
+  packages/cli/src/commands/init/tools/shared/agent-instructions-bundle-contract.test.ts \
   apps/oat-docs/docs/cli-utilities \
   apps/oat-docs/docs/provider-sync/providers.md \
   apps/oat-docs/docs/reference/troubleshooting.md \
@@ -529,7 +540,8 @@ git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
   packages/control-plane/package.json \
   packages/docs-config/package.json \
   packages/docs-theme/package.json \
-  packages/docs-transforms/package.json
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json
 git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 ```
 
