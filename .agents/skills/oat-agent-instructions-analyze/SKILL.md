@@ -1,6 +1,6 @@
 ---
 name: oat-agent-instructions-analyze
-version: 1.11.1
+version: 1.11.2
 description: Run when you need to evaluate agent instruction file coverage, quality, and drift. Produces a severity-rated analysis artifact. Run before oat-agent-instructions-apply to identify what needs improvement.
 disable-model-invocation: true
 user-invocable: true
@@ -107,7 +107,7 @@ Delta mode scoping:
 git diff --name-only "$STORED_HASH"..HEAD
 ```
 
-Use the changed file list to limit coverage gap assessment (Step 5) and drift detection (Step 7) to affected directories. Quality evaluation (Step 4) always runs on ALL instruction files regardless of mode.
+Use the changed file list to limit coverage gap assessment (Step 4) and drift detection (Step 6) to affected directories. Quality evaluation (Step 3) always runs on ALL instruction files regardless of mode.
 
 ### Step 1: Discover Instruction Files
 

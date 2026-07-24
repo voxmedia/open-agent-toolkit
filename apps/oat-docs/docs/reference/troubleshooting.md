@@ -61,6 +61,48 @@ Use [Instruction Sync](../provider-sync/instruction-sync.md) for the full strate
 - In TTY mode, select which outdated skills to update when prompted.
 - In non-interactive mode, rerun the relevant pack subcommand with `--force` if you want to overwrite outdated installed skills.
 
+## `sync` reports an unsafe provider parent
+
+Errors containing `Unsafe provider parent`, `symbolic links are not allowed in
+provider ancestry`, or `provider ancestry is not a directory` mean an existing
+parent of a managed provider destination is a symlink or a non-directory entry.
+OAT refuses to traverse, unlink, or rewrite that parent because it may be
+user-managed or externally owned. Canonical content and external symlink targets
+remain untouched.
+
+Recover explicitly:
+
+1. Inspect the reported parent and preserve or migrate any user-managed content.
+2. Replace that provider parent with a real directory under the intended project
+   or user sync scope.
+3. Rerun sync with the matching scope:
+
+   ```bash
+   oat sync --scope project
+   oat sync --scope user
+   oat sync --scope all
+   ```
+
+Do not replace the parent until you understand who owns its existing target.
+OAT intentionally does not automate this recovery.
+
+## A user-installed pack is missing from shared `tools.*`
+
+This is expected. `.oat/config.json#tools` records project installation state,
+so a user-only install does not set `tools.<pack>` in shared repo config.
+
+Check effective project-plus-user availability with:
+
+```bash
+oat tools has <pack>
+```
+
+To confirm specifically that the user copy is present, run:
+
+```bash
+oat tools has <pack> --scope user
+```
+
 ## Manifest not found or invalid
 
 - Missing manifest: run `sync` or `init`
