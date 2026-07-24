@@ -173,21 +173,36 @@ describe('initializeRepoReference', () => {
     tempDirs.push(root);
     const assetsRoot = join(root, 'assets');
     const repoRoot = join(root, 'repo');
-    const sentinel = '# Curated roadmap\n';
+    const roadmapSentinel = '# Curated roadmap\n';
+    const decisionGuidanceSentinel = '# Curated decision guidance\n';
     await seedTemplates(join(assetsRoot, 'templates'));
     await mkdir(join(repoRoot, 'pjm'), { recursive: true });
-    await writeFile(join(repoRoot, 'pjm', 'roadmap.md'), sentinel, {
+    await mkdir(join(repoRoot, 'reference', 'decisions'), { recursive: true });
+    await writeFile(join(repoRoot, 'pjm', 'roadmap.md'), roadmapSentinel, {
       encoding: 'utf8',
       flag: 'wx',
     });
+    await writeFile(
+      join(repoRoot, 'reference', 'decisions', 'AGENTS.md'),
+      decisionGuidanceSentinel,
+      {
+        encoding: 'utf8',
+        flag: 'wx',
+      },
+    );
 
     const result = await initializeRepoReference({ assetsRoot, repoRoot });
 
     await expect(
       readFile(join(repoRoot, 'pjm', 'roadmap.md'), 'utf8'),
-    ).resolves.toBe(sentinel);
+    ).resolves.toBe(roadmapSentinel);
+    await expect(
+      readFile(join(repoRoot, 'reference', 'decisions', 'AGENTS.md'), 'utf8'),
+    ).resolves.toBe(decisionGuidanceSentinel);
     expect(result.skipped).toContain('pjm/roadmap.md');
+    expect(result.skipped).toContain('reference/decisions/AGENTS.md');
     expect(result.created).not.toContain('pjm/roadmap.md');
+    expect(result.created).not.toContain('reference/decisions/AGENTS.md');
   });
 
   it('is idempotent on rerun', async () => {

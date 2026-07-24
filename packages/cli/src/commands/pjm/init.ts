@@ -47,8 +47,9 @@ const BACKLOG_PATHS = [
   'pjm/backlog/archived/.gitkeep',
 ] as const;
 
+const DECISION_AGENTS_PATH = 'reference/decisions/AGENTS.md';
 const DECISION_PATHS = [
-  'reference/decisions/AGENTS.md',
+  DECISION_AGENTS_PATH,
   'reference/decisions/index.md',
 ] as const;
 
@@ -181,9 +182,11 @@ export async function initializeRepoReference(
   await initializeDecisionRecords(
     join(options.repoRoot, 'reference', 'decisions'),
   );
-  await initializeScopedDecisionAgentsGuidance(
-    join(options.repoRoot, 'reference', 'decisions'),
-  );
+  if (!existingDecisionPaths.has(DECISION_AGENTS_PATH)) {
+    await initializeScopedDecisionAgentsGuidance(
+      join(options.repoRoot, 'reference', 'decisions'),
+    );
+  }
 
   for (const relativePath of DECISION_PATHS) {
     if (existingDecisionPaths.has(relativePath)) {
