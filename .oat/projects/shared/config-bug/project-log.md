@@ -112,6 +112,10 @@ Fresh p01 re-review round 3 passed with zero findings; p01 is approved for merge
 
 Merged reviewed p01 then p02 branches into root. Integrated CLI suite passed 3342/3342; lint, type-check, skill validation, build, and formatting passed after asset-generating checks were rerun serially.
 
+### 2026-07-24 · structural · oat-project-implement · p03-hill-readiness-review1
+
+Automatic p03 HiLL readiness review found one Important stale lifecycle-page claim outside the planned five-page scope; expanded p03 to six pages before approval.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

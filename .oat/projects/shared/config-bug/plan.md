@@ -409,7 +409,7 @@ git commit -m "fix(p02-t02): block sync through symlinked provider parents"
 
 ## Phase 3: Documentation, Release, and Integrated Verification
 
-Before dispatching p03, the root reviews the five target pages against the
+Before dispatching p03, the root reviews the six target pages against the
 implemented behavior, presents the concrete substantive documentation delta to
 the user, and records approval in `implementation.md`. The phase implementer
 must not start p03-t01 without that recorded approval. Rejection or requested
@@ -427,6 +427,7 @@ mid-task.
 - Modify: `apps/oat-docs/docs/cli-utilities/config-and-local-state.md`
 - Modify: `apps/oat-docs/docs/provider-sync/providers.md`
 - Modify: `apps/oat-docs/docs/reference/troubleshooting.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
 - Modify: `apps/oat-docs/index.md` (generated)
 - Modify: `packages/cli/package.json`
 - Modify: `packages/control-plane/package.json`
@@ -457,6 +458,9 @@ Confirm `implementation.md` records the root-owned approval. Document `tools.*`
 as project installation state, `oat tools has` as effective availability,
 lifecycle reconciliation behavior, and provider-parent symlink refusal and
 recovery. Remove claims that shared config represents user-scope availability.
+Update both lifecycle-guide references to `oat-project-document` so they name
+`oat tools has project-management` as the effective runtime check rather than
+the shared `tools.project-management` snapshot.
 Then run:
 
 ```bash
@@ -484,6 +488,7 @@ pnpm exec oxfmt --write \
   "apps/oat-docs/docs/cli-utilities/config-and-local-state.md" \
   "apps/oat-docs/docs/provider-sync/providers.md" \
   "apps/oat-docs/docs/reference/troubleshooting.md" \
+  "apps/oat-docs/docs/workflows/projects/lifecycle.md" \
   "apps/oat-docs/index.md" \
   "packages/cli/package.json" \
   "packages/control-plane/package.json" \
@@ -518,6 +523,7 @@ git add .agents/skills/oat-agent-instructions-analyze/SKILL.md \
   apps/oat-docs/docs/cli-utilities \
   apps/oat-docs/docs/provider-sync/providers.md \
   apps/oat-docs/docs/reference/troubleshooting.md \
+  apps/oat-docs/docs/workflows/projects/lifecycle.md \
   apps/oat-docs/index.md \
   packages/cli/package.json \
   packages/control-plane/package.json \
@@ -550,6 +556,7 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 | 2         | OAT reviewer | Clean                    | No further action                                                                       |
 | 3         | OAT reviewer | 3 Important and 1 Medium | Finalized metadata, safety tests, build verification, and docs approval ownership       |
 | 4         | OAT reviewer | Clean                    | Quick-start exit gate passed                                                            |
+| 5         | OAT reviewer | 1 Important              | Added the stale lifecycle capability page to the p03 approval and implementation scope  |
 
 ## Implementation Complete
 
