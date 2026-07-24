@@ -189,9 +189,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                | Actual / Accepted                                              | Reason                                                                                                | Source of Truth | Follow-up                              |
-| ------------- | --------------- | ----------------------------------- | -------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- | --------------- | -------------------------------------- |
-| p01-t03       | plan.md         | Skill and skill-contract files only | Added `.agents/docs/autonomy-contract.md` to the task boundary | Canonical skill text changes stable prompt-site hashes enforced by the phase-wide gate-inventory test | Updated plan.md | Refresh mappings in bounded p01 repair |
+| Task / Review | Source Artifact | Planned / Documented                | Actual / Accepted                                                  | Reason                                                                                                                    | Source of Truth                     | Follow-up                                                                |
+| ------------- | --------------- | ----------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------ |
+| p01-t03       | plan.md         | Skill and skill-contract files only | Added `.agents/docs/autonomy-contract.md` to the task boundary     | Canonical skill text changes stable prompt-site hashes enforced by the phase-wide gate-inventory test                     | Updated plan.md                     | Refresh mappings in bounded p01 repair                                   |
+| p01 review 1  | plan.md         | Parent install reconciliation only  | Added direct brainstorm command and test files to p01-t01 boundary | Legacy child config persistence runs before the parent reconciler and creates an empty shared config on user-only install | Updated plan.md and review artifact | Remove child persistence and add user/project direct-install regressions |
 
 ## Test Results
 

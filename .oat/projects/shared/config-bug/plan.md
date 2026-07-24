@@ -67,6 +67,8 @@ validation must execute against the merged result.
   `packages/cli/src/commands/tools/shared/project-tools-config.test.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.ts`
 - Modify: `packages/cli/src/commands/init/tools/index.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.ts`
+- Modify: `packages/cli/src/commands/init/tools/brainstorm/index.test.ts`
 - Modify: `packages/cli/src/commands/tools/install/index.test.ts`
 - Modify: `packages/cli/src/commands/tools/update/index.ts`
 - Modify: `packages/cli/src/commands/tools/update/config-write.test.ts`
@@ -87,6 +89,7 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
   src/commands/tools/update/config-write.test.ts \
   src/commands/tools/remove/config-write.test.ts \
   src/commands/init/tools/index.test.ts \
+  src/commands/init/tools/brainstorm/index.test.ts \
   src/commands/tools/install/index.test.ts
 ```
 
@@ -111,6 +114,8 @@ pnpm exec oxfmt --write \
   "packages/cli/src/commands/tools/shared/project-tools-config.test.ts" \
   "packages/cli/src/commands/init/tools/index.ts" \
   "packages/cli/src/commands/init/tools/index.test.ts" \
+  "packages/cli/src/commands/init/tools/brainstorm/index.ts" \
+  "packages/cli/src/commands/init/tools/brainstorm/index.test.ts" \
   "packages/cli/src/commands/tools/install/index.test.ts" \
   "packages/cli/src/commands/tools/update/index.ts" \
   "packages/cli/src/commands/tools/update/config-write.test.ts" \
@@ -521,15 +526,15 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                              |
-| ------ | -------- | ------- | ---------- | ------------------------------------- |
-| p01    | code     | pending | -          | -                                     |
-| p02    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p02-code-review.md |
-| p03    | code     | pending | -          | -                                     |
-| final  | code     | pending | -          | -                                     |
-| spec   | artifact | pending | -          | -                                     |
-| design | artifact | pending | -          | -                                     |
-| plan   | artifact | passed  | 2026-07-24 | in-memory                             |
+| Scope  | Type     | Status      | Date       | Artifact                              |
+| ------ | -------- | ----------- | ---------- | ------------------------------------- |
+| p01    | code     | fixes_added | 2026-07-24 | reviews/2026-07-24-p01-code-review.md |
+| p02    | code     | passed      | 2026-07-24 | reviews/2026-07-24-p02-code-review.md |
+| p03    | code     | pending     | -          | -                                     |
+| final  | code     | pending     | -          | -                                     |
+| spec   | artifact | pending     | -          | -                                     |
+| design | artifact | pending     | -          | -                                     |
+| plan   | artifact | passed      | 2026-07-24 | in-memory                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

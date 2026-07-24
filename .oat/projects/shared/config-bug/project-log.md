@@ -64,6 +64,10 @@ Resumed original p01 implementer for bounded verification repair; original reque
 
 Accepted root-owned reviewer dispatch bb6fa687-3a3f-4340-a551-08d0b947bfef for eea4313d..22ae71c5 after one bounded verification repair.
 
+### 2026-07-24 · structural · oat-project-implement · p01-review1
+
+Review found one Important direct-brainstorm config-persistence defect; bounded fix loop 1 added from reviews/2026-07-24-p01-code-review.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
