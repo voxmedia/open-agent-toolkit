@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p03'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p03'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: true
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -56,41 +56,42 @@ oat_workflow_origin: native # native | imported
 #   receive_completed: false
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
-oat_docs_updated: null # null | skipped | complete — documentation sync status
+oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-23T22:58:06.264Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-24T14:44:43Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-24T14:47:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: config-bug
 
-**Status:** Plan
+**Status:** Implementation closeout
 **Started:** 2026-07-23
-**Last Updated:** 2026-07-23
+**Last Updated:** 2026-07-24
 
 ## Current Phase
 
-Plan - Resolving dispatch and review policy
+Implementation - Final review reconciliation
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (in_progress)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (complete)
+- **Implementation:** `implementation.md` (6/6 tasks complete; final re-review pending)
 
 ## Progress
 
-- ✓ Discovery started
-- ✓ Execution artifacts scaffolded
 - ✓ Discovery complete
-- ✓ Lightweight design drafted
 - ✓ Lightweight design approved
-- ⧗ Plan review and policy setup in progress
+- ✓ Plan approved
+- ✓ Phases p01, p02, and p03 implemented, reviewed, and merged
+- ✓ p03 HiLL checkpoint approved
+- ✓ Final integrated verification passed
+- ⧗ Final review bookkeeping fix awaiting re-review
 
 ## Blockers
 
@@ -98,4 +99,4 @@ None
 
 ## Next Milestone
 
-Complete plan review and hand off to implementation
+Pass final lifecycle re-review and close implementation

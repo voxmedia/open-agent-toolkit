@@ -39,7 +39,7 @@ oat_generated: false
 **Status:** complete
 **Started:** 2026-07-24
 
-### Phase Summary (fill when phase is complete)
+### Phase Summary
 
 **Outcome (what changed):**
 
@@ -72,24 +72,34 @@ oat_generated: false
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Install, update, and remove now reconcile shared `tools.*` exclusively from
+  project-scoped canonical assets.
+- Direct brainstorm installs use parent reconciliation and cannot create shared
+  config for user-only state.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/tools/shared/project-tools-config.ts` - centralized
+  deterministic reconciliation and write suppression.
+- `packages/cli/src/commands/init/tools/index.ts` - parent post-action ownership
+  for aggregate and direct pack installs.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused reconciliation and direct-command tests, full CLI suite, lint,
+  type-check, formatting, and skill validation.
+- Result: passed, including two bounded review-fix loops and a clean p01
+  re-review.
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- Effective availability remains runtime-derived; shared config intentionally
+  records project installation state only.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- Legacy child persistence and stubbed command regressions were found during
+  review; both were removed and replaced with real-action tests.
 
 ---
 
@@ -100,7 +110,8 @@ oat_generated: false
 
 **Notes:**
 
-- {Notes will be added during implementation}
+- `oat tools has` reports valid negative availability as exit 0; invalid pack
+  names exit 1 and scanner/runtime failures exit 2.
 
 ---
 
@@ -182,7 +193,17 @@ _- Outstanding Items_
 
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+### Run 1 — 2026-07-24
+
+| Phase | Outcome                                                             |
+| ----- | ------------------------------------------------------------------- |
+| p01   | Merged after two review-fix loops and clean re-review               |
+| p02   | Merged after a clean phase review                                   |
+| p03   | Approved at HiLL, merged after boundary correction and clean review |
+
+**Parallel group:** `[p01, p02]`
+
+**Outstanding:** Final lifecycle artifact reconciliation and re-review.
 
 <!-- orchestration-runs-end -->
 
@@ -198,7 +219,7 @@ Chronological log of implementation progress.
 
 - [x] p01: Project pack state and effective capability - merged and reviewed
 - [x] p02: Provider mutation safety - merged and reviewed
-- [ ] p03-t01: Correct bundled guidance and validate release - at HiLL
+- [x] p03: Correct bundled guidance and validate release - merged and reviewed
 
 **What changed (high level):**
 
@@ -239,7 +260,7 @@ Chronological log of implementation progress.
 
 - None.
 
-**Session End:** {time}
+**Session End:** 14:45 UTC
 
 ---
 
@@ -270,27 +291,45 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Project-only shared tool-pack reconciliation across install, update, and
+  remove, plus the effective `oat tools has` capability query.
+- Provider mutation ancestry safety across planning and execution.
+- Corrected canonical skill guidance, six documentation pages, and lockstep
+  `0.2.15` public package metadata.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- User-only tool packs no longer set shared repository capability flags.
+- Workflows can detect project-plus-user availability without mutating config.
+- Provider sync refuses unsafe symlinked or non-directory parent paths before
+  mutation and explains recovery.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/commands/tools/shared/project-tools-config.ts` - project
+  installation snapshot reconciliation.
+- `packages/cli/src/commands/tools/has/` - effective availability command.
+- `packages/cli/src/engine/provider-path-safety.ts` - provider mutation boundary.
+- `apps/oat-docs/docs/cli-utilities/tool-packs.md` - public command and state
+  semantics.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- 3,343 CLI tests, lint, type-check, 61-skill validation, repository formatting,
+  workspace build, docs build, and five-package release validation passed.
+- Independent p01, p02, and p03 reviews passed; the final implementation review
+  found no code defects.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Direct brainstorm persistence and real-action tests were added to the p01
+  boundary after review.
+- The lifecycle docs page, bundled version contract, and generated public
+  version asset were added when readiness/validation exposed stale dependents.
+- Fumadocs source index generation replaced the MkDocs-only nav command.
 
 ## References
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
