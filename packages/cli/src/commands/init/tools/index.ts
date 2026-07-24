@@ -7,6 +7,10 @@ import {
   type GlobalOptions,
   type ScopeSelectionMode,
 } from '@app/command-context';
+import {
+  buildDecisionAgentsSectionBody,
+  DECISION_AGENTS_SECTION_KEY,
+} from '@commands/decision/agents-guidance';
 import { copyDirWithStatus } from '@commands/init/tools/shared/copy-helpers';
 import { applyGitignore } from '@commands/local/apply';
 import { addLocalPaths } from '@commands/local/manage';
@@ -1317,6 +1321,13 @@ export async function runInitTools(
           buildProjectManagementAgentsSectionBody(),
         )
       : null;
+    const decisionSectionResult = selectedPacks.includes('project-management')
+      ? await dependencies.upsertAgentsMdSection(
+          projectRoot,
+          DECISION_AGENTS_SECTION_KEY,
+          buildDecisionAgentsSectionBody(),
+        )
+      : null;
     // Migrate: remove legacy <!-- OAT workflows --> section if present
     await dependencies.removeAgentsMdSection(projectRoot, 'workflows');
 
@@ -1332,6 +1343,15 @@ export async function runInitTools(
     ) {
       context.logger.info(
         `AGENTS.md project-management section ${projectManagementSectionResult.action}.`,
+      );
+    }
+    if (
+      !context.json &&
+      decisionSectionResult !== null &&
+      decisionSectionResult.action !== 'no-change'
+    ) {
+      context.logger.info(
+        `AGENTS.md decisions section ${decisionSectionResult.action}.`,
       );
     }
 

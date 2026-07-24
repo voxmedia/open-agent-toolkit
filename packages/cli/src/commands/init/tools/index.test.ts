@@ -1,5 +1,6 @@
 import type { CommandContext, GlobalOptions } from '@app/command-context';
 import { createLoggerCapture } from '@commands/__tests__/helpers';
+import { buildDecisionAgentsSectionBody } from '@commands/decision/agents-guidance';
 import type {
   MultiSelectChoice,
   SelectChoice,
@@ -1165,14 +1166,14 @@ describe('createInitToolsCommand', () => {
     );
   });
 
-  it('writes tool-pack and project-management AGENTS sections', async () => {
+  it('writes tool-pack, project-management, and decision AGENTS sections', async () => {
     const { command, upsertAgentsMdSection } = createHarness({
       interactive: false,
     });
 
     await runCommand(command, [], ['--scope', 'all']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(2);
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
     expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
       1,
       '/tmp/workspace',
@@ -1183,6 +1184,12 @@ describe('createInitToolsCommand', () => {
       2,
       '/tmp/workspace',
       'project-management',
+      expect.stringContaining('### Project Management'),
+    );
+    expect(upsertAgentsMdSection).toHaveBeenNthCalledWith(
+      3,
+      '/tmp/workspace',
+      'decisions',
       expect.stringContaining('### Decision Records'),
     );
   });
@@ -1276,7 +1283,7 @@ describe('createInitToolsCommand', () => {
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(2);
+    expect(upsertAgentsMdSection).toHaveBeenCalledTimes(3);
     const body = upsertAgentsMdSection.mock.calls[0]?.[2] as string;
     expect(body).toContain('_(user scope)_');
     expect(body).toContain('`~/.agents/skills/`');
@@ -1764,19 +1771,22 @@ describe('buildToolPacksSectionBody', () => {
     expect(body).not.toContain('configured HiLL checkpoint');
   });
 
-  it('builds the project-management routing and decision guidance', () => {
-    const body = buildProjectManagementAgentsSectionBody();
+  it('builds independent project-management and decision guidance', () => {
+    const projectManagementBody = buildProjectManagementAgentsSectionBody();
+    const decisionBody = buildDecisionAgentsSectionBody();
 
-    expect(body).toContain('### Project Management');
-    expect(body).toContain('.oat/repo/AGENTS.md');
-    expect(body).toContain('`pjm/` for active state');
-    expect(body).toContain('`reference/` for durable records');
-    expect(body).toContain('### Decision Records');
-    expect(body).toContain('.oat/repo/reference/decisions/index.md');
-    expect(body).toContain('oat-pjm-decision');
-    expect(body).toContain('oat decision new');
-    expect(body).toContain('oat pjm init');
-    expect(body).toContain('oat decision regenerate-index');
+    expect(projectManagementBody).toContain('### Project Management');
+    expect(projectManagementBody).toContain('.oat/repo/AGENTS.md');
+    expect(projectManagementBody).toContain('`pjm/` for active state');
+    expect(projectManagementBody).toContain('`reference/` for durable records');
+    expect(projectManagementBody).toContain('oat pjm init');
+    expect(projectManagementBody).not.toContain('### Decision Records');
+
+    expect(decisionBody).toContain('### Decision Records');
+    expect(decisionBody).toContain('.oat/repo/reference/decisions/index.md');
+    expect(decisionBody).toContain('oat-pjm-decision');
+    expect(decisionBody).toContain('oat decision new');
+    expect(decisionBody).toContain('oat decision regenerate-index');
   });
 
   it('keeps PJM guidance out of the tool-pack listing section', () => {

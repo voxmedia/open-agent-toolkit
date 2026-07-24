@@ -10,6 +10,8 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { initializeDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
+import { initializeDecisionRecords } from '@commands/decision/init';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { initializeRepoReference, INSTRUCTIONS_SYNC_HINT } from './init';
@@ -54,6 +56,7 @@ const EXPECTED_FILES = [
   'pjm/backlog/completed.md',
   'pjm/backlog/items/.gitkeep',
   'pjm/backlog/archived/.gitkeep',
+  'reference/decisions/AGENTS.md',
   'reference/decisions/index.md',
 ] as const;
 
@@ -199,6 +202,38 @@ describe('initializeRepoReference', () => {
 
     expect(second.created).toEqual([]);
     expect(second.skipped).toEqual(EXPECTED_FILES);
+  });
+
+  it('composes with an existing standalone decision scaffold', async () => {
+    const projectRoot = await mkdtemp(join(tmpdir(), 'oat-pjm-init-'));
+    tempDirs.push(projectRoot);
+    const assetsRoot = join(projectRoot, 'assets');
+    const repoRoot = join(projectRoot, '.oat', 'repo');
+    const decisionsRoot = join(repoRoot, 'reference', 'decisions');
+    await seedTemplates(join(assetsRoot, 'templates'));
+    await initializeDecisionRecords(decisionsRoot);
+    await initializeDecisionAgentsGuidance({
+      projectRoot,
+      decisionsRoot,
+    });
+    const standaloneGuidance = await readFile(
+      join(decisionsRoot, 'AGENTS.md'),
+      'utf8',
+    );
+
+    const result = await initializeRepoReference({ assetsRoot, repoRoot });
+
+    expect(result.skipped).toContain('reference/decisions/AGENTS.md');
+    expect(result.skipped).toContain('reference/decisions/index.md');
+    await expect(
+      readFile(join(decisionsRoot, 'AGENTS.md'), 'utf8'),
+    ).resolves.toBe(standaloneGuidance);
+    await expect(
+      access(join(repoRoot, 'reference', 'AGENTS.md')),
+    ).resolves.toBeUndefined();
+    await expect(
+      access(join(repoRoot, 'pjm', 'current-state.md')),
+    ).resolves.toBeUndefined();
   });
 
   it('prefers repo-local templates and falls back to bundled assets', async () => {

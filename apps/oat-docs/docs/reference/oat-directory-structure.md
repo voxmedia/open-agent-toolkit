@@ -246,12 +246,16 @@ operational layer (`pjm/`) from durable references (`reference/`):
   reference/
     AGENTS.md
     decisions/
+      AGENTS.md
+      index.md
 ```
 
 Decisions are file-per-record under `reference/decisions/` (managed with the
 `oat decision` command group), replacing the legacy single
 `reference/decision-record.md`. Repos still on the old single-`reference/`
-layout migrate with `oat pjm migrate`.
+layout migrate with `oat pjm migrate`. Running `oat decision init` by itself
+creates the `decisions/` subtree and decision-specific AGENTS guidance without
+creating the broader `pjm/` surface.
 
 ## User scope (`~/.oat/`)
 

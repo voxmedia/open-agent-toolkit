@@ -12,6 +12,7 @@ function createHarness(): {
   capture: LoggerCapture;
   command: Command;
   createDecisionRecord: ReturnType<typeof vi.fn>;
+  initializeDecisionAgentsGuidance: ReturnType<typeof vi.fn>;
   initializeDecisionRecords: ReturnType<typeof vi.fn>;
   migrateDecisionRecords: ReturnType<typeof vi.fn>;
   regenerateDecisionIndex: ReturnType<typeof vi.fn>;
@@ -19,6 +20,10 @@ function createHarness(): {
   resolveProjectRoot: ReturnType<typeof vi.fn>;
 } {
   const capture = createLoggerCapture();
+  const initializeDecisionAgentsGuidance = vi.fn(async () => ({
+    root: 'created' as const,
+    scoped: 'created' as const,
+  }));
   const initializeDecisionRecords = vi.fn(async (decisionsRoot: string) => ({
     decisionsRoot,
     created: ['index.md'],
@@ -64,6 +69,7 @@ function createHarness(): {
       logger: capture.logger,
     }),
     createDecisionRecord,
+    initializeDecisionAgentsGuidance,
     initializeDecisionRecords,
     migrateDecisionRecords,
     regenerateDecisionIndex,
@@ -75,6 +81,7 @@ function createHarness(): {
     capture,
     command,
     createDecisionRecord,
+    initializeDecisionAgentsGuidance,
     initializeDecisionRecords,
     migrateDecisionRecords,
     regenerateDecisionIndex,
@@ -119,20 +126,57 @@ describe('createDecisionCommand', () => {
   });
 
   it('initializes the default decisions root resolved from the project root', async () => {
-    const { command, capture, initializeDecisionRecords } = createHarness();
+    const {
+      command,
+      capture,
+      initializeDecisionAgentsGuidance,
+      initializeDecisionRecords,
+    } = createHarness();
 
     await runCommand(command, 'init', ['--json']);
 
     expect(initializeDecisionRecords).toHaveBeenCalledWith(
       '/tmp/workspace/repo/.oat/repo/reference/decisions',
     );
+    expect(initializeDecisionAgentsGuidance).toHaveBeenCalledWith({
+      projectRoot: '/tmp/workspace/repo',
+      decisionsRoot: '/tmp/workspace/repo/.oat/repo/reference/decisions',
+    });
     expect(capture.jsonPayloads[0]).toEqual({
       status: 'ok',
       decisionsRoot: '/tmp/workspace/repo/.oat/repo/reference/decisions',
       created: ['index.md'],
       skipped: [],
+      guidance: {
+        root: 'created',
+        scoped: 'created',
+      },
     });
     expect(process.exitCode).toBe(0);
+  });
+
+  it('reports a decision init failure when AGENTS guidance cannot be written', async () => {
+    const {
+      command,
+      capture,
+      initializeDecisionAgentsGuidance,
+      initializeDecisionRecords,
+    } = createHarness();
+    initializeDecisionAgentsGuidance.mockRejectedValueOnce(
+      new Error('permission denied'),
+    );
+
+    await runCommand(command, 'init', ['--json']);
+
+    expect(initializeDecisionRecords).toHaveBeenCalledOnce();
+    expect(capture.jsonPayloads).toEqual([
+      {
+        status: 'error',
+        message:
+          'Decision index initialized at /tmp/workspace/repo/.oat/repo/reference/decisions, but AGENTS.md guidance could not be written: permission denied. Fix the guidance write error and rerun `oat decision init`.',
+      },
+    ]);
+    expect(process.exitCode).toBe(1);
   });
 
   it('regenerates the managed decision index', async () => {
