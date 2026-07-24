@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-24
-oat_current_task_id: p01-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,44 +24,51 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | in_progress | 3     | 0/3       |
-| p02   | pending     | 2     | 0/2       |
-| p03   | pending     | 1     | 0/1       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p01   | complete | 3     | 3/3       |
+| p02   | complete | 2     | 2/2       |
+| p03   | pending  | 1     | 0/1       |
 
-**Total:** 0/6 tasks completed
+**Total:** 5/6 tasks completed
 
 ---
 
 ## Phase 1: Project Pack State and Effective Capability
 
-**Status:** in_progress
+**Status:** complete
 **Started:** 2026-07-24
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Shared `tools.*` state now derives only from project-scoped canonical assets.
+- `oat tools has` reports effective project-plus-user pack availability without
+  mutating config.
+- Pack-gated canonical skills now use the effective capability query.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/commands/tools/shared/project-tools-config.ts` - central
+  project-only config reconciliation.
+- `packages/cli/src/commands/tools/has/` - effective capability query.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused p01 tests, full CLI suite, lint, type-check, skill validation,
+  and formatting.
+- Result: passed; final p01 re-review passed with zero findings.
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Direct brainstorm installs delegate persistence ownership to the parent
+  reconciler; real-action regressions guard that boundary.
 
 ### Task p01-t01: Reconcile shared config from project scope
 
-**Status:** in_progress
-**Commit:** -
+**Status:** complete
+**Commit:** `5448bff7`, `22ae71c5`, `fc1a974c`, `20a43135`
 
 **Outcome (required when completed):**
 
@@ -88,8 +95,8 @@ oat_generated: false
 
 ### Task p01-t02: Add effective pack capability query
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `8cf4173f`
 
 **Notes:**
 
@@ -99,27 +106,41 @@ oat_generated: false
 
 ### Task p01-t03: Migrate pack-gated canonical skills
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `298e1a8e`
 
 ---
 
 ## Phase 2: Provider Mutation Safety
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-24
+
+### Phase Summary
+
+**Outcome:**
+
+- Provider planning and execution reject mutation paths with symlinked or
+  non-directory ancestors.
+- Whole-plan preflight and per-entry checks protect against ancestry swaps and
+  partial application.
+
+**Verification:**
+
+- Focused engine tests and the full CLI suite passed.
+- Independent p02 review passed with zero findings.
 
 ### Task p02-t01: Add generic provider path safety guard
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `f56bf030`
 
 ---
 
 ### Task p02-t02: Enforce path safety in sync planning and execution
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `cc7e2f39`
 
 ---
 
@@ -159,8 +180,9 @@ Chronological log of implementation progress.
 
 **Session Start:** 11:47 UTC
 
-- [ ] p01-t01: Reconcile shared config from project scope - in progress
-- [ ] p02-t01: Add generic provider path safety guard - parallel phase pending dispatch
+- [x] p01: Project pack state and effective capability - merged and reviewed
+- [x] p02: Provider mutation safety - merged and reviewed
+- [ ] p03-t01: Correct bundled guidance and validate release - at HiLL
 
 **What changed (high level):**
 
@@ -171,6 +193,8 @@ Chronological log of implementation progress.
   installs no longer create shared config.
 - Completed p01 review-fix loop 2 in `20a43135`; command-path regressions now
   execute the real brainstorm action.
+- Merged p01 and p02 in plan order after their independent reviews passed.
+- Integrated validation passed after serializing asset-generating checks.
 
 **Decisions:**
 
@@ -203,11 +227,12 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| p01   | -         | -      | -      | -        |
-| p02   | -         | -      | -      | -        |
-| p03   | -         | -      | -      | -        |
+| Phase  | Tests Run                          | Passed | Failed | Coverage                        |
+| ------ | ---------------------------------- | ------ | ------ | ------------------------------- |
+| p01    | Focused + full CLI + quality       | Pass   | 0      | Planned p01 surface             |
+| p02    | Focused + full CLI + quality       | Pass   | 0      | Planned p02 surface             |
+| merged | Full CLI + lint/type/skills/format | 3342   | 0      | Integrated p01+p02 branch state |
+| p03    | -                                  | -      | -      | Pending                         |
 
 ## Final Summary (for PR/docs)
 

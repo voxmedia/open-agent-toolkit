@@ -108,6 +108,10 @@ Accepted fresh p01 re-review round 3 dispatch 8cfb4587-500e-4483-b158-a7e35dfdfe
 
 Fresh p01 re-review round 3 passed with zero findings; p01 is approved for merge.
 
+### 2026-07-24 · structural · oat-project-implement · p01-p02-group-merge
+
+Merged reviewed p01 then p02 branches into root. Integrated CLI suite passed 3342/3342; lint, type-check, skill validation, build, and formatting passed after asset-generating checks were rerun serially.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
