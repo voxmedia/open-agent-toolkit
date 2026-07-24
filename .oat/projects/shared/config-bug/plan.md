@@ -38,7 +38,7 @@ oxfmt/oxlint.
 - [x] Evaluated phases for parallelism opportunities
 - [x] Set `oat_plan_parallel_groups` in frontmatter
 - [x] Resolve project dispatch policy
-- [ ] Configure optional phase gate review
+- [x] Configure optional phase gate review
 - [ ] Complete plan artifact review
 
 ## Parallelism
