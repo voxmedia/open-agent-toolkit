@@ -1,5 +1,6 @@
 import { Command } from 'commander';
 
+import { createToolsHasCommand } from './has';
 import { createToolsInfoCommand } from './info';
 import { createToolsInstallCommand } from './install';
 import { createToolsListCommand } from './list';
@@ -15,6 +16,7 @@ export function createToolsCommand(): Command {
   cmd.addCommand(createToolsListCommand());
   cmd.addCommand(createToolsOutdatedCommand());
   cmd.addCommand(createToolsInfoCommand());
+  cmd.addCommand(createToolsHasCommand());
   cmd.addCommand(createToolsUpdateCommand());
   cmd.addCommand(createToolsRemoveCommand());
   cmd.addCommand(createToolsInstallCommand());
