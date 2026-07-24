@@ -169,6 +169,8 @@ Chronological log of implementation progress.
   baselines passed.
 - Completed p01 review-fix loop 1 in `fc1a974c`; direct user-only brainstorm
   installs no longer create shared config.
+- Completed p01 review-fix loop 2 in `20a43135`; command-path regressions now
+  execute the real brainstorm action.
 
 **Decisions:**
 
