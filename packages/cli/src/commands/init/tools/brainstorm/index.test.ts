@@ -5,7 +5,6 @@ import {
 } from '@commands/__tests__/helpers';
 import { getInstalledCanonicalPaths } from '@commands/tools/shared/install-sync-context';
 import type { ToolInfo } from '@commands/tools/shared/types';
-import type { OatConfig } from '@config/oat-config';
 import type { Scope } from '@shared/types';
 import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -27,7 +26,6 @@ interface HarnessOptions {
     }>;
   };
   scanToolsResults?: ToolInfo[];
-  oatConfig?: OatConfig;
 }
 
 function createHarness(options: HarnessOptions = {}): {
@@ -39,13 +37,9 @@ function createHarness(options: HarnessOptions = {}): {
   installBrainstorm: ReturnType<typeof vi.fn>;
   confirmAction: ReturnType<typeof vi.fn>;
   scanTools: ReturnType<typeof vi.fn>;
-  readOatConfig: ReturnType<typeof vi.fn>;
-  writeOatConfig: ReturnType<typeof vi.fn>;
-  configWrites: OatConfig[];
 } {
   const capture = createLoggerCapture();
   const confirmResponses = [...(options.confirmResponses ?? [])];
-  const configWrites: OatConfig[] = [];
 
   const resolveProjectRoot = vi.fn(async () => '/tmp/workspace');
   const resolveScopeRoot = vi.fn(
@@ -69,12 +63,6 @@ function createHarness(options: HarnessOptions = {}): {
       return all.filter((tool) => tool.scope === scanOptions.scope);
     },
   );
-  const readOatConfig = vi.fn(
-    async () => options.oatConfig ?? ({ version: 1 } satisfies OatConfig),
-  );
-  const writeOatConfig = vi.fn(async (_repoRoot: string, config: OatConfig) => {
-    configWrites.push(config);
-  });
 
   const command = createInitToolsBrainstormCommand({
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
@@ -93,8 +81,6 @@ function createHarness(options: HarnessOptions = {}): {
     installBrainstorm,
     confirmAction,
     scanTools,
-    readOatConfig,
-    writeOatConfig,
   });
 
   return {
@@ -106,9 +92,6 @@ function createHarness(options: HarnessOptions = {}): {
     installBrainstorm,
     confirmAction,
     scanTools,
-    readOatConfig,
-    writeOatConfig,
-    configWrites,
   };
 }
 
@@ -258,45 +241,24 @@ describe('createInitToolsBrainstormCommand', () => {
     expect(process.exitCode).toBe(0);
   });
 
-  it('writes tools.brainstorm: true to config on successful install', async () => {
-    const { command, configWrites, writeOatConfig } = createHarness();
+  it('records a user install for parent-level reconciliation', async () => {
+    const { command } = createHarness();
 
     await runCommand(command, [], ['--scope', 'user']);
 
-    expect(writeOatConfig).toHaveBeenCalledTimes(1);
-    expect(configWrites[0]).toMatchObject({
-      version: 1,
-      tools: { brainstorm: true },
-    });
+    expect(getInstalledCanonicalPaths(command)).not.toEqual([]);
     expect(process.exitCode).toBe(0);
   });
 
-  it('preserves existing tools config keys when writing brainstorm flag', async () => {
-    const { command, configWrites } = createHarness({
-      oatConfig: {
-        version: 1,
-        tools: { ideas: true, workflows: true },
-      },
-    });
-
-    await runCommand(command, [], ['--scope', 'user']);
-
-    expect(configWrites[0]?.tools).toEqual({
-      ideas: true,
-      workflows: true,
-      brainstorm: true,
-    });
-  });
-
-  it('does not write config when install is cancelled', async () => {
-    const { command, writeOatConfig } = createHarness({
+  it('does not record an install when overwrite is cancelled', async () => {
+    const { command } = createHarness({
       interactive: true,
       confirmResponses: [false],
     });
 
     await runCommand(command, ['--force'], ['--scope', 'project']);
 
-    expect(writeOatConfig).not.toHaveBeenCalled();
+    expect(getInstalledCanonicalPaths(command)).toEqual([]);
   });
 
   it('migration safety: prefers existing project install over user defaultScope', async () => {

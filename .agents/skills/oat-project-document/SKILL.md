@@ -1,11 +1,11 @@
 ---
 name: oat-project-document
-version: 1.6.1
+version: 1.6.2
 description: Use when the user requests or confirms documenting an active OAT project — e.g. "document the project", "update the docs", "run oat-project-document", or confirms a previously offered documentation run. Do NOT auto-invoke when implementation completes. Analyzes project artifacts, presents a documentation delta plan, and applies approved changes.
 argument-hint: '[project-path] [--auto]'
 disable-model-invocation: false
 user-invocable: true
-allowed-tools: Read, Write, Edit, Bash(git:*), Glob, Grep, AskUserQuestion, Skill
+allowed-tools: Read, Write, Edit, Bash(git:*), Bash(oat tools:*), Glob, Grep, AskUserQuestion, Skill
 ---
 
 # Project Documentation Sync
@@ -159,10 +159,10 @@ Store resolved values for use in later steps. Do not write auto-detected values 
 
 ### Step 1: Check for PJM Infrastructure
 
-Check whether the project-management tool pack is installed by reading config:
+Check whether the project-management tool pack is effectively available:
 
 ```bash
-PJM_INSTALLED=$(oat config get tools.project-management 2>/dev/null || echo "false")
+PJM_INSTALLED=$(oat tools has project-management 2>/dev/null || echo "false")
 ```
 
 **If `PJM_INSTALLED` is `true`:**

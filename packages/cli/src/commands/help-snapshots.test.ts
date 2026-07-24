@@ -1275,6 +1275,7 @@ describe('help output snapshots', () => {
         list [options]           List installed tools with version and status
         outdated [options]       Show tools with available updates
         info [options] <name>    Show details for an installed tool
+        has [options] <pack>     Check whether a bundled tool pack is available
         update [options] [name]  Update installed tools to bundled versions
         remove [options] [name]  Remove installed tools
         install [options]        Install OAT tool packs (core, ideas, docs,
@@ -1449,6 +1450,31 @@ describe('help output snapshots', () => {
 
       Arguments:
         name             Tool name
+
+      Options:
+        --scope <scope>  Limit execution scope (choices: "project", "user", "all",
+                         default: "all")
+        -h, --help       display help for command
+
+      Global Options:
+        -V, --version    output the version number
+        --json           Output a single JSON document
+        --verbose        Enable verbose debug output
+        --cwd <path>     Override working directory
+      "
+    `);
+  });
+
+  it('tools has --help matches snapshot', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, ['tools', 'has']).helpInformation();
+    expect(help).toMatchInlineSnapshot(`
+      "Usage: oat tools has [options] <pack>
+
+      Check whether a bundled tool pack is available
+
+      Arguments:
+        pack             Bundled tool pack name
 
       Options:
         --scope <scope>  Limit execution scope (choices: "project", "user", "all",
