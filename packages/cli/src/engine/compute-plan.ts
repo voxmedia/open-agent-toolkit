@@ -34,6 +34,7 @@ import type {
   SyncPlanEntry,
 } from './engine.types';
 import { OAT_DIRECTORY_SENTINEL, OAT_MARKER_PREFIX } from './markers';
+import { assertSafeProviderMutationPath } from './provider-path-safety';
 import type { CanonicalEntry } from './scanner';
 
 interface ComputeSyncPlanArgs {
@@ -600,6 +601,7 @@ export async function computeSyncPlan({
           ? 'copy'
           : (manifestEntry?.strategy ?? mappingStrategy);
 
+        await assertSafeProviderMutationPath(entryScopeRoot, providerPath);
         const operation = await classifyOperation(
           canonicalEntry,
           providerPath,
@@ -652,11 +654,13 @@ export async function computeSyncPlan({
       activeMappingsByProvider.get(manifestEntry.provider) ?? []
     ).some((mapping) => manifestEntryInsideMapping(manifestEntry, mapping));
 
-    removals.push(
-      mappingStillExists
-        ? createRemovalEntry(manifestEntry, scopeRoot)
-        : await classifyObsoleteMappingRetirement(manifestEntry, scopeRoot),
-    );
+    const removal = mappingStillExists
+      ? createRemovalEntry(manifestEntry, scopeRoot)
+      : await classifyObsoleteMappingRetirement(manifestEntry, scopeRoot);
+    if (removal.operation === 'remove') {
+      await assertSafeProviderMutationPath(scopeRoot, removal.providerPath);
+    }
+    removals.push(removal);
   }
 
   return { scope, entries, removals };

@@ -9,7 +9,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
 
 import { computeFileHash } from '@manifest/hash';
 import { createEmptyManifest, loadManifest } from '@manifest/manager';
@@ -273,6 +273,173 @@ description: React components
     await expect(
       lstat(join(root, '.claude', 'skills', 'skill-one')),
     ).rejects.toThrow();
+  });
+
+  it.each([
+    ['create_symlink', 'symlink'],
+    ['update_symlink', 'symlink'],
+    ['create_copy', 'copy'],
+    ['update_copy', 'copy'],
+    ['remove', 'symlink'],
+  ] as const)(
+    'refuses %s when an existing provider parent is a symlink',
+    async (operation, strategy) => {
+      const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+      const external = await mkdtemp(
+        join(tmpdir(), 'oat-execute-plan-external-'),
+      );
+      tempDirs.push(root, external);
+      const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+      await seedCanonical(root, 'skill-one', 'canonical-before');
+      await mkdir(join(root, '.claude'), { recursive: true });
+      await symlink(external, join(root, '.claude', 'skills'), 'dir');
+
+      const isExistingOperation =
+        operation === 'update_symlink' ||
+        operation === 'update_copy' ||
+        operation === 'remove';
+      if (isExistingOperation) {
+        await mkdir(join(external, 'skill-one'), { recursive: true });
+        await writeFile(
+          join(external, 'skill-one', 'SKILL.md'),
+          'external-before',
+          'utf8',
+        );
+      }
+
+      const entry = createEntry(root, 'skill-one', operation, strategy);
+      const plan =
+        operation === 'remove'
+          ? createPlan(
+              [],
+              [
+                {
+                  ...entry,
+                  operation: 'remove',
+                },
+              ],
+            )
+          : createPlan([entry]);
+
+      await expect(
+        executeSyncPlan(plan, createEmptyManifest(), manifestPath),
+      ).rejects.toThrow(/symbolic link/i);
+
+      await expect(
+        readFile(
+          join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+          'utf8',
+        ),
+      ).resolves.toBe('canonical-before');
+      if (isExistingOperation) {
+        await expect(
+          readFile(join(external, 'skill-one', 'SKILL.md'), 'utf8'),
+        ).resolves.toBe('external-before');
+      } else {
+        await expect(lstat(join(external, 'skill-one'))).rejects.toMatchObject({
+          code: 'ENOENT',
+        });
+      }
+      await expect(lstat(manifestPath)).rejects.toMatchObject({
+        code: 'ENOENT',
+      });
+    },
+  );
+
+  it('preflights the whole plan before applying any entry', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    const external = await mkdtemp(
+      join(tmpdir(), 'oat-execute-plan-external-'),
+    );
+    tempDirs.push(root, external);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    await seedCanonical(root, 'safe-skill', 'safe-canonical-before');
+    await seedCanonical(root, 'unsafe-skill', 'unsafe-canonical-before');
+    await mkdir(join(root, '.cursor', 'skills'), { recursive: true });
+    await mkdir(join(root, '.claude'), { recursive: true });
+    await symlink(external, join(root, '.claude', 'skills'), 'dir');
+    await mkdir(dirname(manifestPath), { recursive: true });
+    await writeFile(manifestPath, 'manifest-before', 'utf8');
+
+    const safeEntry = {
+      ...createEntry(root, 'safe-skill', 'create_copy', 'copy'),
+      provider: 'cursor',
+      providerPath: join(root, '.cursor', 'skills', 'safe-skill'),
+    };
+    const unsafeEntry = createEntry(
+      root,
+      'unsafe-skill',
+      'create_symlink',
+      'symlink',
+    );
+
+    await expect(
+      executeSyncPlan(
+        createPlan([safeEntry, unsafeEntry]),
+        createEmptyManifest(),
+        manifestPath,
+      ),
+    ).rejects.toThrow(/symbolic link/i);
+
+    await expect(
+      lstat(join(root, '.cursor', 'skills', 'safe-skill')),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await expect(lstat(join(external, 'unsafe-skill'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(
+      readFile(
+        join(root, '.agents', 'skills', 'safe-skill', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('safe-canonical-before');
+    await expect(
+      readFile(
+        join(root, '.agents', 'skills', 'unsafe-skill', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('unsafe-canonical-before');
+    await expect(readFile(manifestPath, 'utf8')).resolves.toBe(
+      'manifest-before',
+    );
+  });
+
+  it('revalidates ancestry after preflight and before the first mutation', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-execute-plan-'));
+    const external = await mkdtemp(
+      join(tmpdir(), 'oat-execute-plan-external-'),
+    );
+    tempDirs.push(root, external);
+    const manifestPath = join(root, '.oat', 'sync', 'manifest.json');
+    const providerParent = join(root, '.claude', 'skills');
+    await seedCanonical(root, 'skill-one', 'canonical-before');
+    await mkdir(providerParent, { recursive: true });
+
+    const result = await executeSyncPlan(
+      createPlan([createEntry(root, 'skill-one', 'create_copy', 'copy')]),
+      createEmptyManifest(),
+      manifestPath,
+      {
+        beforeFirstMutation: async () => {
+          await rm(providerParent, { recursive: true, force: true });
+          await symlink(external, providerParent, 'dir');
+        },
+      },
+    );
+
+    expect(result).toEqual({ applied: 0, failed: 1, skipped: 0 });
+    await expect(lstat(join(external, 'skill-one'))).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+    await expect(
+      readFile(
+        join(root, '.agents', 'skills', 'skill-one', 'SKILL.md'),
+        'utf8',
+      ),
+    ).resolves.toBe('canonical-before');
+    await expect(loadManifest(manifestPath)).resolves.toMatchObject({
+      entries: [],
+    });
   });
 
   it('detaches manifest ownership without deleting the provider path', async () => {

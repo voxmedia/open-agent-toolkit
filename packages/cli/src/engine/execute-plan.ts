@@ -13,6 +13,24 @@ import type { Manifest, ManifestEntry } from '@manifest/manifest.types';
 
 import type { SyncPlan, SyncPlanEntry, SyncResult } from './engine.types';
 import { insertMarker, writeDirectorySentinel } from './markers';
+import { assertSafeProviderMutationPath } from './provider-path-safety';
+
+interface ExecuteSyncPlanDependencies {
+  beforeFirstMutation?: () => Promise<void>;
+}
+
+const DEFAULT_EXECUTE_SYNC_PLAN_DEPENDENCIES: ExecuteSyncPlanDependencies = {};
+
+function mutatesProviderPath(entry: SyncPlanEntry): boolean {
+  return entry.operation !== 'skip' && entry.operation !== 'detach';
+}
+
+async function assertSafeEntryProviderPath(
+  entry: SyncPlanEntry,
+): Promise<void> {
+  const scopeRoot = inferScopeRoot(resolve(entry.canonical.canonicalPath));
+  await assertSafeProviderMutationPath(scopeRoot, entry.providerPath);
+}
 
 export function inferScopeRoot(canonicalPath: string): string {
   const normalizedPath = canonicalPath.replaceAll('\\', '/');
@@ -184,14 +202,22 @@ export async function executeSyncPlan(
   plan: SyncPlan,
   manifest: Manifest,
   manifestPath: string,
+  dependencies: ExecuteSyncPlanDependencies = DEFAULT_EXECUTE_SYNC_PLAN_DEPENDENCIES,
 ): Promise<SyncResult> {
   let nextManifest = manifest;
+  let beforeFirstMutationCalled = false;
   const result: SyncResult = {
     applied: 0,
     failed: 0,
     skipped: 0,
   };
   const operations = [...plan.entries, ...plan.removals];
+
+  for (const operation of operations) {
+    if (mutatesProviderPath(operation)) {
+      await assertSafeEntryProviderPath(operation);
+    }
+  }
 
   for (const operation of operations) {
     if (operation.operation === 'skip') {
@@ -201,6 +227,13 @@ export async function executeSyncPlan(
     }
 
     try {
+      if (mutatesProviderPath(operation)) {
+        if (!beforeFirstMutationCalled) {
+          beforeFirstMutationCalled = true;
+          await dependencies.beforeFirstMutation?.();
+        }
+        await assertSafeEntryProviderPath(operation);
+      }
       nextManifest = await applyEntry(operation, nextManifest);
       result.applied += 1;
     } catch {
