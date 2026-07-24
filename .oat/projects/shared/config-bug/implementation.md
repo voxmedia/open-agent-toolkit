@@ -2,15 +2,15 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-23
+oat_last_updated: 2026-07-24
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
 
 # Implementation: config-bug
 
-**Started:** 2026-07-23
-**Last Updated:** 2026-07-23
+**Started:** 2026-07-24
+**Last Updated:** 2026-07-24
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -24,19 +24,20 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 3     | 0/3       |
+| p02   | pending     | 2     | 0/2       |
+| p03   | pending     | 1     | 0/1       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/6 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Project Pack State and Effective Capability
 
 **Status:** in_progress
-**Started:** 2026-07-23
+**Started:** 2026-07-24
 
 ### Phase Summary (fill when phase is complete)
 
@@ -57,10 +58,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Reconcile shared config from project scope
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -85,7 +86,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add effective pack capability query
 
 **Status:** pending
 **Commit:** -
@@ -96,12 +97,38 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Migrate pack-gated canonical skills
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Provider Mutation Safety
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Add generic provider path safety guard
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Enforce path safety in sync planning and execution
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Documentation, Release, and Integrated Verification
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Correct bundled guidance and validate the public release
 
 **Status:** pending
 **Commit:** -
@@ -128,38 +155,31 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 Chronological log of implementation progress.
 
-### 2026-07-23
+### 2026-07-24
 
-**Session Start:** {time}
+**Session Start:** 11:47 UTC
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
+- [ ] p01-t01: Reconcile shared config from project scope - in progress
+- [ ] p02-t01: Add generic provider path safety guard - parallel phase pending dispatch
 
 **What changed (high level):**
 
-- {short bullets suitable for PR/docs}
+- Initialized the approved plan with final-phase HiLL and auto-review settings.
 
 **Decisions:**
 
-- {Decision made and rationale}
+- Execute independent p01 and p02 file boundaries through the declared parallel
+  group before the root-owned p03 documentation approval checkpoint.
 
 **Follow-ups / TODO:**
 
-- {anything discovered during implementation that should be captured for later}
+- None.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
+- None.
 
 **Session End:** {time}
-
----
-
-### 2026-07-23
-
-**Session Start:** {time}
-
-{Continue log...}
 
 ---
 
@@ -177,8 +197,9 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
+| p03   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
