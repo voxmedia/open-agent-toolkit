@@ -30,6 +30,7 @@ export {
   OAT_MARKER_PREFIX,
   writeDirectorySentinel,
 } from './markers';
+export { assertSafeProviderMutationPath } from './provider-path-safety';
 export type { CanonicalEntry } from './scanner';
 export {
   scanBundledManagedAgents,
