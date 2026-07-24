@@ -547,18 +547,19 @@ git commit -m "docs(p03-t01): correct bundled guidance and release docs"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                                  |
-| ------ | -------- | ------- | ---------- | ----------------------------------------- |
-| p01    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p01-code-rereview-3.md |
-| p02    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p02-code-review.md     |
-| p03    | code     | passed  | 2026-07-24 | reviews/2026-07-24-p03-code-review.md     |
-| final  | code     | pending | -          | -                                         |
-| spec   | artifact | pending | -          | -                                         |
-| design | artifact | pending | -          | -                                         |
-| plan   | artifact | passed  | 2026-07-24 | in-memory                                 |
+| Scope  | Type     | Status   | Date       | Artifact                                  |
+| ------ | -------- | -------- | ---------- | ----------------------------------------- |
+| p01    | code     | passed   | 2026-07-24 | reviews/2026-07-24-p01-code-rereview-3.md |
+| p02    | code     | passed   | 2026-07-24 | reviews/2026-07-24-p02-code-review.md     |
+| p03    | code     | passed   | 2026-07-24 | reviews/2026-07-24-p03-code-review.md     |
+| final  | code     | received | 2026-07-24 | reviews/2026-07-24-final-code-review.md   |
+| spec   | artifact | n/a      | 2026-07-24 | quick mode — no spec required             |
+| design | artifact | passed   | 2026-07-24 | reviews/2026-07-24-final-code-review.md   |
+| plan   | artifact | passed   | 2026-07-24 | in-memory                                 |
 
 **Status values:** `pending` → `received` → `fixes_added` →
-`fixes_completed` → `passed`
+`fixes_completed` → `passed`; `n/a` applies to workflow artifacts not required
+by the selected mode.
 
 ### Artifact Review
 
