@@ -19,7 +19,7 @@ import {
 } from '@commands/tools/shared/auto-sync';
 import { reconcileProjectToolsConfig } from '@commands/tools/shared/project-tools-config';
 import { scanTools } from '@commands/tools/shared/scan-tools';
-import type { ToolInfo } from '@commands/tools/shared/types';
+import type { PackName, ToolInfo } from '@commands/tools/shared/types';
 import { readOatConfig, writeOatConfig } from '@config/oat-config';
 import { resolveAssetsRoot } from '@fs/assets';
 import { fileExists } from '@fs/io';
