@@ -165,6 +165,8 @@ Chronological log of implementation progress.
 **What changed (high level):**
 
 - Initialized the approved plan with final-phase HiLL and auto-review settings.
+- Bootstrapped clean p01 and p02 worktrees from `eea4313d` after full CLI
+  baselines passed.
 
 **Decisions:**
 
