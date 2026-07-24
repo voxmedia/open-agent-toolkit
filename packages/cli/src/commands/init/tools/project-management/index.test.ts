@@ -187,7 +187,7 @@ describe('createInitToolsProjectManagementCommand — scope conflict rejection',
     );
     expect(upsertAgentsMdSection).toHaveBeenCalledWith(
       '/test/project',
-      'project-management',
+      'decisions',
       expect.stringContaining('### Decision Records'),
     );
   });

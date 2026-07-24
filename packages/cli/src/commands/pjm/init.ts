@@ -2,6 +2,7 @@ import { access, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { initializeBacklog } from '@commands/backlog/init';
+import { initializeScopedDecisionAgentsGuidance } from '@commands/decision/agents-guidance';
 import { initializeDecisionRecords } from '@commands/decision/init';
 import { stripTemplateFrontmatter } from '@commands/shared/strip-template-frontmatter';
 
@@ -46,7 +47,11 @@ const BACKLOG_PATHS = [
   'pjm/backlog/archived/.gitkeep',
 ] as const;
 
-const DECISION_PATHS = ['reference/decisions/index.md'] as const;
+const DECISION_AGENTS_PATH = 'reference/decisions/AGENTS.md';
+const DECISION_PATHS = [
+  DECISION_AGENTS_PATH,
+  'reference/decisions/index.md',
+] as const;
 
 export const CANONICAL_REPO_REFERENCE_PATHS = [
   ...TEMPLATE_TARGETS.map((target) => target.target),
@@ -177,6 +182,11 @@ export async function initializeRepoReference(
   await initializeDecisionRecords(
     join(options.repoRoot, 'reference', 'decisions'),
   );
+  if (!existingDecisionPaths.has(DECISION_AGENTS_PATH)) {
+    await initializeScopedDecisionAgentsGuidance(
+      join(options.repoRoot, 'reference', 'decisions'),
+    );
+  }
 
   for (const relativePath of DECISION_PATHS) {
     if (existingDecisionPaths.has(relativePath)) {

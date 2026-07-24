@@ -4,6 +4,10 @@ import {
   type GlobalOptions,
 } from '@app/command-context';
 import {
+  buildDecisionAgentsSectionBody,
+  DECISION_AGENTS_SECTION_KEY,
+} from '@commands/decision/agents-guidance';
+import {
   type UpsertSectionResult,
   upsertAgentsMdSection,
 } from '@commands/shared/agents-md';
@@ -95,15 +99,25 @@ export function createInitToolsProjectManagementCommand(
           });
           didInstall = true;
 
-          let agentsGuidanceAction: UpsertSectionResult['action'] | undefined;
+          let projectManagementGuidanceAction:
+            | UpsertSectionResult['action']
+            | undefined;
+          let decisionGuidanceAction: UpsertSectionResult['action'] | undefined;
           let agentsGuidanceWarning: string | undefined;
           try {
-            const agentsGuidanceResult = await upsertAgentsMdSection(
+            const projectManagementGuidanceResult = await upsertAgentsMdSection(
               targetRoot,
               PROJECT_MANAGEMENT_AGENTS_SECTION_KEY,
               buildProjectManagementAgentsSectionBody(),
             );
-            agentsGuidanceAction = agentsGuidanceResult.action;
+            projectManagementGuidanceAction =
+              projectManagementGuidanceResult.action;
+            const decisionGuidanceResult = await upsertAgentsMdSection(
+              targetRoot,
+              DECISION_AGENTS_SECTION_KEY,
+              buildDecisionAgentsSectionBody(),
+            );
+            decisionGuidanceAction = decisionGuidanceResult.action;
           } catch (error) {
             const message =
               error instanceof Error ? error.message : String(error);
@@ -131,11 +145,19 @@ export function createInitToolsProjectManagementCommand(
               `Templates: copied=${result.copiedTemplates.length}, updated=${result.updatedTemplates.length}, skipped=${result.skippedTemplates.length}`,
             );
             if (
-              agentsGuidanceAction !== undefined &&
-              agentsGuidanceAction !== 'no-change'
+              projectManagementGuidanceAction !== undefined &&
+              projectManagementGuidanceAction !== 'no-change'
             ) {
               context.logger.info(
-                `AGENTS.md project-management section ${agentsGuidanceAction}.`,
+                `AGENTS.md project-management section ${projectManagementGuidanceAction}.`,
+              );
+            }
+            if (
+              decisionGuidanceAction !== undefined &&
+              decisionGuidanceAction !== 'no-change'
+            ) {
+              context.logger.info(
+                `AGENTS.md decisions section ${decisionGuidanceAction}.`,
               );
             }
             if (agentsGuidanceWarning !== undefined) {

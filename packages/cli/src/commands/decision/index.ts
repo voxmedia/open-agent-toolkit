@@ -6,6 +6,7 @@ import { resolveAssetsRoot } from '@fs/assets';
 import { resolveProjectRoot } from '@fs/paths';
 import { Command } from 'commander';
 
+import { initializeDecisionAgentsGuidance } from './agents-guidance';
 import { initializeDecisionRecords } from './init';
 import { migrateDecisionRecords } from './migrate';
 import { createDecisionRecord } from './new';
@@ -38,6 +39,7 @@ interface DecisionCommandDependencies {
   buildCommandContext: typeof buildCommandContext;
   resolveProjectRoot: typeof resolveProjectRoot;
   resolveAssetsRoot: typeof resolveAssetsRoot;
+  initializeDecisionAgentsGuidance: typeof initializeDecisionAgentsGuidance;
   initializeDecisionRecords: typeof initializeDecisionRecords;
   regenerateDecisionIndex: typeof regenerateDecisionIndex;
   createDecisionRecord: typeof createDecisionRecord;
@@ -48,6 +50,7 @@ const DEFAULT_DEPENDENCIES: DecisionCommandDependencies = {
   buildCommandContext,
   resolveProjectRoot,
   resolveAssetsRoot,
+  initializeDecisionAgentsGuidance,
   initializeDecisionRecords,
   regenerateDecisionIndex,
   createDecisionRecord,
@@ -120,9 +123,23 @@ export function createDecisionCommand(
         );
         const result =
           await dependencies.initializeDecisionRecords(decisionsRoot);
+        let guidance;
+        try {
+          guidance = await dependencies.initializeDecisionAgentsGuidance({
+            projectRoot,
+            decisionsRoot,
+          });
+        } catch (error) {
+          const message =
+            error instanceof Error ? error.message : String(error);
+          throw new Error(
+            `Decision index initialized at ${result.decisionsRoot}, but AGENTS.md guidance could not be written: ${message}. Fix the guidance write error and rerun \`oat decision init\`.`,
+            { cause: error },
+          );
+        }
 
         if (context.json) {
-          context.logger.json({ status: 'ok', ...result });
+          context.logger.json({ status: 'ok', ...result, guidance });
         } else {
           context.logger.info(
             `Initialized decision scaffold at ${result.decisionsRoot}`,
@@ -135,6 +152,9 @@ export function createDecisionCommand(
               `Skipped existing: ${result.skipped.join(', ')}`,
             );
           }
+          context.logger.info(
+            `AGENTS.md guidance: root=${guidance.root}, decisions=${guidance.scoped}`,
+          );
         }
         process.exitCode = 0;
       } catch (error) {

@@ -140,6 +140,8 @@ The canonical surface splits active operational state (under `pjm/`) from durabl
 
 Decisions are now file-per-record under `reference/decisions/` (created and indexed with the [`oat decision`](config-and-local-state.md#oat-decision-) command group), replacing the legacy single `decision-record.md`. Repos still on the old `reference/` layout can migrate with `oat pjm migrate`.
 
+For decision records without the broader PJM surface, run `oat decision init` directly. It creates only the decision directory, generated index, and decision-specific AGENTS guidance; it does not require the `project-management` pack or create current state, roadmap, and backlog artifacts. If the pack is installed later, its root guidance is maintained as a separate managed section so the decision instructions remain independently reusable.
+
 `oat pjm init` is idempotent and non-destructive. Existing reference docs are skipped and left unchanged, so curated repo state is not overwritten on repeated runs.
 
 Run `oat pjm doctor` to check an existing surface after the `project-management` pack is enabled: it reports missing canonical files, leftover template frontmatter, and legacy/loose/second-roadmap drift, and accepts `--json` for machine-readable output. When the pack is disabled or not configured, doctor reports PJM as disabled and skips drift checks. The same gated checks also run under project-scope `oat doctor`.

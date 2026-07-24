@@ -85,7 +85,7 @@ For full project-management repo-reference setup, use [`oat pjm init`](tool-pack
 
 Use the `oat decision` group for file-per-record decisions under `.oat/repo/reference/decisions/`. Each decision is its own file with a deterministic `DR-YYMMDD-slug` ID (the slug is capped at 30 characters at the last whole-word boundary, with trailing stop-words trimmed), and the human-facing index is a committed generated view.
 
-- `oat decision init` - scaffold `.oat/repo/reference/decisions/` and the managed decision index
+- `oat decision init` - scaffold `.oat/repo/reference/decisions/`, the managed decision index, decision-scoped `AGENTS.md` guidance, and an idempotent `OAT decisions` section in the repository-root `AGENTS.md`
 - `oat decision new <title>` - create a new decision record; supports `--status`, `--context`, `--decision`, `--consequences`, and `--created-at`
 - `oat decision regenerate-index` - rebuild the managed decision index table from record frontmatter
 - `oat decision migrate` - convert a legacy single `decision-record.md` into file-per-record decisions, preserving each old `ADR-NNN`/`DR-NNN` ID as `legacy_id`; applies by default, so pass `--dry-run` to preview the legacy-to-new mappings without writing, and `--delete-legacy` to remove the source file after a verified migration (unlike `oat pjm migrate`, which defaults to dry-run)
@@ -93,6 +93,8 @@ Use the `oat decision` group for file-per-record decisions under `.oat/repo/refe
 Pass `--context`, `--decision`, and `--consequences` together when creating a resolved decision so every substantive template section is complete in the same atomic creation step. Callers that omit them retain the template's placeholder content for later editing.
 
 The decision index uses managed marker pairs and is deterministic, so an index merge conflict can be resolved by re-running `oat decision regenerate-index` and staging the result. Decision records replace the legacy single `decision-record.md`; repos still on the old layout migrate with `oat decision migrate` (or the broader `oat pjm migrate`).
+
+`oat decision init` is the lightweight standalone setup path. It does not require the `project-management` tool pack and does not create current state, roadmap, or backlog artifacts. Its AGENTS guidance uses `oat decision` directly while also recognizing `oat-pjm-decision` when that optional skill is installed later.
 
 ## `oat local ...`
 

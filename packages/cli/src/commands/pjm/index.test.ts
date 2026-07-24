@@ -33,6 +33,7 @@ const EXPECTED_FILES = [
   'pjm/backlog/completed.md',
   'pjm/backlog/items/.gitkeep',
   'pjm/backlog/archived/.gitkeep',
+  'reference/decisions/AGENTS.md',
   'reference/decisions/index.md',
 ] as const;
 
