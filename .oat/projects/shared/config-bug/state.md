@@ -56,6 +56,17 @@ oat_implement_exit_gate:
   receive_completed: false
   failure: null
   updated_at: '2026-07-24T14:54:04Z'
+oat_post_implement_sequence:
+  status: pre_approval
+  source: configured
+  final_phase: p03
+  pre_approval: [summary, document, pr]
+  pre_approval_completed: []
+  approval: pending
+  approval_source: null
+  post_approval: []
+  post_approval_completed: []
+  failure: null
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
