@@ -115,6 +115,47 @@ describe('resolveGlobalCliInstallerInvocation', () => {
     });
   });
 
+  it('passes the pnpm global store dir when the running CLI is pnpm-managed', () => {
+    const modulesYaml =
+      '/Users/me/Library/pnpm/global/5/node_modules/.modules.yaml';
+    expect(
+      resolveGlobalCliInstallerInvocation('@open-agent-toolkit/cli@1.2.3', {
+        argv: [
+          '/Users/me/Library/pnpm/oat',
+          '/Users/me/Library/pnpm/global/5/node_modules/@open-agent-toolkit/cli/dist/index.js',
+        ],
+        env: {},
+        platform: 'linux',
+        nodeExecutable: '/usr/bin/node',
+        fileExists: (path) => path === modulesYaml,
+        readFile: () => 'storeDir: /Users/me/Library/pnpm/store/v10\n',
+      }),
+    ).toEqual({
+      file: 'pnpm',
+      args: [
+        'add',
+        '-g',
+        '@open-agent-toolkit/cli@1.2.3',
+        '--store-dir',
+        '/Users/me/Library/pnpm/store/v10',
+      ],
+    });
+    expect(
+      formatGlobalCliInstallCommand(
+        '@open-agent-toolkit/cli@1.2.3',
+        [
+          '/Users/me/Library/pnpm/oat',
+          '/Users/me/Library/pnpm/global/5/node_modules/@open-agent-toolkit/cli/dist/index.js',
+        ],
+        {},
+        (path) => path === modulesYaml,
+        () => 'storeDir: /Users/me/Library/pnpm/store/v10\n',
+      ),
+    ).toBe(
+      'pnpm add -g @open-agent-toolkit/cli@1.2.3 --store-dir /Users/me/Library/pnpm/store/v10',
+    );
+  });
+
   it('launches the npm JavaScript CLI through Node on Windows', () => {
     const npmCliPath = 'C:\\npm\\node_modules\\npm\\bin\\npm-cli.js';
     expect(
