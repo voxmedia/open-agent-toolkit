@@ -31,6 +31,14 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.15` separates repository installation state from effective runtime
+  availability: shared `.oat/config.json#tools` now reconciles only
+  project-scoped canonical assets across install, update, and remove, while
+  `oat tools has <pack>` reports current project-plus-user availability for
+  workflow routing. Provider sync also validates destination ancestry during
+  planning, whole-plan preflight, and immediately before each mutation,
+  refusing symlinked or non-directory parents without changing canonical
+  content, external targets, or manifest ownership.
 - CLI `0.2.14` splits portable model-selection guidance from dispatch
   mechanics. The user-invocable `subagent-orchestration` skill owns five task
   classes, provider-specific dated selection matrices, evidence refresh, and
