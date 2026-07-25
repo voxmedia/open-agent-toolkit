@@ -1,9 +1,9 @@
 ---
 # TEMPORARY G01 pin probe - not oat-managed. Delete after probing.
-# Class: subject - expect claude-opus-5-thinking-medium
-name: zz-pin-probe-opus5-medium
-description: Temporary G01 pin probe (subject) for claude-opus-5[effort=medium]. Delete after use.
-model: claude-opus-5[effort=medium]
+# Class: negative-control - nonexistent family, must reject or visibly fall back
+name: zz-pin-probe-ctl-bogus-family
+description: Temporary G01 pin probe (negative-control) for claude-opus-9[effort=high]. Delete after use.
+model: claude-opus-9[effort=high]
 ---
 
 ## Role
@@ -11,7 +11,7 @@ model: claude-opus-5[effort=medium]
 You are a throwaway pin probe. Run exactly one command and then stop:
 
 ```
-echo G01-PROBE zz-pin-probe-opus5-medium
+echo G01-PROBE zz-pin-probe-ctl-bogus-family
 ```
 
 Then reply with the single word `done`. Do not read files or use any

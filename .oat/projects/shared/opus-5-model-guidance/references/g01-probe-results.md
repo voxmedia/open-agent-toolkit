@@ -5,72 +5,109 @@ oat_status: pending
 
 # G01 Pin Probe Results
 
-**Status:** PENDING — awaiting operator probe runs.
+**Status:** PENDING — awaiting an operator probe run from the Cursor desktop app.
 
 ## Why this file exists
 
-`assertApprovedMapping` validates only the _shape_ of a mapping's `gateEvidence`
-(`packages/cli/src/providers/cursor/codec/materialize.ts:39-53`), so any mapping
-declaring `gate: 'g01'` and `disposition: 'approved'` will materialize whether or
-not it was ever verified. The actual authority lives outside the code:
+`DR-260718-explicit-cursor-pin-mapping` requires mapping-specific, native-launch
+evidence before a Cursor pin mapping may be marked `approved`. Structural
+validation is not evidence, and neither is an agent's claim about its own
+identity. This file records what Cursor itself reported.
 
-- `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md:307` — mapping-specific
-  native-launch evidence authorizes shipped mapping data.
-- `:314-317` — Cursor can silently fall back when account, plan, or administration
-  constraints prevent a pin, so accepting a variant is not model verification, and
-  self-report must not be promoted into observed identity.
+## Why the first run failed
 
-This file is that external evidence. Until it is filled in, no Cursor Opus 5 pin
-mapping, catalog entry, generated role variant, or dispatch-recommendation entry
-may be added by any future task.
+The first attempt ran through the `cursor-agent` CLI / remote runtime. Agent
+lifecycle hooks do not fire there, so no resolved model was ever emitted and
+every row recorded `not-reported`. This was re-tested and confirmed: a Task
+subagent launched from that runtime produced zero hook events.
 
-The `p01-*` through `p03-*` task IDs that originally consumed this gate were
-retired with the pre-synthesis plan; see `references/pre-synthesis-plan.md` for
-that historical scope. The gate itself is unchanged and still applies to
-whatever future task takes up the Cursor mapping work.
+A second channel was also ruled out. Cursor's subagent card label cannot
+distinguish thinking from non-thinking. The card rendered `Opus 5 Extra High`
+even though the catalog carries only `claude-opus-5-thinking-xhigh` at that
+rung and displays it as `Opus 5 1M Extra High Thinking`. The card label is
+built from the requested bracket parameters, so it may echo the request rather
+than report the resolution. It is not admissible as identity evidence.
 
-## How to read the observed model
+## Evidence channel
 
-Record what **Cursor** reports for the run — the model shown in the agent/run UI.
-Do **not** record what the agent says about itself. The probe bodies deliberately
-do not ask.
+Project hooks at `.cursor/hooks.json` invoke `.cursor/hooks/g01-capture.sh`,
+which appends every raw payload to `/tmp/g01-probe/hooks.jsonl`.
 
-## Results
+The authoritative field is `subagentStart.subagent_model` — "Model the subagent
+will use", per Cursor's hooks reference. Each probe also runs one `echo`, so
+`preToolUse` fires and may additionally carry `model_params` with explicit
+`thinking` and `effort` entries.
 
-| Probe agent                 | Bracket form submitted          | Observed model (Cursor-reported) | Accepted or fallback? | Thinking enabled? | Verdict |
-| --------------------------- | ------------------------------- | -------------------------------- | --------------------- | ----------------- | ------- |
-| `zz-pin-probe-opus5-low`    | `claude-opus-5[effort=low]`     |                                  |                       |                   |         |
-| `zz-pin-probe-opus5-medium` | `claude-opus-5[effort=medium]`  |                                  |                       |                   |         |
-| `zz-pin-probe-opus5-high`   | `claude-opus-5[effort=high]`    |                                  |                       |                   |         |
-| `zz-pin-probe-opus5-xhigh`  | `claude-opus-5[effort=xhigh]`   |                                  |                       |                   |         |
-| `zz-pin-probe-opus5-max`    | `claude-opus-5[effort=max]`     |                                  |                       |                   |         |
-| `zz-pin-probe-opus48-xhigh` | `claude-opus-4-8[effort=xhigh]` |                                  |                       |                   |         |
+## Why the catalog alone is insufficient
 
-**Verdict values:** `pass` (observed model matches intent, thinking enabled) /
+The live catalog (`cursor-agent models`) carries both a thinking and a
+non-thinking flat ID at low, medium, and high:
+
+| Rung   | Non-thinking ID        | Thinking ID                     |
+| ------ | ---------------------- | ------------------------------- |
+| low    | `claude-opus-5-low`    | `claude-opus-5-thinking-low`    |
+| medium | `claude-opus-5-medium` | `claude-opus-5-thinking-medium` |
+| high   | `claude-opus-5-high`   | `claude-opus-5-thinking-high`   |
+| xhigh  | _none_                 | `claude-opus-5-thinking-xhigh`  |
+| max    | _none_                 | `claude-opus-5-thinking-max`    |
+
+xhigh and max are therefore unambiguous. Low, medium, and high are not, and a
+wrong guess there ships a role that silently runs non-thinking with no error.
+
+## Subjects
+
+| Probe agent                 | Bracket form submitted          | Expected resolution              | `subagent_model` observed | `thinking` param | Verdict |
+| --------------------------- | ------------------------------- | -------------------------------- | ------------------------- | ---------------- | ------- |
+| `zz-pin-probe-opus5-low`    | `claude-opus-5[effort=low]`     | `claude-opus-5-thinking-low`     |                           |                  |         |
+| `zz-pin-probe-opus5-medium` | `claude-opus-5[effort=medium]`  | `claude-opus-5-thinking-medium`  |                           |                  |         |
+| `zz-pin-probe-opus5-high`   | `claude-opus-5[effort=high]`    | `claude-opus-5-thinking-high`    |                           |                  |         |
+| `zz-pin-probe-opus5-xhigh`  | `claude-opus-5[effort=xhigh]`   | `claude-opus-5-thinking-xhigh`   |                           |                  |         |
+| `zz-pin-probe-opus5-max`    | `claude-opus-5[effort=max]`     | `claude-opus-5-thinking-max`     |                           |                  |         |
+| `zz-pin-probe-opus48-xhigh` | `claude-opus-4-8[effort=xhigh]` | `claude-opus-4-8-thinking-xhigh` |                           |                  |         |
+
+## Controls
+
+Controls exist because six subjects all reporting their intended model would be
+equally consistent with a hook that reports true resolution and a hook that
+merely echoes the request. The controls discriminate between those two worlds.
+
+| Probe agent                     | Bracket form                   | Class            | Discriminates                                                                                                                                                                                                                                    |
+| ------------------------------- | ------------------------------ | ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zz-pin-probe-ctl-sonnet-high`  | `claude-sonnet-5[effort=high]` | positive control | Reproduces the prior project's hook-verified result `claude-sonnet-5-thinking-high`. Validates the harness itself.                                                                                                                               |
+| `zz-pin-probe-ctl-fable-xhigh`  | `claude-fable-5[effort=xhigh]` | negative control | Fable is tagged `(NO ZDR)` and this org runs `privacyMode=2`, so it is entitlement-blocked and previously fell back to `gpt-5.6-terra-medium`. **If the hook reports Fable anyway, the hook echoes the request and the entire channel is void.** |
+| `zz-pin-probe-ctl-bogus-family` | `claude-opus-9[effort=high]`   | negative control | Nonexistent family. Distinguishes hard rejection from silent fallback.                                                                                                                                                                           |
+| `zz-pin-probe-ctl-bogus-effort` | `claude-opus-5[effort=ultra]`  | negative control | Invalid effort value on a real family. Tests whether an unparseable rung degrades silently.                                                                                                                                                      |
+
+| Probe agent                     | `subagent_model` observed | Behaved as expected? |
+| ------------------------------- | ------------------------- | -------------------- |
+| `zz-pin-probe-ctl-sonnet-high`  |                           |                      |
+| `zz-pin-probe-ctl-fable-xhigh`  |                           |                      |
+| `zz-pin-probe-ctl-bogus-family` |                           |                      |
+| `zz-pin-probe-ctl-bogus-effort` |                           |                      |
+
+**Verdict values:** `pass` (resolved model matches intent with thinking on) /
 `fail-fallback` (silently resolved to another model) / `fail-nonthinking`
-(resolved to the non-thinking variant) / `fail-rejected` (definition not accepted).
+(resolved to the non-thinking twin) / `fail-rejected` (definition not accepted).
+
+## Gate rule
+
+The controls gate the subjects. If `ctl-fable-xhigh` reports Fable, or
+`ctl-sonnet-high` fails to reproduce `claude-sonnet-5-thinking-high`, the
+channel is not trustworthy and **no** subject row may be promoted regardless of
+what it reports.
+
+Only `pass` subject rows become mappings. Any dropped rung also loses its
+recommendation tier slot; adjust the expected catalog and recommendation counts
+downward rather than forcing them.
 
 ## Environment
 
 - **Probed at:** _(RFC3339 timestamp)_
-- **Cursor version:** _(from Cursor > About)_
-- **Account plan:** _(relevant because plan constraints can force fallback)_
-
-## Consequences
-
-Only `pass` rows may become catalog mappings.
-
-- A `fail-nonthinking` row at medium or high is the specific risk flagged in
-  `references/pre-synthesis-discovery.md`: the role would run at lower
-  capability with no error surfaced.
-- Any dropped rung also loses its recommendation tier slot. Adjust the expected
-  catalog and recommendation counts down to match the rungs that actually
-  passed rather than forcing a predetermined total.
-- If `claude-opus-4-8[effort=xhigh]` fails, the cyber-sensitive Cursor route stays
-  unmaterializable and `provider-cursor.md` must say so plainly instead of naming a
-  route that cannot be dispatched.
+- **Cursor version:** _(Cursor > About)_
+- **Runtime:** _(must be Cursor desktop Agent Chat; the CLI runtime emits no hooks)_
+- **Account plan:** _(plan constraints can force fallback)_
 
 ## Notes
 
-_(Anything surprising: rejected syntax, UI discrepancies, differences between the
-agent picker and the run record.)_
+_(Anything surprising: rejected syntax, UI discrepancies, differences between
+the agent picker and the run record.)_
