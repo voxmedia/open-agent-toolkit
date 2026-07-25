@@ -149,9 +149,12 @@ Use the valid signal to validate the review artifact's orchestration evidence:
   one compact account of every attempted wave: task class, classification
   rationale, selected target, acceptance/outcome, floor satisfaction, fallback,
   and primary reconciliation. Missing or incomplete evidence is an
-  incomplete-artifact error. After successful validation, append exactly once
-  through `oat project log append`, creating one concise structural entry that
-  references the review artifact path.
+  incomplete-artifact error. Record one concise structural entry referencing the
+  review artifact path, but **do not append it here**: carry it to the terminal
+  phase outcome and append it exactly once through `oat project log append` with
+  the phase-outcome entry. Appending at this point dirties the tracked log
+  before the bounded fix loop below dispatches a fix child, whose step 3
+  requires a clean worktree.
 - For `not-attempted`, the artifact must not contain
   `## Review Orchestration`; treat a present section as an inconsistent,
   incomplete artifact. Do not append a log entry and do not invoke
@@ -161,6 +164,10 @@ For the attempted branch, do not mirror individual worker records. Defer flags
 and entry format to `oat project log append --help`; never pre-check project-log
 configuration because the helper no-ops when logging is disabled. The reviewer
 and workers never write `project-log.md` or append this entry.
+
+No project-log write happens anywhere between a reviewer returning and a fix
+child being dispatched. The deferred orchestration entry is appended with the
+phase-outcome entry at Step 7 and committed by that step's bookkeeping.
 
 After successful signal and orchestration validation, validate the review
 artifact scope and commit range.

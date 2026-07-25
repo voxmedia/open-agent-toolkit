@@ -770,6 +770,29 @@ describe('post-implementation sequence contracts', () => {
       );
     });
 
+    it('keeps the executable review route from appending before a fix dispatch', () => {
+      // The entry file states the contract, but `phase-execution.md` is the
+      // route that runs. Asserting only the entry is how the immediate append
+      // survived the first pass.
+      const route = normalizeWhitespace(
+        readFileSync(
+          join(
+            import.meta.dirname,
+            '../../../../../../../.agents/skills/oat-project-implement/references/phase-execution.md',
+          ),
+          'utf8',
+        ),
+      );
+
+      expect(route).not.toMatch(
+        /After successful validation, append exactly once/i,
+      );
+      expect(route).toContain('do not append it here');
+      expect(route).toContain(
+        'No project-log write happens anywhere between a reviewer returning and a fix child being dispatched.',
+      );
+    });
+
     it('stages the project log conditionally in all three bookkeeping blocks', () => {
       const skill = readImplementSkill();
       const staging = skill.match(
