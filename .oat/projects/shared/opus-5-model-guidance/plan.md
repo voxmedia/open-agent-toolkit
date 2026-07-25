@@ -5,7 +5,7 @@ oat_blockers: []
 oat_last_updated: 2026-07-25
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
+oat_plan_hill_phases: ['p01'] # pause after Phase 1 so the operator can run the G01 pin probes
 oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
@@ -296,7 +296,91 @@ git commit -m "docs(p01-t04): bump subagent-orchestration skill to 1.1.0"
 
 ---
 
+### Task p01-t05: Prepare and run the G01 pin probes
+
+**Files:**
+
+- Create: `.cursor/agents/zz-pin-probe-<n>.md` (six temporary probe definitions, deleted in this task)
+- Create: `.oat/projects/shared/opus-5-model-guidance/references/g01-probe-results.md`
+
+**This task ends Phase 1 at a HiLL checkpoint.** The operator must run the
+probes; the implementer cannot.
+
+**Step 1: Understand why this task exists**
+
+`assertApprovedMapping` only validates the _shape_ of `gateEvidence`
+(`packages/cli/src/providers/cursor/codec/materialize.ts:39-53`) — any mapping
+declaring `gate: 'g01'` and `disposition: 'approved'` materializes. The real
+authority is external:
+`apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md:307` states that
+mapping-specific native-launch evidence authorizes shipped mapping data, and
+`:314-317` warns that Cursor can silently fall back when account or plan
+constraints prevent a pin, so acceptance of a variant is not model verification.
+
+Adding the six mappings without probes would fabricate approvals for routes that
+include consequential review, where a silent downgrade is most costly.
+
+**Step 2: Create the probe definitions**
+
+Write six minimal Cursor agent definitions, one per candidate bracket form:
+
+| Probe file          | `model:` frontmatter value      |
+| ------------------- | ------------------------------- |
+| `zz-pin-probe-1.md` | `claude-opus-5[effort=low]`     |
+| `zz-pin-probe-2.md` | `claude-opus-5[effort=medium]`  |
+| `zz-pin-probe-3.md` | `claude-opus-5[effort=high]`    |
+| `zz-pin-probe-4.md` | `claude-opus-5[effort=xhigh]`   |
+| `zz-pin-probe-5.md` | `claude-opus-5[effort=max]`     |
+| `zz-pin-probe-6.md` | `claude-opus-4-8[effort=xhigh]` |
+
+Keep each body trivial — the probe tests pin resolution, not behavior.
+
+**Step 3: HiLL — operator runs the probes**
+
+For each probe, launch it in Cursor and record the model **Cursor itself
+reports** for the run. Do **not** ask the agent what model it is: the contract at
+`dispatch-ceiling.md:316-317` explicitly forbids promoting self-report into
+observed identity.
+
+Record per probe: the bracket form submitted, the model Cursor reports, whether
+the definition was accepted or silently fell back, and whether the resolved
+variant is thinking-enabled. The last item is the assumption flagged in
+`discovery.md` that no other step can settle.
+
+**Step 4: Record results and decide the mapping set**
+
+Write `references/g01-probe-results.md` with one row per probe covering the
+bracket form, observed model, accepted-or-fallback, thinking state, date, and
+Cursor version.
+
+**Only mappings whose observed model matches the intent proceed to p02-t01.**
+Any probe that falls back or resolves non-thinking is dropped from the mapping
+set, and its tier slot in p02-t02 is dropped with it — adjust the expected
+counts in p02-t01 and p02-t02 accordingly rather than forcing 17/16.
+
+**Step 5: Clean up**
+
+```bash
+rm .cursor/agents/zz-pin-probe-*.md
+```
+
+Run: `pnpm run cli -- status --scope project`
+Expected: no unmanaged provider files remain.
+
+**Step 6: Commit**
+
+```bash
+git add .oat/projects/shared/opus-5-model-guidance/references/g01-probe-results.md
+git commit -m "docs(p01-t05): record G01 pin probe evidence"
+```
+
+---
+
 ## Phase 2: Cursor Pin Catalog and Dispatch Recommendation
+
+**Precondition:** p01-t05 is complete and
+`references/g01-probe-results.md` records a matching observed model for every
+mapping added below. Do not add a mapping without a passing probe row.
 
 Unlike Phase 1, this phase **does** change test expectations, because the
 affected assertions pin exact catalog contents and counts by design. Those are
@@ -337,10 +421,14 @@ In `catalog.ts`, add the six `approvedMapping(...)` entries using the
 `claude-effort` syntax family, and add `{ catalogue: false }` to the existing
 `claude-sonnet-5-high` mapping.
 
-Add a comment at the Opus 5 group recording the load-bearing assumption: the
-bracket form cannot express the thinking axis, so these pins rely on Cursor
-resolving `claude-opus-5[effort=...]` to the thinking-enabled variant. This is
-Anthropic's default and the only legal reading at xhigh and max.
+Add a comment at the Opus 5 group citing the probe evidence from p01-t05 —
+`references/g01-probe-results.md`, with its date — rather than asserting the
+mapping is correct. Note the thinking-axis limitation of the bracket form and
+that the probe is what resolved it.
+
+Pass an explicit `probeName` per mapping matching the recorded probe rather than
+relying on the `oat-pin-probe-<id>` default, so the code points at real
+evidence.
 
 Keep `claude-opus-4-8-thinking-xhigh` catalogued so the cyber-sensitive route in
 `provider-cursor.md` is materializable, while leaving it out of the bundled
@@ -548,8 +636,13 @@ git commit -m "chore(p03-t02): bump public packages to 0.2.18"
 
 **Files:**
 
-- Create: `.oat/repo/pjm/backlog/items/BL-260724-<slug>.md`
+- Create: `.oat/repo/pjm/backlog/items/<id>.md` (id returned by the CLI)
 - Modify: `.oat/repo/pjm/backlog/index.md` (regenerated)
+
+**Do not hardcode the date in the filename.** `oat backlog new` derives the
+`BL-YYMMDD-slug` id from the current **UTC** date
+(`packages/cli/src/commands/backlog/shared/generate-id.ts`), which can be a day
+ahead of the operator's local date. Capture the id from the command output.
 
 The active backlog root is `.oat/repo/pjm/backlog`, which is the CLI default and
 uses `BL-YYMMDD-slug` identifiers. Do not write to `.oat/repo/reference/backlog`
@@ -566,8 +659,12 @@ pnpm run cli -- backlog new "Rebalance the Cursor dispatch recommendation tiers"
   --priority medium \
   --scope task \
   --scope-estimate M \
-  --labels dispatch,cursor,model-guidance
+  --labels dispatch,cursor,model-guidance \
+  --json
 ```
+
+Capture the returned item path and reuse that exact value for the content edits
+and every verification below.
 
 Pass the body via `--description` or write it into the generated item file. The
 command writes the item and regenerates the managed index in one step, so no
@@ -603,7 +700,8 @@ Run: `rg -n "Rebalance the Cursor dispatch" .oat/repo/pjm/backlog/index.md`
 Expected: one match — the creation command already regenerated the index, so
 this confirms the result rather than re-running the mutation.
 
-Run: `rg -n "TBD|\{.*\}|Acceptance Criteria" .oat/repo/pjm/backlog/items/BL-260724-*.md`
+Run `rg -n "TBD|Acceptance Criteria" "$ITEM_PATH"` against the path the CLI
+returned.
 Expected: an `Acceptance Criteria` heading with no unresolved template
 placeholders beneath it.
 
@@ -643,12 +741,18 @@ overstepped an incumbent refresh.
 
 **Step 3: Commit**
 
-Only if formatting or lint produced changes:
+Only if formatting or lint produced changes. Inspect the diff first and stage
+the specific paths the formatter touched — do not use `git add -A`, which would
+absorb unrelated or generated files into a validation-only commit:
 
 ```bash
-git add -A
+git status --porcelain
+git add <the specific formatter-touched paths>
 git commit -m "chore(p03-t04): apply formatting and lint fixes"
 ```
+
+Where a fix-up clearly belongs to an earlier task's scope, prefer committing it
+under that task's scope instead.
 
 ---
 
@@ -656,16 +760,21 @@ git commit -m "chore(p03-t04): apply formatting and lint fixes"
 
 **Files:**
 
-- Create: `.oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+- Create: `.oat/projects/shared/opus-5-model-guidance/references/reverification.md`
 
 **Step 1: Write the record**
 
 Handoff item 6 requires a reverification entry conforming to the Reverification
 Record schema in
 `.agents/skills/subagent-orchestration/references/evidence-and-refresh.md`. It
-is written last so it records the validated final state, and it lives in the
-project `pr/` directory so `oat-project-pr-final` can lift it verbatim into the
-PR description.
+is written last so it records the validated final state.
+
+**Path matters.** Do **not** write this under the project's `pr/` directory —
+`.gitignore:74` excludes `.oat/**/pr/`, so the file could never be committed
+(confirm with `git ls-files '.oat/**/pr'`, which returns nothing). `references/`
+is tracked. `oat-project-pr-final` has no reverification input and will not lift
+this file automatically; whoever opens the PR copies its contents into the PR
+body as an explicit step.
 
 Every key in the schema must be present:
 
@@ -697,20 +806,34 @@ Required content beyond the bare schema:
 
 **Step 2: Verify**
 
-Run: `rg -c "verified_at|provider|harness_context|catalog_source|models_considered|controls_verified|sources|incumbent_changes|reason" .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
-Expected: every schema key present; no key missing.
+Assert each key independently rather than counting matching lines, so a missing
+key fails loudly:
 
-Run: `rg -n "thinking" .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
-Expected: at least one match documenting the unverified thinking-mode
-assumption.
+```bash
+REC=.oat/projects/shared/opus-5-model-guidance/references/reverification.md
+for k in verified_at provider harness_context catalog_source \
+         models_considered controls_verified sources incumbent_changes reason; do
+  rg -q "^\s*-?\s*${k}:" "$REC" || { echo "MISSING: $k"; exit 1; }
+done
+echo "all schema keys present"
+```
 
-Run: `pnpm exec oxfmt --check .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+Expected: `all schema keys present`.
+
+Run: `rg -c "^\s*-?\s*provider:" $REC`
+Expected: `2` — one entry for `claude`, one for `cursor`.
+
+Run: `rg -n "thinking" $REC`
+Expected: at least one match documenting the thinking-mode resolution and
+whether the p01-t05 probe confirmed it.
+
+Run: `pnpm exec oxfmt --check $REC`
 Expected: no formatting diff.
 
 **Step 3: Commit**
 
 ```bash
-git add .oat/projects/shared/opus-5-model-guidance/pr/reverification.md
+git add .oat/projects/shared/opus-5-model-guidance/references/reverification.md
 git commit -m "docs(p03-t05): record Opus 5 reverification entry"
 ```
 
@@ -745,11 +868,11 @@ git commit -m "docs(p03-t05): record Opus 5 reverification entry"
 
 **Summary:**
 
-- Phase 1: 4 tasks - Refresh the three dated guidance references and bump the canonical skill version
+- Phase 1: 5 tasks - Refresh the three dated guidance references, bump the canonical skill version, and run the G01 pin probes (HiLL checkpoint)
 - Phase 2: 2 tasks - Add six Cursor pin mappings, demote Sonnet 5 high, and rebalance the bundled recommendation
 - Phase 3: 5 tasks - Materialize role files, bump public packages in lockstep, file the backlog item, validate, and emit the reverification record
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
 Ready for code review and merge.
 
