@@ -39,6 +39,8 @@ canonical source is coherent.
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
+**Implementation status:** complete (5/5 tasks)
+
 ### Task p04-t01: Expand durable selection principles
 
 **Files:**

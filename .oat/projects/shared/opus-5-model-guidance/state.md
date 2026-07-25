@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: f62d01dd
+oat_current_task: p05-t01
+oat_last_commit: 609f0833
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T13:15:00Z'
+oat_project_state_updated: '2026-07-25T13:30:00Z'
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 4 canonical guidance integration (`p04-t05` next).
+Phase 4 complete — ready for Phase 5 packaging and validation.
 
 ## Artifacts
 
@@ -59,7 +59,8 @@ Phase 4 canonical guidance integration (`p04-t05` next).
 - ✓ Claude provider routing refreshed
 - ✓ Codex economics refreshed
 - ✓ Cursor provisional guidance refreshed without speculative pins
-- ⧗ Evidence and refresh protocol expansion
+- ✓ Evidence and refresh protocol expanded
+- ⧗ Canonical skill and public package versioning
 
 ## Blockers
 
@@ -67,4 +68,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 4 canonical guidance integration.
+Complete Phase 5 packaging and repository validation.

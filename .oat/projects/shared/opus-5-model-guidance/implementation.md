@@ -11,25 +11,25 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p04   | in_progress | 5     | 4/5       |
-| p05   | pending     | 3     | 0/3       |
-| p06   | pending     | 3     | 0/3       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p04   | complete | 5     | 5/5       |
+| p05   | pending  | 3     | 0/3       |
+| p06   | pending  | 3     | 0/3       |
 
-**Total:** 4/11 tasks completed
+**Total:** 5/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
-**Status:** in_progress
+**Status:** complete
 
-| Task    | Status  | Commit         |
-| ------- | ------- | -------------- |
-| p04-t01 | done    | `e594ab12`     |
-| p04-t02 | done    | `0e651d0f`     |
-| p04-t03 | done    | `7801e136`     |
-| p04-t04 | done    | pending commit |
-| p04-t05 | pending | -              |
+| Task    | Status | Commit                 |
+| ------- | ------ | ---------------------- |
+| p04-t01 | done   | `e594ab12`             |
+| p04-t02 | done   | `0e651d0f`             |
+| p04-t03 | done   | `7801e136`, `f62d01dd` |
+| p04-t04 | done   | `609f0833`             |
+| p04-t05 | done   | pending commit         |
 
 ## Phase 5: Package and Validate
 
@@ -76,6 +76,8 @@ oat_generated: false
 - `p04-t04`: retained current Cursor catalog examples, made Opus 5 explicitly
   probe-gated, and expanded service-tier latency measurement without adding
   pins.
+- `p04-t05`: added comparable-rung, speed, claim-provenance, independent-review,
+  live-catalog, and downstream parity gates to the refresh protocol.
 
 ## Deviations from Pre-Synthesis Plan
 
@@ -89,11 +91,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Result |
-| ----- | --------- | ------ |
-| p04   | -         | -      |
-| p05   | -         | -      |
-| p06   | -         | -      |
+| Phase | Tests Run                                                               | Result |
+| ----- | ----------------------------------------------------------------------- | ------ |
+| p04   | Focused skill tests (113), format, terminology, scope, policy coherence | pass   |
+| p05   | -                                                                       | -      |
+| p06   | -                                                                       | -      |
 
 ## Final Summary
 
