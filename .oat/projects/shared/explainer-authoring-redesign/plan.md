@@ -633,6 +633,7 @@ as the final task so validation covers the complete tree).
 | Scope | Type     | Status          | Date       | Artifact                                           |
 | ----- | -------- | --------------- | ---------- | -------------------------------------------------- |
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md |
+| plan  | artifact | received        | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
