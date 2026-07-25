@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t04
-oat_last_commit: 0e651d0f
+oat_current_task: p04-t05
+oat_last_commit: f62d01dd
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T13:00:00Z'
+oat_project_state_updated: '2026-07-25T13:15:00Z'
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 4 canonical guidance integration (`p04-t04` next).
+Phase 4 canonical guidance integration (`p04-t05` next).
 
 ## Artifacts
 
@@ -58,7 +58,8 @@ Phase 4 canonical guidance integration (`p04-t04` next).
 - ✓ Durable model-selection principles expanded
 - ✓ Claude provider routing refreshed
 - ✓ Codex economics refreshed
-- ⧗ Cursor provisional guidance refresh
+- ✓ Cursor provisional guidance refreshed without speculative pins
+- ⧗ Evidence and refresh protocol expansion
 
 ## Blockers
 

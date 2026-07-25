@@ -13,11 +13,11 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p04   | in_progress | 5     | 3/5       |
+| p04   | in_progress | 5     | 4/5       |
 | p05   | pending     | 3     | 0/3       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 3/11 tasks completed
+**Total:** 4/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
@@ -27,8 +27,8 @@ oat_generated: false
 | ------- | ------- | -------------- |
 | p04-t01 | done    | `e594ab12`     |
 | p04-t02 | done    | `0e651d0f`     |
-| p04-t03 | done    | pending commit |
-| p04-t04 | pending | -              |
+| p04-t03 | done    | `7801e136`     |
+| p04-t04 | done    | pending commit |
 | p04-t05 | pending | -              |
 
 ## Phase 5: Package and Validate
@@ -73,6 +73,9 @@ oat_generated: false
   pricing step, trajectory economics, and consequence-versus-effort guidance.
   Follow-up review aligned the consequential default to Sol high plus
   independent review, reserving xhigh and max for depth-driven escalation.
+- `p04-t04`: retained current Cursor catalog examples, made Opus 5 explicitly
+  probe-gated, and expanded service-tier latency measurement without adding
+  pins.
 
 ## Deviations from Pre-Synthesis Plan
 
