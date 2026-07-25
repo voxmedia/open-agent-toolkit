@@ -97,10 +97,34 @@ where zero data retention is required because the current route requires
 30-day retention. Provider availability, retention, and controls must be
 verified before selection.
 
-Fast mode is a gated latency purchase, not a capability rung. Priority Tier
-support and commitments are eligibility constraints; do not infer availability
-from another Claude family. Record service tier independently and apply the
-multi-measure speed contract from `model-selection-principles.md`.
+## Eligibility, Retention, and Service Constraints
+
+Eligibility filters the candidate set before capability or economy is compared.
+A route that fails one of these gates is unavailable regardless of benchmark
+standing. These are dated facts verified 2026-07-25; reverify against the live
+schema and the organization's actual plan before launch.
+
+| Constraint          | Opus 5                 | Sonnet 5      | Fable 5                    | Haiku 4.5     |
+| ------------------- | ---------------------- | ------------- | -------------------------- | ------------- |
+| Zero data retention | eligible               | eligible      | **unavailable**, needs 30d | eligible      |
+| Priority Tier       | not supported          | not supported | supported                  | verify live   |
+| Fast mode           | gated research preview | no            | no                         | no            |
+| Long context        | 1M at standard rates   | 1M standard   | 1M standard                | verify live   |
+| Claude Code minimum | version-gated          | version-gated | version-gated              | version-gated |
+
+- Zero data retention removes Fable from the route set outright. Check the
+  retention requirement before selecting a specialist reviewer.
+- Priority Tier commitments are closed to new buyers, so this matters only for
+  an existing commitment. Do not infer availability from another Claude family.
+- Fast mode is a gated latency purchase, not a capability rung.
+- Claude 4.6 and later families use their full 1M context windows at standard
+  rates. Do not carry a competitor's long-context surcharge model across to
+  Claude; the Codex Sol threshold step is a Sol fact, not a general one.
+- Claude Code enforces family-specific minimum versions. Verify the installed
+  runtime rather than assuming the catalog entry is launchable.
+
+Record service tier independently and apply the multi-measure speed contract
+from `model-selection-principles.md`.
 
 ## Cyber-Sensitive Evidence
 
