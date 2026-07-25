@@ -208,3 +208,26 @@ Track test execution during implementation.
 - Plan: `plan.md`
 - Design: `design.md`
 - Spec: `spec.md`
+
+## Gate Escalation: plan artifact review (2026-07-25)
+
+The configured quick-start exit gate (cross-family plan review, block on
+Important, maxAttempts 2) blocked twice; attempts are exhausted and the plan
+phase remains in_progress pending human direction.
+
+- Attempt 1: `reviews/artifact-plan-review-2026-07-25T183814Z.md` — 5
+  Important, 3 Medium. All 8 findings remediated in commit `baa1b8d4`
+  (expansion protocol defined, v2 schema coexistence at versioned paths,
+  consumer-migration task added, parallel write sets made disjoint, release
+  closure moved last with single per-skill bumps, approval-record v2 +
+  resume compatibility, GFM strikethrough, program-recap semantics).
+- Attempt 2: `reviews/artifact-plan-review-2026-07-25T191042Z.md` — 4
+  Important, 1 Medium (new depth): expansion profiles must be policy-owned
+  (briefRef/shell per allowed type, identity/collision validation); recipe
+  v1→v2 needs staged coexistence and a full recipe-consumer inventory;
+  `page` artifact type and manifest marking conflict with the frozen
+  `manifest/v1` schema; actual lifecycle callers (`oat-project-complete`,
+  closeout) must own author-callback construction; run-stage E_QA hard-fail
+  must be split into safety errors vs warnings.
+
+Escalated to operator with remediation recommendations; awaiting direction.
