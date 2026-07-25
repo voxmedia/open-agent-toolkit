@@ -18,7 +18,10 @@ authorization boundary.
 - `stale`: older than 90 days, named models are unavailable or deprecated, or the launching surface can no longer express the recorded controls.
 
 Provider mappings in this package become review-required on 2026-09-08 and
-stale on 2026-10-23 unless re-verified earlier.
+stale on 2026-10-23 unless re-verified earlier, or on the earlier date a
+reference states in its own header. `provider-cursor.md` carries an earlier
+2026-09-04 review date because its catalog was not re-verified in the
+2026-07-25 refresh.
 
 ## Immediate Review Triggers
 
@@ -103,10 +106,14 @@ publish a provider-independent effort conversion.
 - Sol's measured advantage is trajectory efficiency, not universal list-price
   leadership. Opus output token pricing can be lower while Sol costs less per
   completed task through fewer tokens, steps, turns, or recoveries.
-- Artificial Analysis Coding Agent Index and Frontier-Bench are the two
-  non-monotonic top-end Opus effort results in the accepted packet.
-  CursorBench is monotonic from xhigh to max but shows sharply worse marginal
-  economics above high.
+- Artificial Analysis Coding Agent Index (xhigh 67, max 66) and Frontier-Bench
+  (xhigh 44.4%, max 43.3%) are the two non-monotonic top-end Opus effort
+  results in the accepted packet. Frontier-Bench is vendor-operated and the
+  packet carries one self-reported row with no independently verified row, so
+  weight it below the Coding Agent Index rather than treating the two as equal
+  evidence. CursorBench is monotonic from xhigh to max, 69.3% to 70.0%; its
+  contribution is economic, with marginal cost per score point roughly 3.75x
+  worse above high than below it.
 - Cyber-sensitive and valid dual-use work should start on Opus 5 with
   documented fallback handling where safeguards block the workflow. Opus 4.8
   remains a compatibility fallback, not the universal primary.
@@ -147,10 +154,18 @@ Every load-bearing quantitative claim requires claim-level provenance:
 - cache, fallback, refusal, retry, and completion treatment;
 - unresolved source gaps stated explicitly rather than inferred away.
 
-AA-Briefcase time remains definition-unverified and must not be compared
-directly with the Coding Agent Index active-runtime measure. Mutable
+The Coding Agent Index time measure is average active agent wall time per task.
+It excludes environment startup and verifier or judge time, and must not be
+relabeled as total user-observed elapsed time. AA-Briefcase time remains
+definition-unverified and must not be compared directly with it. Mutable
 leaderboards require row-level locators; a homepage or aggregate rank is not a
 sufficient source.
+
+This file records reconciled conclusions and the values that drive a rule. It
+is not the ledger. Full benchmark rows, source URLs, extraction methods, and
+arithmetic live in the dated evidence packet that produced them, which is the
+locator for every figure quoted here. Cite that packet rather than restating a
+leaderboard.
 
 ## Research Independence and Acceptance
 
