@@ -11,7 +11,7 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
@@ -27,6 +27,10 @@ oat_phase_status: complete # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -75,7 +79,7 @@ oat_generated: false
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Design complete — ready for plan generation
+**Status:** Plan complete — ready for implementation
 **Started:** 2026-07-25
 **Last Updated:** 2026-07-25
 
