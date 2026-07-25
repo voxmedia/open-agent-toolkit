@@ -58,9 +58,18 @@ xhigh/max and the two Fable entries.
 roughly half the cost. Should the Cursor matrix stop naming Fable as the
 primary escalation route?
 **A:** Reorder.
-**Decision:** Opus 5 becomes the primary Cursor escalation route. Fable is
-retained as the cross-family reviewer pairing for consequential work, not as
-first choice. This follows the evidence while preserving cross-family review.
+**Decision:** Opus 5 becomes the primary Cursor escalation route for
+`default-implementation`, `hard-reasoning`, and the Anthropic half of the
+`consequential` author/reviewer pair. Fable drops to exceptional escalation
+only, consistent with canon.
+
+**Correction applied after plan review:** an earlier draft of this decision
+described Fable as "the cross-family reviewer pairing." That is wrong. The
+cross-family property of the consequential pair comes from pairing OpenAI (Sol)
+with Anthropic; Fable and Opus are both Anthropic, so swapping one for the other
+does not affect cross-family review at all. The consequential default becomes
+Sol xhigh plus Opus 5 thinking xhigh, escalating to Sol max plus Opus 5 thinking
+max, with Fable reserved for exceptional escalation beyond that.
 
 ### Question 5: Unverifiable Cursor frontmatter bracket syntax
 
@@ -124,9 +133,11 @@ default policy candidate.
 **Q:** Both Fable entries are now strictly dominated, and Fable provides no
 cross-family diversity from Opus since both are Anthropic. Remove them?
 **A:** Keep this PR; backlog the question.
-**Decision:** Retain both Fable candidates. Canon still designates Fable the
-exceptional-escalation route, so removal is a policy change rather than an
-incumbent refresh. CursorBench measures agentic coding, not the long-running
+**Decision:** Retain both Fable candidates in the Cursor recommendation's
+frontier tier, while demoting Fable in prose to exceptional escalation only
+(Question 4). Canon still designates Fable the exceptional-escalation route, so
+removing the candidates entirely is a policy change rather than an incumbent
+refresh. CursorBench measures agentic coding, not the long-running
 autonomous and frontier knowledge work Fable is reserved for, and the evidence
 policy warns against treating leaderboard rank as a universal model order.
 Notably `claude-fable-5-thinking-high` was already dominated by

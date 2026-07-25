@@ -170,12 +170,31 @@ git commit -m "docs(p01-t01): adopt claude-opus-5 as Claude hard-reasoning incum
   2026-07-24 Cursor snapshot **and** CursorBench 3.2, replacing the current
   snapshot-plus-docs basis.
 - **Dated Task-Class Matrix:** update the snapshot date reference from
-  2026-07-21 to 2026-07-24. Name Opus 5 as the primary Cursor escalation route
-  for `default-implementation` and `hard-reasoning`, with Fable retained as the
-  cross-family reviewer pairing rather than first choice. In the
-  `consequential` floor note, keep `claude-opus-4-8-thinking-xhigh` as the
-  cyber-sensitive review route. All five task-class rows must remain present
-  and in order.
+  2026-07-21 to 2026-07-24. All five task-class rows must remain present and in
+  order. Set the rows to exactly this, leaving `mechanical-recon` and
+  `intelligent-recon` unchanged:
+
+  | Row                      | Escalation / default                                                                                                                                                                 |
+  | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+  | `default-implementation` | Escalation becomes `gpt-5.6-sol-high` or `claude-opus-5-thinking-high`, replacing the Fable reference.                                                                               |
+  | `hard-reasoning`         | Escalation becomes `gpt-5.6-sol-xhigh` or `claude-opus-5-thinking-xhigh`, replacing the Fable reference.                                                                             |
+  | `consequential`          | Default becomes a cross-family author/reviewer pair, normally `gpt-5.6-sol-xhigh` plus `claude-opus-5-thinking-xhigh`. Escalation becomes Sol max plus `claude-opus-5-thinking-max`. |
+
+  **Cross-family means cross-vendor.** The cross-family property of the
+  `consequential` pair comes from pairing OpenAI (Sol) with Anthropic — it does
+  **not** come from Fable. Fable and Opus are both Anthropic, so substituting
+  one for the other changes nothing about cross-family review. Do not describe
+  Fable as "the cross-family reviewer"; that phrasing is wrong and this task
+  exists partly to remove it.
+
+  Fable's remaining role is **exceptional escalation only**, consistent with
+  canon: reach for `claude-fable-5-thinking-max` beyond the Opus 5 max pair when
+  unresolved ambiguity or exceptional novelty justifies the incremental cost. A
+  consequential classification alone does not justify it.
+
+  The `consequential` floor note keeps `claude-opus-4-8-thinking-xhigh` as the
+  cyber-sensitive substitution, which p02-t01 makes materializable.
+
 - **Broader Cursor Routes:** add Opus 5 entries with their CursorBench 3.2
   evidence. Note that non-thinking aliases cap at `high`, mirroring the API
   constraint, and that `-fast` variants remain latency purchases under the
@@ -359,6 +378,15 @@ git commit -m "feat(p02-t01): add Opus 5 and Opus 4.8 Cursor pin mappings"
 - Modify: `packages/cli/src/commands/config/index.test.ts`
 - Modify: `packages/cli/src/providers/cursor/codec/catalog.test.ts`
 
+**Generated write set.** `bundle-assets.sh` recopies the whole bundled skill
+tree, so running it produces churn under `packages/cli/assets/skills/`. That
+churn is **not** committed: `.gitignore:21-22` ignores `packages/cli/assets/*`
+except `public-package-versions.json`. Exactly three paths under `assets/` are
+tracked — `config/dispatch-matrix-recommendation.json`,
+`migration/pjm-restructure.md`, and `public-package-versions.json` — and only
+the first is in this task's write set. Verify with
+`git ls-files packages/cli/assets` if the diff looks larger than expected.
+
 **Step 1: Write test (RED)**
 
 Update the expected `providers.cursor` object in `bundle-consistency.test.ts`
@@ -415,8 +443,15 @@ Expected: dispatch-matrix normalization and ceiling-preset suites still pass.
 
 **Step 4: Commit**
 
+Stage the exact declared paths, not the directories:
+
 ```bash
-git add packages/cli/config packages/cli/assets packages/cli/src
+git add packages/cli/config/dispatch-matrix-recommendation.json \
+        packages/cli/assets/config/dispatch-matrix-recommendation.json \
+        packages/cli/src/commands/init/tools/shared/bundle-consistency.test.ts \
+        packages/cli/src/commands/config/index.test.ts \
+        packages/cli/src/providers/cursor/codec/catalog.test.ts
+git status --porcelain   # expect nothing unexpected left staged
 git commit -m "feat(p02-t02): place Opus 5 rungs in the Cursor dispatch recommendation"
 ```
 
@@ -473,6 +508,7 @@ git commit -m "chore(p03-t01): sync Opus role variants"
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json` (generated by the bundle script from the five versions above; tracked despite living under `assets/`, via the `.gitignore:22` negation)
 
 **Step 1: Edit**
 
@@ -480,16 +516,29 @@ Bump all five from `0.2.17` to `0.2.18` together. Bundled assets under
 `.agents/skills` count as shipped CLI functionality, so the lockstep rule
 applies even though most changed files are markdown and JSON.
 
+Regenerate the derived asset rather than hand-editing it:
+
+```bash
+bash packages/cli/scripts/bundle-assets.sh
+```
+
 **Step 2: Verify**
 
 Run: `pnpm release:validate`
-Expected: passes, confirming the five versions moved in lockstep and the
-bundled `public-package-versions.json` asset derives correctly from them.
+Expected: passes, confirming the five versions moved in lockstep.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/bundle-consistency.test.ts`
+Expected: passes, including the case that derives
+`public-package-versions.json` from the shared inventory — this is what proves
+the regenerated asset matches the five bumped versions.
 
 **Step 3: Commit**
 
 ```bash
-git add packages/*/package.json packages/cli/assets
+git add packages/cli/package.json packages/control-plane/package.json \
+        packages/docs-config/package.json packages/docs-theme/package.json \
+        packages/docs-transforms/package.json \
+        packages/cli/assets/public-package-versions.json
 git commit -m "chore(p03-t02): bump public packages to 0.2.18"
 ```
 
@@ -509,9 +558,20 @@ durable records.
 
 **Step 1: Create**
 
+Declare the canonical metadata on the creation command rather than editing it in
+afterwards:
+
 ```bash
-pnpm run cli -- backlog new "Rebalance the Cursor dispatch recommendation tiers"
+pnpm run cli -- backlog new "Rebalance the Cursor dispatch recommendation tiers" \
+  --priority medium \
+  --scope task \
+  --scope-estimate M \
+  --labels dispatch,cursor,model-guidance
 ```
+
+Pass the body via `--description` or write it into the generated item file. The
+command writes the item and regenerates the managed index in one step, so no
+second mutation is needed.
 
 Record the three deferred findings with their CursorBench 3.2 evidence:
 
@@ -532,10 +592,20 @@ Note in the item that CursorBench measures Cursor-harness agentic coding on one
 task distribution, and that the evidence policy warns against treating
 leaderboard rank as a universal model order.
 
+Replace the template acceptance-criteria placeholders with concrete criteria —
+at minimum: a decision recorded on whether Fable keeps a frontier slot, the
+economy tier's Composer and Luna placements re-examined against current
+CursorBench data, and a stated position on `gpt-5.6-sol-low` as a latency route.
+
 **Step 2: Verify**
 
-Run: `pnpm run cli -- backlog regenerate-index`
-Expected: the index table includes the new item and the command exits 0.
+Run: `rg -n "Rebalance the Cursor dispatch" .oat/repo/pjm/backlog/index.md`
+Expected: one match — the creation command already regenerated the index, so
+this confirms the result rather than re-running the mutation.
+
+Run: `rg -n "TBD|\{.*\}|Acceptance Criteria" .oat/repo/pjm/backlog/items/BL-260724-*.md`
+Expected: an `Acceptance Criteria` heading with no unresolved template
+placeholders beneath it.
 
 **Step 3: Commit**
 
@@ -582,6 +652,70 @@ git commit -m "chore(p03-t04): apply formatting and lint fixes"
 
 ---
 
+### Task p03-t05: Emit the schema-complete reverification record
+
+**Files:**
+
+- Create: `.oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+
+**Step 1: Write the record**
+
+Handoff item 6 requires a reverification entry conforming to the Reverification
+Record schema in
+`.agents/skills/subagent-orchestration/references/evidence-and-refresh.md`. It
+is written last so it records the validated final state, and it lives in the
+project `pr/` directory so `oat-project-pr-final` can lift it verbatim into the
+PR description.
+
+Every key in the schema must be present:
+
+```yaml
+verified_at: <RFC3339 timestamp>
+provider: claude # plus a second entry for cursor
+harness_context: <exact launching surface>
+catalog_source: UI snapshot # operator Cursor catalog snapshot 2026-07-24
+models_considered: <exact selectors>
+controls_verified: effort, service tier, reasoning mode, context, tools
+sources: <official docs and relevant benchmarks>
+incumbent_changes: <additions, replacements, removals>
+reason: <scheduled review or trigger>
+```
+
+Required content beyond the bare schema:
+
+- `reason` is the newer-family trigger, not a scheduled review.
+- `sources` cites both the operator Cursor catalog snapshot (2026-07-24) and
+  CursorBench 3.2, plus the Anthropic release and platform documentation.
+- `incumbent_changes` lists the Opus 4.8 to Opus 5 replacement, the five Opus 5
+  Cursor pins, the Opus 4.8 cyber pin addition, and the `claude-sonnet-5-high`
+  economy removal.
+- **The thinking-mode assumption must appear explicitly**: the Cursor bracket
+  syntax cannot express the thinking axis, so `claude-opus-5[effort=...]` is
+  assumed to resolve to the thinking-enabled variant. Unverified by live probe.
+- Record the Opus 5 classifier question and the retained Opus 4.8
+  cyber-sensitive carve-out under `controls_verified` or `sources`.
+
+**Step 2: Verify**
+
+Run: `rg -c "verified_at|provider|harness_context|catalog_source|models_considered|controls_verified|sources|incumbent_changes|reason" .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+Expected: every schema key present; no key missing.
+
+Run: `rg -n "thinking" .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+Expected: at least one match documenting the unverified thinking-mode
+assumption.
+
+Run: `pnpm exec oxfmt --check .oat/projects/shared/opus-5-model-guidance/pr/reverification.md`
+Expected: no formatting diff.
+
+**Step 3: Commit**
+
+```bash
+git add .oat/projects/shared/opus-5-model-guidance/pr/reverification.md
+git commit -m "docs(p03-t05): record Opus 5 reverification entry"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -612,9 +746,9 @@ git commit -m "chore(p03-t04): apply formatting and lint fixes"
 
 - Phase 1: 4 tasks - Refresh the three dated guidance references and bump the canonical skill version
 - Phase 2: 2 tasks - Add six Cursor pin mappings, demote Sonnet 5 high, and rebalance the bundled recommendation
-- Phase 3: 4 tasks - Materialize role files, bump public packages in lockstep, file the backlog item, and validate
+- Phase 3: 5 tasks - Materialize role files, bump public packages in lockstep, file the backlog item, validate, and emit the reverification record
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
 Ready for code review and merge.
 
