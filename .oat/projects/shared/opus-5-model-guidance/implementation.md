@@ -13,11 +13,11 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p04   | in_progress | 5     | 1/5       |
+| p04   | in_progress | 5     | 2/5       |
 | p05   | pending     | 3     | 0/3       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 1/11 tasks completed
+**Total:** 2/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
@@ -25,8 +25,8 @@ oat_generated: false
 
 | Task    | Status  | Commit         |
 | ------- | ------- | -------------- |
-| p04-t01 | done    | pending commit |
-| p04-t02 | pending | -              |
+| p04-t01 | done    | `e594ab12`     |
+| p04-t02 | done    | pending commit |
 | p04-t03 | pending | -              |
 | p04-t04 | pending | -              |
 | p04-t05 | pending | -              |
@@ -66,6 +66,9 @@ oat_generated: false
   probes exist.
 - `p04-t01`: separated task class, effort, consequence, reviewer role, and
   eligibility; added failure-mode review and multi-measure speed contracts.
+- `p04-t02`: made Opus 5 medium/high the substantive Claude route, retained
+  Sonnet and Fable as measured or eligibility-gated cases, and documented cyber
+  fallback handling.
 
 ## Deviations from Pre-Synthesis Plan
 
