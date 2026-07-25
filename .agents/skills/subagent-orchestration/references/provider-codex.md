@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-07-22
-last_verified: 2026-07-22
-review_after: 2026-09-04
+guidance_version: 2026-07-25
+last_verified: 2026-07-25
+review_after: 2026-09-08
 ---
 
 # Codex and OpenAI Model Selection
@@ -45,11 +45,38 @@ name includes `codex`.
 not a model slug and not an effort label. Record it independently. Evaluate it
 against max or xhigh on representative consequential work before adopting it.
 
+The task-class ladder is work-shape based. Sol is the code-first,
+trajectory-efficient route for implementation and hard reasoning; this does
+not establish a provider-independent ranking against interpretation-heavy
+models in other harnesses. Consequential work requires independent review and
+root-owned authorization. It does not automatically force Sol max: choose
+effort from reasoning depth, then add the consequence controls.
+
 ## Long-Context Floor
 
 For very large context, prefer Sol or Terra. Published GPT-5.6 results show a
 large Luna retention drop in the 256K-to-1M range. Large context does not change
 the task class, but it may disqualify Luna, mini, or nano.
+
+For Sol requests above 272K input tokens, the current direct-API price step is
+2× input and 1.5× output. Apply the threshold to the whole request and verify
+the live pricing contract before cost-sensitive dispatch. Crossing this
+threshold can change the economical route even when Sol remains the capability
+choice.
+
+## Trajectory Economics
+
+Token list price and total trajectory cost are separate. A model with a higher
+output-token price can still cost less per completed task when it uses fewer
+output tokens, steps, tool calls, retries, or recoveries. Conversely, a cheap
+attempt is not economical when completion rate is low or operator intervention
+is high.
+
+Evaluate input, cached-input, and output tokens together with time to first
+token or first useful action, active runtime, total elapsed time, steps and tool
+calls, retries, completion rate, variance, and cost per attempted and completed
+task. Do not use token price alone as a proxy for wall-clock efficiency, and do
+not infer latency from trajectory length without a measured runtime.
 
 ## Tool-Heavy Work
 
