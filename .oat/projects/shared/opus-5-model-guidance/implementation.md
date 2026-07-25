@@ -11,13 +11,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----- | --------- |
-| p04   | complete | 5     | 5/5       |
-| p05   | pending  | 3     | 0/3       |
-| p06   | pending  | 3     | 0/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p04   | complete    | 5     | 5/5       |
+| p05   | in_progress | 3     | 1/3       |
+| p06   | pending     | 3     | 0/3       |
 
-**Total:** 5/11 tasks completed
+**Total:** 6/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
@@ -33,13 +33,13 @@ oat_generated: false
 
 ## Phase 5: Package and Validate
 
-**Status:** pending
+**Status:** in_progress
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p05-t01 | pending | -      |
-| p05-t02 | pending | -      |
-| p05-t03 | pending | -      |
+| Task    | Status  | Commit         |
+| ------- | ------- | -------------- |
+| p05-t01 | done    | pending commit |
+| p05-t02 | pending | -              |
+| p05-t03 | pending | -              |
 
 ## Phase 6: Record Reverification and Deferral
 
@@ -78,6 +78,8 @@ oat_generated: false
   pins.
 - `p04-t05`: added comparable-rung, speed, claim-provenance, independent-review,
   live-catalog, and downstream parity gates to the refresh protocol.
+- `p05-t01`: bumped the canonical skill once to `1.0.1` and all five public
+  packages in lockstep to `0.2.18`.
 
 ## Deviations from Pre-Synthesis Plan
 

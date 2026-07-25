@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-t01
+oat_current_task: p05-t02
 oat_last_commit: 33cc3b8b
 oat_blockers: []
 associated_issues: []
@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T13:30:00Z'
+oat_project_state_updated: '2026-07-25T14:00:00Z'
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 4 complete — ready for Phase 5 packaging and validation.
+Phase 5 packaging and validation (`p05-t02` next).
 
 ## Artifacts
 
@@ -60,7 +60,8 @@ Phase 4 complete — ready for Phase 5 packaging and validation.
 - ✓ Codex economics refreshed
 - ✓ Cursor provisional guidance refreshed without speculative pins
 - ✓ Evidence and refresh protocol expanded
-- ⧗ Canonical skill and public package versioning
+- ✓ Canonical skill and public packages versioned
+- ⧗ Generated provider views and bundled assets refresh
 
 ## Blockers
 
