@@ -44,17 +44,14 @@ or mechanics.
 Defer entry flags to `oat project log append --help`; never pre-check config:
 the helper no-ops when the feature is off.
 
-**Never append while a dispatched child owns the worktree.** `project-log.md` is
-tracked, so an append dirties the tree that the child's preflight and per-task
-commit checks require to be clean. Every append point below fires only once no
-child owns the head, and each is committed by the bookkeeping that owns it.
+**Never append while a dispatched child owns the worktree.** The tracked log
+dirties the tree that the child's preflight and per-task commit checks require
+to be clean; each append is committed by the bookkeeping that owns it.
 
 - After every accepted subagent dispatch, record the acceptance in the generic
   dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
-  never mirror that record. Do not write the project log at acceptance.
-  Append the corresponding entry with `oat project log append` after the
-  child's report returns, batched with the phase-outcome entry, preserving
-  the run-anchor reference.
+  never mirror that record. Do not write the project log at acceptance; append
+  it with the phase-outcome entry after the child's report returns.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`
@@ -63,10 +60,9 @@ child owns the head, and each is committed by the bookkeeping that owns it.
   and fail closed before validation, bookkeeping, or logging.
 - For `attempted`, require complete `## Review Orchestration` evidence. After
   validation, append exactly once through `oat project log append`, referencing
-  the artifact without copying records. Defer that append until the bounded fix
-  and re-review loop reaches a terminal phase outcome, then batch it with the
-  phase-outcome entry. Appending when the reviewer returns would dirty the tree
-  before a fix child is dispatched into it.
+  the artifact without copying records. Defer that append to the terminal phase
+  outcome; appending when the reviewer returns dirties the tree before a fix
+  child is dispatched into it.
 - For `not-attempted`, the artifact must not contain `## Review Orchestration`;
   do not invoke `oat project log append` or create a log entry.
 - Before every STOP or park return, invoke `oat project log append` for a

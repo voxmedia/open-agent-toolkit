@@ -749,10 +749,7 @@ describe('post-implementation sequence contracts', () => {
         'Never append while a dispatched child owns the worktree',
       );
       expect(normalized).toContain(
-        'Do not write the project log at acceptance.',
-      );
-      expect(normalized).toContain(
-        "Append the corresponding entry with `oat project log append` after the child's report returns, batched with the phase-outcome entry",
+        "Do not write the project log at acceptance; append it with the phase-outcome entry after the child's report returns.",
       );
     });
 
@@ -769,10 +766,7 @@ describe('post-implementation sequence contracts', () => {
       const normalized = normalizeWhitespace(readImplementSkill());
 
       expect(normalized).toContain(
-        'Defer that append until the bounded fix and re-review loop reaches a terminal phase outcome',
-      );
-      expect(normalized).toContain(
-        'Appending when the reviewer returns would dirty the tree before a fix child is dispatched into it.',
+        'Defer that append to the terminal phase outcome; appending when the reviewer returns dirties the tree before a fix child is dispatched into it.',
       );
     });
 
