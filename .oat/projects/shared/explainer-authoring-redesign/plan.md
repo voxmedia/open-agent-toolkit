@@ -536,9 +536,10 @@ append-oriented test additions, but the merge order should land p03 first.
 
 ## Reviews
 
-| Scope | Type     | Status | Date       | Artifact                                                                                                               |
-| ----- | -------- | ------ | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| plan  | artifact | passed | 2026-07-25 | inline planning-parent review (deliberate inheritance, High ceiling met); 1 Important + 1 Minor finding fixed in-place |
+| Scope | Type     | Status   | Date       | Artifact                                                                                                               |
+| ----- | -------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
+| plan  | artifact | passed   | 2026-07-25 | inline planning-parent review (deliberate inheritance, High ceiling met); 1 Important + 1 Minor finding fixed in-place |
+| plan  | artifact | received | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md                                                                     |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
