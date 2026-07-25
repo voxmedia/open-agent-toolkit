@@ -586,13 +586,14 @@ git commit -m "chore(p03-t04): apply formatting and lint fixes"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope | Type     | Status  | Date       | Artifact                                               |
-| ----- | -------- | ------- | ---------- | ------------------------------------------------------ |
-| p01   | code     | pending | -          | -                                                      |
-| p02   | code     | pending | -          | -                                                      |
-| p03   | code     | pending | -          | -                                                      |
-| final | code     | pending | -          | -                                                      |
-| plan  | artifact | passed  | 2026-07-25 | inline (planning parent) + bounded verification worker |
+| Scope | Type     | Status   | Date       | Artifact                                               |
+| ----- | -------- | -------- | ---------- | ------------------------------------------------------ |
+| p01   | code     | pending  | -          | -                                                      |
+| p02   | code     | pending  | -          | -                                                      |
+| p03   | code     | pending  | -          | -                                                      |
+| final | code     | pending  | -          | -                                                      |
+| plan  | artifact | passed   | 2026-07-25 | inline (planning parent) + bounded verification worker |
+| plan  | artifact | received | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
