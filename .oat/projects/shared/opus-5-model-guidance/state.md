@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p04-t02
 oat_last_commit: null
 oat_blockers: []
 associated_issues: []
@@ -27,19 +27,19 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T12:00:00Z'
+oat_project_state_updated: '2026-07-25T12:30:00Z'
 oat_generated: false
 ---
 
 # Project State: opus-5-model-guidance
 
-**Status:** Plan complete
+**Status:** Implementation in progress
 **Started:** 2026-07-25
 **Last Updated:** 2026-07-25
 
 ## Current Phase
 
-Plan complete — ready to implement the post-release synthesis.
+Phase 4 canonical guidance integration (`p04-t02` next).
 
 ## Artifacts
 
@@ -55,7 +55,8 @@ Plan complete — ready to implement the post-release synthesis.
 - ✓ Original pre-release discovery and plan preserved
 - ✓ Post-release synthesis accepted by independent reviewers and user
 - ✓ Implementation scope reconciled
-- ⧗ Canonical guidance implementation
+- ✓ Durable model-selection principles expanded
+- ⧗ Claude provider routing refresh
 
 ## Blockers
 

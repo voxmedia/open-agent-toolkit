@@ -13,23 +13,23 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
-| p04   | in_progress | 5     | 0/5       |
+| p04   | in_progress | 5     | 1/5       |
 | p05   | pending     | 3     | 0/3       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 0/11 tasks completed
+**Total:** 1/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
 **Status:** in_progress
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p04-t01 | pending | -      |
-| p04-t02 | pending | -      |
-| p04-t03 | pending | -      |
-| p04-t04 | pending | -      |
-| p04-t05 | pending | -      |
+| Task    | Status  | Commit         |
+| ------- | ------- | -------------- |
+| p04-t01 | done    | pending commit |
+| p04-t02 | pending | -              |
+| p04-t03 | pending | -              |
+| p04-t04 | pending | -              |
+| p04-t05 | pending | -              |
 
 ## Phase 5: Package and Validate
 
@@ -64,6 +64,8 @@ oat_generated: false
 - Retired unimplemented task IDs `p01-*` through `p03-*`.
 - Explicitly deferred speculative Cursor pins until live alias and control
   probes exist.
+- `p04-t01`: separated task class, effort, consequence, reviewer role, and
+  eligibility; added failure-mode review and multi-measure speed contracts.
 
 ## Deviations from Pre-Synthesis Plan
 
