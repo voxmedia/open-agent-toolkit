@@ -312,12 +312,18 @@ describe('review skill contracts', () => {
     expect(appendPoints).toContain('the helper no-ops when the feature is off');
     expect(content).toMatch(/^allowed-tools:.*Bash\(oat project log:\*\).*$/m);
     expect(appendPoints).toMatch(
-      /accepted subagent dispatch[\s\S]*?oat project log append/i,
+      /accepted subagent dispatch[\s\S]*?generic\s+dispatch record/i,
     );
     expect(appendPoints).toContain(
       '$PROJECT_PATH/implementation.md#<run-anchor>',
     );
     expect(appendPoints).toContain('never mirror that record');
+    expect(appendPoints).toContain(
+      'Do not write the project log at acceptance',
+    );
+    expect(appendPoints).toMatch(
+      /Never append while a dispatched child owns the worktree/i,
+    );
     expect(appendPoints).toMatch(/STOP or park[\s\S]*?oat project log append/i);
     expect(appendPoints).toMatch(
       /phase outcome[\s\S]*?oat project log append/i,
