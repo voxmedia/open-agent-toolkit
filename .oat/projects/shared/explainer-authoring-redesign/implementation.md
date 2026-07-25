@@ -18,90 +18,187 @@ oat_generated: false
 >
 > - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
 > - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
+> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews`.
 > - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
 > - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
 
+## Run Configuration
+
+- **Tier:** 1 (subagents) — Cursor-native
+- **Dispatch policy:** high (managed, capped) — source: project state
+- **Resolved target:** `oat-phase-implementer-gpt-5-6-sol-high`
+- **HiLL checkpoints:** `['p08']` (final phase only, from `workflow.hillCheckpointDefault: final`)
+- **Auto-review at HiLL checkpoints:** enabled (from `workflow.autoReviewAtHillCheckpoints`)
+- **Phase review gate:** not configured (no external cross-provider phase gate)
+- **Parallel group:** `[p02, p03, p04]` — worktree-isolated
+
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase                                        | Status  | Tasks | Completed |
+| -------------------------------------------- | ------- | ----- | --------- |
+| Phase 1: Contracts, briefs, and recipes v2   | pending | 5     | 0/5       |
+| Phase 2: Lifecycle caller wiring             | pending | 1     | 0/1       |
+| Phase 3: Narrative renderer                  | pending | 3     | 0/3       |
+| Phase 4: Artistic composer path              | pending | 2     | 0/2       |
+| Phase 5: Guideline checker and render QA     | pending | 2     | 0/2       |
+| Phase 6: Pipeline integration, v1 retirement | pending | 4     | 0/4       |
+| Phase 7: End-to-end anti-regression fixture  | pending | 1     | 0/1       |
+| Phase 8: Documentation and release closure   | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-07-25
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/20 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
-
-**Status:** pending
-**Commit:** -
-
-**Notes:**
-
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 1: Contracts, briefs, and recipes v2
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p01-t01: Author contract v2 schemas (coexisting with v1)
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t02: Dual-version recipe loader and shape accessors
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Author briefs (prerequisite for v2 recipes)
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t04: Rewrite bundled recipes to v2
+
+**Status:** pending
+**Commit:** -
+
+### Task p01-t05: Approval record v2 with marking and resume compatibility
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 2: Lifecycle caller wiring
+
+**Status:** pending
+**Started:** -
+
+### Task p02-t01: Lifecycle callers construct the author callback
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Narrative renderer
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Markdown parsing and AST safety validation
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Themed block library and expansion path rule
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t03: Diagram blocks rendered to inline SVG
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Artistic composer path
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: DOM safety validator with hash-pinned shell scripts
+
+**Status:** pending
+**Commit:** -
+
+### Task p04-t02: Shell canvases
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Guideline checker and render QA
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Guideline checker with warning vocabulary
+
+**Status:** pending
+**Commit:** -
+
+### Task p05-t02: Render QA probe battery
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Pipeline integration and v1 retirement
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Relocate the approval gate after render and QA
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Author stage wiring and QA severity split
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Marking surfacing through core and adapter results
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t04: Retire recipe v1 and migrate all remaining consumers
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 7: End-to-end anti-regression fixture
+
+**Status:** pending
+**Started:** -
+
+### Task p07-t01: Recap anti-regression fixture
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 8: Documentation and release closure
+
+**Status:** pending
+**Started:** -
+
+### Task p08-t01: Docs and skill guidance updates
+
+**Status:** pending
+**Commit:** -
+
+### Task p08-t02: Provider sync, version bumps, release validation (final task)
 
 **Status:** pending
 **Commit:** -
@@ -130,36 +227,20 @@ Chronological log of implementation progress.
 
 ### 2026-07-25
 
-**Session Start:** {time}
+**Session Start:** implementation initialized
 
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
+- Plan phase closed as operator-accepted (not gate-passed); see `plan.md`
+  "Plan acceptance basis" and the Gate Escalation record below.
+- Plan frontmatter aligned to `oat_status: complete` /
+  `oat_ready_for: oat-project-implement` so the implement workflow could start.
+- HiLL checkpoints resolved to `['p08']` from `workflow.hillCheckpointDefault: final`
+  (plan previously carried `[]`, i.e. every phase).
+- Tier 1 dispatch confirmed with resolved target
+  `oat-phase-implementer-gpt-5-6-sol-high`.
 
 **Blockers:**
 
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-25
-
-**Session Start:** {time}
-
-{Continue log...}
+- None
 
 ---
 
@@ -179,13 +260,18 @@ Track test execution during implementation.
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | -         | -      | -      | -        |
 | 2     | -         | -      | -      | -        |
+| 3     | -         | -      | -      | -        |
+| 4     | -         | -      | -      | -        |
+| 5     | -         | -      | -      | -        |
+| 6     | -         | -      | -      | -        |
+| 7     | -         | -      | -      | -        |
+| 8     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
 - {capability 1}
-- {capability 2}
 
 **Behavioral changes (user-facing):**
 
@@ -207,13 +293,13 @@ Track test execution during implementation.
 
 - Plan: `plan.md`
 - Design: `design.md`
-- Spec: `spec.md`
+- Spec: N/A (quick mode)
 
 ## Gate Escalation: plan artifact review (2026-07-25)
 
 The configured quick-start exit gate (cross-family plan review, block on
-Important, maxAttempts 2) blocked twice; attempts are exhausted and the plan
-phase remains in_progress pending human direction.
+Important, maxAttempts 2) blocked twice; attempts were exhausted and the plan
+phase was escalated to the operator.
 
 - Attempt 1: `reviews/artifact-plan-review-2026-07-25T183814Z.md` — 5
   Important, 3 Medium. All 8 findings remediated in commit `baa1b8d4`
@@ -230,4 +316,9 @@ phase remains in_progress pending human direction.
   closeout) must own author-callback construction; run-stage E_QA hard-fail
   must be split into safety errors vs warnings.
 
-Escalated to operator with remediation recommendations; awaiting direction.
+**Resolution (2026-07-25):** findings from attempts 1–2 and three further
+cycles were remediated, and the interface-level questions the reviews surfaced
+were promoted into `design.md` as resolved decisions D1–D8 rather than left as
+plan defects. The operator then ended the gate loop and accepted the plan.
+Implementation proceeds on that recorded decision; see `plan.md` "Plan
+acceptance basis".

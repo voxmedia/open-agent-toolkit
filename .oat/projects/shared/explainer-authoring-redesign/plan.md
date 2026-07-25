@@ -1,11 +1,12 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-25
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: []
+oat_phase_status: complete
+oat_plan_hill_phases: ['p08']
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [['p02', 'p03', 'p04']]
 oat_plan_source: quick
 oat_import_reference: null
@@ -1026,6 +1027,14 @@ commit so no intermediate state is self-rejecting. p07 (e2e fixture) and p08
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
+
+**Plan acceptance basis:** no review reached `passed`. After six cycles with
+monotonically converging findings, each round's remediations verified closed by
+the next, the operator ended the loop and accepted the plan on 2026-07-25 —
+judging the remaining class of finding to be design-detail refinement better
+resolved against real code than through further max-effort gate cycles. The
+plan is therefore operator-accepted, not gate-passed; implementation proceeds
+on that recorded decision.
 
 ## Implementation Complete
 

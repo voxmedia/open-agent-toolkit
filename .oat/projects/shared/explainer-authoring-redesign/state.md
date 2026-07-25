@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -8,11 +8,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p08'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -73,19 +73,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-25T17:10:10.185Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-25T17:10:10.185Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-25T21:45:00.000Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Plan complete — ready for implementation
+**Status:** Implementation in progress — Phase 1
 **Started:** 2026-07-25
 **Last Updated:** 2026-07-25
 
 ## Current Phase
 
-Plan complete and operator-accepted; ready for implementation. Discovery was
+Implementation started at `p01-t01`. Tier 1 (subagents), dispatch policy `high`
+(managed capped, project state), resolved target
+`oat-phase-implementer-gpt-5-6-sol-high`. HiLL checkpoint is the final phase
+only (`p08`), resolved from `workflow.hillCheckpointDefault: final`; auto-review
+at that checkpoint is enabled. No external per-phase review gate is configured.
+
+Plan phase closed as operator-accepted; `plan.md` frontmatter was aligned to
+`oat_status: complete` at implementation start, because ending the gate loop
+manually meant the normal plan-completion write never ran. Discovery was
 seeded from the 2026-07-25 brainstorm session, and the user chose quick mode
 with the optional lightweight design step because discovery surfaced real
 architecture decisions (two rendering paths, recipe floor/expansion semantics,
@@ -106,7 +114,7 @@ by a passing gate** — a deliberate, recorded decision, not an oversight.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete — includes resolved interface decisions D1–D8)
 - **Plan:** `plan.md` (complete — 20 tasks across 8 phases, operator-accepted)
-- **Implementation:** `implementation.md` (not started)
+- **Implementation:** `implementation.md` (in progress — 0/20 tasks)
 
 ## Progress
 
@@ -114,8 +122,8 @@ by a passing gate** — a deliberate, recorded decision, not an oversight.
 - ✓ Execution artifacts scaffolded
 - ✓ Lightweight design complete, with D1–D8 resolving the interface questions
   the plan reviews surfaced
-- ✓ Plan complete: 20 tasks, parallel group [p02, p03, p04], 5 review cycles
-- ⧗ Implementation not started
+- ✓ Plan complete: 20 tasks, parallel group [p02, p03, p04], 6 review cycles
+- ⧗ Implementation in progress: Phase 1, 0/20 tasks complete
 
 ## Blockers
 
@@ -123,5 +131,5 @@ None
 
 ## Next Milestone
 
-Begin implementation at Phase 1 (`p01-t01`, author contract v2 schemas) via
-`oat-project-implement`.
+Complete Phase 1 (contracts, briefs, recipes v2 — `p01-t01` … `p01-t05`), then
+run the parallel group [p02, p03, p04] in isolated worktrees.
