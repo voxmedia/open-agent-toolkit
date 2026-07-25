@@ -180,8 +180,18 @@ surfaced a scope change.
 8. **Managed Claude tier needs no code change:** the `providers.claude` policy
    tier `opus` compiles to `{ model: 'opus' }`, a Claude CLI alias Anthropic
    resolves to the current Opus. The tier therefore resolves to Opus 5
-   automatically. Cyber-sensitive contexts reach 4.8 through an explicit
-   dispatch-matrix route target rather than through the four-value tier ladder.
+   automatically.
+9. **Opus 4.8 is not reachable through managed Claude dispatch.** An earlier
+   assumption that a `{ harness: 'claude', model: 'claude-opus-4-8' }` route
+   target could serve as the carve-out escape hatch was disproved during plan
+   verification. The candidate-ordering validator reads only `target.model` and
+   requires one of `haiku|sonnet|opus|fable`, throwing `unsupported Claude model`
+   otherwise (`packages/cli/src/commands/project/dispatch-ceiling/index.ts:864-877`);
+   `target.effort` is never read for Claude, unlike the Codex branch at `:879`.
+   The Claude-side carve-out is therefore an operator choice made outside
+   managed dispatch, and the guidance must say so rather than implying a
+   mechanism that does not exist. Only the Cursor harness gets a materializable
+   Opus 4.8 pin.
 
 ## Constraints
 
