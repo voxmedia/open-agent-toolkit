@@ -29,7 +29,7 @@ oat_generated: false
 | p04-t02 | done   | `0e651d0f`             |
 | p04-t03 | done   | `7801e136`, `f62d01dd` |
 | p04-t04 | done   | `609f0833`             |
-| p04-t05 | done   | pending commit         |
+| p04-t05 | done   | `33cc3b8b`             |
 
 ## Phase 5: Package and Validate
 
