@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-07-25
 oat_generated: false
@@ -76,17 +76,72 @@ at the mapping site.
 
 **Q:** Opus 5 low strictly dominates `claude-sonnet-5-high` on CursorBench
 (higher score, lower cost, half the tokens, a third fewer steps). Act now?
-**A:** Backlog it.
-**Decision:** Leave the economy tier untouched in this project. File a repo
-backlog item carrying the CursorBench evidence so an economy-tier rebalance can
-consider Composer and Luna at the same time.
+**A:** Initially "backlog it", then reversed at the requirements gate.
+**Decision:** Drop `claude-sonnet-5-high` from the Cursor economy tier. Demote
+its pin mapping to `catalogue: false` rather than deleting it, matching the
+existing `claude-fable-5-xhigh` precedent, so explicit configurations keep
+working. Anthropic presence moves up to Opus 5 low in `balanced`.
+
+### Question 7: Revised economy and balanced tiers (requirements gate)
+
+**Q:** At the requirements gate the operator redirected scope: put Opus 5 low
+in `balanced`, change economy's Sonnet entry to medium, and add
+`gpt-5.6-sol-low`. Two of the three are strictly dominated on CursorBench — is
+that intended?
+**A:** Skip `gpt-5.6-sol-low`; add Opus 5 low to `balanced`; drop Sonnet from
+Cursor economy entirely.
+**Decision:** Five Opus 5 rungs total (low in `balanced`; medium and high in
+`high`; xhigh and max in `frontier`). `gpt-5.6-sol-low` is excluded — it is
+dominated on both score and cost by `gpt-5.6-luna-high` from the same provider
+family, leaving only a latency argument that no current route needs.
+
+### Question 8: Does the economy change affect the Claude harness?
+
+**Q:** Do the Cursor economy and balanced changes also apply to the Claude
+harness?
+**A:** Question raised by the operator; answered during the gate.
+**Decision:** Cursor only, for three independent reasons. The `claude` provider
+block accepts only the four family scalars `haiku|sonnet|opus|fable` and its
+ceiling adapter declares `selectionAxis: 'tier'`, so no effort-qualified Sonnet
+value can be expressed. The evidence is Cursor-harness-specific and the harness
+rule forbids inferring direct-provider behavior from it. And the handoff freezes
+the Sonnet and Haiku rows in `provider-claude.md`.
+
+### Question 9: Unmaterializable cyber-sensitive route
+
+**Q:** `provider-cursor.md` names `claude-opus-4-8-thinking-xhigh` as the
+cyber-sensitive review route, but no Opus 4.8 entry exists in the Cursor pin
+catalog, so the resolver cannot materialize it. This project re-affirms that
+note while adding five Opus 5 pins beside it.
+**A:** Add it as a catalogued target.
+**Decision:** Add `claude-opus-4-8-thinking-xhigh` with `catalogue: true` so the
+cyber-sensitive carve-out is actually dispatchable. It is deliberately excluded
+from the bundled recommendation — it generates role files without becoming a
+default policy candidate.
+
+### Question 10: Fable's dominated frontier entries
+
+**Q:** Both Fable entries are now strictly dominated, and Fable provides no
+cross-family diversity from Opus since both are Anthropic. Remove them?
+**A:** Keep this PR; backlog the question.
+**Decision:** Retain both Fable candidates. Canon still designates Fable the
+exceptional-escalation route, so removal is a policy change rather than an
+incumbent refresh. CursorBench measures agentic coding, not the long-running
+autonomous and frontier knowledge work Fable is reserved for, and the evidence
+policy warns against treating leaderboard rank as a universal model order.
+Notably `claude-fable-5-thinking-high` was already dominated by
+`gpt-5.6-sol-max` (67.2%/$5.69 versus 66.5%/$8.77) before this project, so the
+inversion is pre-existing rather than introduced here. The approved prose
+reordering captures the practical benefit without touching policy.
 
 ## Solution Space
 
 The approach was not in question — the handoff brief prescribed it and the
-operator validated it. The only genuinely open dimensions were rung selection
-and tier placement, resolved in Questions 2-4 above once benchmark evidence
-replaced the release-notes-only basis the handoff was drafted against.
+operator validated it. The genuinely open dimensions were rung selection and
+tier placement, resolved in Questions 2-4 once benchmark evidence replaced the
+release-notes-only basis the handoff was drafted against, and then the
+economy/balanced revision in Questions 6-9 after the requirements gate
+surfaced a scope change.
 
 ## Key Decisions
 
@@ -102,13 +157,27 @@ replaced the release-notes-only basis the handoff was drafted against.
    and the Opus-first rationale are untouched. Fable 5 remains
    exceptional-escalation only. Sonnet and Haiku rows in `provider-claude.md`
    are unchanged.
-4. **Cursor rung set mirrors Sol:** four pinned variants at medium, high,
-   xhigh, and max; no low rung.
-5. **Evidence basis upgraded:** CursorBench 3.2 per-rung score and cost data is
+4. **Cursor rung set:** five pinned Opus 5 variants — low, medium, high, xhigh,
+   and max — placed as low in `balanced`, medium and high in `high`, and xhigh
+   and max in `frontier`. The medium-through-max group mirrors the existing Sol
+   shape; low is the added trustworthy option in `balanced`, where Grok 4.5's
+   higher score carries Cursor's training-contamination disclosure.
+5. **Cursor economy tier:** `claude-sonnet-5-high` is removed. It was a $3.19
+   outlier in a tier whose other members run $0.44-$1.14 and was strictly
+   dominated by all of them. Its pin mapping is demoted to `catalogue: false`,
+   not deleted. Economy consequently carries no Anthropic route; this is
+   acceptable because consequential work, which needs cross-family reviewer
+   pairing, never runs at economy.
+6. **Cyber-sensitive route becomes dispatchable:**
+   `claude-opus-4-8-thinking-xhigh` is added as a catalogued pin target so the
+   Opus 4.8 carve-out named in `provider-cursor.md` can actually be
+   materialized. It stays out of the bundled recommendation so it generates
+   role files without becoming a default policy candidate.
+7. **Evidence basis upgraded:** CursorBench 3.2 per-rung score and cost data is
    incorporated into the Cursor guidance and the evidence summary. Under the
    repo's own evidence-priority ordering, harness-specific benchmark data
    outranks provider release notes for a Cursor route.
-6. **Managed Claude tier needs no code change:** the `providers.claude` policy
+8. **Managed Claude tier needs no code change:** the `providers.claude` policy
    tier `opus` compiles to `{ model: 'opus' }`, a Claude CLI alias Anthropic
    resolves to the current Opus. The tier therefore resolves to Opus 5
    automatically. Cyber-sensitive contexts reach 4.8 through an explicit
@@ -135,10 +204,15 @@ replaced the release-notes-only basis the handoff was drafted against.
 - `provider-claude.md`, `provider-cursor.md`, and `evidence-and-refresh.md`
   carry Opus 5 as the hard-reasoning and consequential incumbent with refreshed
   freshness metadata and a stated cyber-sensitive carve-out.
-- Four `claude-opus-5-thinking-*` pinned variants exist for both
-  `oat-reviewer` and `oat-phase-implementer`, generated by sync.
-- The bundled dispatch-matrix recommendation places the new rungs in the `high`
-  and `frontier` tiers and its version identifier reflects the change.
+- Five `claude-opus-5-thinking-*` pinned variants and one
+  `claude-opus-4-8-thinking-xhigh` variant exist for both `oat-reviewer` and
+  `oat-phase-implementer`, generated by sync — 17 catalogued targets and 34
+  role files, up from 12 and 24.
+- The bundled dispatch-matrix recommendation carries 16 Cursor candidates
+  across the revised `economy`, `balanced`, `high`, and `frontier` tiers, and
+  its version identifier reflects the change.
+- Every recommendation candidate resolves to a catalogued pin mapping;
+  `claude-opus-4-8-thinking-xhigh` is catalogued without being recommended.
 - Existing skill-validation tests still pass unmodified, confirming the change
   is an incumbent refresh and not a policy change.
 - `pnpm lint`, `pnpm format`, `pnpm type-check`, `pnpm test`, and
@@ -150,9 +224,9 @@ replaced the release-notes-only basis the handoff was drafted against.
 
 - Any change to the five task classes, escalation boundaries, or the
   Opus-first policy.
-- Sonnet and Haiku rows in `provider-claude.md`.
-- The Cursor economy tier, including the dominated `claude-sonnet-5-high`
-  entry.
+- Sonnet and Haiku rows in `provider-claude.md`, and the `claude` provider
+  block of the dispatch matrix, which cannot express effort.
+- Removing either Fable candidate from the Cursor frontier tier.
 - `oat-dispatch-subagents/references/provider-claude.md` — verified by grep to
   contain no versioned model names, so no edit is required.
 - Downstream propagation: the internal-skills `pnpm run sync:skills` rerun and
@@ -160,13 +234,19 @@ replaced the release-notes-only basis the handoff was drafted against.
 
 ## Deferred Ideas
 
-- Cursor economy-tier rebalance — `claude-sonnet-5-high` is strictly dominated
-  by Opus 5 low on CursorBench, and at $3.19 it is already a cost outlier in a
-  tier whose other members run $0.44-$1.14. Deferred to a backlog item so
-  Composer and Luna placement can be reconsidered together rather than
-  piecemeal.
-- Pinning a `claude-opus-5-thinking-low` variant — excluded to mirror Sol,
-  which has no pinned low rung. The alias remains selectable ad hoc.
+- Fable frontier-tier review — both Fable candidates are now strictly
+  dominated, and Fable offers no cross-family diversity from Opus since both
+  are Anthropic. `claude-fable-5-thinking-high` was already dominated by
+  `gpt-5.6-sol-max` before this project. Deferred because removal would
+  contradict canon's exceptional-escalation designation and is a policy
+  decision, not an incumbent refresh.
+- Broader Cursor economy rebalance — with Sonnet removed, the remaining
+  Composer and Luna placements were not re-examined and may warrant their own
+  pass.
+- Pinning `gpt-5.6-sol-low` — dominated on score and cost by
+  `gpt-5.6-luna-high` from the same provider family. Its only real advantage is
+  latency: 19 steps and 5,104 tokens, less than half of anything else in
+  economy. Revisit if a low-latency economy route is ever needed.
 
 ## Assumptions
 
