@@ -214,6 +214,7 @@ installation updates are deliberately outside this repository plan.
 | final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T211041Z.md          |
 | final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212319Z.md          |
 | final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212332Z.md          |
+| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T214740Z.md          |
 | plan          | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault) |
 | pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md  |
 | pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md  |
