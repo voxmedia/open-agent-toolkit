@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-25
-oat_current_task_id: p04-t01
+oat_current_task_id: p06-t03
 oat_generated: false
 ---
 
@@ -14,10 +14,10 @@ oat_generated: false
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p04   | complete    | 5     | 5/5       |
-| p05   | in_progress | 3     | 1/3       |
-| p06   | pending     | 3     | 0/3       |
+| p05   | complete    | 3     | 3/3       |
+| p06   | in_progress | 3     | 2/3       |
 
-**Total:** 6/11 tasks completed
+**Total:** 10/11 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
@@ -33,23 +33,23 @@ oat_generated: false
 
 ## Phase 5: Package and Validate
 
-**Status:** in_progress
+**Status:** complete
 
-| Task    | Status  | Commit         |
-| ------- | ------- | -------------- |
-| p05-t01 | done    | pending commit |
-| p05-t02 | pending | -              |
-| p05-t03 | pending | -              |
+| Task    | Status | Commit                            |
+| ------- | ------ | --------------------------------- |
+| p05-t01 | done   | `30066393`                        |
+| p05-t02 | done   | `dfefbc2c`                        |
+| p05-t03 | done   | validation only, no source change |
 
 ## Phase 6: Record Reverification and Deferral
 
-**Status:** pending
+**Status:** in_progress
 
-| Task    | Status  | Commit |
-| ------- | ------- | ------ |
-| p06-t01 | pending | -      |
-| p06-t02 | pending | -      |
-| p06-t03 | pending | -      |
+| Task    | Status      | Commit                |
+| ------- | ----------- | --------------------- |
+| p06-t01 | done        | `54588a59`            |
+| p06-t02 | done        | audit only, no change |
+| p06-t03 | in_progress | -                     |
 
 ## Orchestration Runs
 
@@ -81,6 +81,42 @@ oat_generated: false
 - `p05-t01`: bumped the canonical skill once to `1.0.1` and all five public
   packages in lockstep to `0.2.18`.
 
+### 2026-07-25 — session takeover
+
+Ownership returned to the originating session after a separate Codex session
+crossed into this worktree. The takeover reviewed rather than assumed the
+inherited work.
+
+- **Verified independently:** the 113 focused skill tests pass; `p04` satisfies
+  all nine content gates and the deferral gate from the accepted vault packet;
+  no Cursor pin, catalog, generated role, or recommendation entry changed.
+- **Resolved the interrupted generation run:** `.oat/sync/manifest.json` and
+  `packages/cli/assets/public-package-versions.json` were confirmed to
+  regenerate byte-identically from `bundle-assets.sh`, and project-scoped sync
+  reported no further changes. Committed as `p05-t02` rather than discarded.
+- **Corrected four evidence gaps** in `evidence-and-refresh.md`: Frontier-Bench
+  now carries its vendor-operated, single-self-reported-row qualification
+  instead of being weighted equally with the Coding Agent Index; absolute
+  values were added for the monotonic and non-monotonic top-end results; the
+  Coding Agent Index measure gained its definition and exclusions; and the
+  dated evidence packet is now named as the locator the file's own
+  claim-provenance rule requires.
+- **Resolved a date contradiction:** the package-wide review date now
+  acknowledges that `provider-cursor.md` carries an earlier 2026-09-04 date
+  because its catalog was deliberately not re-verified.
+- **Corrected false review provenance** in `plan.md`, which recorded two
+  blocking gate reviews of the retired pre-synthesis plan as passing approvals
+  of the current scope.
+- **Scoped sync deliberately:** `oat sync` defaults to `--scope all`, which
+  would mutate user-scope installs. Only `--scope project` was run.
+- `p05-t03`: format, lint, type-check, 129 root tests, 113 focused skill tests,
+  `release:validate` across five packages, and `git diff --check` all pass.
+- `p06-t01`: reverification record written with all 16 schema keys and three
+  provider entries; downstream parity recorded as OPEN, not satisfied.
+- `p06-t02`: policy coherence audit passed. Canonical, bundled, and `.claude`
+  views are byte-identical; the only differing copies are an immutable
+  prior-project archive snapshot.
+
 ## Deviations from Pre-Synthesis Plan
 
 | Previous plan                        | Accepted plan                                                                     |
@@ -93,11 +129,11 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                               | Result |
-| ----- | ----------------------------------------------------------------------- | ------ |
-| p04   | Focused skill tests (113), format, terminology, scope, policy coherence | pass   |
-| p05   | -                                                                       | -      |
-| p06   | -                                                                       | -      |
+| Phase | Tests Run                                                                                         | Result |
+| ----- | ------------------------------------------------------------------------------------------------- | ------ |
+| p04   | Focused skill tests (113), format, terminology, scope, policy coherence; independently rerun      | pass   |
+| p05   | format, lint, type-check (10/10), root suite (129), focused skill tests (113), `release:validate` | pass   |
+| p06   | 16-key schema check, three-provider check, coherence audit A1-A8, generated-view parity           | pass   |
 
 ## Final Summary
 
