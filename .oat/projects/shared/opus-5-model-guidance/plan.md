@@ -212,6 +212,7 @@ installation updates are deliberately outside this repository plan.
 | p05   | code     | pending  | -          | -                                                       |
 | p06   | code     | pending  | -          | -                                                       |
 | final | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T211041Z.md              |
+| final | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212332Z.md              |
 | plan  | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault)     |
 
 **Prior-plan review history (retired scope).** The two gate reviews below
