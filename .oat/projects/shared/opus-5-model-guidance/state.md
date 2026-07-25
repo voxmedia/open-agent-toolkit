@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t02
-oat_last_commit: 33cc3b8b
+oat_current_task: p06-t03
+oat_last_commit: bdf3c6c5
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -11,8 +11,8 @@ oat_children: []
 oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
-oat_phase: plan
-oat_phase_status: complete
+oat_phase: implement
+oat_phase_status: in_progress
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T14:00:00Z'
+oat_project_state_updated: '2026-07-25T21:40:00Z'
 oat_generated: false
 ---
 
@@ -39,7 +39,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 5 packaging and validation (`p05-t02` next).
+Phase 6 reverification and closeout (`p06-t03` in progress).
 
 ## Artifacts
 
@@ -47,7 +47,8 @@ Phase 5 packaging and validation (`p05-t02` next).
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode)
 - **Plan:** `plan.md` (complete, post-release reconciled)
-- **Implementation:** `implementation.md` (ready)
+- **Implementation:** `implementation.md` (in progress, 10/11 tasks)
+- **Reverification:** `references/reverification.md` (complete)
 - **Historical plan:** `references/pre-synthesis-plan.md`
 
 ## Progress
@@ -61,7 +62,11 @@ Phase 5 packaging and validation (`p05-t02` next).
 - ✓ Cursor provisional guidance refreshed without speculative pins
 - ✓ Evidence and refresh protocol expanded
 - ✓ Canonical skill and public packages versioned
-- ⧗ Generated provider views and bundled assets refresh
+- ✓ Generated provider views and bundled assets refreshed
+- ✓ Repository validation passed (format, lint, type-check, tests, release)
+- ✓ Reverification record written; downstream parity recorded as OPEN
+- ✓ Policy coherence and generated-view parity audited
+- ⧗ Final cross-family review and closeout
 
 ## Blockers
 
@@ -69,4 +74,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 5 packaging and repository validation.
+Clear the final cross-family review gate, then hand off for PR.

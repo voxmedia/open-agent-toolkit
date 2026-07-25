@@ -12,66 +12,63 @@ it automatically.
 
 ```yaml
 verified_at: 2026-07-25T21:01:09Z
-provider: [claude, codex, cursor]
 reason: >-
   Newer-family trigger. Claude Opus 5 released 2026-07-24, followed by a
   two-lane independent research effort, reciprocal review, cross-model
   synthesis, and human acceptance on 2026-07-25. Not a scheduled review.
 
-harness_context:
-  claude: >-
-    Claude Code and direct Anthropic API workers dispatched through OAT
-    subagent-orchestration guidance.
-  codex: Codex CLI and direct OpenAI API workers.
-  cursor: Cursor IDE and CLI subagent dispatch.
+records:
+  - provider: claude
+    harness_context: >-
+      Claude Code and direct Anthropic API workers dispatched through OAT
+      subagent-orchestration guidance.
+    catalog_source: API catalog and official provider documentation
+    models_considered:
+      - claude-opus-5 (low, medium, high, xhigh, max)
+      - claude-opus-4-8
+      - claude-sonnet-5
+      - claude-fable-5
+      - claude-haiku-4-5
+      - claude-mythos-5 (invitation-only; not a routing candidate)
+    controls_verified:
+      - effort rungs low through max
+      - adaptive thinking on by default; disabling rejected at xhigh and max
+      - prompt-cache invalidation on effort or speed change
+      - fast mode as a gated latency purchase, not a capability rung
+      - service tier recorded independently of effort
+    eligibility_verified:
+      - Fable 5 requires 30-day retention and is unavailable under ZDR
+      - Priority Tier unsupported for Opus 5 and Sonnet 5; commitments closed
+        to new buyers
+      - Claude 4.6+ families use 1M context at standard rates
+      - Claude Code minimum version gating applies per family
 
-catalog_source:
-  claude: API catalog and official provider documentation
-  codex: official provider documentation
-  cursor: UI snapshot 2026-07-24, NOT re-verified in this refresh
+  - provider: codex
+    harness_context: Codex CLI and direct OpenAI API workers.
+    catalog_source: official provider documentation
+    models_considered:
+      - gpt-5.6-sol (medium, high, xhigh, max)
+      - gpt-5.6-luna (high, xhigh)
+      - gpt-5.6-terra
+      - mini and nano direct-API routes for strict extraction
+    controls_verified:
+      - reasoning-effort rungs
+      - trajectory economics distinguished from list price
+    eligibility_verified:
+      - Sol direct-API requests above 272K input tokens carry a 2x input and
+        1.5x output price step
+      - Luna disqualified for some very large-context work despite nominal
+        window acceptance
 
-models_considered:
-  claude:
-    - claude-opus-5 (low, medium, high, xhigh, max)
-    - claude-opus-4-8
-    - claude-sonnet-5
-    - claude-fable-5
-    - claude-haiku-4-5
-    - claude-mythos-5 (invitation-only; not a routing candidate)
-  codex:
-    - gpt-5.6-sol (medium, high, xhigh, max)
-    - gpt-5.6-luna (high, xhigh)
-    - gpt-5.6-terra
-    - mini and nano direct-API routes for strict extraction
-  cursor: existing live-catalog entries only; no new selector verified
-
-controls_verified:
-  claude:
-    - effort rungs low through max
-    - adaptive thinking on by default; disabling rejected at xhigh and max
-    - prompt-cache invalidation on effort or speed change
-    - fast mode as a gated latency purchase, not a capability rung
-    - service tier recorded independently of effort
-  codex:
-    - reasoning-effort rungs
-    - trajectory economics distinguished from list price
-  cursor: none newly verified this cycle
-
-eligibility_verified:
-  claude:
-    - Fable 5 requires 30-day retention and is unavailable under ZDR
-    - Priority Tier unsupported for Opus 5 and Sonnet 5; commitments closed
-      to new buyers
-    - Claude 4.6+ families use 1M context at standard rates
-    - Claude Code minimum version gating applies per family
-  codex:
-    - Sol direct-API requests above 272K input tokens carry a 2x input and
-      1.5x output price step
-    - Luna disqualified for some very large-context work despite nominal
-      window acceptance
-  cursor: >-
-    not re-verified; provider-cursor.md carries an earlier 2026-09-04 review
-    date to reflect this
+  - provider: cursor
+    harness_context: Cursor IDE and CLI subagent dispatch.
+    catalog_source: UI snapshot 2026-07-24, NOT re-verified in this refresh
+    models_considered: existing live-catalog entries only; no new selector
+      verified
+    controls_verified: none newly verified this cycle
+    eligibility_verified: >-
+      not re-verified; provider-cursor.md carries an earlier 2026-09-04 review
+      date to reflect this
 
 sources:
   - https://platform.claude.com/docs/en/about-claude/models/overview
@@ -104,7 +101,7 @@ independent_reviewer: >-
   of Claude Opus review of the synthesis. Verdict: Aligned with Revisions,
   20 accept / 6 revise / 4 keep provisional / 0 reject, with one retraction.
   Human acceptance recorded 2026-07-25 in Accepted Update Plan.md.
-  Repository-side takeover review and the final gate review were both run
+  Repository-side takeover review and both final gate reviews were run
   cross-family on gpt-5.6-sol-max against the accepted packet.
 
 incumbent_changes:

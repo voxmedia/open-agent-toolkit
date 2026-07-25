@@ -20,8 +20,14 @@ not it was ever verified. The actual authority lives outside the code:
   constraints prevent a pin, so accepting a variant is not model verification, and
   self-report must not be promoted into observed identity.
 
-This file is that external evidence. Until it is filled in, no mapping may be added
-in p02-t01.
+This file is that external evidence. Until it is filled in, no Cursor Opus 5 pin
+mapping, catalog entry, generated role variant, or dispatch-recommendation entry
+may be added by any future task.
+
+The `p01-*` through `p03-*` task IDs that originally consumed this gate were
+retired with the pre-synthesis plan; see `references/pre-synthesis-plan.md` for
+that historical scope. The gate itself is unchanged and still applies to
+whatever future task takes up the Cursor mapping work.
 
 ## How to read the observed model
 
@@ -52,13 +58,14 @@ do not ask.
 
 ## Consequences
 
-Only `pass` rows become mappings in p02-t01.
+Only `pass` rows may become catalog mappings.
 
 - A `fail-nonthinking` row at medium or high is the specific risk flagged in
-  `discovery.md`: the role would run at lower capability with no error surfaced.
-- Any dropped rung also loses its recommendation tier slot in p02-t02. Adjust the
-  expected counts down from 17 catalogued / 16 recommended rather than forcing
-  those numbers.
+  `references/pre-synthesis-discovery.md`: the role would run at lower
+  capability with no error surfaced.
+- Any dropped rung also loses its recommendation tier slot. Adjust the expected
+  catalog and recommendation counts down to match the rungs that actually
+  passed rather than forcing a predetermined total.
 - If `claude-opus-4-8[effort=xhigh]` fails, the cyber-sensitive Cursor route stays
   unmaterializable and `provider-cursor.md` must say so plainly instead of naming a
   route that cannot be dispatched.

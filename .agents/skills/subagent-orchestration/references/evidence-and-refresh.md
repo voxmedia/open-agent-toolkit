@@ -208,6 +208,16 @@ After canonical changes:
 
 ## Reverification Record
 
+One record describes one provider reference. When a single refresh cycle
+updates several provider references, emit one record per provider inside a
+`records:` list and lift the cycle-level fields — `verified_at`, `sources`,
+`claim_provenance`, `independent_author`, `independent_reviewer`,
+`incumbent_changes`, `reason`, `downstream_consumers`, `downstream_parity`, and
+`unresolved_items` — to the parent so they are stated once rather than
+duplicated per provider. Each record then carries only `provider`,
+`harness_context`, `catalog_source`, `models_considered`, `controls_verified`,
+and `eligibility_verified`.
+
 When updating a provider reference, record:
 
 ```yaml

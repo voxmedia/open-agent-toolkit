@@ -206,35 +206,39 @@ installation updates are deliberately outside this repository plan.
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                                |
-| ----- | -------- | -------- | ---------- | ------------------------------------------------------- |
-| p04   | code     | passed   | 2026-07-25 | takeover review against the accepted packet (see below) |
-| p05   | code     | pending  | -          | -                                                       |
-| p06   | code     | pending  | -          | -                                                       |
-| final | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T211041Z.md              |
-| final | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212319Z.md              |
-| final | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212332Z.md              |
-| plan  | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault)     |
-
-**Prior-plan review history (retired scope).** The two gate reviews below
-reviewed `references/pre-synthesis-plan.md`, not this plan. Both returned
-blocking findings and exited nonzero; their findings were remediated in that
-retired plan before it was superseded. They are recorded as provenance and must
-not be read as approvals of the current `p04`-`p06` scope.
-
-| Scope         | Type     | Status  | Date       | Artifact                                           |
-| ------------- | -------- | ------- | ---------- | -------------------------------------------------- |
-| pre-synthesis | artifact | blocked | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md |
-| pre-synthesis | artifact | blocked | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md |
-
-**Takeover review (2026-07-25).** The `p04` guidance changes were reviewed
-against the accepted vault packet during session takeover. All nine content
-gates and the deferral gate passed. Four evidence-specificity gaps were found
-and corrected in a follow-up commit; the underlying conclusions were already
-correct. The 113 focused skill tests were independently rerun and passed.
+| Scope         | Type     | Status   | Date       | Artifact                                            |
+| ------------- | -------- | -------- | ---------- | --------------------------------------------------- |
+| p04           | code     | passed   | 2026-07-25 | takeover review against the accepted packet         |
+| p05           | code     | pending  | -          | -                                                   |
+| p06           | code     | pending  | -          | -                                                   |
+| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T211041Z.md          |
+| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212319Z.md          |
+| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212332Z.md          |
+| plan          | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault) |
+| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md  |
+| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md  |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
+
+### Review notes
+
+The two `pre-synthesis` rows reviewed `references/pre-synthesis-plan.md`, not
+this plan. Both returned blocking findings and exited nonzero; their findings
+were remediated in that retired plan before it was superseded. They are
+recorded as provenance and must not be read as approvals of the current
+`p04`-`p06` scope.
+
+The `p04` takeover review checked the guidance changes against the accepted
+vault packet during session takeover. All nine content gates and the deferral
+gate passed. Four evidence-specificity gaps were found and corrected; the
+underlying conclusions were already correct. The 113 focused skill tests were
+independently rerun and passed.
+
+The three `final` reviews ran cross-family on `gpt-5.6-sol-max`. The first
+raised two Important findings, both fixed in `bdf3c6c5`. The second raised two
+further Important findings against those fixes, both fixed in the closeout
+commit.
 
 ## References
 

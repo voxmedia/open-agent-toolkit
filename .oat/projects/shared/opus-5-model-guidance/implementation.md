@@ -23,33 +23,67 @@ oat_generated: false
 
 **Status:** complete
 
-| Task    | Status | Commit                 |
-| ------- | ------ | ---------------------- |
-| p04-t01 | done   | `e594ab12`             |
-| p04-t02 | done   | `0e651d0f`             |
-| p04-t03 | done   | `7801e136`, `f62d01dd` |
-| p04-t04 | done   | `609f0833`             |
-| p04-t05 | done   | `33cc3b8b`             |
+### Task p04-t01: Expand durable selection principles
+
+**Status:** completed
+**Commit:** `e594ab12`
+
+### Task p04-t02: Refresh Claude routing
+
+**Status:** completed
+**Commit:** `0e651d0f`, `bdf3c6c5`
+
+### Task p04-t03: Refresh Codex economics
+
+**Status:** completed
+**Commit:** `7801e136`, `f62d01dd`
+
+### Task p04-t04: Refresh Cursor guidance without speculative pins
+
+**Status:** completed
+**Commit:** `609f0833`
+
+### Task p04-t05: Expand evidence and refresh protocol
+
+**Status:** completed
+**Commit:** `33cc3b8b`, `a68b1c28`
 
 ## Phase 5: Package and Validate
 
 **Status:** complete
 
-| Task    | Status | Commit                            |
-| ------- | ------ | --------------------------------- |
-| p05-t01 | done   | `30066393`                        |
-| p05-t02 | done   | `dfefbc2c`                        |
-| p05-t03 | done   | validation only, no source change |
+### Task p05-t01: Bump the canonical skill and public packages
+
+**Status:** completed
+**Commit:** `30066393`
+
+### Task p05-t02: Refresh generated views
+
+**Status:** completed
+**Commit:** `dfefbc2c`
+
+### Task p05-t03: Run repository validation
+
+**Status:** completed
+**Commit:** validation only, no source change
 
 ## Phase 6: Record Reverification and Deferral
 
 **Status:** in_progress
 
-| Task    | Status      | Commit                |
-| ------- | ----------- | --------------------- |
-| p06-t01 | done        | `54588a59`            |
-| p06-t02 | done        | audit only, no change |
-| p06-t03 | in_progress | -                     |
+### Task p06-t01: Write the reverification record
+
+**Status:** completed
+**Commit:** `54588a59`, `bdf3c6c5`
+
+### Task p06-t02: Audit policy coherence
+
+**Status:** completed
+**Commit:** audit only, no source change
+
+### Task p06-t03: Final review and bookkeeping
+
+**Status:** in_progress
 
 ## Orchestration Runs
 
