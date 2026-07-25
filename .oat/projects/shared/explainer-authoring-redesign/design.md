@@ -61,9 +61,9 @@ assembly, immutable hashing, and the s3-static publish connector.
 ### Component Diagram
 
 ```
-fact base ──▶ author stage ──▶ content records ──▶ render ──▶ validate ──▶ render QA ──▶ manifest ──▶ (publish)
-              brief + facts     markdown | HTML     per-path    safety=hard   warnings      warnings[],
-              per artifact      + provenance                    floors=warn                 auto-drafted mark
+fact base ──▶ author stage ──▶ content records ──▶ render ──▶ validate ──▶ render QA ──▶ approval ──▶ manifest ──▶ (publish)
+              brief + facts     markdown | HTML     per-path    safety=hard   warnings      gate (D4)    warnings[]
+              per artifact      + provenance                    floors=warn                 marking
 ```
 
 **Key Components:**
@@ -94,7 +94,8 @@ fact base ──▶ author stage ──▶ content records ──▶ render ─�
 artifact's brief and returns authored content with provenance; narrative
 artifacts flow through the renderer, artistic ones through DOM validation; the
 guideline checker and render QA append warnings; the manifest records
-artifacts, hashes, warnings, and approval marking exactly as today.
+artifacts, hashes, and warnings exactly as today, while approval marking
+stays in the approval record and run result.
 
 ## Component Design
 
@@ -159,9 +160,9 @@ provenance}`. The author request (`author-request/v2`) carries the fact
 - **Responsibilities:** Provide curated shells (deck shell, explainer shell,
   diagram canvas) and theme tokens as the starting canvas; accept
   agent-composed HTML; validate at the DOM level — hard-fail on unsafe
-  content (script elements, event handlers, external active content),
-  warn on style-family deviations (missing theme token usage, missing
-  required anchors).
+  content (event handlers, external active content, and any script that is
+  not a hash-pinned core shell script per decision D3), warn on style-family
+  deviations (missing theme token usage, missing required anchors).
 - **Interfaces:** The author request for an artistic artifact includes the
   shell source and theme tokens; the response's `html` is the complete
   artifact document. Validation is a parse-level allowlist pass, not
@@ -196,47 +197,241 @@ provenance}`. The author request (`author-request/v2`) carries the fact
 
 ### 7. Recipe contract v2
 
-- **Purpose:** Content-driven set scaling.
+- **Purpose:** Content-driven set scaling, with policy owned by the recipe.
 - **Responsibilities:** Declare the floor (required artifacts with types and
-  briefs — for `project-recap`: one narrative page) and the allowed expansion
-  (artifact types the author may add: diagrams, decks, additional pages, up to
-  sane limits). Validation treats floor misses as warnings (guideline checker)
-  and undeclared artifact types as errors.
+  briefs — for `project-recap`: one narrative hub page) and the allowed
+  expansion as _profiles_: each profile fixes a `type`, `authoring`,
+  `briefRef`, optional `shell`, and `maxCount`. The author selects a profile
+  by ID and supplies only `{id, profileId, rationale}`; it never chooses the
+  rendering path, brief, or shell. Validation treats floor misses as warnings
+  (guideline checker); unknown profiles, unsafe or duplicate artifact IDs, and
+  collisions with floor IDs are errors; over-limit proposals are rejected with
+  a warning.
 - **Interfaces:** `recipe/v2` replaces the exact `artifacts[]` list with
-  `floor[]` + `expansion{allowedTypes, limits}`. The manifest's artifact list
-  remains variable-length as today (no manifest change).
+  `floor[]` + `expansion{profiles[], limits}`. Only the recipe file's
+  `schemaVersion` moves to v2; each recipe's own `version` selector stays
+  `"1"`, so `{id, version}` callers and manifest cross-checks are unaffected.
+  The manifest's artifact list remains variable-length as today (no manifest
+  change), and every declared type stays inside the frozen `manifest/v1` enum
+  (`hub`, `diagram`, `explainer`, `deck`, `catalog`) — narrative sub-pages use
+  `explainer` rather than introducing a new type.
 - **Notes:** With multi-artifact sets, the narrative page assumes hub duty via
   the existing `artifactLinks` mechanism.
 
 ### 8. Approval & marking
 
 - **Purpose:** Keep human gating optional-but-real; make autonomy honest.
-- **Responsibilities:** Interactive runs pause at the existing approval
-  checkpoint with the Markdown draft(s) and accumulated warnings as the review
+- **Responsibilities:** Interactive runs pause at the approval checkpoint —
+  relocated after render and QA per D4 — with the rendered artifacts, their
+  Markdown sources, and the complete accumulated warning set as the review
   surface. Unattended runs (including automated project completion) flow
-  through end-to-end; the approval record and manifest carry `auto-drafted`
-  (vs `human-approved`) so published pages and catalogs can mark and filter.
-- **Interfaces:** Extends the existing content-approval record and manifest
-  with the marking field; no change to run-request modes. The lifecycle's
-  automated completion chain (document / summary / pr-final / recap) always
-  invokes recap runs with `mode: unattended`.
+  through end-to-end; the approval record carries `auto-drafted` (vs
+  `human-approved`) so downstream consumers can mark and filter.
+- **Interfaces:** Extends the existing content-approval record with the
+  marking field and surfaces it in the run result. It is deliberately **not**
+  added to the manifest: `manifest/v1` is `additionalProperties: false` with
+  no marking field, and this design keeps that rail frozen. No change to
+  run-request modes. The author callback is required in both modes, since
+  synthetic content models are removed; interactive runs differ only in
+  pausing at the approval gate. The lifecycle's automated completion chain
+  (document / summary / pr-final / recap) always invokes recap runs with
+  `mode: unattended`, and those callers construct the brief-aware author
+  callback alongside the existing critic callback.
+
+## Resolved Interface Decisions
+
+Five decisions the third plan gate correctly identified as unresolved design
+questions rather than plan defects. Each was verified against current code and
+is binding on the plan.
+
+### D1. Expansion sub-pages get ID-bearing paths; floor artifacts keep today's
+
+`artifactPath` currently appends `artifact.id` only for `diagram` and `deck`
+(`scripts/lib/render.mjs:256-263`), so every `explainer` artifact resolves to
+`site/explainers/{slug}/index.html`. Routing narrative sub-pages to
+`explainer` would therefore make multiple sub-pages overwrite each other and
+trip the duplicate-path cross-record check (`scripts/lib/contracts.mjs:538-545`).
+
+**Decision:** the path rule keys on the artifact's declared role, not its
+type. Floor artifacts keep the current path function byte-for-byte, so no
+existing published URL changes. Expansion artifacts always receive
+`site/{directory}/{slug}/{artifactId}/index.html`. Expansion IDs are already
+validated unique and non-colliding with floor IDs, and an expansion page nests
+one level below the floor's `index.html`, so uniqueness is structural rather
+than conventional.
+
+The origin is carried explicitly rather than inferred. Renderer artifact
+descriptors (`render.mjs:339-355`) gain a required
+`origin: "floor" | "expansion"` field that `artifactPath` reads, and
+`artifactLinks` entries widen from `{id, type, label}` to
+`{id, type, label, origin}` (`:389-405`) so a generated hub link resolves
+through the identical rule instead of falling back to the floor path.
+Transitional v1 descriptors default to `"floor"`. Both the rendered path and
+the relative/public link must be asserted.
+
+### D2. `requiredNarrative` survives as a floor-entry field
+
+`requiredNarrative` is a required recipe field today, validated at
+`scripts/lib/recipes.mjs:175` and consumed at `:132` to check that fact-base
+`sections` entries reference known section IDs. Dropping it would break
+fact-base validation and leave the guideline checker without a coverage list.
+
+**Decision:** it moves from the recipe root to the narrative floor entry in
+`recipe/v2` rather than disappearing. This is consistent with "schemas carry
+identity, prose carries quality": the _list_ of sections is machine identity
+(fact-base validation, coverage checks), while what each section should
+achieve editorially lives in the brief. `author-request/v2` already carries it
+through the existing `floor` field.
+
+### D3. Core shell scripts are hash-pinned; authored scripts are rejected
+
+All three bundled shells contain `<script>` elements (`deck-shell.html`,
+`diagram-shell.html`, `engineer-tour.html`), so a validator that hard-fails
+every script would reject an unmodified shell.
+
+**Decision:** the validator derives a hash-pinned **ordered multiset** of
+script hashes from the declared core shell and requires the authored HTML's
+scripts to match it exactly — same hashes, same count, same order. Membership
+alone is insufficient: `deck-shell.html` carries two distinct core scripts
+(lines 13 and 223), so a membership test would accept a deleted script, a
+duplicated block, or one allowed block replaced by another. Comparison is over
+exact bytes with no normalization. Missing, added, duplicated, reordered,
+replaced, or mutated scripts are all hard errors, as are inline event-handler
+attributes and external active content in all cases. Non-script markup stays fully free within the DOM
+allowlist. The rejected alternative — accepting only authored extension
+regions injected into a core-owned shell — was declined because it
+reintroduces the slot-filling constraint this redesign exists to remove.
+
+### D4. The interactive approval gate moves after render and QA
+
+The gate currently resolves before theme and render (`scripts/run.mjs:112-191`),
+its resume predicate requires `theme` still pending (`:225-230`), and tests
+assert that `theme.resolved.json` and `site/` do not exist at the pause
+(`tests/run.integration.test.mjs:141-178`). Post-render warnings therefore
+cannot structurally reach the interactive reviewer.
+
+**Decision:** theme, render, safety validation, the guideline checker, and
+render QA all run before the approval checkpoint; approval sits immediately
+before publish and durability. Rendering is local, cheap, and non-destructive,
+and nothing leaves the machine before approval, so the meaningful invariant is
+preserved and strengthened: the reviewer approves the rendered artifacts and
+the complete warning set rather than raw markdown.
+
+Consequences the plan must carry. The resume predicate keys on an
+**unresolved approval state — `pending` or `rejected`** — plus completed
+render/QA stages, replacing today's theme-pending check; keying on `pending`
+alone would delete the reject → edit → approve correction loop. Because that
+loop edits the source _after_ the rejection, a rejected resume must
+**re-render and re-run QA against the edited sources** before approval is
+processed; otherwise the run would approve stale artifacts backed by stale
+safety evidence. Build-record stages are terminal once `passed`/`warned`
+(`scripts/lib/records.mjs:18-23`, `:84-101`), so this requires a narrowly
+guarded record-level reopen that re-runs the affected stages and leaves an
+auditable trail rather than silently overwriting them. A direct, unedited
+pending→approve resume may hydrate the already-validated render. The build
+record shows render stages passed at the pause, and the existing "no
+downstream work before approval" assertions are re-expressed as "nothing is
+published or persisted externally before approval" — the `publish` and
+`durability` call-count assertions remain exactly as they are.
+
+### D5. Every bundled recipe declares finite expansion caps
+
+`maxCount`, `maxArtifacts`, and `maxPerType` were all optional, so a recipe
+could declare profiles with no effective bound and let an unattended author
+propose an unbounded set.
+
+**Decision:** `recipe/v2` validation requires a finite `maxCount` on every
+profile and a finite `expansion.limits.maxArtifacts` on every recipe. Floor
+artifacts do not count toward `maxArtifacts`; it caps expansion only. Bundled
+values: `project-recap` — supporting-diagram 4, deep-dive 3, walkthrough-deck
+1, maxArtifacts 6; `program-recap` — supporting-diagram 3, project-page 12,
+maxArtifacts 12; `project-explainer` — supporting-diagram 4, maxArtifacts 4;
+`engineer-tour` — supporting-diagram 4, maxArtifacts 4.
+
+### D6. Callout and timeline source syntax
+
+**Decision:** callouts use GFM alert syntax (`> [!NOTE]`, `> [!TIP]`,
+`> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`) parsed from blockquotes into
+a distinct callout AST node — no invented syntax. Timelines use a fenced
+` ```timeline ` block with one `date — label` entry per line, in the same
+family as fenced diagram blocks. Both map to dedicated AST node types with
+parser and renderer fixtures.
+
+### D7. Minimum supported fenced-diagram grammar
+
+"Mermaid-class" is too loose to make p03-t03 acceptance objective against a
+dependency-free native implementation, so the supported boundary is fixed.
+
+**Decision:** a ` ```diagram ` fence must support exactly this grammar, and
+everything within it must render:
+
+- a direction header, `graph TD` or `graph LR`
+- node declarations with an ID and optional label shape: `id[Label]`
+  (rectangle), `id(Label)` (rounded), `id{Label}` (diamond); a bare `id` is a
+  rectangle labelled with its ID
+- edges `a --> b`, `a --- b`, and labelled edges `a -->|label| b`
+- labels may be quoted (`id["Label, with comma"]`); all label text is
+  HTML-escaped on render
+- `%%` line comments
+
+Any construct outside this grammar (subgraphs, classDefs, sequence/state
+diagrams, styling directives) degrades to the planned warning plus the source
+in a code block rather than failing. Fixtures sit exactly at this boundary:
+one exercising every supported construct, one per degradation class.
+
+### D8. The accepted artifact set is persisted in the approval record
+
+With a mandatory author callback and expansion, an interactive run can create
+a variable artifact set _before_ pausing. Today the approval record stores no
+`authorResultPaths` for pending/rejected states
+(`scripts/lib/content-approval.mjs:42-49`) and resume hydration reads paths
+only from that record while iterating recipe artifacts
+(`scripts/run.mjs:261-294`) — so a paused expanded run would lose expansion
+identities, source paths, provenance, and hub links on resume.
+
+**Decision:** `content-approval/v2` becomes the durable source of truth for
+the resolved set. It carries `artifacts[]` of `{artifactId, origin,
+profileId?, authoring, contentPath, authorResultPath?}` for every floor and
+accepted expansion artifact, written for **all** approval states including
+pending and rejected. Resume hydrates the set from the record rather than from
+the recipe, so the author is never re-invoked and IDs, paths, links, and
+hashes are stable across a pause.
+
+Two compatibility rules keep this implementable in order. First, the complete
+set can only be written once the author stage exists to produce it — before
+then the runner passes only `state.authorResultPaths` (`scripts/run.mjs:112-117`)
+and interactive runs synthesize content with no author result at all
+(`:85-95`). So the field is defined and readable when v2 lands, but
+complete-set writes activate atomically with the author stage, not earlier.
+Second, `authorResultPath` is optional precisely because normalized legacy v1
+records have none (`scripts/lib/content-approval.mjs:42-67`); such entries
+hydrate from the existing content file rather than inventing a path to a file
+that never existed. For v1 records read during resume the set defaults to the
+recipe floor, matching today's behavior.
 
 ## Data Models
 
 Conceptual contract shapes (exact JSON Schema is implementation work):
 
-- `author-request/v2`: `{schemaVersion, artifactId, artifactType, brief,
-factBase, shell?, theme, floor?}`
+- `author-request/v2`: `{schemaVersion, artifactId, artifactType, authoring,
+brief, factBase, shell?, theme, floor?}`
 - `author-result/v2`: `{schemaVersion, artifactId, content: {markdown |
-html}, provenance{authorId, generatedAt, method?}}`
-- `recipe/v2`: `{schemaVersion, id, version, sourceRoles, briefRef, floor:
-[{id, type, authoring: markdown|html, template?}], expansion:
-{allowedTypes[], limits?}, discoveryLimits}`
-- `content-approval/v2`: adds `marking: human-approved | auto-drafted` to the
-  existing record.
-- Manifest (`manifest/v1`): unchanged shape; variable artifact list and
-  `warnings[]` already suffice; approval marking rides in the existing
-  approval record and is surfaced in the manifest's outcome context.
+html}, provenance{authorId, generatedAt, method?}, proposedArtifacts?: [{id,
+profileId, rationale}]}` — proposals carry no `authoring`, `briefRef`, or
+  `shell`; those come from the referenced profile.
+- `recipe/v2`: `{schemaVersion, id, version, sourceRoles, floor: [{id, type,
+authoring: markdown|html, template?, briefRef, requiredNarrative?}],
+expansion: {profiles: [{profileId, type, authoring, briefRef, shell?,
+maxCount}], limits: {maxArtifacts, maxPerType?}}, discoveryLimits}` —
+  `requiredNarrative` moves from the recipe root to the narrative floor entry
+  (D2), and caps are mandatory (D5).
+- `content-approval/v2`: adds `marking: human-approved | auto-drafted` and
+  `artifacts: [{artifactId, origin, profileId?, authoring, contentPath,
+authorResultPath}]` (D8) to the existing record.
+- Manifest (`manifest/v1`): unchanged shape. Its variable artifact list and
+  required `warnings: string[]` already suffice for expansion sets and
+  guideline/render-QA findings; approval marking rides in the approval record
+  and run result only, never the manifest.
 
 ## Error Handling
 
@@ -245,11 +440,19 @@ Two-tier taxonomy, applied uniformly:
 - **Hard errors (fail the stage, recorded in build record):** unsafe HTML/AST
   content (script, event handlers, active external content), citation or
   provenance integrity violations, undeclared artifact types, publish-boundary
-  contract violations, malformed author results (missing content/provenance).
+  contract violations, malformed author results (missing content/provenance),
+  and malformed expansion proposals (unknown `profileId`, unsafe or duplicate
+  artifact ID, collision with a floor ID) — these signal a broken author
+  rather than thin content.
 - **Warnings (manifest `warnings[]`, never block):** floor misses (missing
   diagram, thin coverage), style-family deviations, render QA findings
   (overflow, clipping, readability), render-QA-skipped (no headless runtime),
-  stale-input freshness findings (existing behavior).
+  rejected over-limit expansion proposals, stale-input freshness findings
+  (existing behavior).
+
+The run stage enforces this split: safety and provenance violations keep
+throwing `E_QA`, while editorial and layout findings append stable warning IDs
+to the manifest's `warnings[]` and let the run succeed in both modes.
 
 Interactive runs surface both tiers at the approval gate; unattended runs ship
 warnings visibly in the manifest.

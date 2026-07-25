@@ -22,25 +22,97 @@ escaping single-paragraph renderer) with the two-path authoring model from
 `design.md`: markdown-first deterministic rendering for narrative artifacts,
 shell-based agent-composed HTML for artistic artifacts, prose briefs as the
 quality mechanism, guidelines-as-warnings, restored render QA, content-driven
-set scaling, and honest auto-drafted marking for unattended runs. Machine
-rails (fact base, manifest, hashing, publish, approval modes) stay unchanged.
+set scaling, and honest auto-drafted marking for unattended runs.
 
 Primary write surface: `.agents/skills/explainer-kit/` (core skill) and
-`.agents/skills/oat-explainer-kit/` (adapter), plus consumer callers, docs,
-and release bookkeeping. Skill tests run with `node --test
-.agents/skills/explainer-kit/tests/`.
+`.agents/skills/oat-explainer-kit/` (adapter), plus lifecycle callers, docs,
+release tooling fixtures, and release bookkeeping. Skill tests run with
+`node --test .agents/skills/explainer-kit/tests/`.
 
-**Expansion protocol (design clarification, binding for p01/p06/p07):**
-content-driven set scaling is expressed as a two-step author protocol. The
-floor artifact's `author-result/v2` may carry an optional
-`proposedArtifacts[]` (id, type, authoring, rationale) — the set-planning
-response. The pipeline validates proposals against the recipe's
-`expansion{allowedTypes, limits}`, then issues one `author-request/v2` per
-accepted proposal and receives one `author-result/v2` per artifact. Hub
-linking of accepted expansion artifacts rides the existing `artifactLinks`
-mechanism. Rejected/over-limit proposals degrade to manifest warnings.
+Bundled copies under `packages/cli/assets/skills/` are regenerated wholesale
+by `packages/cli/scripts/bundle-assets.sh` during `pnpm build` (it `rm -rf`s
+the assets tree and re-copies from `.agents/skills`, stripping `tests/`).
+Tasks edit canonical paths only; the bundled tree refreshes at build.
 
-## Phase 1: Contracts v2 (schemas, recipes, approval marking)
+## Binding decisions
+
+`design.md` resolves eight interface questions (D1–D8) that this plan
+implements verbatim: ID-bearing paths for expansion artifacts while floor
+artifacts keep today's paths, carried by an explicit `origin` field (D1);
+`requiredNarrative` relocated to the narrative floor entry (D2); an ordered
+multiset of hash-pinned core shell scripts with all other scripts rejected
+(D3); the interactive approval gate relocated to after render and QA (D4);
+mandatory finite expansion caps (D5); GFM alert callouts plus fenced
+`timeline` blocks (D6); a fixed minimum fenced-diagram grammar (D7); and the
+accepted artifact set persisted in the approval record so paused expanded
+runs rehydrate faithfully (D8). Three further boundaries are plan-level:
+
+**B1. Manifest stays at v1, unmodified.** `manifest.schema.json` is
+`additionalProperties: false` with artifact types restricted to `hub`,
+`diagram`, `explainer`, `deck`, `catalog`. No new type is introduced;
+narrative sub-pages use `explainer`. Approval marking is **not** added to the
+manifest — it lives in the `content-approval/v2` record and the run result.
+Guideline and render-QA findings need no schema change: `manifest/v1` already
+requires `warnings` as `{type: array, items: {type: string}}`.
+
+**B2. Recipe files carry two independent versions; only one moves.**
+`recipes.mjs` distinguishes `schemaVersion` (`explainer-kit.recipe/v1`, the
+file-format contract, line 3) from `version` (`"1"`, the recipe's identity,
+line 173) used in the `{id, version}` selector and cross-checked against the
+manifest at `oat-explainer-kit/scripts/run.mjs:309`. This plan moves
+`schemaVersion` to `explainer-kit.recipe/v2` and **leaves every recipe's
+`version` at `"1"`**, so identity pins in `resolve-config.mjs:182` and the
+wave skills stay valid. Release/RC fixtures that assert the recipe _schema_
+version are a separate surface and are migrated in p06-t04.
+
+**B3. Floors are unchanged from v1.** Each recipe's floor reproduces its
+current artifact set exactly — `project-recap`, `program-recap`, and
+`project-explainer` each keep one `hub` on `house-style`; `engineer-tour`
+keeps one `explainer` on the `engineer-tour` shell. Rendered URLs, recipe
+identity, and artifact ID/type identity therefore do not churn. Internal
+source paths may change with the authoring format: `engineer-tour` authors
+html, so its `source/content/…` file (and the manifest `contentPath` that
+records it) moves from `.md` to `.html`. Richness comes from expansion, not
+from restructuring the floor.
+
+## Expansion protocol
+
+Recipes own policy; the author owns judgment about how many and why. Each
+recipe declares `expansion.profiles[]`, where a profile fixes everything the
+pipeline needs to build a follow-up request:
+
+```json
+{
+  "profileId": "supporting-diagram",
+  "type": "diagram",
+  "authoring": "html",
+  "briefRef": "briefs/supporting-diagram.md",
+  "shell": "diagram-shell",
+  "maxCount": 4
+}
+```
+
+The floor artifact's `author-result/v2` may carry an optional
+`proposedArtifacts[]` of `{id, profileId, rationale}`. Proposals carry **no**
+`authoring`, `briefRef`, or `shell`; those are read from the profile. The
+pipeline then:
+
+1. Validates each proposal: `profileId` must resolve; `id` must be a safe
+   slug, unique across proposals, and must not collide with any floor
+   artifact id.
+2. Enforces caps: per-profile `maxCount` and recipe-level
+   `expansion.limits.maxArtifacts` (both mandatory per D5; floor artifacts do
+   not count toward `maxArtifacts`). Over-limit proposals are rejected with a
+   stable warning ID rather than failing the run.
+3. Issues one `author-request/v2` per accepted proposal, populated from the
+   profile, and receives one `author-result/v2` per artifact.
+
+Malformed proposals (unknown profile, unsafe/duplicate/colliding id) are hard
+errors — they indicate a broken author, not thin content. Accepted expansion
+artifacts render to ID-bearing paths per D1 and are linked from the floor hub
+via the existing `artifactLinks` mechanism.
+
+## Phase 1: Contracts, briefs, and recipes v2
 
 ### Task p01-t01: Author contract v2 schemas (coexisting with v1)
 
@@ -52,13 +124,18 @@ mechanism. Rejected/over-limit proposals degrade to manifest warnings.
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 
 **Step 1:** Define `explainer-kit.author-request/v2`: `{schemaVersion,
-artifactId, artifactType, brief, factBase, shell?, theme, floor?}` and
+artifactId, artifactType, authoring, brief, factBase, shell?, theme, floor?}`
+where `floor` carries the artifact's `requiredNarrative` per D2. Define
 `explainer-kit.author-result/v2`: `{schemaVersion, artifactId, content:
 {markdown | html} (exactly one), provenance{authorId, generatedAt, method?},
-proposedArtifacts?: [{id, type, authoring, rationale}]}` per the expansion
-protocol above. The v2 schemas live at **distinct versioned paths**; the
-existing v1 files (`author-request.schema.json`, `author-result.schema.json`)
-are untouched here — `run.mjs` consumes them until p06-t01.
+proposedArtifacts?: [{id, profileId, rationale}]}`. Proposal entries are
+`additionalProperties: false` and must **not** accept `authoring`,
+`briefRef`, or `shell` — the schema is the first enforcement point for policy
+ownership.
+
+The v2 schemas live at **distinct versioned paths**; the v1 files
+(`author-request.schema.json`, `author-result.schema.json`) are untouched
+here — `run.mjs` consumes them until p06-t02.
 
 **Step 2:** Extend `contracts.mjs` registration to be version-aware: both v1
 and v2 author contracts resolve by `$id`/kind+version. No call-site behavior
@@ -68,47 +145,116 @@ changes in this task.
 Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`
 Expected: v2 fixtures (with and without `proposedArtifacts`) validate; v1
 validation unchanged; a v2 result carrying both `markdown` and `html` is
-rejected.
+rejected; a proposal carrying `authoring` or `shell` is rejected.
 
 **Step 4: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/schemas/author-request.v2.schema.json .agents/skills/explainer-kit/schemas/author-result.v2.schema.json .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
-git commit -m "feat(p01-t01): author contract v2 with expansion proposals, coexisting with v1"
+git commit -m "feat(p01-t01): author contract v2 with profile-referencing expansion proposals"
 ```
 
-### Task p01-t02: Recipe contract v2 (floor + expansion limits)
+### Task p01-t02: Dual-version recipe loader and shape accessors
 
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
 
-**Step 1:** Replace exact `artifacts[]` semantics with `floor[]` (required
-artifacts: id, type, authoring `markdown|html`, template/shell ref, briefRef)
-plus `expansion{allowedTypes[], limits{maxArtifacts?, maxPerType?}}`.
-Validation: undeclared artifact type in a proposal or result → error;
-over-limit proposals → rejected with warning (consumed by p05-t01/p06-t01);
-floor misses → deferred to the guideline checker (warning), not a recipe
-error.
+**Step 1:** `recipes.mjs` loads and validates all four bundled recipes at
+module import (line 41) and `requiredNarrative` is a required field (line
+175, consumed at 132), so a bare swap of the validation rules would red every
+intermediate commit. Make the loader **dual-version**: dispatch on each
+file's declared `schemaVersion`, validating `artifacts[]` + root
+`requiredNarrative` for `explainer-kit.recipe/v1` (current rules, unchanged)
+and `floor[]` + `expansion{profiles[], limits{}}` with floor-entry
+`requiredNarrative` for `explainer-kit.recipe/v2`.
 
-**Step 2:** Update `loadRecipe`/`validateContentModel` call sites for the new
-shape; keep source-role validation unchanged.
+v2 validation covers: floor entries (`id`, `type` within the manifest enum,
+`authoring`, template/shell ref, `briefRef`, `requiredNarrative`); profile
+completeness (`profileId`, `type`, `authoring`, `briefRef`, `shell?`, and a
+**finite `maxCount`** per D5); a **finite `expansion.limits.maxArtifacts`**
+per D5; duplicate `profileId`s; and floor/profile id hygiene. Undeclared
+artifact type in a proposal or result → error. Over-limit proposals →
+rejection with warning. Floor misses → guideline checker (warning), never a
+recipe error.
+
+**Step 2:** Introduce normalized accessors — `recipeFloor(recipe)`,
+`recipeExpansion(recipe)`, and `recipeRequiredNarrative(recipe, artifactId)`
+— that work for **both** shapes: for v1, map `artifacts[]` to floor entries
+with empty expansion and read `requiredNarrative` from the recipe root; for
+v2, read from floor entries. Convert every recipe-shape reader to the
+accessors. The complete reader inventory, verified by
+`rg -n "recipe\.artifacts|\.artifacts\[|requiredNarrative" .agents/skills/explainer-kit --glob '!**/assets/**'`:
+
+- `scripts/run.mjs` — 5 `recipe.artifacts` sites plus the
+  `requiredNarrative` consumers in the authoring/content path (≈ lines
+  587-620 and 693-709)
+- `tests/recipes.test.mjs` — 2 sites (lines 31, 202)
+- `tests/render.test.mjs` — 5 `loadRecipe('project-explainer', '1').artifacts[0]`
+  reads (lines 41, 63, 80, 158, 200)
+
+This step is mechanical and behavior-preserving: v1 recipes still load and
+the full suite stays green before any recipe file changes.
 
 **Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
-Expected: floor+expansion fixtures pass; undeclared-type fixture errors;
-over-limit proposal fixture yields a rejection outcome; floor-miss fixture
-does not error.
+Run: `node --test .agents/skills/explainer-kit/tests/`
+Expected: the whole core suite passes unchanged with v1 recipes on disk;
+synthetic v2 fixtures (floor + profiles + caps) pass; undeclared-type,
+duplicate-profileId, id-collision, missing-`maxCount`, and
+missing-`maxArtifacts` fixtures error; over-limit proposal fixture yields a
+rejection outcome; floor-miss fixture does not error.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/scripts/lib/recipes.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs
-git commit -m "feat(p01-t02): recipe v2 floor+expansion semantics with limit validation"
+git add .agents/skills/explainer-kit/scripts/lib/recipes.mjs .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs
+git commit -m "feat(p01-t02): dual-version recipe loader with normalized shape accessors"
 ```
 
-### Task p01-t03: Rewrite bundled recipes to v2 (all four, asserted)
+### Task p01-t03: Author briefs (prerequisite for v2 recipes)
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/briefs/project-recap.md`
+- Create: `.agents/skills/explainer-kit/briefs/program-recap.md`
+- Create: `.agents/skills/explainer-kit/briefs/project-explainer.md`
+- Create: `.agents/skills/explainer-kit/briefs/engineer-tour.md`
+- Create: `.agents/skills/explainer-kit/briefs/supporting-diagram.md`
+- Create: `.agents/skills/explainer-kit/briefs/deep-dive.md`
+- Create: `.agents/skills/explainer-kit/briefs/walkthrough-deck.md`
+- Create: `.agents/skills/explainer-kit/briefs/project-page.md`
+
+**Step 1:** Briefs land **before** the v2 recipes because p01-t04 verifies
+that every `briefRef` resolves. Author the brief format (audience, voice,
+per-section intent, floors, expansion license) and write all eight bundled
+briefs — one per recipe floor entry (4) and one per expansion profile (4).
+
+The `project-recap` brief encodes the editorial bar: busy-reader prose, the
+six-part narrative coverage matching its `requiredNarrative`, ≥1 high-level
+architecture diagram (inline fine), evidence tables for validation, an
+expansion license keyed to project substance ("propose additional diagrams, a
+deep-dive, or a walkthrough deck when complexity earns it"), and the
+plain-language editing rules from the original 0.4.1 skill. The
+`program-recap` brief covers program-level aggregation and per-project
+sub-page expansion. `engineer-tour` is an artistic (html) brief and states
+the shell-composition license under D3.
+
+**Step 2: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
+Expected: suite still green (briefs are inert until p01-t04 references them);
+all eight files exist and are non-empty.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/briefs
+git commit -m "feat(p01-t03): bundled author briefs carry the editorial bar"
+```
+
+### Task p01-t04: Rewrite bundled recipes to v2
 
 **Files:**
 
@@ -118,33 +264,39 @@ git commit -m "feat(p01-t02): recipe v2 floor+expansion semantics with limit val
 - Modify: `.agents/skills/explainer-kit/recipes/engineer-tour.json`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 
-**Step 1:** Convert each recipe with explicit semantics:
+**Step 1:** Convert each recipe to `schemaVersion:
+"explainer-kit.recipe/v2"`, **keeping `version: "1"`** (B2) and **keeping the
+floor identical to today's artifact set** (B3). Each floor entry carries its
+`briefRef` and the `requiredNarrative` list moved down from the recipe root
+(D2). Caps are the concrete D5 values:
 
-- `project-recap`: floor = one markdown narrative page; expansion allows
-  `diagram`, `deck`, additional `page` artifacts.
-- `program-recap`: floor = one markdown narrative page (program-level
-  aggregate); expansion allows `diagram` and `page` artifacts (per-project
-  sub-pages), markdown authoring.
-- `project-explainer`: floor = one markdown narrative page + one html
-  explainer artifact (shell ref); expansion allows `diagram`.
-- `engineer-tour`: floor = one html tour artifact (shell ref); expansion
-  allows `diagram`.
+| Recipe              | Floor (unchanged)                            | Profiles (maxCount)                                   | maxArtifacts |
+| ------------------- | -------------------------------------------- | ----------------------------------------------------- | ------------ |
+| `project-recap`     | 1 `hub`, markdown, house-style, 6 sections   | supporting-diagram 4, deep-dive 3, walkthrough-deck 1 | 6            |
+| `program-recap`     | 1 `hub`, markdown, house-style, 6 sections   | supporting-diagram 3, project-page 12                 | 12           |
+| `project-explainer` | 1 `hub`, markdown, house-style, 5 sections   | supporting-diagram 4                                  | 4            |
+| `engineer-tour`     | 1 `explainer`, html, engineer-tour, 5 sects. | supporting-diagram 4                                  | 4            |
 
-Each floor entry carries its `briefRef`.
+Profile types/authoring: `supporting-diagram` → `diagram`/html/diagram-shell;
+`deep-dive` and `project-page` → `explainer`/markdown; `walkthrough-deck` →
+`deck`/html/deck-shell.
 
 **Step 2: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
-Expected: semantic assertions per recipe (floor artifact ids/types/authoring,
-expansion allowedTypes, briefRef resolution) — not load-only checks.
+Run: `node --test .agents/skills/explainer-kit/tests/`
+Expected: semantic assertions per recipe (floor ids/types/authoring identical
+to the v1 artifact set, `requiredNarrative` preserved per floor entry,
+profile sets and caps, every `briefRef` resolving to a p01-t03 file,
+`version` still `"1"`); the whole core suite stays green because all readers
+went through the p01-t02 accessors.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/recipes .agents/skills/explainer-kit/tests/recipes.test.mjs
-git commit -m "feat(p01-t03): bundled recipes on v2 floor+expansion with semantic assertions"
+git commit -m "feat(p01-t04): bundled recipes on v2 floor+expansion profiles"
 ```
 
-### Task p01-t04: Approval record v2 with marking and resume compatibility
+### Task p01-t05: Approval record v2 with marking and resume compatibility
 
 **Files:**
 
@@ -152,85 +304,90 @@ git commit -m "feat(p01-t03): bundled recipes on v2 floor+expansion with semanti
 - Modify: `.agents/skills/explainer-kit/tests/content-approval.test.mjs`
 
 **Step 1:** Emit `explainer-kit.content-approval/v2` records carrying
-`marking: "human-approved" | "auto-drafted"`: unattended auto-approval records
-`auto-drafted`; interactive approve records `human-approved`. Update all
-version assertions that currently hard-code v1.
+`marking: "human-approved" | "auto-drafted"`: unattended auto-approval
+records `auto-drafted`; interactive approve records `human-approved`. Update
+version assertions that hard-code v1. Per B1, marking surfaces in the
+approval record and run result only — never the manifest.
 
-**Step 2:** Define resume compatibility: reading a persisted v1 approval
-record from an in-flight run remains valid (treated as `human-approved` when
-status is approved interactively, `auto-drafted` when unattended); new writes
-are always v2. Surface the marking in the run result for manifest assembly
-(p06-t02).
+**Step 2:** Define — but do not yet require — the D8 `artifacts[]` field:
+`{artifactId, origin, profileId?, authoring, contentPath, authorResultPath?}`.
+Activation is deliberately split from definition because the producer does not
+exist yet: at this point the runner passes only `state.authorResultPaths` into
+approval (`run.mjs:112-117`) and interactive runs synthesize content with no
+author result at all (`:85-95`), so demanding complete entries here would be
+unsatisfiable and would red p06-t01's intervening full-suite commit. This task
+lands the shape, the reader, and the normalization; p06-t02 activates
+complete-set writes atomically with the author stage that can populate them.
 
-**Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/content-approval.test.mjs`
-Expected: new unattended runs record v2 `auto-drafted`; interactive approve
-records v2 `human-approved`; resumed v1-record fixture is accepted with the
-compatibility mapping; reject flow unchanged.
+**Step 3:** Specify legacy normalization concretely. `authorResultPath` is
+optional because current v1 pending/rejected records contain none
+(`content-approval.mjs:42-67`); normalized v1 entries hydrate from the
+existing content file rather than inventing a path to a file that never
+existed. A persisted v1 record from an in-flight run stays readable (treated
+as `human-approved` when approved interactively, `auto-drafted` when
+unattended, with `artifacts[]` defaulting to the recipe floor); new writes are
+always v2.
 
-**Step 4: Commit**
+**Step 4: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/`
+Expected: unattended runs record v2 `auto-drafted`; interactive approve
+records v2 `human-approved`; a v2 record round-trips with and without
+`artifacts[]`; a normalized v1 fixture with no author-result path hydrates
+from its content file; reject flow unchanged; the full core suite stays green
+under the pre-author-stage runner.
+
+**Step 5: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/content-approval.mjs .agents/skills/explainer-kit/tests/content-approval.test.mjs
-git commit -m "feat(p01-t04): content-approval v2 marking with v1 resume compatibility"
+git commit -m "feat(p01-t05): content-approval v2 marking and resolved artifact set"
 ```
 
-## Phase 2: Author briefs
+## Phase 2: Lifecycle caller wiring
 
-### Task p02-t01: Brief format and bundled per-recipe briefs
+### Task p02-t01: Lifecycle callers construct the author callback
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/briefs/project-recap.md`
-- Create: `.agents/skills/explainer-kit/briefs/program-recap.md`
-- Create: `.agents/skills/explainer-kit/briefs/project-explainer.md`
-- Create: `.agents/skills/explainer-kit/briefs/engineer-tour.md`
-
-**Step 1:** Author the brief format (audience, voice, per-section intent,
-floors, expansion license) and write the four bundled briefs. The
-`project-recap` brief encodes the editorial bar: busy-reader prose, six-part
-narrative coverage, ≥1 high-level architecture diagram (inline fine),
-evidence tables for validation, expansion license keyed to project substance
-("multiple diagrams/sub-diagrams/deck when complexity earns it"), and the
-plain-language editing rules from the original 0.4.1 skill. The
-`program-recap` brief covers program-level aggregation and per-project
-sub-page expansion.
-
-**Step 2: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
-Expected: every bundled recipe's `briefRef` resolves to an existing brief.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/explainer-kit/briefs
-git commit -m "feat(p02-t01): bundled author briefs carry the editorial bar"
-```
-
-### Task p02-t02: Author-callback construction documented for the lifecycle
-
-**Files:**
-
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (Step 3.6 recap invocation)
+- Modify: `.agents/skills/oat-project-implement/references/completion-and-closeout.md` (closeout recap invocation)
 - Modify: `.agents/skills/oat-explainer-kit/references/` (author-callback construction guidance)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (brief wiring guidance; version bump deferred to p08-t02)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (brief wiring guidance; version bump lands in p06-t04)
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
 
-**Step 1:** Document how the adapter/lifecycle constructs the author callback:
+**Step 1:** Edit the **real callers**, not just adapter docs. Today
+`oat-project-complete/SKILL.md:281-285` invokes `runOatExplainer` in
+unattended mode supplying only the critic callback, while the adapter already
+throws `E_AUTHOR_REQUIRED` for unattended runs without an author
+(`oat-explainer-kit/scripts/run.mjs:168-175`) — so the completion chain would
+fail outright once synthetic content is removed. Update the completion skill
+and the implementation-tail closeout reference to construct and pass the
+brief-aware author callback (or validated author module entry point)
+alongside the existing critic callback, stating that completion-chain recap
+runs always use `mode: unattended`.
+
+**Step 2:** Document in the adapter references how the callback is built:
 brief inlined into `author-request/v2`, fact base attached, shell/theme for
-artistic artifacts, and the expansion protocol (set-planning proposals →
-per-artifact requests) — closing the closeout gap (critic documented, author
-not). Include the automated-completion rule: recap runs invoked by the
-completion chain always use `mode: unattended`.
+artistic artifacts, and the expansion protocol. Record the both-modes rule
+decided in p06-t03.
 
-**Step 2: Verify**
-Run: `rg -n "author-request/v2" .agents/skills/oat-explainer-kit | head`
-Expected: adapter references describe author-callback construction, the
-expansion protocol, and the unattended completion rule.
+**Step 3:** Make the wiring behaviorally verifiable rather than prose-only.
+The repository already has a completion contract test that reads
+`oat-project-complete/SKILL.md`
+(`oat-explainer-kit/tests/completion.integration.test.mjs:19-84`); extend it
+with caller-contract assertions covering **both** instruction surfaces —
+each must name an author seam, the critic seam, and `mode: unattended`.
 
-**Step 3: Commit**
+**Step 4: Verify**
+Run: `node --test .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+Expected: assertions fail if either caller omits the author seam, the critic
+seam, or the unattended mode declaration.
+
+**Step 5: Commit**
 
 ```bash
-git add .agents/skills/oat-explainer-kit
-git commit -m "docs(p02-t02): adapter author-callback construction + unattended completion rule"
+git add .agents/skills/oat-project-complete/SKILL.md .agents/skills/oat-project-implement/references/completion-and-closeout.md .agents/skills/oat-explainer-kit
+git commit -m "feat(p02-t01): lifecycle callers construct the brief-aware author callback"
 ```
 
 ## Phase 3: Narrative renderer
@@ -243,30 +400,34 @@ git commit -m "docs(p02-t02): adapter author-callback construction + unattended 
 - Create: `.agents/skills/explainer-kit/tests/markdown.test.mjs`
 
 **Step 1:** Implement CommonMark + GFM (tables, task lists, strikethrough)
-parsing to an internal AST. Decision recorded in design: the core stays
-dependency-light — implement the required subset natively (no npm runtime
-deps in the packaged skill); scope is the block vocabulary, not full spec
+parsing to an internal AST, plus the two D6 extensions: GFM alert callouts
+(`> [!NOTE]`, `> [!TIP]`, `> [!IMPORTANT]`, `> [!WARNING]`, `> [!CAUTION]`
+parsed from blockquotes into a callout node) and fenced ` ```timeline `
+blocks (one `date — label` entry per line) into a timeline node. Fenced
+diagram blocks are recognized as a third distinct node type. The core stays
+dependency-light: implement the required subset natively (no npm runtime deps
+in the packaged skill); scope is the block vocabulary, not full spec
 compliance.
 
 **Step 2:** AST validation: safe node allowlist (no raw HTML passthrough),
-absolute-link rule per the publish contract, fenced diagram blocks recognized
-as a distinct node type. Safety violations are hard errors; style findings
-return as warnings.
+absolute-link rule per the publish contract. Safety violations are hard
+errors; style findings return as warnings.
 
 **Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/markdown.test.mjs`
-Expected: block fixtures (including tables, task lists, strikethrough) parse;
-raw-HTML and unsafe-link fixtures hard-fail; warning fixtures return findings
-without throwing.
+Expected: block fixtures (tables, task lists, strikethrough, all five alert
+types, timeline, diagram fences) parse to the expected node types; raw-HTML
+and unsafe-link fixtures hard-fail; warning fixtures return findings without
+throwing.
 
 **Step 4: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/markdown.mjs .agents/skills/explainer-kit/tests/markdown.test.mjs
-git commit -m "feat(p03-t01): markdown AST parse (GFM incl. strikethrough) + safety validation"
+git commit -m "feat(p03-t01): markdown AST parse (GFM, alerts, timelines) + safety validation"
 ```
 
-### Task p03-t02: Themed block library rendering
+### Task p03-t02: Themed block library and expansion path rule
 
 **Files:**
 
@@ -274,81 +435,126 @@ git commit -m "feat(p03-t01): markdown AST parse (GFM incl. strikethrough) + saf
 - Modify: `.agents/skills/explainer-kit/templates/house-style.html`
 - Create: `.agents/skills/explainer-kit/tests/narrative-render.test.mjs`
 
-**Step 1:** Replace `renderSections`' escaped single-`<p>` emission with AST →
-block rendering: headings, paragraphs, GFM tables, lists (incl. task lists),
-strikethrough, callouts, timelines, code blocks, figures — all themed via
-existing tokens, preserving section anchors/numbering/TOC and the
+**Step 1:** Replace `renderSections`' escaped single-`<p>` emission with AST
+→ block rendering: headings, paragraphs, GFM tables, lists (incl. task
+lists), strikethrough, callouts, timelines, code blocks, figures — all themed
+via existing tokens, preserving section anchors/numbering/TOC and the
 self-contained HTML profile.
 
-**Step 2:** Keep deck/slide rendering delegated to the artistic path (p04);
+**Step 2:** Implement the D1 path rule in `artifactPath`
+(`render.mjs:256-263`), which today appends `artifact.id` only for `diagram`
+and `deck` and would therefore collapse every `explainer` to
+`site/explainers/{slug}/index.html`. Key the rule on the artifact's declared
+role: floor artifacts keep the current path exactly (no URL churn), while
+expansion artifacts always resolve to
+`site/{directory}/{slug}/{artifactId}/index.html`.
+
+Carry the origin explicitly rather than inferring it. Add a required
+`origin: "floor" | "expansion"` field to the renderer artifact descriptors
+(`render.mjs:339-355`, which are exact-key objects) and widen `artifactLinks`
+entries from `{id, type, label}` to `{id, type, label, origin}`
+(`:389-405`), so generated hub links resolve through the identical rule
+instead of falling back to the floor path. Transitional v1 descriptors
+default to `"floor"`.
+
+**Step 3:** Keep deck/slide rendering delegated to the artistic path (p04);
 narrative rendering no longer feeds `renderSlides`. Golden-file tests live in
 the **new** `narrative-render.test.mjs` (not `templates.test.mjs`, which p04
 owns during the parallel group).
 
-**Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/narrative-render.test.mjs .agents/skills/explainer-kit/tests/theme.test.mjs`
+**Step 4: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/narrative-render.test.mjs .agents/skills/explainer-kit/tests/theme.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs`
 Expected: golden-file renders per block type and theme mode; identical input
-→ identical output.
+→ identical output; floor artifacts of every type resolve to their current
+paths, while multiple expansion `explainer` artifacts resolve to distinct
+ID-bearing paths — asserted for both the rendered path **and** the generated
+relative/public hub link.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/render.mjs .agents/skills/explainer-kit/templates/house-style.html .agents/skills/explainer-kit/tests/narrative-render.test.mjs
-git commit -m "feat(p03-t02): themed block library replaces escaped-paragraph rendering"
+git commit -m "feat(p03-t02): themed block library + collision-safe expansion paths"
 ```
 
-### Task p03-t03: Diagram blocks to build-time inline SVG
+### Task p03-t03: Diagram blocks rendered to inline SVG
 
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
 - Create: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/narrative-render.test.mjs`
 
-**Step 1:** Render fenced diagram blocks (flowchart/graph vocabulary per
-design) to inline SVG at build time — no client-side script — themed for
-light/dark modes. Unsupported diagram syntax degrades to a warning plus the
-source in a code block (never a hard failure).
+**Step 1:** Render fenced diagram blocks to inline SVG at build time — no
+client-side script — themed for light/dark modes. The supported grammar is
+fixed by D7 and everything inside it must render: a `graph TD`/`graph LR`
+direction header; node declarations `id[Label]`, `id(Label)`, `id{Label}`,
+and bare `id`; edges `a --> b`, `a --- b`, `a -->|label| b`; quoted labels
+with HTML escaping; and `%%` comments. Any construct outside that grammar
+(subgraphs, classDefs, sequence/state diagrams, styling directives) degrades
+to a warning plus the source in a code block, never a hard failure.
 
-**Step 2: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/diagram.test.mjs`
-Expected: diagram fixtures produce deterministic inline SVG; unsupported
-syntax degrades gracefully with a warning.
+**Step 2:** Wire the module into the narrative renderer: `render.mjs` must
+dispatch diagram AST nodes to `diagram.mjs` and inline the returned SVG.
+Without this the module is unreachable and the recap architecture-diagram
+floor cannot be met.
 
-**Step 3: Commit**
+**Step 3: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/diagram.test.mjs .agents/skills/explainer-kit/tests/narrative-render.test.mjs`
+Expected: a fixture exercising every D7 construct produces deterministic
+inline SVG in isolation **and** through a full narrative render; one fixture
+per degradation class (subgraph, classDef, non-graph diagram type) degrades
+to the specified code-block warning.
+
+**Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/scripts/lib/diagram.mjs .agents/skills/explainer-kit/tests/diagram.test.mjs
-git commit -m "feat(p03-t03): build-time inline SVG diagram blocks"
+git add .agents/skills/explainer-kit/scripts/lib/diagram.mjs .agents/skills/explainer-kit/tests/diagram.test.mjs .agents/skills/explainer-kit/scripts/lib/render.mjs .agents/skills/explainer-kit/tests/narrative-render.test.mjs
+git commit -m "feat(p03-t03): build-time inline SVG diagrams wired into narrative render"
 ```
 
 ## Phase 4: Artistic composer path
 
-### Task p04-t01: DOM safety validator
+### Task p04-t01: DOM safety validator with hash-pinned shell scripts
 
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/scripts/lib/html-safety.mjs`
 - Create: `.agents/skills/explainer-kit/tests/html-safety.test.mjs`
 
-**Step 1:** Parse-level allowlist validation for agent-composed HTML:
-hard-fail on script elements, event-handler attributes, and external active
-content; warn on style-family deviations (missing theme tokens, missing
-required anchors). Parser is a dependency-light HTML tokenizer used for
-validation only (no rendering).
+**Step 1:** Parse-level allowlist validation for agent-composed HTML,
+implementing the D3 trust boundary. All three bundled shells legitimately
+contain `<script>` elements, so a blanket script ban would reject an
+unmodified shell. Instead derive a hash-pinned **ordered multiset** of script
+hashes from the declared core shell and require the authored HTML's scripts
+to match it exactly — same hashes, same count, same order, compared over
+exact bytes with no normalization. Membership alone is insufficient:
+`deck-shell.html` carries two distinct core scripts (lines 13 and 223), so a
+membership test would accept a deleted script, a duplicated block, or one
+allowed block substituted for another. Hard-fail on missing, added,
+duplicated, reordered, replaced, or mutated scripts; on inline event-handler
+attributes; and on external active content. Warn on style-family deviations
+(missing theme tokens, missing required anchors). Non-script markup is free
+within the DOM allowlist. The parser is a dependency-light HTML tokenizer
+used for validation only.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/html-safety.test.mjs`
-Expected: injection fixtures hard-fail; allowlisted rich fixtures pass;
-deviation fixtures warn.
+Expected: each of the three bundled shells passes unmodified; deletion,
+insertion, duplication, reordering, substitution, and mutation of scripts all
+hard-fail (exercised against two-script `deck-shell.html`), as do
+event-handler and external-active-content fixtures; rich non-script
+elaboration of a shell passes; deviation fixtures warn.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/html-safety.mjs .agents/skills/explainer-kit/tests/html-safety.test.mjs
-git commit -m "feat(p04-t01): DOM allowlist safety validation for artistic artifacts"
+git commit -m "feat(p04-t01): DOM allowlist with hash-pinned core shell scripts"
 ```
 
-### Task p04-t02: Shell canvases and expansion license plumbing
+### Task p04-t02: Shell canvases
 
 **Files:**
 
@@ -359,10 +565,11 @@ git commit -m "feat(p04-t01): DOM allowlist safety validation for artistic artif
 
 **Step 1:** Refresh shells as starting canvases: theme-token wiring, required
 anchors (for validation and render QA), and clearly-marked extension regions.
-Shells are delivered to the author inside `author-request/v2` (`shell` field).
-Shell fidelity checks live in `templates.test.mjs`, which **only this phase**
-touches during the parallel group (p03 golden tests live in
-`narrative-render.test.mjs`).
+Shells are delivered to the author inside `author-request/v2` (`shell`
+field), resolved from the floor entry or expansion profile — never chosen by
+the author. Keep shell scripts minimal and self-contained, since D3 pins them
+by hash. Shell fidelity checks live in `templates.test.mjs`, which **only
+this phase** touches during the parallel group.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs`
@@ -385,9 +592,11 @@ git commit -m "feat(p04-t02): shells as authoring canvases with validation ancho
 - Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
 
 **Step 1:** Implement floor evaluation against built artifacts: narrative
-coverage, diagram presence (inline or standalone), structured-block depth
-signals, and rejected/over-limit expansion proposals. Emit stable warning
-identifiers into manifest `warnings[]`; never block.
+coverage against the floor entry's `requiredNarrative`, diagram presence
+(inline or standalone), structured-block depth signals, and
+rejected/over-limit expansion proposals. Emit stable warning identifiers as
+strings suitable for the existing manifest `warnings[]` array; the checker
+never blocks. Run-stage wiring is p06-t02.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/qa.test.mjs`
@@ -412,8 +621,8 @@ git commit -m "feat(p05-t01): guideline checker emits floor warnings"
 **Step 1:** Extend the existing `browserProbe` seam into a first-class stage:
 serve the built site dir, load each artifact, run the layout-probe battery
 (document/inner-container overflow, viewport clipping, heading readability)
-with animations disabled. Findings → warnings. When no headless runtime is
-available, record the single skip warning and continue.
+with animations disabled. Findings become warning IDs. When no headless
+runtime is available, record the single stable skip warning and continue.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/qa.test.mjs`
@@ -430,7 +639,69 @@ git commit -m "feat(p05-t02): render QA probe battery with graceful skip"
 
 ## Phase 6: Pipeline integration and v1 retirement
 
-### Task p06-t01: Author stage wiring in the core run (v1 schemas retired)
+### Task p06-t01: Relocate the approval gate after render and QA
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Step 1:** Implement D4 as a standalone, behavior-preserving reordering
+while the v1 content model is still in place, so this commit is independently
+green. Today approval resolves before theme and render
+(`run.mjs:112-191`) and the resume predicate requires `theme` pending
+(`:225-230`). Move theme, render, safety validation, and the QA stage ahead
+of `resolveContentApproval`, leaving approval immediately before publish and
+durability.
+
+**Step 2:** Update the dependent machinery. The resume predicate must key on
+an **unresolved approval state — `pending` or `rejected` — plus completed
+render/QA stages**, not `pending` alone. The existing workflow deliberately
+resumes rejected records too: a rejection is persisted, the operator edits
+the content, and a later approval resumes the same run
+(`run.integration.test.mjs:179-223`), and `loadResumableRun` evaluates
+persisted state before the new approval decision is processed. Keying on
+`pending` alone would silently delete that correction loop. The build record
+shows render stages passed at an interactive pause.
+
+**Step 3:** Make the rejected-resume path safe, not just reachable. That loop
+edits the source _after_ the rejection and asserts the corrected source
+reaches the rendered artifact (`run.integration.test.mjs:179-238`), but render
+and QA already completed before the pause and build-record stages are terminal
+once `passed`/`warned` (`records.mjs:18-23`, `:84-101`). A literal
+implementation would otherwise publish the pre-edit render, throw when
+`executeStage` re-runs, or bypass the record and keep stale safety evidence.
+Add a narrowly guarded record-level reopen/reset API to `records.mjs` and have
+rejected resume reopen and re-run render plus QA against the edited sources
+before approval is processed, leaving an auditable trail. A direct, unedited
+pending→approve resume may hydrate the already-validated render.
+
+**Step 4:** Re-express the existing `run.integration.test.mjs:141-178`
+assertions. The meaningful invariant is that **nothing is published or
+persisted externally** before approval, so the `publish` and `durability`
+call-count assertions stay exactly as they are, while the
+`theme.resolved.json`/`site/` absence assertions are replaced by assertions
+that rendered output **is** present at the pause.
+
+**Step 5: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/`
+Expected: full core suite green; an interactive run pauses with rendered
+artifacts on disk and zero publish/durability calls; direct pending→approve
+resume completes the run; the reject → edit → approve → same-run resume loop
+works end-to-end with the edited source reflected in the re-rendered artifact;
+and a correction that newly fails QA updates the build record while keeping
+publish and durability at zero calls.
+
+**Step 6: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/scripts/lib/records.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs
+git commit -m "refactor(p06-t01): approval gate moves after render and QA with guarded stage reopen"
+```
+
+### Task p06-t02: Author stage wiring and QA severity split
 
 **Files:**
 
@@ -438,93 +709,180 @@ git commit -m "feat(p05-t02): render QA probe battery with graceful skip"
 - Delete: `.agents/skills/explainer-kit/schemas/author-request.schema.json`
 - Delete: `.agents/skills/explainer-kit/schemas/author-result.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/content-approval.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/content-approval.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 
 **Step 1:** Replace `createContentModel`'s joined-claims summary with the
-author stage: construct `author-request/v2` per floor artifact (brief inlined,
-shell/theme attached for html authoring), invoke the author callback, run the
-expansion protocol (validate `proposedArtifacts` against recipe limits, issue
-per-artifact requests for accepted proposals), persist authored content as
-the real render input (`source/content/<artifact>.md` or `.html` — now
-load-bearing, still hash-pinned). Route rendering by authoring type
-(markdown → narrative renderer; html → safety validation). Link accepted
-expansion artifacts from the narrative page via `artifactLinks`.
+author stage: construct `author-request/v2` per floor artifact (brief
+inlined, `requiredNarrative` in `floor`, shell/theme attached for html
+authoring), invoke the author callback, run the expansion protocol (validate
+`proposedArtifacts` against declared profiles and caps, issue per-artifact
+requests for accepted proposals), and persist authored content as the real
+render input (`source/content/<artifact>.md` or `.html` — now load-bearing,
+still hash-pinned). Route rendering by the floor/profile `authoring` value
+(markdown → narrative renderer; html → `html-safety.mjs`). Link accepted
+expansion artifacts from the floor hub via `artifactLinks`.
 
-**Step 2:** Remove the v1 author schema files and their `contracts.mjs`
-registrations now that nothing consumes them; update contract tests
-accordingly. Unattended runs without an author callback fail with a clear
-`E_AUTHOR_REQUIRED` (autonomous invokers must supply one — documented in
-p02-t02); interactive runs pause at the approval gate with drafts + warnings
-as the review surface.
+**Step 2:** Make the variable artifact set survive an interactive pause per
+D8, activating complete-set writes here — atomically with the author stage
+that first makes them satisfiable. The author stage populates the
+`content-approval/v2` `artifacts[]` field (shape defined in p01-t05) with
+every floor and accepted expansion artifact —
+`{artifactId, origin, profileId?, authoring, contentPath, authorResultPath}`
+— written for pending and rejected states too, and the completeness
+assertions land in this task. Resume hydration
+(`run.mjs:261-294`), which today reads paths only from the approval record
+and iterates recipe artifacts, instead rehydrates the set from that record so
+the author is never re-invoked and expansion identities, source paths,
+provenance, and hub links are stable across the pause.
 
-**Step 3: Verify**
+**Step 3:** Split QA severity. Today `run.mjs:180-187` throws `E_QA` whenever
+`auditArtifactSet().valid` is false, so nothing can degrade. Partition the
+report: safety and provenance violations (unsafe DOM, raw HTML passthrough,
+source-copying, link policy) keep throwing `E_QA`; editorial and layout
+findings from p05 — including the no-headless-runtime skip — append their
+stable IDs to `state.warnings` and let the run succeed.
+
+**Step 4:** Retire the v1 author contracts atomically with their consumers.
+Delete the two v1 schema files and their `contracts.mjs` registrations, and
+migrate the tests that assert or construct them in the **same commit**:
+`schemas.test.mjs:21-22` (asserts the v1 author schemas) and
+`run.integration.test.mjs:68-89` (constructs v1 author results). The author
+callback is required in **both** modes, since synthetic content models are
+gone: runs without one fail with `E_AUTHOR_REQUIRED`. Interactive runs pause
+at the relocated gate with rendered drafts + warnings as the review surface;
+unattended runs auto-approve with `auto-drafted` marking.
+
+**Step 5: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/`
 Expected: full core suite passes; run fixtures produce authored, rendered,
-validated artifacts end-to-end, including an accepted-expansion fixture.
+validated artifacts end-to-end, including an accepted-expansion fixture and a
+rejected-proposal fixture. Run-integration assertions confirm a successful
+manifest carries editorial/layout warning IDs in `warnings[]` in **both**
+modes and that warnings are visible at the interactive pause, while a
+safety-violation fixture still fails `E_QA`. An interactive run carrying both
+markdown and html expansions can pause, reject, edit, resume, and finish with
+identical artifact IDs, paths, hub links, hashes, and a complete
+`authorResultPaths` set without re-invoking the author.
 
-**Step 4: Commit**
+**Step 6: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/schemas .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests
-git commit -m "feat(p06-t01): author stage feeds both render paths; v1 author contracts retired"
+git commit -m "feat(p06-t02): author stage feeds both render paths; QA severity split; v1 author contracts retired"
 ```
 
-### Task p06-t02: Manifest marking and adapter integration
+### Task p06-t03: Marking surfacing through core and adapter results
 
 **Files:**
 
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs` (`resultFor`)
 - Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/resolve-intent.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
-
-**Step 1:** Surface the approval marking through the run result/manifest
-context; adapter passes briefs and author callback through, and the automated
-completion chain (document/summary/pr-final/recap) invokes recap with
-`mode: unattended` unconditionally.
-
-**Step 2: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/records.test.mjs`
-Expected: unattended run records carry `auto-drafted`; adapter context fixtures
-force unattended for completion-chain invocations.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/explainer-kit/scripts/lib/records.mjs .agents/skills/oat-explainer-kit/scripts .agents/skills/explainer-kit/tests/records.test.mjs
-git commit -m "feat(p06-t02): auto-drafted marking + unattended completion chain"
-```
-
-### Task p06-t03: Migrate every remaining v1 consumer (same release)
-
-**Files:**
-
-- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (author-request/v1 → v2 guidance)
-- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
-- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
 
-**Step 1:** Inventory canonical v1 author-contract references (`rg -n
-"author-request/v1|author-result/v1" .agents tools apps packages`) and migrate
-each: the `oat-wave-execute` shipped guidance, core schema tests, adapter
-integration fixtures, and the wrapper-compatibility smoke fixtures all
-construct/reference v2 shapes. Any newly discovered consumer is migrated in
-this task, not deferred.
+**Step 1:** Surface the approval marking through the run result, not the
+manifest (B1). The run result is assembled by `resultFor` in
+`explainer-kit/scripts/run.mjs:823-845`, which currently returns approval
+status and path only — `records.mjs` alone cannot add the marking, so the
+core runner is in scope here.
 
-**Step 2:** Refresh provider views (`oat sync --scope all`) so `.claude/`,
-`.cursor/`, `.codex/` mirrors of changed canonical skills are current.
+**Step 2:** Adapter integration: pass briefs and the author callback through
+to the core, require the author callback in **both** modes (extending the
+current unattended-only `E_AUTHOR_REQUIRED` check at
+`oat-explainer-kit/scripts/run.mjs:168-175`), and have the automated
+completion chain invoke recap with `mode: unattended` unconditionally.
 
 **Step 3: Verify**
-Run: `rg -n "author-request/v1|author-result/v1" .agents tools apps packages | wc -l` then `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm test:smoke`
-Expected: zero remaining v1 author-contract references; core, adapter, and
-smoke suites pass.
+Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/`
+Expected: core and adapter results both expose `auto-drafted` for unattended
+and `human-approved` for interactive approval; manifests validate unchanged
+against `manifest/v1` and carry no marking property; an interactive adapter
+call without an author callback now fails `E_AUTHOR_REQUIRED`.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/oat-wave-execute/SKILL.md .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .oat/sync/manifest.json .claude .cursor .codex
-git commit -m "feat(p06-t03): migrate all v1 author-contract consumers to v2"
+git add .agents/skills/explainer-kit/scripts .agents/skills/explainer-kit/tests .agents/skills/oat-explainer-kit/scripts .agents/skills/oat-explainer-kit/tests
+git commit -m "feat(p06-t03): marking in core+adapter results; author callback required in both modes"
+```
+
+### Task p06-t04: Retire recipe v1 and migrate all remaining consumers
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` (drop the v1 branch)
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (version → 2.0.0)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (PR-scoped bump + minimum-core prose)
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs` (minimum core version)
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs` (1.x rejection coverage)
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md`
+- Modify: `.agents/skills/oat-wave-program/SKILL.md`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+- Modify: `tools/smoke/explainer-kit/packaged-layout.test.mjs`
+- Modify: `tools/smoke/explainer-kit/fixtures/package-root.mjs`
+- Modify: `tools/release/build-explainer-rc.test.mjs`
+- Modify: `tools/release/run-explainer-rc.test.mjs`
+- Modify: `tools/release/validate-explainer-acceptance.test.mjs`
+
+**Step 1:** With all four bundled recipes on v2 and every reader on the
+accessors, remove the dual-version v1 branch from `recipes.mjs` so
+`explainer-kit.recipe/v1` is retired in the same release.
+
+**Step 2:** Migrate the recipe **schema-version** fixtures, which are a
+distinct surface from the `{id, version: "1"}` identity pins that B2 leaves
+alone. `build-explainer-rc.mjs:203-221` copies the schema version into RC
+identity, so these must move together: `build-explainer-rc.test.mjs:309-317`,
+`run-explainer-rc.test.mjs:406`,
+`validate-explainer-acceptance.test.mjs:366`, and
+`tools/smoke/explainer-kit/fixtures/package-root.mjs:195`.
+
+**Step 3:** Update both wave skills' author guidance. `oat-wave-program`
+carries stale "authoring seam pending upstream" prose around lines 140-149
+that a literal v1-string search will not surface; refresh it and
+`oat-wave-execute` while **preserving** their `{id, version: "1"}` recipe
+identity pins.
+
+**Step 4:** Move the entire 2.0.0 compatibility boundary into this one task so
+no intermediate commit is self-rejecting. Raising the adapter minimum while
+the core is still `1.0.2` would make the source adapter reject the source
+core until p08-t02, so all of the following land together: bump
+`explainer-kit/SKILL.md` to `2.0.0`; apply the adapter's single PR-scoped
+bump; raise the minimum in `oat-explainer-kit/scripts/run.mjs:15-45` **and**
+the shipped prose that still claims `1.0.0` (`oat-explainer-kit/SKILL.md:36`,
+`:57`); and add adapter rejection coverage for a 1.x core.
+
+**Step 5:** Update the smoke assertions that pin the old versions —
+`wrapper-compatibility.test.mjs:194-195` (`1.0.2`/`1.0.1`) and
+`packaged-layout.test.mjs:60` (`installedVersion` `1.0.2`) and `:87` (the
+`1.0.2` → `0.9.0` incompatible fixture). Root `pnpm test` always runs
+`pnpm test:smoke` (`package.json:32-33`), so leaving these stale would
+guarantee a red final task. Prefer reading the expected versions from the
+packaged candidate rather than re-hard-coding literals; keep an explicit
+literal only where the fixture deliberately constructs an incompatible
+version.
+
+**Step 6:** Refresh provider views (`oat sync --scope all`).
+
+**Step 7: Verify**
+Run: `rg -n "author-request/v1|author-result/v1|explainer-kit\.recipe/v1" .agents tools apps packages --glob '!packages/cli/assets/**' | wc -l` then `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/ && pnpm test:smoke && node --test tools/release/`
+Expected: zero remaining v1 author-contract or recipe-schema references
+outside the generated assets tree; core, adapter, smoke, and release-tooling
+suites pass; a 1.x core is rejected by the adapter and a 2.0.0 core is
+accepted.
+
+**Step 8: Commit**
+
+```bash
+git add .agents/skills tools .oat/sync/manifest.json .claude .cursor .codex
+git commit -m "feat(p06-t04): retire recipe v1, migrate fixtures, land the 2.0.0 compatibility boundary"
 ```
 
 ## Phase 7: End-to-end anti-regression fixture
@@ -534,26 +892,30 @@ git commit -m "feat(p06-t03): migrate all v1 author-contract consumers to v2"
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
-- Modify: `.agents/skills/explainer-kit/examples/project-recap/` (existing fixture set updated for v2)
+- Modify: `.agents/skills/explainer-kit/examples/project-recap/` (fixture set updated for v2)
 
 **Step 1:** Build a completed-project fact base + author fixture (modeled on
-the in5-game-cms evidence) and assert the rendered narrative page contains
+the in5-game-cms evidence) and assert the rendered narrative hub contains
 structured blocks: ≥1 table, ≥1 inline diagram SVG, lists, and section
 anchors — the direct anti-regression for the original complaint. Include an
-expansion-path case (author proposes a standalone diagram; page links it).
-Assert manifest warnings are empty for the rich fixture and populated for a
-thin one.
+expansion case (author proposes two `deep-dive` pages and a
+`supporting-diagram` by profile ID) asserting **distinct** content paths,
+rendered paths, and manifest identities per D1, plus hub links to each.
+Include failure cases: unknown profile → hard error; over-cap proposal →
+warning. Assert manifest warnings are empty for the rich fixture and
+populated for a thin one.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
-Expected: rich fixture renders rich (with linked expansion artifact); thin
-fixture ships with floor warnings.
+Expected: rich fixture renders rich with distinctly-pathed linked expansion
+artifacts; thin fixture ships with floor warnings; malformed proposals fail
+loudly.
 
 **Step 3: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/explainer-kit/examples
-git commit -m "test(p07-t01): recap richness anti-regression fixture"
+git commit -m "test(p07-t01): recap richness and expansion anti-regression fixture"
 ```
 
 ## Phase 8: Documentation and release closure
@@ -563,12 +925,13 @@ git commit -m "test(p07-t01): recap richness anti-regression fixture"
 **Files:**
 
 - Modify: `apps/oat-docs/docs/` (explainer-kit pages: authoring model, briefs, warnings, marking)
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (authoring model description; version bump lands in p08-t02)
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (authoring model description; version bump landed in p06-t04)
 
 **Step 1:** Update the docs surface: two-path authoring model, brief
-authoring guidance, floor/expansion recipe semantics and the expansion
-protocol, warning taxonomy, auto-drafted marking, render QA behavior.
-Regenerate the docs index if nav changed (`oat docs generate-index`).
+authoring guidance, floor/expansion-profile recipe semantics and the
+expansion protocol, the relocated approval gate, warning taxonomy and the QA
+severity split, auto-drafted marking, render QA behavior. Regenerate the docs
+index if nav changed (`oat docs generate-index`).
 
 **Step 2: Verify**
 Run: `pnpm build:docs`
@@ -581,60 +944,85 @@ git add apps/oat-docs .agents/skills/explainer-kit/SKILL.md
 git commit -m "docs(p08-t01): explainer authoring v2 documentation"
 ```
 
-### Task p08-t02: Version bumps and release validation (final task)
+### Task p08-t02: Provider sync, version bumps, release validation (final task)
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (version: 2.0.0)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (single PR-scoped bump)
 - Modify: `.agents/skills/oat-wave-execute/SKILL.md` (single PR-scoped bump)
-- Modify: `packages/cli/package.json`
-- Modify: `packages/control-plane/package.json`
-- Modify: `packages/docs-config/package.json`
-- Modify: `packages/docs-theme/package.json`
-- Modify: `packages/docs-transforms/package.json`
+- Modify: `.agents/skills/oat-wave-program/SKILL.md` (single PR-scoped bump)
+- Modify: `.agents/skills/oat-project-complete/SKILL.md` (single PR-scoped bump)
+- Modify: `.agents/skills/oat-project-implement/SKILL.md` (single PR-scoped bump)
+- Modify: `packages/*/package.json` (the five lockstep public packages)
+- Modify: `.claude/`, `.cursor/`, `.codex/`, `.oat/sync/manifest.json` (regenerated views)
 
-**Step 1:** As the final task, after all shipped skill/docs edits exist: bump
-the core skill to 2.0.0 and apply exactly one PR-scoped version bump to every
-other canonical skill changed on this branch (`oat-explainer-kit`,
-`oat-wave-execute`); bump the five lockstep public packages (bundled assets
-count as shipped CLI functionality per the repo guardrail).
+**Step 1:** As the final task, after all shipped skill/docs edits exist,
+apply the remaining PR-scoped version bumps: `oat-wave-execute`,
+`oat-wave-program`, `oat-project-complete`, and `oat-project-implement`.
+`explainer-kit` (2.0.0) and `oat-explainer-kit` were already bumped in
+p06-t04, where they had to land atomically with the adapter's minimum-core
+floor; they are **not** bumped again here, preserving exactly one bump per
+changed skill in the final PR diff. Bump the five lockstep public packages
+(bundled assets count as shipped CLI functionality per the repo guardrail).
 
-**Step 2: Verify**
+**Step 2:** Re-run `oat sync --scope all` **after** the p08-t01 and Step 1
+canonical edits. The p06-t04 sync predates them, so without this pass the
+provider-linked views ship stale. Stage the regenerated views and manifest.
+
+**Step 3: Verify**
 Run: `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`
 Expected: release dry-run and full repo checks pass against the complete
-tree — no shipped edits follow this task.
+tree — no shipped edits follow this task. `pnpm build` regenerates
+`packages/cli/assets/skills/` from canonical sources as part of validation,
+and provider views are current.
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md .agents/skills/oat-wave-execute/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
-git commit -m "chore(p08-t02): lockstep version bumps + release validation for explainer authoring v2"
+git add .agents/skills packages .claude .cursor .codex .oat/sync/manifest.json
+git commit -m "chore(p08-t02): provider sync, lockstep version bumps, release validation"
 ```
 
 ## Parallelism
 
-Phase 1 is the contract foundation and runs first. After it lands, **p02
-(briefs), p03 (narrative renderer), and p04 (artistic path) have disjoint
-write sets** — `briefs/` + adapter references; `scripts/lib/markdown|diagram
-.mjs` + `render.mjs` + `house-style.html` + the new
-`narrative-render.test.mjs`; and `html-safety.mjs` + shell templates +
-`templates.test.mjs` respectively. The former shared surface
-(`templates.test.mjs`) was removed by giving p03 its own test file, so the
-group's write sets are genuinely disjoint with independent verification. p05
-(guideline checker + render QA) touches `qa.mjs`, which reads outputs from
-both render paths, so it follows the group. p06 (pipeline integration + v1
-retirement + consumer migration) rewires `run.mjs` across everything and must
-be sequential, as must p07 (e2e fixture) and p08 (docs, then release closure
-as the final task so validation covers the complete tree).
+Phase 1 is the contract foundation and runs first. Its ordering is
+load-bearing: the dual-version loader and accessors (p01-t02) keep every
+later commit executable while recipes change shape, and briefs (p01-t03)
+precede the v2 recipes (p01-t04) because those recipes' `briefRef`s must
+resolve at validation time.
+
+After Phase 1 lands, **p02, p03, and p04 have disjoint write sets**:
+
+- p02 — `oat-project-complete/SKILL.md`,
+  `oat-project-implement/references/completion-and-closeout.md`, and the
+  `oat-explainer-kit` skill/references/completion test
+- p03 — `scripts/lib/{markdown,diagram,render}.mjs`, `house-style.html`, and
+  `tests/{markdown,diagram,narrative-render}.test.mjs`
+- p04 — `scripts/lib/html-safety.mjs`, the three shell templates, and
+  `tests/{html-safety,templates}.test.mjs`
+
+p03 owns `render.mjs` and `narrative-render.test.mjs` across both its tasks;
+p04 owns `templates.test.mjs`. No file appears in two groups.
+
+p05 (guideline checker + render QA) touches `qa.mjs`, which reads outputs
+from both render paths, so it follows the group. Phase 6 is strictly
+sequential and rewires `run.mjs` in three passes that are each independently
+green — gate relocation, then the author stage and v1 author retirement, then
+marking — before p06-t04 retires recipe v1, migrates the release/smoke
+fixture surface, and lands the whole 2.0.0 compatibility boundary (core
+version, adapter minimum, and the smoke assertions that pin them) in one
+commit so no intermediate state is self-rejecting. p07 (e2e fixture) and p08
+(docs, then remaining bumps + sync + release closure) follow.
 
 ## Reviews
 
 | Scope | Type     | Status          | Date       | Artifact                                           |
 | ----- | -------- | --------------- | ---------- | -------------------------------------------------- |
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md |
-| plan  | artifact | received        | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md |
-| plan  | artifact | received        | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -643,22 +1031,26 @@ as the final task so validation covers the complete tree).
 
 **Summary:**
 
-- Phase 1: 4 tasks — contracts v2 (author+expansion, recipe, approval marking)
-- Phase 2: 2 tasks — author briefs + lifecycle author-callback docs
-- Phase 3: 3 tasks — narrative renderer (markdown, blocks, diagrams)
-- Phase 4: 2 tasks — artistic path (safety validator, shells)
+- Phase 1: 5 tasks — author contracts v2, dual-version recipe loader, briefs,
+  v2 recipes, approval marking
+- Phase 2: 1 task — lifecycle caller author-callback wiring with contract tests
+- Phase 3: 3 tasks — narrative renderer (markdown, blocks + paths, diagrams)
+- Phase 4: 2 tasks — artistic path (hash-pinned safety validator, shells)
 - Phase 5: 2 tasks — guideline checker + render QA
-- Phase 6: 3 tasks — pipeline integration, marking, v1 consumer migration
+- Phase 6: 4 tasks — approval relocation, author stage + QA split, marking,
+  recipe v1 retirement + fixture migration + 2.0.0 boundary
 - Phase 7: 1 task — e2e anti-regression fixture
-- Phase 8: 2 tasks — docs, then version bumps + release validation
+- Phase 8: 2 tasks — docs, then remaining bumps + sync + release validation
 
-**Total: 19 tasks**
+**Total: 20 tasks**
 
 ## References
 
 - Discovery: `discovery.md`
-- Design: `design.md` (expansion protocol clarified in this plan's preamble)
-- Plan review: `reviews/artifact-plan-review-2026-07-25T183814Z.md`
+- Design: `design.md` — decisions D1–D8 in "Resolved Interface Decisions"
+- Plan reviews: `reviews/artifact-plan-review-2026-07-25T183814Z.md`,
+  `...T190445Z.md`, `...T191042Z.md`, `...T194853Z.md`, `...T202242Z.md`,
+  `...T204842Z.md`
 - Root-cause evidence: live in5-game-cms recap; `author-result/v1` +
   `render.mjs` escaped single-paragraph rendering; write-only markdown
   content records

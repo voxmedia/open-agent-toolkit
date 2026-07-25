@@ -85,24 +85,37 @@ oat_generated: false
 
 ## Current Phase
 
-Discovery complete (seeded from the 2026-07-25 brainstorm session). User chose
-quick mode with the optional lightweight design step: discovery surfaced real
+Plan complete and operator-accepted; ready for implementation. Discovery was
+seeded from the 2026-07-25 brainstorm session, and the user chose quick mode
+with the optional lightweight design step because discovery surfaced real
 architecture decisions (two rendering paths, recipe floor/expansion semantics,
 brief packaging, agent-HTML safety validation).
+
+The plan went through five artifact review cycles. Findings converged
+monotonically (8 → 3 → 2 Important) and each round's remediations were
+verified closed by the next review. The operator ended the loop deliberately
+after the fifth cycle's findings were remediated, judging that the remaining
+class of finding was design-detail refinement better resolved against real
+code during implementation than through further ~12-minute max-effort gate
+cycles. The plan was therefore **accepted by the operator rather than closed
+by a passing gate** — a deliberate, recorded decision, not an oversight.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (next — lightweight design chosen)
-- **Plan:** `plan.md` (scaffolded template — not started)
-- **Implementation:** `implementation.md` (scaffolded template — not started)
+- **Design:** `design.md` (complete — includes resolved interface decisions D1–D8)
+- **Plan:** `plan.md` (complete — 20 tasks across 8 phases, operator-accepted)
+- **Implementation:** `implementation.md` (not started)
 
 ## Progress
 
 - ✓ Discovery complete (brainstorm-seeded, user-validated direction)
 - ✓ Execution artifacts scaffolded
-- ⧗ Lightweight design not started
+- ✓ Lightweight design complete, with D1–D8 resolving the interface questions
+  the plan reviews surfaced
+- ✓ Plan complete: 20 tasks, parallel group [p02, p03, p04], 5 review cycles
+- ⧗ Implementation not started
 
 ## Blockers
 
@@ -110,4 +123,5 @@ None
 
 ## Next Milestone
 
-Produce lightweight `design.md` via `oat-project-quick-start`, then plan
+Begin implementation at Phase 1 (`p01-t01`, author contract v2 schemas) via
+`oat-project-implement`.
