@@ -728,6 +728,7 @@ git commit -m "docs(p03-t05): record Opus 5 reverification entry"
 | final | code     | pending  | -          | -                                                      |
 | plan  | artifact | passed   | 2026-07-25 | inline (planning parent) + bounded verification worker |
 | plan  | artifact | received | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md     |
+| plan  | artifact | received | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md     |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
