@@ -71,6 +71,8 @@ oat_generated: false
   fallback handling.
 - `p04-t03`: retained the Codex task-class ladder while adding Sol's >272K
   pricing step, trajectory economics, and consequence-versus-effort guidance.
+  Follow-up review aligned the consequential default to Sol high plus
+  independent review, reserving xhigh and max for depth-driven escalation.
 
 ## Deviations from Pre-Synthesis Plan
 
