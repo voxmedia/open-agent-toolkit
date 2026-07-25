@@ -12,7 +12,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -75,27 +75,30 @@ oat_generated: false
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Discovery
+**Status:** Discovery complete — ready for lightweight design
 **Started:** 2026-07-25
 **Last Updated:** 2026-07-25
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Discovery complete (seeded from the 2026-07-25 brainstorm session). User chose
+quick mode with the optional lightweight design step: discovery surfaced real
+architecture decisions (two rendering paths, recipe floor/expansion semantics,
+brief packaging, agent-HTML safety validation).
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
+- **Design:** `design.md` (next — lightweight design chosen)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
 ## Progress
 
-- ✓ Discovery started
+- ✓ Discovery complete (brainstorm-seeded, user-validated direction)
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ⧗ Lightweight design not started
 
 ## Blockers
 
@@ -103,4 +106,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Produce lightweight `design.md` via `oat-project-quick-start`, then plan
