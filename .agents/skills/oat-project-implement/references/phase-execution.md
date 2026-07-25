@@ -271,8 +271,13 @@ Bookkeeping is mandatory:
 ```bash
 oat state refresh
 git add {PROJECT_PATH}/implementation.md {PROJECT_PATH}/state.md {PROJECT_PATH}/plan.md
+[ -f {PROJECT_PATH}/project-log.md ] && git add {PROJECT_PATH}/project-log.md
 git commit -m "chore(oat): bookkeeping after {pNN} {pass|fail}"
 ```
+
+`project-log.md` is tracked, so leaving it unstaged carries the log's dirt into
+the next dispatch and fails the child's clean-worktree preflight. Stage it only
+when it exists; logging can be disabled.
 
 ### Step 8: Check Plan Phase Completion
 
@@ -303,7 +308,14 @@ verification, final review, and stored pre-approval work before asking for
 approval.
 
 After phase summary and task pointer advancement, refresh state and commit the
-three tracking artifacts. Do not use `git add -A`.
+three tracking artifacts, plus `project-log.md` when it exists. Do not use
+`git add -A`.
+
+**Any step that appends to the project log owns committing it** before it
+returns, parks, or stops — not just the success path. STOP and park returns,
+validation failure, invalid-run aborts, and retry exhaustion all bypass this
+phase boundary, and each leaves the tracked log dirty for whatever runs next.
+Commit the log on those paths too, once no child owns the head.
 
 ### Step 9: Repeat Until Complete
 
