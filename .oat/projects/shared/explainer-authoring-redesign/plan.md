@@ -1,10 +1,10 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-implement
+oat_status: in_progress
+oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-25
 oat_phase: plan
-oat_phase_status: complete
+oat_phase_status: in_progress
 oat_plan_hill_phases: []
 oat_plan_parallel_groups: [['p02', 'p03', 'p04']]
 oat_plan_source: quick
@@ -13,7 +13,6 @@ oat_import_source_path: null
 oat_import_provider: null
 oat_generated: false
 oat_template: false
-oat_template_name: plan
 ---
 
 # Implementation Plan: explainer-authoring-redesign
@@ -27,44 +26,58 @@ set scaling, and honest auto-drafted marking for unattended runs. Machine
 rails (fact base, manifest, hashing, publish, approval modes) stay unchanged.
 
 Primary write surface: `.agents/skills/explainer-kit/` (core skill) and
-`.agents/skills/oat-explainer-kit/` (adapter), plus docs and release
-bookkeeping. Skill tests run with `node --test
+`.agents/skills/oat-explainer-kit/` (adapter), plus consumer callers, docs,
+and release bookkeeping. Skill tests run with `node --test
 .agents/skills/explainer-kit/tests/`.
+
+**Expansion protocol (design clarification, binding for p01/p06/p07):**
+content-driven set scaling is expressed as a two-step author protocol. The
+floor artifact's `author-result/v2` may carry an optional
+`proposedArtifacts[]` (id, type, authoring, rationale) — the set-planning
+response. The pipeline validates proposals against the recipe's
+`expansion{allowedTypes, limits}`, then issues one `author-request/v2` per
+accepted proposal and receives one `author-result/v2` per artifact. Hub
+linking of accepted expansion artifacts rides the existing `artifactLinks`
+mechanism. Rejected/over-limit proposals degrade to manifest warnings.
 
 ## Phase 1: Contracts v2 (schemas, recipes, approval marking)
 
-### Task p01-t01: Author contract v2 schemas
+### Task p01-t01: Author contract v2 schemas (coexisting with v1)
 
 **Files:**
 
-- Create: `.agents/skills/explainer-kit/schemas/author-request.schema.json` (v2 `$id`)
-- Create: `.agents/skills/explainer-kit/schemas/author-result.schema.json` (v2 `$id`)
+- Create: `.agents/skills/explainer-kit/schemas/author-request.v2.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/author-result.v2.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 
 **Step 1:** Define `explainer-kit.author-request/v2`: `{schemaVersion,
 artifactId, artifactType, brief, factBase, shell?, theme, floor?}` and
 `explainer-kit.author-result/v2`: `{schemaVersion, artifactId, content:
-{markdown | html} (exactly one), provenance{authorId, generatedAt, method?}}`.
-Keep the v1 author schemas registered for now — `run.mjs` consumes them until
-p06-t01 rewires the author stage; v1 removal happens there so every
-intermediate phase stays green (clean break still lands within this release).
+{markdown | html} (exactly one), provenance{authorId, generatedAt, method?},
+proposedArtifacts?: [{id, type, authoring, rationale}]}` per the expansion
+protocol above. The v2 schemas live at **distinct versioned paths**; the
+existing v1 files (`author-request.schema.json`, `author-result.schema.json`)
+are untouched here — `run.mjs` consumes them until p06-t01.
 
-**Step 2:** Register the v2 contracts in `contracts.mjs` validation alongside
-v1.
+**Step 2:** Extend `contracts.mjs` registration to be version-aware: both v1
+and v2 author contracts resolve by `$id`/kind+version. No call-site behavior
+changes in this task.
 
 **Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs`
-Expected: v2 fixtures validate; existing v1 validation unchanged.
+Expected: v2 fixtures (with and without `proposedArtifacts`) validate; v1
+validation unchanged; a v2 result carrying both `markdown` and `html` is
+rejected.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/schemas .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
-git commit -m "feat(p01-t01): author contract v2 (markdown/html content, minimal shape)"
+git add .agents/skills/explainer-kit/schemas/author-request.v2.schema.json .agents/skills/explainer-kit/schemas/author-result.v2.schema.json .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests/contracts.test.mjs
+git commit -m "feat(p01-t01): author contract v2 with expansion proposals, coexisting with v1"
 ```
 
-### Task p01-t02: Recipe contract v2 (floor + expansion)
+### Task p01-t02: Recipe contract v2 (floor + expansion limits)
 
 **Files:**
 
@@ -72,9 +85,11 @@ git commit -m "feat(p01-t01): author contract v2 (markdown/html content, minimal
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 
 **Step 1:** Replace exact `artifacts[]` semantics with `floor[]` (required
-artifacts: id, type, authoring `markdown|html`, template/shell ref) plus
-`expansion{allowedTypes[], limits}`. Validation: undeclared artifact type →
-error; floor miss → deferred to guideline checker (warning), not a recipe
+artifacts: id, type, authoring `markdown|html`, template/shell ref, briefRef)
+plus `expansion{allowedTypes[], limits{maxArtifacts?, maxPerType?}}`.
+Validation: undeclared artifact type in a proposal or result → error;
+over-limit proposals → rejected with warning (consumed by p05-t01/p06-t01);
+floor misses → deferred to the guideline checker (warning), not a recipe
 error.
 
 **Step 2:** Update `loadRecipe`/`validateContentModel` call sites for the new
@@ -83,16 +98,17 @@ shape; keep source-role validation unchanged.
 **Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
 Expected: floor+expansion fixtures pass; undeclared-type fixture errors;
-floor-miss fixture does not error.
+over-limit proposal fixture yields a rejection outcome; floor-miss fixture
+does not error.
 
 **Step 4: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/recipes.mjs .agents/skills/explainer-kit/tests/recipes.test.mjs
-git commit -m "feat(p01-t02): recipe v2 floor+expansion semantics"
+git commit -m "feat(p01-t02): recipe v2 floor+expansion semantics with limit validation"
 ```
 
-### Task p01-t03: Rewrite bundled recipes to v2
+### Task p01-t03: Rewrite bundled recipes to v2 (all four, asserted)
 
 **Files:**
 
@@ -100,45 +116,63 @@ git commit -m "feat(p01-t02): recipe v2 floor+expansion semantics"
 - Modify: `.agents/skills/explainer-kit/recipes/program-recap.json`
 - Modify: `.agents/skills/explainer-kit/recipes/project-explainer.json`
 - Modify: `.agents/skills/explainer-kit/recipes/engineer-tour.json`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
 
-**Step 1:** Convert each recipe: `project-recap` floor = one markdown
-narrative page; expansion allows diagram/deck/page artifacts. `project-explainer`
-and `engineer-tour` floors include their artistic artifacts (html authoring,
-shell refs). Each recipe carries a `briefRef`.
+**Step 1:** Convert each recipe with explicit semantics:
+
+- `project-recap`: floor = one markdown narrative page; expansion allows
+  `diagram`, `deck`, additional `page` artifacts.
+- `program-recap`: floor = one markdown narrative page (program-level
+  aggregate); expansion allows `diagram` and `page` artifacts (per-project
+  sub-pages), markdown authoring.
+- `project-explainer`: floor = one markdown narrative page + one html
+  explainer artifact (shell ref); expansion allows `diagram`.
+- `engineer-tour`: floor = one html tour artifact (shell ref); expansion
+  allows `diagram`.
+
+Each floor entry carries its `briefRef`.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
-Expected: all four bundled recipes load and validate as v2.
+Expected: semantic assertions per recipe (floor artifact ids/types/authoring,
+expansion allowedTypes, briefRef resolution) — not load-only checks.
 
 **Step 3: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/recipes
-git commit -m "feat(p01-t03): bundled recipes on v2 floor+expansion"
+git add .agents/skills/explainer-kit/recipes .agents/skills/explainer-kit/tests/recipes.test.mjs
+git commit -m "feat(p01-t03): bundled recipes on v2 floor+expansion with semantic assertions"
 ```
 
-### Task p01-t04: Approval marking (auto-drafted vs human-approved)
+### Task p01-t04: Approval record v2 with marking and resume compatibility
 
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/content-approval.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/content-approval.test.mjs`
 
-**Step 1:** Add `marking: "human-approved" | "auto-drafted"` to the approval
-record: unattended auto-approval records `auto-drafted`; interactive approve
-records `human-approved`. Surface the marking in the run result so the
-manifest assembly step (p06-t02) can carry it.
+**Step 1:** Emit `explainer-kit.content-approval/v2` records carrying
+`marking: "human-approved" | "auto-drafted"`: unattended auto-approval records
+`auto-drafted`; interactive approve records `human-approved`. Update all
+version assertions that currently hard-code v1.
 
-**Step 2: Verify**
+**Step 2:** Define resume compatibility: reading a persisted v1 approval
+record from an in-flight run remains valid (treated as `human-approved` when
+status is approved interactively, `auto-drafted` when unattended); new writes
+are always v2. Surface the marking in the run result for manifest assembly
+(p06-t02).
+
+**Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/content-approval.test.mjs`
-Expected: unattended fixture records `auto-drafted`; interactive approve
-records `human-approved`; reject flow unchanged.
+Expected: new unattended runs record v2 `auto-drafted`; interactive approve
+records v2 `human-approved`; resumed v1-record fixture is accepted with the
+compatibility mapping; reject flow unchanged.
 
-**Step 3: Commit**
+**Step 4: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/content-approval.mjs .agents/skills/explainer-kit/tests/content-approval.test.mjs
-git commit -m "feat(p01-t04): approval marking distinguishes auto-drafted runs"
+git commit -m "feat(p01-t04): content-approval v2 marking with v1 resume compatibility"
 ```
 
 ## Phase 2: Author briefs
@@ -158,7 +192,9 @@ floors, expansion license) and write the four bundled briefs. The
 narrative coverage, ≥1 high-level architecture diagram (inline fine),
 evidence tables for validation, expansion license keyed to project substance
 ("multiple diagrams/sub-diagrams/deck when complexity earns it"), and the
-plain-language editing rules from the original 0.4.1 skill.
+plain-language editing rules from the original 0.4.1 skill. The
+`program-recap` brief covers program-level aggregation and per-project
+sub-page expansion.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs`
@@ -176,18 +212,19 @@ git commit -m "feat(p02-t01): bundled author briefs carry the editorial bar"
 **Files:**
 
 - Modify: `.agents/skills/oat-explainer-kit/references/` (author-callback construction guidance)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump + brief wiring)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (brief wiring guidance; version bump deferred to p08-t02)
 
 **Step 1:** Document how the adapter/lifecycle constructs the author callback:
 brief inlined into `author-request/v2`, fact base attached, shell/theme for
-artistic artifacts — closing the closeout gap (critic documented, author not).
-Include the automated-completion rule: recap runs invoked by the completion
-chain always use `mode: unattended`.
+artistic artifacts, and the expansion protocol (set-planning proposals →
+per-artifact requests) — closing the closeout gap (critic documented, author
+not). Include the automated-completion rule: recap runs invoked by the
+completion chain always use `mode: unattended`.
 
 **Step 2: Verify**
 Run: `rg -n "author-request/v2" .agents/skills/oat-explainer-kit | head`
-Expected: adapter references describe author-callback construction and the
-unattended completion rule.
+Expected: adapter references describe author-callback construction, the
+expansion protocol, and the unattended completion rule.
 
 **Step 3: Commit**
 
@@ -205,26 +242,28 @@ git commit -m "docs(p02-t02): adapter author-callback construction + unattended 
 - Create: `.agents/skills/explainer-kit/scripts/lib/markdown.mjs`
 - Create: `.agents/skills/explainer-kit/tests/markdown.test.mjs`
 
-**Step 1:** Implement CommonMark + GFM-tables/task-list parsing to an internal
-AST. Decision recorded in design: the core stays dependency-light — implement
-the required subset natively (no npm runtime deps in the packaged skill);
-scope is the block vocabulary, not full spec compliance.
+**Step 1:** Implement CommonMark + GFM (tables, task lists, strikethrough)
+parsing to an internal AST. Decision recorded in design: the core stays
+dependency-light — implement the required subset natively (no npm runtime
+deps in the packaged skill); scope is the block vocabulary, not full spec
+compliance.
 
 **Step 2:** AST validation: safe node allowlist (no raw HTML passthrough),
-absolute-link rule per publish contract, fenced diagram blocks recognized as a
-distinct node type. Safety violations are hard errors; style findings return
-as warnings.
+absolute-link rule per the publish contract, fenced diagram blocks recognized
+as a distinct node type. Safety violations are hard errors; style findings
+return as warnings.
 
 **Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/markdown.test.mjs`
-Expected: block fixtures parse; raw-HTML and unsafe-link fixtures hard-fail;
-warning fixtures return findings without throwing.
+Expected: block fixtures (including tables, task lists, strikethrough) parse;
+raw-HTML and unsafe-link fixtures hard-fail; warning fixtures return findings
+without throwing.
 
 **Step 4: Commit**
 
 ```bash
 git add .agents/skills/explainer-kit/scripts/lib/markdown.mjs .agents/skills/explainer-kit/tests/markdown.test.mjs
-git commit -m "feat(p03-t01): markdown AST parse + safety validation"
+git commit -m "feat(p03-t01): markdown AST parse (GFM incl. strikethrough) + safety validation"
 ```
 
 ### Task p03-t02: Themed block library rendering
@@ -233,25 +272,28 @@ git commit -m "feat(p03-t01): markdown AST parse + safety validation"
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
 - Modify: `.agents/skills/explainer-kit/templates/house-style.html`
-- Modify: `.agents/skills/explainer-kit/tests/templates.test.mjs`
+- Create: `.agents/skills/explainer-kit/tests/narrative-render.test.mjs`
 
 **Step 1:** Replace `renderSections`' escaped single-`<p>` emission with AST →
-block rendering: headings, paragraphs, GFM tables, lists, callouts,
-timelines, code blocks, figures — all themed via existing tokens, preserving
-section anchors/numbering/TOC and the self-contained HTML profile.
+block rendering: headings, paragraphs, GFM tables, lists (incl. task lists),
+strikethrough, callouts, timelines, code blocks, figures — all themed via
+existing tokens, preserving section anchors/numbering/TOC and the
+self-contained HTML profile.
 
 **Step 2:** Keep deck/slide rendering delegated to the artistic path (p04);
-narrative rendering no longer feeds `renderSlides`.
+narrative rendering no longer feeds `renderSlides`. Golden-file tests live in
+the **new** `narrative-render.test.mjs` (not `templates.test.mjs`, which p04
+owns during the parallel group).
 
 **Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs .agents/skills/explainer-kit/tests/theme.test.mjs`
+Run: `node --test .agents/skills/explainer-kit/tests/narrative-render.test.mjs .agents/skills/explainer-kit/tests/theme.test.mjs`
 Expected: golden-file renders per block type and theme mode; identical input
 → identical output.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/scripts/lib/render.mjs .agents/skills/explainer-kit/templates/house-style.html .agents/skills/explainer-kit/tests/templates.test.mjs
+git add .agents/skills/explainer-kit/scripts/lib/render.mjs .agents/skills/explainer-kit/templates/house-style.html .agents/skills/explainer-kit/tests/narrative-render.test.mjs
 git commit -m "feat(p03-t02): themed block library replaces escaped-paragraph rendering"
 ```
 
@@ -291,8 +333,8 @@ git commit -m "feat(p03-t03): build-time inline SVG diagram blocks"
 **Step 1:** Parse-level allowlist validation for agent-composed HTML:
 hard-fail on script elements, event-handler attributes, and external active
 content; warn on style-family deviations (missing theme tokens, missing
-required anchors). Parser is the same dependency-light HTML tokenizer used
-for validation only (no rendering).
+required anchors). Parser is a dependency-light HTML tokenizer used for
+validation only (no rendering).
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/html-safety.test.mjs`
@@ -318,6 +360,9 @@ git commit -m "feat(p04-t01): DOM allowlist safety validation for artistic artif
 **Step 1:** Refresh shells as starting canvases: theme-token wiring, required
 anchors (for validation and render QA), and clearly-marked extension regions.
 Shells are delivered to the author inside `author-request/v2` (`shell` field).
+Shell fidelity checks live in `templates.test.mjs`, which **only this phase**
+touches during the parallel group (p03 golden tests live in
+`narrative-render.test.mjs`).
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/templates.test.mjs`
@@ -341,13 +386,13 @@ git commit -m "feat(p04-t02): shells as authoring canvases with validation ancho
 
 **Step 1:** Implement floor evaluation against built artifacts: narrative
 coverage, diagram presence (inline or standalone), structured-block depth
-signals. Emit stable warning identifiers into manifest `warnings[]`; never
-block.
+signals, and rejected/over-limit expansion proposals. Emit stable warning
+identifiers into manifest `warnings[]`; never block.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/qa.test.mjs`
 Expected: floor-miss fixtures produce the expected warning ids; rich fixtures
-produce none.
+produce none; over-limit proposal fixture yields its warning id.
 
 **Step 3: Commit**
 
@@ -383,26 +428,32 @@ git add .agents/skills/explainer-kit/scripts/lib/qa.mjs .agents/skills/explainer
 git commit -m "feat(p05-t02): render QA probe battery with graceful skip"
 ```
 
-## Phase 6: Pipeline integration
+## Phase 6: Pipeline integration and v1 retirement
 
-### Task p06-t01: Author stage wiring in the core run
+### Task p06-t01: Author stage wiring in the core run (v1 schemas retired)
 
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Delete: `.agents/skills/explainer-kit/schemas/author-request.schema.json`
+- Delete: `.agents/skills/explainer-kit/schemas/author-result.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
 
 **Step 1:** Replace `createContentModel`'s joined-claims summary with the
 author stage: construct `author-request/v2` per floor artifact (brief inlined,
-shell/theme attached for html authoring), invoke the author callback, persist
-authored content as the real render input (`source/content/<artifact>.md` or
-`.html` — now load-bearing, still hash-pinned). Route rendering by authoring
-type (markdown → narrative renderer; html → safety validation). Accept
-expansion artifacts the author returns within recipe limits. Remove the v1
-author schemas and their `contracts.mjs` registrations here (deferred from
-p01-t01) now that nothing consumes them.
+shell/theme attached for html authoring), invoke the author callback, run the
+expansion protocol (validate `proposedArtifacts` against recipe limits, issue
+per-artifact requests for accepted proposals), persist authored content as
+the real render input (`source/content/<artifact>.md` or `.html` — now
+load-bearing, still hash-pinned). Route rendering by authoring type
+(markdown → narrative renderer; html → safety validation). Link accepted
+expansion artifacts from the narrative page via `artifactLinks`.
 
-**Step 2:** Unattended runs without an author callback fail with a clear
+**Step 2:** Remove the v1 author schema files and their `contracts.mjs`
+registrations now that nothing consumes them; update contract tests
+accordingly. Unattended runs without an author callback fail with a clear
 `E_AUTHOR_REQUIRED` (autonomous invokers must supply one — documented in
 p02-t02); interactive runs pause at the approval gate with drafts + warnings
 as the review surface.
@@ -410,13 +461,13 @@ as the review surface.
 **Step 3: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/`
 Expected: full core suite passes; run fixtures produce authored, rendered,
-validated artifacts end-to-end.
+validated artifacts end-to-end, including an accepted-expansion fixture.
 
 **Step 4: Commit**
 
 ```bash
-git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests
-git commit -m "feat(p06-t01): author stage feeds real content through both render paths"
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/schemas .agents/skills/explainer-kit/scripts/lib/contracts.mjs .agents/skills/explainer-kit/tests
+git commit -m "feat(p06-t01): author stage feeds both render paths; v1 author contracts retired"
 ```
 
 ### Task p06-t02: Manifest marking and adapter integration
@@ -445,7 +496,38 @@ git add .agents/skills/explainer-kit/scripts/lib/records.mjs .agents/skills/oat-
 git commit -m "feat(p06-t02): auto-drafted marking + unattended completion chain"
 ```
 
-## Phase 7: End-to-end fixture and release validation
+### Task p06-t03: Migrate every remaining v1 consumer (same release)
+
+**Files:**
+
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (author-request/v1 → v2 guidance)
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+
+**Step 1:** Inventory canonical v1 author-contract references (`rg -n
+"author-request/v1|author-result/v1" .agents tools apps packages`) and migrate
+each: the `oat-wave-execute` shipped guidance, core schema tests, adapter
+integration fixtures, and the wrapper-compatibility smoke fixtures all
+construct/reference v2 shapes. Any newly discovered consumer is migrated in
+this task, not deferred.
+
+**Step 2:** Refresh provider views (`oat sync --scope all`) so `.claude/`,
+`.cursor/`, `.codex/` mirrors of changed canonical skills are current.
+
+**Step 3: Verify**
+Run: `rg -n "author-request/v1|author-result/v1" .agents tools apps packages | wc -l` then `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs && pnpm test:smoke`
+Expected: zero remaining v1 author-contract references; core, adapter, and
+smoke suites pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-wave-execute/SKILL.md .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs tools/smoke/explainer-kit/wrapper-compatibility.test.mjs .oat/sync/manifest.json .claude .cursor .codex
+git commit -m "feat(p06-t03): migrate all v1 author-contract consumers to v2"
+```
+
+## Phase 7: End-to-end anti-regression fixture
 
 ### Task p07-t01: Recap anti-regression fixture
 
@@ -457,12 +539,15 @@ git commit -m "feat(p06-t02): auto-drafted marking + unattended completion chain
 **Step 1:** Build a completed-project fact base + author fixture (modeled on
 the in5-game-cms evidence) and assert the rendered narrative page contains
 structured blocks: ≥1 table, ≥1 inline diagram SVG, lists, and section
-anchors — the direct anti-regression for the original complaint. Assert
-manifest warnings are empty for the rich fixture and populated for a thin one.
+anchors — the direct anti-regression for the original complaint. Include an
+expansion-path case (author proposes a standalone diagram; page links it).
+Assert manifest warnings are empty for the rich fixture and populated for a
+thin one.
 
 **Step 2: Verify**
 Run: `node --test .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
-Expected: rich fixture renders rich; thin fixture ships with floor warnings.
+Expected: rich fixture renders rich (with linked expansion artifact); thin
+fixture ships with floor warnings.
 
 **Step 3: Commit**
 
@@ -471,42 +556,19 @@ git add .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/exp
 git commit -m "test(p07-t01): recap richness anti-regression fixture"
 ```
 
-### Task p07-t02: Version bumps and release validation
-
-**Files:**
-
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (version: 2.0.0)
-- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (version bump)
-- Modify: `packages/cli/package.json`, `packages/control-plane/package.json`, `packages/docs-config/package.json`, `packages/docs-theme/package.json`, `packages/docs-transforms/package.json` (lockstep bump)
-
-**Step 1:** Bump the core skill to 2.0.0 and the adapter accordingly (bundled
-assets count as shipped CLI functionality → lockstep bump of all five public
-packages per repo guardrail).
-
-**Step 2: Verify**
-Run: `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`
-Expected: release dry-run and full repo checks pass.
-
-**Step 3: Commit**
-
-```bash
-git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md packages/*/package.json
-git commit -m "chore(p07-t02): lockstep version bumps for explainer authoring v2"
-```
-
-## Phase 8: Documentation
+## Phase 8: Documentation and release closure
 
 ### Task p08-t01: Docs and skill guidance updates
 
 **Files:**
 
 - Modify: `apps/oat-docs/docs/` (explainer-kit pages: authoring model, briefs, warnings, marking)
-- Modify: `.agents/skills/explainer-kit/SKILL.md` (authoring model description)
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (authoring model description; version bump lands in p08-t02)
 
 **Step 1:** Update the docs surface: two-path authoring model, brief
-authoring guidance, floor/expansion recipe semantics, warning taxonomy,
-auto-drafted marking, render QA behavior. Regenerate the docs index if nav
-changed (`oat docs generate-index`).
+authoring guidance, floor/expansion recipe semantics and the expansion
+protocol, warning taxonomy, auto-drafted marking, render QA behavior.
+Regenerate the docs index if nav changed (`oat docs generate-index`).
 
 **Step 2: Verify**
 Run: `pnpm build:docs`
@@ -519,27 +581,58 @@ git add apps/oat-docs .agents/skills/explainer-kit/SKILL.md
 git commit -m "docs(p08-t01): explainer authoring v2 documentation"
 ```
 
+### Task p08-t02: Version bumps and release validation (final task)
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/SKILL.md` (version: 2.0.0)
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md` (single PR-scoped bump)
+- Modify: `.agents/skills/oat-wave-execute/SKILL.md` (single PR-scoped bump)
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+
+**Step 1:** As the final task, after all shipped skill/docs edits exist: bump
+the core skill to 2.0.0 and apply exactly one PR-scoped version bump to every
+other canonical skill changed on this branch (`oat-explainer-kit`,
+`oat-wave-execute`); bump the five lockstep public packages (bundled assets
+count as shipped CLI functionality per the repo guardrail).
+
+**Step 2: Verify**
+Run: `pnpm release:validate && pnpm lint && pnpm type-check && pnpm test`
+Expected: release dry-run and full repo checks pass against the complete
+tree — no shipped edits follow this task.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/SKILL.md .agents/skills/oat-explainer-kit/SKILL.md .agents/skills/oat-wave-execute/SKILL.md packages/cli/package.json packages/control-plane/package.json packages/docs-config/package.json packages/docs-theme/package.json packages/docs-transforms/package.json
+git commit -m "chore(p08-t02): lockstep version bumps + release validation for explainer authoring v2"
+```
+
 ## Parallelism
 
 Phase 1 is the contract foundation and runs first. After it lands, **p02
 (briefs), p03 (narrative renderer), and p04 (artistic path) have disjoint
-write sets** — `briefs/` + adapter references, `scripts/lib/markdown|diagram
-.mjs` + `render.mjs` + `house-style.html`, and `html-safety.mjs` + shell
-templates respectively — with independent verification, so they are declared
-as a parallel group. p05 (guideline checker + render QA) touches `qa.mjs`,
-which reads outputs from both render paths, so it follows the group. p06
-(pipeline integration) rewires `run.mjs` across everything and must be
-sequential, as must p07 (e2e + release, depends on the whole) and p08 (docs
-describe final behavior). `templates.test.mjs` is shared between p03-t02 and
-p04-t02; the parallel groups tolerate this because worktree merges are
-append-oriented test additions, but the merge order should land p03 first.
+write sets** — `briefs/` + adapter references; `scripts/lib/markdown|diagram
+.mjs` + `render.mjs` + `house-style.html` + the new
+`narrative-render.test.mjs`; and `html-safety.mjs` + shell templates +
+`templates.test.mjs` respectively. The former shared surface
+(`templates.test.mjs`) was removed by giving p03 its own test file, so the
+group's write sets are genuinely disjoint with independent verification. p05
+(guideline checker + render QA) touches `qa.mjs`, which reads outputs from
+both render paths, so it follows the group. p06 (pipeline integration + v1
+retirement + consumer migration) rewires `run.mjs` across everything and must
+be sequential, as must p07 (e2e fixture) and p08 (docs, then release closure
+as the final task so validation covers the complete tree).
 
 ## Reviews
 
-| Scope | Type     | Status   | Date       | Artifact                                                                                                               |
-| ----- | -------- | -------- | ---------- | ---------------------------------------------------------------------------------------------------------------------- |
-| plan  | artifact | passed   | 2026-07-25 | inline planning-parent review (deliberate inheritance, High ceiling met); 1 Important + 1 Minor finding fixed in-place |
-| plan  | artifact | received | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md                                                                     |
+| Scope | Type     | Status          | Date       | Artifact                                           |
+| ----- | -------- | --------------- | ---------- | -------------------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -548,21 +641,22 @@ append-oriented test additions, but the merge order should land p03 first.
 
 **Summary:**
 
-- Phase 1: 4 tasks — contracts v2 (author, recipe, approval marking)
+- Phase 1: 4 tasks — contracts v2 (author+expansion, recipe, approval marking)
 - Phase 2: 2 tasks — author briefs + lifecycle author-callback docs
 - Phase 3: 3 tasks — narrative renderer (markdown, blocks, diagrams)
 - Phase 4: 2 tasks — artistic path (safety validator, shells)
 - Phase 5: 2 tasks — guideline checker + render QA
-- Phase 6: 2 tasks — pipeline integration + marking
-- Phase 7: 2 tasks — e2e anti-regression + release validation
-- Phase 8: 1 task — documentation
+- Phase 6: 3 tasks — pipeline integration, marking, v1 consumer migration
+- Phase 7: 1 task — e2e anti-regression fixture
+- Phase 8: 2 tasks — docs, then version bumps + release validation
 
-**Total: 18 tasks**
+**Total: 19 tasks**
 
 ## References
 
 - Discovery: `discovery.md`
-- Design: `design.md`
+- Design: `design.md` (expansion protocol clarified in this plan's preamble)
+- Plan review: `reviews/artifact-plan-review-2026-07-25T183814Z.md`
 - Root-cause evidence: live in5-game-cms recap; `author-result/v1` +
   `render.mjs` escaped single-paragraph rendering; write-only markdown
   content records
