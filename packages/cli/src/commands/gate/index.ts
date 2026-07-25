@@ -1,4 +1,4 @@
-import { spawn } from 'node:child_process';
+import { execFileSync, spawn } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -2879,6 +2879,61 @@ function writeReviewGateTargetingFailure(
   );
 }
 
+/**
+ * Commits the project log entry this gate run just appended.
+ *
+ * `project-log.md` is tracked, so an uncommitted append leaves the worktree
+ * dirty for whatever runs next — including a dispatched subagent whose
+ * preflight requires a clean tree. The commit is pathspec-scoped to the log
+ * alone so unrelated working-tree changes are never swept in, and it never
+ * throws: git failures are reported to the caller, which degrades to a warning
+ * rather than altering the gate's exit status.
+ */
+function commitReviewGateProjectLog(
+  repoRoot: string,
+  logPath: string,
+): { committed: boolean; error?: string } {
+  const run = (args: string[]): string =>
+    execFileSync('git', args, {
+      cwd: repoRoot,
+      encoding: 'utf8',
+      // Capture stderr rather than inheriting it so skip/failure probes do not
+      // leak raw `git fatal:` lines into gate output.
+      stdio: ['ignore', 'pipe', 'pipe'],
+    }).trim();
+
+  try {
+    run(['rev-parse', '--is-inside-work-tree']);
+  } catch {
+    return { committed: false };
+  }
+
+  try {
+    if (run(['status', '--porcelain', '--', logPath]).length === 0) {
+      return { committed: false };
+    }
+
+    run(['add', '--', logPath]);
+    run([
+      'commit',
+      '-m',
+      'chore(oat): record gate review in project log',
+      '--',
+      logPath,
+    ]);
+    return { committed: true };
+  } catch (error) {
+    const stderr =
+      error && typeof error === 'object' && 'stderr' in error
+        ? (error as { stderr?: Buffer | string }).stderr
+        : undefined;
+    const message =
+      (stderr != null ? stderr.toString().trim() : '') ||
+      (error instanceof Error ? error.message : String(error));
+    return { committed: false, error: message };
+  }
+}
+
 async function finalizeReviewGateProjectLog(
   context: CommandContext,
   dependencies: GateCommandDependencies,
@@ -2893,7 +2948,7 @@ async function finalizeReviewGateProjectLog(
   const body = `target=${finalization.target} threshold=${finalization.threshold}${findings} exit=${finalization.exitCode} status=${finalization.status}${artifact}`;
 
   try {
-    await dependencies.appendProjectLog({
+    const result = await dependencies.appendProjectLog({
       repoRoot: finalization.repoRoot,
       home: finalization.home,
       project: finalization.project,
@@ -2902,6 +2957,18 @@ async function finalizeReviewGateProjectLog(
       ref: finalization.ref,
       body,
     });
+
+    if (result.status === 'appended') {
+      const commit = commitReviewGateProjectLog(
+        finalization.repoRoot,
+        result.logPath,
+      );
+      if (commit.error != null) {
+        context.logger.warn(
+          `Warning: unable to commit the oat gate review project log entry: ${commit.error}. Gate result is unchanged.`,
+        );
+      }
+    }
   } catch (error) {
     context.logger.warn(
       `Warning: unable to append oat gate review result to the project log: ${
