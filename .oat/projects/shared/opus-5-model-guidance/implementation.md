@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: review
 oat_blockers: []
-oat_last_updated: 2026-07-25
-oat_current_task_id: p06-t03
+oat_last_updated: 2026-07-26
+oat_current_task_id: p07-t03
 oat_generated: false
 ---
 
@@ -11,13 +11,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p04   | complete    | 5     | 5/5       |
-| p05   | complete    | 3     | 3/3       |
-| p06   | in_progress | 3     | 2/3       |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----- | --------- |
+| p04   | complete | 5     | 5/5       |
+| p05   | complete | 3     | 3/3       |
+| p06   | complete | 3     | 3/3       |
+| p07   | complete | 3     | 3/3       |
 
-**Total:** 10/11 tasks completed
+**Total:** 14/14 tasks completed
 
 ## Phase 4: Integrate the Accepted Selection Policy
 
@@ -69,7 +70,7 @@ oat_generated: false
 
 ## Phase 6: Record Reverification and Deferral
 
-**Status:** in_progress
+**Status:** completed
 
 ### Task p06-t01: Write the reverification record
 
@@ -83,7 +84,26 @@ oat_generated: false
 
 ### Task p06-t03: Final review and bookkeeping
 
-**Status:** in_progress
+**Status:** completed
+**Commit:** `803c3ea2`, `8c1ddf08`
+
+## Phase 7: Admit Probe-Verified Cursor Pins
+
+**Status:** completed
+
+### Task p07-t01: Run the G01 probe with controls
+
+**Status:** completed
+**Commit:** `58d23c11`
+
+### Task p07-t02: Add the verified pins
+
+**Status:** completed
+**Commit:** `f19445f5`
+
+### Task p07-t03: Record findings and reconcile artifacts
+
+**Status:** completed
 
 ## Orchestration Runs
 
@@ -150,6 +170,39 @@ inherited work.
 - `p06-t02`: policy coherence audit passed. Canonical, bundled, and `.claude`
   views are byte-identical; the only differing copies are an immutable
   prior-project archive snapshot.
+- `p06-t03`: four final gate reviews across two rounds. The first three ran on
+  `cursor-gpt-5-6-sol-max`; the fourth fell back to `cursor-gpt-5-6-sol-xhigh`
+  after that exec target was removed from user-scope config mid-cycle.
+
+### 2026-07-25 — Phase 7 scope expansion
+
+Phases 4 through 6 deferred all Cursor pin work on the standing rule that no
+selector ships without live probe evidence. That blocker was cleared by
+evidence rather than waived, so the pins were admitted in a new phase instead
+of being folded silently into a completed one.
+
+- `p07-t01`: the first probe run produced no usable evidence. It executed under
+  the `cursor-agent` CLI runtime, which emits no agent lifecycle hooks, so
+  every subject reported `not-reported`. Reran from Cursor desktop Agent Chat
+  with temporary project hooks capturing `subagentStart.subagent_model`.
+- All six subjects resolved to their intended thinking variants: five
+  `claude-opus-5` rungs plus `claude-opus-4-8[effort=xhigh]`.
+- Negative controls proved the channel reports resolution rather than echoing
+  the request, and exposed a failure mode: Cursor substitutes a default for any
+  selector component it cannot resolve, silently. An unknown family resolved to
+  `cursor-grok-4.5-high-fast`; an unknown effort resolved to the family default
+  rung.
+- The `high` subject row is individually confounded, since `high` is the Opus 5
+  default. It is rescued by its neighbors — `low`, `medium`, `xhigh`, and `max`
+  each resolved to non-default rungs, proving the effort parameter is honored.
+- A pre-probe assumption was disproved: Fable resolved normally despite its
+  `NO ZDR` catalog tag, so it is not entitlement-blocked for this account.
+- `p07-t02`: six mappings added, recommendation rebalanced to `2026-07-25.1`,
+  twelve role files generated, `claude-sonnet-5-high` dropped from the economy
+  tier as strictly dominated while remaining catalogued.
+- `p07-t03`: findings recorded, silent-fallback risk filed as
+  `BL-260726-validate-cursor-pin-effort`, and artifacts reconciled so nothing
+  still claims pin work is deferred.
 
 ## Deviations from Pre-Synthesis Plan
 
@@ -158,16 +211,17 @@ inherited work.
 | Opus xhigh as default                | Opus medium/high by work shape; xhigh selective                                   |
 | Consequential implies xhigh/max      | Consequential adds independent review and root authority                          |
 | Opus 4.8 universal cyber primary     | Opus 5 general route with documented fallback handling                            |
-| Five speculative Cursor pins         | No pin/catalog change before live probe                                           |
+| Five speculative Cursor pins         | Six pins shipped in Phase 7, each probe-verified rather than inferred             |
 | Fable generic exceptional escalation | Reviewer principle durable; Fable instantiation provisional and eligibility-gated |
 
 ## Test Results
 
-| Phase | Tests Run                                                                                         | Result |
-| ----- | ------------------------------------------------------------------------------------------------- | ------ |
-| p04   | Focused skill tests (113), format, terminology, scope, policy coherence; independently rerun      | pass   |
-| p05   | format, lint, type-check (10/10), root suite (129), focused skill tests (113), `release:validate` | pass   |
-| p06   | 16-key schema check, three-provider check, coherence audit A1-A8, generated-view parity           | pass   |
+| Phase | Tests Run                                                                                          | Result |
+| ----- | -------------------------------------------------------------------------------------------------- | ------ |
+| p04   | Focused skill tests (113), format, terminology, scope, policy coherence; independently rerun       | pass   |
+| p05   | format, lint, type-check (10/10), root suite (129), focused skill tests (113), `release:validate`  | pass   |
+| p06   | 16-key schema check, three-provider check, coherence audit A1-A8, generated-view parity            | pass   |
+| p07   | G01 probe (6 subjects, 4 controls), full suite, `release:validate`, type-check, lint, format, sync | pass   |
 
 ## Final Summary
 

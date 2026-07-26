@@ -61,14 +61,37 @@ records:
         window acceptance
 
   - provider: cursor
-    harness_context: Cursor IDE and CLI subagent dispatch.
-    catalog_source: UI snapshot 2026-07-24, NOT re-verified in this refresh
-    models_considered: existing live-catalog entries only; no new selector
-      verified
-    controls_verified: none newly verified this cycle
+    harness_context: >-
+      Cursor desktop Agent Chat, Task-tool subagents, Cursor 3.12.30. Probe
+      identity read from subagentStart lifecycle hooks, corroborated by
+      preToolUse. The cursor-agent CLI runtime emits no agent hooks and cannot
+      serve as a verification channel.
+    catalog_source: >-
+      live `cursor-agent models` catalog plus CursorBench 3.2, with selectors
+      probe-verified 2026-07-25
+    models_considered:
+      - claude-opus-5 (low, medium, high, xhigh, max)
+      - claude-opus-4-8 xhigh
+      - claude-sonnet-5 high (positive control; retained but demoted from the
+        economy tier as strictly dominated)
+      - claude-fable-5 xhigh
+    controls_verified:
+      - all five Opus 5 rungs and Opus 4.8 xhigh resolve to their thinking
+        variants; non-thinking twins exist at low, medium, and high and were not
+        selected
+      - effort parameter proven honored by four non-default rungs; the high row
+        alone is confounded because high is the Opus 5 default
+      - unknown family falls back silently to the default model
+        (claude-opus-9 resolved to cursor-grok-4.5-high-fast)
+      - unknown effort falls back silently to the family default rung
+        (effort=ultra resolved to claude-opus-5-thinking-high)
+      - default rung is family-specific, marked by the unqualified catalog
+        label; Opus 4.7 defaults to xhigh while Opus 5 defaults to high
     eligibility_verified: >-
-      not re-verified; provider-cursor.md carries an earlier 2026-09-04 review
-      date to reflect this
+      Fable resolved normally for this account despite its NO ZDR catalog tag,
+      contradicting the pre-probe assumption that it was entitlement-blocked. An
+      earlier Fable fallback observed on the opus-5-sa-test branch is
+      unexplained and was not reproduced.
 
 sources:
   - https://platform.claude.com/docs/en/about-claude/models/overview
@@ -101,8 +124,13 @@ independent_reviewer: >-
   of Claude Opus review of the synthesis. Verdict: Aligned with Revisions,
   20 accept / 6 revise / 4 keep provisional / 0 reject, with one retraction.
   Human acceptance recorded 2026-07-25 in Accepted Update Plan.md.
-  Repository-side takeover review and both final gate reviews were run
-  cross-family on gpt-5.6-sol-max against the accepted packet.
+  Repository-side takeover review and four final gate reviews were run
+  cross-family against the accepted packet. The first three (through
+  2026-07-25T21:23Z) ran on gpt-5.6-sol-max; the fourth
+  (2026-07-25T21:47Z) ran on gpt-5.6-sol-xhigh because the
+  cursor-gpt-5-6-sol-max exec target was removed from user-scope config
+  mid-cycle. Both are frontier-tier Sol rungs, so cross-family
+  independence held, but the reviews were not run on a uniform target.
 
 incumbent_changes:
   replacements:
@@ -119,13 +147,22 @@ incumbent_changes:
     - explicit prohibition on cross-provider effort normalization
     - Sol long-context pricing threshold and trajectory-vs-list-price
       distinction
+    - probe-verified Cursor pin mappings for five Opus 5 effort rungs and
+      Opus 4.8 xhigh, with generated reviewer and phase-implementer roles
+    - Cursor recommendation tiers rebalanced; Opus 5 low to balanced, medium
+      and high to high, xhigh and max to frontier
+    - Cursor silent default-fallback behavior documented as a pinning hazard
   removals:
     - consequence automatically implying xhigh or max effort
     - Opus 4.8 as the universal cyber primary
     - Sonnet as the default substantive Claude route
+    - claude-sonnet-5-high from the Cursor economy tier, strictly dominated by
+      claude-opus-5-thinking-low on score, cost, tokens, and steps; the mapping
+      remains catalogued and dispatchable
   none_shipped:
-    - Cursor Opus 5 pin mappings, catalog entries, generated role variants,
-      and dispatch-recommendation entries
+    - Cursor pin work was deferred through Phase 6 and admitted in Phase 7 only
+      after the G01 probe supplied native-launch evidence. Nothing in this
+      refresh remains unshipped on that basis.
 
 downstream_consumers:
   - canonical .agents/skills/subagent-orchestration (updated, authoritative)
@@ -146,11 +183,18 @@ downstream_parity: >-
   must not be recorded as satisfied.
 
 unresolved_items:
-  - Cursor Opus 5 selector syntax, resolved identity, thinking behavior,
-    effort rung, and absence of silent fallback remain unverified. The G01
-    probe is still the gate. Six probe definitions are staged at
-    .cursor/agents/zz-pin-probe-*.md with a results template at
-    references/g01-probe-results.md.
+  - Cursor pin selectors are RESOLVED. Syntax, resolved identity, thinking
+    behavior, and effort rung were probe-verified 2026-07-25 for five Opus 5
+    rungs and Opus 4.8 xhigh; see references/g01-probe-results.md and the raw
+    payloads at references/g01-probe-hooks.jsonl. Absence of silent fallback is
+    verified for these mappings specifically, but Cursor was shown to fall back
+    silently for unresolvable selectors, so this does not generalize to any
+    unprobed selector.
+  - Cursor effort-rung defaults are vendor-controlled and family-specific, so a
+    pinned selector could change capability without a repository change. Tracked
+    as BL-260726-validate-cursor-pin-effort.
+  - The Fable fallback observed earlier on the opus-5-sa-test branch is
+    unexplained and was not reproduced.
   - AA-Briefcase time/task definition remains unverified and must not be
     compared with the Coding Agent Index active-runtime measure.
   - Benign dual-use classifier behavior for Opus 5 is unvalidated locally.

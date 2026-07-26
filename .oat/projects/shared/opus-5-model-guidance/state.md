@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t03
-oat_last_commit: bdf3c6c5
+oat_current_task: p07-t03
+oat_last_commit: f19445f5
 oat_blockers: []
 associated_issues: []
 oat_kind: implementation
@@ -27,7 +27,7 @@ oat_pr_status: null
 oat_pr_url: null
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-25T21:40:00Z'
+oat_project_state_updated: '2026-07-26T01:30:00Z'
 oat_generated: false
 ---
 
@@ -39,7 +39,8 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 6 reverification and closeout (`p06-t03` in progress).
+Phase 7 complete (`p07-t03`). All 14 tasks done; awaiting manual review of the
+Phase 7 pin work, then documentation and PR.
 
 ## Artifacts
 
@@ -47,8 +48,10 @@ Phase 6 reverification and closeout (`p06-t03` in progress).
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode)
 - **Plan:** `plan.md` (complete, post-release reconciled)
-- **Implementation:** `implementation.md` (in progress, 10/11 tasks)
+- **Implementation:** `implementation.md` (complete, 14/14 tasks)
 - **Reverification:** `references/reverification.md` (complete)
+- **G01 probe evidence:** `references/g01-probe-results.md`,
+  `references/g01-probe-hooks.jsonl`
 - **Historical plan:** `references/pre-synthesis-plan.md`
 
 ## Progress
@@ -66,7 +69,11 @@ Phase 6 reverification and closeout (`p06-t03` in progress).
 - ✓ Repository validation passed (format, lint, type-check, tests, release)
 - ✓ Reverification record written; downstream parity recorded as OPEN
 - ✓ Policy coherence and generated-view parity audited
-- ⧗ Final cross-family review and closeout
+- ✓ Final cross-family review gates cleared
+- ✓ G01 pin probe run with controls; six selectors verified from Cursor's own
+  lifecycle hooks
+- ✓ Probe-verified Cursor pins, recommendation rebalance, and generated roles
+  shipped
 
 ## Blockers
 
@@ -74,4 +81,5 @@ None
 
 ## Next Milestone
 
-Clear the final cross-family review gate, then hand off for PR.
+Manual review of the Phase 7 pin work, then `oat-project-document` and
+`oat-project-pr-final`.
