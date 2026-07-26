@@ -57,7 +57,14 @@ test('runs the packaged adapter against the user-scoped packaged core', async ()
   const result = await runJson(fixture.adapterRunArgs);
 
   assert.equal(result.compatibility.coreRoot, fixture.coreRoot);
-  assert.equal(result.compatibility.installedVersion, '1.0.2');
+  const packagedCoreSkill = await readFile(
+    `${fixture.coreRoot}/SKILL.md`,
+    'utf8',
+  );
+  const packagedCoreVersion = packagedCoreSkill.match(
+    /^version:\s*([^\s#]+)\s*$/m,
+  )?.[1];
+  assert.equal(result.compatibility.installedVersion, packagedCoreVersion);
   assert.equal(result.request.recipe.id, 'project-explainer');
   assert.equal(result.result.outcome, 'built-not-durable');
   assert.equal(result.manifest.schemaVersion, 'explainer-kit.manifest/v1');
@@ -84,7 +91,7 @@ test('packaged adapter fails closed when its packaged core is missing or incompa
   const compatibleSkill = await readFile(skillPath, 'utf8');
   await writeFile(
     skillPath,
-    compatibleSkill.replace(/^version: 1\.0\.2$/m, 'version: 0.9.0'),
+    compatibleSkill.replace(/^version:\s*[^\s#]+\s*$/m, 'version: 1.9.9'),
   );
   const incompatible = await runJsonFailure(fixture.adapterRunArgs);
   assert.equal(incompatible.outcome, 'failed');
@@ -129,7 +136,6 @@ async function assertAuthoredRun(runRoot, manifest) {
     authorId: 'packaged-layout-provider-neutral-author',
     generatedAt: '2026-07-18T14:00:00.000Z',
     method: 'structured-evidence-synthesis',
-    model: 'packaged-layout-author/v1',
   });
 }
 

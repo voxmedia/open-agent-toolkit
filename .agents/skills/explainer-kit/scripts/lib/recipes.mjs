@@ -1,16 +1,6 @@
 import { readFileSync } from 'node:fs';
 
-const RECIPE_SCHEMA_V1 = 'explainer-kit.recipe/v1';
 const RECIPE_SCHEMA_V2 = 'explainer-kit.recipe/v2';
-const RECIPE_V1_ROOT_KEYS = [
-  'artifacts',
-  'discoveryLimits',
-  'id',
-  'requiredNarrative',
-  'schemaVersion',
-  'sourceRoles',
-  'version',
-];
 const RECIPE_V2_ROOT_KEYS = [
   'discoveryLimits',
   'expansion',
@@ -27,7 +17,6 @@ const SOURCE_ROLE_KEYS = [
   'required',
   'role',
 ];
-const ARTIFACT_KEYS = ['id', 'required', 'template', 'type'];
 const FLOOR_KEYS = [
   'authoring',
   'briefRef',
@@ -93,9 +82,6 @@ export function loadRecipe(id, version) {
 }
 
 export function recipeFloor(recipe) {
-  if (recipe?.schemaVersion === RECIPE_SCHEMA_V1) {
-    return structuredClone(recipe.artifacts);
-  }
   if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
     return structuredClone(recipe.floor);
   }
@@ -103,9 +89,6 @@ export function recipeFloor(recipe) {
 }
 
 export function recipeExpansion(recipe) {
-  if (recipe?.schemaVersion === RECIPE_SCHEMA_V1) {
-    return { profiles: [], limits: { maxArtifacts: 0 } };
-  }
   if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
     return structuredClone(recipe.expansion);
   }
@@ -113,9 +96,6 @@ export function recipeExpansion(recipe) {
 }
 
 export function recipeRequiredNarrative(recipe, artifactId) {
-  if (recipe?.schemaVersion === RECIPE_SCHEMA_V1) {
-    return [...recipe.requiredNarrative];
-  }
   if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
     const artifact = recipe.floor.find(({ id }) => id === artifactId);
     return [...(artifact?.requiredNarrative ?? [])];
@@ -299,9 +279,7 @@ export function validateContentModel(recipe, contentModel) {
     contentModel.artifactId,
   )) {
     const count = sectionCounts.get(sectionId) ?? 0;
-    if (count === 0 && recipe.schemaVersion === RECIPE_SCHEMA_V1) {
-      errors.push(`Missing required narrative section: ${sectionId}`);
-    } else if (count > 1) {
+    if (count > 1) {
       errors.push(`Duplicate narrative section: ${sectionId}`);
     }
   }
@@ -332,10 +310,7 @@ export function shouldStopDiscovery(recipe, findingsByRound) {
 
 export function validateRecipe(recipe, file = 'recipe') {
   assertObject(recipe, `${file} recipe`);
-  if (recipe.schemaVersion === RECIPE_SCHEMA_V1) {
-    assertExactKeys(recipe, RECIPE_V1_ROOT_KEYS, `${file} recipe`);
-    validateV1Shape(recipe, file);
-  } else if (recipe.schemaVersion === RECIPE_SCHEMA_V2) {
+  if (recipe.schemaVersion === RECIPE_SCHEMA_V2) {
     assertExactKeys(recipe, RECIPE_V2_ROOT_KEYS, `${file} recipe`);
     validateV2Shape(recipe, file);
   } else {
@@ -377,31 +352,6 @@ export function validateRecipe(recipe, file = 'recipe') {
 
   validateDiscoveryLimits(recipe.discoveryLimits, file);
   return recipe;
-}
-
-function validateV1Shape(recipe, file) {
-  assertUniqueNonEmptyStrings(
-    recipe.requiredNarrative,
-    `${file} requiredNarrative`,
-  );
-  assert(
-    Array.isArray(recipe.artifacts) && recipe.artifacts.length > 0,
-    `${file} artifacts must be a non-empty array`,
-  );
-  const artifactIds = [];
-  for (const artifact of recipe.artifacts) {
-    assertObject(artifact, `${file} artifact`);
-    assertExactKeys(artifact, ARTIFACT_KEYS, `${file} artifact`);
-    assertNonEmptyString(artifact.id, `${file} artifact id`);
-    artifactIds.push(artifact.id);
-    assert(
-      ARTIFACT_TYPES.has(artifact.type),
-      `${file} artifact has unsupported type`,
-    );
-    assertNonEmptyString(artifact.template, `${file} artifact template`);
-    assert(typeof artifact.required === 'boolean', `${file} artifact required`);
-  }
-  assertUnique(artifactIds, `${file} artifact ids`);
 }
 
 function validateV2Shape(recipe, file) {

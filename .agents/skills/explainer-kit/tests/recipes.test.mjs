@@ -43,11 +43,9 @@ function contentModel(recipe, overrides = {}) {
   };
 }
 
-// The dual-shape fixtures stay synthetic so they keep exercising both loader
-// branches after every bundled recipe migrates to v2.
-function recipeV1() {
+function recipeV2() {
   return {
-    schemaVersion: 'explainer-kit.recipe/v1',
+    schemaVersion: 'explainer-kit.recipe/v2',
     id: 'synthetic-recipe',
     version: '1',
     sourceRoles: [
@@ -59,35 +57,17 @@ function recipeV1() {
         maxBindings: 1,
       },
     ],
-    requiredNarrative: ['planned-architecture', 'decisions', 'risks'],
-    artifacts: [
+    floor: [
       {
         id: 'synthetic-recipe',
         type: 'hub',
         template: 'house-style',
         required: true,
+        authoring: 'markdown',
+        briefRef: 'briefs/project-explainer.md',
+        requiredNarrative: ['planned-architecture', 'decisions', 'risks'],
       },
     ],
-    discoveryLimits: {
-      consecutiveNoNewFindingsRounds: 2,
-      maxRounds: 8,
-    },
-  };
-}
-
-function recipeV2() {
-  const v1 = recipeV1();
-  return {
-    schemaVersion: 'explainer-kit.recipe/v2',
-    id: v1.id,
-    version: v1.version,
-    sourceRoles: v1.sourceRoles,
-    floor: recipeFloor(v1).map((artifact) => ({
-      ...artifact,
-      authoring: 'markdown',
-      briefRef: 'briefs/project-explainer.md',
-      requiredNarrative: recipeRequiredNarrative(v1, artifact.id),
-    })),
     expansion: {
       profiles: [
         {
@@ -108,7 +88,10 @@ function recipeV2() {
       ],
       limits: { maxArtifacts: 2 },
     },
-    discoveryLimits: v1.discoveryLimits,
+    discoveryLimits: {
+      consecutiveNoNewFindingsRounds: 2,
+      maxRounds: 8,
+    },
   };
 }
 
@@ -277,48 +260,44 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
   assert.equal(briefRefs.size, 8);
 });
 
-test('validates recipe v2 and normalizes both recipe shapes', () => {
-  const v1 = recipeV1();
+test('validates recipe v2 and rejects retired schema shapes', () => {
   const v2 = recipeV2();
 
-  assert.equal(validateRecipe(v1, 'synthetic-v1'), v1);
   assert.equal(validateRecipe(v2, 'synthetic-v2'), v2);
-  assert.deepEqual(
-    recipeFloor(v2).map(({ id }) => id),
-    recipeFloor(v1).map(({ id }) => id),
-  );
-  assert.deepEqual(
-    recipeRequiredNarrative(v2, recipeFloor(v2)[0].id),
-    recipeRequiredNarrative(v1, recipeFloor(v1)[0].id),
-  );
-  assert.deepEqual(recipeExpansion(v1), {
-    profiles: [],
-    limits: { maxArtifacts: 0 },
-  });
+  assert.deepEqual(recipeRequiredNarrative(v2, recipeFloor(v2)[0].id), [
+    'planned-architecture',
+    'decisions',
+    'risks',
+  ]);
   assert.equal(recipeExpansion(v2).profiles.length, 2);
+  assert.throws(
+    () =>
+      validateRecipe(
+        {
+          ...v2,
+          schemaVersion: 'explainer-kit.recipe/unsupported',
+        },
+        'retired-shape',
+      ),
+    /unsupported schemaVersion/,
+  );
 });
 
-// Floor coverage is a hard error only for v1. Under v2 it degrades to a
-// guideline-checker warning (p05-t01), so this layer stays silent by design.
-test('narrative coverage is a v1 hard error and a v2 non-error', () => {
-  for (const [label, recipe, expected] of [
-    [
-      'v1',
-      recipeV1(),
-      { valid: false, errors: ['Missing required narrative section: risks'] },
-    ],
-    ['v2', recipeV2(), { valid: true, errors: [] }],
-  ]) {
-    assert.deepEqual(
-      validateContentModel(recipe, contentModel(recipe)),
-      { valid: true, errors: [] },
-      label,
-    );
+// Floor coverage degrades to a guideline-checker warning (p05-t01), so this
+// contract layer stays silent by design.
+test('recipe v2 narrative coverage is not a content-model hard error', () => {
+  const recipe = recipeV2();
+  assert.deepEqual(validateContentModel(recipe, contentModel(recipe)), {
+    valid: true,
+    errors: [],
+  });
 
-    const incomplete = contentModel(recipe);
-    incomplete.sections.pop();
-    assert.deepEqual(validateContentModel(recipe, incomplete), expected, label);
-  }
+  const incomplete = contentModel(recipe);
+  incomplete.sections.pop();
+  assert.deepEqual(validateContentModel(recipe, incomplete), {
+    valid: true,
+    errors: [],
+  });
 });
 
 test('recipe v2 rejects malformed profiles, ids, types, and finite caps', () => {

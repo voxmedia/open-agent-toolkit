@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.1
+version: 1.0.2
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
@@ -34,7 +34,7 @@ rollback, and operator-owned real-wrapper gate, use `references/migration.md`.
 
 Before reading OAT config or invoking the core, call
 `scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
-directory and minimum core version `1.0.0`. Continue only when it returns
+directory and minimum core version `2.0.0`. Continue only when it returns
 `ok: true`.
 
 - Missing core: stop and show
@@ -55,7 +55,7 @@ Call `scripts/run.mjs#runOatExplainer` with the repository root, project
 invocation, active project path, recipe, slug, lifecycle mode, and any explicit
 runtime overrides. The adapter:
 
-1. checks the user-scoped installed core at minimum version `1.0.0`;
+1. checks the user-scoped installed core at minimum version `2.0.0`;
 2. resolves only the public `explainers.*` and `workflow.explainers.*` keys;
 3. derives the canonical project output root;
 4. binds approved OAT artifacts to the recipe's single `project` source set;

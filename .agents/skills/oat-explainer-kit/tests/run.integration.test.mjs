@@ -31,7 +31,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '1.0.0' } = {}) {
+async function createFixture({ coreVersion = '2.0.0' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');
@@ -641,10 +641,10 @@ test('propagates failed core results when no manifest was produced', async () =>
   ]);
 });
 
-test('fails closed for missing and incompatible installed cores', async () => {
+test('fails closed for missing and 1.x installed cores', async () => {
   for (const [coreVersion, pattern] of [
     [null, /install utility --scope user/i],
-    ['0.9.0', /update --pack utility --scope user/i],
+    ['1.9.9', /update --pack utility --scope user/i],
   ]) {
     const fixture = await createFixture({ coreVersion });
     await assert.rejects(

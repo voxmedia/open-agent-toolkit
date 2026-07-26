@@ -12,7 +12,7 @@ import {
 } from './resolve-config.mjs';
 import { resolveExplainerOutputRoot } from './resolve-paths.mjs';
 
-const MINIMUM_CORE_VERSION = '1.0.0';
+const MINIMUM_CORE_VERSION = '2.0.0';
 const ADAPTER_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runOatExplainer({

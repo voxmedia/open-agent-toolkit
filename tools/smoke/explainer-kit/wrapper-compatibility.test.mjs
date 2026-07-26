@@ -139,7 +139,6 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
       authorId: 'private-wrapper-provider-neutral-author',
       generatedAt: NOW,
       method: 'structured-evidence-synthesis',
-      model: 'private-wrapper-author/v1',
     },
   ]);
   assert.equal(
@@ -191,8 +190,8 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 1\.0\.2$/m);
-  assert.match(adapterSkill, /^version: 1\.0\.1$/m);
+  assert.match(coreSkill, /^version: 2\.0\.0$/m);
+  assert.match(adapterSkill, /^version: 1\.0\.2$/m);
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
 
@@ -243,23 +242,20 @@ function suppliedFactBase() {
 
 async function providerNeutralAuthor(request) {
   return {
-    schemaVersion: 'explainer-kit.author-result/v1',
-    artifactId: request.artifact.id,
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
     content: {
-      title: 'Private Wrapper Compatibility',
-      description:
-        'A provider-neutral wrapper run built from approved private inputs.',
-      sections: request.narrativeOutline.map(({ id, title }) => ({
-        id,
-        title,
-        prose: `The private wrapper author synthesized the ${title.toLowerCase()} section from approved evidence before the wrapper consumed the versioned manifest.`,
-      })),
+      markdown: `# Private Wrapper Compatibility\n\n${request.floor.requiredNarrative
+        .map(
+          (id) =>
+            `## ${id}\n\nThe private wrapper author synthesized ${id} from approved evidence before the wrapper consumed the versioned manifest.`,
+        )
+        .join('\n\n')}\n`,
     },
     provenance: {
       authorId: 'private-wrapper-provider-neutral-author',
       generatedAt: NOW,
       method: 'structured-evidence-synthesis',
-      model: 'private-wrapper-author/v1',
     },
   };
 }
