@@ -1,8 +1,3 @@
-// These suites assert pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 import assert from 'node:assert/strict';
 import {
   mkdir,
@@ -20,6 +15,11 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
+
+// This suite asserts pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime. The core reads this at stage time.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
 
 const tempDirs = [];
 const SOURCE_SKILLS_ROOT = resolve(

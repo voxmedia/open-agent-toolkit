@@ -409,6 +409,41 @@ hydrate from the existing content file rather than inventing a path to a file
 that never existed. For v1 records read during resume the set defaults to the
 recipe floor, matching today's behavior.
 
+### D9. The author seam stays caller-owned; autonomous richness is verified, not generated
+
+Final review (I1) observed that `author-request/v2` appears only in tests and
+documentation, and that the existing anti-regression coverage feeds a checked-in
+rich Markdown fixture through the author callback. That proves the renderer
+_preserves_ richness while leaving the "basic AF" failure mode — a pipeline that
+_generates_ thin output from real project evidence — unproven.
+
+**Decision:** no code-level author driver ships, and the seam stays caller-owned.
+Shipping a content generator inside the core or the OAT adapter would recreate
+the slot-filling rigidity this redesign exists to remove, and neither component
+can author prose; the executing agent is the author by the "prose carries
+quality" premise. The adapter's refusal to synthesize one
+(`E_AUTHOR_REQUIRED`, and `coreOptions.author` rejected at the boundary) is
+therefore correct as designed.
+
+What was genuinely missing is the **outcome check**. The verification gap is
+closed by a behavioral completion → adapter → core test that runs the real
+bundled core over real lifecycle artifacts with an author holding no prewritten
+recap: every heading, list item, table row, diagram node, callout, and timeline
+entry is derived from the `brief`, `factBase`, and `floor` the request carries.
+The test asserts three things the previous fixture-driven coverage could not:
+the six brief-declared sections are all present without a coverage warning; the
+rendered hub carries real block structure (table, list, callout, inline
+`narrative-diagram` SVG, timeline) rather than paragraphs; and the output tracks
+_this_ project's evidence, shown by running the same author against two
+different artifact sets and asserting the recaps differ accordingly. A thin
+author over the same evidence is asserted to raise the narrative-coverage,
+structured-depth, and architecture-diagram guideline warnings, so the check
+discriminates rather than merely passing.
+
+This keeps the request contract — not a bundled generator — as the thing that
+must carry enough for an agent to author richly, which is what the seam actually
+promises.
+
 ## Data Models
 
 Conceptual contract shapes (exact JSON Schema is implementation work):

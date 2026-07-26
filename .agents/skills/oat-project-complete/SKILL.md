@@ -289,6 +289,17 @@ author seam as documented by
 alongside the existing `critic` callback (or validated
 `criticModulePath`), and invoke the recap with `mode: unattended`.
 
+The author seam is the recap's quality mechanism, so derive its output from the
+request rather than from ambient context or a stock recap shape. Cover every
+`floor.requiredNarrative` section, ground each claim in the supplied `factBase`,
+and follow the inlined `brief` for structure — evidence tables for the
+implementation and validation sections, at least one high-level architecture
+diagram, and lists where material is enumerable. A recap whose warnings include
+`guideline-narrative-coverage-missing`, `guideline-structured-depth-missing`, or
+`guideline-architecture-diagram-missing` is thin: it still completes, but treat
+those warnings as the signal that the authored content did not use the evidence
+it was given.
+
 Set `SELECTED_PROJECT_RECAP_RUN` only to the final selected `project-recap` run. The value must be project-relative in the form `explainers/<run-slug>` so it can be passed safely to the archive CLI. An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap.
 
 When recap intent resolves to `skip`, or generation produces no valid final recap, leave `SELECTED_PROJECT_RECAP_RUN` empty and complete without a recap. Record any failed recap attempt as a warning rather than changing project completion status.

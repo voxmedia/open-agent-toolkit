@@ -1,8 +1,3 @@
-// These suites assert pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
@@ -24,6 +19,11 @@ import {
   runExplainer as runExplainerCore,
   runExplainerCli,
 } from '../scripts/run.mjs';
+
+// This suite asserts pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime. The core reads this at stage time.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
 
 const NOW = '2026-07-17T20:00:00Z';
 const HASH = `sha256:${'a'.repeat(64)}`;

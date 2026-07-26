@@ -1,13 +1,33 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { dirname, resolve } from 'node:path';
-import test from 'node:test';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { dirname, join, resolve } from 'node:path';
+import test, { afterEach } from 'node:test';
 import { fileURLToPath } from 'node:url';
+
+import { runOatExplainer } from '../scripts/run.mjs';
 
 const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../../..',
 );
+const SOURCE_SKILLS_ROOT = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../..',
+);
+const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
+const tempDirs = [];
+
+// This suite asserts pipeline and authoring behaviour, not browser behaviour,
+// so probe resolution is switched off explicitly. The release visual gate
+// exercises the real headless runtime. The core reads this at stage time.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
+
+afterEach(async () => {
+  await Promise.all(
+    tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
+  );
+});
 const completionSkillPath = resolve(
   repoRoot,
   '.agents/skills/oat-project-complete/SKILL.md',
@@ -147,6 +167,25 @@ test('both lifecycle recap callers require author, critic, and unattended mode',
       /`mode: unattended`/,
       `${name} must declare unattended lifecycle mode`,
     );
+  }
+});
+
+test('completion states the authored richness outcome the seam is judged on', () => {
+  const recapSection = sectionBetween(
+    completionSkill,
+    '### Step 3.6: Select Final Project Recap',
+    '### Step 3.7: Project Log Completion Gate',
+  );
+
+  assert.match(recapSection, /derive its output from the\s+request/);
+  assert.match(recapSection, /`floor\.requiredNarrative`/);
+  assert.match(recapSection, /ground each claim in the supplied `factBase`/);
+  for (const warning of [
+    'guideline-narrative-coverage-missing',
+    'guideline-structured-depth-missing',
+    'guideline-architecture-diagram-missing',
+  ]) {
+    assert.match(recapSection, new RegExp(warning), warning);
   }
 });
 
@@ -316,6 +355,351 @@ test('warns on failed exported attestation without failing completion', () => {
     /Failure to verify the exported commit evidence is non-blocking/,
   );
 });
+
+// The seam is caller-owned by design: the executing agent authors, and nothing
+// in the shipped core or adapter generates prose. What these tests verify is the
+// outcome that premise depends on — that an author holding no prewritten recap,
+// working only from the request the pipeline hands it, produces a rich recap,
+// and that a thin one is caught.
+test('the documented author seam turns lifecycle evidence into a rich recap', async () => {
+  const built = await recapFromEvidence({
+    slug: 'evidence-derived-recap',
+    decisions: [
+      'Checkpoint each partition so a restart resumes mid-file.',
+      'Reject duplicate section IDs rather than silently merging them.',
+    ],
+    components: [
+      ['ingest-worker', 'Streams partitions and emits checkpoints.'],
+      ['index-store', 'Holds the committed offsets for every partition.'],
+    ],
+    checks: [['pnpm test', '284 passing'], ['pnpm lint', 'clean']],
+  });
+
+  assert.equal(
+    built.result.result.outcome,
+    'built-not-durable',
+    JSON.stringify(built.result.result.errors),
+  );
+
+  // Every brief-declared section is present, so coverage is earned rather than
+  // waived by a warning.
+  for (const id of REQUIRED_NARRATIVE) {
+    assert.match(built.hub, new RegExp(`id="${id}"`), id);
+  }
+  assert.equal(
+    built.result.result.warnings.includes(
+      'guideline-narrative-coverage-missing',
+    ),
+    false,
+    JSON.stringify(built.result.result.warnings),
+  );
+  assert.equal(
+    built.result.result.warnings.includes('guideline-structured-depth-missing'),
+    false,
+  );
+  assert.equal(
+    built.result.result.warnings.includes(
+      'guideline-architecture-diagram-missing',
+    ),
+    false,
+  );
+
+  // Richness means real block structure, not paragraphs of prose.
+  assert.match(built.hub, /<table\b/);
+  assert.match(built.hub, /<(?:ul|ol)\b/);
+  assert.match(built.hub, /class="[^"]*callout/);
+  assert.match(built.hub, /<svg\b[^>]*class="narrative-diagram"/);
+  assert.match(built.hub, /class="[^"]*timeline/);
+
+  // The content tracks this project's evidence rather than a stock recap.
+  assert.match(built.hub, /Checkpoint each partition/);
+  assert.match(built.hub, /ingest-worker/);
+  assert.match(built.hub, /284 passing/);
+});
+
+test('the same author seam tracks different evidence instead of a stock recap', async () => {
+  const [first, second] = await Promise.all([
+    recapFromEvidence({
+      slug: 'evidence-tracking-a',
+      decisions: ['Cache the parsed brief for the run.'],
+      components: [['brief-loader', 'Reads versioned author briefs.']],
+      checks: [['pnpm build', 'succeeded']],
+    }),
+    recapFromEvidence({
+      slug: 'evidence-tracking-b',
+      decisions: ['Fail closed on an unpinned resource reference.'],
+      components: [['html-safety', 'Validates authored DOM against a policy.']],
+      checks: [['pnpm release:validate', '5 packages validated']],
+    }),
+  ]);
+
+  assert.match(first.hub, /Cache the parsed brief/);
+  assert.match(first.hub, /brief-loader/);
+  assert.equal(/Fail closed/.test(first.hub), false);
+
+  assert.match(second.hub, /Fail closed on an unpinned resource reference/);
+  assert.match(second.hub, /html-safety/);
+  assert.equal(/brief-loader/.test(second.hub), false);
+});
+
+test('a thin author fails the same richness check the rich one passes', async () => {
+  const thin = await recapFromEvidence({
+    slug: 'thin-recap',
+    decisions: ['Checkpoint each partition.'],
+    components: [['ingest-worker', 'Streams partitions.']],
+    checks: [['pnpm test', 'passing']],
+    author: async (request) => ({
+      schemaVersion: 'explainer-kit.author-result/v2',
+      artifactId: request.artifactId,
+      content: {
+        markdown:
+          '# Project recap\n\nThe project shipped and the tests passed.\n',
+      },
+      provenance: {
+        authorId: 'thin-lifecycle-author',
+        generatedAt: '2026-07-20T12:00:00.000Z',
+        method: 'provider-neutral-callback',
+      },
+    }),
+  });
+
+  assert.equal(
+    thin.result.result.outcome,
+    'built-not-durable',
+    JSON.stringify(thin.result.result.errors),
+  );
+  for (const warning of [
+    'guideline-narrative-coverage-missing',
+    'guideline-structured-depth-missing',
+    'guideline-architecture-diagram-missing',
+  ]) {
+    assert.ok(
+      thin.result.result.warnings.includes(warning),
+      `${warning}: ${JSON.stringify(thin.result.result.warnings)}`,
+    );
+  }
+  assert.equal(/<table\b/.test(thin.hub), false);
+  assert.equal(/narrative-diagram/.test(thin.hub), false);
+});
+
+const REQUIRED_NARRATIVE = [
+  'original-request',
+  'key-agent-decisions',
+  'as-built-architecture',
+  'implementation-record',
+  'validation-evidence',
+  'outcome',
+];
+
+async function recapFromEvidence({
+  slug,
+  decisions,
+  components,
+  checks,
+  author = authorFromLifecycleEvidence,
+}) {
+  const root = await mkdtemp(join(tmpdir(), 'oat-explainer-autonomy-'));
+  tempDirs.push(root);
+  const repoRootFixture = join(root, 'repo');
+  const projectRoot = join(
+    repoRootFixture,
+    '.oat',
+    'projects',
+    'shared',
+    'demo',
+  );
+  await mkdir(projectRoot, { recursive: true });
+  for (const [name, content] of Object.entries(
+    lifecycleArtifacts({ decisions, components, checks }),
+  )) {
+    await writeFile(join(projectRoot, name), content);
+  }
+
+  const result = await runOatExplainer({
+    adapterRoot: SOURCE_ADAPTER_ROOT,
+    userSkillsRoot: SOURCE_SKILLS_ROOT,
+    repoRoot: repoRootFixture,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug,
+    author,
+    critic: async () => ({
+      criticId: 'autonomy-check-critic',
+      executedAt: '2026-07-20T12:00:00.000Z',
+      findings: [],
+    }),
+    getConfig: async (key) => ({
+      status: 'ok',
+      key,
+      value:
+        key === 'explainers.defaults.palette'
+          ? 'neutral'
+          : key === 'explainers.defaults.visualProfile'
+            ? 'clean'
+            : key.startsWith('workflow.')
+              ? 'ask'
+              : null,
+      source: 'default',
+    }),
+    mode: 'unattended',
+  });
+  const hubPath = result.manifest.artifacts?.find(
+    ({ id }) => id === 'project-recap',
+  )?.renderedPath;
+  assert.ok(hubPath, JSON.stringify(result.result));
+
+  return {
+    result,
+    hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
+  };
+}
+
+function lifecycleArtifacts({ decisions, components, checks }) {
+  return {
+    'plan.md': `# Plan\n\n## Goal\n\nMake indexing continuous without a full rebuild.\n\n## Constraints\n\n- Restart must resume mid-file.\n- No new external service.\n`,
+    'design.md': `# Design\n\n## Decisions\n\n${decisions.map((text) => `- ${text}`).join('\n')}\n\n## Components\n\n${components.map(([name, role]) => `- ${name}: ${role}`).join('\n')}\n`,
+    'spec.md': `# Spec\n\n## Success criteria\n\n- A restarted run resumes from the last checkpoint.\n`,
+    'implementation.md': `# Implementation\n\n## Checks\n\n${checks.map(([command, observed]) => `- ${command}: ${observed}`).join('\n')}\n`,
+    'summary.md': `# Summary\n\nContinuous indexing shipped behind the existing worker.\n`,
+  };
+}
+
+/**
+ * Stands in for the executing agent. It holds no recap prose: every heading,
+ * table row, list item, diagram node, and callout is derived from the brief and
+ * fact base carried by the request it receives.
+ */
+async function authorFromLifecycleEvidence(request) {
+  assert.equal(request.schemaVersion, 'explainer-kit.author-request/v2');
+  assert.equal(request.authoring, 'markdown');
+  assert.ok(request.brief.length > 0, 'the request must carry a brief');
+
+  const intent = briefIntent(request.brief);
+  const evidence = Object.fromEntries(
+    request.factBase.claims.map(({ id, text }) => [id, text]),
+  );
+  const decisions = bulletsUnder(evidence.design, 'Decisions');
+  const components = bulletsUnder(evidence.design, 'Components').map((line) => {
+    const separator = line.indexOf(': ');
+    return separator < 0
+      ? { name: line, role: '' }
+      : { name: line.slice(0, separator), role: line.slice(separator + 2) };
+  });
+  const checks = bulletsUnder(evidence.implementation, 'Checks').map((line) => {
+    const separator = line.indexOf(': ');
+    return { command: line.slice(0, separator), observed: line.slice(separator + 2) };
+  });
+
+  const sections = request.floor.requiredNarrative.map((id) => {
+    const body = [`## ${title(id)}`, '', intent.get(id) ?? `Derived from the ${id} evidence.`, ''];
+    if (id === 'original-request') {
+      body.push(
+        ...bulletsUnder(evidence.plan, 'Constraints').map(
+          (line) => `- ${line}`,
+        ),
+        '',
+        '```timeline',
+        ...bulletsUnder(evidence.plan, 'Goal').map(
+          (line) => `Requested — ${line}`,
+        ),
+        `Delivered — ${firstSentence(evidence.summary)}`,
+        '```',
+        '',
+      );
+    }
+    if (id === 'key-agent-decisions') {
+      body.push(...decisions.map((text) => `- ${text}`), '');
+    }
+    if (id === 'as-built-architecture') {
+      body.push(
+        '```diagram',
+        'graph TD',
+        ...components.map(
+          ({ name }, index) =>
+            `  c${index}[${name}]${index + 1 < components.length ? ` --> c${index + 1}` : ''}`,
+        ),
+        '```',
+        '',
+      );
+    }
+    if (id === 'implementation-record') {
+      body.push(
+        '| Component | Change |',
+        '| --- | --- |',
+        ...components.map(({ name, role }) => `| ${name} | ${role} |`),
+        '',
+      );
+    }
+    if (id === 'validation-evidence') {
+      body.push(
+        '| Check | Observed |',
+        '| --- | --- |',
+        ...checks.map(({ command, observed }) => `| ${command} | ${observed} |`),
+        '',
+      );
+    }
+    if (id === 'outcome') {
+      body.push(
+        `> [!NOTE] ${firstSentence(evidence.summary)}`,
+        '',
+        ...bulletsUnder(evidence.spec, 'Success criteria').map(
+          (line) => `- ${line}`,
+        ),
+        '',
+      );
+    }
+    return body.join('\n');
+  });
+
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: {
+      markdown: `# ${title(request.artifactId)}\n\n${sections.join('\n')}`,
+    },
+    provenance: {
+      authorId: 'evidence-derived-lifecycle-author',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'provider-neutral-callback',
+    },
+  };
+}
+
+function briefIntent(brief) {
+  return new Map(
+    [...brief.matchAll(/^- \*\*(.+?):\*\*\s*([\s\S]*?)(?=\n- \*\*|\n\n#|$)/gm)].map(
+      ([, label, text]) => [
+        label.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
+        text.replaceAll(/\s+/g, ' ').trim(),
+      ],
+    ),
+  );
+}
+
+function bulletsUnder(markdown, heading) {
+  const section = (markdown ?? '').split(`## ${heading}`)[1];
+  if (!section) return [];
+  return section
+    .split(/\n(?=## )/)[0]
+    .split('\n')
+    .map((line) => line.match(/^- (.+)$/)?.[1])
+    .filter(Boolean);
+}
+
+function firstSentence(markdown) {
+  const prose = (markdown ?? '')
+    .split('\n')
+    .find((line) => line.trim().length > 0 && !line.startsWith('#'));
+  return (prose ?? '').trim();
+}
+
+function title(id) {
+  return id
+    .split('-')
+    .map((part) => `${part[0].toUpperCase()}${part.slice(1)}`)
+    .join(' ');
+}
 
 test('rewrites summary and PR recap links to the tracked export root', () => {
   assert.match(

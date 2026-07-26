@@ -1,8 +1,3 @@
-// These suites assert pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { access, readFile, rename, writeFile } from 'node:fs/promises';
@@ -10,6 +5,11 @@ import { after, before, test } from 'node:test';
 import { promisify } from 'node:util';
 
 import { createPackagedLayout } from './fixtures/package-root.mjs';
+
+// This suite asserts pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime. The core reads this at stage time.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
 
 const execFileAsync = promisify(execFile);
 let fixture;

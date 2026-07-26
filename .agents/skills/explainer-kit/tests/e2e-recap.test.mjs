@@ -1,8 +1,3 @@
-// These suites assert pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 import assert from 'node:assert/strict';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -11,6 +6,11 @@ import { afterEach, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { runExplainer } from '../scripts/run.mjs';
+
+// This suite asserts pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime. The core reads this at stage time.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
 
 const NOW = '2026-03-09T18:00:00Z';
 const SLUG = 'atlas-index-recap';
