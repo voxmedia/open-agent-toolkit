@@ -175,9 +175,13 @@
         font-family: var(--mono);
       }
       .table-scroll,
+      .diagram-scroll,
       pre {
         max-width: 100%;
         overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
       }
       pre {
         border: 1px solid var(--border);

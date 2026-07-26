@@ -313,7 +313,7 @@ function renderMarkdownNode(node) {
     case 'code':
       return `<pre><code${node.language ? ` class="language-${escapeAttribute(node.language)}"` : ''}>${escapeHtml(node.value)}</code></pre>`;
     case 'diagram':
-      return node.renderedHtml;
+      return `<div class="diagram-scroll">${node.renderedHtml}</div>`;
     case 'list':
       return renderMarkdownList(node);
     case 'listItem':

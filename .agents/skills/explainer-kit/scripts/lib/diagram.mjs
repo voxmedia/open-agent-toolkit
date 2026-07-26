@@ -133,7 +133,7 @@ export function renderDiagram(source, { theme } = {}) {
     .join('');
 
   return {
-    html: `<svg class="narrative-diagram" data-direction="${parsed.direction}" viewBox="0 0 ${width} ${height}" role="img" aria-label="Diagram"><style>
+    html: `<svg class="narrative-diagram" data-direction="${parsed.direction}" viewBox="0 0 ${width} ${height}" width="${width}" height="${height}" role="img" aria-label="Diagram"><style>
       .diagram-node-shape { fill: var(--panel, ${panel}); stroke: var(--accent, ${accent}); stroke-width: 2; }
       .diagram-node-label { fill: var(--ink, ${ink}); font: 14px var(--sans, system-ui, sans-serif); text-anchor: middle; dominant-baseline: middle; }
       .diagram-edge { fill: none; stroke: var(--muted, ${muted}); stroke-width: 2; }

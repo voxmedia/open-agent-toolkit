@@ -104,7 +104,13 @@ source[Source] -->|validated| output("Rendered output")
   assert.match(first.html, /class="callout callout--important"/);
   assert.match(first.html, /<ol class="timeline">/);
   assert.match(first.html, /<pre><code class="language-js">/);
-  assert.match(first.html, /<svg class="narrative-diagram"/);
+  // The scroll wrapper and intrinsic size keep wide diagrams at legible type
+  // instead of downscaling them to fit the column.
+  assert.match(
+    first.html,
+    /<div class="diagram-scroll"><svg class="narrative-diagram"/,
+  );
+  assert.match(first.html, /<svg class="narrative-diagram"[^>]*width="\d+"/);
   assert.match(first.html, /data-direction="LR"/);
   assert.match(first.html, /validated/);
   assert.match(first.html, /<figure>/);
