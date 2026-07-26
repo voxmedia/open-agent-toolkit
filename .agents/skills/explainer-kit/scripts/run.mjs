@@ -20,6 +20,7 @@ import {
 } from './lib/recipes.mjs';
 import {
   initializeRun,
+  reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
 } from './lib/records.mjs';
@@ -48,6 +49,7 @@ export async function runExplainer(request, options = {}) {
     warnings: [],
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
+    resumedApprovalStatus: null,
   };
 
   try {
@@ -111,6 +113,20 @@ export async function runExplainer(request, options = {}) {
       });
     }
 
+    if (!resumed) {
+      await executeThemeStage(state, options);
+    }
+    if (!resumed || state.resumedApprovalStatus === 'rejected') {
+      if (state.resumedApprovalStatus === 'rejected') {
+        await reopenBuildStages(run, {
+          ids: ['render', 'qa'],
+          reason: 'content-rejected',
+        });
+      }
+      await executeRenderStage(state, options);
+      await executeQaStage(state, options);
+    }
+
     state.approval = await resolveContentApproval(
       run,
       run.request.mode,
@@ -121,77 +137,6 @@ export async function runExplainer(request, options = {}) {
       return resultFor(state);
     }
 
-    await executeStage(run, 'theme', options, async () => {
-      const resolved = await resolveTheme(run.request.theme);
-      state.theme = resolved.theme;
-      state.renderStrategy = resolved.renderStrategy;
-      state.warnings.push(...resolved.warnings);
-      await writeJsonAtomic(run.runRoot, 'theme.resolved.json', state.theme);
-      return {
-        outputPaths: ['theme.resolved.json'],
-        warnings: resolved.warnings,
-        status: resolved.warnings.length > 0 ? 'warned' : 'passed',
-      };
-    });
-    await executeStage(run, 'render', options, async () => {
-      for (const recipeArtifact of recipeFloor(recipe)) {
-        const content = state.contentModels.find(
-          ({ artifactId }) => artifactId === recipeArtifact.id,
-        );
-        const rendered = await renderArtifact({
-          recipeArtifact: renderDescriptor(recipeArtifact),
-          content,
-          theme: state.theme,
-          renderStrategy: state.renderStrategy,
-          ...(run.request.publicBaseUrl && {
-            publicBaseUrl: run.request.publicBaseUrl,
-          }),
-        });
-        await writeTextAtomic(
-          run.runRoot,
-          rendered.renderedPath,
-          rendered.html,
-        );
-        state.rendered.push(rendered);
-        state.artifacts.push({
-          id: rendered.artifactId,
-          type: rendered.type,
-          contentPath: state.contentPaths.get(rendered.artifactId),
-          renderedPath: rendered.renderedPath,
-          mediaType: rendered.mediaType,
-          status: 'built',
-          hash: hashBytes(rendered.html),
-          rebuildable: false,
-        });
-      }
-      return {
-        outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
-      };
-    });
-    await executeStage(run, 'qa', options, async () => {
-      const report = await auditArtifactSet({
-        artifacts: state.rendered.map((artifact) => ({
-          id: artifact.artifactId,
-          type: artifact.type,
-          html: artifact.html,
-        })),
-        ...(options.denylist && { denylist: options.denylist }),
-        ...(options.browserProbe && { browserProbe: options.browserProbe }),
-        ...(options.widths && { widths: options.widths }),
-      });
-      if (!report.valid) {
-        throw codedError(
-          'E_QA',
-          report.issues
-            .map(({ code, message }) => `${code}: ${message}`)
-            .join('; '),
-        );
-      }
-      return {
-        outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
-      };
-    });
-
     await executeDurabilityAndPublish(state, options, now);
     await persistManifest(state, now());
     return resultFor(state);
@@ -201,6 +146,82 @@ export async function runExplainer(request, options = {}) {
     }
     return resultFor(state, error);
   }
+}
+
+async function executeThemeStage(state, options) {
+  await executeStage(state.run, 'theme', options, async () => {
+    const resolved = await resolveTheme(state.run.request.theme);
+    state.theme = resolved.theme;
+    state.renderStrategy = resolved.renderStrategy;
+    state.warnings.push(...resolved.warnings);
+    await writeJsonAtomic(
+      state.run.runRoot,
+      'theme.resolved.json',
+      state.theme,
+    );
+    return {
+      outputPaths: ['theme.resolved.json'],
+      warnings: resolved.warnings,
+      status: resolved.warnings.length > 0 ? 'warned' : 'passed',
+    };
+  });
+}
+
+async function executeRenderStage(state, options) {
+  state.rendered = [];
+  state.artifacts = [];
+  await executeStage(state.run, 'render', options, async () => {
+    for (const recipeArtifact of recipeFloor(state.recipe)) {
+      const content = state.contentModels.find(
+        ({ artifactId }) => artifactId === recipeArtifact.id,
+      );
+      const rendered = await renderArtifact({
+        recipeArtifact: renderDescriptor(recipeArtifact),
+        content,
+        theme: state.theme,
+        renderStrategy: state.renderStrategy,
+        ...(state.run.request.publicBaseUrl && {
+          publicBaseUrl: state.run.request.publicBaseUrl,
+        }),
+      });
+      await writeTextAtomic(
+        state.run.runRoot,
+        rendered.renderedPath,
+        rendered.html,
+      );
+      state.rendered.push(rendered);
+      state.artifacts.push(artifactRecord(state, rendered));
+    }
+    return {
+      outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+    };
+  });
+}
+
+async function executeQaStage(state, options) {
+  await executeStage(state.run, 'qa', options, async () => {
+    const report = await auditArtifactSet({
+      artifacts: state.rendered.map((artifact) => ({
+        id: artifact.artifactId,
+        type: artifact.type,
+        html: artifact.html,
+      })),
+      ...(options.denylist && { denylist: options.denylist }),
+      ...(options.browserProbe && { browserProbe: options.browserProbe }),
+      ...(options.widths && { widths: options.widths }),
+    });
+    if (!report.valid) {
+      throw codedError(
+        'E_QA',
+        report.issues
+          .map(({ code, message }) => `${code}: ${message}`)
+          .join('; '),
+      );
+    }
+    return {
+      outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+    };
+  });
 }
 
 async function loadResumableRun(request) {
@@ -224,11 +245,16 @@ async function loadResumableRun(request) {
     throw error;
   }
 
-  const content = record.stages?.find(({ id }) => id === 'content');
-  const theme = record.stages?.find(({ id }) => id === 'theme');
+  const approvalUnresolved = ['pending', 'rejected'].includes(approval.status);
+  const completedBeforeApproval = ['content', 'theme', 'render', 'qa'].every(
+    (id) =>
+      ['passed', 'warned', 'skipped'].includes(
+        record.stages?.find((stage) => stage.id === id)?.status,
+      ),
+  );
   if (
-    content?.status !== 'passed' ||
-    theme?.status !== 'pending' ||
+    !approvalUnresolved ||
+    !completedBeforeApproval ||
     approval.runId !== record.runId
   ) {
     return null;
@@ -261,14 +287,23 @@ async function loadResumableRun(request) {
 }
 
 async function hydrateResumableState(state) {
-  const [factBase, approval] = await Promise.all([
+  const [factBase, approval, theme, record] = await Promise.all([
     readJson(join(state.run.runRoot, 'source/fact-base.json')),
     readJson(join(state.run.runRoot, 'source/content-approval.json')),
+    readJson(join(state.run.runRoot, 'theme.resolved.json')),
+    readJson(state.run.buildRecordPath),
   ]);
   state.factBase = factBase;
+  state.theme = theme;
+  state.resumedApprovalStatus = approval.status;
   state.authorResultPaths = Array.isArray(approval.authorResultPaths)
     ? [...approval.authorResultPaths]
     : [];
+  state.warnings.push(
+    ...record.stages.flatMap(({ warnings = [] }) =>
+      warnings.filter((warning) => !warning.startsWith('stage-reopened:')),
+    ),
+  );
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
   state.contentModels = [];
@@ -294,6 +329,46 @@ async function hydrateResumableState(state) {
     state.contentModels.push(model);
     state.contentPaths.set(model.artifactId, path);
   }
+  await hydrateRenderedState(state);
+}
+
+async function hydrateRenderedState(state) {
+  state.rendered = [];
+  state.artifacts = [];
+  for (const recipeArtifact of recipeFloor(state.recipe)) {
+    const content = state.contentModels.find(
+      ({ artifactId }) => artifactId === recipeArtifact.id,
+    );
+    const descriptor = await renderArtifact({
+      recipeArtifact: renderDescriptor(recipeArtifact),
+      content,
+      theme: state.theme,
+      renderStrategy: state.renderStrategy,
+      ...(state.run.request.publicBaseUrl && {
+        publicBaseUrl: state.run.request.publicBaseUrl,
+      }),
+    });
+    const html = await readFile(
+      join(state.run.runRoot, descriptor.renderedPath),
+      'utf8',
+    );
+    const rendered = { ...descriptor, html };
+    state.rendered.push(rendered);
+    state.artifacts.push(artifactRecord(state, rendered));
+  }
+}
+
+function artifactRecord(state, rendered) {
+  return {
+    id: rendered.artifactId,
+    type: rendered.type,
+    contentPath: state.contentPaths.get(rendered.artifactId),
+    renderedPath: rendered.renderedPath,
+    mediaType: rendered.mediaType,
+    status: 'built',
+    hash: hashBytes(rendered.html),
+    rebuildable: false,
+  };
 }
 
 async function readJson(path) {
@@ -340,7 +415,7 @@ async function executeStage(run, id, options, operation) {
       id,
       status: result.status ?? 'passed',
       outputPaths: result.outputPaths ?? [],
-      warnings: result.warnings ?? [],
+      ...(result.warnings !== undefined && { warnings: result.warnings }),
     });
   } catch (error) {
     await updateBuildRecord(run, {

@@ -138,7 +138,7 @@ async function suppliedFixture(recipe = 'project-explainer') {
   };
 }
 
-test('interactive runs pause after Markdown and do no downstream work before approval', async () => {
+test('interactive runs pause after rendered QA and do no external work before approval', async () => {
   const fixture = await suppliedFixture();
   const publish = mock.fn(async () => {
     throw new Error('publish must not run before content approval');
@@ -163,17 +163,35 @@ test('interactive runs pause after Markdown and do no downstream work before app
   assert.equal(publish.mock.callCount(), 0);
   assert.equal(durability.mock.callCount(), 0);
   await access(join(result.runRoot, 'source/content/project-explainer.md'));
-  await assert.rejects(access(join(result.runRoot, 'theme.resolved.json')));
-  await assert.rejects(access(join(result.runRoot, 'site')));
+  await access(join(result.runRoot, 'theme.resolved.json'));
+  await access(join(result.runRoot, 'site'));
   const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  for (const id of ['content', 'theme', 'render', 'qa']) {
+    assert.ok(
+      ['passed', 'warned'].includes(
+        record.stages.find((stage) => stage.id === id).status,
+      ),
+      `${id} completed before approval`,
+    );
+  }
+
+  const approvedDurability = mock.fn(async () => {});
+  const resumed = await runExplainer(interactiveRequest, {
+    now: () => '2026-07-17T20:05:00Z',
+    durability: approvedDurability,
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+    },
+  });
+  assert.equal(resumed.runId, result.runId);
   assert.equal(
-    record.stages.find(({ id }) => id === 'content').status,
-    'passed',
+    resumed.outcome,
+    'built-not-durable',
+    JSON.stringify(resumed.errors),
   );
-  assert.equal(
-    record.stages.find(({ id }) => id === 'theme').status,
-    'pending',
-  );
+  assert.equal(approvedDurability.mock.callCount(), 1);
 });
 
 test('rejection persists corrections and explicit approval resumes the same run', async () => {
@@ -236,6 +254,63 @@ test('rejection persists corrections and explicit approval resumes the same run'
     'utf8',
   );
   assert.match(rendered, /Corrected implementation status\./);
+  const record = JSON.parse(await readFile(resumed.buildRecordPath, 'utf8'));
+  assert.match(
+    record.stages
+      .find(({ id }) => id === 'render')
+      .warnings.find((warning) => warning.startsWith('stage-reopened:')),
+    /^stage-reopened:content-rejected:/,
+  );
+});
+
+test('a rejected correction that fails QA remains local and updates the build record', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const rejected = await runExplainer(interactiveRequest, {
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Remove the blocked phrase.'],
+    },
+  });
+  const contentPath = join(
+    rejected.runRoot,
+    'source/content/project-explainer.md',
+  );
+  await writeFile(
+    contentPath,
+    (await readFile(contentPath, 'utf8')).replace(
+      'The system uses a config-blind core.',
+      'Blocked correction phrase.',
+    ),
+  );
+  const durability = mock.fn(async () => {});
+  const publish = mock.fn(async () => {});
+
+  const result = await runExplainer(interactiveRequest, {
+    now: () => '2026-07-17T20:05:00Z',
+    durability,
+    publish,
+    denylist: ['Blocked correction phrase.'],
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+    },
+  });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_QA');
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
+  const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+  assert.equal(record.stages.find(({ id }) => id === 'qa').status, 'failed');
 });
 
 test('resume rejects a changed fact-base binding', async () => {
@@ -311,7 +386,7 @@ test('unattended lifecycle sources persist review provenance without prompting',
   ]);
 });
 
-test('unattended resume reloads persisted author provenance', async () => {
+test('completed unattended runs are not mistaken for unresolved approval resumes', async () => {
   const fixture = await suppliedFixture('project-recap');
   const initial = await runExplainer(fixture.request, { now: () => NOW });
   const buildRecordPath = join(initial.runRoot, 'build-record.json');
@@ -334,7 +409,7 @@ test('unattended resume reloads persisted author provenance', async () => {
     'built-not-durable',
     JSON.stringify(resumed.errors),
   );
-  assert.equal(resumed.runId, initial.runId);
+  assert.notEqual(resumed.runId, initial.runId);
   const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
   assert.deepEqual(manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
@@ -835,7 +910,7 @@ test('confines atomic package writes from symlinked site, content, nested ancest
   }
 });
 
-test('retains successful intermediates and a privacy-safe failed record after a stage failure', async () => {
+test('retains successful intermediates and a privacy-safe build record after a pre-approval failure', async () => {
   const fixture = await suppliedFixture();
   const result = await runExplainer(fixture.request, {
     now: () => NOW,
@@ -858,12 +933,10 @@ test('retains successful intermediates and a privacy-safe failed record after a 
   );
   assert.match(recordText, /seeded renderer failure/);
   assert.doesNotMatch(recordText, /Private transient direction/);
-  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
-  assert.equal(manifest.outcome, 'failed');
-  assert.equal(manifest.artifacts[0].status, 'failed');
-  assert.equal(
-    validateContract('manifest', manifest, { buildRecord: record }).valid,
-    true,
+  await assert.rejects(
+    access(result.manifestPath),
+    { code: 'ENOENT' },
+    'a manifest cannot satisfy immutable approval coverage before the relocated gate',
   );
 });
 
