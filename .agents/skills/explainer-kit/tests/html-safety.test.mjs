@@ -4,6 +4,7 @@ import { test } from 'node:test';
 
 import {
   coreScriptHashes,
+  findUnpinnedResourceRefs,
   validateHtmlSafety,
 } from '../scripts/lib/html-safety.mjs';
 
@@ -217,6 +218,109 @@ test('missing theme declarations and required anchors warn without failing', () 
   assert.ok(result.warnings.includes('missing-theme-token:--accent'));
   assert.ok(
     result.warnings.includes('missing-required-anchor:diagram-viewport'),
+  );
+});
+
+test('form submission targets hard-fail under every scheme', () => {
+  const diagram = templates.get('diagram-shell');
+  const submissions = [
+    '<form action="mailto:exfil@example.com"><button>Send</button></form>',
+    '<form action="/collect"><button>Send</button></form>',
+    '<form action="collect.php"><button>Send</button></form>',
+    '<button formaction="collect.php">Send</button>',
+    '<button formaction=collect.php>Send</button>',
+    '<a href="https://example.com" ping="//tracker.example.com/p">Cite</a>',
+  ];
+
+  for (const submission of submissions) {
+    const result = validate(
+      'diagram-shell',
+      diagram.replace('<main>', `<main>${submission}`),
+    );
+    assert.equal(result.valid, false, submission);
+    assert.ok(
+      result.errors.includes('external-active-content') ||
+        result.errors.includes('disallowed-element:form'),
+      `${submission} -> ${result.errors.join(', ')}`,
+    );
+  }
+});
+
+test('the form element is no longer on the DOM allowlist', () => {
+  const diagram = templates.get('diagram-shell');
+  const result = validate(
+    'diagram-shell',
+    diagram.replace('<main>', '<main><form><button>Send</button></form>'),
+  );
+
+  assert.equal(result.valid, false);
+  assert.ok(result.errors.includes('disallowed-element:form'));
+});
+
+test('resource elements must reference inline data or same-document fragments', () => {
+  const diagram = templates.get('diagram-shell');
+  const rejected = [
+    '<svg><image href="diagram.png" /></svg>',
+    '<svg><image xlink:href="../shared/diagram.png" /></svg>',
+    '<svg><use href="sprite.svg#node" /></svg>',
+    '<svg><use href=sprite.svg#node /></svg>',
+    '<img src="/assets/hero.png" />',
+    '<img src="" />',
+    '<img srcset="hero.png 1x, hero@2x.png 2x" />',
+    '<img srcset="data:image/png;base64,AAAA 1x, hero@2x.png 2x" />',
+    '<svg><textPath href="other.svg#curve">Label</textPath></svg>',
+    '<svg><pattern href="tiles.svg#tile"></pattern></svg>',
+  ];
+  const accepted = [
+    '<svg><use href="#node" /></svg>',
+    '<svg><image href="data:image/png;base64,AAAA" /></svg>',
+    '<img src="data:image/png;base64,AAAA" />',
+    '<img srcset="data:image/png;base64,AAAA 1x, data:image/png;base64,BBBB 2x" />',
+    '<a href="https://example.com/evidence">Evidence</a>',
+    '<a href="../sibling/index.html">Sibling</a>',
+    '<blockquote cite="https://example.com/source"><p>Quoted.</p></blockquote>',
+  ];
+
+  for (const markup of rejected) {
+    const result = validate(
+      'diagram-shell',
+      diagram.replace('<main>', `<main>${markup}`),
+    );
+    assert.equal(result.valid, false, markup);
+    assert.ok(
+      result.errors.includes('external-active-content'),
+      `${markup} -> ${result.errors.join(', ')}`,
+    );
+  }
+  for (const markup of accepted) {
+    const result = validate(
+      'diagram-shell',
+      diagram.replace('<main>', `<main>${markup}`),
+    );
+    assert.deepEqual(result.errors, [], markup);
+  }
+});
+
+test('findUnpinnedResourceRefs reports resource refs without flagging links', () => {
+  assert.deepEqual(
+    findUnpinnedResourceRefs(
+      '<a href="https://example.com/a">Link</a><img src="data:image/png;base64,AAAA" /><svg><use href="#node" /></svg>',
+    ),
+    [],
+  );
+  assert.deepEqual(
+    findUnpinnedResourceRefs('<svg><image href="diagram.png" /></svg>'),
+    [{ element: 'image', attribute: 'href', value: 'diagram.png' }],
+  );
+  assert.deepEqual(
+    findUnpinnedResourceRefs('<script src="https://cdn.example.com/x.js">'),
+    [
+      {
+        element: 'script',
+        attribute: 'src',
+        value: 'https://cdn.example.com/x.js',
+      },
+    ],
   );
 });
 

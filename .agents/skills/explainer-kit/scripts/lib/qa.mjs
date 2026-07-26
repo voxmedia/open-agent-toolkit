@@ -1,3 +1,4 @@
+import { findUnpinnedResourceRefs } from './html-safety.mjs';
 import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
 
 const VOID_ELEMENTS = new Set([
@@ -16,8 +17,6 @@ const VOID_ELEMENTS = new Set([
   'track',
   'wbr',
 ]);
-const EXTERNAL_ASSET_PATTERN =
-  /<(?:script|iframe|source|img|audio|video|object|embed)\b[^>]*(?:src|data)\s*=\s*["'](?!data:)[^"']+/i;
 const INLINE_ASSET_VIOLATION_PATTERN =
   /<link\b|@import\b|url\(\s*["']?(?!data:|#)/i;
 const TOKEN_PATTERN = /{{\s*[A-Z][A-Z0-9_]*\s*}}/g;
@@ -321,13 +320,12 @@ export function checkHtmlStructure({
     }
   }
 
-  if (
-    EXTERNAL_ASSET_PATTERN.test(html) ||
-    INLINE_ASSET_VIOLATION_PATTERN.test(html)
-  ) {
+  const unpinnedRefs = findUnpinnedResourceRefs(html);
+  if (unpinnedRefs.length > 0 || INLINE_ASSET_VIOLATION_PATTERN.test(html)) {
     add(
       'external-asset',
       'Final HTML assets must be inline and self-contained.',
+      ...(unpinnedRefs.length > 0 ? [{ refs: unpinnedRefs.slice(0, 10) }] : []),
     );
   }
 

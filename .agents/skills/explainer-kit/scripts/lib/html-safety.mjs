@@ -33,7 +33,6 @@ const ALLOWED_ELEMENTS = new Set([
   'figcaption',
   'figure',
   'footer',
-  'form',
   'h1',
   'h2',
   'h3',
@@ -185,20 +184,49 @@ const URL_ATTRIBUTES = new Set([
   'srcset',
   'xlink:href',
 ]);
+// Every element that can pull a subresource into the document, including the
+// SVG reference elements that resolve `href`/`xlink:href` against another
+// document.
 const RESOURCE_ELEMENTS = new Set([
+  'animate',
+  'animatemotion',
+  'animatetransform',
   'audio',
+  'clippath',
   'embed',
+  'feimage',
+  'filter',
   'frame',
   'iframe',
   'image',
   'img',
+  'lineargradient',
   'link',
+  'marker',
+  'mask',
+  'mpath',
   'object',
+  'pattern',
+  'radialgradient',
   'script',
+  'set',
   'source',
+  'textpath',
+  'track',
   'use',
   'video',
+  'view',
 ]);
+// Submission targets never have a legitimate use in a self-contained artifact,
+// so they are rejected under every scheme rather than only when external.
+const SUBMISSION_ATTRIBUTES = new Set(['action', 'formaction', 'ping']);
+const DANGEROUS_SCHEMES = [
+  'javascript:',
+  'vbscript:',
+  'file:',
+  'data:text/html',
+  'data:image/svg+xml',
+];
 const REQUIRED_THEME_TOKENS = [
   '--canvas',
   '--panel',
@@ -503,21 +531,77 @@ function parseAttributes(source) {
 }
 
 function isUnsafeUrl(value, elementName, attributeName) {
-  const compact = value.replace(/[\u0000-\u0020\u007f]+/g, '').toLowerCase();
   if (
-    compact.startsWith('javascript:') ||
-    compact.startsWith('vbscript:') ||
-    compact.startsWith('data:text/html') ||
-    compact.startsWith('data:image/svg+xml')
+    DANGEROUS_SCHEMES.some((scheme) => compactUrl(value).startsWith(scheme))
   ) {
     return true;
   }
+  if (SUBMISSION_ATTRIBUTES.has(attributeName)) return true;
+  return isUnpinnedResourceRef(value, elementName, attributeName);
+}
 
-  const isExternal = /^(?:https?:)?\/\//.test(compact);
-  if (!isExternal) return false;
-  if (elementName === 'form' && attributeName === 'action') return true;
-  if (attributeName === 'formaction' || attributeName === 'ping') return true;
-  return RESOURCE_ELEMENTS.has(elementName);
+// A resource element may only reference payloads that travel with the
+// document: an allowed inline `data:` payload or a same-document fragment.
+function isUnpinnedResourceRef(value, elementName, attributeName) {
+  if (
+    !RESOURCE_ELEMENTS.has(elementName) ||
+    !URL_ATTRIBUTES.has(attributeName)
+  ) {
+    return false;
+  }
+  const candidates =
+    attributeName === 'srcset' ? srcsetCandidates(value) : [value];
+  return candidates.length === 0 || !candidates.every(isSelfContainedRef);
+}
+
+function isSelfContainedRef(value) {
+  const compact = compactUrl(value);
+  if (compact.startsWith('#')) return true;
+  return (
+    compact.startsWith('data:') &&
+    !DANGEROUS_SCHEMES.some((scheme) => compact.startsWith(scheme))
+  );
+}
+
+// `srcset` candidates are whitespace-delimited URL/descriptor pairs separated
+// by commas, and a `data:` URL may itself contain commas, so candidates are
+// split on the trailing comma of a token rather than on every comma.
+function srcsetCandidates(value) {
+  const urls = [];
+  let expectUrl = true;
+  for (const token of value.split(/\s+/).filter(Boolean)) {
+    const terminated = token.endsWith(',');
+    if (expectUrl) {
+      urls.push(terminated ? token.slice(0, -1) : token);
+    }
+    expectUrl = terminated;
+  }
+  return urls.filter(Boolean);
+}
+
+function compactUrl(value) {
+  return value.replace(/[\u0000-\u0020\u007f]+/g, '').toLowerCase();
+}
+
+// Shared with the render QA structural check so both call sites enforce one
+// self-contained-resource policy.
+export function findUnpinnedResourceRefs(html) {
+  if (typeof html !== 'string') return [];
+  const refs = [];
+  for (const element of tokenizeHtml(html).elements) {
+    for (const attribute of element.attributes) {
+      if (
+        isUnpinnedResourceRef(attribute.value, element.name, attribute.name)
+      ) {
+        refs.push({
+          element: element.name,
+          attribute: attribute.name,
+          value: attribute.value,
+        });
+      }
+    }
+  }
+  return refs;
 }
 
 function containsExternalCss(value) {
