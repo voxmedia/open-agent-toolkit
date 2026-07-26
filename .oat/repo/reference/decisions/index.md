@@ -10,6 +10,8 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260726-explainer-authoring-is-two     | 2026-07-26 | accepted | Explainer authoring is two-path with a caller-owned author seam         | -      |
+| DR-260726-explainer-render-qa-is-opt     | 2026-07-26 | accepted | Explainer render QA is opt-in and never self-launching                  | -      |
 | DR-260724-canonical-project-asset        | 2026-07-24 | accepted | Canonical project asset reconciliation                                  | -      |
 | DR-260724-project-state-and-runtime      | 2026-07-24 | accepted | Project state and runtime availability separation                       | -      |
 | DR-260724-provider-path-safety-boundary  | 2026-07-24 | accepted | Provider path safety boundary                                           | -      |

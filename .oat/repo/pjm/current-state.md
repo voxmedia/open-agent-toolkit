@@ -31,6 +31,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.18` rebuilds Explainer Kit authoring on two per-artifact paths,
+  replacing slot-filling that produced structurally thin output. A narrative
+  path promotes Markdown from provenance to actual renderer input, so tables,
+  GFM-alert callouts, fenced timelines, and fenced diagrams render as
+  structure; an artistic path has the agent compose HTML from hash-pinned
+  shells. Recipe policy chooses the path, not the author. `recipe/v2` ships
+  beside v1 through a dual-version loader with finite per-recipe and per-type
+  expansion caps, guideline misses degrade to warnings while safety and
+  provenance stay hard errors, approval moves after render and QA with the
+  accepted set persisted in `content-approval/v2` for faithful resume, and
+  author provenance binds through trusted caller configuration with the core
+  stamping time from its injected clock. Render QA is opt-in and never
+  self-launching. `explainer-kit` 2.0.0 marks the author-contract boundary.
 - CLI `0.2.15` separates repository installation state from effective runtime
   availability: shared `.oat/config.json#tools` now reconciles only
   project-scoped canonical assets across install, update, and remove, while
