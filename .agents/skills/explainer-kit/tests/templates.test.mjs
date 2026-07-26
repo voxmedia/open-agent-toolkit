@@ -40,6 +40,53 @@ const requiredTokens = {
     'FOOTER',
   ],
 };
+const canvasContracts = {
+  'deck-shell.html': {
+    anchors: [
+      'deck',
+      'deck-controls',
+      'deck-counter',
+      'deck-progress',
+      'deck-progress-bar',
+    ],
+    extensionRegions: 1,
+    scripts: 2,
+  },
+  'diagram-shell.html': {
+    anchors: [
+      'diagram-title',
+      'diagram-description',
+      'diagram-shell',
+      'zoom-controls',
+      'diagram-viewport',
+      'diagram-canvas',
+      'diagram-legend',
+    ],
+    extensionRegions: 2,
+    scripts: 1,
+  },
+  'engineer-tour.html': {
+    anchors: [
+      'tour-layout',
+      'tour-navigation',
+      'tour-body',
+      'diagram-rail',
+      'diagram-card',
+    ],
+    extensionRegions: 4,
+    scripts: 1,
+  },
+};
+const requiredThemeTokens = [
+  '--canvas',
+  '--panel',
+  '--border',
+  '--ink',
+  '--muted',
+  '--accent',
+  '--sans',
+  '--mono',
+];
 const forbiddenProduction = [
   /voxops/i,
   /vox media/i,
@@ -62,9 +109,9 @@ test('production templates are complete neutral shells with documented tokens', 
   for (const name of templateNames) {
     const html = await template(name);
     assert.match(html, /^<!doctype html>/i, name);
-    assert.match(html, /<html lang="en">/i, name);
+    assert.match(html, /<html\b[^>]*\blang="en"(?:\s[^>]*)?>/i, name);
     assert.match(html, /<head>[\s\S]*<\/head>/i, name);
-    assert.match(html, /<body>[\s\S]*<\/body>\s*<\/html>\s*$/i, name);
+    assert.match(html, /<body\b[^>]*>[\s\S]*<\/body>\s*<\/html>\s*$/i, name);
     assert.match(html, /TEMPLATE CONTRACT:/, name);
 
     const documented = html.match(/TEMPLATE CONTRACT: ([A-Z_, ]+)/)?.[1] ?? '';
@@ -84,6 +131,47 @@ test('production templates are complete neutral shells with documented tokens', 
       />\s*(?:Point one|Lane A|Node A|Section A)\s*</i,
       name,
     );
+  }
+});
+
+test('artistic shells expose theme wiring, validation anchors, and extension regions', async () => {
+  for (const [name, contract] of Object.entries(canvasContracts)) {
+    const html = await template(name);
+    const shellName = name.replace(/\.html$/, '');
+
+    assert.match(
+      html,
+      new RegExp(
+        `<body\\b[^>]*\\bdata-explainer-shell="${shellName}"[^>]*>`,
+        'i',
+      ),
+      name,
+    );
+    for (const token of requiredThemeTokens) {
+      assert.match(html, new RegExp(`${token}\\s*:`), `${name}: ${token}`);
+      assert.match(
+        html,
+        new RegExp(`var\\(${token}\\)`),
+        `${name}: ${token} wiring`,
+      );
+    }
+    for (const anchor of contract.anchors) {
+      const matches = html.match(
+        new RegExp(`data-shell-anchor="${anchor}"`, 'g'),
+      );
+      assert.equal(matches?.length, 1, `${name}: ${anchor}`);
+    }
+
+    const starts = html.match(/<!-- AUTHOR EXTENSION REGION:/g) ?? [];
+    const ends = html.match(/<!-- END AUTHOR EXTENSION REGION -->/g) ?? [];
+    assert.equal(starts.length, contract.extensionRegions, name);
+    assert.equal(ends.length, starts.length, name);
+
+    const scripts = html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) ?? [];
+    assert.equal(scripts.length, contract.scripts, name);
+    for (const script of scripts) {
+      assert.doesNotMatch(script, /<script\b[^>]+\bsrc\s*=/i, name);
+    }
   }
 });
 

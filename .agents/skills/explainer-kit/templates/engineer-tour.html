@@ -24,6 +24,7 @@
         --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         --serif: ui-serif, Georgia, serif;
         --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
         {{THEME_CSS}}
       }
       * {
@@ -199,25 +200,43 @@
       }
     </style>
   </head>
-  <body>
-    <div class="layout">
-      <nav class="toc" aria-label="Tour sections">
+  <body data-explainer-shell="engineer-tour">
+    <div class="layout" data-shell-anchor="tour-layout">
+      <nav
+        class="toc"
+        data-shell-anchor="tour-navigation"
+        aria-label="Tour sections"
+      >
         <div class="toc-brand">{{EYEBROW}}</div>
+        <!-- AUTHOR EXTENSION REGION: section navigation -->
         {{NAVIGATION}}
+        <!-- END AUTHOR EXTENSION REGION -->
       </nav>
-      <main class="tour-body">
+      <main class="tour-body" data-shell-anchor="tour-body">
         <header>
           <div class="eyebrow">{{EYEBROW}}</div>
           <h1>{{TITLE}}</h1>
           <p>{{DESCRIPTION}}</p>
         </header>
+        <!-- AUTHOR EXTENSION REGION: narrative tour sections -->
         {{CONTENT}}
-        <footer>{{FOOTER}}</footer>
+        <!-- END AUTHOR EXTENSION REGION -->
+        <footer>
+          <!-- AUTHOR EXTENSION REGION: supporting references and next steps -->
+          {{FOOTER}}
+          <!-- END AUTHOR EXTENSION REGION -->
+        </footer>
       </main>
-      <aside class="diagram-rail" aria-label="System diagram">
-        <div class="diagram-card">
+      <aside
+        class="diagram-rail"
+        data-shell-anchor="diagram-rail"
+        aria-label="System diagram"
+      >
+        <div class="diagram-card" data-shell-anchor="diagram-card">
           <svg viewBox="0 0 360 540" role="img" aria-label="{{TITLE}}">
+            <!-- AUTHOR EXTENSION REGION: synchronized system diagram -->
             {{DIAGRAM}}
+            <!-- END AUTHOR EXTENSION REGION -->
           </svg>
         </div>
       </aside>
