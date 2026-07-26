@@ -64,7 +64,7 @@ existing cells. Planning shows the complete recommendation before asking which
 scope should own it. If the resulting ladder is still missing or incomplete,
 planning remains blocked rather than replacing the user's explicit values.
 
-#### Upgrading to a newer recommendation version
+### Upgrading to a newer recommendation version
 
 Preservation applies to whole cells, which has a consequence worth stating
 plainly: when a new recommendation version adds candidates to a tier you have

@@ -130,7 +130,7 @@ Restart Cursor or reload the window so the hooks register.
 One throwaway agent per selector, under `.cursor/agents/`. Keep them trivial:
 the probe is the hook payload, not anything the agent produces.
 
-```markdown
+````markdown
 ---
 # TEMPORARY pin probe - not oat-managed. Delete after probing.
 # Class: subject - expect claude-opus-5-thinking-medium
@@ -142,10 +142,9 @@ model: claude-opus-5[effort=medium]
 ## Role
 
 You are a throwaway pin probe. Run exactly one command and then stop:
-```
 
+```bash
 echo PIN-PROBE zz-pin-probe-opus5-medium
-
 ```
 
 Then reply with the single word `done`. Do not read files or use any
@@ -153,7 +152,7 @@ other tool.
 
 Cursor's hook payload is the evidence for this probe. Your own claim about
 your identity is not evidence and is deliberately not requested.
-```
+````
 
 The `echo` exists to force a tool call, which is what produces the
 corroborating `preToolUse` event.
