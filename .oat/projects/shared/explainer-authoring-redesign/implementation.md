@@ -238,6 +238,25 @@ Chronological log of implementation progress.
 - Tier 1 dispatch confirmed with resolved target
   `oat-phase-implementer-gpt-5-6-sol-high`.
 
+**p00 pre-phase (regression repair, before Phase 1):**
+
+- First Phase 1 dispatch returned `BLOCKED` before any commit: the plan's
+  mandatory phase-verification command `node --test .agents/skills/explainer-kit/tests/`
+  fails on Node 22.17 (directory resolved as a module). The implementer
+  correctly refused to substitute a different command. Its partial p01-t01 work
+  was stashed and Phase 1 will be re-dispatched fresh.
+- Bisect established the suite was 133/133 green at `2ad5b5cd` and 136/147 at
+  `ffcae8f0` (PR #170), so the 11 failures were a regression, not a baseline.
+- `8c81513b` restored the suite to 146/146: added the required
+  immutable-coverage provenance paths to the manifest fixtures in
+  `records.test.mjs` and `s3-static.test.mjs` (10 tests), and removed the
+  obsolete 0.4.1 migration-provenance test plus its 293-line fixture from
+  `rebuildability.test.mjs` (1 test), which depended on the archived
+  `.oat/projects/shared/explainer-kit/` project. Operator decision: drop the
+  provenance record rather than relocate it.
+- Adjacent suites verified unaffected: `oat-explainer-kit` 52/52,
+  `tools/release` 41 pass / 0 fail.
+
 **Blockers:**
 
 - None
@@ -248,9 +267,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review   | Source Artifact                    | Planned / Documented                                                          | Actual / Accepted                                                      | Reason                                                                                                                                                                            | Source of Truth     | Follow-up                                            |
+| --------------- | ---------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------- |
+| p00 (pre-phase) | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`  | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`). | `plan.md` (updated) | None                                                 |
+| p00 (pre-phase) | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                               | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1 | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.              | Commit `8c81513b`   | Consider upstreaming the fix to `main` independently |
 
 ## Test Results
 

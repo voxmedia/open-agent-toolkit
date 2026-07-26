@@ -28,7 +28,24 @@ set scaling, and honest auto-drafted marking for unattended runs.
 Primary write surface: `.agents/skills/explainer-kit/` (core skill) and
 `.agents/skills/oat-explainer-kit/` (adapter), plus lifecycle callers, docs,
 release tooling fixtures, and release bookkeeping. Skill tests run with
-`node --test .agents/skills/explainer-kit/tests/`.
+`node --test .agents/skills/explainer-kit/tests/*.test.mjs`.
+
+**Test invocation must use explicit globs, never a bare directory.**
+`node --test <dir>` does not work in this repo on Node 22.17 — it resolves the
+directory as a module and throws `MODULE_NOT_FOUND`, reporting a single failed
+"test" without executing any suite. This is not specific to the hidden
+`.agents/` path; `node --test tools/release/` fails the same way. The repo
+convention is explicit globs, as `package.json`'s `test:smoke` script shows. Do
+not "simplify" these commands back to directory form.
+
+**Baseline:** the core suite is 146/146 green as of `8c81513b`, which repaired
+11 failures that PR #170 (`ffcae8f0`) left on main — stale manifest fixtures in
+`records.test.mjs` / `s3-static.test.mjs` missing the immutable-coverage
+provenance paths, plus a 0.4.1 migration-provenance test in
+`rebuildability.test.mjs` that depended on the since-archived
+`.oat/projects/shared/explainer-kit/` project and was removed with its fixture.
+Phase verification therefore expects a genuinely green suite, not a pinned
+known-red set.
 
 Bundled copies under `packages/cli/assets/skills/` are regenerated wholesale
 by `packages/cli/scripts/bundle-assets.sh` during `pnpm build` (it `rm -rf`s
@@ -201,7 +218,7 @@ This step is mechanical and behavior-preserving: v1 recipes still load and
 the full suite stays green before any recipe file changes.
 
 **Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: the whole core suite passes unchanged with v1 recipes on disk;
 synthetic v2 fixtures (floor + profiles + caps) pass; undeclared-type,
 duplicate-profileId, id-collision, missing-`maxCount`, and
@@ -283,7 +300,7 @@ Profile types/authoring: `supporting-diagram` → `diagram`/html/diagram-shell;
 `deck`/html/deck-shell.
 
 **Step 2: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: semantic assertions per recipe (floor ids/types/authoring identical
 to the v1 artifact set, `requiredNarrative` preserved per floor entry,
 profile sets and caps, every `briefRef` resolving to a p01-t03 file,
@@ -330,7 +347,7 @@ unattended, with `artifacts[]` defaulting to the recipe floor); new writes are
 always v2.
 
 **Step 4: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: unattended runs record v2 `auto-drafted`; interactive approve
 records v2 `human-approved`; a v2 record round-trips with and without
 `artifacts[]`; a normalized v1 fixture with no author-result path hydrates
@@ -687,7 +704,7 @@ call-count assertions stay exactly as they are, while the
 that rendered output **is** present at the pause.
 
 **Step 5: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: full core suite green; an interactive run pauses with rendered
 artifacts on disk and zero publish/durability calls; direct pending→approve
 resume completes the run; the reject → edit → approve → same-run resume loop
@@ -759,7 +776,7 @@ at the relocated gate with rendered drafts + warnings as the review surface;
 unattended runs auto-approve with `auto-drafted` marking.
 
 **Step 5: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: full core suite passes; run fixtures produce authored, rendered,
 validated artifacts end-to-end, including an accepted-expansion fixture and a
 rejected-proposal fixture. Run-integration assertions confirm a successful
@@ -802,7 +819,7 @@ current unattended-only `E_AUTHOR_REQUIRED` check at
 completion chain invoke recap with `mode: unattended` unconditionally.
 
 **Step 3: Verify**
-Run: `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/`
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs`
 Expected: core and adapter results both expose `auto-drafted` for unattended
 and `human-approved` for interactive approval; manifests validate unchanged
 against `manifest/v1` and carry no marking property; an interactive adapter
@@ -873,7 +890,7 @@ version.
 **Step 6:** Refresh provider views (`oat sync --scope all`).
 
 **Step 7: Verify**
-Run: `rg -n "author-request/v1|author-result/v1|explainer-kit\.recipe/v1" .agents tools apps packages --glob '!packages/cli/assets/**' | wc -l` then `node --test .agents/skills/explainer-kit/tests/ .agents/skills/oat-explainer-kit/tests/ && pnpm test:smoke && node --test tools/release/`
+Run: `rg -n "author-request/v1|author-result/v1|explainer-kit\.recipe/v1" .agents tools apps packages --glob '!packages/cli/assets/**' | wc -l` then `node --test .agents/skills/explainer-kit/tests/*.test.mjs .agents/skills/oat-explainer-kit/tests/*.test.mjs && pnpm test:smoke && node --test tools/release/*.test.*`
 Expected: zero remaining v1 author-contract or recipe-schema references
 outside the generated assets tree; core, adapter, smoke, and release-tooling
 suites pass; a 1.x core is rejected by the adapter and a 2.0.0 core is
