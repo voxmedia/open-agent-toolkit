@@ -40,7 +40,7 @@ oat_generated: false
 | Phase 2: Lifecycle caller wiring             | pending  | 1     | 0/1       |
 | Phase 3: Narrative renderer                  | pending  | 3     | 0/3       |
 | Phase 4: Artistic composer path              | pending  | 2     | 0/2       |
-| Phase 5: Guideline checker and render QA     | pending  | 2     | 0/2       |
+| Phase 5: Guideline checker and render QA     | complete | 2     | 2/2       |
 | Phase 6: Pipeline integration, v1 retirement | pending  | 4     | 0/4       |
 | Phase 7: End-to-end anti-regression fixture  | pending  | 1     | 0/1       |
 | Phase 8: Documentation and release closure   | pending  | 2     | 0/2       |
