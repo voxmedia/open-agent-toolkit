@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "explainer-kit.recipe/v1",
+  "schemaVersion": "explainer-kit.recipe/v2",
   "id": "engineer-tour",
   "version": "1",
   "sourceRoles": [
@@ -11,21 +11,38 @@
       "maxBindings": 1
     }
   ],
-  "requiredNarrative": [
-    "orientation",
-    "architecture",
-    "execution-flow",
-    "key-code",
-    "validation"
-  ],
-  "artifacts": [
+  "floor": [
     {
       "id": "engineer-tour",
       "type": "explainer",
+      "authoring": "html",
       "template": "engineer-tour",
-      "required": true
+      "required": true,
+      "briefRef": "briefs/engineer-tour.md",
+      "requiredNarrative": [
+        "orientation",
+        "architecture",
+        "execution-flow",
+        "key-code",
+        "validation"
+      ]
     }
   ],
+  "expansion": {
+    "profiles": [
+      {
+        "profileId": "supporting-diagram",
+        "type": "diagram",
+        "authoring": "html",
+        "briefRef": "briefs/supporting-diagram.md",
+        "shell": "diagram-shell",
+        "maxCount": 4
+      }
+    ],
+    "limits": {
+      "maxArtifacts": 4
+    }
+  },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,
     "maxRounds": 8

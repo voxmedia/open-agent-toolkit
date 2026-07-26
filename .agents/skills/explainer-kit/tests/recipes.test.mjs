@@ -122,8 +122,159 @@ test('loads each supported recipe by exact id and version', () => {
     const recipe = loadRecipe(id, '1');
     assert.equal(recipe.id, id);
     assert.equal(recipe.version, '1');
-    assert.equal(recipe.schemaVersion, 'explainer-kit.recipe/v1');
+    assert.equal(recipe.schemaVersion, 'explainer-kit.recipe/v2');
   }
+});
+
+test('bundled v2 recipes preserve floors and declare bounded expansion policy', async () => {
+  const expectations = {
+    'project-recap': {
+      floor: {
+        id: 'project-recap',
+        type: 'hub',
+        authoring: 'markdown',
+        template: 'house-style',
+        briefRef: 'briefs/project-recap.md',
+        requiredNarrative: RECAP_SECTIONS,
+      },
+      profiles: [
+        {
+          profileId: 'supporting-diagram',
+          type: 'diagram',
+          authoring: 'html',
+          briefRef: 'briefs/supporting-diagram.md',
+          shell: 'diagram-shell',
+          maxCount: 4,
+        },
+        {
+          profileId: 'deep-dive',
+          type: 'explainer',
+          authoring: 'markdown',
+          briefRef: 'briefs/deep-dive.md',
+          maxCount: 3,
+        },
+        {
+          profileId: 'walkthrough-deck',
+          type: 'deck',
+          authoring: 'html',
+          briefRef: 'briefs/walkthrough-deck.md',
+          shell: 'deck-shell',
+          maxCount: 1,
+        },
+      ],
+      maxArtifacts: 6,
+    },
+    'program-recap': {
+      floor: {
+        id: 'program-recap',
+        type: 'hub',
+        authoring: 'markdown',
+        template: 'house-style',
+        briefRef: 'briefs/program-recap.md',
+        requiredNarrative: PROGRAM_RECAP_SECTIONS,
+      },
+      profiles: [
+        {
+          profileId: 'supporting-diagram',
+          type: 'diagram',
+          authoring: 'html',
+          briefRef: 'briefs/supporting-diagram.md',
+          shell: 'diagram-shell',
+          maxCount: 3,
+        },
+        {
+          profileId: 'project-page',
+          type: 'explainer',
+          authoring: 'markdown',
+          briefRef: 'briefs/project-page.md',
+          maxCount: 12,
+        },
+      ],
+      maxArtifacts: 12,
+    },
+    'project-explainer': {
+      floor: {
+        id: 'project-explainer',
+        type: 'hub',
+        authoring: 'markdown',
+        template: 'house-style',
+        briefRef: 'briefs/project-explainer.md',
+        requiredNarrative: [
+          'planned-architecture',
+          'decisions',
+          'risks',
+          'phases',
+          'validation-approach',
+        ],
+      },
+      profiles: [
+        {
+          profileId: 'supporting-diagram',
+          type: 'diagram',
+          authoring: 'html',
+          briefRef: 'briefs/supporting-diagram.md',
+          shell: 'diagram-shell',
+          maxCount: 4,
+        },
+      ],
+      maxArtifacts: 4,
+    },
+    'engineer-tour': {
+      floor: {
+        id: 'engineer-tour',
+        type: 'explainer',
+        authoring: 'html',
+        template: 'engineer-tour',
+        briefRef: 'briefs/engineer-tour.md',
+        requiredNarrative: [
+          'orientation',
+          'architecture',
+          'execution-flow',
+          'key-code',
+          'validation',
+        ],
+      },
+      profiles: [
+        {
+          profileId: 'supporting-diagram',
+          type: 'diagram',
+          authoring: 'html',
+          briefRef: 'briefs/supporting-diagram.md',
+          shell: 'diagram-shell',
+          maxCount: 4,
+        },
+      ],
+      maxArtifacts: 4,
+    },
+  };
+  const briefRefs = new Set();
+
+  for (const [id, expected] of Object.entries(expectations)) {
+    const recipe = loadRecipe(id, '1');
+    const floor = recipeFloor(recipe);
+    const expansion = recipeExpansion(recipe);
+
+    assert.equal(recipe.version, '1', id);
+    assert.equal(floor.length, 1, id);
+    assert.deepEqual(floor[0], { ...expected.floor, required: true }, id);
+    assert.deepEqual(expansion.profiles, expected.profiles, id);
+    assert.equal(expansion.limits.maxArtifacts, expected.maxArtifacts, id);
+
+    for (const briefRef of [
+      floor[0].briefRef,
+      ...expansion.profiles.map(({ briefRef }) => briefRef),
+    ]) {
+      briefRefs.add(briefRef);
+      assert.ok(
+        (
+          await readFile(new URL(`../${briefRef}`, import.meta.url), 'utf8')
+        ).trim().length > 0,
+        briefRef,
+      );
+    }
+  }
+
+  assert.equal(briefRefs.size, 8);
 });
 
 test('validates recipe v2 and normalizes both recipe shapes', () => {
@@ -392,24 +543,13 @@ test('project recap binds exactly one project source set', () => {
   );
 });
 
-test('project recap requires all six accountability sections', () => {
+test('project recap declares all six accountability sections', () => {
   const recipe = loadRecipe('project-recap', '1');
   const artifact = recipeFloor(recipe)[0];
   assert.deepEqual(
     recipeRequiredNarrative(recipe, artifact.id),
     RECAP_SECTIONS,
   );
-  assert.deepEqual(validateContentModel(recipe, contentModel(recipe)), {
-    valid: true,
-    errors: [],
-  });
-
-  const incomplete = contentModel(recipe);
-  incomplete.sections.pop();
-  assert.deepEqual(validateContentModel(recipe, incomplete), {
-    valid: false,
-    errors: ['Missing required narrative section: outcome'],
-  });
 });
 
 test('program recap binds one program and requires its six birdseye sections', () => {

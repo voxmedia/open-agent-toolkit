@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "explainer-kit.recipe/v1",
+  "schemaVersion": "explainer-kit.recipe/v2",
   "id": "project-explainer",
   "version": "1",
   "sourceRoles": [
@@ -11,21 +11,38 @@
       "maxBindings": 1
     }
   ],
-  "requiredNarrative": [
-    "planned-architecture",
-    "decisions",
-    "risks",
-    "phases",
-    "validation-approach"
-  ],
-  "artifacts": [
+  "floor": [
     {
       "id": "project-explainer",
       "type": "hub",
+      "authoring": "markdown",
       "template": "house-style",
-      "required": true
+      "required": true,
+      "briefRef": "briefs/project-explainer.md",
+      "requiredNarrative": [
+        "planned-architecture",
+        "decisions",
+        "risks",
+        "phases",
+        "validation-approach"
+      ]
     }
   ],
+  "expansion": {
+    "profiles": [
+      {
+        "profileId": "supporting-diagram",
+        "type": "diagram",
+        "authoring": "html",
+        "briefRef": "briefs/supporting-diagram.md",
+        "shell": "diagram-shell",
+        "maxCount": 4
+      }
+    ],
+    "limits": {
+      "maxArtifacts": 4
+    }
+  },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,
     "maxRounds": 8
