@@ -6,11 +6,6 @@ import { promisify } from 'node:util';
 
 import { createPackagedLayout } from './fixtures/package-root.mjs';
 
-// This suite asserts pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime. The core reads this at stage time.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 const execFileAsync = promisify(execFile);
 let fixture;
 

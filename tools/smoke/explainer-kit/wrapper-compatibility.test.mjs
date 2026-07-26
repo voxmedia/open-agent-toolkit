@@ -9,11 +9,6 @@ import {
   runPrivateWrapper,
 } from './fixtures/private-wrapper.mjs';
 
-// This suite asserts pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime. The core reads this at stage time.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 const REPO_ROOT = resolve(import.meta.dirname, '../../..');
 const PERSONAL_PUBLIC_ROOT = 'https://dy4vzrzaexuy5.cloudfront.net';
 const NOW = '2026-07-18T12:00:00Z';

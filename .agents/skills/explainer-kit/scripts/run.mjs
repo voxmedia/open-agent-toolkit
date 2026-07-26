@@ -5,10 +5,6 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import {
-  RUNTIME_UNAVAILABLE_REASONS,
-  createBrowserProbeSession,
-} from './lib/browser-runtime.mjs';
 import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
@@ -242,96 +238,33 @@ async function executeQaStage(state, options) {
   await executeStage(state.run, 'qa', options, async () => {
     const htmlSafetyErrors = [];
     const qaWarnings = [];
-    const runtime = await resolveBrowserProbeRuntime(options);
-    try {
-      return await auditRenderedArtifacts(state, options, {
-        runtime,
-        htmlSafetyErrors,
-        qaWarnings,
-      });
-    } finally {
-      await runtime.close?.();
-    }
+    return auditRenderedArtifacts(state, options, {
+      browserProbe: resolveBrowserProbe(options),
+      htmlSafetyErrors,
+      qaWarnings,
+    });
   });
 }
 
 /**
- * Resolve the browser probe the QA stage will drive. Injection wins for tests,
- * an explicitly requested module must load or fail loudly, and an ordinary run
- * attempts real capability detection before recording a skip.
+ * Render QA drives a caller-supplied probe only. The core never launches a
+ * headless runtime itself; agents review rendered output in their own browser.
  */
-async function resolveBrowserProbeRuntime(options) {
-  if (options.browserProbe !== undefined) {
-    if (typeof options.browserProbe !== 'function') {
-      throw codedError(
-        'E_BROWSER_PROBE',
-        'options.browserProbe must be a function when supplied.',
-      );
-    }
-    return { probe: options.browserProbe, source: 'injected' };
-  }
-
-  if (options.browserProbeModulePath !== undefined) {
-    const probe = await loadBrowserProbeModule(options.browserProbeModulePath);
-    return { probe, source: 'module' };
-  }
-
-  const createSession =
-    options.createBrowserProbeSession ?? createBrowserProbeSession;
-  let session;
-  try {
-    session = await createSession();
-  } catch (cause) {
+function resolveBrowserProbe(options) {
+  if (options.browserProbe === undefined) return null;
+  if (typeof options.browserProbe !== 'function') {
     throw codedError(
       'E_BROWSER_PROBE',
-      `Headless browser runtime failed to start: ${safeMessage(cause)}`,
+      'options.browserProbe must be a function when supplied.',
     );
   }
-  if (!session?.available) {
-    return {
-      probe: null,
-      source: 'unavailable',
-      reason: session?.reason ?? 'unknown',
-    };
-  }
-  return {
-    probe: session.probe,
-    source: 'resolved',
-    runtime: session.runtime,
-    close: session.close,
-  };
-}
-
-async function loadBrowserProbeModule(modulePath) {
-  if (typeof modulePath !== 'string' || modulePath.trim().length === 0) {
-    throw codedError(
-      'E_BROWSER_PROBE',
-      'options.browserProbeModulePath must be a non-empty module path.',
-    );
-  }
-  let loaded;
-  try {
-    loaded = await import(pathToFileURL(resolve(modulePath)).href);
-  } catch (cause) {
-    throw codedError(
-      'E_BROWSER_PROBE',
-      `Unable to load browser probe module at ${modulePath}: ${safeMessage(cause)}`,
-    );
-  }
-  const probe = loaded.browserProbe ?? loaded.default;
-  if (typeof probe !== 'function') {
-    throw codedError(
-      'E_BROWSER_PROBE',
-      `Browser probe module at ${modulePath} must export a browserProbe function.`,
-    );
-  }
-  return probe;
+  return options.browserProbe;
 }
 
 async function auditRenderedArtifacts(
   state,
   options,
-  { runtime, htmlSafetyErrors, qaWarnings },
+  { browserProbe, htmlSafetyErrors, qaWarnings },
 ) {
   for (const artifact of state.resolvedArtifacts.filter(
     ({ authoring }) => authoring === 'html',
@@ -358,7 +291,7 @@ async function auditRenderedArtifacts(
   const report = await auditArtifactSet({
     artifacts: probeArtifacts,
     ...(options.denylist && { denylist: options.denylist }),
-    ...(runtime.probe && { browserProbe: runtime.probe }),
+    ...(browserProbe && { browserProbe }),
     ...(options.widths && { widths: options.widths }),
   });
   const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
@@ -373,14 +306,8 @@ async function auditRenderedArtifacts(
       .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
       .map(({ code }) => `qa-${code}`),
   );
-  // The skip means "this machine has no usable runtime" or "an operator turned
-  // probes off", never "no caller injected a probe".
-  if (!runtime.probe) {
-    qaWarnings.push(
-      runtime.reason === RUNTIME_UNAVAILABLE_REASONS.disabled
-        ? RENDER_QA_WARNING_IDS.disabledByConfiguration
-        : RENDER_QA_WARNING_IDS.skippedNoRuntime,
-    );
+  if (!browserProbe) {
+    qaWarnings.push(RENDER_QA_WARNING_IDS.skippedNoProbe);
   }
   const guidelines = checkGuidelines({
     recipe: state.recipe,
@@ -1444,10 +1371,6 @@ async function parseCli(argv) {
       const path = argv[++index];
       if (!path) throw new Error('--reviewed-source requires a JSON path.');
       options.reviewedSource = JSON.parse(await readFile(path, 'utf8'));
-    } else if (value === '--browser-probe-module') {
-      const path = argv[++index];
-      if (!path) throw new Error(`${value} requires a module path.`);
-      options.browserProbeModulePath = path;
     } else if (
       [
         '--author-module',
@@ -1470,7 +1393,7 @@ async function parseCli(argv) {
   }
   if (!requestPath) {
     throw new Error(
-      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--author-module <mjs>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>] [--browser-probe-module <mjs>]',
+      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--author-module <mjs>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
     );
   }
   return { requestPath, options };

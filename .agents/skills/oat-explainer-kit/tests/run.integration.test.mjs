@@ -16,11 +16,6 @@ import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
-// This suite asserts pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime. The core reads this at stage time.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 const tempDirs = [];
 const SOURCE_SKILLS_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
@@ -538,88 +533,6 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     'source/author/project-recap.json',
   ]);
 });
-
-test('carries a lifecycle browser probe module through to the core render QA stage', async () => {
-  const fixture = await createFixture();
-  const authorModulePath = join(fixture.root, 'lifecycle-author.mjs');
-  const probeModulePath = join(fixture.root, 'lifecycle-probe.mjs');
-  await writeValidAuthorModule(authorModulePath);
-  await writeFile(
-    probeModulePath,
-    `
-      export async function browserProbe() {
-        return {
-          pageOverflowX: false,
-          clippedX: [],
-          viewportClipped: [],
-          unreadableHeadings: [],
-          animationsDisabled: true,
-          reducedMotion: true,
-          keyboard: { tab: true },
-        };
-      }
-    `,
-  );
-
-  const adapterResult = await runOatExplainer({
-    adapterRoot: SOURCE_ADAPTER_ROOT,
-    userSkillsRoot: SOURCE_SKILLS_ROOT,
-    repoRoot: fixture.repoRoot,
-    invocation: 'project',
-    activeProject: '.oat/projects/shared/demo',
-    recipe: 'project-recap',
-    slug: 'probe-module-recap',
-    authorModulePath,
-    browserProbeModulePath: probeModulePath,
-    critic: probeTestCritic,
-    getConfig,
-    mode: 'unattended',
-  });
-
-  assert.equal(
-    adapterResult.result.outcome,
-    'built-not-durable',
-    JSON.stringify(adapterResult.result.errors),
-  );
-  // A named module means probes actually ran, so neither skip warning applies.
-  for (const warning of [
-    'render-qa-skipped-no-headless-runtime',
-    'render-qa-disabled-by-configuration',
-  ]) {
-    assert.equal(
-      adapterResult.result.warnings.includes(warning),
-      false,
-      warning,
-    );
-  }
-
-  await assert.rejects(
-    runOatExplainer({
-      adapterRoot: SOURCE_ADAPTER_ROOT,
-      userSkillsRoot: SOURCE_SKILLS_ROOT,
-      repoRoot: fixture.repoRoot,
-      invocation: 'project',
-      activeProject: '.oat/projects/shared/demo',
-      recipe: 'project-recap',
-      slug: 'probe-module-conflict',
-      authorModulePath,
-      browserProbeModulePath: probeModulePath,
-      coreOptions: { browserProbeModulePath: probeModulePath },
-      critic: probeTestCritic,
-      getConfig,
-      mode: 'unattended',
-    }),
-    /only one browser probe module/i,
-  );
-});
-
-async function probeTestCritic() {
-  return {
-    criticId: 'probe-module-critic',
-    executedAt: '2026-07-18T00:00:00.000Z',
-    findings: [],
-  };
-}
 
 test('rejects invalid critic module and callback contracts at the adapter boundary', async () => {
   const fixture = await createFixture();

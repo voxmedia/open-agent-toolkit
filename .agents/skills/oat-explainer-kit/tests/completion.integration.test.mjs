@@ -18,11 +18,6 @@ const SOURCE_SKILLS_ROOT = resolve(
 const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
 const tempDirs = [];
 
-// This suite asserts pipeline and authoring behaviour, not browser behaviour,
-// so probe resolution is switched off explicitly. The release visual gate
-// exercises the real headless runtime. The core reads this at stage time.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),

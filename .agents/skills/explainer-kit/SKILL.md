@@ -137,13 +137,10 @@ guideline misses, rejected over-limit proposals, and render-QA layout findings â
 append stable warning IDs to the manifest's `warnings[]` and let the run
 succeed.
 
-Render QA drives a real headless browser on every run. It uses an injected
-`browserProbe`, then a `--browser-probe-module` entry point when named, and
-otherwise resolves an installed headless Chromium itself. Only when that
-detection fails does it record `render-qa-skipped-no-headless-runtime` and
-continue. Setting `EXPLAINER_KIT_HEADLESS_PROBE=off` suppresses resolution for
-hermetic runs and records the distinct `render-qa-disabled-by-configuration`
-instead, so a configured opt-out never reads as a missing runtime.
+Render QA is opt-in. It runs only against an injected `browserProbe`, and the
+core never launches a browser of its own â€” reviewing the rendered output in a
+browser is the generating agent's job. Without a probe the stage records
+`render-qa-skipped-no-probe` and the run continues.
 
 See `references/contracts.md` for source formats, callback modules, retained
 intermediates, and result semantics.

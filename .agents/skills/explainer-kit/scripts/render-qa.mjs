@@ -6,10 +6,6 @@ import { basename, posix, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
-  RUNTIME_UNAVAILABLE_REASONS,
-  createBrowserProbeSession,
-} from './lib/browser-runtime.mjs';
-import {
   RENDER_QA_WARNING_IDS,
   auditArtifactSet,
   renderQaWarningIds,
@@ -64,38 +60,21 @@ export async function runRenderQaStage({
   artifacts,
   browserProbe,
   widths,
-  createProbeSession = createBrowserProbeSession,
 } = {}) {
   assertStageInput(siteDir, artifacts);
-  let probe = browserProbe;
-  let closeSession;
-  if (typeof probe !== 'function') {
-    // Attempt a real runtime before conceding; the skip must describe machine
-    // capability rather than the absence of an injected callback.
-    const session = await createProbeSession();
-    if (!session?.available) {
-      return {
-        valid: true,
-        skipped: true,
-        warnings: [
-          session?.reason === RUNTIME_UNAVAILABLE_REASONS.disabled
-            ? RENDER_QA_WARNING_IDS.disabledByConfiguration
-            : RENDER_QA_WARNING_IDS.skippedNoRuntime,
-        ],
-        issues: [],
-        probes: 0,
-        ...(session?.reason && { reason: session.reason }),
-      };
-    }
-    probe = session.probe;
-    closeSession = session.close;
+  // Render QA is opt-in: the stage drives a probe the caller supplies and never
+  // launches a runtime of its own.
+  if (typeof browserProbe !== 'function') {
+    return {
+      valid: true,
+      skipped: true,
+      warnings: [RENDER_QA_WARNING_IDS.skippedNoProbe],
+      issues: [],
+      probes: 0,
+    };
   }
 
-  try {
-    return await probeSiteArtifacts({ siteDir, artifacts, probe, widths });
-  } finally {
-    await closeSession?.();
-  }
+  return probeSiteArtifacts({ siteDir, artifacts, probe: browserProbe, widths });
 }
 
 async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {

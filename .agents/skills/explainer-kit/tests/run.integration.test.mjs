@@ -20,11 +20,6 @@ import {
   runExplainerCli,
 } from '../scripts/run.mjs';
 
-// This suite asserts pipeline behaviour, not browser behaviour, so probe
-// resolution is switched off explicitly. The release visual gate exercises the
-// real headless runtime. The core reads this at stage time.
-process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
-
 const NOW = '2026-07-17T20:00:00Z';
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
@@ -689,19 +684,13 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
       },
     );
     assert.notEqual(result.outcome, 'failed', mode);
-    assert.ok(
-      result.warnings.includes('render-qa-disabled-by-configuration'),
-      mode,
-    );
+    assert.ok(result.warnings.includes('render-qa-skipped-no-probe'), mode);
     assert.ok(
       result.warnings.includes('guideline-architecture-diagram-missing'),
       mode,
     );
     const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
-    assert.ok(
-      manifest.warnings.includes('render-qa-disabled-by-configuration'),
-      mode,
-    );
+    assert.ok(manifest.warnings.includes('render-qa-skipped-no-probe'), mode);
   }
 
   const unsafeFixture = await suppliedFixture('project-recap');

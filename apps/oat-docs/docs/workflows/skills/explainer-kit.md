@@ -192,33 +192,34 @@ throw `E_QA` and fail the run. Editorial and layout findings append stable
 warning identifiers to the manifest's `warnings[]` array and let the run
 succeed in both modes.
 
-| Warning ID                               | Meaning                                                           |
-| ---------------------------------------- | ----------------------------------------------------------------- |
-| `guideline-narrative-coverage-missing`   | A required narrative section is not covered by the artifact       |
-| `guideline-architecture-diagram-missing` | No architecture diagram, inline or standalone, was produced       |
-| `guideline-structured-depth-missing`     | The artifact lacks the structured blocks its floor expects        |
-| `expansion-profile-limit-exceeded`       | A proposal was rejected against its profile's `maxCount`          |
-| `expansion-artifact-limit-exceeded`      | A proposal was rejected against `expansion.limits.maxArtifacts`   |
-| `render-qa-document-overflow`            | The document overflows the viewport at a probed width             |
-| `render-qa-inner-container-overflow`     | An inner container overflows horizontally                         |
-| `render-qa-viewport-clipping`            | Content is clipped and unreachable                                |
-| `render-qa-heading-unreadable`           | A heading fails the readability probe                             |
-| `render-qa-animations-enabled`           | Animation remained active where it should be suppressed           |
-| `render-qa-reduced-motion`               | The reduced-motion preference was not honored                     |
-| `render-qa-keyboard-navigation`          | Keyboard navigation did not reach expected targets                |
-| `render-qa-theme-toggle`                 | The theme toggle did not behave as expected                       |
-| `render-qa-deck-no-js-layout`            | A deck degrades incorrectly without JavaScript                    |
-| `render-qa-deck-print-layout`            | A deck degrades incorrectly in print layout                       |
-| `render-qa-skipped-no-headless-runtime`  | Render QA could not run because no headless runtime was available |
+| Warning ID                               | Meaning                                                         |
+| ---------------------------------------- | --------------------------------------------------------------- |
+| `guideline-narrative-coverage-missing`   | A required narrative section is not covered by the artifact     |
+| `guideline-architecture-diagram-missing` | No architecture diagram, inline or standalone, was produced     |
+| `guideline-structured-depth-missing`     | The artifact lacks the structured blocks its floor expects      |
+| `expansion-profile-limit-exceeded`       | A proposal was rejected against its profile's `maxCount`        |
+| `expansion-artifact-limit-exceeded`      | A proposal was rejected against `expansion.limits.maxArtifacts` |
+| `render-qa-document-overflow`            | The document overflows the viewport at a probed width           |
+| `render-qa-inner-container-overflow`     | An inner container overflows horizontally                       |
+| `render-qa-viewport-clipping`            | Content is clipped and unreachable                              |
+| `render-qa-heading-unreadable`           | A heading fails the readability probe                           |
+| `render-qa-animations-enabled`           | Animation remained active where it should be suppressed         |
+| `render-qa-reduced-motion`               | The reduced-motion preference was not honored                   |
+| `render-qa-keyboard-navigation`          | Keyboard navigation did not reach expected targets              |
+| `render-qa-theme-toggle`                 | The theme toggle did not behave as expected                     |
+| `render-qa-deck-no-js-layout`            | A deck degrades incorrectly without JavaScript                  |
+| `render-qa-deck-print-layout`            | A deck degrades incorrectly in print layout                     |
+| `render-qa-skipped-no-probe`             | Render QA was skipped because no browser probe was supplied     |
 
-Render QA is a first-class stage in every mode. It serves the built site
-directory, loads each artifact headlessly with animations disabled, and runs the
-layout-probe battery at representative widths. Viewport clipping deliberately
-exempts content inside a horizontally scrollable ancestor, so intentionally
-paged deck slides are not reported as clipped while genuinely unreachable
-content still is. Where no headless runtime exists, the stage records the single
-`render-qa-skipped-no-headless-runtime` warning and the run continues rather
-than failing closed.
+Render QA is opt-in. When a caller supplies a browser probe, the stage serves
+the built site directory, loads each artifact with animations disabled, and runs
+the layout-probe battery at representative widths. Viewport clipping
+deliberately exempts content inside a horizontally scrollable ancestor, so
+intentionally paged deck slides are not reported as clipped while genuinely
+unreachable content still is. The core never launches a browser on its own:
+without an injected probe the stage records the single
+`render-qa-skipped-no-probe` warning and the run continues rather than failing
+closed.
 
 ## Curated styles and themes
 
