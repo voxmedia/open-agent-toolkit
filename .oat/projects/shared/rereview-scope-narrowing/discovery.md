@@ -140,6 +140,36 @@ as it is written, and read the most recent same-scope artifact when narrowing.
 - Touches the review artifact contract, so the reviewer must be changed too.
 - No narrowing benefit until at least one review has been written under the
   new contract.
+- **Does not survive receive.** Consumed review artifacts are archived into an
+  untracked location, so the artifact holding the reviewed commit disappears
+  from version control once a review has been received. On another machine, in
+  a fresh worktree, or after cleanup, the provenance is simply gone and every
+  re-review falls back to full scope. Safe, but the benefit evaporates in
+  precisely the multi-machine and worktree flows the toolkit encourages.
+
+### Option A′: Artifact field plus a durable tracked record _(chosen refinement)_
+
+**Description:** Record the reviewed head commit on the review artifact as the
+primary source, and additionally persist it on the tracked plan review row,
+which already carries scope, type, status, date, and artifact path and is
+protected by an existing preservation rule.
+
+**Pros:**
+
+- Provenance travels with the branch, so it survives receive, archival,
+  cleanup, fresh clones, and worktree hand-offs.
+- The plan review row is already the durable ledger of what was reviewed, so
+  the reviewed commit belongs there on its own merits.
+- Degrades cleanly: artifact when present, tracked row otherwise, full scope
+  when neither.
+
+**Cons:**
+
+- Two writers must stay consistent, and a disagreement between them needs a
+  defined resolution.
+- Widens the change to the plan review-row shape.
+
+**Chosen:** A′
 
 ### Option B: Source it from the implementation exit-gate state
 
@@ -157,10 +187,15 @@ exit-gate machinery already maintains in project state.
   review, so they are absent or wrong for manual and auto reviews.
 - Couples the ordinary re-review path to gate-specific bookkeeping.
 
-**Chosen:** A
+**Chosen:** Neither as originally framed — superseded by A′ above.
 
 **Summary:** Record the reviewed head commit on the review artifact, matching
-the remote rail, and let artifacts lacking the field fall back to full scope.
+the remote rail, and mirror it onto the tracked plan review row so the
+provenance survives artifact archival. Fall back to full scope whenever neither
+source yields a usable commit. Option B was rejected on evidence: during the
+incident that motivated this work, the exit-gate state fields described a
+blocked gate run and would have been useless provenance for the manual final
+review that actually happened.
 
 ## Key Decisions
 
@@ -169,18 +204,45 @@ the remote rail, and let artifacts lacking the field fall back to full scope.
    working.
 2. **Prompt removal:** The interactive confirm disappears from both rails
    rather than moving behind another setting. The preference remains a boolean.
+   One-off full-scope review does not depend on the prompt: the local rail's
+   scope resolution already gives explicit user input priority, so passing a
+   base commit or an explicit range remains a per-invocation escape hatch, and
+   the remote rail keeps its existing narrowing flags. No capability is lost
+   with the prompt.
 3. **Semantics alignment:** The local rail adopts prior-reviewed-commit-to-head
    ranges with an existence-and-ancestry guard, replacing commit-message
    matching and the fixed lookback window.
-4. **Reviewed commit provenance:** Local review artifacts record the head
-   commit they reviewed. This is what makes sound local narrowing possible.
+4. **Reviewed commit provenance is dual and durable:** The review artifact
+   records the head commit it reviewed, and the tracked plan review row mirrors
+   it. The artifact is the primary source; the tracked row is what makes the
+   provenance survive receive, archival, and machine or worktree boundaries.
+   Consumed artifacts are archived into an untracked location, so an
+   artifact-only design would lose the provenance exactly when a project moves
+   between machines.
 5. **Fail open to full scope:** Any unresolvable condition — no prior review,
-   missing reviewed commit, failed guard — falls back to reviewing everything.
-   Narrowing is never inferred from ambiguous state.
-6. **Freshness reuse is absorbed, not added:** With correct range semantics, a
-   re-review of unchanged code produces an empty range. The separate
-   fingerprint-based freshness short-circuit proposed in the upstream feedback
-   is therefore not needed for this case and is not being built.
+   missing reviewed commit, failed guard, or disagreement between the two
+   provenance sources — falls back to reviewing everything. Narrowing is never
+   inferred from ambiguous state.
+6. **Freshness reuse is mostly mitigated, not absorbed:** Correct range
+   semantics remove most of the redundant-review cost, but not by producing an
+   empty range. In the incident that motivated this work, roughly twenty
+   bookkeeping commits landed after the passed final review, so the narrowed
+   range would have been non-empty while containing no reviewable code. The
+   review would still have dispatched, and the reviewer would still have paid
+   full lifecycle artifact intake, which narrowing does not reduce at all. The
+   improvement is real and large — minutes rather than twenty — but the
+   fingerprint-based short-circuit is being declined on cost/benefit grounds,
+   not because narrowing makes it unnecessary.
+7. **Narrowed reviews must be honest about coverage:** A narrowed re-review
+   inspected only part of its nominal scope and cannot regenerate a full
+   requirements-coverage claim from its own evidence. Its artifact must name
+   the prior artifact and reviewed commit it builds on, so coverage across the
+   union of passes is auditable rather than implied.
+8. **Narrowing is expected to be intermittent:** The ancestry guard means
+   rebases, integration merges, and worktree consolidation frequently
+   invalidate a prior reviewed commit. Narrowing pays off on linear stretches
+   and fails open elsewhere. This is accepted behavior, not a defect to design
+   around.
 
 ## Constraints
 
@@ -209,11 +271,18 @@ the remote rail, and let artifacts lacking the field fall back to full scope.
   existence-and-ancestry guard the remote rail uses.
 - A prior reviewed commit that is missing, unreachable, or not an ancestor of
   the current head results in a full-scope review and a stated reason.
-- Local review artifacts record the head commit they reviewed.
+- Local review artifacts record the head commit they reviewed, and the tracked
+  plan review row carries the same value.
+- Narrowing provenance survives a received-and-archived prior review: a
+  re-review run from a fresh clone or a different worktree, where the prior
+  artifact is no longer present, still narrows from the tracked row.
+- A narrowed re-review artifact names the prior artifact and reviewed commit it
+  builds on, so the coverage chain across successive passes is auditable.
 - Review artifacts written before this change do not narrow anything.
 - An initial review is unaffected regardless of the preference.
 - Documentation describing the preference matches the new default everywhere it
-  appears.
+  appears, and sets the expectation that narrowing applies opportunistically
+  rather than on every re-review.
 
 ## Out of Scope
 
@@ -231,22 +300,45 @@ the remote rail, and let artifacts lacking the field fall back to full scope.
 
 - Making the tested helper modules the runtime for both rails — tracked
   separately; doing it here would swallow this change.
-- Extending narrowing to skip a re-review entirely when the resolved range is
-  empty — attractive, but it changes what a review event means and deserves its
-  own decision.
+- Skipping a re-review entirely when the resolved range contains no reviewable
+  work. This is the case that actually occurs: a literally empty range is rare,
+  while a range of bookkeeping-only commits is common after closeout. The
+  repository already defines the needed classifier as closeout-only
+  descendants, and that definition deliberately refuses to treat a path
+  category as sufficient on its own — it requires a corresponding persisted
+  gate or sequence transition to own the boundary, and treats unknown or mixed
+  work as substantive. So this is a corroboration check rather than a one-line
+  path filter, and it changes what a review event means. Deferred on both
+  counts, but it is the highest-value follow-on.
+- Relaxing the ancestry guard with tree or patch-equivalence comparison so
+  narrowing survives rebases and integration merges. Would materially raise how
+  often narrowing applies, but needs its own correctness argument.
+- Reducing lifecycle artifact intake cost, which narrowing does not touch. This
+  is the larger half of the measured review cost and belongs to the
+  artifact-first review-plan work in the upstream feedback.
 
 ## Open Questions
 
-None blocking. The prior-reviewed-commit provenance question was the one open
-item and was resolved to Option A during discovery.
+- **Gate invocations:** Should narrowing apply when a review is invoked by a
+  configured independent gate? A configured cross-family exit gate exists to
+  produce an independent opinion, and handing it a pre-narrowed range
+  partially defeats that purpose — silently, and by default. The same
+  distinction was already drawn upstream for freshness reuse, where configured
+  independent gates were excluded. Unresolved; it changes default behavior and
+  should be settled before planning.
+
+The prior-reviewed-commit provenance question was resolved during discovery,
+first to Option A and then to the durable A′ refinement.
 
 ## Assumptions
 
 - Local review artifacts are written to a per-project reviews directory with
   parseable frontmatter, and the most recent same-scope artifact can be
-  identified from it.
+  identified from it **while it remains unconsumed**. Once received, it is
+  archived out of version control, which is why the tracked row exists.
 - Existing consumers of the review artifact tolerate an added frontmatter
-  field.
+  field, and the plan review row can gain a column without breaking the
+  preservation rule that forbids deleting existing rows.
 - Users who set the preference to `true` today intend narrowing and are
   unaffected by the default change.
 
@@ -271,8 +363,34 @@ item and was resolved to Option A during discovery.
   using the prompt as a per-review decision point.
   - **Likelihood:** Low
   - **Impact:** Low
-  - **Mitigation Ideas:** The explicit opt-out remains, the remote rail keeps
-    its per-invocation flags, and the resolved range is printed every time.
+  - **Mitigation Ideas:** The explicit opt-out remains, explicit scope tokens
+    still force a one-off full-scope review, the remote rail keeps its
+    per-invocation flags, and the resolved range is printed every time.
+
+- **Provenance sources disagree:** The artifact and the tracked row carry
+  different reviewed commits, for example after a manual artifact edit or a
+  partially applied receive.
+  - **Likelihood:** Low
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Treat disagreement as unresolvable and fall back to
+    full scope with a stated reason rather than preferring one source silently.
+
+- **Narrowed reviews accumulate into an unaudited coverage claim:** Successive
+  narrowed passes each verify a slice while the review ledger reads as though
+  full scope was verified each time.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** Require the narrowed artifact to name the prior
+    artifact and reviewed commit it builds on, so the chain is explicit and a
+    break in it is visible.
+
+- **Benefit is smaller than expected:** Narrowing reduces diff traversal but
+  not lifecycle artifact intake, and the ancestry guard fails open often in
+  rebase-heavy history.
+  - **Likelihood:** Medium
+  - **Impact:** Low
+  - **Mitigation Ideas:** Set the expectation in documentation rather than
+    over-promising. The remaining cost is a known, separately scoped problem.
 
 ## Next Steps
 
