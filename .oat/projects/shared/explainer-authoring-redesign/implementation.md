@@ -1,16 +1,16 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
-oat_last_updated: 2026-07-25
-oat_current_task_id: prev1-t01
+oat_last_updated: 2026-07-26
+oat_current_task_id: null
 oat_generated: false
 ---
 
 # Implementation: explainer-authoring-redesign
 
 **Started:** 2026-07-25
-**Last Updated:** 2026-07-25
+**Last Updated:** 2026-07-26
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -44,11 +44,19 @@ oat_generated: false
 | Phase 6: Pipeline integration, v1 retirement | complete | 4     | 4/4       |
 | Phase 7: End-to-end anti-regression fixture  | complete | 1     | 1/1       |
 | Phase 8: Documentation and release closure   | complete | 2     | 2/2       |
-| Phase rev1: Final review fixes               | pending  | 10    | 0/10      |
+| Phase rev1: Final review fixes               | complete | 10    | 10/10     |
 
-**Total:** 23/33 tasks completed. The 23 implementation tasks (20 planned +
-correctives p01-t02a, p05-t02a, p05-t02b) are complete; 10 review-fix tasks
-from the final review are pending.
+**Total:** 33/33 tasks completed. The 23 implementation tasks (20 planned +
+correctives p01-t02a, p05-t02a, p05-t02b) and all 10 review-fix tasks from the
+final review are complete.
+
+`oat project status` reports `Progress: 20/20`, which is consistent, not drift.
+The control-plane task parser counts only IDs matching `pNN-tNN` or
+`p-revN-tNN`, so it cannot see the three lettered correctives (`p01-t02a`,
+`p05-t02a`, `p05-t02b`) or this plan's `prev1-tNN` review-fix IDs, which predate
+the `p-revN` convention. All 20 IDs it can see are counted complete. Task
+statuses in this document use the template's `completed` vocabulary, which is
+what that parser matches; phase statuses use `complete`.
 
 ---
 
@@ -68,34 +76,34 @@ approval assertion was replaced by five stronger ones.
 
 ### Task p01-t01: Author contract v2 schemas (coexisting with v1)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `b1613d1c`
 
 ### Task p01-t02: Dual-version recipe loader and shape accessors
 
-**Status:** complete
+**Status:** completed
 **Commit:** `ea55d86c`
 
 ### Task p01-t03: Author briefs (prerequisite for v2 recipes)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `ea60381f`
 
 ### Task p01-t02a: Make p01-t02 survive the v2 cutover (corrective, inserted)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `97aebb08` (plan amendment: `4a321ad4`)
 
 Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ### Task p01-t04: Rewrite bundled recipes to v2
 
-**Status:** complete
+**Status:** completed
 **Commit:** `1b82714a`
 
 ### Task p01-t05: Approval record v2 with marking and resume compatibility
 
-**Status:** complete
+**Status:** completed
 **Commit:** `5ebd7049`
 
 ---
@@ -107,7 +115,7 @@ Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ### Task p02-t01: Lifecycle callers construct the author callback
 
-**Status:** complete
+**Status:** completed
 **Commit:** `3571b345`
 
 ---
@@ -119,17 +127,17 @@ Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ### Task p03-t01: Markdown parsing and AST safety validation
 
-**Status:** complete
+**Status:** completed
 **Commit:** `07f5be21`
 
 ### Task p03-t02: Themed block library and expansion path rule
 
-**Status:** complete
+**Status:** completed
 **Commit:** `0b01aa58`
 
 ### Task p03-t03: Diagram blocks rendered to inline SVG
 
-**Status:** complete
+**Status:** completed
 **Commit:** `ed612264`
 
 ---
@@ -141,7 +149,7 @@ Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ### Task p04-t01: DOM safety validator with hash-pinned shell scripts
 
-**Status:** complete
+**Status:** completed
 **Commit:** `6051f28c`
 
 D3 enforcement verified empirically at the root, not just by reading the code:
@@ -151,7 +159,7 @@ unmodified shell accepted, a mutated core script rejected
 
 ### Task p04-t02: Shell canvases
 
-**Status:** complete
+**Status:** completed
 **Commit:** `a5bd6a1b`
 
 ---
@@ -163,7 +171,7 @@ unmodified shell accepted, a mutated core script rejected
 
 ### Task p05-t01: Guideline checker with warning vocabulary
 
-**Status:** complete
+**Status:** completed
 **Commit:** `a75bcb32`
 
 Closes the coverage gap Phase 1 deliberately deferred. Verified empirically at
@@ -174,19 +182,19 @@ now both exist, so the guarantee moved rather than disappeared.
 
 ### Task p05-t02: Render QA probe battery
 
-**Status:** complete
+**Status:** completed
 **Commit:** `651aac80` (corrected by p05-t02a `c926b4fe`)
 
 ### Task p05-t02a: Viewport clipping exempts paged deck slides (corrective)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `c926b4fe` (plan amendment: `e45c0c6e`)
 
 See Deviations.
 
 ### Task p05-t02b: Animation probe accepts suppressed reduced motion (corrective)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `df237bf8` (plan amendment: `d6dec1c2`)
 
 Second false positive from the same p05-t02 probe battery, found when
@@ -208,22 +216,22 @@ one silent-failure risk and it is closed.
 
 ### Task p06-t01: Relocate the approval gate after render and QA
 
-**Status:** complete
+**Status:** completed
 **Commit:** `144051f2`
 
 ### Task p06-t02: Author stage wiring and QA severity split
 
-**Status:** complete
+**Status:** completed
 **Commit:** `fb787584`
 
 ### Task p06-t03: Marking surfacing through core and adapter results
 
-**Status:** complete
+**Status:** completed
 **Commit:** `b4cbd5c2`
 
 ### Task p06-t04: Retire recipe v1 and migrate all remaining consumers
 
-**Status:** complete
+**Status:** completed
 **Commit:** `781f8289`
 
 ---
@@ -241,7 +249,7 @@ complaint, so a vacuous fixture would have been worse than none.
 
 ### Task p07-t01: Recap anti-regression fixture
 
-**Status:** complete
+**Status:** completed
 **Commit:** `c3e25d31`
 
 ---
@@ -256,12 +264,12 @@ Suites: core 207, adapter 55, smoke 129, release 43 pass + 1 skip.
 
 ### Task p08-t01: Docs and skill guidance updates
 
-**Status:** complete
+**Status:** completed
 **Commit:** `d1a72286`
 
 ### Task p08-t02: Provider sync, version bumps, release validation (final task)
 
-**Status:** complete
+**Status:** completed
 **Commit:** `81fd68a5`
 
 Skills bumped (minor, each carrying a behavioral guidance change):
@@ -270,6 +278,182 @@ Skills bumped (minor, each carrying a behavioral guidance change):
 `explainer-kit` (2.0.0) and `oat-explainer-kit` (1.0.2) were bumped in p06-t04
 and deliberately not bumped again, preserving one bump per changed skill in the
 final PR diff. All five lockstep public packages went 0.2.17 -> 0.2.18.
+
+---
+
+## Phase rev1: Final review fixes
+
+**Status:** complete
+**Phase base:** `4f156766` → **head:** this commit (`prev1-t10`), the eleventh
+on top of the base
+**Started:** 2026-07-26
+**Completed:** 2026-07-26
+**Verification (every commit):** core, adapter, smoke, and `tools/release/*`
+suites plus `pnpm lint` and `pnpm type-check`; `pnpm release:validate`,
+`pnpm test:smoke`, and `pnpm test` additionally on the tasks touching
+`qa.mjs`, `html-safety.mjs`, or provenance. Narrow core+adapter verification is
+what let these ten findings escape, so all four suites gated every commit.
+Final counts: core 226, adapter 60, smoke 129, release 44 pass + 1 skip
+(RC-integration, env-gated).
+
+### Task prev1-t01: URL policy is a hard error again (I2)
+
+**Status:** completed
+**Commit:** `fada5be0`
+
+`<form>` left `ALLOWED_ELEMENTS` entirely — no bundled shell needs form
+controls — and submission attributes (`action`, `formaction`, `ping`) are now
+rejected unconditionally rather than only when they look external. Dangerous
+schemes (`javascript:`, `vbscript:`, `file:`, `data:text/html`,
+`data:image/svg+xml`) are rejected before the external-URL test that previously
+short-circuited them. Resource references generalized: every element that can
+pull in external content (including the SVG reference elements `animate`,
+`clipPath`, `feImage`, …) must resolve to an inline `data:` URI or a
+same-document fragment. `srcset` is parsed per candidate instead of as one URL.
+The policy now lives only in `html-safety.mjs`; `qa.mjs` imports
+`findUnpinnedResourceRefs` instead of keeping its own divergent regex.
+
+### Task prev1-t02: Harden the render QA probe battery (I4)
+
+**Status:** completed
+**Commit:** `5f202ee7`
+
+Treated as module hardening, not three point fixes. Each sub-fix was
+revert-verified in real Chromium — the new test was observed failing with the
+fix removed, then passing with it restored:
+
+- **Scroll reachability.** `p05-t02a` exempted every descendant of a
+  scrollable ancestor; reachability is now computed against the scroll extent.
+  Reverted: `viewport clipping distinguishes paged slides from unreachable
+content` fails (`actual: []`, `expected: ['#behind']`).
+- **Presented headings.** `checkVisibility()` (with a `getClientRects()`
+  fallback) plus an `aria-hidden` check separates deliberately hidden panels
+  from genuinely unreadable headings. Reverted: `heading readability separates
+hidden panels from unreadable headings` fails (`actual: ['#panel']`,
+  `expected: []`).
+- **Pseudo-element motion.** `::before`/`::after` are inspected for running
+  animations and transitions once they generate content. Reverted: `animation
+probe accepts suppressed motion and still reports perceptible motion` fails
+  (`a running pseudo-element keyframe animation reports: true !== false`).
+
+One new fixture expectation was corrected rather than the code: an absolutely
+positioned element at `left:900px` inside a `position:relative` scroller is
+genuinely reachable, because the browser extends `scrollWidth` to include it.
+The fixture drops `position:relative` so the element positions against the
+viewport and is actually unreachable.
+
+### Task prev1-t03: Render degradation warnings reach the manifest (I5)
+
+**Status:** completed
+**Commit:** `3a7da577`
+
+`rendered.warnings` had no consumer anywhere in `run.mjs`. Renderer codes now
+map to stable `render-*` IDs (`render-unsupported-diagram`,
+`render-heading-depth-jump`, `render-timeline-entry-shape`,
+`render-legacy-raw-html-escaped`) and flow into the run result, the render
+stage record, and the manifest. Resume audit trail preserved: `stage-reopened`
+markers from a prior run are merged with new degradation warnings instead of
+being overwritten, and they do not leak into the resumed run's warnings.
+
+### Task prev1-t04: One stable warning ID per browser finding (M1)
+
+**Status:** completed
+**Commit:** `154747f1`
+
+Browser findings already mapped to `render-qa-*` no longer also receive a
+generic `qa-*` prefix. Revert-verified at the manifest level with a
+`defectiveProbe` fixture: without the dedupe, `qa-viewport-overflow`,
+`qa-inner-x-overflow`, `qa-viewport-clipping`, `qa-heading-readability`,
+`qa-animations-enabled`, `qa-reduced-motion`, and `qa-keyboard-navigation` all
+appear alongside their `render-qa-` counterparts.
+
+### Task prev1-t05: Author provenance is caller-bound (I6)
+
+**Status:** completed
+**Commits:** `eea9ad80`, `f257f96d`
+
+The core now stamps `generatedAt` from the run clock always, verifies
+`authorId` and `method` against `options.authorProvenance` when a trusted
+context exists, rejects any author-supplied `trust`, and records
+`trust: caller-bound | self-asserted` on the retained provenance.
+`author-result.v2.schema.json` gains the optional `trust` enum, stamped by the
+core rather than the author. Smoke fixtures were migrated, not weakened: they
+now assert the `trust` field is present and that a backdated author
+`generatedAt` is overwritten by the core clock — a strictly stronger assertion
+than the previous hardcoded-timestamp equality. `f257f96d` is a lint-only
+follow-up renaming an intentionally unused destructured binding.
+
+### Task prev1-t06: Real headless runtime seam for render QA (I3)
+
+**Status:** completed
+**Commit:** `a3b776a3`
+
+`browserProbe` existed only as an injected option, so every normal run emitted
+the skip warning. Extracted the shared `browser-runtime.mjs` module (runtime
+resolution, page probing, keyboard/theme probes) that both `render-qa.mjs` and
+the release visual validator now use instead of duplicating it. Runs resolve a
+headless runtime automatically; a `--browser-probe-module` CLI flag and the
+adapter's `browserProbeModulePath` allow explicit injection, and an explicitly
+named module that fails to load is a hard `E_BROWSER_PROBE` error rather than a
+silent skip. `EXPLAINER_KIT_HEADLESS_PROBE=off` distinguishes a configured
+opt-out (`render-qa-disabled-by-configuration`) from a genuinely missing
+runtime (`render-qa-skipped-no-headless-runtime`), and keeps unit suites
+hermetic. Revert-verified: 7 failures across core and adapter without the
+change.
+
+### Task prev1-t07: Verify autonomous authoring richness (I1)
+
+**Status:** completed
+**Commit:** `fd75dacd`
+
+Resolved by the artifact-alignment route, not by shipping a content generator.
+The seam is correct as designed — the author callback is caller-owned and the
+"prose carries quality" premise makes the executing agent the author, so a
+bundled code-level driver would reintroduce exactly the rigidity this project
+removed. What was genuinely missing was the _outcome check_. Recorded as
+design decision **D9** and verified behaviorally: an author that derives its
+output purely from the `author-request/v2` brief, fact base, and required
+narrative produces tables, diagrams, lists, callouts, and timelines with no
+coverage or structured-depth warnings, and tracks different evidence rather
+than emitting a stock recap. The check is proven discriminating — a thin author
+run through the identical assertions fails them. `oat-project-complete/SKILL.md`
+now states the richness outcome the seam is judged on.
+
+### Task prev1-t08: Enforce per-type expansion caps (M2)
+
+**Status:** completed
+**Commit:** `4b160636`
+
+`expansion.limits.maxPerType` was declared but never enforced.
+`evaluateExpansionProposals` now tracks accepted counts per artifact type
+across profiles and emits `expansion-type-limit-exceeded`. Tests cover a cap
+binding across two profiles that share one artifact type, and confirm
+undeclared types stay unconstrained while per-profile caps still apply.
+
+### Task prev1-t09: Preserve Markdown lead, disambiguate section IDs (M3)
+
+**Status:** completed
+**Commit:** `a8f3c2c7`
+
+Prose between the document title and the first `##` heading is preserved as its
+own leading section (`overview`, then `introduction`, then `lead`), and
+duplicate subheadings get unique anchors (`outcome`, `outcome-2`) instead of
+colliding. Floor content models are validated against the recipe narrative
+contract with an `E_CONTENT_MODEL` error. Assertions read section IDs out of
+the rendered HTML, since the content model is never persisted as JSON.
+Revert-verified: 2 core failures without the change.
+
+### Task prev1-t10: Align lifecycle artifacts with shipped state (I7)
+
+**Status:** completed
+**Commit:** this commit (`docs(prev1-t10): align lifecycle artifacts with shipped state`)
+
+Artifact drift, not a code defect. `implementation.md` moved to
+`oat_status: complete` with `oat_current_task_id: null` (the contract's
+sentinel, not the literal `complete` it previously carried), true task counts
+(33/33), per-task rev1 outcomes, final suite counts, and a filled Final
+Summary. `state.md`'s body was brought in line with its frontmatter — it still
+read "Implementation in progress — Phase 1" and "0/20 tasks".
 
 ---
 
@@ -324,6 +508,35 @@ Chronological log of implementation progress.
   provenance record rather than relocate it.
 - Adjacent suites verified unaffected: `oat-explainer-kit` 52/52,
   `tools/release` 41 pass / 0 fail.
+
+**Blockers:**
+
+- None
+
+### 2026-07-26
+
+**Phase rev1 executed:** all ten final-review fix tasks, in the planned order —
+safety boundary first (`prev1-t01`), then probe correctness (`prev1-t02`)
+before the warning plumbing that depends on it (`prev1-t03`, `prev1-t04`), then
+provenance and the runtime seam, then the two Medium fixes, with artifact
+alignment (`prev1-t10`) last so it records true final state.
+
+- `4f156766` (phase base) → `fada5be0`, `5f202ee7`, `3a7da577`, `154747f1`,
+  `eea9ad80`, `f257f96d`, `a3b776a3`, `fd75dacd`, `4b160636`, `a8f3c2c7`, and
+  this commit.
+- `f257f96d` is an eleventh commit: a lint-only follow-up to `prev1-t05` for an
+  intentionally unused destructured binding in a smoke fixture. It is recorded
+  under `prev1-t05` rather than concealed or amended into it.
+- Verification discipline changed deliberately. All four suites plus
+  `pnpm lint` and `pnpm type-check` gated every commit, with
+  `pnpm release:validate`, `pnpm test:smoke`, and `pnpm test` additionally on
+  the tasks touching `qa.mjs`, `html-safety.mjs`, or provenance. Narrow
+  core+adapter verification is precisely what let all ten findings escape.
+- No assertion was weakened, loosened, or deleted to make a suite pass. Two
+  existing expectations were corrected as genuinely wrong and are recorded in
+  the deviations table with reasoning: the `prev1-t02` scroller fixture, and
+  the `prev1-t05` provenance assertions (migrated to a strictly stronger
+  core-clock-precedence check).
 
 **Blockers:**
 
@@ -409,61 +622,130 @@ After the fix tasks are complete:
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review        | Source Artifact                    | Planned / Documented                                                                                                | Actual / Accepted                                                               | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                             | Source of Truth                | Follow-up                                                                                              |
-| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
-| p00 (pre-phase)      | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites                                       | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`           | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`).                                                                                                                                                                                                                                                                  | `plan.md` (updated)            | None                                                                                                   |
-| p00 (pre-phase)      | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                                                                     | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1          | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.                                                                                                                                                                                                                                                                               | Commit `8c81513b`              | Consider upstreaming the fix to `main` independently                                                   |
-| p01-t02a             | `plan.md` Phase 1 task list        | Phase 1 had five tasks; p01-t04 was expected to stay green because "all readers went through the p01-t02 accessors" | Inserted a sixth, corrective task between p01-t03 and p01-t04                   | That premise was false in two places invisible while every bundled recipe was v1: `renderArtifact` takes an exact four-key descriptor (`render.mjs:339-355`) and rejects normalized v2 floor entries, and p01-t02's dual-shape test used a live bundled recipe as its v1 example, so the v1 loader branch would have lost all coverage at p01-t04. Both sit in p01-t02-owned files, so p01-t04 could not repair them inside its declared boundary. | Commits `4a321ad4`, `97aebb08` | None                                                                                                   |
-| p01-t04              | `plan.md` p01-t04 verification     | Suite stays green with no bundled-recipe test changes called out                                                    | Two v1-era tests in `recipes.test.mjs` updated deliberately                     | The loader test asserted `schemaVersion === v1`, and `project recap requires all six accountability sections` asserted a hard error that stops applying once the recipe is v2. The enforcement half was dropped and the test renamed to "declares"; the `requiredNarrative` assertion was kept. The v1 guarantee is still held by p01-t02a's synthetic fixture.                                                                                    | `plan.md` (updated)            | p05-t01 must supply the replacement coverage warning                                                   |
-| Parallel group setup | n/a — environment                  | Worktrees dispatched after verifying tests green                                                                    | All three phases aborted preflight on a dirty tree; restarted after remediation | `pnpm run worktree:init` runs a provider sync that restamps `.oat/sync/manifest.json` `oatVersion` from the committed `0.2.14` to the locally installed `0.2.17`. Dispatch was gated on tests passing but not on a clean tree. Reverted in all three; implementers given a narrow exemption for that one file. No work lost.                                                                                                                       | Base `b958bb86` unchanged      | Repo backlog candidate: `worktree:init` should not leave a fresh worktree dirty                        |
-| p02-t01              | AGENTS.md skill version-bump rule  | Bump `version:` for each changed canonical `SKILL.md`                                                               | No bump in this commit                                                          | The rule is PR-scoped, not edit-scoped. p02 touched `oat-explainer-kit` and `oat-project-complete`; the plan assigns those single bumps to p06-t04 and p08-t02 respectively, so bumping here would produce two bumps for one skill.                                                                                                                                                                                                                | `plan.md`                      | Verify both bumps actually land in p06-t04 / p08-t02                                                   |
-| p03-t02              | D1 origin propagation              | Renderer descriptors carry `origin`                                                                                 | Carried, but `run.mjs`'s `renderDescriptor()` still strips it                   | p03 widened `assertRecipeArtifact` to accept both the legacy four-key shape and the five-key `origin` form, avoiding a cross-boundary write into p06-owned `run.mjs`. The tolerance means a missed follow-through in p06-t02 would silently give expansion artifacts floor paths.                                                                                                                                                                  | Commit `5a85f31d` (plan note)  | p06-t02 must widen `renderDescriptor()` and assert the expansion path                                  |
-| p04-t01              | `plan.md` p04-t01 commit message   | Subject capitalized "DOM"                                                                                           | Lowercased to "dom"                                                             | Repo commitlint enforces subject-case and rejected the planned capitalization. Message-only; no code or boundary change.                                                                                                                                                                                                                                                                                                                           | Commit `6051f28c`              | None                                                                                                   |
-| p04-t02              | Shell identity marker placement    | Marker on the `<html>` element                                                                                      | Marker moved to `<body>` attributes                                             | The renderer matches the exact `<html lang="en">` opening when injecting theme mode; marking `<html>` would have required editing p03-owned `render.mjs` mid-parallel-group. `<body>` preserves compatibility with no cross-boundary write.                                                                                                                                                                                                        | Commit `a5bd6a1b`              | None                                                                                                   |
-| n/a — environment    | `pnpm lint`                        | Full lint green                                                                                                     | Type-aware lint pass fails repo-wide                                            | `oxlint-tsgolint` is not installed locally, so the `--type-aware` pass cannot run; the standard oxlint pass reports 0 errors in every package. Unrelated to this project — the whole merge touched only `.agents/` and `.oat/`, zero TypeScript.                                                                                                                                                                                                   | n/a                            | Must be resolved before p08-t02's `pnpm release:validate` or that gate fails for environmental reasons |
+| Task / Review        | Source Artifact                                             | Planned / Documented                                                                                                | Actual / Accepted                                                                     | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Source of Truth                   | Follow-up                                                                                                   |
+| -------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| p00 (pre-phase)      | `plan.md` verification commands                             | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites                                       | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`                 | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`).                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `plan.md` (updated)               | None                                                                                                        |
+| p00 (pre-phase)      | n/a — pre-existing main regression                          | Plan assumed a green core suite at every commit                                                                     | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1                | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Commit `8c81513b`                 | Consider upstreaming the fix to `main` independently                                                        |
+| p01-t02a             | `plan.md` Phase 1 task list                                 | Phase 1 had five tasks; p01-t04 was expected to stay green because "all readers went through the p01-t02 accessors" | Inserted a sixth, corrective task between p01-t03 and p01-t04                         | That premise was false in two places invisible while every bundled recipe was v1: `renderArtifact` takes an exact four-key descriptor (`render.mjs:339-355`) and rejects normalized v2 floor entries, and p01-t02's dual-shape test used a live bundled recipe as its v1 example, so the v1 loader branch would have lost all coverage at p01-t04. Both sit in p01-t02-owned files, so p01-t04 could not repair them inside its declared boundary.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Commits `4a321ad4`, `97aebb08`    | None                                                                                                        |
+| p01-t04              | `plan.md` p01-t04 verification                              | Suite stays green with no bundled-recipe test changes called out                                                    | Two v1-era tests in `recipes.test.mjs` updated deliberately                           | The loader test asserted `schemaVersion === v1`, and `project recap requires all six accountability sections` asserted a hard error that stops applying once the recipe is v2. The enforcement half was dropped and the test renamed to "declares"; the `requiredNarrative` assertion was kept. The v1 guarantee is still held by p01-t02a's synthetic fixture.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | `plan.md` (updated)               | p05-t01 must supply the replacement coverage warning                                                        |
+| Parallel group setup | n/a — environment                                           | Worktrees dispatched after verifying tests green                                                                    | All three phases aborted preflight on a dirty tree; restarted after remediation       | `pnpm run worktree:init` runs a provider sync that restamps `.oat/sync/manifest.json` `oatVersion` from the committed `0.2.14` to the locally installed `0.2.17`. Dispatch was gated on tests passing but not on a clean tree. Reverted in all three; implementers given a narrow exemption for that one file. No work lost.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           | Base `b958bb86` unchanged         | Repo backlog candidate: `worktree:init` should not leave a fresh worktree dirty                             |
+| p02-t01              | AGENTS.md skill version-bump rule                           | Bump `version:` for each changed canonical `SKILL.md`                                                               | No bump in this commit                                                                | The rule is PR-scoped, not edit-scoped. p02 touched `oat-explainer-kit` and `oat-project-complete`; the plan assigns those single bumps to p06-t04 and p08-t02 respectively, so bumping here would produce two bumps for one skill.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | `plan.md`                         | Verify both bumps actually land in p06-t04 / p08-t02                                                        |
+| p03-t02              | D1 origin propagation                                       | Renderer descriptors carry `origin`                                                                                 | Carried, but `run.mjs`'s `renderDescriptor()` still strips it                         | p03 widened `assertRecipeArtifact` to accept both the legacy four-key shape and the five-key `origin` form, avoiding a cross-boundary write into p06-owned `run.mjs`. The tolerance means a missed follow-through in p06-t02 would silently give expansion artifacts floor paths.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Commit `5a85f31d` (plan note)     | p06-t02 must widen `renderDescriptor()` and assert the expansion path                                       |
+| p04-t01              | `plan.md` p04-t01 commit message                            | Subject capitalized "DOM"                                                                                           | Lowercased to "dom"                                                                   | Repo commitlint enforces subject-case and rejected the planned capitalization. Message-only; no code or boundary change.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Commit `6051f28c`                 | None                                                                                                        |
+| p04-t02              | Shell identity marker placement                             | Marker on the `<html>` element                                                                                      | Marker moved to `<body>` attributes                                                   | The renderer matches the exact `<html lang="en">` opening when injecting theme mode; marking `<html>` would have required editing p03-owned `render.mjs` mid-parallel-group. `<body>` preserves compatibility with no cross-boundary write.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Commit `a5bd6a1b`                 | None                                                                                                        |
+| n/a — environment    | `pnpm lint`                                                 | Full lint green                                                                                                     | Type-aware lint pass fails repo-wide                                                  | `oxlint-tsgolint` is not installed locally, so the `--type-aware` pass cannot run; the standard oxlint pass reports 0 errors in every package. Unrelated to this project — the whole merge touched only `.agents/` and `.oat/`, zero TypeScript.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       | n/a                               | Must be resolved before p08-t02's `pnpm release:validate` or that gate fails for environmental reasons      |
+| p05-t02a             | `plan.md` Phase 5 task list                                 | Phase 5 had two tasks and reported green on core + adapter                                                          | Inserted a corrective task after Phase 6                                              | p05-t02 introduced viewport-clipping detection, which did not previously exist, and its first real-Chromium run failed the release visual gate on `profile-editorial-deck` at 320px in both the default and no-js scenarios. Bisected to `651aac80`: green at `b958bb86`, `97ef5349`, `origin/main`, and `a75bcb32` (p05-t01). The finding was a **false positive** — `.deck` is `display: flex; overflow-x: auto; scroll-snap-type: x mandatory`, so slides after the first sit off-viewport by design and stay reachable by scroll, keyboard, and snap. The probe read intentional horizontal paging as clipped content. Fixed by exempting elements inside a horizontally scrollable ancestor, pinned by a real-browser regression test that fails without the exemption. Neither Phase 5 nor my own phase verification ran `tools/release/*`, which is how it escaped both.                                                                                        | Commits `e45c0c6e`, `c926b4fe`    | The exemption was itself too broad and was re-hardened in `prev1-t02`                                       |
+| p05-t02b             | `plan.md` Phase 5 task list                                 | Phase 5 shipped a render QA probe battery assumed correct                                                           | Inserted a second corrective task during Phase 8                                      | `pnpm release:validate` ran for the first time in p08-t02 and failed the visual gate with six `animations-enabled` issues covering every `explainer`-type artifact. Reproduced identically at the untouched phase base `c3e25d31`, and absent at `origin/main` and `a75bcb32`, so it originates in `651aac80` (p05-t02) like p05-t02a. Also a false positive: `engineer-tour.html` carries the conventional `prefers-reduced-motion` idiom setting `transition-duration: 0.01ms !important` (byte-identical to `origin/main`), and a real-Chromium probe showed every element at `animationName: none` with no motion running. The probe demanded a duration of exactly `0`, so it read reduced-motion _compliance_ as a defect. Fixed by treating sub-millisecond durations as suppressed rather than active. Verified at the root that this does not blind the probe: 0.01ms reads disabled, while 200ms transitions, keyframe animations, and 1ms all still report. | Commits `d6dec1c2`, `df237bf8`    | The p05-t02 probe battery shipped two false positives; both were found only by gates outside core + adapter |
+| p08-t02              | n/a — stale CLI contract tests                              | Plan assumed `pnpm test` was green before the bumps                                                                 | Two pre-existing red tests repaired inside p08-t02                                    | `pnpm test` had never been run by any earlier phase, so two stale assertions went unnoticed: `skills.test.ts` still pinned `explainer-kit` at 1.0.2 and `oat-explainer-kit` at 1.0.1 (stale since p06-t04), and `review-skill-contracts.test.ts` asserted a critic-only sentence that p02-t01 had replaced. Verified at the root that the prose assertion was strengthened, not weakened: one `toContain` became four `toMatch` assertions covering author-seam construction, both callback forms, the retained `critic` callback, and `mode: unattended`.                                                                                                                                                                                                                                                                                                                                                                                                             | Commit `81fd68a5`                 | Adopted in Phase rev1: every commit gated on all four suites plus `pnpm test`                               |
+| p08-t01              | `plan.md` p08-t01 file list                                 | `apps/oat-docs/docs/` and `explainer-kit/SKILL.md`                                                                  | Also updated `explainer-kit/references/contracts.md` and two docs accuracy fixes      | `SKILL.md` delegates to `references/contracts.md`, which still described `AuthorRequestV1`/`AuthorResultV1`, an unattended-only author requirement, and a pipeline with no approval stage. Leaving it would have shipped a self-contradictory skill.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Commit `d1a72286`                 | Doc tasks should declare the full delegation closure, not just the entry document                           |
+| prev1-t07            | Review finding I1                                           | Review asked for a shipped code-level author driver implementing `author-request/v2`                                | Seam accepted as designed; verification added instead, recorded as design decision D9 | The design's "prose carries quality" premise makes the executing agent the author, so the author callback is deliberately caller-owned. A bundled generator would reintroduce the rigidity this project removed. The genuine gap was the absent outcome check, now covered by behavioral tests that prove an evidence-derived author yields structured richness and that a thin author fails the same assertions.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | `design.md` D9, commit `fd75dacd` | None                                                                                                        |
+| prev1-t02            | Review finding I4                                           | Three independent probe defects                                                                                     | Treated as one hardening pass over the probe battery                                  | Four defects across three discoveries in the same module, one of them a regression from a prior fix, indicated the module's classification logic rather than three isolated bugs. Each sub-fix was individually revert-verified in real Chromium.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      | Commit `5f202ee7`                 | None                                                                                                        |
+| prev1-t02            | `tools/release/validate-explainer-visuals.test.mjs` fixture | New fixture expected an element at `left:900px` inside a `position:relative` scroller to be unreachable             | Fixture corrected to drop `position:relative`                                         | The original expectation was wrong, not the code: with a positioned ancestor the browser extends `scrollWidth` to include the element, making it genuinely reachable. Without the positioned ancestor it resolves against the viewport and is truly unreachable, which is the case the test needs.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     | Commit `5f202ee7`                 | None                                                                                                        |
+| prev1-t05            | Smoke provenance fixtures                                   | Fixtures asserted an author-supplied `generatedAt` verbatim                                                         | Migrated to assert core-clock precedence plus the new `trust` field                   | Required by the new trust boundary, and strictly stronger: the fixtures now prove a backdated author claim is overwritten rather than merely echoed.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Commits `eea9ad80`, `f257f96d`    | None                                                                                                        |
+| prev1-t06            | Unit-suite hermeticity                                      | Render QA had no runtime to resolve, so suites were incidentally hermetic                                           | `EXPLAINER_KIT_HEADLESS_PROBE=off` set explicitly in the affected suites              | Once runs resolve a real headless runtime by default, unit suites would otherwise launch Chromium. The opt-out is reported as `render-qa-disabled-by-configuration`, distinct from a missing runtime, so the distinction stays visible in the manifest.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                | Commit `a3b776a3`                 | None                                                                                                        |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase        | Tests Run                      | Passed                                                     | Failed                                                                           | Coverage                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| ------------ | ------------------------------ | ---------------------------------------------------------- | -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ----------------------------------------------------------------------------------------------------------- |
-| 1            | 158                            | 158                                                        | 0                                                                                | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 2-4 (merged) | 242                            | 242                                                        | 0                                                                                | core 188 + adapter 54, on the merged trunk; core is exactly 158 + 18 (p03) + 12 (p04), so the merge was additive with no coverage lost                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| 5            | 247                            | 247                                                        | 0                                                                                | core 193 + adapter 54                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
-| 2            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 3            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 4            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 5            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 6            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 7            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| 8            | -                              | -                                                          | -                                                                                | -                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| p05-t02a     | `plan.md` Phase 5 task list    | Phase 5 had two tasks and reported green on core + adapter | Inserted a corrective task after Phase 6                                         | p05-t02 introduced viewport-clipping detection, which did not previously exist, and its first real-Chromium run failed the release visual gate on `profile-editorial-deck` at 320px in both the default and no-js scenarios. Bisected to `651aac80`: green at `b958bb86`, `97ef5349`, `origin/main`, and `a75bcb32` (p05-t01). The finding was a **false positive** — `.deck` is `display: flex; overflow-x: auto; scroll-snap-type: x mandatory`, so slides after the first sit off-viewport by design and stay reachable by scroll, keyboard, and snap. The probe read intentional horizontal paging as clipped content. Fixed by exempting elements inside a horizontally scrollable ancestor, pinned by a real-browser regression test that fails without the exemption. Neither Phase 5 nor my own phase verification ran `tools/release/*`, which is how it escaped both.                                                                                        | Commits `e45c0c6e`, `c926b4fe` |
-| p05-t02b     | `plan.md` Phase 5 task list    | Phase 5 shipped a render QA probe battery assumed correct  | Inserted a second corrective task during Phase 8                                 | `pnpm release:validate` ran for the first time in p08-t02 and failed the visual gate with six `animations-enabled` issues covering every `explainer`-type artifact. Reproduced identically at the untouched phase base `c3e25d31`, and absent at `origin/main` and `a75bcb32`, so it originates in `651aac80` (p05-t02) like p05-t02a. Also a false positive: `engineer-tour.html` carries the conventional `prefers-reduced-motion` idiom setting `transition-duration: 0.01ms !important` (byte-identical to `origin/main`), and a real-Chromium probe showed every element at `animationName: none` with no motion running. The probe demanded a duration of exactly `0`, so it read reduced-motion _compliance_ as a defect. Fixed by treating sub-millisecond durations as suppressed rather than active. Verified at the root that this does not blind the probe: 0.01ms reads disabled, while 200ms transitions, keyframe animations, and 1ms all still report. | Commits `d6dec1c2`, `df237bf8` | The p05-t02 probe battery shipped two false positives; both were found only by gates outside core + adapter |
-| p08-t02      | n/a — stale CLI contract tests | Plan assumed `pnpm test` was green before the bumps        | Two pre-existing red tests repaired inside p08-t02                               | `pnpm test` had never been run by any earlier phase, so two stale assertions went unnoticed: `skills.test.ts` still pinned `explainer-kit` at 1.0.2 and `oat-explainer-kit` at 1.0.1 (stale since p06-t04), and `review-skill-contracts.test.ts` asserted a critic-only sentence that p02-t01 had replaced. Verified at the root that the prose assertion was strengthened, not weakened: one `toContain` became four `toMatch` assertions covering author-seam construction, both callback forms, the retained `critic` callback, and `mode: unattended`.                                                                                                                                                                                                                                                                                                                                                                                                             | Commit `81fd68a5`              | Phase verification should include `pnpm test`, not only the four suites                                     |
-| p08-t01      | `plan.md` p08-t01 file list    | `apps/oat-docs/docs/` and `explainer-kit/SKILL.md`         | Also updated `explainer-kit/references/contracts.md` and two docs accuracy fixes | `SKILL.md` delegates to `references/contracts.md`, which still described `AuthorRequestV1`/`AuthorResultV1`, an unattended-only author requirement, and a pipeline with no approval stage. Leaving it would have shipped a self-contradictory skill.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Commit `d1a72286`              | Doc tasks should declare the full delegation closure, not just the entry document                           |
+| Phase        | Tests Run | Passed | Failed | Coverage                                                                                                                                                                                                                                                                                                                                                                     |
+| ------------ | --------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1            | 158       | 158    | 0      | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153                                                                                                                                                                                                                                                                                               |
+| 2-4 (merged) | 242       | 242    | 0      | core 188 + adapter 54, on the merged trunk; core is exactly 158 + 18 (p03) + 12 (p04), so the merge was additive with no coverage lost                                                                                                                                                                                                                                       |
+| 5            | 247       | 247    | 0      | core 193 + adapter 54                                                                                                                                                                                                                                                                                                                                                        |
+| 6            | 424       | 424    | 0      | core 199 + adapter 55 + smoke 129 + release 41                                                                                                                                                                                                                                                                                                                               |
+| 7            | 434       | 433    | 0      | core 207 + adapter 55 + smoke 129 + release 42 pass, 1 skip                                                                                                                                                                                                                                                                                                                  |
+| 8            | 435       | 434    | 0      | core 207 + adapter 55 + smoke 129 + release 43 pass, 1 skip; plus `pnpm release:validate`, `pnpm lint`, `pnpm type-check`, `pnpm test`                                                                                                                                                                                                                                       |
+| rev1         | 460       | 459    | 0      | core 226 + adapter 60 + smoke 129 + release 44 pass, 1 skip (RC-integration, env-gated); all four suites plus `pnpm lint` and `pnpm type-check` gated every one of the ten commits, with `pnpm release:validate`, `pnpm test:smoke`, and `pnpm test` additionally on the `qa.mjs` / `html-safety.mjs` / provenance tasks. Net new coverage: core +19, adapter +5, release +1 |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
+- An author seam (`author-request/v2` → `author-result/v2`) that hands the
+  brief, fact base, and required narrative to the calling agent and takes back
+  authored content, replacing the hardcoded recap templates that produced
+  uniformly thin output.
+- Recipes v2 with a floor/expansion split: a recipe declares the narrative
+  floor every artifact must cover, plus policy-owned expansion profiles with
+  per-profile and per-type caps, so callers can propose extra artifacts without
+  the recipe enumerating them.
+- Two rendering paths — a narrative renderer (Markdown, blocks, diagrams,
+  timelines) and an artistic composer path for agent-authored HTML — with a
+  hash-pinned safety validator gating the latter.
+- A guideline checker and a render QA stage that drives a real headless browser,
+  covering layout, reachability, heading readability, reduced-motion
+  compliance, keyboard operability, and theme toggling.
+- Approval relocated after render and QA, so a human approves what will
+  actually ship rather than an intermediate plan, with resume-compatible
+  approval records.
+- Recipe v1 retired at the 2.0.0 boundary, with all consumers and fixtures
+  migrated.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Recap and explainer output is authored per run from actual lifecycle
+  evidence, so two projects no longer produce near-identical prose.
+- Unsafe authored HTML is a hard error: `<form>` is not an allowed element, and
+  submission attributes, dangerous URL schemes, and unpinned external resource
+  references are rejected outright rather than warned about.
+- Render QA runs against a real browser by default. It reports
+  `render-qa-skipped-no-headless-runtime` only when no runtime exists, and
+  `render-qa-disabled-by-configuration` when `EXPLAINER_KIT_HEADLESS_PROBE=off`.
+- Every QA and render finding carries exactly one stable warning ID, and render
+  degradation warnings now reach the run result and the manifest instead of
+  being computed and dropped.
+- Author provenance records `trust: caller-bound | self-asserted`, and
+  `generatedAt` is always stamped by the core clock, so an author cannot
+  backdate or spoof its own identity.
+- Markdown lead prose (before the first `##`) is preserved as its own section,
+  and repeated headings get unique anchors rather than colliding.
+- Recipe v1 is no longer loadable; callers must supply v2.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `.agents/skills/explainer-kit/scripts/run.mjs` - pipeline orchestration:
+  fact base, author stage, render, QA, approval, provenance stamping
+- `.agents/skills/explainer-kit/scripts/lib/recipes.mjs` - recipe v2 loading,
+  narrative-floor validation, expansion evaluation and caps
+- `.agents/skills/explainer-kit/scripts/lib/qa.mjs` - guideline checks, browser
+  probe battery, stable warning-ID vocabulary
+- `.agents/skills/explainer-kit/scripts/lib/html-safety.mjs` - the single
+  source of authored-HTML policy: element allowlist, URL and resource rules
+- `.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs` - shared
+  headless runtime resolution and page probing, used by render QA and the
+  release visual validator
+- `.agents/skills/explainer-kit/scripts/render-qa.mjs` - render + QA stage entry
+- `.agents/skills/explainer-kit/schemas/author-{request,result}.v2.schema.json` -
+  the author contract
+- `.agents/skills/oat-explainer-kit/scripts/run.mjs` - OAT lifecycle adapter,
+  including the browser-probe module seam
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Four suites green at every commit: core 226, adapter 60, smoke 129, release
+  44 pass + 1 skip (RC-integration, env-gated).
+- `pnpm release:validate`, `pnpm lint`, `pnpm type-check`, and `pnpm test` all
+  pass; `release:validate` includes the real-Chromium visual gate.
+- Non-vacuity proven rather than assumed at three high-risk points: the p07
+  anti-regression fixture (6 of 8 tests fail with the table renderer
+  regressed), each of `prev1-t02`'s three probe sub-fixes (revert-verified
+  individually in real Chromium), and `prev1-t07`'s richness check (a thin
+  author fails the assertions a rich one passes).
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- **D9 added.** The author seam is caller-owned by design: the core ships no
+  content generator, because "prose carries quality" makes the executing agent
+  the author. What the design had left implicit was how autonomous richness
+  gets verified; D9 records the seam as intended and pins the outcome check.
+- **Origin propagation (D1)** is carried end to end, but
+  `assertRecipeArtifact` tolerates both the legacy four-key descriptor and the
+  five-key `origin` form, a widening taken to avoid a cross-boundary write
+  during the parallel group.
+- **Shell identity marker** sits on `<body>` rather than `<html>`, because the
+  renderer matches the exact `<html lang="en">` opening when injecting theme
+  mode.
 
 ## References
 

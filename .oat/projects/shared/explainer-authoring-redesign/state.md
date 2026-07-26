@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t01
-oat_last_commit: null
+oat_current_task: null
+oat_last_commit: a8f3c2c7
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p08'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p08'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -73,23 +73,34 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-25T17:10:10.185Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-26T16:30:00Z'
+oat_project_state_updated: '2026-07-26T18:00:00Z'
 oat_generated: false
 ---
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Implementation in progress — Phase 1
+**Status:** Implementation complete — all 8 phases plus Phase rev1 (final review
+fixes); awaiting re-review before PR
 **Started:** 2026-07-25
-**Last Updated:** 2026-07-25
+**Last Updated:** 2026-07-26
 
 ## Current Phase
 
-Implementation started at `p01-t01`. Tier 1 (subagents), dispatch policy `high`
-(managed capped, project state), resolved target
-`oat-phase-implementer-gpt-5-6-sol-high`. HiLL checkpoint is the final phase
-only (`p08`), resolved from `workflow.hillCheckpointDefault: final`; auto-review
-at that checkpoint is enabled. No external per-phase review gate is configured.
+Implementation is complete: 33/33 tasks (20 planned, 3 correctives, 10
+review-fix tasks). Phase rev1 closed the 7 Important and 3 Medium findings from
+the final code review at `4f156766`..`a8f3c2c7` plus the artifact-alignment
+commit. Tier 1 (subagents), dispatch policy `high` (managed capped, project
+state), resolved target `oat-phase-implementer-gpt-5-6-sol-high`. HiLL
+checkpoint is the final phase only (`p08`), resolved from
+`workflow.hillCheckpointDefault: final`; it is complete and auto-review at that
+checkpoint ran, producing the final review that Phase rev1 remediated. No
+external per-phase review gate is configured.
+
+**Gates at final state:** core 226, adapter 60, smoke 129, release 44 pass + 1
+skip (RC-integration, env-gated). `pnpm release:validate`, `pnpm lint`,
+`pnpm type-check`, and `pnpm test` all pass. All four suites gated every rev1
+commit, since narrow core+adapter verification is what let the ten findings
+escape.
 
 Plan phase closed as operator-accepted; `plan.md` frontmatter was aligned to
 `oat_status: complete` at implementation start, because ending the gate loop
@@ -112,18 +123,24 @@ by a passing gate** — a deliberate, recorded decision, not an oversight.
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** `design.md` (complete — includes resolved interface decisions D1–D8)
-- **Plan:** `plan.md` (complete — 20 tasks across 8 phases, operator-accepted)
-- **Implementation:** `implementation.md` (in progress — 0/20 tasks)
+- **Design:** `design.md` (complete — resolved interface decisions D1–D8, plus
+  D9 recording the caller-owned author seam)
+- **Plan:** `plan.md` (complete — 20 planned tasks across 8 phases,
+  operator-accepted, plus 3 correctives and Phase rev1's 10 review-fix tasks)
+- **Implementation:** `implementation.md` (complete — 33/33 tasks)
 
 ## Progress
 
 - ✓ Discovery complete (brainstorm-seeded, user-validated direction)
 - ✓ Execution artifacts scaffolded
 - ✓ Lightweight design complete, with D1–D8 resolving the interface questions
-  the plan reviews surfaced
+  the plan reviews surfaced, and D9 added during Phase rev1
 - ✓ Plan complete: 20 tasks, parallel group [p02, p03, p04], 6 review cycles
-- ⧗ Implementation in progress: Phase 1, 0/20 tasks complete
+- ✓ Implementation complete: Phases 1–8 (23 tasks including correctives
+  p01-t02a, p05-t02a, p05-t02b)
+- ✓ HiLL checkpoint `p08` complete; auto-review produced the final code review
+- ✓ Phase rev1 complete: all 10 findings fixed (7 Important, 3 Medium), none
+  deferred
 
 ## Blockers
 
@@ -131,5 +148,9 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 (contracts, briefs, recipes v2 — `p01-t01` … `p01-t05`), then
-run the parallel group [p02, p03, p04] in isolated worktrees.
+Re-review before PR: run `oat-project-review-provide code final`, then
+`oat-project-review-receive`, to move the final review event from
+`fixes_added` to `fixes_completed` and then `passed`. That review-status
+transition in `plan.md` is owned by the review-receive lifecycle, not by
+`prev1-t10`, whose declared boundary is `implementation.md` and `state.md`.
+After the review passes, run `oat-project-pr-final`.
