@@ -1,0 +1,171 @@
+---
+oat_status: complete
+oat_ready_for: null
+oat_blockers: []
+oat_last_updated: 2026-07-26
+oat_generated: true
+oat_summary_last_task: prev1-t10
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: ['rev1']
+---
+
+# Summary: explainer-authoring-redesign
+
+## Overview
+
+A prior Explainer Kit revision abstracted authoring into fixed slots, so every
+generated recap filled the same shapes and the output was structurally thin —
+the complaint that opened this project was that a shipped recap was "basic AF"
+despite the kit passing its own gates. The diagnosis was that editorial
+expectations had been encoded into machine contracts: the schema described
+shapes rather than quality, so an author satisfying it exactly still produced a
+formulaic page, and tightening the schema made it worse.
+
+This project rebuilt authoring on two per-artifact paths and moved quality
+expectations out of schemas and into prose.
+
+## What Was Implemented
+
+Eight phases, 20 planned tasks plus three correctives, then a 10-task revision
+phase and a final scope reduction. Shipped as PR #179: 68 commits, 98 files,
++13,758/−1,541.
+
+- **Two authoring paths.** A narrative path promotes Markdown from provenance to
+  actual renderer input, so tables, GFM-alert callouts, fenced timelines, and
+  fenced diagrams render as structure instead of flattening to prose. An
+  artistic path has the executing agent compose HTML from hash-pinned shells.
+  Recipe policy selects the path through expansion profiles; the author does not.
+- **`recipe/v2` beside v1** via a dual-version loader, with bundled recipes and
+  fixtures migrated and finite per-recipe and per-type expansion caps enforced.
+- **Guidelines degrade to warnings.** Floor-coverage misses emit
+  `guideline-narrative-coverage-missing` rather than failing the run, while
+  safety and provenance stay hard errors.
+- **Approval moved after render and QA**, with the accepted artifact set
+  persisted in `content-approval/v2` so a rejected draft resumes faithfully.
+- **Provenance trust boundary.** Author identity and method bind through trusted
+  caller configuration; the core stamps time from its injected clock and rejects
+  author-asserted trust levels.
+- **Render QA is opt-in** and never self-launching.
+- **End-to-end anti-regression fixture** built on the shipped `project-recap`
+  example, verified non-vacuous — breaking the table renderer fails 6 of 8
+  assertions.
+
+Final gates: core 221, adapter 59, release 44 (1 env-gated skip), smoke 129,
+plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
+
+## Key Decisions
+
+- **Explainer authoring is two-path with a caller-owned author seam.** Editorial
+  expectations live in author briefs as prose while schemas define only machine
+  boundaries — prose carries quality, schemas carry identity. No content
+  generator ships in the core or adapter; the executing agent is the author.
+  Promoted to `DR-260726-explainer-authoring-is-two`.
+- **Explainer render QA is opt-in and never self-launching.** The core never
+  launches a browser; the generating agent reviews output in a browser when one
+  is available. Promoted to `DR-260726-explainer-render-qa-is-opt`.
+- **Policy owns expansion, not authors.** Recipes declare profiles that dictate
+  type, authoring path, brief, and shell, preventing authors from choosing their
+  own freedom level. Promoted to `DR-260726-recipe-policy-owns-expansion`.
+- **Expansion artifacts get ID-bearing paths; floor artifacts keep existing
+  ones** (D1), with `origin` carried explicitly so URL stability holds for
+  already-published artifacts. Promoted to
+  `DR-260726-expansion-artifacts-get-id`.
+- **Core shell scripts are hash-pinned and authored scripts are rejected** (D3),
+  validated as an ordered multiset. Promoted to
+  `DR-260726-core-shell-scripts-are-hash`.
+
+## Design Deltas
+
+- **D9 added during the revision phase.** The final review observed that
+  `author-request/v2` appeared only in tests and documentation, so autonomous
+  richness was unproven. Rather than ship a content generator, the project
+  recorded the author seam as deliberately caller-owned and verified richness
+  behaviorally. The underlying limitation is accepted, not closed: whether an
+  agent writes well is not unit-testable.
+- **Automated render QA was removed after implementation.** `prev1-t06` built an
+  auto-resolving browser runtime; a later scope review cut it. The shared
+  `browser-runtime.mjs` module was retained because the pre-existing visual
+  release gate had come to depend on it.
+- **Manifest warning vocabulary changed.** `render-qa-skipped-no-headless-runtime`
+  and `render-qa-disabled-by-configuration` collapsed into
+  `render-qa-skipped-no-probe`, carried by the `explainer-kit` 2.0.0 major.
+
+## Notable Challenges
+
+- **A pre-existing regression blocked the start.** 11 core tests were already
+  failing on `origin/main`, bisected to PR #170: one test referenced a project
+  directory that PR had deleted, and ten had fixtures stale against a new
+  immutable-coverage validation. Repaired as a `p00` pre-phase to establish a
+  green baseline before redesign work began.
+- **Probe false positives blocked two later phases.** The layout probe reported
+  intentionally paged deck slides as clipped, and read the conventional
+  reduced-motion idiom (`0.01ms`) as active animation. Both required correctives
+  (`p05-t02a`, `p05-t02b`) because they blocked `release:validate`.
+- **Parallel phases aborted three times at preflight** because
+  `pnpm run worktree:init` restamped `.oat/sync/manifest.json` outside the
+  declared write sets. Resolved by reverting the file and re-dispatching with an
+  explicit exemption.
+- **The review loop did not converge.** The plan needed six gate cycles before
+  implementation; the final code review produced 10 findings, and a re-review of
+  those 11 fix commits produced 8 more. The loop was ended deliberately rather
+  than continued.
+
+## Tradeoffs Made
+
+- **Richness is verified by example, not by test.** The alternative — a bundled
+  content generator — would recreate the slot-filling rigidity the project
+  existed to remove. A caller supplying a thin author still gets thin output.
+- **Layout regressions rely on the release gate and agent review** rather than
+  per-run automation, so a layout defect can reach a reader if nobody looks.
+  Accepted because render QA had grown to own a browser dependency and a
+  disproportionate share of the test surface for artifacts published to a
+  private bucket.
+- **Four review findings were dropped rather than fixed or backlogged.** Two
+  HTML-safety gaps (`input[type=image]` with a remote `src`, and relative CSS
+  `url()`) are real but unreachable while artifacts are composed from
+  hash-pinned shells; an anchor collision requires an author to use `overview`,
+  `introduction`, and `lead` simultaneously; and one warning is already re-added
+  by the pipeline.
+
+## Revision History
+
+- **Phase rev1** — the final code review's 10 findings implemented across 11
+  commits: HTML safety, three distinct probe defects (scroll reachability,
+  hidden headings, pseudo-element motion), render degradation warnings reaching
+  the manifest, a single stable warning ID per finding, the provenance trust
+  boundary, the QA runtime seam, D9, per-type expansion caps, Markdown lead
+  preservation with deterministic ID disambiguation, and artifact alignment.
+  Each probe sub-fix was individually revert-verified in real Chromium.
+- **Post-revision scope reduction** — three commits making render QA opt-in,
+  clearing stale render/QA warnings on a corrected resume, and correcting the
+  `f257f96d` deviation description. Core and adapter counts fell from 226 and 60
+  to 221 and 59 as six tests were removed with the behavior they described.
+
+## Follow-up Items
+
+Recorded for memory, explicitly not backlogged — the operator decided these do
+not warrant tracked work:
+
+- `isUnsafeUrl` accepts `<input type="image" src="https://…">` and relative CSS
+  `url(...)` references. Verified reproducible. Matters only if artifact HTML
+  ever stops coming from an agent working off hash-pinned shells.
+- A generated lead section can take `#lead` from an authored heading when
+  `overview`, `introduction`, and `lead` are all already used.
+- `checkGuidelines` omits the per-type expansion warning that the main pipeline
+  appends separately, so direct consumers of that exported function lose it.
+- Autonomous prose richness remains verified by rendered example rather than by
+  automated evaluation.
+
+## Workflow Observations
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:5,medium:3,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/explainer-authoring-redesign/reviews/artifact-plan-review-2026-07-25T183814Z.md
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:5,medium:3,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/explainer-authoring-redesign/reviews/artifact-plan-review-2026-07-25T190445Z.md
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:4,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/explainer-authoring-redesign/reviews/artifact-plan-review-2026-07-25T191042Z.md
