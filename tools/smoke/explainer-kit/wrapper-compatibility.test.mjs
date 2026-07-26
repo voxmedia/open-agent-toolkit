@@ -1,3 +1,8 @@
+// These suites assert pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
+
 import assert from 'node:assert/strict';
 import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -135,7 +140,9 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   assert.equal(syncGoogleDoc.mock.callCount(), 1);
   assert.equal(publishManifest.mock.callCount(), 1);
   assert.deepEqual(
-    wrapped.authorProvenance.map(({ generatedAt, ...identity }) => identity),
+    wrapped.authorProvenance.map(
+      ({ generatedAt: _generatedAt, ...identity }) => identity,
+    ),
     [
       {
         authorId: 'private-wrapper-provider-neutral-author',
