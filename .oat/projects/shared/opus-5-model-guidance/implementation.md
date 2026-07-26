@@ -225,7 +225,45 @@ of being folded silently into a completed one.
 
 ## Final Summary
 
-To be completed after implementation and validation.
+Claude Opus 5 is now the hard-reasoning and consequential incumbent in the
+canonical `subagent-orchestration` guidance, and Opus 4.8 is repositioned as
+the cyber-sensitive route on the strength of its predictable refusal behavior.
+The task-class ladder and the Opus-first policy are unchanged; only the
+incumbent and its supporting metadata moved.
+
+Six Cursor pin mappings shipped: five `claude-opus-5` effort rungs plus
+`claude-opus-4-8[effort=xhigh]`, the last catalogued but deliberately withheld
+from the bundled recommendation. Recommendation `2026-07-25.1` places Opus 5
+across the Cursor `balanced`, `high`, and `frontier` tiers and drops
+`claude-sonnet-5-high` from `economy`, where CursorBench showed Opus 5 low
+strictly dominating it on score, cost, tokens, and steps.
+
+The pins were the hard part, and they were not in the original plan. Phases 4
+through 6 deferred all Cursor pin work because no selector had been verified
+and the project's own decision record forbids shipping a mapping on structural
+validation or agent self-report. Phase 7 was added after a live probe supplied
+the missing evidence, read from Cursor's `subagentStart` lifecycle hooks. The
+first probe attempt failed and is worth recording: it ran through the headless
+`cursor-agent` runtime, which emits no agent hooks at all, so every row came
+back not-reported.
+
+Two findings came out of the probe that outlast this project. Cursor does not
+reject a malformed pin — it silently substitutes a default for any selector
+component it cannot resolve, and the default rung is family-specific rather
+than always `high`, so a typo ships a working-but-wrong model that tracks a
+vendor-controlled default. And a probe whose requested rung happens to equal
+the family default cannot distinguish an honored effort parameter from an
+ignored one, which means the `high` row here is sound only by inference across
+its non-default neighbors. Both are now documented, the first is tracked as
+`BL-260726-validate-cursor-pin-effort`, and mappings can carry a probe record
+that fails its own test if the selector is edited without re-probing.
+
+The final review passed with zero findings after four rounds. Every blocking
+finding across those rounds was in the guidance and provenance layer rather
+than the implementation; the mappings and generated roles reviewed clean from
+the first round. The recurring defect was a stale cross-reference — changing
+one file and leaving a now-false statement in another — which is worth
+watching for in any future refresh that spans this many artifacts.
 
 ## References
 

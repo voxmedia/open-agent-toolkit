@@ -264,23 +264,23 @@ Promote only probe-passing selectors.
 
 ## Reviews
 
-| Scope         | Type     | Status   | Date       | Artifact                                            |
-| ------------- | -------- | -------- | ---------- | --------------------------------------------------- |
-| p04           | code     | passed   | 2026-07-25 | takeover review against the accepted packet         |
-| p05           | code     | pending  | -          | -                                                   |
-| p06           | code     | pending  | -          | -                                                   |
-| p07           | code     | pending  | -          | operator-run manual review                          |
-| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T211041Z.md          |
-| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212319Z.md          |
-| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T212332Z.md          |
-| final         | code     | received | 2026-07-25 | reviews/final-review-2026-07-25T214740Z.md          |
-| plan          | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault) |
-| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md  |
-| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md  |
-| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T040908Z.md          |
-| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T165653Z.md          |
-| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T172447Z.md          |
-| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T173526Z.md          |
+| Scope         | Type     | Status   | Date       | Artifact                                                    |
+| ------------- | -------- | -------- | ---------- | ----------------------------------------------------------- |
+| p04           | code     | passed   | 2026-07-25 | takeover review against the accepted packet                 |
+| p05           | code     | pending  | -          | -                                                           |
+| p06           | code     | pending  | -          | -                                                           |
+| p07           | code     | pending  | -          | operator-run manual review                                  |
+| final         | code     | received | 2026-07-25 | reviews/archived/final-review-2026-07-25T211041Z.md         |
+| final         | code     | received | 2026-07-25 | reviews/archived/final-review-2026-07-25T212319Z.md         |
+| final         | code     | received | 2026-07-25 | reviews/archived/final-review-2026-07-25T212332Z.md         |
+| final         | code     | received | 2026-07-25 | reviews/archived/final-review-2026-07-25T214740Z.md         |
+| plan          | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault)         |
+| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/archived/artifact-plan-review-2026-07-25T004651Z.md |
+| pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/archived/artifact-plan-review-2026-07-25T005730Z.md |
+| final         | code     | received | 2026-07-26 | reviews/archived/final-review-2026-07-26T040908Z.md         |
+| final         | code     | received | 2026-07-26 | reviews/archived/final-review-2026-07-26T165653Z.md         |
+| final         | code     | received | 2026-07-26 | reviews/archived/final-review-2026-07-26T172447Z.md         |
+| final         | code     | passed   | 2026-07-26 | reviews/archived/final-review-2026-07-26T173526Z.md         |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.

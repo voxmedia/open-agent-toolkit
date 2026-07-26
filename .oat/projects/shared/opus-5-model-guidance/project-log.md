@@ -42,43 +42,43 @@ Entries are chronological and append-only.
 
 ### 2026-07-25 · structural · oat gate review · plan
 
-target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/artifact-plan-review-2026-07-25T004651Z.md
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T004651Z.md
 
 ### 2026-07-25 · structural · oat gate review · plan
 
-target=cursor-gpt-5-6-sol-max threshold=important findings=critical:1,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/artifact-plan-review-2026-07-25T005730Z.md
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:1,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T005730Z.md
 
 ### 2026-07-25 · structural · oat gate review · final
 
-target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-25T211041Z.md
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T211041Z.md
 
 ### 2026-07-25 · structural · oat gate review · final
 
-target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-25T212332Z.md
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212332Z.md
 
 ### 2026-07-25 · structural · oat gate review · final
 
-target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-25T212319Z.md
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212319Z.md
 
 ### 2026-07-26 · structural · oat-project-review-provide · final
 
-Delegated reconnaissance completed and was reconciled by the primary reviewer; artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T040908Z.md
+Delegated reconnaissance completed and was reconciled by the primary reviewer; artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T040908Z.md
 
-### 2026-07-26 · structural · oat-project-review-provide · reviews/final-review-2026-07-26T165653Z.md
+### 2026-07-26 · structural · oat-project-review-provide · reviews/archived/final-review-2026-07-26T165653Z.md
 
-Completed gate-originated final code review with bounded reconnaissance; see reviews/final-review-2026-07-26T165653Z.md.
-
-### 2026-07-26 · structural · oat gate review · final
-
-target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T165653Z.md
+Completed gate-originated final code review with bounded reconnaissance; see reviews/archived/final-review-2026-07-26T165653Z.md.
 
 ### 2026-07-26 · structural · oat gate review · final
 
-target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T172447Z.md
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T165653Z.md
 
 ### 2026-07-26 · structural · oat gate review · final
 
-target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T173526Z.md
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T172447Z.md
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T173526Z.md
 
 ## End-of-run synthesis (pending — do not skip at project completion)
 
