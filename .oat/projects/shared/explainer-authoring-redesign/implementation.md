@@ -45,7 +45,7 @@ oat_generated: false
 | Phase 7: End-to-end anti-regression fixture  | pending  | 1     | 0/1       |
 | Phase 8: Documentation and release closure   | pending  | 2     | 0/2       |
 
-**Total:** 12/21 tasks completed (21 = 20 planned + corrective p01-t02a)
+**Total:** 14/21 tasks completed (21 = 20 planned + corrective p01-t02a)
 
 ---
 
@@ -155,18 +155,24 @@ unmodified shell accepted, a mutated core script rejected
 
 ## Phase 5: Guideline checker and render QA
 
-**Status:** pending
+**Status:** complete
 **Started:** -
 
 ### Task p05-t01: Guideline checker with warning vocabulary
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `a75bcb32`
+
+Closes the coverage gap Phase 1 deliberately deferred. Verified empirically at
+the root against the real v2 `project-recap`: full section coverage emits no
+coverage warning, and dropping a required section emits
+`guideline-narrative-coverage-missing`. The v1 hard error and the v2 warning
+now both exist, so the guarantee moved rather than disappeared.
 
 ### Task p05-t02: Render QA probe battery
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `651aac80`
 
 ---
 
@@ -309,6 +315,7 @@ Track test execution during implementation.
 | ------------ | --------- | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | 1            | 158       | 158    | 0      | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153                                                         |
 | 2-4 (merged) | 242       | 242    | 0      | core 188 + adapter 54, on the merged trunk; core is exactly 158 + 18 (p03) + 12 (p04), so the merge was additive with no coverage lost |
+| 5            | 247       | 247    | 0      | core 193 + adapter 54                                                                                                                  |
 | 2            | -         | -      | -      | -                                                                                                                                      |
 | 3            | -         | -      | -      | -                                                                                                                                      |
 | 4            | -         | -      | -      | -                                                                                                                                      |
