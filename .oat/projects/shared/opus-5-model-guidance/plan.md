@@ -280,6 +280,7 @@ Promote only probe-passing selectors.
 | final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T040908Z.md          |
 | final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T165653Z.md          |
 | final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T172447Z.md          |
+| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T173526Z.md          |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
