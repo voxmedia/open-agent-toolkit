@@ -1202,6 +1202,7 @@ commit so no intermediate state is self-rejecting. p07 (e2e fixture) and p08
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md |
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md |
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md |
+| final | code     | received        | 2026-07-26 | reviews/final-review-2026-07-26T155422Z.md         |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
