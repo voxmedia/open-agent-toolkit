@@ -22,5 +22,18 @@ Cursor silently substitutes a default when it cannot resolve a pin component. An
 
 ## Acceptance Criteria
 
-- {Outcome 1}
-- {Outcome 2}
+- Catalog validation parses each `frontmatterModel` into its family and effort
+  components and checks both against the known Cursor rung set.
+- An unknown family or an effort value outside that family's rungs fails
+  loudly — a hard error during catalog validation, and a clear message naming
+  the offending selector and the valid rungs for that family.
+- Validation is family-aware rather than assuming a shared rung set, since
+  rungs differ by family and the default rung is not uniformly `high`
+  (Opus 4.7 defaults to `xhigh`, Opus 5 to `high`).
+- Regression tests cover a valid selector, an unknown family, an unknown
+  effort, and a selector whose requested rung equals its family default — the
+  last because a default-rung result cannot by itself prove the effort
+  parameter was honored.
+- A pin whose recorded probe evidence does not match its current selector is
+  rejected, so editing a mapping without re-probing cannot inherit a stale
+  approval.

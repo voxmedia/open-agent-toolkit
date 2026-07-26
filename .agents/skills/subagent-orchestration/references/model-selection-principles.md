@@ -130,15 +130,22 @@ version.
 
 Required in any speed claim:
 
-- time to first token or first useful action;
+- time to first token;
 - active agent runtime;
 - total user-observed elapsed time;
 - output tokens;
 - steps, turns, or tool calls;
 - completion rate and variance.
 
+Time to first token is required, not substitutable. Where a harness cannot
+expose it, record it explicitly as not-reported rather than silently omitting
+it or supplying a different measure in its place; an absent measure and an
+unmeasurable one are different claims.
+
 Record additionally when available:
 
+- first useful action, which is a complement to time to first token and never
+  a replacement for it;
 - output rate;
 - input and cached-input tokens;
 - retries, recoveries, refusals, and operator interventions;

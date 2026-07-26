@@ -68,6 +68,10 @@ Delegated reconnaissance completed and was reconciled by the primary reviewer; a
 
 Completed gate-originated final code review with bounded reconnaissance; see reviews/final-review-2026-07-26T165653Z.md.
 
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T165653Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

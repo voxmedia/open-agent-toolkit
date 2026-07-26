@@ -291,21 +291,35 @@ were remediated in that retired plan before it was superseded. They are
 recorded as provenance and must not be read as approvals of the current
 `p04`-`p06` scope.
 
-The four `final` rows all predate Phase 7. The last of them passed with zero
+Six `final` rows exist and they divide into two groups.
+
+The four dated 2026-07-25 all predate Phase 7. The last of them passed with zero
 findings, but it reviewed the project as guidance and packaging only and
 explicitly recorded that Cursor pin work remained deferred. None of them covers
-the pins added in `p07`, which are reviewed separately by the operator.
+the pins added in `p07`.
+
+Those four did not run on a uniform target. The first three ran cross-family on
+`gpt-5.6-sol-max`; the fourth (`...T214740Z`) ran on `gpt-5.6-sol-xhigh`,
+because the `cursor-gpt-5-6-sol-max` exec target was removed from user-scope
+config mid-cycle. Both are frontier-tier Sol rungs, so cross-family
+independence held. Of these, the first raised two Important findings, both
+fixed in `bdf3c6c5`; the second raised two further Important findings against
+those fixes, both fixed in the closeout commit.
+
+The two dated 2026-07-26 review Phase 7 and ran on `gpt-5.6-sol-xhigh`. The
+first (`...T040908Z`) returned three Important and three Medium findings: an
+unconditional-xhigh contradiction in the Cursor consequential row, a stale
+Cursor deferral claim, an unresolvable evidence locator, a divergent speed
+contract, a probe manifest that was not self-contained, and identity fields in
+the committed probe payloads. All six were fixed in `d45de6ba`. The second
+(`...T165653Z`) confirmed those fixes and raised one Important finding — this
+note's own stale provenance — plus two Medium contract gaps.
 
 The `p04` takeover review checked the guidance changes against the accepted
-vault packet during session takeover. All nine content gates and the deferral
-gate passed. Four evidence-specificity gaps were found and corrected; the
-underlying conclusions were already correct. The 113 focused skill tests were
-independently rerun and passed.
-
-The three `final` reviews ran cross-family on `gpt-5.6-sol-max`. The first
-raised two Important findings, both fixed in `bdf3c6c5`. The second raised two
-further Important findings against those fixes, both fixed in the closeout
-commit.
+research packet during session takeover. All nine content gates and the
+deferral gate passed. Four evidence-specificity gaps were found and corrected;
+the underlying conclusions were already correct. The 113 focused skill tests
+were independently rerun and passed.
 
 ## References
 
