@@ -1611,6 +1611,7 @@ git commit -m "docs(prev1-t10): align lifecycle artifacts with shipped state"
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md  |
 | plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md  |
 | final | code     | fixes_added     | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md |
+| final | code     | fixes_completed | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -1622,6 +1623,23 @@ judging the remaining class of finding to be design-detail refinement better
 resolved against real code than through further max-effort gate cycles. The
 plan is therefore operator-accepted, not gate-passed; implementation proceeds
 on that recorded decision.
+
+**Final review acceptance basis:** the final code review's ten findings were all
+implemented in Phase rev1, recorded above as `fixes_completed`. A re-review of
+those eleven fix commits (structured output, no file artifact) verified six
+findings resolved and returned `block` on eight new ones. The operator triaged
+them against a single question — does this affect whether the kit produces good
+explainers. Two were fixed: stale render/QA warnings surviving a corrected
+resume, and an artifact that misdescribed commit `f257f96d`. Two dissolved when
+automatic render QA was cut, since the unshipped browser driver and the
+unrestricted probe-module import existed only to serve it. Four were dropped
+rather than backlogged: two HTML-safety gaps unreachable while artifacts are
+composed from hash-pinned shells, an anchor collision requiring an author to use
+`overview`, `introduction`, and `lead` at once, a warning the pipeline already
+re-adds, and the objection that autonomous prose richness is unproven by unit
+test — which it cannot be, and which the rendered example answers instead. The
+final review is therefore operator-accepted at `fixes_completed`, not
+gate-passed, and the review loop was deliberately ended rather than continued.
 
 ## Implementation Complete
 
