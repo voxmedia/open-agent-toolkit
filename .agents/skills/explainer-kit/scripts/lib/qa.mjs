@@ -1,3 +1,5 @@
+import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
+
 const VOID_ELEMENTS = new Set([
   'area',
   'base',
@@ -20,8 +22,82 @@ const INLINE_ASSET_VIOLATION_PATTERN =
   /<link\b|@import\b|url\(\s*["']?(?!data:|#)/i;
 const TOKEN_PATTERN = /{{\s*[A-Z][A-Z0-9_]*\s*}}/g;
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+const INLINE_DIAGRAM_PATTERN =
+  /<svg\b(?=[^>]*(?:\bclass\s*=\s*["'][^"']*\bdiagram\b|\baria-label\s*=\s*["'][^"']*(?:architecture|diagram)))[^>]*>/i;
+const STRUCTURED_BLOCK_PATTERNS = [
+  /<table\b/i,
+  /<(?:ul|ol)\b/i,
+  /<aside\b[^>]*\bclass\s*=\s*["'][^"']*\bcallout\b/i,
+  /<blockquote\b/i,
+  /<figure\b/i,
+];
 
 export const REPRESENTATIVE_WIDTHS = Object.freeze([320, 768, 1440]);
+export const GUIDELINE_WARNING_IDS = Object.freeze({
+  narrativeCoverage: 'guideline-narrative-coverage-missing',
+  architectureDiagram: 'guideline-architecture-diagram-missing',
+  structuredDepth: 'guideline-structured-depth-missing',
+  expansionProfileLimit: 'expansion-profile-limit-exceeded',
+  expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
+});
+
+export function checkGuidelines({ recipe, artifacts, expansion } = {}) {
+  if (!Array.isArray(artifacts)) {
+    throw new TypeError('Guideline checker artifacts must be an array.');
+  }
+  if (
+    artifacts.some(
+      (artifact) =>
+        !isPlainObject(artifact) ||
+        typeof artifactId(artifact) !== 'string' ||
+        typeof artifact.type !== 'string' ||
+        typeof artifact.html !== 'string',
+    )
+  ) {
+    throw new TypeError(
+      'Guideline checker artifacts require id, type, and HTML.',
+    );
+  }
+
+  const floor = recipeFloor(recipe);
+  const builtById = new Map(
+    artifacts.map((artifact) => [artifactId(artifact), artifact]),
+  );
+  const narrativeFloor = floor.filter(
+    (artifact) => recipeRequiredNarrative(recipe, artifact.id).length > 0,
+  );
+  const warnings = new Set();
+
+  const missesNarrative = narrativeFloor.some((floorArtifact) => {
+    const built = builtById.get(floorArtifact.id);
+    const required = recipeRequiredNarrative(recipe, floorArtifact.id);
+    return (
+      !built ||
+      required.some((sectionId) => !hasElementId(built.html, sectionId))
+    );
+  });
+  if (missesNarrative) {
+    warnings.add(GUIDELINE_WARNING_IDS.narrativeCoverage);
+  }
+
+  const hasDiagram =
+    artifacts.some(({ type }) => type === 'diagram') ||
+    artifacts.some(({ html }) => INLINE_DIAGRAM_PATTERN.test(html));
+  if (!hasDiagram) {
+    warnings.add(GUIDELINE_WARNING_IDS.architectureDiagram);
+  }
+
+  const hasStructuredDepth = narrativeFloor.some((floorArtifact) => {
+    const html = builtById.get(floorArtifact.id)?.html ?? '';
+    return STRUCTURED_BLOCK_PATTERNS.some((pattern) => pattern.test(html));
+  });
+  if (narrativeFloor.length > 0 && !hasStructuredDepth) {
+    warnings.add(GUIDELINE_WARNING_IDS.structuredDepth);
+  }
+
+  addExpansionWarnings(warnings, expansion);
+  return { valid: true, warnings: [...warnings] };
+}
 
 export function checkSourceDumping({
   authoredText,
@@ -561,6 +637,50 @@ function representativeHeight(width) {
   if (width <= 480) return 640;
   if (width <= 900) return 1024;
   return 900;
+}
+
+function artifactId(artifact) {
+  return artifact?.id ?? artifact?.artifactId;
+}
+
+function hasElementId(html, id) {
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\bid\\s*=\\s*["']${escaped}["']`, 'i').test(html);
+}
+
+function addExpansionWarnings(warnings, expansion) {
+  if (expansion === undefined) return;
+  if (
+    !isPlainObject(expansion) ||
+    !Array.isArray(expansion.errors) ||
+    !Array.isArray(expansion.rejected) ||
+    !Array.isArray(expansion.warnings)
+  ) {
+    throw new TypeError(
+      'Guideline checker expansion must be an evaluated proposal result.',
+    );
+  }
+  if (expansion.valid !== true || expansion.errors.length > 0) {
+    throw new TypeError(
+      'Guideline checker cannot convert expansion proposal errors into warnings.',
+    );
+  }
+
+  const knownWarnings = new Set([
+    GUIDELINE_WARNING_IDS.expansionProfileLimit,
+    GUIDELINE_WARNING_IDS.expansionArtifactLimit,
+  ]);
+  for (const warning of expansion.warnings) {
+    if (knownWarnings.has(warning)) warnings.add(warning);
+  }
+  for (const rejected of expansion.rejected) {
+    if (rejected?.reason === 'profile-limit') {
+      warnings.add(GUIDELINE_WARNING_IDS.expansionProfileLimit);
+    }
+    if (rejected?.reason === 'recipe-limit') {
+      warnings.add(GUIDELINE_WARNING_IDS.expansionArtifactLimit);
+    }
+  }
 }
 
 function isPlainObject(value) {

@@ -3,13 +3,16 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import {
+  GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
   auditArtifactSet,
   checkArtifactCohesion,
+  checkGuidelines,
   checkHtmlStructure,
   checkSourceDumping,
   runBrowserProbes,
 } from '../scripts/lib/qa.mjs';
+import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 import { runRenderQaCli } from '../scripts/render-qa.mjs';
@@ -46,6 +49,41 @@ const deck = () =>
     </script></body>`,
   );
 
+const guidelineRecipe = () => ({
+  schemaVersion: 'explainer-kit.recipe/v2',
+  id: 'guideline-fixture',
+  version: '1',
+  sourceRoles: [],
+  floor: [
+    {
+      id: 'recap',
+      type: 'hub',
+      authoring: 'markdown',
+      template: 'house-style',
+      required: true,
+      briefRef: 'briefs/fixture.md',
+      requiredNarrative: ['request', 'architecture', 'outcome'],
+    },
+  ],
+  expansion: {
+    profiles: [
+      {
+        profileId: 'supporting-diagram',
+        type: 'diagram',
+        authoring: 'html',
+        briefRef: 'briefs/supporting-diagram.md',
+        shell: 'diagram-shell',
+        maxCount: 1,
+      },
+    ],
+    limits: { maxArtifacts: 1 },
+  },
+  discoveryLimits: {
+    consecutiveNoNewFindingsRounds: 1,
+    maxRounds: 1,
+  },
+});
+
 test('accepts a self-contained, balanced and accessible artifact', () => {
   const report = checkHtmlStructure({
     id: 'overview',
@@ -55,6 +93,88 @@ test('accepts a self-contained, balanced and accessible artifact', () => {
   });
 
   assert.deepEqual(report, { valid: true, issues: [] });
+});
+
+test('guideline checker reports stable non-blocking floor warning ids', () => {
+  const report = checkGuidelines({
+    recipe: guidelineRecipe(),
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(
+          '<h1>Recap</h1><section id="request"><h2>Request</h2><p>Ship it.</p></section><section id="outcome"><h2>Outcome</h2><p>Done.</p></section>',
+        ),
+      },
+    ],
+  });
+
+  assert.equal(report.valid, true);
+  assert.deepEqual(report.warnings, [
+    GUIDELINE_WARNING_IDS.narrativeCoverage,
+    GUIDELINE_WARNING_IDS.architectureDiagram,
+    GUIDELINE_WARNING_IDS.structuredDepth,
+  ]);
+});
+
+test('guideline checker accepts rich coverage with an inline diagram', () => {
+  const report = checkGuidelines({
+    recipe: guidelineRecipe(),
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2><svg class="narrative-diagram" role="img" aria-label="Architecture diagram"></svg></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><th>Check</th></tr><tr><td>Passed</td></tr></table></section>`),
+      },
+    ],
+  });
+
+  assert.deepEqual(report, { valid: true, warnings: [] });
+});
+
+test('guideline checker preserves over-limit expansion warnings', () => {
+  const recipe = guidelineRecipe();
+  const expansion = evaluateExpansionProposals(recipe, [
+    {
+      id: 'diagram-one',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the top-level flow.',
+    },
+    {
+      id: 'diagram-two',
+      profileId: 'supporting-diagram',
+      rationale: 'Show a second flow.',
+    },
+  ]);
+  const report = checkGuidelines({
+    recipe,
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><td>Passed</td></tr></table></section>`),
+      },
+      {
+        id: 'diagram-one',
+        type: 'diagram',
+        html: fixture('<h1>Architecture diagram</h1>'),
+      },
+    ],
+    expansion,
+  });
+
+  assert.equal(expansion.valid, true);
+  assert.equal(expansion.rejected[0].reason, 'profile-limit');
+  assert.deepEqual(report, {
+    valid: true,
+    warnings: [GUIDELINE_WARNING_IDS.expansionProfileLimit],
+  });
 });
 
 test('rejects unresolved tokens, configured leaks and non-inline assets', async () => {
