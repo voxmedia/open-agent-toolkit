@@ -277,6 +277,7 @@ Promote only probe-passing selectors.
 | plan          | artifact | approved | 2026-07-25 | human approval of `Accepted Update Plan.md` (vault) |
 | pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T004651Z.md  |
 | pre-synthesis | artifact | blocked  | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T005730Z.md  |
+| final         | code     | received | 2026-07-26 | reviews/final-review-2026-07-26T040908Z.md          |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
