@@ -118,10 +118,71 @@
       .callout {
         border-inline-start: 0.25rem solid var(--accent);
       }
+      .callout--tip,
+      .callout--note {
+        border-inline-start-color: var(--accent);
+      }
+      .callout--important {
+        border-inline-start-color: var(--success);
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger);
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        padding-inline-start: 1rem;
+        color: var(--muted);
+      }
+      .task-list {
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .task-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+      .task-list li > p {
+        margin-block: 0.2rem;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
       .table-scroll,
       pre {
         max-width: 100%;
         overflow-x: auto;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-muted);
+        padding: 1rem;
       }
       table {
         width: 100%;
@@ -136,6 +197,23 @@
       code,
       pre {
         font-family: var(--mono);
+      }
+      :not(pre) > code {
+        border-radius: calc(var(--radius) / 2);
+        background: var(--panel-muted);
+        padding: 0.1em 0.3em;
+      }
+      figure {
+        margin-inline: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+      }
+      figcaption {
+        margin-block-start: 0.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
       }
       footer {
         border-block-start: 1px solid var(--border);

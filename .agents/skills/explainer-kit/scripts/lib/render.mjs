@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import { posix } from 'node:path';
 
 import { canonicalHash, validateContract } from './contracts.mjs';
+import { renderDiagram as renderDiagramBlock } from './diagram.mjs';
+import { MarkdownSafetyError, parseMarkdownDocument } from './markdown.mjs';
 
 const RENDER_STRATEGIES = new Set(['default-only', 'user-switchable']);
 const TEMPLATE_BY_TYPE = new Map([
@@ -50,6 +52,7 @@ export async function renderArtifact({
   const sections = content.sections.map((section) => ({
     ...section,
     anchor: section.id,
+    ...prepareSectionMarkdown(section.content, theme),
   }));
   const links = content.artifactLinks ?? [];
   const values = templateValues({
@@ -82,6 +85,7 @@ export async function renderArtifact({
       : undefined,
     mediaType: 'text/html',
     html,
+    warnings: sections.flatMap((section) => section.warnings),
   };
 }
 
@@ -164,7 +168,7 @@ function templateValues({
           baseUrl,
         ),
         CONTENT: renderSections(sections, { tour: true }),
-        DIAGRAM: renderDiagram(sections),
+        DIAGRAM: renderLegacyDiagram(sections),
         FOOTER: footer,
       };
     case 'deck-shell':
@@ -181,7 +185,7 @@ function templateValues({
     case 'diagram-shell':
       return {
         ...common,
-        DIAGRAM: renderDiagram(sections),
+        DIAGRAM: renderLegacyDiagram(sections),
         LEGEND: [
           sections
             .map(
@@ -213,9 +217,132 @@ function renderSections(sections, { tour = false } = {}) {
       const tourAttributes = tour
         ? ` data-active-nodes="node-${index + 1}" data-active-edges=""`
         : '';
-      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><div class="section-number">${index + 1}</div><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2><p>${escapeHtml(section.content)}</p></section>`;
+      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><div class="section-number">${index + 1}</div><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2>${renderMarkdownNodes(section.ast.children)}</section>`;
     })
     .join('');
+}
+
+function prepareSectionMarkdown(content, theme) {
+  try {
+    const parsed = parseMarkdownDocument(content);
+    const diagramWarnings = [];
+    visitMarkdownNodes(parsed.ast.children, (node) => {
+      if (node.type !== 'diagram') return;
+      const rendered = renderDiagramBlock(node.source, { theme });
+      node.renderedHtml = rendered.html;
+      diagramWarnings.push(...rendered.warnings);
+    });
+    return {
+      ...parsed,
+      warnings: [...parsed.warnings, ...diagramWarnings],
+    };
+  } catch (error) {
+    if (
+      !(error instanceof MarkdownSafetyError) ||
+      !/raw html|node type: html/i.test(error.message)
+    ) {
+      throw error;
+    }
+    return {
+      ast: {
+        type: 'document',
+        children: [
+          {
+            type: 'paragraph',
+            children: [{ type: 'text', value: content }],
+          },
+        ],
+      },
+      warnings: [
+        {
+          code: 'legacy-raw-html-escaped',
+          message: 'Legacy section markup was rendered as escaped text.',
+        },
+      ],
+    };
+  }
+}
+
+function visitMarkdownNodes(nodes, callback) {
+  for (const node of nodes) {
+    callback(node);
+    if (Array.isArray(node.children)) {
+      visitMarkdownNodes(node.children, callback);
+    }
+  }
+}
+
+function renderMarkdownNodes(nodes) {
+  return nodes.map(renderMarkdownNode).join('');
+}
+
+function renderMarkdownNode(node) {
+  switch (node.type) {
+    case 'text':
+      return escapeHtml(node.value);
+    case 'paragraph':
+      if (node.children.length === 1 && node.children[0].type === 'figure') {
+        return renderMarkdownNode(node.children[0]);
+      }
+      return `<p>${renderMarkdownNodes(node.children)}</p>`;
+    case 'heading':
+      return `<h${node.depth}>${renderMarkdownNodes(node.children)}</h${node.depth}>`;
+    case 'strong':
+      return `<strong>${renderMarkdownNodes(node.children)}</strong>`;
+    case 'emphasis':
+      return `<em>${renderMarkdownNodes(node.children)}</em>`;
+    case 'delete':
+      return `<del>${renderMarkdownNodes(node.children)}</del>`;
+    case 'inlineCode':
+      return `<code>${escapeHtml(node.value)}</code>`;
+    case 'link':
+      return `<a href="${escapeAttribute(node.url)}"${node.title ? ` title="${escapeAttribute(node.title)}"` : ''}>${renderMarkdownNodes(node.children)}</a>`;
+    case 'figure':
+      return `<figure><a href="${escapeAttribute(node.url)}">${escapeHtml(node.alt || 'View figure')}</a>${node.title || node.alt ? `<figcaption>${escapeHtml(node.title ?? node.alt)}</figcaption>` : ''}</figure>`;
+    case 'blockquote':
+      return `<blockquote>${renderMarkdownNodes(node.children)}</blockquote>`;
+    case 'callout':
+      return `<aside class="callout callout--${escapeAttribute(node.kind)}" data-callout="${escapeAttribute(node.kind)}"><div class="callout__label">${escapeHtml(humanize(node.kind))}</div>${renderMarkdownNodes(node.children)}</aside>`;
+    case 'timeline':
+      return `<ol class="timeline">${node.entries
+        .map(
+          (entry) =>
+            `<li><time>${escapeHtml(entry.date)}</time><span>${escapeHtml(entry.label)}</span></li>`,
+        )
+        .join('')}</ol>`;
+    case 'code':
+      return `<pre><code${node.language ? ` class="language-${escapeAttribute(node.language)}"` : ''}>${escapeHtml(node.value)}</code></pre>`;
+    case 'diagram':
+      return node.renderedHtml;
+    case 'list':
+      return renderMarkdownList(node);
+    case 'listItem':
+      return `<li>${node.checked === null ? '' : `<input type="checkbox" disabled${node.checked ? ' checked' : ''} aria-label="${node.checked ? 'Completed' : 'Incomplete'} task" />`}${renderMarkdownNodes(node.children)}</li>`;
+    case 'table':
+      return `<div class="table-scroll"><table><thead><tr>${node.header
+        .map((cell) => `<th>${renderMarkdownNodes(cell)}</th>`)
+        .join('')}</tr></thead><tbody>${node.rows
+        .map(
+          (row) =>
+            `<tr>${row
+              .map((cell) => `<td>${renderMarkdownNodes(cell)}</td>`)
+              .join('')}</tr>`,
+        )
+        .join('')}</tbody></table></div>`;
+    default:
+      throw new MarkdownSafetyError(
+        `Unsupported markdown render node: ${String(node.type)}.`,
+      );
+  }
+}
+
+function renderMarkdownList(node) {
+  const tag = node.ordered ? 'ol' : 'ul';
+  const attributes = [
+    node.task ? ' class="task-list"' : '',
+    node.ordered && node.start !== 1 ? ` start="${node.start}"` : '',
+  ].join('');
+  return `<${tag}${attributes}>${renderMarkdownNodes(node.children)}</${tag}>`;
 }
 
 function renderSlides(sections, links, slug, renderedPath, baseUrl) {
@@ -231,7 +358,7 @@ function renderSlides(sections, links, slug, renderedPath, baseUrl) {
     : slides;
 }
 
-function renderDiagram(sections) {
+function renderLegacyDiagram(sections) {
   return sections
     .map((section, index) => {
       const y = 80 + index * 120;
@@ -253,12 +380,18 @@ function renderRelatedLinks(links, slug, renderedPath, baseUrl) {
     .join(' ');
 }
 
-function artifactPath(artifact, slug) {
+export function artifactPath(artifact, slug) {
   const directory = TYPE_DIRECTORIES.get(artifact.type);
   if (!directory)
     throw new Error(`Unsupported artifact type: ${artifact.type}.`);
   const parts = ['site', directory, slug];
-  if (['diagram', 'deck'].includes(artifact.type)) parts.push(artifact.id);
+  const origin = artifact.origin ?? 'floor';
+  if (
+    origin === 'expansion' ||
+    (origin === 'floor' && ['diagram', 'deck'].includes(artifact.type))
+  ) {
+    parts.push(artifact.id);
+  }
   parts.push('index.html');
   return parts.join('/');
 }
@@ -337,11 +470,19 @@ function switchableThemeControl(theme) {
 }
 
 function assertRecipeArtifact(artifact) {
+  const hasLegacyKeys =
+    isObject(artifact) &&
+    hasExactKeys(artifact, ['id', 'type', 'template', 'required']);
+  const hasOriginKeys =
+    isObject(artifact) &&
+    hasExactKeys(artifact, ['id', 'type', 'template', 'required', 'origin']);
   if (
     !isObject(artifact) ||
-    !hasExactKeys(artifact, ['id', 'type', 'template', 'required']) ||
+    (!hasLegacyKeys && !hasOriginKeys) ||
     !SLUG_PATTERN.test(artifact.id ?? '') ||
-    typeof artifact.required !== 'boolean'
+    typeof artifact.required !== 'boolean' ||
+    (artifact.origin !== undefined &&
+      !['floor', 'expansion'].includes(artifact.origin))
   ) {
     throw new TypeError(
       'Recipe artifact is not a validated artifact descriptor.',
@@ -391,12 +532,18 @@ function assertContent(content, recipeArtifact) {
     throw new TypeError('Artifact links must be an array.');
   }
   for (const link of links) {
+    const hasLegacyKeys =
+      isObject(link) && hasExactKeys(link, ['id', 'type', 'label']);
+    const hasOriginKeys =
+      isObject(link) && hasExactKeys(link, ['id', 'type', 'label', 'origin']);
     if (
       !isObject(link) ||
-      !hasExactKeys(link, ['id', 'type', 'label']) ||
+      (!hasLegacyKeys && !hasOriginKeys) ||
       !SLUG_PATTERN.test(link.id ?? '') ||
       !TYPE_DIRECTORIES.has(link.type) ||
-      typeof link.label !== 'string'
+      typeof link.label !== 'string' ||
+      (link.origin !== undefined &&
+        !['floor', 'expansion'].includes(link.origin))
     ) {
       throw new TypeError(
         'Artifact cross-links must use typed artifact targets.',
