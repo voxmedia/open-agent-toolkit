@@ -3,6 +3,9 @@ oat_generated: true
 oat_generated_at: 2026-07-26
 oat_project: opus-5-model-guidance
 oat_workflow_mode: quick
+oat_summary_last_task: p07-t03
+oat_summary_revision_count: 0
+oat_summary_includes_revisions: []
 ---
 
 # Project Summary: Opus 5 Model Guidance
@@ -127,3 +130,45 @@ work pending live probe evidence, and the phase was added only after that
 evidence existed. The plan, reverification record, and discovery success
 criteria were reconciled afterward to reflect that the deferral was resolved
 rather than still standing.
+
+## Workflow Observations
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T004651Z.md
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:1,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T005730Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T211041Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212332Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212319Z.md
+
+### 2026-07-26 · structural · oat-project-review-provide · final
+
+Delegated reconnaissance completed and was reconciled by the primary reviewer; artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T040908Z.md
+
+### 2026-07-26 · structural · oat-project-review-provide · reviews/archived/final-review-2026-07-26T165653Z.md
+
+Completed gate-originated final code review with bounded reconnaissance; see reviews/archived/final-review-2026-07-26T165653Z.md.
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T165653Z.md
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T172447Z.md
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T173526Z.md
