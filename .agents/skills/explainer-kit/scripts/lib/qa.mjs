@@ -39,6 +39,12 @@ export const GUIDELINE_WARNING_IDS = Object.freeze({
   expansionProfileLimit: 'expansion-profile-limit-exceeded',
   expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
 });
+export const RENDER_WARNING_IDS = Object.freeze({
+  unsupportedDiagram: 'render-unsupported-diagram',
+  headingDepthJump: 'render-heading-depth-jump',
+  timelineEntryShape: 'render-timeline-entry-shape',
+  legacyRawHtmlEscaped: 'render-legacy-raw-html-escaped',
+});
 export const RENDER_QA_WARNING_IDS = Object.freeze({
   documentOverflow: 'render-qa-document-overflow',
   innerContainerOverflow: 'render-qa-inner-container-overflow',
@@ -76,6 +82,18 @@ export function renderQaWarningIds(issues) {
         .filter(Boolean),
     ),
   ];
+}
+
+// Degradation findings are prefixed rather than looked up so a newly added
+// render warning code surfaces instead of being silently dropped.
+export function renderWarningIds(warnings) {
+  if (!Array.isArray(warnings)) {
+    throw new TypeError('Render warnings must be an array.');
+  }
+  if (warnings.some(({ code } = {}) => typeof code !== 'string' || !code)) {
+    throw new TypeError('Every render warning requires a string code.');
+  }
+  return [...new Set(warnings.map(({ code }) => `render-${code}`))];
 }
 
 export function checkGuidelines({ recipe, artifacts, expansion } = {}) {

@@ -16,6 +16,7 @@ import {
   checkSourceDumping,
   RENDER_QA_WARNING_IDS,
   renderQaWarningIds,
+  renderWarningIds,
 } from './lib/qa.mjs';
 import {
   evaluateExpansionProposals,
@@ -66,6 +67,7 @@ export async function runExplainer(request, options = {}) {
     rendered: [],
     artifacts: [],
     warnings: [],
+    reopenedWarnings: {},
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
     resumedApprovalStatus: null,
@@ -125,10 +127,18 @@ export async function runExplainer(request, options = {}) {
     }
     if (!resumed || state.resumedApprovalStatus === 'rejected') {
       if (state.resumedApprovalStatus === 'rejected') {
-        await reopenBuildStages(run, {
+        const reopened = await reopenBuildStages(run, {
           ids: ['render', 'qa'],
           reason: 'content-rejected',
         });
+        // Reopen markers are the D4 audit trail, so they survive the rerun's
+        // replacement of each stage's warning set.
+        state.reopenedWarnings = Object.fromEntries(
+          reopened.stages.map(({ id, warnings }) => [
+            id,
+            warnings.filter((warning) => warning.startsWith('stage-reopened:')),
+          ]),
+        );
       }
       await executeRenderStage(state, options);
       await executeQaStage(state, options);
@@ -206,8 +216,19 @@ async function executeRenderStage(state, options) {
       state.rendered.push(rendered);
       state.artifacts.push(artifactRecord(state, rendered));
     }
+    // D7 degradation findings are guideline severity, so they travel to the
+    // run result and the manifest as warnings rather than failing the stage.
+    const degradation = renderWarningIds(
+      state.rendered.flatMap(
+        ({ warnings: sectionWarnings = [] }) => sectionWarnings,
+      ),
+    );
+    state.warnings.push(...degradation);
+    const warnings = [...(state.reopenedWarnings.render ?? []), ...degradation];
     return {
       outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+      warnings,
+      status: warnings.length > 0 ? 'warned' : 'passed',
     };
   });
 }
@@ -277,7 +298,10 @@ async function executeQaStage(state, options) {
       );
     }
     state.warnings.push(...qaWarnings);
-    const warnings = [...new Set(qaWarnings)];
+    const warnings = [
+      ...(state.reopenedWarnings.qa ?? []),
+      ...new Set(qaWarnings),
+    ];
     return {
       outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
       warnings,

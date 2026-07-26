@@ -284,11 +284,19 @@ test('rejection persists corrections and explicit approval resumes the same run'
   );
   assert.match(rendered, /Corrected implementation status\./);
   const record = JSON.parse(await readFile(resumed.buildRecordPath, 'utf8'));
-  assert.match(
-    record.stages
-      .find(({ id }) => id === 'render')
-      .warnings.find((warning) => warning.startsWith('stage-reopened:')),
-    /^stage-reopened:content-rejected:/,
+  for (const id of ['render', 'qa']) {
+    assert.match(
+      record.stages
+        .find((stage) => stage.id === id)
+        .warnings.find((warning) => warning.startsWith('stage-reopened:')),
+      /^stage-reopened:content-rejected:/,
+      id,
+    );
+  }
+  // The audit trail never leaks into the published warning vocabulary.
+  assert.equal(
+    resumed.warnings.some((warning) => warning.startsWith('stage-reopened:')),
+    false,
   );
 });
 

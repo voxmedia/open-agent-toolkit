@@ -473,6 +473,48 @@ test('a thin recap ships with the floor warning vocabulary', async () => {
   assert.doesNotMatch(hub, /<svg class="narrative-diagram"/);
 });
 
+test('render degradation warnings reach the result and the manifest', async () => {
+  const cases = [
+    [
+      'render-unsupported-diagram',
+      '# Degraded recap\n\n## Original request\n\n```diagram\nsequenceDiagram\n  reader->>worker: change\n```\n',
+    ],
+    [
+      'render-heading-depth-jump',
+      '# Degraded recap\n\n## Original request\n\n### Background\n\nThe ask was continuous indexing.\n\n##### Skipped two levels\n\nThis heading jumps from h3 to h5.\n',
+    ],
+    [
+      'render-legacy-raw-html-escaped',
+      '# Degraded recap\n\n## Original request\n\n<div class="legacy">Raw markup from a v1-era record.</div>\n',
+    ],
+  ];
+
+  for (const [warningId, markdown] of cases) {
+    const { request } = await fixture();
+    const result = await runExplainer(request, {
+      author: async (authorRequest) => authorResult(authorRequest, markdown),
+      browserProbe: cleanProbe(),
+      now: () => NOW,
+    });
+
+    assert.equal(
+      result.outcome,
+      'built-not-durable',
+      `${warningId}: ${JSON.stringify(result.errors)}`,
+    );
+    assert.ok(result.warnings.includes(warningId), `result: ${warningId}`);
+    const manifest = await readJson(result.manifestPath);
+    assert.ok(manifest.warnings.includes(warningId), `manifest: ${warningId}`);
+    const record = await readJson(result.buildRecordPath);
+    assert.ok(
+      record.stages
+        .find((stage) => stage.id === 'render')
+        .warnings.includes(warningId),
+      `render stage: ${warningId}`,
+    );
+  }
+});
+
 test('a run without a headless runtime warns rather than skipping silently', async () => {
   const { request } = await fixture();
   const result = await runExplainer(request, {
