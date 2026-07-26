@@ -107,6 +107,7 @@
 | BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log             | open   | medium   | feature | S        |
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)          | open   | medium   | task    |          |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync            | open   | medium   | feature | M        |
+| BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                          | open   | medium   | task    | S        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
 | BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight            | open   | low      | task    | M        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |

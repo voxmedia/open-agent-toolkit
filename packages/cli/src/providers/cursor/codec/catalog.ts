@@ -108,6 +108,42 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     { catalogue: false },
   ),
   approvedMapping(
+    'claude-opus-5-thinking-low',
+    'claude-opus-5[effort=low]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus5-low' },
+  ),
+  approvedMapping(
+    'claude-opus-5-thinking-medium',
+    'claude-opus-5[effort=medium]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus5-medium' },
+  ),
+  approvedMapping(
+    'claude-opus-5-thinking-high',
+    'claude-opus-5[effort=high]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus5-high' },
+  ),
+  approvedMapping(
+    'claude-opus-5-thinking-xhigh',
+    'claude-opus-5[effort=xhigh]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus5-xhigh' },
+  ),
+  approvedMapping(
+    'claude-opus-5-thinking-max',
+    'claude-opus-5[effort=max]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus5-max' },
+  ),
+  approvedMapping(
+    'claude-opus-4-8-thinking-xhigh',
+    'claude-opus-4-8[effort=xhigh]',
+    'claude-effort',
+    { probeName: 'zz-pin-probe-opus48-xhigh' },
+  ),
+  approvedMapping(
     'gpt-5.6-sol-xhigh',
     'gpt-5.6-sol[reasoning=xhigh]',
     'gpt-reasoning',
