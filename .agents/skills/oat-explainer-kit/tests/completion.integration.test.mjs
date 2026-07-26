@@ -16,8 +16,31 @@ const lifecycleContractPath = resolve(
   repoRoot,
   '.agents/skills/oat-explainer-kit/references/lifecycle-contract.md',
 );
+const closeoutReferencePath = resolve(
+  repoRoot,
+  '.agents/skills/oat-project-implement/references/completion-and-closeout.md',
+);
+const adapterSkillPath = resolve(
+  repoRoot,
+  '.agents/skills/oat-explainer-kit/SKILL.md',
+);
+const authorCallbackPath = resolve(
+  repoRoot,
+  '.agents/skills/oat-explainer-kit/references/author-callback.md',
+);
 const completionSkill = await readFile(completionSkillPath, 'utf8');
 const lifecycleContract = await readFile(lifecycleContractPath, 'utf8');
+const closeoutReference = await readFile(closeoutReferencePath, 'utf8');
+const adapterSkill = await readFile(adapterSkillPath, 'utf8');
+const authorCallback = await readFile(authorCallbackPath, 'utf8');
+
+function sectionBetween(source, start, end) {
+  const startIndex = source.indexOf(start);
+  const endIndex = source.indexOf(end, startIndex);
+  assert.ok(startIndex >= 0, `missing section start: ${start}`);
+  assert.ok(endIndex > startIndex, `missing section end: ${end}`);
+  return source.slice(startIndex, endIndex);
+}
 
 test('resolves recap intent before one batched completion prompt and persists either answer', () => {
   const resolveIndex = completionSkill.indexOf(
@@ -78,6 +101,73 @@ test('reuses only a fresh recap or invokes the adapter once and selects the fina
   assert.match(
     completionSkill,
     /An incomplete, stale, wrong-project, or `project-explainer` manifest is never selected as the final recap/,
+  );
+});
+
+test('both lifecycle recap callers require author, critic, and unattended mode', () => {
+  const callers = [
+    {
+      name: 'project completion',
+      text: sectionBetween(
+        completionSkill,
+        '### Step 3.6: Select Final Project Recap',
+        '### Step 3.7: Project Log Completion Gate',
+      ),
+    },
+    {
+      name: 'implementation tail',
+      text: sectionBetween(
+        closeoutReference,
+        '**Implementation-Tail Project Recap:**',
+        '**Autonomous final HiLL approval:**',
+      ),
+    },
+  ];
+
+  for (const { name, text } of callers) {
+    assert.match(
+      text,
+      /brief-aware/,
+      `${name} must require a brief-aware seam`,
+    );
+    assert.match(text, /`author`/, `${name} must name the author callback`);
+    assert.match(
+      text,
+      /`authorModulePath`/,
+      `${name} must name the author module entry point`,
+    );
+    assert.match(text, /`critic`/, `${name} must name the critic callback`);
+    assert.match(
+      text,
+      /`criticModulePath`/,
+      `${name} must name the critic module entry point`,
+    );
+    assert.match(
+      text,
+      /`mode: unattended`/,
+      `${name} must declare unattended lifecycle mode`,
+    );
+  }
+});
+
+test('author guidance carries briefs, evidence, artistic inputs, and expansion policy', () => {
+  assert.match(adapterSkill, /`references\/author-callback\.md`/);
+  assert.match(
+    adapterSkill,
+    /construct exactly\s+one provider-neutral author seam in both modes/,
+  );
+  assert.match(authorCallback, /`explainer-kit\.author-request\/v2`/);
+  assert.match(authorCallback, /`brief`/);
+  assert.match(authorCallback, /`briefRef`/);
+  assert.match(authorCallback, /`factBase`/);
+  assert.match(authorCallback, /`theme`/);
+  assert.match(authorCallback, /`shell`/);
+  assert.match(authorCallback, /`proposedArtifacts`/);
+  assert.match(authorCallback, /`profileId`/);
+  assert.match(authorCallback, /both interactive and unattended modes/);
+  assert.match(
+    lifecycleContract,
+    /Every adapter run in both interactive and unattended modes must provide exactly\s+one provider-neutral author seam/,
   );
 });
 
