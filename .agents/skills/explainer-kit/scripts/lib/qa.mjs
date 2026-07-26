@@ -38,6 +38,7 @@ export const GUIDELINE_WARNING_IDS = Object.freeze({
   structuredDepth: 'guideline-structured-depth-missing',
   expansionProfileLimit: 'expansion-profile-limit-exceeded',
   expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
+  expansionTypeLimit: 'expansion-type-limit-exceeded',
 });
 export const RENDER_WARNING_IDS = Object.freeze({
   unsupportedDiagram: 'render-unsupported-diagram',

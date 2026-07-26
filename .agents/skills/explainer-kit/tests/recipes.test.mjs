@@ -425,6 +425,102 @@ test('expansion proposals reject over-limit entries without making floor misses 
   ]);
 });
 
+test('a declared type cap binds across profiles that share one artifact type', () => {
+  const recipe = recipeV2();
+  // Two profiles produce the same artifact type, and the recipe caps that type
+  // below what the two per-profile caps would allow on their own.
+  recipe.expansion.profiles = [
+    {
+      profileId: 'supporting-diagram',
+      type: 'diagram',
+      authoring: 'html',
+      briefRef: 'briefs/supporting-diagram.md',
+      shell: 'diagram-shell',
+      maxCount: 3,
+    },
+    {
+      profileId: 'context-diagram',
+      type: 'diagram',
+      authoring: 'html',
+      briefRef: 'briefs/supporting-diagram.md',
+      shell: 'diagram-shell',
+      maxCount: 3,
+    },
+  ];
+  recipe.expansion.limits = { maxArtifacts: 6, maxPerType: { diagram: 2 } };
+
+  const evaluated = evaluateExpansionProposals(recipe, [
+    {
+      id: 'first-diagram',
+      profileId: 'supporting-diagram',
+      rationale: 'Shows the ingest boundary.',
+    },
+    {
+      id: 'second-diagram',
+      profileId: 'context-diagram',
+      rationale: 'Shows the surrounding systems.',
+    },
+    {
+      id: 'third-diagram',
+      profileId: 'supporting-diagram',
+      rationale: 'Would exceed the declared diagram cap.',
+    },
+    {
+      id: 'fourth-diagram',
+      profileId: 'context-diagram',
+      rationale: 'Spreads across a sibling profile to evade the cap.',
+    },
+  ]);
+
+  assert.equal(evaluated.valid, true, JSON.stringify(evaluated.errors));
+  assert.deepEqual(
+    evaluated.accepted.map(({ id }) => id),
+    ['first-diagram', 'second-diagram'],
+  );
+  assert.deepEqual(
+    evaluated.rejected.map(({ id, status, reason }) => ({
+      id,
+      status,
+      reason,
+    })),
+    [
+      { id: 'third-diagram', status: 'rejected', reason: 'type-limit' },
+      { id: 'fourth-diagram', status: 'rejected', reason: 'type-limit' },
+    ],
+  );
+  assert.deepEqual(evaluated.warnings, ['expansion-type-limit-exceeded']);
+});
+
+test('an undeclared type is unconstrained and per-profile caps still apply', () => {
+  const recipe = recipeV2();
+  recipe.expansion.limits = { maxArtifacts: 4, maxPerType: { deck: 1 } };
+  recipe.expansion.profiles[1].maxCount = 2;
+
+  const evaluated = evaluateExpansionProposals(recipe, [
+    {
+      id: 'storage-deep-dive',
+      profileId: 'deep-dive',
+      rationale: 'Storage warrants its own page.',
+    },
+    {
+      id: 'api-deep-dive',
+      profileId: 'deep-dive',
+      rationale: 'The API surface warrants its own page.',
+    },
+    {
+      id: 'third-deep-dive',
+      profileId: 'deep-dive',
+      rationale: 'Exceeds the profile cap, not a type cap.',
+    },
+  ]);
+
+  assert.deepEqual(
+    evaluated.accepted.map(({ id }) => id),
+    ['storage-deep-dive', 'api-deep-dive'],
+  );
+  assert.deepEqual(evaluated.warnings, ['expansion-profile-limit-exceeded']);
+});
+
 test('malformed expansion proposals remain hard validation errors', () => {
   const recipe = recipeV2();
   const evaluated = evaluateExpansionProposals(recipe, [
