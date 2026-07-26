@@ -120,6 +120,18 @@ async function runExplainer(request, options = {}) {
   });
 }
 
+function layoutProbe({ pageOverflowX }) {
+  return async () => ({
+    pageOverflowX,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: { tab: true },
+  });
+}
+
 function humanize(value) {
   return value
     .split('-')
@@ -229,6 +241,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
 
   const rejected = await runExplainer(interactiveRequest, {
     now: () => NOW,
+    browserProbe: layoutProbe({ pageOverflowX: true }),
     reviewedSource: {
       decision: 'reject',
       reviewedAt: NOW,
@@ -238,6 +251,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
   });
   assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
   assert.equal(rejected.approval.status, 'rejected');
+  assert.ok(rejected.warnings.includes('render-qa-document-overflow'));
   const contentPath = join(
     rejected.runRoot,
     'source/content/project-explainer.md',
@@ -253,6 +267,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
 
   const resumed = await runExplainer(interactiveRequest, {
     now: () => '2026-07-17T20:05:00Z',
+    browserProbe: layoutProbe({ pageOverflowX: false }),
     reviewedSource: {
       decision: 'approve',
       reviewedAt: '2026-07-17T20:05:00Z',
@@ -283,6 +298,15 @@ test('rejection persists corrections and explicit approval resumes the same run'
     'utf8',
   );
   assert.match(rendered, /Corrected implementation status\./);
+  // The rerun cleared the defect, so its warning must not survive the resume.
+  assert.equal(
+    resumed.warnings.includes('render-qa-document-overflow'),
+    false,
+  );
+  assert.equal(
+    manifest.warnings.includes('render-qa-document-overflow'),
+    false,
+  );
   const record = JSON.parse(await readFile(resumed.buildRecordPath, 'utf8'));
   for (const id of ['render', 'qa']) {
     assert.match(

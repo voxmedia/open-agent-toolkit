@@ -37,6 +37,9 @@ import {
 import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 
+// Stages a rejected draft reruns once its content is corrected.
+const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
+
 export async function runExplainer(request, options = {}) {
   assertValidRequest(request);
   const recipe = loadRecipe(request.recipe.id, request.recipe.version);
@@ -129,7 +132,7 @@ export async function runExplainer(request, options = {}) {
     if (!resumed || state.resumedApprovalStatus === 'rejected') {
       if (state.resumedApprovalStatus === 'rejected') {
         const reopened = await reopenBuildStages(run, {
-          ids: ['render', 'qa'],
+          ids: [...REOPENED_ON_REJECTION],
           reason: 'content-rejected',
         });
         // Reopen markers are the D4 audit trail, so they survive the rerun's
@@ -436,10 +439,16 @@ async function hydrateResumableState(state) {
   state.theme = theme;
   state.themeWarnings = [];
   state.resumedApprovalStatus = approval.status;
+  // Reopened stages rerun against the corrected content, so carrying their
+  // prior warnings forward would outlive the fix that resolved them.
+  const rerunning =
+    approval.status === 'rejected' ? REOPENED_ON_REJECTION : [];
   state.warnings.push(
-    ...record.stages.flatMap(({ warnings = [] }) =>
-      warnings.filter((warning) => !warning.startsWith('stage-reopened:')),
-    ),
+    ...record.stages
+      .filter(({ id }) => !rerunning.includes(id))
+      .flatMap(({ warnings = [] }) =>
+        warnings.filter((warning) => !warning.startsWith('stage-reopened:')),
+      ),
   );
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
