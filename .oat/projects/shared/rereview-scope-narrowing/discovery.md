@@ -212,6 +212,21 @@ review that actually happened.
 3. **Semantics alignment:** The local rail adopts prior-reviewed-commit-to-head
    ranges with an existence-and-ancestry guard, replacing commit-message
    matching and the fixed lookback window.
+   **The resolved range is also classified, and the classification is stated.**
+   After computing the range, classify it as empty, bookkeeping-only, or
+   substantive, and name that classification in the printed resolution line.
+   All three still dispatch a review in this change; the classification is
+   reporting, not authorization. Because nothing is skipped on the strength of
+   it, a path-based test is sufficient here — a misclassification costs
+   nothing, since the review runs over the full resolved range either way. The
+   stronger corroboration standard the repository already defines for
+   closeout-only descendants becomes necessary only at the deferred
+   skip-entirely idea, where the classification would authorize skipping
+   verification. Scope the bookkeeping-only test to the project's own tracking
+   directory rather than the toolkit directory as a whole: bundled templates
+   and durable repository reference records live under the same top-level
+   directory and are substantive shipped content, so a broad filter would
+   mislabel them.
 4. **Reviewed commit provenance is dual and durable:** The review artifact
    records the head commit it reviewed, and the tracked plan review row mirrors
    it. The artifact is the primary source; the tracked row is what makes the
@@ -277,7 +292,15 @@ review that actually happened.
   re-review run from a fresh clone or a different worktree, where the prior
   artifact is no longer present, still narrows from the tracked row.
 - A narrowed re-review artifact names the prior artifact and reviewed commit it
-  builds on, so the coverage chain across successive passes is auditable.
+  builds on, alongside its own resolved range, so the coverage chain across
+  successive passes is auditable.
+- A narrowed final-scope artifact does not restate requirements-coverage claims
+  it did not itself verify. It either points at the prior artifact's coverage
+  or marks the inherited rows as inherited.
+- The printed resolution line states whether the resolved range is empty,
+  bookkeeping-only, or substantive, so a review dispatched against no
+  reviewable code is visibly that rather than indistinguishable from a real
+  pass.
 - Review artifacts written before this change do not narrow anything.
 - An initial review is unaffected regardless of the preference.
 - Documentation describing the preference matches the new default everywhere it
