@@ -34,50 +34,66 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                        | Status  | Tasks | Completed |
-| -------------------------------------------- | ------- | ----- | --------- |
-| Phase 1: Contracts, briefs, and recipes v2   | pending | 5     | 0/5       |
-| Phase 2: Lifecycle caller wiring             | pending | 1     | 0/1       |
-| Phase 3: Narrative renderer                  | pending | 3     | 0/3       |
-| Phase 4: Artistic composer path              | pending | 2     | 0/2       |
-| Phase 5: Guideline checker and render QA     | pending | 2     | 0/2       |
-| Phase 6: Pipeline integration, v1 retirement | pending | 4     | 0/4       |
-| Phase 7: End-to-end anti-regression fixture  | pending | 1     | 0/1       |
-| Phase 8: Documentation and release closure   | pending | 2     | 0/2       |
+| Phase                                        | Status   | Tasks | Completed |
+| -------------------------------------------- | -------- | ----- | --------- |
+| Phase 1: Contracts, briefs, and recipes v2   | complete | 6     | 6/6       |
+| Phase 2: Lifecycle caller wiring             | pending  | 1     | 0/1       |
+| Phase 3: Narrative renderer                  | pending  | 3     | 0/3       |
+| Phase 4: Artistic composer path              | pending  | 2     | 0/2       |
+| Phase 5: Guideline checker and render QA     | pending  | 2     | 0/2       |
+| Phase 6: Pipeline integration, v1 retirement | pending  | 4     | 0/4       |
+| Phase 7: End-to-end anti-regression fixture  | pending  | 1     | 0/1       |
+| Phase 8: Documentation and release closure   | pending  | 2     | 0/2       |
 
-**Total:** 0/20 tasks completed
+**Total:** 6/21 tasks completed (21 = 20 planned + corrective p01-t02a)
 
 ---
 
 ## Phase 1: Contracts, briefs, and recipes v2
 
-**Status:** pending
-**Started:** -
+**Status:** complete
+**Started:** 2026-07-25
+**Completed:** 2026-07-25
+**Phase base:** `c777e838` → **head:** `5ebd7049`
+**Verification:** 158/158 core suite passing, clean tree (verified at root, not
+only reported by the implementer)
+**Root review:** pass. Scanned the full phase diff for the failure mode that
+blocked the first attempt — no `skip`/`only`/`todo` tests introduced, and every
+removed assertion traces to a field that legitimately moved (recipe root
+`requiredNarrative` and `artifacts[]` down into `floor[]`). The one removed
+approval assertion was replaced by five stronger ones.
 
 ### Task p01-t01: Author contract v2 schemas (coexisting with v1)
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `b1613d1c`
 
 ### Task p01-t02: Dual-version recipe loader and shape accessors
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `ea55d86c`
 
 ### Task p01-t03: Author briefs (prerequisite for v2 recipes)
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `ea60381f`
+
+### Task p01-t02a: Make p01-t02 survive the v2 cutover (corrective, inserted)
+
+**Status:** complete
+**Commit:** `97aebb08` (plan amendment: `4a321ad4`)
+
+Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ### Task p01-t04: Rewrite bundled recipes to v2
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `1b82714a`
 
 ### Task p01-t05: Approval record v2 with marking and resume compatibility
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `5ebd7049`
 
 ---
 
@@ -267,25 +283,27 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact                    | Planned / Documented                                                          | Actual / Accepted                                                      | Reason                                                                                                                                                                            | Source of Truth     | Follow-up                                            |
-| --------------- | ---------------------------------- | ----------------------------------------------------------------------------- | ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------- | ---------------------------------------------------- |
-| p00 (pre-phase) | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`  | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`). | `plan.md` (updated) | None                                                 |
-| p00 (pre-phase) | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                               | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1 | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.              | Commit `8c81513b`   | Consider upstreaming the fix to `main` independently |
+| Task / Review   | Source Artifact                    | Planned / Documented                                                                                                | Actual / Accepted                                                      | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                             | Source of Truth                | Follow-up                                            |
+| --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
+| p00 (pre-phase) | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites                                       | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`  | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`).                                                                                                                                                                                                                                                                  | `plan.md` (updated)            | None                                                 |
+| p00 (pre-phase) | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                                                                     | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1 | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.                                                                                                                                                                                                                                                                               | Commit `8c81513b`              | Consider upstreaming the fix to `main` independently |
+| p01-t02a        | `plan.md` Phase 1 task list        | Phase 1 had five tasks; p01-t04 was expected to stay green because "all readers went through the p01-t02 accessors" | Inserted a sixth, corrective task between p01-t03 and p01-t04          | That premise was false in two places invisible while every bundled recipe was v1: `renderArtifact` takes an exact four-key descriptor (`render.mjs:339-355`) and rejects normalized v2 floor entries, and p01-t02's dual-shape test used a live bundled recipe as its v1 example, so the v1 loader branch would have lost all coverage at p01-t04. Both sit in p01-t02-owned files, so p01-t04 could not repair them inside its declared boundary. | Commits `4a321ad4`, `97aebb08` | None                                                 |
+| p01-t04         | `plan.md` p01-t04 verification     | Suite stays green with no bundled-recipe test changes called out                                                    | Two v1-era tests in `recipes.test.mjs` updated deliberately            | The loader test asserted `schemaVersion === v1`, and `project recap requires all six accountability sections` asserted a hard error that stops applying once the recipe is v2. The enforcement half was dropped and the test renamed to "declares"; the `requiredNarrative` assertion was kept. The v1 guarantee is still held by p01-t02a's synthetic fixture.                                                                                    | `plan.md` (updated)            | p05-t01 must supply the replacement coverage warning |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
-| 3     | -         | -      | -      | -        |
-| 4     | -         | -      | -      | -        |
-| 5     | -         | -      | -      | -        |
-| 6     | -         | -      | -      | -        |
-| 7     | -         | -      | -      | -        |
-| 8     | -         | -      | -      | -        |
+| Phase | Tests Run | Passed | Failed | Coverage                                                                       |
+| ----- | --------- | ------ | ------ | ------------------------------------------------------------------------------ |
+| 1     | 158       | 158    | 0      | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153 |
+| 2     | -         | -      | -      | -                                                                              |
+| 3     | -         | -      | -      | -                                                                              |
+| 4     | -         | -      | -      | -                                                                              |
+| 5     | -         | -      | -      | -                                                                              |
+| 6     | -         | -      | -      | -                                                                              |
+| 7     | -         | -      | -      | -                                                                              |
+| 8     | -         | -      | -      | -                                                                              |
 
 ## Final Summary (for PR/docs)
 
