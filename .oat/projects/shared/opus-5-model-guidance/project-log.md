@@ -76,6 +76,10 @@ target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,importan
 
 target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T172447Z.md
 
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/opus-5-model-guidance/reviews/final-review-2026-07-26T173526Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

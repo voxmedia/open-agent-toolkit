@@ -98,6 +98,10 @@ The user's instruction to proceed with integration is the requirements gate.
 - The Codex reference records long-context pricing and trajectory economics.
 - The Cursor reference contains only selectors supported by the current
   catalog snapshot and explicitly defers unverified Opus 5 pins.
+  _Superseded by Phase 7._ The deferral held through Phase 6. Phase 7 ran the
+  live probe that the deferral was waiting on, so the criterion became: ship
+  only probe-verified selectors, and record the resolution each one was
+  approved against. Six mappings met that bar on 2026-07-25.
 - The refresh protocol requires multi-measure wall-clock evidence and
   downstream parity verification.
 - Skill validation and release validation pass.

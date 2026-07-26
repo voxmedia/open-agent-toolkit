@@ -64,6 +64,23 @@ existing cells. Planning shows the complete recommendation before asking which
 scope should own it. If the resulting ladder is still missing or incomplete,
 planning remains blocked rather than replacing the user's explicit values.
 
+#### Upgrading to a newer recommendation version
+
+Preservation applies to whole cells, which has a consequence worth stating
+plainly: when a new recommendation version adds candidates to a tier you have
+already populated, re-running adoption will not give them to you. The existing
+cell is kept intact rather than merged candidate by candidate. Removals are not
+propagated either.
+
+To pick up a new version, compare your
+`workflow.dispatchCeiling.recommendationVersion` against the bundled version,
+then either edit the affected cells by hand or clear them and re-adopt.
+
+Version `2026-07-25.1` is a live example: it adds Opus 5 rungs to the Cursor
+`balanced`, `high`, and `frontier` tiers and drops `claude-sonnet-5-high` from
+`economy`. An adopter still on the prior version keeps their existing Cursor
+tiers untouched until they take one of those actions.
+
 Before offering adoption, planning runs `oat config list --json` once and treats
 its output as the effective boundary across shared, repo-local, user, and
 bundled-default precedence. A complete effective ladder skips adoption even
@@ -194,10 +211,14 @@ candidate in each tier:
   `max`.
 - **Claude:** `haiku`, `sonnet`, `opus`, and `fable` across the ordered named
   tiers.
-- **Cursor:** 12 verified multi-family flat IDs across Composer, Claude, GPT,
-  and Grok. The explicit materialization catalogue maps each flat ladder ID to
-  a separate bracket-form frontmatter model; OAT does not derive or normalize
-  either value.
+- **Cursor:** verified multi-family flat IDs across Composer, Claude (Sonnet,
+  Opus, and Fable), GPT, and Grok. Two counts apply and they differ: the
+  bundled recommendation carries 16 Cursor candidates across the four tiers,
+  while the materialization catalogue carries 18 flat IDs. The extra entries
+  are approved mappings deliberately kept out of the recommendation but still
+  materializable. The catalogue maps each flat ladder ID to a separate
+  bracket-form frontmatter model; OAT does not derive or normalize either
+  value.
 
 The final candidate in a named tier defines that tier's reviewer ceiling. Lower
 reviewer selection requires a separate reviewed contract; a normal reviewer
@@ -305,6 +326,11 @@ separate evidence layers:
 - The materialized definition uses the mapping's explicit bracket-form
   frontmatter model.
 - Mapping-specific native-launch evidence authorizes the shipped mapping data.
+  An approved mapping may carry a probe record whose `submittedSelector` must
+  equal the mapping's `frontmatterModel` and whose `resolvedModel` must equal
+  its `ladderModelId`, so editing a mapping without re-probing fails its own
+  test rather than inheriting an approval it was never granted. See
+  [Verifying Cursor Pins](../../contributing/verifying-cursor-pins.md).
 - `oat doctor` checks current flat-ID catalogue availability, which can detect
   drift but cannot prove a definition pin.
 - The launcher records the selected variant and mapped model with `configured`
@@ -315,6 +341,26 @@ Cursor can silently fallback when account, plan, or administration constraints
 prevent a requested definition pin. Native variant acceptance is therefore not
 runtime-model verification, and skills must not promote self-report or
 catalogue presence into observed identity.
+
+#### Unresolvable selectors also fall back silently
+
+Entitlement is not the only trigger. Cursor does not reject a malformed pin
+either; it substitutes a default for whichever selector component it cannot
+resolve, with no error or warning:
+
+- An unknown family falls back to the account default model. Probing
+  `claude-opus-9[effort=high]` resolved to `cursor-grok-4.5-high-fast`.
+- An unknown effort falls back to that family's default rung. Probing
+  `claude-opus-5[effort=ultra]` resolved to `claude-opus-5-thinking-high`.
+
+The default rung is family-specific and is not always `high` — Opus 4.7
+defaults to `xhigh`. A typo in a pinned selector therefore ships a
+working-but-wrong model that silently tracks a vendor-controlled default, so
+capability can change with no corresponding change in the repository.
+
+OAT does not currently validate effort rungs at sync time; that is tracked as
+`BL-260726-validate-cursor-pin-effort`. Until it lands, the probe runbook is
+the only guard.
 
 ## Phase and Optional-Worker Layers
 
