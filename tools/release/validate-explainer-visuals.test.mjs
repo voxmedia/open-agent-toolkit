@@ -227,3 +227,45 @@ test('viewport clipping distinguishes paged slides from unreachable content', as
     await browser.close();
   }
 });
+
+// Shells honor prefers-reduced-motion with the conventional 0.01ms transition
+// so transitionend still fires. Accepting that must not blind the probe to
+// motion a reader would actually see.
+test('animation probe accepts suppressed motion and still reports perceptible motion', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({
+    viewport: { width: 320, height: 600 },
+    reducedMotion: 'reduce',
+  });
+  const disabled = async (style) => {
+    await page.setContent(
+      `<style>${style}</style><body style="margin:0"><p id="probe">a</p></body>`,
+    );
+    const { animationsDisabled } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return animationsDisabled;
+  };
+
+  try {
+    assert.equal(
+      await disabled(
+        '@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:0.01ms !important}}',
+      ),
+      true,
+      'the reduced-motion 0.01ms idiom is suppressed motion',
+    );
+    assert.equal(
+      await disabled('#probe{transition-duration:180ms}'),
+      false,
+      'a perceptible transition still reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}#probe{animation:pulse 2s infinite}',
+      ),
+      false,
+      'a running keyframe animation still reports',
+    );
+  } finally {
+    await browser.close();
+  }
+});

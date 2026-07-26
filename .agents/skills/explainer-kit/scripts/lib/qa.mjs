@@ -251,12 +251,18 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       fontSize: Number.parseFloat(getComputedStyle(heading).fontSize)
     }))
     .slice(0, 20);
+  // Reduced-motion styling conventionally collapses transitions to a token
+  // 0.01ms rather than 0s so transitionend still fires. That is suppressed
+  // motion, not active motion, so anything under a millisecond counts as
+  // disabled while a perceptible duration still reports.
+  const PERCEPTIBLE_SECONDS = 0.001;
   const animationsDisabled = elements.every((element) => {
     const style = getComputedStyle(element);
     const durations = (style.animationDuration + ',' + style.transitionDuration)
       .split(',')
       .map((value) => Number.parseFloat(value) || 0);
-    return style.animationName === 'none' && durations.every((value) => value === 0);
+    return style.animationName === 'none' &&
+      durations.every((value) => value < PERCEPTIBLE_SECONDS);
   });
   return {
     pageOverflowX: root.scrollWidth > root.clientWidth + 2,
