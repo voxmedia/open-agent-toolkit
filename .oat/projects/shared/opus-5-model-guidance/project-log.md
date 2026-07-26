@@ -1,0 +1,85 @@
+---
+oat_generated: false
+purpose: project-observations
+oat_last_updated: 2026-07-25
+---
+
+# Project Log: opus-5-model-guidance
+
+This append-only log serves two audiences: the project team learning from this project's execution, and maintainers improving the general OAT workflow and tooling.
+
+## Logging contract
+
+Append when something breaks, surprises you, requires a workaround, or works notably well enough to preserve as do-not-regress evidence. Record evidence, not a running narrative. Prior entries are never edited or struck through; append corrections as a new judgment entry that references the original entry and explains the correction. Add a version note to tool-related observations. Create entries only with `oat project log append`; run `oat project log append --help` for the complete entry contract. Reference supporting artifacts by path instead of inlining them. Never record secret values such as tokens, keys, signed URLs, or credentials because this log rolls up into tracked surfaces; reference secrets by name or source, never by value.
+
+Judgment entries default to 1–3 sentences covering what happened, the impact or workaround, and any follow-up. High-value entries may instead use this structured body:
+
+```text
+Observation: What happened and the supporting evidence.
+Impact: Why it mattered or what workaround was required.
+Recommendation: What should change or be preserved.
+```
+
+Shared tracked surfaces must be written only from the root checkout, never from parallel worktrees.
+
+## Entry format
+
+Judgment entries:
+
+```text
+### 2026-07-25 · <project|general> · <bug|friction|worked-well|feedback> · <area>
+```
+
+Structural entries:
+
+```text
+### 2026-07-25 · structural · <producer> · <ref>
+```
+
+## Entries
+
+Entries are chronological and append-only.
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:2,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T004651Z.md
+
+### 2026-07-25 · structural · oat gate review · plan
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:1,important:1,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/artifact-plan-review-2026-07-25T005730Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T211041Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212332Z.md
+
+### 2026-07-25 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-max threshold=important findings=critical:0,important:2,medium:1,minor:1 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-25T212319Z.md
+
+### 2026-07-26 · structural · oat-project-review-provide · final
+
+Delegated reconnaissance completed and was reconciled by the primary reviewer; artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T040908Z.md
+
+### 2026-07-26 · structural · oat-project-review-provide · reviews/archived/final-review-2026-07-26T165653Z.md
+
+Completed gate-originated final code review with bounded reconnaissance; see reviews/archived/final-review-2026-07-26T165653Z.md.
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:2,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T165653Z.md
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:1,medium:0,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T172447Z.md
+
+### 2026-07-26 · structural · oat gate review · final
+
+target=cursor-gpt-5-6-sol-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:0 exit=0 status=ok artifact=.oat/projects/shared/opus-5-model-guidance/reviews/archived/final-review-2026-07-26T173526Z.md
+
+## End-of-run synthesis (pending — do not skip at project completion)
+
+Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
