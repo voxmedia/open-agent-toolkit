@@ -43,8 +43,40 @@ function contentModel(recipe, overrides = {}) {
   };
 }
 
+// The dual-shape fixtures stay synthetic so they keep exercising both loader
+// branches after every bundled recipe migrates to v2.
+function recipeV1() {
+  return {
+    schemaVersion: 'explainer-kit.recipe/v1',
+    id: 'synthetic-recipe',
+    version: '1',
+    sourceRoles: [
+      {
+        role: 'project',
+        required: true,
+        accepts: ['file', 'directory', 'git', 'github'],
+        minBindings: 1,
+        maxBindings: 1,
+      },
+    ],
+    requiredNarrative: ['planned-architecture', 'decisions', 'risks'],
+    artifacts: [
+      {
+        id: 'synthetic-recipe',
+        type: 'hub',
+        template: 'house-style',
+        required: true,
+      },
+    ],
+    discoveryLimits: {
+      consecutiveNoNewFindingsRounds: 2,
+      maxRounds: 8,
+    },
+  };
+}
+
 function recipeV2() {
-  const v1 = loadRecipe('project-explainer', '1');
+  const v1 = recipeV1();
   return {
     schemaVersion: 'explainer-kit.recipe/v2',
     id: v1.id,
@@ -95,9 +127,10 @@ test('loads each supported recipe by exact id and version', () => {
 });
 
 test('validates recipe v2 and normalizes both recipe shapes', () => {
-  const v1 = loadRecipe('project-explainer', '1');
+  const v1 = recipeV1();
   const v2 = recipeV2();
 
+  assert.equal(validateRecipe(v1, 'synthetic-v1'), v1);
   assert.equal(validateRecipe(v2, 'synthetic-v2'), v2);
   assert.deepEqual(
     recipeFloor(v2).map(({ id }) => id),
@@ -112,6 +145,29 @@ test('validates recipe v2 and normalizes both recipe shapes', () => {
     limits: { maxArtifacts: 0 },
   });
   assert.equal(recipeExpansion(v2).profiles.length, 2);
+});
+
+// Floor coverage is a hard error only for v1. Under v2 it degrades to a
+// guideline-checker warning (p05-t01), so this layer stays silent by design.
+test('narrative coverage is a v1 hard error and a v2 non-error', () => {
+  for (const [label, recipe, expected] of [
+    [
+      'v1',
+      recipeV1(),
+      { valid: false, errors: ['Missing required narrative section: risks'] },
+    ],
+    ['v2', recipeV2(), { valid: true, errors: [] }],
+  ]) {
+    assert.deepEqual(
+      validateContentModel(recipe, contentModel(recipe)),
+      { valid: true, errors: [] },
+      label,
+    );
+
+    const incomplete = contentModel(recipe);
+    incomplete.sections.pop();
+    assert.deepEqual(validateContentModel(recipe, incomplete), expected, label);
+  }
 });
 
 test('recipe v2 rejects malformed profiles, ids, types, and finite caps', () => {

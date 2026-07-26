@@ -139,7 +139,7 @@ export async function runExplainer(request, options = {}) {
           ({ artifactId }) => artifactId === recipeArtifact.id,
         );
         const rendered = await renderArtifact({
-          recipeArtifact,
+          recipeArtifact: renderDescriptor(recipeArtifact),
           content,
           theme: state.theme,
           renderStrategy: state.renderStrategy,
@@ -680,6 +680,17 @@ function contractErrorMessage(label, errors) {
   return `Invalid ${label}: ${errors
     .map(({ path, message }) => `${path}: ${message}`)
     .join('; ')}`;
+}
+
+// renderArtifact validates an exact key set, so normalized v2 floor entries
+// must be narrowed before they reach it.
+function renderDescriptor(artifact) {
+  return {
+    id: artifact.id,
+    type: artifact.type,
+    template: artifact.template,
+    required: artifact.required,
+  };
 }
 
 function createContentModel(recipe, artifact, slug, factBase) {
