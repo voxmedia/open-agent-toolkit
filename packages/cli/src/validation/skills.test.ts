@@ -2081,7 +2081,7 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.9'],
+      ['.agents/agents/oat-phase-implementer.md', '1.0.10'],
       ['.agents/agents/oat-reviewer.md', '1.1.9'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
@@ -2333,7 +2333,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -2344,6 +2344,9 @@ describe('validateOatSkills', () => {
     );
     expect(agent).toMatch(/one\s+verified\s+commit per task/i);
     expect(agent).toContain('between-task transition check');
+    expect(agent).toMatch(
+      /HEAD exactly equals\s+`phase_base_head`[\s\S]{0,300}Never\s+use ancestry from `expected_base_sha` as a substitute/i,
+    );
     expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
     expect(agent).toContain('`--no-verify`');
     expect(agent).toContain('Phase-Wide Self-Review');
