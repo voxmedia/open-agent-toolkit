@@ -106,10 +106,11 @@ files:
 ```bash
 oat state refresh
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+[ -f "$PROJECT_PATH/project-log.md" ] && git add "$PROJECT_PATH/project-log.md"
 git diff --cached --quiet || git commit -m "chore(oat): prepare final implementation closeout"
 ```
 
-Do not use `git add -A` or glob patterns. Only commit the three project artifacts listed above; `.oat/state.md` is a generated, gitignored dashboard.
+Do not use `git add -A` or glob patterns. Only commit the three project artifacts listed above, plus `$PROJECT_PATH/project-log.md` when it exists; `.oat/state.md` is a generated, gitignored dashboard.
 
 ### Step 12: Final Verification
 
@@ -841,11 +842,13 @@ commit:
 ```bash
 oat state refresh
 git add "$PROJECT_PATH/implementation.md" "$PROJECT_PATH/state.md" "$PROJECT_PATH/plan.md"
+[ -f "$PROJECT_PATH/project-log.md" ] && git add "$PROJECT_PATH/project-log.md"
 git diff --cached --quiet || git commit -m "chore(oat): mark implementation complete"
 ```
 
 Do not use `git add -A` or glob patterns. Only commit the three project
-artifacts listed above; `.oat/state.md` is a generated, gitignored dashboard.
+artifacts listed above, plus `$PROJECT_PATH/project-log.md` when it exists;
+`.oat/state.md` is a generated, gitignored dashboard.
 
 ### Step 17: Prompt for Next Steps
 

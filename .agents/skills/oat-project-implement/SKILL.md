@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.1.8
+version: 2.1.9
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -44,8 +44,14 @@ or mechanics.
 Defer entry flags to `oat project log append --help`; never pre-check config:
 the helper no-ops when the feature is off.
 
-- After every accepted subagent dispatch, use `oat project log append` at
-  `$PROJECT_PATH/implementation.md#<run-anchor>`; never mirror that record.
+**Never append while a dispatched child owns the worktree.** The tracked log
+dirties the tree that the child's preflight and per-task commit checks require
+to be clean; each append is committed by the bookkeeping that owns it.
+
+- After every accepted subagent dispatch, record the acceptance in the generic
+  dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
+  never mirror that record. Do not write the project log at acceptance; append
+  it with the phase-outcome entry after the child's report returns.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`
@@ -54,7 +60,9 @@ the helper no-ops when the feature is off.
   and fail closed before validation, bookkeeping, or logging.
 - For `attempted`, require complete `## Review Orchestration` evidence. After
   validation, append exactly once through `oat project log append`, referencing
-  the artifact without copying records.
+  the artifact without copying records. Defer that append to the terminal phase
+  outcome; appending when the reviewer returns dirties the tree before a fix
+  child is dispatched into it.
 - For `not-attempted`, the artifact must not contain `## Review Orchestration`;
   do not invoke `oat project log append` or create a log entry.
 - Before every STOP or park return, invoke `oat project log append` for a

@@ -33,6 +33,14 @@
   `--scope` placement drift through local option parsing plus doctor detection,
   and clearly rejects resolver calls that combine exact-candidate flags with
   `--preferred`.
+- Generated-artifact gate hygiene shipped the narrow fix: project-log writes
+  moved out of child-owned worktree windows, every append site got a commit
+  owner (including `oat gate review`), and project-start preflights auto-commit
+  a manifest-only dirty tree. General sync-ownership classification was
+  designed, reviewed three times, and cut — `BL-260725-classify-general-sync-owned`
+  (Classify general sync-owned dirt in project-start preflight) is parked at low
+  priority and carries the design traps, since prompting is the correct answer
+  for every case the classifier existed to handle.
 - Wave-workflow follow-ups now track the grouped CLI-family and stable-artifact
   contract work, a tested TypeScript bootstrap-group rewrite, and removal of
   the temporary reviews-row watch after one more clean W6 gate. The proposed
@@ -100,6 +108,7 @@
 | BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)          | open   | medium   | task    |          |
 | BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync            | open   | medium   | feature | M        |
 | BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
+| BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight            | open   | low      | task    | M        |
 | BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
