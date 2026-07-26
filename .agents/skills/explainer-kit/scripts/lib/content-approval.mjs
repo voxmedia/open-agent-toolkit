@@ -34,6 +34,9 @@ export async function resolveContentApproval(
   if (artifacts !== undefined) {
     assertArtifacts(artifacts);
   }
+  if (authorResultPaths !== undefined) {
+    assertAuthorResultPaths(authorResultPaths);
+  }
 
   const previous = await readContentApproval(run);
   let record;
@@ -61,9 +64,13 @@ export async function resolveContentApproval(
       status: 'pending',
       attempts: [],
     };
-    if (artifacts !== undefined) {
-      record = { ...record, ...optionalArtifacts(artifacts) };
-    }
+    record = {
+      ...record,
+      ...optionalAuthorResultPaths(
+        authorResultPaths ?? previous?.authorResultPaths,
+      ),
+      ...optionalArtifacts(artifacts ?? previous?.artifacts),
+    };
   } else {
     const decision = normalizeDecision(reviewedSource.decision);
     const attempt = interactiveAttempt(reviewedSource, decision);
@@ -82,6 +89,9 @@ export async function resolveContentApproval(
           },
         ),
       }),
+      ...optionalAuthorResultPaths(
+        authorResultPaths ?? previous?.authorResultPaths,
+      ),
       ...optionalArtifacts(artifacts ?? previous?.artifacts),
     };
     if (record.reviewedSource) {
@@ -167,6 +177,12 @@ function optionalArtifacts(artifacts) {
   return artifacts === undefined
     ? {}
     : { artifacts: structuredClone(artifacts) };
+}
+
+function optionalAuthorResultPaths(paths) {
+  return paths === undefined
+    ? {}
+    : { authorResultPaths: structuredClone(paths) };
 }
 
 function assertLegacyRecord(record) {

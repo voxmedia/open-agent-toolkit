@@ -66,21 +66,41 @@ function suppliedFactBase() {
 }
 
 function authorResult(authorRequest, overrides = {}) {
+  const requiredNarrative = authorRequest.floor?.requiredNarrative ?? [
+    'overview',
+  ];
+  const markdown = `# Authored ${authorRequest.artifactId}\n\n${requiredNarrative
+    .map(
+      (id, index) =>
+        `## ${humanize(id)}\n\nSection ${index + 1} explains the verified ${humanize(id).toLowerCase()} in concise, audience-ready language.${index === 0 ? ` ${authorRequest.factBase.claims[0]?.text ?? ''}` : ''}`,
+    )
+    .join('\n\n')}\n`;
+  const html = authorRequest.shell
+    ?.replaceAll('{{TITLE}}', `Authored ${authorRequest.artifactId}`)
+    .replaceAll('{{DESCRIPTION}}', 'A concise authored artifact.')
+    .replaceAll('{{EYEBROW}}', 'Explainer Kit')
+    .replaceAll('{{NAVIGATION}}', '')
+    .replaceAll(
+      '{{CONTENT}}',
+      '<section id="overview"><h2>Overview</h2><p>Authored artifact.</p></section>',
+    )
+    .replaceAll(
+      '{{DIAGRAM}}',
+      '<rect data-node="overview" class="node active" width="80" height="40"></rect>',
+    )
+    .replaceAll('{{FOOTER}}', 'Authored from validated evidence.')
+    .replaceAll(
+      '{{SLIDES}}',
+      '<section class="slide"><h1>Overview</h1></section>',
+    )
+    .replaceAll('{{LEGEND}}', '<span>Overview</span>')
+    .replaceAll('{{THEME_CSS}}', '');
   return {
-    schemaVersion: 'explainer-kit.author-result/v1',
-    artifactId: authorRequest.artifact.id,
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: authorRequest.artifactId,
     content: {
-      title: `Authored ${authorRequest.recipe.id}`,
-      description:
-        'A concise account synthesized from the reconciled evidence.',
-      eyebrow: 'Explainer Kit',
-      footer: 'Authored from validated project evidence.',
-      sections: authorRequest.narrativeOutline.map(({ id, title }, index) => ({
-        id,
-        title,
-        prose: `Section ${index + 1} explains the verified ${title.toLowerCase()} in concise, audience-ready language.`,
-      })),
-      artifactLinks: [],
+      [authorRequest.authoring]:
+        authorRequest.authoring === 'markdown' ? markdown : html,
     },
     provenance: {
       authorId: 'fixture-author',
@@ -93,11 +113,18 @@ function authorResult(authorRequest, overrides = {}) {
 
 async function runExplainer(request, options = {}) {
   return runExplainerCore(request, {
-    ...(request.mode === 'unattended' && typeof options.author !== 'function'
+    ...(typeof options.author !== 'function'
       ? { author: async (authorRequest) => authorResult(authorRequest) }
       : {}),
     ...options,
   });
+}
+
+function humanize(value) {
+  return value
+    .split('-')
+    .map((part) => `${part[0].toUpperCase()}${part.slice(1)}`)
+    .join(' ');
 }
 
 function request({ outputRoot, factBasePath, recipe = 'project-explainer' }) {
@@ -207,7 +234,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
       corrections: ['Correct the implementation status.'],
     },
   });
-  assert.equal(rejected.outcome, 'incomplete');
+  assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
   assert.equal(rejected.approval.status, 'rejected');
   const contentPath = join(
     rejected.runRoot,
@@ -416,19 +443,23 @@ test('completed unattended runs are not mistaken for unresolved approval resumes
   ]);
 });
 
-test('unattended runs fail before narrative output when no author is supplied', async () => {
-  const fixture = await suppliedFixture('project-recap');
+test('both modes fail before narrative output when no author is supplied', async () => {
+  for (const mode of ['interactive', 'unattended']) {
+    const fixture = await suppliedFixture('project-recap');
+    const result = await runExplainerCore(
+      { ...fixture.request, mode },
+      { now: () => NOW },
+    );
 
-  const result = await runExplainerCore(fixture.request, { now: () => NOW });
-
-  assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_REQUIRED');
-  await assert.rejects(
-    access(join(result.runRoot, 'source/content/project-recap.md')),
-  );
-  await assert.rejects(
-    access(join(result.runRoot, 'source/author/project-recap.json')),
-  );
+    assert.equal(result.outcome, 'failed', mode);
+    assert.equal(result.errors[0].code, 'E_AUTHOR_REQUIRED', mode);
+    await assert.rejects(
+      access(join(result.runRoot, 'source/content/project-recap.md')),
+    );
+    await assert.rejects(
+      access(join(result.runRoot, 'source/author/project-recap.json')),
+    );
+  }
 });
 
 test('unattended author receives structured per-artifact context and retains validated provenance', async () => {
@@ -452,19 +483,23 @@ test('unattended author receives structured per-artifact context and retains val
     JSON.stringify(result.errors),
   );
   assert.equal(author.mock.callCount(), 1);
-  assert.equal(requests[0].schemaVersion, 'explainer-kit.author-request/v1');
-  assert.equal(requests[0].artifact.id, 'project-recap');
-  assert.deepEqual(
-    requests[0].narrativeOutline.map(({ id }) => id),
-    requests[0].recipe.requiredNarrative,
-  );
+  assert.equal(requests[0].schemaVersion, 'explainer-kit.author-request/v2');
+  assert.equal(requests[0].artifactId, 'project-recap');
+  assert.equal(requests[0].authoring, 'markdown');
+  assert.deepEqual(requests[0].floor.requiredNarrative, [
+    'original-request',
+    'key-agent-decisions',
+    'as-built-architecture',
+    'implementation-record',
+    'validation-evidence',
+    'outcome',
+  ]);
+  assert.match(requests[0].brief, /Audience/i);
   assert.equal(
     requests[0].factBase.schemaVersion,
     'explainer-kit.fact-base/v1',
   );
-  assert.deepEqual(requests[0].discovery.findings, [
-    'Archive validation exposed incomplete hashes.',
-  ]);
+  assert.equal(requests[0].theme.schemaVersion, 'explainer-kit.theme/v1');
 
   const authorPath = join(result.runRoot, 'source/author/project-recap.json');
   const retained = JSON.parse(await readFile(authorPath, 'utf8'));
@@ -481,14 +516,211 @@ test('unattended author receives structured per-artifact context and retains val
   assert.ok(manifest.immutableHashes['source/author/project-recap.json']);
 });
 
-test('unattended authors must return complete prose and cannot dilute a dumped section', async () => {
+test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, and resume', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const interactiveRequest = { ...fixture.request, mode: 'interactive' };
+  const author = mock.fn(async (authorRequest) =>
+    authorResult(authorRequest, {
+      ...(authorRequest.artifactId === 'project-recap' && {
+        proposedArtifacts: [
+          {
+            id: 'architecture-details',
+            profileId: 'deep-dive',
+            rationale: 'Architecture details warrant a dedicated page.',
+          },
+          {
+            id: 'system-map',
+            profileId: 'supporting-diagram',
+            rationale: 'The system relationships need a standalone visual.',
+          },
+        ],
+      }),
+    }),
+  );
+
+  const rejected = await runExplainerCore(interactiveRequest, {
+    author,
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Tighten the floor and diagram copy.'],
+    },
+  });
+  assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
+  assert.equal(author.mock.callCount(), 3);
+  const approvalPath = join(rejected.runRoot, 'source/content-approval.json');
+  const rejectedApproval = JSON.parse(await readFile(approvalPath, 'utf8'));
+  assert.equal(rejectedApproval.artifacts.length, 3);
+  assert.equal(
+    rejectedApproval.artifacts.every(({ authorResultPath }) =>
+      authorResultPath?.startsWith('source/author/'),
+    ),
+    true,
+  );
+  await access(
+    join(
+      rejected.runRoot,
+      'site/explainers/project-recap-demo/architecture-details/index.html',
+    ),
+  );
+  const hubPath = join(
+    rejected.runRoot,
+    'site/initiatives/project-recap-demo/index.html',
+  );
+  assert.match(
+    await readFile(hubPath, 'utf8'),
+    /architecture-details\/index\.html/,
+  );
+
+  const floorPath = join(rejected.runRoot, 'source/content/project-recap.md');
+  const diagramPath = join(rejected.runRoot, 'source/content/system-map.html');
+  await writeFile(
+    floorPath,
+    (await readFile(floorPath, 'utf8')).replace(
+      'audience-ready language',
+      'reviewed language',
+    ),
+  );
+  await writeFile(
+    diagramPath,
+    (await readFile(diagramPath, 'utf8')).replace(
+      'A concise authored artifact.',
+      'A reviewed authored artifact.',
+    ),
+  );
+
+  const resumed = await runExplainerCore(interactiveRequest, {
+    author,
+    now: () => '2026-07-17T20:05:00Z',
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+    },
+  });
+  assert.equal(
+    resumed.outcome,
+    'built-not-durable',
+    JSON.stringify(resumed.errors),
+  );
+  assert.equal(author.mock.callCount(), 3, 'resume must not re-invoke author');
+  const approved = JSON.parse(await readFile(approvalPath, 'utf8'));
+  assert.deepEqual(approved.artifacts, rejectedApproval.artifacts);
+  const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
+  assert.deepEqual(
+    manifest.source.authorResultPaths,
+    rejectedApproval.artifacts.map(({ authorResultPath }) => authorResultPath),
+  );
+  for (const artifact of manifest.artifacts) {
+    assert.equal(
+      artifact.hash,
+      `sha256:${createHash('sha256')
+        .update(await readFile(join(resumed.runRoot, artifact.renderedPath)))
+        .digest('hex')}`,
+    );
+  }
+  assert.match(await readFile(hubPath, 'utf8'), /system-map\/index\.html/);
+});
+
+test('over-limit expansion proposals are rejected as warnings', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const proposals = Array.from({ length: 5 }, (_, index) => ({
+    id: `diagram-${index + 1}`,
+    profileId: 'supporting-diagram',
+    rationale: `Diagram ${index + 1} isolates one architectural concern.`,
+  }));
+  const result = await runExplainerCore(fixture.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        ...(authorRequest.artifactId === 'project-recap' && {
+          proposedArtifacts: proposals,
+        }),
+      }),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.ok(result.warnings.includes('expansion-profile-limit-exceeded'));
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.equal(manifest.artifacts.length, 5);
+  assert.ok(manifest.warnings.includes('expansion-profile-limit-exceeded'));
+});
+
+test('editorial and render QA findings warn in both modes while DOM safety throws E_QA', async () => {
+  for (const mode of ['interactive', 'unattended']) {
+    const fixture = await suppliedFixture('project-recap');
+    const result = await runExplainerCore(
+      { ...fixture.request, mode },
+      {
+        author: async (authorRequest) => authorResult(authorRequest),
+        now: () => NOW,
+        ...(mode === 'interactive' && {
+          reviewedSource: {
+            decision: 'approve',
+            reviewedAt: NOW,
+            reviewer: 'operator',
+          },
+        }),
+      },
+    );
+    assert.notEqual(result.outcome, 'failed', mode);
+    assert.ok(
+      result.warnings.includes('render-qa-skipped-no-headless-runtime'),
+      mode,
+    );
+    assert.ok(
+      result.warnings.includes('guideline-architecture-diagram-missing'),
+      mode,
+    );
+    const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+    assert.ok(
+      manifest.warnings.includes('render-qa-skipped-no-headless-runtime'),
+      mode,
+    );
+  }
+
+  const unsafeFixture = await suppliedFixture('project-recap');
+  const unsafe = await runExplainerCore(unsafeFixture.request, {
+    author: async (authorRequest) => {
+      const result = authorResult(authorRequest, {
+        ...(authorRequest.artifactId === 'project-recap' && {
+          proposedArtifacts: [
+            {
+              id: 'unsafe-map',
+              profileId: 'supporting-diagram',
+              rationale: 'A diagram clarifies the system.',
+            },
+          ],
+        }),
+      });
+      if (authorRequest.artifactId === 'unsafe-map') {
+        result.content.html = result.content.html.replace(
+          '<script>',
+          '<script>window.intrusion = true;</script><script>',
+        );
+      }
+      return result;
+    },
+    now: () => NOW,
+  });
+  assert.equal(unsafe.outcome, 'failed');
+  assert.equal(unsafe.errors[0].code, 'E_QA');
+});
+
+test('authors must return the declared content path and source dumping fails QA', async () => {
   const invalidFixture = await suppliedFixture('project-recap');
   const invalid = await runExplainerCore(invalidFixture.request, {
     author: async (authorRequest) =>
       authorResult(authorRequest, {
         content: {
           ...authorResult(authorRequest).content,
-          sections: authorResult(authorRequest).content.sections.slice(1),
+          html: '<h1>Wrong path</h1>',
         },
       }),
     now: () => NOW,
@@ -511,21 +743,14 @@ test('unattended authors must return complete prose and cannot dilute a dumped s
   const dumped = await runExplainerCore(dumpFixture.request, {
     author: async (authorRequest) => {
       const result = authorResult(authorRequest);
-      result.content.sections = result.content.sections.map(
-        (section, index) => ({
-          ...section,
-          prose: index === 0 ? dumpedProse : section.prose,
-        }),
-      );
+      result.content.markdown = `# Dumped recap\n\n## Original Request\n\n${dumpedProse}`;
       return result;
     },
     now: () => NOW,
   });
   assert.equal(dumped.outcome, 'failed');
-  assert.equal(dumped.errors[0].code, 'E_SOURCE_DUMP');
-  await assert.rejects(
-    access(join(dumped.runRoot, 'source/content/project-recap.md')),
-  );
+  assert.equal(dumped.errors[0].code, 'E_QA');
+  await access(join(dumped.runRoot, 'source/content/project-recap.md'));
 });
 
 test('CLI resolves an explicit author module without persisting executable callbacks', async () => {
@@ -537,17 +762,10 @@ test('CLI resolves an explicit author module without persisting executable callb
     authorModulePath,
     `export default async function author(request) {
       return {
-        schemaVersion: 'explainer-kit.author-result/v1',
-        artifactId: request.artifact.id,
+        schemaVersion: 'explainer-kit.author-result/v2',
+        artifactId: request.artifactId,
         content: {
-          title: 'CLI-authored recap',
-          description: 'A concise retained narrative.',
-          sections: request.narrativeOutline.map(({ id, title }, index) => ({
-            id,
-            title,
-            prose: \`CLI section \${index + 1} summarizes validated evidence for readers.\`
-          })),
-          artifactLinks: []
+          markdown: '# CLI-authored recap\\n\\n## Original Request\\n\\nA concise retained narrative.'
         },
         provenance: {
           authorId: 'cli-fixture-author',
@@ -655,7 +873,7 @@ test('reusing a completed slug starts a clean independent run', async () => {
   assert.equal(manifest.runId, second.runId);
 });
 
-test('routes tagged program claims to matching narrative sections', async () => {
+test('brief-aware author can route tagged program claims to matching narrative sections', async () => {
   const fixture = await suppliedFixture('program-recap');
   const taggedFactBase = suppliedFactBase();
   taggedFactBase.claims = [
@@ -695,6 +913,26 @@ test('routes tagged program claims to matching narrative sections', async () => 
   const result = await runExplainer(
     { ...fixture.request, mode: 'interactive' },
     {
+      author: async (authorRequest) => {
+        const global = authorRequest.factBase.claims
+          .filter(({ sections }) => !sections)
+          .map(({ text }) => text);
+        const markdown = authorRequest.floor.requiredNarrative
+          .map((id) => {
+            const matched = authorRequest.factBase.claims
+              .filter(({ sections }) => sections?.includes(id))
+              .map(({ text }) => text);
+            const unresolved = authorRequest.factBase.unresolvedClaims
+              .filter(({ sections }) => sections?.includes(id))
+              .map(({ text }) => `Needs confirmation: ${text}`);
+            return `## ${humanize(id)}\n\n${[...global, ...matched, ...unresolved].join(' ')}`;
+          })
+          .join('\n\n');
+        return {
+          ...authorResult(authorRequest),
+          content: { markdown: `# Program recap\n\n${markdown}\n` },
+        };
+      },
       now: () => NOW,
       reviewedSource: {
         decision: 'approve',

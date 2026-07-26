@@ -84,17 +84,21 @@ test('interactive content remains pending until an explicit decision', async () 
   assert.deepEqual(await readContentApproval(run), persisted);
 });
 
-test('v2 artifacts round-trip and remain optional through interactive approval', async () => {
+test('v2 artifact and author-result sets round-trip through interactive approval', async () => {
   const run = await makeRun();
+  const authorResultPaths = RESOLVED_ARTIFACTS.map(
+    ({ authorResultPath }) => authorResultPath,
+  );
 
   const pending = await resolveContentApproval(
     run,
     'interactive',
     undefined,
-    undefined,
+    authorResultPaths,
     RESOLVED_ARTIFACTS,
   );
   assert.deepEqual(pending.record.artifacts, RESOLVED_ARTIFACTS);
+  assert.deepEqual(pending.record.authorResultPaths, authorResultPaths);
   assert.deepEqual(
     (await readContentApproval(run)).artifacts,
     RESOLVED_ARTIFACTS,
@@ -107,6 +111,7 @@ test('v2 artifacts round-trip and remain optional through interactive approval',
   });
   assert.equal(approved.record.marking, 'human-approved');
   assert.deepEqual(approved.record.artifacts, RESOLVED_ARTIFACTS);
+  assert.deepEqual(approved.record.authorResultPaths, authorResultPaths);
 });
 
 test('persists rejection corrections and later approval for the same run', async () => {

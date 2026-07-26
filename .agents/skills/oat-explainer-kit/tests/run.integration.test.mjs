@@ -685,17 +685,13 @@ async function writeValidAuthorModule(path) {
     path,
     `export async function author(request) {
   return {
-    schemaVersion: 'explainer-kit.author-result/v1',
-    artifactId: request.artifact.id,
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
     content: {
-      title: 'Lifecycle-authored recap',
-      description: 'A concise project narrative synthesized from reconciled facts.',
-      sections: request.narrativeOutline.map(({ id, title }, index) => ({
-        id,
-        title,
-        prose: \`Section \${index + 1} explains the validated \${title.toLowerCase()} evidence and its project impact for readers.\`,
-      })),
-      artifactLinks: [],
+      markdown: '# Lifecycle-authored recap\\n\\n' +
+        request.floor.requiredNarrative.map((id, index) =>
+          \`## \${id.replaceAll('-', ' ')}\\n\\nSection \${index + 1} explains validated evidence and its project impact.\`
+        ).join('\\n\\n'),
     },
     provenance: {
       authorId: 'adapter-lifecycle-author',
