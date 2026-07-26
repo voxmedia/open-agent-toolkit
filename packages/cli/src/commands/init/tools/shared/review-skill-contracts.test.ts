@@ -198,8 +198,17 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'Run this recap gate after the final code review has passed and configured pre-approval summary/document steps have completed, but before final HiLL approval.',
     );
-    expect(content).toContain(
-      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    expect(content).toMatch(
+      /construct exactly one brief-aware,\s+provider-neutral author seam/,
+    );
+    expect(content).toMatch(
+      /In-process callers pass\s+`author`; JSON\/CLI callers pass a validated `authorModulePath`\./,
+    );
+    expect(content).toMatch(
+      /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
+    );
+    expect(content).toMatch(
+      /always invoke this implementation-tail recap with\s+`mode: unattended`\./,
     );
 
     const normalizedContent = content.replace(/\s+/g, ' ');
@@ -660,7 +669,7 @@ describe('review skill contracts', () => {
     );
     const normalizedContent = content.replace(/\s+/g, ' ');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.4');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
     expect(content).toContain(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
     );
@@ -673,9 +682,16 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'A valid persisted `oat_project_recap` decision prevents another prompt.',
     );
-    expect(content).toContain(
-      'Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.',
+    expect(content).toMatch(
+      /construct exactly one brief-aware, provider-neutral\s+author seam/,
     );
+    expect(content).toMatch(
+      /In-process callers pass\s+`author`; JSON\/CLI callers pass a validated `authorModulePath`\./,
+    );
+    expect(content).toMatch(
+      /Supply it\s+alongside the existing `critic` callback \(or validated\s+`criticModulePath`\)/,
+    );
+    expect(content).toMatch(/invoke the recap with `mode: unattended`\./);
 
     const resolveIndex = normalizedContent.indexOf(
       'Resolve `projectRecap` intent before presenting the batched completion prompt.',
