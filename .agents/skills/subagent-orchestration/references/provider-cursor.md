@@ -45,8 +45,13 @@ does not by itself prove lower user-observed elapsed time.
 
 ## Dated Task-Class Matrix
 
-Use exact aliases from the live catalog. The examples below were present in the
-user's 2026-07-21 snapshot.
+Use exact aliases from the live catalog. The examples below come from two
+observations, not one. Most were present in a 2026-07-21 catalog snapshot. The
+`claude-opus-5` and `claude-opus-4-8` routes postdate it — Opus 5 released
+2026-07-24 — and were confirmed against the live catalog and probe-verified on
+2026-07-25, as recorded under Verified Opus 5 Cursor Routes below. The
+remainder of the catalog has not been re-snapshotted since 2026-07-21, so treat
+non-Opus entries as the older and weaker observation.
 
 | Task class               | Default                                                                                                                                                      | Economy                                                                              | Escalation                                                                                                             | Floor notes                                                                                                                                                                                                                                                                     |
 | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
