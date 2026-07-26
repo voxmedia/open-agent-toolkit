@@ -380,8 +380,11 @@ context exists, rejects any author-supplied `trust`, and records
 core rather than the author. Smoke fixtures were migrated, not weakened: they
 now assert the `trust` field is present and that a backdated author
 `generatedAt` is overwritten by the core clock — a strictly stronger assertion
-than the previous hardcoded-timestamp equality. `f257f96d` is a lint-only
-follow-up renaming an intentionally unused destructured binding.
+than the previous hardcoded-timestamp equality. `f257f96d` is a follow-up that
+both renamed an intentionally unused destructured binding to satisfy lint and
+set `EXPLAINER_KIT_HEADLESS_PROBE=off` for the wrapper smoke suite. That
+opt-out is no longer present: `f3917a8f` made render QA opt-in, so nothing
+self-launches a runtime for the suite to switch off.
 
 ### Task prev1-t06: Real headless runtime seam for render QA (I3)
 
