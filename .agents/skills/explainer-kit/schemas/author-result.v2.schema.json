@@ -24,7 +24,11 @@
       "properties": {
         "authorId": { "type": "string", "minLength": 1 },
         "generatedAt": { "type": "string", "format": "date-time" },
-        "method": { "type": "string", "minLength": 1 }
+        "method": { "type": "string", "minLength": 1 },
+        "trust": {
+          "description": "Stamped by the core on the retained record only. An author callback that asserts it is rejected.",
+          "enum": ["caller-bound", "self-asserted"]
+        }
       }
     },
     "proposedArtifacts": {

@@ -132,11 +132,16 @@ async function assertAuthoredRun(runRoot, manifest) {
       'utf8',
     ),
   );
-  assert.deepEqual(authorResult.provenance, {
+  const { generatedAt, ...identity } = authorResult.provenance;
+  assert.deepEqual(identity, {
     authorId: 'packaged-layout-provider-neutral-author',
-    generatedAt: '2026-07-18T14:00:00.000Z',
     method: 'structured-evidence-synthesis',
+    trust: 'self-asserted',
   });
+  // The core stamps generation time from its own clock, so the author
+  // module's backdated claim never reaches the hash-pinned record.
+  assert.notEqual(generatedAt, '2026-07-18T14:00:00.000Z');
+  assert.equal(new Date(generatedAt).toISOString(), generatedAt);
 }
 
 function escapeRegExp(value) {

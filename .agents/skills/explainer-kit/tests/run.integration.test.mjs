@@ -767,6 +767,124 @@ test('authors must return the declared content path and source dumping fails QA'
   await access(join(dumped.runRoot, 'source/content/project-recap.md'));
 });
 
+test('author provenance is bound to trusted caller context, not self-asserted', async () => {
+  const trusted = {
+    authorId: 'lifecycle-recap-author',
+    method: 'provider-neutral-module',
+  };
+  const provenanceOf = async (result) =>
+    JSON.parse(
+      await readFile(join(result.runRoot, 'source/author/project-recap.json'), 'utf8'),
+    ).provenance;
+
+  // Matching context: identity and method survive, time comes from the clock.
+  const matching = await suppliedFixture('project-recap');
+  const bound = await runExplainerCore(matching.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        provenance: { ...trusted, generatedAt: NOW },
+      }),
+    authorProvenance: trusted,
+    now: () => NOW,
+  });
+  assert.equal(bound.outcome, 'built-not-durable', JSON.stringify(bound.errors));
+  assert.deepEqual(await provenanceOf(bound), {
+    ...trusted,
+    generatedAt: NOW,
+    trust: 'caller-bound',
+  });
+
+  // A spoofed identity is a hard error rather than a retained claim.
+  for (const spoofed of [
+    { authorId: 'someone-else', method: trusted.method },
+    { authorId: trusted.authorId, method: 'hand-written' },
+  ]) {
+    const fixture = await suppliedFixture('project-recap');
+    const result = await runExplainerCore(fixture.request, {
+      author: async (authorRequest) =>
+        authorResult(authorRequest, {
+          provenance: { ...spoofed, generatedAt: NOW },
+        }),
+      authorProvenance: trusted,
+      now: () => NOW,
+    });
+    assert.equal(result.outcome, 'failed', JSON.stringify(spoofed));
+    assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
+    assert.match(
+      result.errors[0].message,
+      /does not match the trusted caller context/,
+    );
+  }
+
+  // A backdated claim never reaches the hash-pinned record.
+  const backdated = await suppliedFixture('project-recap');
+  const stamped = await runExplainerCore(backdated.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        provenance: { ...trusted, generatedAt: '2019-01-01T00:00:00.000Z' },
+      }),
+    authorProvenance: trusted,
+    now: () => NOW,
+  });
+  assert.equal(
+    stamped.outcome,
+    'built-not-durable',
+    JSON.stringify(stamped.errors),
+  );
+  assert.deepEqual(await provenanceOf(stamped), {
+    ...trusted,
+    generatedAt: NOW,
+    trust: 'caller-bound',
+  });
+
+  // A callback may not claim to be caller-bound.
+  const forged = await suppliedFixture('project-recap');
+  const rejected = await runExplainerCore(forged.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        provenance: { ...trusted, generatedAt: NOW, trust: 'caller-bound' },
+      }),
+    authorProvenance: trusted,
+    now: () => NOW,
+  });
+  assert.equal(rejected.outcome, 'failed');
+  assert.equal(rejected.errors[0].code, 'E_AUTHOR_PROVENANCE');
+  assert.match(rejected.errors[0].message, /must not assert a provenance trust/);
+
+  // Without trusted context the retained record says so rather than implying
+  // an authenticated identity.
+  const untrusted = await suppliedFixture('project-recap');
+  const selfAsserted = await runExplainerCore(untrusted.request, {
+    author: async (authorRequest) =>
+      authorResult(authorRequest, {
+        provenance: { authorId: 'anyone', generatedAt: '2019-01-01T00:00:00.000Z' },
+      }),
+    now: () => NOW,
+  });
+  assert.equal(
+    selfAsserted.outcome,
+    'built-not-durable',
+    JSON.stringify(selfAsserted.errors),
+  );
+  assert.deepEqual(await provenanceOf(selfAsserted), {
+    authorId: 'anyone',
+    generatedAt: NOW,
+    trust: 'self-asserted',
+  });
+});
+
+test('a malformed trusted provenance context fails the run loudly', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const result = await runExplainerCore(fixture.request, {
+    author: async (authorRequest) => authorResult(authorRequest),
+    authorProvenance: { method: 'module' },
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_AUTHOR_PROVENANCE');
+});
+
 test('CLI resolves an explicit author module without persisting executable callbacks', async () => {
   const fixture = await suppliedFixture('project-recap');
   const requestPath = join(fixture.cwd, 'request.json');

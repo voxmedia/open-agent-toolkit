@@ -110,7 +110,7 @@ export async function runExplainer(request, options = {}) {
       await prepareTheme(state);
       await executeStage(run, 'content', options, async () => {
         state.discovery = await runDiscovery(recipe, state.factBase, options);
-        await createAuthoredContent(state, options.author);
+        await createAuthoredContent(state, options, now);
         return {
           outputPaths: [
             ...state.contentPaths.values(),
@@ -785,13 +785,15 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
   };
 }
 
-async function createAuthoredContent(state, author) {
+async function createAuthoredContent(state, options, now) {
+  const author = options.author;
   if (typeof author !== 'function') {
     throw codedError(
       'E_AUTHOR_REQUIRED',
       'Explainer runs require an explicit author callback in both modes.',
     );
   }
+  const trust = authorTrustContext(options, now);
 
   const floor = await Promise.all(
     recipeFloor(state.recipe).map((artifact) =>
@@ -803,6 +805,7 @@ async function createAuthoredContent(state, author) {
           shell: artifact.authoring === 'html' ? artifact.template : undefined,
         },
         author,
+        trust,
       ),
     ),
   );
@@ -837,6 +840,7 @@ async function createAuthoredContent(state, author) {
         profileId: profile.profileId,
       },
       author,
+      trust,
     );
     if ((item.result.proposedArtifacts ?? []).length > 0) {
       throw codedError(
@@ -869,7 +873,67 @@ async function createAuthoredContent(state, author) {
   }
 }
 
-async function authorArtifact(state, artifact, author) {
+// Provenance authenticity cannot come from the party being identified, so
+// identity and method are bound to trusted caller configuration and the
+// generation time is stamped from the run's injected clock.
+function authorTrustContext(options, now) {
+  const generatedAt = now();
+  const declared = options.authorProvenance;
+  if (declared === undefined) return { generatedAt, bound: null };
+  const valid =
+    typeof declared === 'object' &&
+    declared !== null &&
+    !Array.isArray(declared) &&
+    typeof declared.authorId === 'string' &&
+    declared.authorId.length > 0 &&
+    (declared.method === undefined ||
+      (typeof declared.method === 'string' && declared.method.length > 0));
+  if (!valid) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      'Trusted author provenance requires a non-empty authorId and, when present, a non-empty method.',
+    );
+  }
+  return {
+    generatedAt,
+    bound: {
+      authorId: declared.authorId,
+      ...(declared.method !== undefined && { method: declared.method }),
+    },
+  };
+}
+
+function resolveAuthorProvenance(claimed, trust, artifactId) {
+  if ('trust' in claimed) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      `Author result for ${artifactId} must not assert a provenance trust level; the core stamps it.`,
+    );
+  }
+  if (trust.bound === null) {
+    return {
+      ...claimed,
+      generatedAt: trust.generatedAt,
+      trust: 'self-asserted',
+    };
+  }
+  if (
+    claimed.authorId !== trust.bound.authorId ||
+    (trust.bound.method !== undefined && claimed.method !== trust.bound.method)
+  ) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      `Author result for ${artifactId} claims provenance that does not match the trusted caller context.`,
+    );
+  }
+  return {
+    ...trust.bound,
+    generatedAt: trust.generatedAt,
+    trust: 'caller-bound',
+  };
+}
+
+async function authorArtifact(state, artifact, author, trust) {
   const brief = await readSkillFile(artifact.briefRef);
   const shellContent =
     artifact.authoring === 'html'
@@ -923,6 +987,21 @@ async function authorArtifact(state, artifact, author) {
       `Author result for ${artifact.id} must match its identity and ${artifact.authoring} path.`,
     );
   }
+  const retained = {
+    ...structuredClone(result),
+    provenance: resolveAuthorProvenance(
+      result.provenance,
+      trust,
+      artifact.id,
+    ),
+  };
+  const retainedValidation = validateContract('author-result/v2', retained);
+  if (!retainedValidation.valid) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      contractErrorMessage('retained author result', retainedValidation.errors),
+    );
+  }
   const dumpCheck = checkSourceDumping({
     authoredText: content,
     sourceTexts: [
@@ -939,7 +1018,7 @@ async function authorArtifact(state, artifact, author) {
 
   return {
     artifact: resolvedArtifact,
-    result: structuredClone(result),
+    result: retained,
     resultPath: `source/author/${artifact.id}.json`,
     content,
     contentPath: `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,

@@ -161,4 +161,11 @@ test('author v2 contracts require authored content and provenance', async () => 
     'authorId',
     'generatedAt',
   ]);
+  // The trust level is core-stamped on the retained record, so it is declared
+  // but never required of an incoming author result.
+  assert.deepEqual(result.properties.provenance.properties.trust.enum, [
+    'caller-bound',
+    'self-asserted',
+  ]);
+  assert.equal(result.properties.provenance.additionalProperties, false);
 });

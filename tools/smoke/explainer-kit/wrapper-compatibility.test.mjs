@@ -134,13 +134,21 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   assert.equal(writeStoaNote.mock.callCount(), 1);
   assert.equal(syncGoogleDoc.mock.callCount(), 1);
   assert.equal(publishManifest.mock.callCount(), 1);
-  assert.deepEqual(wrapped.authorProvenance, [
-    {
-      authorId: 'private-wrapper-provider-neutral-author',
-      generatedAt: NOW,
-      method: 'structured-evidence-synthesis',
-    },
-  ]);
+  assert.deepEqual(
+    wrapped.authorProvenance.map(({ generatedAt, ...identity }) => identity),
+    [
+      {
+        authorId: 'private-wrapper-provider-neutral-author',
+        method: 'structured-evidence-synthesis',
+        trust: 'self-asserted',
+      },
+    ],
+  );
+  // Generation time comes from the core's injected clock, so the author
+  // module's backdated claim never reaches the retained record.
+  for (const { generatedAt } of wrapped.authorProvenance) {
+    assert.equal(generatedAt, NOW);
+  }
   assert.equal(
     wrapped.publishReceipt.schemaVersion,
     'explainer-kit.publish-receipt/v1',
@@ -254,7 +262,7 @@ async function providerNeutralAuthor(request) {
     },
     provenance: {
       authorId: 'private-wrapper-provider-neutral-author',
-      generatedAt: NOW,
+      generatedAt: '2019-01-01T00:00:00.000Z',
       method: 'structured-evidence-synthesis',
     },
   };
