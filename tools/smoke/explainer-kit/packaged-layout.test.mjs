@@ -1,3 +1,8 @@
+// These suites assert pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
+
 import assert from 'node:assert/strict';
 import { execFile } from 'node:child_process';
 import { access, readFile, rename, writeFile } from 'node:fs/promises';

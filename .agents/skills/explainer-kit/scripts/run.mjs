@@ -5,6 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import {
+  RUNTIME_UNAVAILABLE_REASONS,
+  createBrowserProbeSession,
+} from './lib/browser-runtime.mjs';
 import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
@@ -237,79 +241,170 @@ async function executeQaStage(state, options) {
   await executeStage(state.run, 'qa', options, async () => {
     const htmlSafetyErrors = [];
     const qaWarnings = [];
-    for (const artifact of state.resolvedArtifacts.filter(
-      ({ authoring }) => authoring === 'html',
-    )) {
-      const safety = validateHtmlSafety({
-        html: state.authoredContent.get(artifact.id),
-        shell: artifact.shellContent,
-        shellName: artifact.shell ?? artifact.template,
+    const runtime = await resolveBrowserProbeRuntime(options);
+    try {
+      return await auditRenderedArtifacts(state, options, {
+        runtime,
+        htmlSafetyErrors,
+        qaWarnings,
       });
-      htmlSafetyErrors.push(
-        ...safety.errors.map((code) => ({
-          code,
-          message: `Artistic artifact ${artifact.id} failed DOM safety validation.`,
-        })),
-      );
-      qaWarnings.push(...safety.warnings);
+    } finally {
+      await runtime.close?.();
     }
-
-    const report = await auditArtifactSet({
-      artifacts: state.rendered.map((artifact) => ({
-        id: artifact.artifactId,
-        type: artifact.type,
-        html: artifact.html,
-      })),
-      ...(options.denylist && { denylist: options.denylist }),
-      ...(options.browserProbe && { browserProbe: options.browserProbe }),
-      ...(options.widths && { widths: options.widths }),
-    });
-    const hardIssues = report.issues.filter((issue) =>
-      isHardQaIssue(issue.code),
-    );
-    const warningIssues = report.issues.filter(
-      (issue) => !isHardQaIssue(issue.code),
-    );
-    // A code the render-QA vocabulary already covers must not also emit an ad
-    // hoc `qa-*` twin; the generic conversion is for structural codes only.
-    qaWarnings.push(
-      ...renderQaWarningIds(warningIssues),
-      ...warningIssues
-        .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
-        .map(({ code }) => `qa-${code}`),
-    );
-    if (!options.browserProbe) {
-      qaWarnings.push(RENDER_QA_WARNING_IDS.skippedNoRuntime);
-    }
-    const guidelines = checkGuidelines({
-      recipe: state.recipe,
-      artifacts: state.rendered.map((artifact) => ({
-        id: artifact.artifactId,
-        type: artifact.type,
-        html: artifact.html,
-      })),
-      expansion: state.expansion,
-    });
-    qaWarnings.push(...guidelines.warnings, ...state.expansion.warnings);
-
-    const errors = [...state.qaErrors, ...htmlSafetyErrors, ...hardIssues];
-    if (errors.length > 0) {
-      throw codedError(
-        'E_QA',
-        errors.map(({ code, message }) => `${code}: ${message}`).join('; '),
-      );
-    }
-    state.warnings.push(...qaWarnings);
-    const warnings = [
-      ...(state.reopenedWarnings.qa ?? []),
-      ...new Set(qaWarnings),
-    ];
-    return {
-      outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
-      warnings,
-      status: warnings.length > 0 ? 'warned' : 'passed',
-    };
   });
+}
+
+/**
+ * Resolve the browser probe the QA stage will drive. Injection wins for tests,
+ * an explicitly requested module must load or fail loudly, and an ordinary run
+ * attempts real capability detection before recording a skip.
+ */
+async function resolveBrowserProbeRuntime(options) {
+  if (options.browserProbe !== undefined) {
+    if (typeof options.browserProbe !== 'function') {
+      throw codedError(
+        'E_BROWSER_PROBE',
+        'options.browserProbe must be a function when supplied.',
+      );
+    }
+    return { probe: options.browserProbe, source: 'injected' };
+  }
+
+  if (options.browserProbeModulePath !== undefined) {
+    const probe = await loadBrowserProbeModule(options.browserProbeModulePath);
+    return { probe, source: 'module' };
+  }
+
+  const createSession =
+    options.createBrowserProbeSession ?? createBrowserProbeSession;
+  let session;
+  try {
+    session = await createSession();
+  } catch (cause) {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      `Headless browser runtime failed to start: ${safeMessage(cause)}`,
+    );
+  }
+  if (!session?.available) {
+    return {
+      probe: null,
+      source: 'unavailable',
+      reason: session?.reason ?? 'unknown',
+    };
+  }
+  return {
+    probe: session.probe,
+    source: 'resolved',
+    runtime: session.runtime,
+    close: session.close,
+  };
+}
+
+async function loadBrowserProbeModule(modulePath) {
+  if (typeof modulePath !== 'string' || modulePath.trim().length === 0) {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      'options.browserProbeModulePath must be a non-empty module path.',
+    );
+  }
+  let loaded;
+  try {
+    loaded = await import(pathToFileURL(resolve(modulePath)).href);
+  } catch (cause) {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      `Unable to load browser probe module at ${modulePath}: ${safeMessage(cause)}`,
+    );
+  }
+  const probe = loaded.browserProbe ?? loaded.default;
+  if (typeof probe !== 'function') {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      `Browser probe module at ${modulePath} must export a browserProbe function.`,
+    );
+  }
+  return probe;
+}
+
+async function auditRenderedArtifacts(
+  state,
+  options,
+  { runtime, htmlSafetyErrors, qaWarnings },
+) {
+  for (const artifact of state.resolvedArtifacts.filter(
+    ({ authoring }) => authoring === 'html',
+  )) {
+    const safety = validateHtmlSafety({
+      html: state.authoredContent.get(artifact.id),
+      shell: artifact.shellContent,
+      shellName: artifact.shell ?? artifact.template,
+    });
+    htmlSafetyErrors.push(
+      ...safety.errors.map((code) => ({
+        code,
+        message: `Artistic artifact ${artifact.id} failed DOM safety validation.`,
+      })),
+    );
+    qaWarnings.push(...safety.warnings);
+  }
+
+  const probeArtifacts = state.rendered.map((artifact) => ({
+    id: artifact.artifactId,
+    type: artifact.type,
+    html: artifact.html,
+  }));
+  const report = await auditArtifactSet({
+    artifacts: probeArtifacts,
+    ...(options.denylist && { denylist: options.denylist }),
+    ...(runtime.probe && { browserProbe: runtime.probe }),
+    ...(options.widths && { widths: options.widths }),
+  });
+  const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
+  const warningIssues = report.issues.filter(
+    (issue) => !isHardQaIssue(issue.code),
+  );
+  // A code the render-QA vocabulary already covers must not also emit an ad
+  // hoc `qa-*` twin; the generic conversion is for structural codes only.
+  qaWarnings.push(
+    ...renderQaWarningIds(warningIssues),
+    ...warningIssues
+      .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
+      .map(({ code }) => `qa-${code}`),
+  );
+  // The skip means "this machine has no usable runtime" or "an operator turned
+  // probes off", never "no caller injected a probe".
+  if (!runtime.probe) {
+    qaWarnings.push(
+      runtime.reason === RUNTIME_UNAVAILABLE_REASONS.disabled
+        ? RENDER_QA_WARNING_IDS.disabledByConfiguration
+        : RENDER_QA_WARNING_IDS.skippedNoRuntime,
+    );
+  }
+  const guidelines = checkGuidelines({
+    recipe: state.recipe,
+    artifacts: probeArtifacts,
+    expansion: state.expansion,
+  });
+  qaWarnings.push(...guidelines.warnings, ...state.expansion.warnings);
+
+  const errors = [...state.qaErrors, ...htmlSafetyErrors, ...hardIssues];
+  if (errors.length > 0) {
+    throw codedError(
+      'E_QA',
+      errors.map(({ code, message }) => `${code}: ${message}`).join('; '),
+    );
+  }
+  state.warnings.push(...qaWarnings);
+  const warnings = [
+    ...(state.reopenedWarnings.qa ?? []),
+    ...new Set(qaWarnings),
+  ];
+  return {
+    outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+    warnings,
+    status: warnings.length > 0 ? 'warned' : 'passed',
+  };
 }
 
 function isHardQaIssue(code) {
@@ -1272,6 +1367,10 @@ async function parseCli(argv) {
       const path = argv[++index];
       if (!path) throw new Error('--reviewed-source requires a JSON path.');
       options.reviewedSource = JSON.parse(await readFile(path, 'utf8'));
+    } else if (value === '--browser-probe-module') {
+      const path = argv[++index];
+      if (!path) throw new Error(`${value} requires a module path.`);
+      options.browserProbeModulePath = path;
     } else if (
       [
         '--author-module',
@@ -1294,7 +1393,7 @@ async function parseCli(argv) {
   }
   if (!requestPath) {
     throw new Error(
-      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--author-module <mjs>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>]',
+      'Usage: run.mjs --request <json> [--reviewed-source <json>] [--author-module <mjs>] [--critic-module <mjs>] [--publish-module <mjs>] [--durability-module <mjs>] [--browser-probe-module <mjs>]',
     );
   }
   return { requestPath, options };

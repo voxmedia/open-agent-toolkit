@@ -1,3 +1,8 @@
+// These suites assert pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
+
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import {
@@ -685,7 +690,7 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
     );
     assert.notEqual(result.outcome, 'failed', mode);
     assert.ok(
-      result.warnings.includes('render-qa-skipped-no-headless-runtime'),
+      result.warnings.includes('render-qa-disabled-by-configuration'),
       mode,
     );
     assert.ok(
@@ -694,7 +699,7 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
     );
     const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
     assert.ok(
-      manifest.warnings.includes('render-qa-skipped-no-headless-runtime'),
+      manifest.warnings.includes('render-qa-disabled-by-configuration'),
       mode,
     );
   }

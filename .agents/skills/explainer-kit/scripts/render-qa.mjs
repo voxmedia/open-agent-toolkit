@@ -6,6 +6,10 @@ import { basename, posix, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import {
+  RUNTIME_UNAVAILABLE_REASONS,
+  createBrowserProbeSession,
+} from './lib/browser-runtime.mjs';
+import {
   RENDER_QA_WARNING_IDS,
   auditArtifactSet,
   renderQaWarningIds,
@@ -60,18 +64,41 @@ export async function runRenderQaStage({
   artifacts,
   browserProbe,
   widths,
+  createProbeSession = createBrowserProbeSession,
 } = {}) {
   assertStageInput(siteDir, artifacts);
-  if (typeof browserProbe !== 'function') {
-    return {
-      valid: true,
-      skipped: true,
-      warnings: [RENDER_QA_WARNING_IDS.skippedNoRuntime],
-      issues: [],
-      probes: 0,
-    };
+  let probe = browserProbe;
+  let closeSession;
+  if (typeof probe !== 'function') {
+    // Attempt a real runtime before conceding; the skip must describe machine
+    // capability rather than the absence of an injected callback.
+    const session = await createProbeSession();
+    if (!session?.available) {
+      return {
+        valid: true,
+        skipped: true,
+        warnings: [
+          session?.reason === RUNTIME_UNAVAILABLE_REASONS.disabled
+            ? RENDER_QA_WARNING_IDS.disabledByConfiguration
+            : RENDER_QA_WARNING_IDS.skippedNoRuntime,
+        ],
+        issues: [],
+        probes: 0,
+        ...(session?.reason && { reason: session.reason }),
+      };
+    }
+    probe = session.probe;
+    closeSession = session.close;
   }
 
+  try {
+    return await probeSiteArtifacts({ siteDir, artifacts, probe, widths });
+  } finally {
+    await closeSession?.();
+  }
+}
+
+async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {
   return withSiteServer(siteDir, async (origin) => {
     const probeArtifacts = await Promise.all(
       artifacts.map(async (artifact) => {
@@ -92,7 +119,7 @@ export async function runRenderQaStage({
     );
     const browser = await runBrowserProbes({
       artifacts: probeArtifacts,
-      probe: browserProbe,
+      probe,
       ...(widths && { widths }),
     });
     return {

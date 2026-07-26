@@ -36,6 +36,7 @@ export async function runOatExplainer({
   authorModulePath,
   critic,
   criticModulePath,
+  browserProbeModulePath,
   coreOptions = {},
 }) {
   const compatibility = await checkCoreCompatibility({
@@ -120,8 +121,13 @@ export async function runOatExplainer({
     criticModulePath,
     coreOptions,
   });
+  const probeModulePath = resolveProbeModulePath({
+    browserProbeModulePath,
+    coreOptions,
+  });
   const result = await core.runExplainer(request, {
     ...coreOptions,
+    ...(probeModulePath && { browserProbeModulePath: probeModulePath }),
     ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
@@ -143,6 +149,28 @@ export async function runOatExplainer({
     marking: result.marking ?? null,
     outputRoot,
   };
+}
+
+/**
+ * Lifecycle runs may name a browser probe module; when they do not, the core
+ * still tries to resolve an installed headless runtime on its own.
+ */
+function resolveProbeModulePath({ browserProbeModulePath, coreOptions }) {
+  const supplied = [
+    browserProbeModulePath,
+    coreOptions?.browserProbeModulePath,
+  ].filter((candidate) => candidate !== undefined);
+  if (supplied.length > 1) {
+    throw new Error(
+      'Supply only one browser probe module entry point at the OAT adapter boundary.',
+    );
+  }
+  const [path] = supplied;
+  if (path === undefined) return null;
+  if (typeof path !== 'string' || path.trim().length === 0) {
+    throw new TypeError('browserProbeModulePath must be a non-empty path.');
+  }
+  return resolve(path.trim());
 }
 
 async function resolveLifecycleAuthor({

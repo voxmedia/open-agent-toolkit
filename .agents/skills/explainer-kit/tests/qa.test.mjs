@@ -5,6 +5,11 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
+  RUNTIME_UNAVAILABLE_REASONS,
+  createBrowserProbeSession,
+  resolveHeadlessRuntime,
+} from '../scripts/lib/browser-runtime.mjs';
+import {
   GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
   RENDER_QA_WARNING_IDS,
@@ -517,7 +522,7 @@ test('render QA stage serves built artifacts and emits seeded layout warnings', 
   });
 });
 
-test('render QA stage records one stable warning when no probe is available', async () => {
+test('render QA stage records one stable warning only when no runtime exists', async () => {
   const report = await runRenderQaStage({
     siteDir: '/not-read-when-skipped',
     artifacts: [
@@ -527,6 +532,10 @@ test('render QA stage records one stable warning when no probe is available', as
         renderedPath: 'site/recap.html',
       },
     ],
+    createProbeSession: async () => ({
+      available: false,
+      reason: 'browser-driver-not-installed',
+    }),
   });
 
   assert.deepEqual(report, {
@@ -535,7 +544,110 @@ test('render QA stage records one stable warning when no probe is available', as
     warnings: [RENDER_QA_WARNING_IDS.skippedNoRuntime],
     issues: [],
     probes: 0,
+    reason: 'browser-driver-not-installed',
   });
+});
+
+test('render QA stage drives a resolved runtime without an injected probe', async (t) => {
+  const siteDir = await mkdtemp(join(tmpdir(), 'explainer-render-qa-runtime-'));
+  t.after(() => rm(siteDir, { recursive: true, force: true }));
+  await writeFile(join(siteDir, 'recap.html'), fixture());
+
+  let closed = false;
+  const report = await runRenderQaStage({
+    siteDir,
+    artifacts: [{ id: 'recap', type: 'hub', renderedPath: 'site/recap.html' }],
+    widths: [320],
+    createProbeSession: async () => ({
+      available: true,
+      runtime: { name: 'chromium', version: '0.0.0-test' },
+      probe: async () => ({
+        pageOverflowX: false,
+        clippedX: [],
+        viewportClipped: [],
+        unreadableHeadings: [],
+        animationsDisabled: true,
+        reducedMotion: true,
+        keyboard: { tab: true },
+      }),
+      close: async () => {
+        closed = true;
+      },
+    }),
+  });
+
+  assert.deepEqual(report, {
+    valid: true,
+    skipped: false,
+    warnings: [],
+    issues: [],
+    probes: 1,
+  });
+  assert.equal(closed, true);
+});
+
+test('a genuinely resolvable runtime probes the real rendered artifact', async (t) => {
+  const session = await createBrowserProbeSession();
+  if (!session.available) {
+    t.skip(`no headless runtime on this machine: ${session.reason}`);
+    return;
+  }
+  const siteDir = await mkdtemp(join(tmpdir(), 'explainer-render-qa-real-'));
+  t.after(async () => {
+    await session.close();
+    await rm(siteDir, { recursive: true, force: true });
+  });
+  await writeFile(join(siteDir, 'recap.html'), fixture());
+
+  const report = await runRenderQaStage({
+    siteDir,
+    artifacts: [{ id: 'recap', type: 'hub', renderedPath: 'site/recap.html' }],
+    widths: [320],
+    createProbeSession: async () => session,
+  });
+
+  assert.equal(report.skipped, false);
+  assert.equal(report.probes, 1);
+  assert.deepEqual(report.warnings, []);
+  assert.deepEqual(report.issues, []);
+});
+
+test('runtime resolution reports capability rather than assuming a driver', async () => {
+  assert.deepEqual(
+    await resolveHeadlessRuntime({
+      loadDriver: async () => {
+        throw new Error('Cannot find package');
+      },
+    }),
+    { available: false, reason: RUNTIME_UNAVAILABLE_REASONS.driverMissing },
+  );
+  assert.deepEqual(
+    await resolveHeadlessRuntime({
+      loadDriver: async () => ({
+        chromium: {
+          launch: () => {},
+          executablePath: () => '/nowhere/chromium',
+        },
+      }),
+      fileExists: () => false,
+      env: {},
+    }),
+    { available: false, reason: RUNTIME_UNAVAILABLE_REASONS.executableMissing },
+  );
+
+  const resolved = await resolveHeadlessRuntime({
+    loadDriver: async () => ({
+      chromium: {
+        launch: () => 'browser',
+        executablePath: () => '/opt/chromium',
+      },
+    }),
+    fileExists: (candidate) => candidate === '/opt/chromium',
+    env: {},
+  });
+  assert.equal(resolved.available, true);
+  assert.equal(resolved.executablePath, '/opt/chromium');
+  assert.equal(resolved.launch(), 'browser');
 });
 
 test('browser probes require both deck arrow pairs', async () => {

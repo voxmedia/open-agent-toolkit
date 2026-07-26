@@ -57,6 +57,9 @@ export const RENDER_QA_WARNING_IDS = Object.freeze({
   deckNoJsLayout: 'render-qa-deck-no-js-layout',
   deckPrintLayout: 'render-qa-deck-print-layout',
   skippedNoRuntime: 'render-qa-skipped-no-headless-runtime',
+  // Distinct from the capability skip so a configured opt-out can never be
+  // mistaken for "this machine cannot run probes".
+  disabledByConfiguration: 'render-qa-disabled-by-configuration',
 });
 const RENDER_QA_WARNING_BY_CODE = new Map([
   ['viewport-overflow', RENDER_QA_WARNING_IDS.documentOverflow],

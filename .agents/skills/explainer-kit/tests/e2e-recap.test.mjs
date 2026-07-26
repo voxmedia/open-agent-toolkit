@@ -1,3 +1,8 @@
+// These suites assert pipeline behaviour, not browser behaviour, so probe
+// resolution is switched off explicitly. The release visual gate exercises the
+// real headless runtime.
+process.env.EXPLAINER_KIT_HEADLESS_PROBE = 'off';
+
 import assert from 'node:assert/strict';
 import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -62,19 +67,23 @@ async function fixture(mode = 'unattended') {
 
 // A stub for the headless runtime: a clean probe result keeps render QA silent
 // so the rich fixture's warning set is meaningful rather than runtime-shaped.
+function cleanProbeResult() {
+  return {
+    pageOverflowX: false,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: { tab: true },
+  };
+}
+
 function cleanProbe() {
   const requests = [];
   const probe = async (request) => {
     requests.push(request);
-    return {
-      pageOverflowX: false,
-      clippedX: [],
-      viewportClipped: [],
-      unreadableHeadings: [],
-      animationsDisabled: true,
-      reducedMotion: true,
-      keyboard: { tab: true },
-    };
+    return cleanProbeResult();
   };
   probe.requests = requests;
   return probe;
@@ -565,7 +574,62 @@ test('render degradation warnings reach the result and the manifest', async () =
   }
 });
 
-test('a run without a headless runtime warns rather than skipping silently', async () => {
+test('an unavailable headless runtime warns rather than skipping silently', async () => {
+  const { request } = await fixture();
+  const result = await runExplainer(request, {
+    author: richAuthor(),
+    now: () => NOW,
+    createBrowserProbeSession: async () => ({
+      available: false,
+      reason: 'no-installed-chromium-executable',
+    }),
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.deepEqual(result.warnings, ['render-qa-skipped-no-headless-runtime']);
+});
+
+test('a run resolves its own probe runtime instead of waiting for injection', async () => {
+  const { request } = await fixture();
+  const probed = [];
+  const result = await runExplainer(request, {
+    author: richAuthor(),
+    now: () => NOW,
+    widths: [320],
+    // No `browserProbe`: the stage must resolve a runtime on its own.
+    createBrowserProbeSession: async () => ({
+      available: true,
+      runtime: { name: 'chromium', version: '0.0.0-test' },
+      probe: async ({ artifact }) => {
+        probed.push(artifact.id);
+        return cleanProbeResult();
+      },
+      close: async () => probed.push('closed'),
+    }),
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.ok(probed.length > 1, JSON.stringify(probed));
+  assert.equal(probed.at(-1), 'closed');
+  assert.equal(
+    result.warnings.includes('render-qa-skipped-no-headless-runtime'),
+    false,
+  );
+  assert.equal(
+    result.warnings.includes('render-qa-disabled-by-configuration'),
+    false,
+  );
+});
+
+test('a configured opt-out is reported distinctly from a missing runtime', async () => {
   const { request } = await fixture();
   const result = await runExplainer(request, {
     author: richAuthor(),
@@ -577,5 +641,17 @@ test('a run without a headless runtime warns rather than skipping silently', asy
     'built-not-durable',
     JSON.stringify(result.errors),
   );
-  assert.deepEqual(result.warnings, ['render-qa-skipped-no-headless-runtime']);
+  assert.deepEqual(result.warnings, ['render-qa-disabled-by-configuration']);
+});
+
+test('an explicitly named probe module that cannot load fails the run', async () => {
+  const { request } = await fixture();
+  const result = await runExplainer(request, {
+    author: richAuthor(),
+    now: () => NOW,
+    browserProbeModulePath: '/nonexistent/probe.mjs',
+  });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_BROWSER_PROBE');
 });

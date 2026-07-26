@@ -135,8 +135,15 @@ Safety and provenance violations fail the run with `E_QA`. Editorial and layout
 findings — narrative-coverage, architecture-diagram, and structured-depth
 guideline misses, rejected over-limit proposals, and render-QA layout findings —
 append stable warning IDs to the manifest's `warnings[]` and let the run
-succeed. Where no headless runtime is available, render QA records
-`render-qa-skipped-no-headless-runtime` and continues.
+succeed.
+
+Render QA drives a real headless browser on every run. It uses an injected
+`browserProbe`, then a `--browser-probe-module` entry point when named, and
+otherwise resolves an installed headless Chromium itself. Only when that
+detection fails does it record `render-qa-skipped-no-headless-runtime` and
+continue. Setting `EXPLAINER_KIT_HEADLESS_PROBE=off` suppresses resolution for
+hermetic runs and records the distinct `render-qa-disabled-by-configuration`
+instead, so a configured opt-out never reads as a missing runtime.
 
 See `references/contracts.md` for source formats, callback modules, retained
 intermediates, and result semantics.
