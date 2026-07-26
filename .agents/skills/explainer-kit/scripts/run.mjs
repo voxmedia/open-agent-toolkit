@@ -12,6 +12,8 @@ import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { auditArtifactSet, checkSourceDumping } from './lib/qa.mjs';
 import {
   loadRecipe,
+  recipeFloor,
+  recipeRequiredNarrative,
   shouldStopDiscovery,
   validateContentModel,
   validateSourceBindings,
@@ -89,7 +91,7 @@ export async function runExplainer(request, options = {}) {
           state.contentModels = authored.models;
           state.authorResultPaths = authored.resultPaths;
         } else {
-          state.contentModels = recipe.artifacts.map((artifact) =>
+          state.contentModels = recipeFloor(recipe).map((artifact) =>
             createContentModel(recipe, artifact, run.slug, state.factBase),
           );
         }
@@ -132,7 +134,7 @@ export async function runExplainer(request, options = {}) {
       };
     });
     await executeStage(run, 'render', options, async () => {
-      for (const recipeArtifact of recipe.artifacts) {
+      for (const recipeArtifact of recipeFloor(recipe)) {
         const content = state.contentModels.find(
           ({ artifactId }) => artifactId === recipeArtifact.id,
         );
@@ -270,7 +272,7 @@ async function hydrateResumableState(state) {
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
   state.contentModels = [];
-  for (const artifact of state.recipe.artifacts) {
+  for (const artifact of recipeFloor(state.recipe)) {
     const base = createContentModel(
       state.recipe,
       artifact,
@@ -512,7 +514,7 @@ async function persistFailureManifest(state, error, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
   const recordedIds = new Set(state.artifacts.map(({ id }) => id));
   state.artifacts.push(
-    ...state.recipe.artifacts
+    ...recipeFloor(state.recipe)
       .filter(({ id }) => !recordedIds.has(id))
       .map((artifact) => ({
         id: artifact.id,
@@ -576,21 +578,25 @@ async function createAuthoredContent(state, author) {
   }
 
   const authored = [];
-  for (const artifact of state.recipe.artifacts) {
+  for (const artifact of recipeFloor(state.recipe)) {
     const resultPath = `source/author/${artifact.id}.json`;
+    const requiredNarrative = recipeRequiredNarrative(
+      state.recipe,
+      artifact.id,
+    );
     const authorRequest = {
       schemaVersion: 'explainer-kit.author-request/v1',
       run: { runId: state.run.runId, slug: state.run.slug },
       recipe: {
         id: state.recipe.id,
         version: state.recipe.version,
-        requiredNarrative: [...state.recipe.requiredNarrative],
+        requiredNarrative,
       },
       artifact: {
         id: artifact.id,
         type: artifact.type,
       },
-      narrativeOutline: state.recipe.requiredNarrative.map((id) => ({
+      narrativeOutline: requiredNarrative.map((id) => ({
         id,
         title: humanize(id),
       })),
@@ -616,10 +622,8 @@ async function createAuthoredContent(state, author) {
     const sectionIds = result.content.sections.map(({ id }) => id);
     if (
       result.artifactId !== artifact.id ||
-      sectionIds.length !== state.recipe.requiredNarrative.length ||
-      state.recipe.requiredNarrative.some(
-        (id, index) => sectionIds[index] !== id,
-      )
+      sectionIds.length !== requiredNarrative.length ||
+      requiredNarrative.some((id, index) => sectionIds[index] !== id)
     ) {
       throw codedError(
         'E_AUTHOR_RESULT',
@@ -679,6 +683,7 @@ function contractErrorMessage(label, errors) {
 }
 
 function createContentModel(recipe, artifact, slug, factBase) {
+  const requiredNarrative = recipeRequiredNarrative(recipe, artifact.id);
   const facts = [
     ...factBase.claims.map(({ text, sections }) => ({ text, sections })),
     ...factBase.unresolvedClaims.map(({ text, sections }) => ({
@@ -690,7 +695,7 @@ function createContentModel(recipe, artifact, slug, factBase) {
     ...new Set(
       facts
         .flatMap(({ sections }) => sections ?? [])
-        .filter((section) => !recipe.requiredNarrative.includes(section)),
+        .filter((section) => !requiredNarrative.includes(section)),
     ),
   ];
   if (unknownSections.length > 0) {
@@ -706,7 +711,7 @@ function createContentModel(recipe, artifact, slug, factBase) {
     description: `Approved-source ${humanize(recipe.id).toLowerCase()}.`,
     eyebrow: 'Explainer Kit',
     footer: 'Generated from the retained reconciled fact base.',
-    sections: recipe.requiredNarrative.map((id) => {
+    sections: requiredNarrative.map((id) => {
       const sectionFacts = facts
         .filter(({ sections }) => !sections || sections.includes(id))
         .map(({ text }) => text);

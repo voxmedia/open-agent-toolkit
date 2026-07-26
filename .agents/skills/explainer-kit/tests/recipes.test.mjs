@@ -3,9 +3,14 @@ import { readFile } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import {
+  evaluateExpansionProposals,
   loadRecipe,
+  recipeExpansion,
+  recipeFloor,
+  recipeRequiredNarrative,
   shouldStopDiscovery,
   validateContentModel,
+  validateRecipe,
   validateSourceBindings,
 } from '../scripts/lib/recipes.mjs';
 
@@ -27,13 +32,51 @@ const PROGRAM_RECAP_SECTIONS = [
 ];
 
 function contentModel(recipe, overrides = {}) {
+  const artifact = recipeFloor(recipe)[0];
   return {
-    artifactId: recipe.artifacts[0].id,
-    sections: recipe.requiredNarrative.map((id) => ({
+    artifactId: artifact.id,
+    sections: recipeRequiredNarrative(recipe, artifact.id).map((id) => ({
       id,
       content: `Content for ${id}.`,
     })),
     ...overrides,
+  };
+}
+
+function recipeV2() {
+  const v1 = loadRecipe('project-explainer', '1');
+  return {
+    schemaVersion: 'explainer-kit.recipe/v2',
+    id: v1.id,
+    version: v1.version,
+    sourceRoles: v1.sourceRoles,
+    floor: recipeFloor(v1).map((artifact) => ({
+      ...artifact,
+      authoring: 'markdown',
+      briefRef: 'briefs/project-explainer.md',
+      requiredNarrative: recipeRequiredNarrative(v1, artifact.id),
+    })),
+    expansion: {
+      profiles: [
+        {
+          profileId: 'supporting-diagram',
+          type: 'diagram',
+          authoring: 'html',
+          briefRef: 'briefs/supporting-diagram.md',
+          shell: 'diagram-shell',
+          maxCount: 1,
+        },
+        {
+          profileId: 'deep-dive',
+          type: 'explainer',
+          authoring: 'markdown',
+          briefRef: 'briefs/deep-dive.md',
+          maxCount: 2,
+        },
+      ],
+      limits: { maxArtifacts: 2 },
+    },
+    discoveryLimits: v1.discoveryLimits,
   };
 }
 
@@ -49,6 +92,185 @@ test('loads each supported recipe by exact id and version', () => {
     assert.equal(recipe.version, '1');
     assert.equal(recipe.schemaVersion, 'explainer-kit.recipe/v1');
   }
+});
+
+test('validates recipe v2 and normalizes both recipe shapes', () => {
+  const v1 = loadRecipe('project-explainer', '1');
+  const v2 = recipeV2();
+
+  assert.equal(validateRecipe(v2, 'synthetic-v2'), v2);
+  assert.deepEqual(
+    recipeFloor(v2).map(({ id }) => id),
+    recipeFloor(v1).map(({ id }) => id),
+  );
+  assert.deepEqual(
+    recipeRequiredNarrative(v2, recipeFloor(v2)[0].id),
+    recipeRequiredNarrative(v1, recipeFloor(v1)[0].id),
+  );
+  assert.deepEqual(recipeExpansion(v1), {
+    profiles: [],
+    limits: { maxArtifacts: 0 },
+  });
+  assert.equal(recipeExpansion(v2).profiles.length, 2);
+});
+
+test('recipe v2 rejects malformed profiles, ids, types, and finite caps', () => {
+  const cases = [
+    [
+      'undeclared type',
+      (recipe) => {
+        recipe.expansion.profiles[0].type = 'narrative-page';
+      },
+      /unsupported type/,
+    ],
+    [
+      'duplicate profileId',
+      (recipe) => {
+        recipe.expansion.profiles[1].profileId =
+          recipe.expansion.profiles[0].profileId;
+      },
+      /profileIds must be unique/,
+    ],
+    [
+      'floor/profile id collision',
+      (recipe) => {
+        recipe.expansion.profiles[0].profileId = recipe.floor[0].id;
+      },
+      /collides with floor id/,
+    ],
+    [
+      'missing maxCount',
+      (recipe) => {
+        delete recipe.expansion.profiles[0].maxCount;
+      },
+      /unknown or missing keys/,
+    ],
+    [
+      'missing maxArtifacts',
+      (recipe) => {
+        delete recipe.expansion.limits.maxArtifacts;
+      },
+      /unknown or missing keys/,
+    ],
+    [
+      'non-finite maxCount',
+      (recipe) => {
+        recipe.expansion.profiles[0].maxCount = Number.POSITIVE_INFINITY;
+      },
+      /finite non-negative integer/,
+    ],
+  ];
+
+  for (const [label, mutate, expected] of cases) {
+    const recipe = recipeV2();
+    mutate(recipe);
+    assert.throws(() => validateRecipe(recipe, label), expected, label);
+  }
+});
+
+test('expansion proposals reject over-limit entries without making floor misses errors', () => {
+  const recipe = recipeV2();
+  const thinContent = contentModel(recipe);
+  thinContent.sections.pop();
+  assert.deepEqual(validateContentModel(recipe, thinContent), {
+    valid: true,
+    errors: [],
+  });
+
+  const empty = evaluateExpansionProposals(recipe, []);
+  assert.deepEqual(empty, {
+    valid: true,
+    accepted: [],
+    rejected: [],
+    warnings: [],
+    errors: [],
+  });
+
+  const evaluated = evaluateExpansionProposals(recipe, [
+    {
+      id: 'architecture-overview',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the main boundaries.',
+    },
+    {
+      id: 'architecture-detail',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the internal flow.',
+    },
+    {
+      id: 'storage-deep-dive',
+      profileId: 'deep-dive',
+      rationale: 'Explain persistence choices.',
+    },
+    {
+      id: 'api-deep-dive',
+      profileId: 'deep-dive',
+      rationale: 'Explain the public interface.',
+    },
+  ]);
+
+  assert.equal(evaluated.valid, true);
+  assert.deepEqual(
+    evaluated.accepted.map(({ id }) => id),
+    ['architecture-overview', 'storage-deep-dive'],
+  );
+  assert.deepEqual(
+    evaluated.rejected.map(({ id, status, reason }) => ({
+      id,
+      status,
+      reason,
+    })),
+    [
+      {
+        id: 'architecture-detail',
+        status: 'rejected',
+        reason: 'profile-limit',
+      },
+      {
+        id: 'api-deep-dive',
+        status: 'rejected',
+        reason: 'recipe-limit',
+      },
+    ],
+  );
+  assert.deepEqual(evaluated.warnings, [
+    'expansion-profile-limit-exceeded',
+    'expansion-artifact-limit-exceeded',
+  ]);
+});
+
+test('malformed expansion proposals remain hard validation errors', () => {
+  const recipe = recipeV2();
+  const evaluated = evaluateExpansionProposals(recipe, [
+    {
+      id: recipe.floor[0].id,
+      profileId: 'supporting-diagram',
+      rationale: 'Collides with the floor.',
+    },
+    {
+      id: 'Unsafe ID',
+      profileId: 'supporting-diagram',
+      rationale: 'Not a safe slug.',
+    },
+    {
+      id: 'unknown-profile',
+      profileId: 'missing-profile',
+      rationale: 'References missing policy.',
+    },
+    {
+      id: 'unknown-profile',
+      profileId: 'deep-dive',
+      rationale: 'Duplicates an earlier proposal id.',
+    },
+  ]);
+
+  assert.equal(evaluated.valid, false);
+  assert.deepEqual(evaluated.errors, [
+    `Expansion artifact id collides with floor: ${recipe.floor[0].id}`,
+    'Unsafe expansion artifact id: Unsafe ID',
+    'Unknown expansion profile: missing-profile',
+    'Duplicate expansion artifact id: unknown-profile',
+  ]);
 });
 
 test('rejects unsupported recipe ids and versions with the contract error', () => {
@@ -116,7 +338,11 @@ test('project recap binds exactly one project source set', () => {
 
 test('project recap requires all six accountability sections', () => {
   const recipe = loadRecipe('project-recap', '1');
-  assert.deepEqual(recipe.requiredNarrative, RECAP_SECTIONS);
+  const artifact = recipeFloor(recipe)[0];
+  assert.deepEqual(
+    recipeRequiredNarrative(recipe, artifact.id),
+    RECAP_SECTIONS,
+  );
   assert.deepEqual(validateContentModel(recipe, contentModel(recipe)), {
     valid: true,
     errors: [],
@@ -132,9 +358,13 @@ test('project recap requires all six accountability sections', () => {
 
 test('program recap binds one program and requires its six birdseye sections', () => {
   const recipe = loadRecipe('program-recap', '1');
+  const artifact = recipeFloor(recipe)[0];
   const oneProgram = [{ role: 'program', kind: 'directory', locator: '/repo' }];
 
-  assert.deepEqual(recipe.requiredNarrative, PROGRAM_RECAP_SECTIONS);
+  assert.deepEqual(
+    recipeRequiredNarrative(recipe, artifact.id),
+    PROGRAM_RECAP_SECTIONS,
+  );
   assert.deepEqual(validateSourceBindings(recipe, oneProgram), {
     valid: true,
     errors: [],
@@ -151,6 +381,8 @@ test('program recap binds one program and requires its six birdseye sections', (
 
 test('content models are closed to declared artifacts and safe section content', () => {
   const recipe = loadRecipe('project-explainer', '1');
+  const artifact = recipeFloor(recipe)[0];
+  const requiredNarrative = recipeRequiredNarrative(recipe, artifact.id);
   const duplicate = contentModel(recipe);
   duplicate.sections.push({ ...duplicate.sections[0] });
 
@@ -166,7 +398,7 @@ test('content models are closed to declared artifacts and safe section content',
   );
   assert.deepEqual(validateContentModel(recipe, duplicate), {
     valid: false,
-    errors: [`Duplicate narrative section: ${recipe.requiredNarrative[0]}`],
+    errors: [`Duplicate narrative section: ${requiredNarrative[0]}`],
   });
   assert.deepEqual(
     validateContentModel(recipe, {
@@ -174,7 +406,7 @@ test('content models are closed to declared artifacts and safe section content',
       sections: [
         ...contentModel(recipe).sections.slice(1),
         {
-          id: recipe.requiredNarrative[0],
+          id: requiredNarrative[0],
           content: '<script>alert("unsafe")</script>',
         },
       ],
@@ -182,7 +414,7 @@ test('content models are closed to declared artifacts and safe section content',
     {
       valid: false,
       errors: [
-        `Narrative section ${recipe.requiredNarrative[0]} contains raw script content`,
+        `Narrative section ${requiredNarrative[0]} contains raw script content`,
       ],
     },
   );
@@ -199,7 +431,7 @@ test('engineer tour is a generic codebase recipe without OAT coupling', async ()
       maxBindings: 1,
     },
   ]);
-  assert.equal(recipe.artifacts[0].template, 'engineer-tour');
+  assert.equal(recipeFloor(recipe)[0].template, 'engineer-tour');
 
   const serialized = await readFile(
     new URL('../recipes/engineer-tour.json', import.meta.url),

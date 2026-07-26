@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { loadRecipe } from '../scripts/lib/recipes.mjs';
+import { loadRecipe, recipeFloor } from '../scripts/lib/recipes.mjs';
 import { renderArtifact, substituteTemplate } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 
@@ -38,7 +38,7 @@ function content(artifactId, overrides = {}) {
 }
 
 test('renders escaped content through every documented house template token', async () => {
-  const recipeArtifact = loadRecipe('project-explainer', '1').artifacts[0];
+  const recipeArtifact = recipeFloor(loadRecipe('project-explainer', '1'))[0];
   const { theme } = await resolveTheme();
   const rendered = await renderArtifact({
     recipeArtifact,
@@ -60,7 +60,7 @@ test('renders escaped content through every documented house template token', as
 });
 
 test('keeps runtime assets local and theme assets inline', async () => {
-  const recipeArtifact = loadRecipe('project-explainer', '1').artifacts[0];
+  const recipeArtifact = recipeFloor(loadRecipe('project-explainer', '1'))[0];
   const { theme } = await resolveTheme();
   const { html } = await renderArtifact({
     recipeArtifact,
@@ -77,7 +77,7 @@ test('keeps runtime assets local and theme assets inline', async () => {
 });
 
 test('renders only the default mode unless user-switchable mode is requested', async () => {
-  const recipeArtifact = loadRecipe('project-explainer', '1').artifacts[0];
+  const recipeArtifact = recipeFloor(loadRecipe('project-explainer', '1'))[0];
   const { theme } = await resolveTheme({ defaultMode: 'dark' });
   const defaultOnly = await renderArtifact({
     recipeArtifact,
@@ -155,7 +155,7 @@ test('uses typed site paths and explicit index URLs for artifact cross-links', a
 });
 
 test('build-only cross-links are relative explicit index URLs', async () => {
-  const recipeArtifact = loadRecipe('project-explainer', '1').artifacts[0];
+  const recipeArtifact = recipeFloor(loadRecipe('project-explainer', '1'))[0];
   const { theme } = await resolveTheme();
   const { html } = await renderArtifact({
     recipeArtifact,
@@ -197,7 +197,7 @@ test('deck substitution preserves horizontal paging, no-JS, and print behavior',
 });
 
 test('rejects unknown templates, invalid themes and render strategies', async () => {
-  const recipeArtifact = loadRecipe('project-explainer', '1').artifacts[0];
+  const recipeArtifact = recipeFloor(loadRecipe('project-explainer', '1'))[0];
   const { theme } = await resolveTheme();
 
   await assert.rejects(
