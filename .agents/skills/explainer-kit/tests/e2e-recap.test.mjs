@@ -500,6 +500,95 @@ test('a thin recap ships with the floor warning vocabulary', async () => {
   assert.doesNotMatch(hub, /<svg class="narrative-diagram"/);
 });
 
+test('prose before the first section heading survives to the rendered hub', async () => {
+  const { request } = await fixture();
+  const lead =
+    'Continuous indexing shipped in three phases, and this page records each one.';
+  const result = await runExplainer(request, {
+    author: async (authorRequest) =>
+      authorResult(
+        authorRequest,
+        `# Atlas index recap\n\n${lead}\n\n## Original request\n\nThe ask was continuous indexing.\n\n## Outcome\n\nIndexing now resumes mid-file.\n`,
+      ),
+    browserProbe: cleanProbe(),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
+  assert.match(hub, new RegExp(lead.replaceAll('.', '\\.')));
+  // The lead becomes its own addressable section ahead of the authored ones.
+  assert.match(hub, /id="overview"/);
+  assert.ok(
+    hub.indexOf('id="overview"') < hub.indexOf('id="original-request"'),
+    'the lead section precedes the first authored section',
+  );
+
+  assert.deepEqual(renderedSectionIds(hub), [
+    'overview',
+    'original-request',
+    'outcome',
+  ]);
+});
+
+test('a repeated heading keeps both sections with unique anchors', async () => {
+  const { request } = await fixture();
+  const result = await runExplainer(request, {
+    author: async (authorRequest) =>
+      authorResult(
+        authorRequest,
+        '# Atlas index recap\n\n## Outcome\n\nIndexing resumes mid-file.\n\n## Outcome\n\nThe operator runbook changed too.\n\n## Original request\n\nThe ask was continuous indexing.\n',
+      ),
+    browserProbe: cleanProbe(),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
+  assert.deepEqual(renderedSectionIds(hub), [
+    'outcome',
+    'outcome-2',
+    'original-request',
+  ]);
+  assert.equal(occurrences(hub, /id="outcome"/g), 1);
+  assert.equal(occurrences(hub, /id="outcome-2"/g), 1);
+  assert.match(hub, /The operator runbook changed too\./);
+  // Coverage still resolves against the undecorated first occurrence.
+  assert.equal(
+    result.warnings.includes('guideline-narrative-coverage-missing'),
+    true,
+  );
+});
+
+test('a lead-only document still renders one overview section', async () => {
+  const { request } = await fixture();
+  const result = await runExplainer(request, {
+    author: async (authorRequest) =>
+      authorResult(
+        authorRequest,
+        '# Atlas index recap\n\nThe whole story fits in one pass with no section headings.\n',
+      ),
+    browserProbe: cleanProbe(),
+    now: () => NOW,
+  });
+
+  const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
+  assert.deepEqual(renderedSectionIds(hub), ['overview']);
+  assert.match(hub, /The whole story fits in one pass with no section headings\./);
+});
+
+function renderedSectionIds(html) {
+  return [...html.matchAll(/<section id="([^"]+)"/g)].map((match) => match[1]);
+}
+
 test('each browser finding emits exactly one stable render-qa id', async () => {
   const { request } = await fixture();
   const result = await runExplainer(request, {

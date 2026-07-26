@@ -29,6 +29,7 @@ import {
   recipeFloor,
   recipeRequiredNarrative,
   shouldStopDiscovery,
+  validateContentModel,
   validateSourceBindings,
 } from './lib/recipes.mjs';
 import {
@@ -957,15 +958,33 @@ async function createAuthoredContent(state, options, now) {
     state.authoredContent.set(item.artifact.id, item.content);
     if (item.artifact.authoring === 'markdown') {
       state.contentModels.push(
-        markdownContentModel(
+        assertValidContentModel(
+          state.recipe,
+          markdownContentModel(
+            item.artifact,
+            state.run.slug,
+            item.content,
+            item.artifact.origin === 'floor' ? links : [],
+          ),
           item.artifact,
-          state.run.slug,
-          item.content,
-          item.artifact.origin === 'floor' ? links : [],
         ),
       );
     }
   }
+}
+
+// Expansion artifacts are not recipe-floor entries, so only floor content models
+// can be checked against the floor-scoped contract.
+function assertValidContentModel(recipe, model, artifact) {
+  if (artifact.origin !== 'floor') return model;
+  const result = validateContentModel(recipe, model);
+  if (!result.valid) {
+    throw codedError(
+      'E_CONTENT_MODEL',
+      `Authored content for ${artifact.id} violates the narrative contract: ${result.errors.join('; ')}`,
+    );
+  }
+  return model;
 }
 
 // Provenance authenticity cannot come from the party being identified, so
@@ -1142,23 +1161,81 @@ function renderDescriptor(artifact) {
   };
 }
 
+const LEAD_SECTION_IDS = ['overview', 'introduction', 'lead'];
+
 function markdownContentModel(artifact, slug, markdown, artifactLinks) {
-  const title =
-    markdown.match(/^# (.+)$/m)?.[1]?.trim() ?? humanize(artifact.id);
+  const titleMatch = markdown.match(/^# (.+)$/m);
+  const title = titleMatch?.[1]?.trim() ?? humanize(artifact.id);
   const headings = [...markdown.matchAll(/^## (.+)$/gm)];
-  const sections =
-    headings.length > 0
-      ? headings.map((heading, index) => ({
-          id: slugify(heading[1].trim()),
-          title: heading[1].trim(),
-          content: markdown
-            .slice(
-              heading.index + heading[0].length,
-              headings[index + 1]?.index ?? markdown.length,
-            )
-            .trim(),
-        }))
-      : [{ id: 'overview', title: 'Overview', content: markdown }];
+  if (headings.length === 0) {
+    return contentModel({
+      artifact,
+      slug,
+      title,
+      artifactLinks,
+      sections: [{ id: 'overview', title: 'Overview', content: markdown }],
+    });
+  }
+
+  // Prose between the document title and the first `##` is authored content,
+  // so it is carried as a leading section rather than silently dropped.
+  const bodyStart = titleMatch
+    ? titleMatch.index + titleMatch[0].length
+    : 0;
+  const lead = markdown.slice(bodyStart, headings[0].index).trim();
+  const authoredIds = new Set(
+    headings.map((heading) => slugify(heading[1].trim())),
+  );
+  const sections = headings.map((heading, index) => ({
+    id: slugify(heading[1].trim()),
+    title: heading[1].trim(),
+    content: markdown
+      .slice(
+        heading.index + heading[0].length,
+        headings[index + 1]?.index ?? markdown.length,
+      )
+      .trim(),
+  }));
+  if (lead.length > 0) {
+    const leadId =
+      LEAD_SECTION_IDS.find((candidate) => !authoredIds.has(candidate)) ??
+      'lead';
+    sections.unshift({
+      id: leadId,
+      title: humanize(leadId),
+      content: lead,
+    });
+  }
+
+  return contentModel({
+    artifact,
+    slug,
+    title,
+    artifactLinks,
+    sections: disambiguateSectionIds(sections),
+  });
+}
+
+// A repeated heading is legitimate authoring, but duplicate anchors break
+// navigation, so later collisions get a deterministic suffix.
+function disambiguateSectionIds(sections) {
+  const used = new Map();
+  return sections.map((section) => {
+    const seen = used.get(section.id) ?? 0;
+    used.set(section.id, seen + 1);
+    if (seen === 0) return section;
+    let candidate = `${section.id}-${seen + 1}`;
+    let offset = seen + 1;
+    while (used.has(candidate)) {
+      offset += 1;
+      candidate = `${section.id}-${offset}`;
+    }
+    used.set(candidate, 1);
+    return { ...section, id: candidate };
+  });
+}
+
+function contentModel({ artifact, slug, title, artifactLinks, sections }) {
   return {
     artifactId: artifact.id,
     slug,
