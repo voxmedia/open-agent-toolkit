@@ -212,11 +212,20 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       scrollWidth: element.scrollWidth
     }))
     .slice(0, 20);
+  const inScrollablePage = (element) => {
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (['auto', 'scroll'].includes(style.overflowX) &&
+        node.scrollWidth > node.clientWidth + 2) return true;
+    }
+    return false;
+  };
   const viewportClipped = elements
     .filter((element) => {
       const rect = element.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0 &&
-        (rect.left < -2 || rect.right > innerWidth + 2);
+        (rect.left < -2 || rect.right > innerWidth + 2) &&
+        !inScrollablePage(element);
     })
     .map((element) => {
       const rect = element.getBoundingClientRect();

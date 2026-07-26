@@ -6,6 +6,7 @@ import { afterEach, test } from 'node:test';
 
 import { chromium } from '@playwright/test';
 
+import { BROWSER_PROBE_EVALUATE } from '../../.agents/skills/explainer-kit/scripts/lib/qa.mjs';
 import { selectReleaseVisualMatrix } from '../../.agents/skills/explainer-kit/scripts/render-qa.mjs';
 import {
   probeArrowKey,
@@ -185,4 +186,44 @@ test('CLI retains machine-readable browser measurements', async () => {
   const retained = JSON.parse(await readFile(output, 'utf8'));
   assert.equal(retained.valid, true);
   assert.equal(retained.measurements.length, 1);
+});
+
+// The deck shell is a horizontal scroll-snap carousel, so its off-screen
+// slides are reachable by design. Exempting them must not blind the probe to
+// content that is genuinely unreachable.
+test('viewport clipping distinguishes paged slides from unreachable content', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 320, height: 600 } });
+  const clipped = async (body) => {
+    await page.setContent(`<body style="margin:0">${body}</body>`);
+    const { viewportClipped } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return viewportClipped.map(({ selector }) => selector);
+  };
+
+  try {
+    assert.deepEqual(
+      await clipped(
+        '<div style="display:flex;overflow-x:auto;width:320px">' +
+          '<section id="first" style="min-width:320px">a</section>' +
+          '<section id="second" style="min-width:320px">b</section></div>',
+      ),
+      [],
+      'paged slides in a horizontal scroll container are reachable',
+    );
+    assert.deepEqual(
+      await clipped(
+        '<div style="width:320px;overflow:hidden">' +
+          '<p id="wide" style="width:900px">x</p></div>',
+      ),
+      ['#wide'],
+      'content clipped by an overflow-hidden ancestor is unreachable',
+    );
+    assert.deepEqual(
+      await clipped('<p id="bleed" style="position:absolute;left:400px">y</p>'),
+      ['#bleed'],
+      'content positioned past the viewport is unreachable',
+    );
+  } finally {
+    await browser.close();
+  }
 });
