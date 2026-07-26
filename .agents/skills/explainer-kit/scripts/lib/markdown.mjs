@@ -177,18 +177,24 @@ function parseBlocks(lines) {
       while (index < lines.length) {
         const item = matchListItem(lines[index]);
         if (!item || item.ordered !== ordered) break;
-        const task = item.content.match(/^\[([ xX])\]\s+(.*)$/);
+        const content = [item.content];
+        index += 1;
+        while (index < lines.length && !startsBlock(lines, index)) {
+          content.push(lines[index].trim());
+          index += 1;
+        }
+        const text = content.join(' ');
+        const task = text.match(/^\[([ xX])\]\s+(.*)$/);
         items.push({
           type: 'listItem',
           checked: task ? task[1].toLowerCase() === 'x' : null,
           children: [
             {
               type: 'paragraph',
-              children: parseInline(task?.[2] ?? item.content),
+              children: parseInline(task?.[2] ?? text),
             },
           ],
         });
-        index += 1;
       }
       blocks.push({
         type: 'list',

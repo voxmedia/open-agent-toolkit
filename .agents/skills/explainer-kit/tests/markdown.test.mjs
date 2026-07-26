@@ -71,6 +71,30 @@ const ready = true;
   assert.deepEqual(warnings, []);
 });
 
+test('keeps wrapped list items whole instead of splitting the continuation out', () => {
+  const ast = parseMarkdown(
+    `- Recaps can be more structured than decks, but structure must come from
+  guidance rather than rigid schemas.
+- Decks need genuine artistic freedom.
+
+Trailing paragraph.`,
+  );
+
+  assert.deepEqual(
+    ast.children.map(({ type }) => type),
+    ['list', 'paragraph'],
+  );
+  const [first, second] = ast.children[0].children;
+  assert.equal(
+    first.children[0].children.map((node) => node.value ?? '').join(''),
+    'Recaps can be more structured than decks, but structure must come from guidance rather than rigid schemas.',
+  );
+  assert.equal(
+    second.children[0].children.map((node) => node.value ?? '').join(''),
+    'Decks need genuine artistic freedom.',
+  );
+});
+
 test('parses all five GFM alert callouts into dedicated nodes', () => {
   const ast = parseMarkdown(
     ['NOTE', 'TIP', 'IMPORTANT', 'WARNING', 'CAUTION']
