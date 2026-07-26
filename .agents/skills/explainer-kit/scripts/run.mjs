@@ -270,10 +270,12 @@ async function executeQaStage(state, options) {
     const warningIssues = report.issues.filter(
       (issue) => !isHardQaIssue(issue.code),
     );
+    // A code the render-QA vocabulary already covers must not also emit an ad
+    // hoc `qa-*` twin; the generic conversion is for structural codes only.
     qaWarnings.push(
       ...renderQaWarningIds(warningIssues),
       ...warningIssues
-        .filter(({ code }) => !code.startsWith('viewport-'))
+        .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
         .map(({ code }) => `qa-${code}`),
     );
     if (!options.browserProbe) {

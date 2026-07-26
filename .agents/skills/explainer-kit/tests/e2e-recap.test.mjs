@@ -80,6 +80,24 @@ function cleanProbe() {
   return probe;
 }
 
+// Seeds one finding per mapped browser code so the manifest vocabulary can be
+// asserted exactly rather than by substring.
+function defectiveProbe() {
+  return async () => ({
+    pageOverflowX: true,
+    clippedX: [{ selector: 'table', clientWidth: 320, scrollWidth: 900 }],
+    viewportClipped: [
+      { selector: '.narrative-diagram', left: -10, right: 310 },
+    ],
+    unreadableHeadings: [
+      { selector: 'h2', text: 'Original request', fontSize: 9 },
+    ],
+    animationsDisabled: false,
+    reducedMotion: false,
+    keyboard: { tab: false },
+  });
+}
+
 function authorResult(request, content) {
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
@@ -471,6 +489,38 @@ test('a thin recap ships with the floor warning vocabulary', async () => {
   const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
   assert.doesNotMatch(hub, /<table\b/);
   assert.doesNotMatch(hub, /<svg class="narrative-diagram"/);
+});
+
+test('each browser finding emits exactly one stable render-qa id', async () => {
+  const { request } = await fixture();
+  const result = await runExplainer(request, {
+    author: richAuthor(),
+    browserProbe: defectiveProbe(),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const expected = [
+    'render-qa-animations-enabled',
+    'render-qa-document-overflow',
+    'render-qa-heading-unreadable',
+    'render-qa-inner-container-overflow',
+    'render-qa-keyboard-navigation',
+    'render-qa-reduced-motion',
+    'render-qa-viewport-clipping',
+  ];
+  assert.deepEqual([...result.warnings].sort(), expected);
+  const manifest = await readJson(result.manifestPath);
+  assert.deepEqual([...manifest.warnings].sort(), expected);
+  assert.deepEqual(
+    manifest.warnings.filter((warning) => warning.startsWith('qa-')),
+    [],
+    'no ad hoc qa-* twin survives',
+  );
 });
 
 test('render degradation warnings reach the result and the manifest', async () => {
