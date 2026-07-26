@@ -2,6 +2,7 @@ import { readFile } from 'node:fs/promises';
 import { posix } from 'node:path';
 
 import { canonicalHash, validateContract } from './contracts.mjs';
+import { renderDiagram as renderDiagramBlock } from './diagram.mjs';
 import { MarkdownSafetyError, parseMarkdownDocument } from './markdown.mjs';
 
 const RENDER_STRATEGIES = new Set(['default-only', 'user-switchable']);
@@ -51,7 +52,7 @@ export async function renderArtifact({
   const sections = content.sections.map((section) => ({
     ...section,
     anchor: section.id,
-    ...parseSectionMarkdown(section.content),
+    ...prepareSectionMarkdown(section.content, theme),
   }));
   const links = content.artifactLinks ?? [];
   const values = templateValues({
@@ -167,7 +168,7 @@ function templateValues({
           baseUrl,
         ),
         CONTENT: renderSections(sections, { tour: true }),
-        DIAGRAM: renderDiagram(sections),
+        DIAGRAM: renderLegacyDiagram(sections),
         FOOTER: footer,
       };
     case 'deck-shell':
@@ -184,7 +185,7 @@ function templateValues({
     case 'diagram-shell':
       return {
         ...common,
-        DIAGRAM: renderDiagram(sections),
+        DIAGRAM: renderLegacyDiagram(sections),
         LEGEND: [
           sections
             .map(
@@ -221,9 +222,20 @@ function renderSections(sections, { tour = false } = {}) {
     .join('');
 }
 
-function parseSectionMarkdown(content) {
+function prepareSectionMarkdown(content, theme) {
   try {
-    return parseMarkdownDocument(content);
+    const parsed = parseMarkdownDocument(content);
+    const diagramWarnings = [];
+    visitMarkdownNodes(parsed.ast.children, (node) => {
+      if (node.type !== 'diagram') return;
+      const rendered = renderDiagramBlock(node.source, { theme });
+      node.renderedHtml = rendered.html;
+      diagramWarnings.push(...rendered.warnings);
+    });
+    return {
+      ...parsed,
+      warnings: [...parsed.warnings, ...diagramWarnings],
+    };
   } catch (error) {
     if (
       !(error instanceof MarkdownSafetyError) ||
@@ -248,6 +260,15 @@ function parseSectionMarkdown(content) {
         },
       ],
     };
+  }
+}
+
+function visitMarkdownNodes(nodes, callback) {
+  for (const node of nodes) {
+    callback(node);
+    if (Array.isArray(node.children)) {
+      visitMarkdownNodes(node.children, callback);
+    }
   }
 }
 
@@ -292,7 +313,7 @@ function renderMarkdownNode(node) {
     case 'code':
       return `<pre><code${node.language ? ` class="language-${escapeAttribute(node.language)}"` : ''}>${escapeHtml(node.value)}</code></pre>`;
     case 'diagram':
-      return `<div class="diagram-fallback"><div class="callout callout--warning">Diagram source</div><pre><code>${escapeHtml(node.source)}</code></pre></div>`;
+      return node.renderedHtml;
     case 'list':
       return renderMarkdownList(node);
     case 'listItem':
@@ -337,7 +358,7 @@ function renderSlides(sections, links, slug, renderedPath, baseUrl) {
     : slides;
 }
 
-function renderDiagram(sections) {
+function renderLegacyDiagram(sections) {
   return sections
     .map((section, index) => {
       const y = 80 + index * 120;

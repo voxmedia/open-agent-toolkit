@@ -68,6 +68,11 @@ Paragraph with **strong**, *emphasis*, \`inline code\`, ~~removed~~ text, and an
 const ready = true;
 \`\`\`
 
+\`\`\`diagram
+graph LR
+source[Source] -->|validated| output("Rendered output")
+\`\`\`
+
 ![Architecture reference](https://example.com/architecture.svg "System map")`;
 
   const input = {
@@ -99,6 +104,9 @@ const ready = true;
   assert.match(first.html, /class="callout callout--important"/);
   assert.match(first.html, /<ol class="timeline">/);
   assert.match(first.html, /<pre><code class="language-js">/);
+  assert.match(first.html, /<svg class="narrative-diagram"/);
+  assert.match(first.html, /data-direction="LR"/);
+  assert.match(first.html, /validated/);
   assert.match(first.html, /<figure>/);
   assert.match(first.html, /href="#overview"/);
   assert.doesNotMatch(first.html, /<img\b|src="https:/);
@@ -127,6 +135,37 @@ test('uses theme modes without changing narrative structure', async () => {
   assert.match(lightRender.html, /<p>Safe narrative\.<\/p>/);
   assert.match(darkRender.html, /<p>Safe narrative\.<\/p>/);
   assert.notEqual(lightRender.html, darkRender.html);
+});
+
+test('degrades unsupported diagram syntax visibly without failing the narrative', async () => {
+  const { theme } = await resolveTheme();
+  const recipeArtifact = descriptor('initiative', 'hub');
+  const source = `graph TD
+subgraph unsafe
+a --> b
+end`;
+  const rendered = await renderArtifact({
+    recipeArtifact,
+    content: content(recipeArtifact.id, {
+      sections: [
+        {
+          id: 'overview',
+          title: 'Overview',
+          content: `\`\`\`diagram
+${source}
+\`\`\``,
+        },
+      ],
+    }),
+    theme,
+    renderStrategy: 'default-only',
+  });
+
+  assert.equal(rendered.warnings[0].code, 'unsupported-diagram');
+  assert.match(rendered.html, /class="diagram-warning"/);
+  assert.match(rendered.html, /Unsupported diagram construct/);
+  assert.match(rendered.html, /<pre><code>graph TD/);
+  assert.doesNotMatch(rendered.html, /<svg class="narrative-diagram"/);
 });
 
 test('preserves every floor path and gives every expansion an ID-bearing path', async () => {
