@@ -12,7 +12,7 @@ oat_hill_checkpoints: []
 oat_hill_completed: []
 oat_parallel_execution: false
 oat_phase: implement
-oat_phase_status: in_progress
+oat_phase_status: pr_open
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -23,11 +23,11 @@ oat_dispatch_policy:
 oat_workflow_mode: quick
 oat_workflow_origin: native
 oat_docs_updated: complete
-oat_pr_status: null
-oat_pr_url: null
+oat_pr_status: open
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/178'
 oat_project_created: '2026-07-25T00:19:49.509Z'
 oat_project_completed: null
-oat_project_state_updated: '2026-07-26T19:40:00Z'
+oat_project_state_updated: '2026-07-26T20:05:00Z'
 oat_generated: false
 ---
 
@@ -39,8 +39,10 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 7 complete (`p07-t03`). All 14 tasks done; awaiting manual review of the
-Phase 7 pin work, then documentation and PR.
+Implementation — PR open; completion may run before or after merge.
+
+All 14 tasks done. The final review passed with zero findings on its fourth
+round, documentation is synced, and PR #178 is open against `main`.
 
 ## Artifacts
 
@@ -74,6 +76,11 @@ Phase 7 pin work, then documentation and PR.
   lifecycle hooks
 - ✓ Probe-verified Cursor pins, recommendation rebalance, and generated roles
   shipped
+- ✓ Final review passed with zero findings (fourth round)
+- ✓ Documentation synced; Cursor pin verification runbook published
+- ✓ Repo reference updated (`pjm/current-state.md`)
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -81,5 +88,8 @@ None
 
 ## Next Milestone
 
-Manual review of the Phase 7 pin work, then `oat-project-document` and
-`oat-project-pr-final`.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
