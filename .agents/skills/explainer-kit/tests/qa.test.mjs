@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
   GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
+  RENDER_QA_WARNING_IDS,
   auditArtifactSet,
   checkArtifactCohesion,
   checkGuidelines,
@@ -15,7 +18,7 @@ import {
 import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
-import { runRenderQaCli } from '../scripts/render-qa.mjs';
+import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
 
 const fixture = (
   body = '<h1>System overview</h1><p>Ready.</p>',
@@ -407,6 +410,22 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
           scrollWidth: 900,
         },
       ],
+      viewportClipped: [
+        {
+          selector: '.diagram-node',
+          left: -20,
+          right: 280,
+          viewportWidth: 320,
+        },
+      ],
+      unreadableHeadings: [
+        {
+          selector: 'h2',
+          text: 'Clipped heading',
+          fontSize: 9,
+        },
+      ],
+      animationsDisabled: false,
       reducedMotion: false,
       keyboard: { tab: false },
     }),
@@ -415,6 +434,9 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
   for (const code of [
     'viewport-overflow',
     'inner-x-overflow',
+    'viewport-clipping',
+    'heading-readability',
+    'animations-enabled',
     'reduced-motion',
     'keyboard-navigation',
   ]) {
@@ -423,6 +445,97 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
       code,
     );
   }
+});
+
+test('render QA stage serves built artifacts and emits seeded layout warnings', async (t) => {
+  const siteDir = await mkdtemp(join(tmpdir(), 'explainer-render-qa-'));
+  t.after(() => rm(siteDir, { recursive: true, force: true }));
+  await mkdir(join(siteDir, 'pages'), { recursive: true });
+  await Promise.all([
+    writeFile(
+      join(siteDir, 'pages', 'clipped-diagram.html'),
+      fixture(
+        '<h1>Diagram</h1><svg class="narrative-diagram" data-defect="clipped"></svg>',
+      ),
+    ),
+    writeFile(
+      join(siteDir, 'pages', 'overflowing-table.html'),
+      fixture(
+        '<h1>Evidence</h1><table data-defect="overflow"><tr><td>Wide</td></tr></table>',
+      ),
+    ),
+  ]);
+
+  const requests = [];
+  const report = await runRenderQaStage({
+    siteDir,
+    artifacts: [
+      {
+        id: 'clipped-diagram',
+        type: 'hub',
+        renderedPath: 'site/pages/clipped-diagram.html',
+      },
+      {
+        id: 'overflowing-table',
+        type: 'hub',
+        renderedPath: 'site/pages/overflowing-table.html',
+      },
+    ],
+    widths: [320],
+    browserProbe: async (request) => {
+      requests.push(request);
+      const html = await fetch(request.artifact.url).then((response) =>
+        response.text(),
+      );
+      return {
+        pageOverflowX: html.includes('data-defect="overflow"'),
+        clippedX: html.includes('data-defect="overflow"')
+          ? [{ selector: 'table', clientWidth: 320, scrollWidth: 900 }]
+          : [],
+        viewportClipped: html.includes('data-defect="clipped"')
+          ? [{ selector: '.narrative-diagram', left: -10, right: 310 }]
+          : [],
+        unreadableHeadings: [],
+        animationsDisabled: true,
+        reducedMotion: true,
+        keyboard: { tab: true },
+      };
+    },
+  });
+
+  assert.ok(requests.every(({ disableAnimations }) => disableAnimations));
+  assert.deepEqual(report, {
+    valid: true,
+    skipped: false,
+    warnings: [
+      RENDER_QA_WARNING_IDS.viewportClipping,
+      RENDER_QA_WARNING_IDS.documentOverflow,
+      RENDER_QA_WARNING_IDS.innerContainerOverflow,
+    ],
+    issues: report.issues,
+    probes: 2,
+  });
+});
+
+test('render QA stage records one stable warning when no probe is available', async () => {
+  const report = await runRenderQaStage({
+    siteDir: '/not-read-when-skipped',
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        renderedPath: 'site/recap.html',
+      },
+    ],
+  });
+
+  assert.deepEqual(report, {
+    valid: true,
+    skipped: true,
+    warnings: [RENDER_QA_WARNING_IDS.skippedNoRuntime],
+    issues: [],
+    probes: 0,
+  });
 });
 
 test('browser probes require both deck arrow pairs', async () => {

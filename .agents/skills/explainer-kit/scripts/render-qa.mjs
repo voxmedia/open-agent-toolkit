@@ -1,10 +1,16 @@
 #!/usr/bin/env node
 
 import { readFile } from 'node:fs/promises';
-import { basename } from 'node:path';
+import { createServer } from 'node:http';
+import { basename, posix, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { auditArtifactSet } from './lib/qa.mjs';
+import {
+  RENDER_QA_WARNING_IDS,
+  auditArtifactSet,
+  renderQaWarningIds,
+  runBrowserProbes,
+} from './lib/qa.mjs';
 import { renderArtifact } from './lib/render.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 
@@ -48,6 +54,56 @@ export const RELEASE_ARTIFACTS = Object.freeze([
     required: true,
   }),
 ]);
+
+export async function runRenderQaStage({
+  siteDir,
+  artifacts,
+  browserProbe,
+  widths,
+} = {}) {
+  assertStageInput(siteDir, artifacts);
+  if (typeof browserProbe !== 'function') {
+    return {
+      valid: true,
+      skipped: true,
+      warnings: [RENDER_QA_WARNING_IDS.skippedNoRuntime],
+      issues: [],
+      probes: 0,
+    };
+  }
+
+  return withSiteServer(siteDir, async (origin) => {
+    const probeArtifacts = await Promise.all(
+      artifacts.map(async (artifact) => {
+        const relativePath = siteRelativePath(artifact.renderedPath);
+        return {
+          id: artifact.id,
+          type: artifact.type,
+          html: await readFile(
+            resolve(siteDir, ...relativePath.split('/')),
+            'utf8',
+          ),
+          url: `${origin}/${relativePath
+            .split('/')
+            .map(encodeURIComponent)
+            .join('/')}`,
+        };
+      }),
+    );
+    const browser = await runBrowserProbes({
+      artifacts: probeArtifacts,
+      probe: browserProbe,
+      ...(widths && { widths }),
+    });
+    return {
+      valid: true,
+      skipped: false,
+      warnings: renderQaWarningIds(browser.issues),
+      issues: browser.issues,
+      probes: browser.probes,
+    };
+  });
+}
 
 export function selectReleaseVisualMatrix() {
   const paletteModeCases = RELEASE_PALETTES.flatMap((palette, paletteIndex) =>
@@ -263,6 +319,89 @@ function releaseContent(artifactId) {
       { id: 'evidence', title: 'Evidence', content: 'Checks are complete.' },
     ],
   };
+}
+
+function assertStageInput(siteDir, artifacts) {
+  if (typeof siteDir !== 'string' || siteDir.length === 0) {
+    throw new TypeError('Render QA stage requires a built site directory.');
+  }
+  if (
+    !Array.isArray(artifacts) ||
+    artifacts.length === 0 ||
+    artifacts.some(
+      (artifact) =>
+        typeof artifact?.id !== 'string' ||
+        typeof artifact?.type !== 'string' ||
+        typeof artifact?.renderedPath !== 'string',
+    )
+  ) {
+    throw new TypeError(
+      'Render QA stage requires artifacts with id, type, and renderedPath.',
+    );
+  }
+  for (const artifact of artifacts) siteRelativePath(artifact.renderedPath);
+}
+
+function siteRelativePath(renderedPath) {
+  const withoutPrefix = renderedPath.startsWith('site/')
+    ? renderedPath.slice('site/'.length)
+    : renderedPath;
+  const normalized = posix.normalize(withoutPrefix);
+  if (
+    normalized === '.' ||
+    normalized.startsWith('../') ||
+    posix.isAbsolute(normalized)
+  ) {
+    throw new TypeError(`Unsafe render QA artifact path: ${renderedPath}`);
+  }
+  return normalized;
+}
+
+async function withSiteServer(siteDir, callback) {
+  const root = resolve(siteDir);
+  const server = createServer(async (request, response) => {
+    try {
+      const pathname = decodeURIComponent(
+        new URL(request.url ?? '/', 'http://127.0.0.1').pathname,
+      );
+      const candidate = resolve(root, `.${pathname}`);
+      if (candidate !== root && !candidate.startsWith(`${root}${sep}`)) {
+        response.writeHead(403).end();
+        return;
+      }
+      const body = await readFile(candidate);
+      response.writeHead(200, {
+        'content-type': candidate.endsWith('.html')
+          ? 'text/html; charset=utf-8'
+          : 'application/octet-stream',
+        'cache-control': 'no-store',
+      });
+      response.end(body);
+    } catch {
+      response.writeHead(404).end();
+    }
+  });
+  await new Promise((resolveListen, rejectListen) => {
+    server.once('error', rejectListen);
+    server.listen(0, '127.0.0.1', resolveListen);
+  });
+  const address = server.address();
+  if (!address || typeof address === 'string') {
+    await closeServer(server);
+    throw new Error('Render QA server did not expose a TCP address.');
+  }
+
+  try {
+    return await callback(`http://127.0.0.1:${address.port}`);
+  } finally {
+    await closeServer(server);
+  }
+}
+
+function closeServer(server) {
+  return new Promise((resolveClose, rejectClose) => {
+    server.close((error) => (error ? rejectClose(error) : resolveClose()));
+  });
 }
 
 if (

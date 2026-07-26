@@ -40,6 +40,44 @@ export const GUIDELINE_WARNING_IDS = Object.freeze({
   expansionProfileLimit: 'expansion-profile-limit-exceeded',
   expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
 });
+export const RENDER_QA_WARNING_IDS = Object.freeze({
+  documentOverflow: 'render-qa-document-overflow',
+  innerContainerOverflow: 'render-qa-inner-container-overflow',
+  viewportClipping: 'render-qa-viewport-clipping',
+  headingReadability: 'render-qa-heading-unreadable',
+  animationsEnabled: 'render-qa-animations-enabled',
+  reducedMotion: 'render-qa-reduced-motion',
+  keyboardNavigation: 'render-qa-keyboard-navigation',
+  themeToggle: 'render-qa-theme-toggle',
+  deckNoJsLayout: 'render-qa-deck-no-js-layout',
+  deckPrintLayout: 'render-qa-deck-print-layout',
+  skippedNoRuntime: 'render-qa-skipped-no-headless-runtime',
+});
+const RENDER_QA_WARNING_BY_CODE = new Map([
+  ['viewport-overflow', RENDER_QA_WARNING_IDS.documentOverflow],
+  ['inner-x-overflow', RENDER_QA_WARNING_IDS.innerContainerOverflow],
+  ['viewport-clipping', RENDER_QA_WARNING_IDS.viewportClipping],
+  ['heading-readability', RENDER_QA_WARNING_IDS.headingReadability],
+  ['animations-enabled', RENDER_QA_WARNING_IDS.animationsEnabled],
+  ['reduced-motion', RENDER_QA_WARNING_IDS.reducedMotion],
+  ['keyboard-navigation', RENDER_QA_WARNING_IDS.keyboardNavigation],
+  ['theme-toggle', RENDER_QA_WARNING_IDS.themeToggle],
+  ['deck-no-js-layout', RENDER_QA_WARNING_IDS.deckNoJsLayout],
+  ['deck-print-layout', RENDER_QA_WARNING_IDS.deckPrintLayout],
+]);
+
+export function renderQaWarningIds(issues) {
+  if (!Array.isArray(issues)) {
+    throw new TypeError('Render QA issues must be an array.');
+  }
+  return [
+    ...new Set(
+      issues
+        .map(({ code }) => RENDER_QA_WARNING_BY_CODE.get(code))
+        .filter(Boolean),
+    ),
+  ];
+}
 
 export function checkGuidelines({ recipe, artifacts, expansion } = {}) {
   if (!Array.isArray(artifacts)) {
@@ -157,24 +195,66 @@ function shingles(value, size) {
 
 export const BROWSER_PROBE_EVALUATE = `(() => {
   const root = document.documentElement;
-  const clippedX = [...document.querySelectorAll('body *')]
+  const elements = [...document.querySelectorAll('body *')];
+  const selector = (element) => element.id ? '#' + CSS.escape(element.id) :
+    element.classList.length ? '.' + [...element.classList].map(CSS.escape).join('.') :
+    element.tagName.toLowerCase();
+  const clippedX = elements
     .filter((element) => {
       const style = getComputedStyle(element);
       return element.scrollWidth > element.clientWidth + 2 &&
         ['hidden', 'clip'].includes(style.overflowX);
     })
     .map((element) => ({
-      selector: element.id ? '#' + CSS.escape(element.id) :
-        element.classList.length ? '.' + [...element.classList].map(CSS.escape).join('.') :
-        element.tagName.toLowerCase(),
+      selector: selector(element),
       overflowX: getComputedStyle(element).overflowX,
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth
     }))
     .slice(0, 20);
+  const viewportClipped = elements
+    .filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 &&
+        (rect.left < -2 || rect.right > innerWidth + 2);
+    })
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        selector: selector(element),
+        left: rect.left,
+        right: rect.right,
+        viewportWidth: innerWidth
+      };
+    })
+    .slice(0, 20);
+  const unreadableHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+    .filter((heading) => {
+      const style = getComputedStyle(heading);
+      const rect = heading.getBoundingClientRect();
+      const fontSize = Number.parseFloat(style.fontSize);
+      return !heading.textContent.trim() || rect.width <= 0 || rect.height <= 0 ||
+        !Number.isFinite(fontSize) || fontSize < 12;
+    })
+    .map((heading) => ({
+      selector: selector(heading),
+      text: heading.textContent.trim(),
+      fontSize: Number.parseFloat(getComputedStyle(heading).fontSize)
+    }))
+    .slice(0, 20);
+  const animationsDisabled = elements.every((element) => {
+    const style = getComputedStyle(element);
+    const durations = (style.animationDuration + ',' + style.transitionDuration)
+      .split(',')
+      .map((value) => Number.parseFloat(value) || 0);
+    return style.animationName === 'none' && durations.every((value) => value === 0);
+  });
   return {
     pageOverflowX: root.scrollWidth > root.clientWidth + 2,
     clippedX,
+    viewportClipped,
+    unreadableHeadings,
+    animationsDisabled,
     reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
     deckLayout: document.querySelector('.deck') ? {
       flow: getComputedStyle(document.querySelector('.deck')).display === 'block' ?
@@ -345,6 +425,9 @@ export async function runBrowserProbes({
           scenario,
           viewport: { width, height: representativeHeight(width) },
           reducedMotion: 'reduce',
+          disableAnimations: true,
+          injectedCss:
+            '*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}',
           evaluate: BROWSER_PROBE_EVALUATE,
           keyboard:
             artifact.type === 'deck' && scenario === 'default'
@@ -388,6 +471,30 @@ export async function runBrowserProbes({
             code: 'inner-x-overflow',
             message: 'An inner container clips content on the x axis.',
             details: result.clippedX,
+          });
+        }
+        if ((result.viewportClipped ?? []).length > 0) {
+          issues.push({
+            ...context,
+            code: 'viewport-clipping',
+            message: 'Rendered content is clipped outside the viewport.',
+            details: result.viewportClipped,
+          });
+        }
+        if ((result.unreadableHeadings ?? []).length > 0) {
+          issues.push({
+            ...context,
+            code: 'heading-readability',
+            message: 'A heading is not visibly readable.',
+            details: result.unreadableHeadings,
+          });
+        }
+        if (result.animationsDisabled === false) {
+          issues.push({
+            ...context,
+            code: 'animations-enabled',
+            message:
+              'Render QA observed active animation or transition timing.',
           });
         }
         if (!result.reducedMotion) {
@@ -606,6 +713,18 @@ function validateProbeResult(result, artifactId, width, request) {
   ) {
     throw new TypeError(
       `Browser probe for ${artifactId} at ${width}px returned an invalid result.`,
+    );
+  }
+  if (
+    (result.viewportClipped !== undefined &&
+      !Array.isArray(result.viewportClipped)) ||
+    (result.unreadableHeadings !== undefined &&
+      !Array.isArray(result.unreadableHeadings)) ||
+    (result.animationsDisabled !== undefined &&
+      typeof result.animationsDisabled !== 'boolean')
+  ) {
+    throw new TypeError(
+      `Browser layout probe for ${artifactId} at ${width}px returned an invalid result.`,
     );
   }
   if (request.themeToggle && !isPlainObject(result.themeToggle)) {
