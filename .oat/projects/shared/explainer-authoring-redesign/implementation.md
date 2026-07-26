@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-25
-oat_current_task_id: complete
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -44,8 +44,11 @@ oat_generated: false
 | Phase 6: Pipeline integration, v1 retirement | complete | 4     | 4/4       |
 | Phase 7: End-to-end anti-regression fixture  | complete | 1     | 1/1       |
 | Phase 8: Documentation and release closure   | complete | 2     | 2/2       |
+| Phase rev1: Final review fixes               | pending  | 10    | 0/10      |
 
-**Total:** 23/23 tasks completed (23 = 20 planned + correctives p01-t02a, p05-t02a, p05-t02b)
+**Total:** 23/33 tasks completed. The 23 implementation tasks (20 planned +
+correctives p01-t02a, p05-t02a, p05-t02b) are complete; 10 review-fix tasks
+from the final review are pending.
 
 ---
 
@@ -327,6 +330,80 @@ Chronological log of implementation progress.
 - None
 
 ---
+
+---
+
+### Review Received: final
+
+**Date:** 2026-07-26
+**Review artifact:** `reviews/archived/final-review-2026-07-26T155422Z.md`
+**Reviewer target:** `gpt-5.6-sol-high` (resolved from the project's `high`
+review ceiling, matrix-pinned)
+**Review cycle:** 1 of 3
+
+**Findings:**
+
+- Critical: 0
+- Important: 7
+- Medium: 3
+- Minor: 0
+
+**Disposition:** all 10 converted to fix tasks at the operator's direction
+(fix everything before PR). Nothing deferred. The empty deferred-medium ledger
+was confirmed historically accurate by the reviewer — no prior finding had been
+accepted and deferred.
+
+**Root verification before conversion.** Every Important finding was reproduced
+independently rather than accepted on the reviewer's word:
+
+- I2 confirmed by reading `isUnsafeUrl`: the `if (!isExternal) return false;`
+  early return precedes the form/resource checks, so `mailto:` and relative
+  form actions pass the hard validator.
+- I3 confirmed: `browserProbe` exists only as an injected option; there is no
+  probe-module CLI seam, so normal runs always emit the skip warning.
+- I4 confirmed in real Chromium on all three sub-claims — unreachable
+  `left:-400px` content inside a scroller is exempt, `aria-hidden` +
+  `display:none` headings are flagged, and `::before` keyframe animations
+  report `animationsDisabled: true`.
+- I5 confirmed: no `rendered.warnings` consumption exists anywhere in
+  `run.mjs`, so render degradation warnings are computed and dropped.
+- I6 confirmed: only theme provenance is validated in `run.mjs`; author
+  provenance is retained as supplied.
+- I7 confirmed against both artifacts.
+- I1 confirmed: `author-request/v2` appears only in tests and documentation; no
+  shipped code implements it.
+
+**New tasks added:** `prev1-t01` … `prev1-t10`
+
+**Design drift / artifact alignment notes:**
+
+- I7: the review found lifecycle-artifact drift rather than a code defect. The
+  shipped implementation is accepted; the artifacts are stale. `prev1-t10` is
+  the artifact-alignment task and runs last so it records true final state.
+- I1: partially a design question rather than a pure defect. The design's
+  "prose carries quality" premise deliberately makes the executing agent the
+  author, so the absent code-level author driver may be correct by design while
+  the _verification_ of autonomous richness is genuinely missing. `prev1-t07`
+  is scoped to resolve that explicitly — either ship a driver/protocol or record
+  the seam as intended in `design.md` and add the outcome check — rather than
+  silently reintroducing the rigidity this project removed.
+
+**Root-cause note.** I4's first sub-finding is a regression introduced by the
+`p05-t02a` corrective, which exempted every descendant of a scrollable ancestor
+rather than testing reachability. The root verification at the time covered
+overflow-hidden clipping and off-viewport absolute positioning but never tested
+unreachable content _inside_ a scroller, so the "does not blind the probe"
+claim was narrower than stated. Four defects have now been found in the
+`qa.mjs` probe battery across three separate discoveries; `prev1-t02` should be
+treated as hardening that module, not as one more point fix.
+
+**Next:** Execute fix tasks via the `oat-project-implement` skill.
+
+After the fix tasks are complete:
+
+- Update this same artifact-identified review event to `fixes_completed`
+- Re-run `oat-project-review-provide code final` then
+  `oat-project-review-receive` to reach `passed`
 
 ## Deviations from Plan / Design
 

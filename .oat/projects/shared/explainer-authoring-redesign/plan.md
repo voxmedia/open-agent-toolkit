@@ -1192,17 +1192,425 @@ version, adapter minimum, and the smoke assertions that pin them) in one
 commit so no intermediate state is self-rejecting. p07 (e2e fixture) and p08
 (docs, then remaining bumps + sync + release closure) follow.
 
+## Phase rev1: Final review fixes
+
+Fix tasks from the `final` code review
+(`reviews/archived/final-review-2026-07-26T155422Z.md`): 7 Important and
+3 Medium findings, all independently reproduced at the root before conversion.
+Ordered so that safety lands first, QA correctness before the warning plumbing
+that depends on it, and lifecycle bookkeeping last so it records final state.
+
+Verification note: `node --test` requires glob patterns in this repo, never a
+bare directory. Every task must leave core, adapter, smoke, and release suites
+green — the narrow core+adapter verification used during Phases 1-7 is what let
+these findings escape.
+
+### Task prev1-t01: (review) Close the active-content URL policy gap
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/html-safety.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/html-safety.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I2, `html-safety.mjs:522`. `isUnsafeUrl` computes
+`isExternal = /^(?:https?:)?\/\//` and returns `false` for everything that is
+not external **before** reaching the form-submission and resource checks.
+Confirmed consequence: `form action="mailto:..."`, relative `action`,
+relative `formaction`, and relative `image`/`use` references all pass the hard
+validator. The secondary QA regex only matches a subset of quoted `src`
+attributes and does not cover SVG `href` (`qa.mjs:19`). This defeats the
+self-contained / no-external-active-content hard boundary.
+
+**Step 2: Implement fix**
+
+Apply scheme-aware policy before the external-URL early return. Reject form
+submission targets outright regardless of scheme (or drop form controls from
+the allowlist entirely — prefer this if no bundled shell needs forms). Require
+resource elements to reference only inline `data:` payloads on the existing
+allowlist or same-document `#fragment` references. Keep this a hard error, not
+a warning: it is a safety boundary, not a guideline.
+
+**Step 3: Verify**
+
+Add cases for `mailto:` action, relative action, relative `formaction`,
+unquoted attribute values, SVG `<image href>`, SVG `<use href>`, and
+`srcset`. Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke`.
+Expected: new cases rejected; existing artistic fixtures still pass.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib .agents/skills/explainer-kit/tests
+git commit -m "fix(prev1-t01): reject non-http active content and unpinned resources"
+```
+
+### Task prev1-t02: (review) Repair the three remaining probe misclassifications
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `tools/release/validate-explainer-visuals.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I4. Three defects, all reproduced in real Chromium at the root:
+
+1. **Scroll exemption overreaches** (`qa.mjs:215`). The `p05-t02a` fix exempts
+   every descendant of a horizontally scrollable ancestor. Verified: a
+   `position:absolute; left:-400px` element inside a scroller whose scroll
+   range is 0-320 is **not** flagged, though scrolling can never reveal it.
+   The exemption must test reachability, not mere ancestry.
+2. **Hidden headings flagged** (`qa.mjs:240`). Verified: an `<h2>` inside
+   `aria-hidden="true"; display:none` reports as unreadable. Screen-reader-only
+   headings correctly pass, so only the hidden-panel case is wrong.
+3. **Pseudo-element motion missed** (`qa.mjs:259`). Verified: a running
+   `::before` keyframe animation yields `animationsDisabled: true`. The probe
+   reads element styles only.
+
+**Step 2: Implement fix**
+
+For (1) compute whether an off-viewport element falls within the ancestor's
+actual scroll range (`scrollLeft` extent), and keep flagging it when it does
+not. For (2) skip elements that are not rendered or are `aria-hidden`, while
+continuing to exempt visually-hidden accessibility text as today. For (3)
+inspect `::before` and `::after` computed styles alongside the element.
+
+**Step 3: Verify**
+
+Extend the real-Chromium regression test with all three cases plus the two
+existing p05-t02a/p05-t02b boundaries. Each new assertion must fail without
+its fix — verify by reverting locally, as was done for the prior two probe
+correctives. Run: `node --test tools/release/*.test.mjs` and
+`pnpm release:validate`.
+Expected: release suite green; visual matrix still `valid: true`.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/qa.mjs tools/release
+git commit -m "fix(prev1-t02): probe reachability, hidden headings, pseudo-element motion"
+```
+
+### Task prev1-t03: (review) Propagate render degradation warnings to the manifest
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I5, `run.mjs:182`. `renderArtifact` returns section warnings
+(`render.mjs:88`) covering unsupported diagram grammar, heading-depth jumps,
+and escaped raw HTML. `executeRenderStage` pushes `rendered` into
+`state.rendered` and `state.artifacts` but never reads `rendered.warnings` —
+confirmed: no `rendered.warnings` consumption exists anywhere in `run.mjs`.
+D7's degradation warning is therefore computed and silently discarded.
+
+**Step 2: Implement fix**
+
+Aggregate `rendered.warnings` into the render stage result and `state.warnings`,
+deduplicated, so they reach both the run result and the manifest. Keep them
+warnings — this is guideline/style severity, not a hard error.
+
+**Step 3: Verify**
+
+Add end-to-end assertions that a `sequenceDiagram` fence surfaces the
+unsupported-diagram warning in `result.warnings` **and** `manifest.warnings`,
+plus cases for a heading-depth jump and escaped raw HTML.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`.
+Expected: warnings present; the rich fixture's empty-warning assertion still
+holds.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests
+git commit -m "fix(prev1-t03): render degradation warnings reach result and manifest"
+```
+
+### Task prev1-t04: (review) Collapse the duplicate `qa-*` warning vocabulary
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render-qa.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M3, `run.mjs:252`. After mapping browser codes through
+`renderQaWarningIds`, the runner also prefixes every non-`viewport-*` warning
+as `qa-*`. Inner overflow, heading readability, motion, keyboard, theme, and
+deck-layout findings therefore emit two vocabularies, contradicting the
+documented stable IDs.
+
+**Step 2: Implement fix**
+
+Exclude all mapped browser codes from the generic structural `qa-*` conversion,
+so each browser finding emits exactly one stable `render-qa-*` ID.
+
+**Step 3: Verify**
+
+Assert the exact manifest warning set for an injected browser defect.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`.
+Expected: one stable ID per finding, no `qa-*` duplicates.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests
+git commit -m "fix(prev1-t04): emit one stable render-qa warning id per finding"
+```
+
+### Task prev1-t05: (review) Establish a provenance trust boundary
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/author-result.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/tests/author.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I6, `run.mjs:885`. The v2 schema accepts arbitrary `authorId`,
+`generatedAt`, and `method` from the callback; the runner validates shape,
+artifact identity, and content path, then retains and hash-pins the claim. A
+callback can impersonate another author or backdate generation. Immutable
+hashing then proves only that the spoofed claim was retained faithfully — it
+proves nothing about authenticity, which the design treats as a hard invariant.
+
+**Step 2: Implement fix**
+
+Bind author identity and method through trusted caller configuration, and stamp
+or verify `generatedAt` in the core using the injected clock rather than the
+callback's value. Treat callback-supplied provenance as untrusted metadata
+unless it matches trusted context; a mismatch stays a hard error.
+
+**Step 3: Verify**
+
+Add tests for a spoofed `authorId`, a backdated `generatedAt`, and the
+matching-context happy path.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs` and
+`node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs`, then
+`pnpm test:smoke` (smoke fixtures assert provenance shape).
+Expected: spoofing rejected; smoke fixtures updated if the trusted shape moves.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit .agents/skills/oat-explainer-kit tools/smoke
+git commit -m "fix(prev1-t05): bind author provenance to trusted caller context"
+```
+
+### Task prev1-t06: (review) Give render QA a real runtime seam
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render-qa.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I3, `run.mjs:236`. Browser probes run only when a caller injects
+`options.browserProbe`; otherwise the run always records
+`render-qa-skipped-no-headless-runtime`. Confirmed: the core CLI accepts
+author/critic/publish/durability module paths but no probe module, and the
+adapter ships no runtime. The documented first-class stage is injection-only,
+so it is skipped on every normal CLI and lifecycle run even where Chromium is
+installed.
+
+**Step 2: Implement fix**
+
+Expose a probe-runtime seam across the core and adapter invocation boundary
+(module path plus resolution of a supported headless runtime). Attempt launch
+on normal runs and emit the skip warning only after real capability detection
+fails, so the warning means "no runtime available" rather than "nobody injected
+one".
+
+**Step 3: Verify**
+
+Cover: runtime resolved and probes run; runtime genuinely absent yields exactly
+the skip warning; injected probe still honored for tests.
+Run: all four suites plus `pnpm release:validate`.
+Expected: lifecycle runs exercise QA when a runtime exists.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit .agents/skills/oat-explainer-kit
+git commit -m "fix(prev1-t06): resolve a headless runtime for render qa on normal runs"
+```
+
+### Task prev1-t07: (review) Prove autonomous authoring produces rich output
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-project-complete/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding I1, `oat-project-complete/SKILL.md:284`. This is the finding
+closest to the project's reason for existing. Both lifecycle callers only
+instruct the executing agent in prose to "construct" a brief-aware author seam.
+Confirmed: no shipped code implements `author-request/v2` — it appears only in
+tests and documentation. The completion test regex-matches the prose, and the
+anti-regression fixture feeds a checked-in rich Markdown file through
+`richAuthor`. Together those prove the renderer **preserves** richness; nothing
+demonstrates the pipeline **generates** it from project evidence, which is the
+original "basic AF" failure mode.
+
+**Step 2: Implement fix**
+
+Ship either a concrete lifecycle author driver or a precise, testable
+callback/module-materialization protocol that can answer iterative
+`author-request/v2` calls from lifecycle evidence. Then add a behavioral
+completion → adapter → core test (or a recorded eval) that starts from
+lifecycle artifacts and demonstrates rich authored output with no prewritten
+recap fixture.
+
+Note the design tension to resolve explicitly rather than silently: the
+"prose carries quality" premise deliberately makes the agent the author, so the
+goal is a verifiable seam and an outcome check, not a hardcoded generator that
+would reintroduce the rigidity this project removed. If the conclusion is that
+the seam is correct as designed and only the verification is missing, record
+that as artifact alignment in `design.md` and ship the outcome check.
+
+**Step 3: Verify**
+
+Run: `node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs` and the
+core suite; confirm the new test fails if the author returns thin content.
+Expected: autonomous path demonstrably yields structured output.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/oat-explainer-kit .agents/skills/oat-project-complete
+git commit -m "fix(prev1-t07): verify autonomous authoring yields rich structure"
+```
+
+### Task prev1-t08: (review) Enforce declared `maxPerType` expansion caps
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M1, `recipes.mjs:166`. Recipe validation accepts and validates
+`expansion.limits.maxPerType` (`recipes.mjs:437`), but proposal evaluation
+checks only per-profile `maxCount` and total `maxArtifacts`. A valid recipe can
+declare a finite type cap that an author bypasses by spreading proposals across
+profiles.
+
+**Step 2: Implement fix**
+
+Track accepted counts per artifact type and reject over-cap proposals with a
+stable warning ID consistent with the existing expansion-limit vocabulary.
+
+**Step 3: Verify**
+
+Add synthetic dual-profile coverage where two profiles share one type and
+together exceed `maxPerType`.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`.
+Expected: cap enforced; existing D5 assertions unchanged.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/recipes.mjs .agents/skills/explainer-kit/tests
+git commit -m "fix(prev1-t08): enforce per-type expansion caps"
+```
+
+### Task prev1-t09: (review) Preserve Markdown lead and reject duplicate section IDs
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M2, `run.mjs:945`. When any `##` heading exists,
+`markdownContentModel` slices from the first such heading onward, silently
+discarding prose between the document title and the first section. Repeated
+headings also produce duplicate slug IDs because the run never calls the
+existing content-model duplicate validation. Both reduce author freedom — the
+opposite of this project's intent — and duplicate IDs break navigation anchors.
+
+**Step 2: Implement fix**
+
+Parse the document once, preserve lead content as a rendered introduction, and
+either reject or deterministically disambiguate duplicate generated section IDs
+by calling the existing validation.
+
+**Step 3: Verify**
+
+Add full-run fixtures for lead-prose preservation and for repeated headings.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`.
+Expected: lead prose rendered; duplicate IDs handled deterministically.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs .agents/skills/explainer-kit/tests
+git commit -m "fix(prev1-t09): preserve markdown lead and disambiguate section ids"
+```
+
+### Task prev1-t10: (review) Align lifecycle artifacts with shipped state
+
+**Files:**
+
+- Modify: `.oat/projects/shared/explainer-authoring-redesign/implementation.md`
+- Modify: `.oat/projects/shared/explainer-authoring-redesign/state.md`
+
+**Step 1: Understand the issue**
+
+Review finding I7. Artifact drift, not a code defect, but it makes closeout
+state unreliable. Confirmed: `implementation.md` is still
+`oat_status: in_progress`, uses `oat_current_task_id: complete` where the
+contract expects `null`, and leaves the Final Summary as placeholders;
+`state.md` frontmatter says complete while its body still reads
+"Implementation in progress — Phase 1" and "0/20 tasks".
+
+**Step 2: Implement fix**
+
+Align both artifacts with actual phase, task counts (23 implementation tasks
+plus these 10 review-fix tasks), verification results, review status, design
+deltas, and the next boundary. Run this task **last** so it records the true
+final state including the preceding nine fixes.
+
+**Step 3: Verify**
+
+Run: `oat project status --project-path .oat/projects/shared/explainer-authoring-redesign`
+Expected: reported phase, task counts, and review status match the artifacts;
+no placeholder text remains in the Final Summary.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/explainer-authoring-redesign
+git commit -m "docs(prev1-t10): align lifecycle artifacts with shipped state"
+```
+
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                           |
-| ----- | -------- | --------------- | ---------- | -------------------------------------------------- |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md |
-| final | code     | received        | 2026-07-26 | reviews/final-review-2026-07-26T155422Z.md         |
+| Scope | Type     | Status          | Date       | Artifact                                            |
+| ----- | -------- | --------------- | ---------- | --------------------------------------------------- |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md  |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md  |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md  |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md  |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md  |
+| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md  |
+| final | code     | fixes_added     | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -1229,8 +1637,11 @@ on that recorded decision.
   recipe v1 retirement + fixture migration + 2.0.0 boundary
 - Phase 7: 1 task — e2e anti-regression fixture
 - Phase 8: 2 tasks — docs, then remaining bumps + sync + release validation
+- Phase rev1: 10 tasks — final review fixes (7 Important, 3 Medium)
 
-**Total: 20 tasks**
+**Total: 30 planned tasks** (20 original + 10 review fixes; 23 implementation
+tasks were actually executed, including correctives p01-t02a, p05-t02a, and
+p05-t02b)
 
 ## References
 
