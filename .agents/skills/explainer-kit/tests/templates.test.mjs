@@ -199,6 +199,18 @@ test('house and engineer shells preserve sticky navigation and tour interactions
   assert.match(tour, /setAttribute\(['"]aria-expanded['"]/);
 });
 
+test('narrative shells style the section number the renderer always emits', async () => {
+  // renderArtifact emits <div class="section-number"> for every narrative
+  // section, so an unstyled shell renders bare numerals at body size.
+  for (const name of ['house-style.html', 'engineer-tour.html']) {
+    assert.match(
+      await template(name),
+      /\.section-number[^{]*\{[^}]*font:/,
+      `${name} must style .section-number`,
+    );
+  }
+});
+
 test('diagram shell preserves an inline accessible diagram viewport', async () => {
   const html = await template('diagram-shell.html');
 
