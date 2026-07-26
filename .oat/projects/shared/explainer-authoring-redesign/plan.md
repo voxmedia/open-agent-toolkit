@@ -712,6 +712,42 @@ git commit -m "feat(p05-t02): render QA probe battery with graceful skip"
 
 ## Phase 6: Pipeline integration and v1 retirement
 
+### Task p05-t02a: Viewport clipping must not flag paged deck slides (corrective)
+
+Inserted after Phase 6, when the release visual gate surfaced the defect.
+p05-t02 introduced viewport-clipping detection, which did not exist before it.
+Its first real-Chromium run failed `validate-explainer-visuals.test.mjs` on
+`profile-editorial-deck` at 320px, in both the default and no-js scenarios.
+
+Bisected to `651aac80` (p05-t02): the gate passed at `b958bb86`, `97ef5349`,
+`origin/main`, and `a75bcb32` (p05-t01), and failed only from p05-t02 onward.
+The finding is a **false positive**, not a deck defect. `.deck` is
+`display: flex; overflow-x: auto; scroll-snap-type: x mandatory`, so slides
+after the first sit beyond the viewport **by design** and are reachable by
+scroll, keyboard, and snap. The probe flagged any element whose rect exceeded
+the viewport, which treats intentional horizontal paging as clipped content.
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `tools/release/validate-explainer-visuals.test.mjs`
+
+**Step 1:** Exempt elements that live inside a horizontally scrollable
+ancestor (`overflow-x: auto|scroll` with `scrollWidth > clientWidth`) from the
+viewport-clipping check. Genuine clipping is still caught: the separate
+`clippedX` check covers `overflow: hidden|clip` ancestors, and content
+positioned past the viewport with no scrollable ancestor still reports.
+
+**Step 2:** Add a real-Chromium regression test pinning all three cases —
+paged slides exempt, overflow-hidden clipping reported, absolutely positioned
+off-viewport content reported. Exempting reachable content must never become
+blindness to unreachable content.
+
+**Step 3: Verify**
+Run: `node --test tools/release/*.test.mjs` and the core suite.
+Expected: release 41/41, core 199/199. The regression test must fail when the
+exemption is reverted — confirmed: 2 failures without it, 0 with it.
+
 ### Task p06-t01: Relocate the approval gate after render and QA
 
 **Files:**
