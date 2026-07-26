@@ -72,6 +72,8 @@ function manifest(run, buildRecord, overrides = {}) {
     },
     artifacts: [],
     immutableHashes: {
+      'run-request.json': HASH,
+      'source/content-approval.json': HASH,
       'source/fact-base.json': HASH,
       'source/fact-base.md': HASH,
       'theme.resolved.json': HASH,
