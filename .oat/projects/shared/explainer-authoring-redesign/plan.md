@@ -748,6 +748,65 @@ Run: `node --test tools/release/*.test.mjs` and the core suite.
 Expected: release 41/41, core 199/199. The regression test must fail when the
 exemption is reverted — confirmed: 2 failures without it, 0 with it.
 
+### Task p05-t02b: Animation probe must accept suppressed motion (corrective)
+
+Inserted during Phase 8, when p08-t02's `pnpm release:validate` ran the full
+visual matrix for the first time. p05-t02 introduced the `animations-enabled`
+probe, which did not exist before it (`rg animations-enabled` is empty at
+`origin/main` and at `a75bcb32`, and first appears in `651aac80`).
+
+`pnpm release:validate:visual` failed with six `animations-enabled` issues
+covering **every** `explainer`-type artifact — `profile-clean-explainer`,
+`profile-editorial-explainer`, and `profile-technical-explainer` at both probed
+widths. Hub, diagram, and deck artifacts passed. Reproduced identically at the
+untouched phase base `c3e25d31`, so it predates Phase 8 but is owned by this
+project.
+
+The finding is a **false positive**. Only `engineer-tour.html` — the explainer
+template — carries a `@media (prefers-reduced-motion: reduce)` block setting
+`transition-duration: 0.01ms !important`, and that block is unchanged from
+`origin/main`. The probe runs under `reducedMotion: 'reduce'`, so the block
+applies. Instrumenting a real Chromium run showed all 37 elements reporting
+`animationName: none`, `animationDuration: 0s`, and
+`transitionDuration: 1e-05s`: no motion is running, and the artifact is
+_honoring_ reduced motion using the conventional 0.01ms idiom (chosen so
+`transitionend` still fires). The probe required durations to be exactly `0`
+and so read that compliance as a defect. Note the real-Chromium probe applies
+only `reducedMotion: 'reduce'`; it never applies the request's `injectedCss`
+animation reset, so nothing overrides the template.
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `tools/release/validate-explainer-visuals.test.mjs`
+
+**Step 1:** Treat sub-millisecond durations as suppressed rather than active.
+`animationsDisabled` requires `animationName === 'none'` and every duration
+below a `PERCEPTIBLE_SECONDS` threshold of `0.001`. Perceptible motion is still
+caught: any duration at or above 1ms reports, as does any running keyframe
+animation.
+
+**Step 2:** Add a real-Chromium regression test pinning all three cases — the
+0.01ms reduced-motion idiom accepted, a 180ms transition reported, and a
+running keyframe animation reported. Accepting suppressed motion must never
+become blindness to motion a reader would actually see.
+
+**Step 3: Verify**
+Run: `node --test tools/release/*.test.mjs`, the core suite, and
+`pnpm release:validate:visual`.
+Expected: release 43 pass / 1 skip, core 207/207, and the visual matrix
+`valid: true` across all 65 measurements. The regression test must fail when
+the threshold is reverted to `=== 0` — confirmed: 1 failure without it, 0 with
+it.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib/qa.mjs \
+  tools/release/validate-explainer-visuals.test.mjs
+git commit -m "fix(p05-t02b): animation probe accepts suppressed reduced motion"
+```
+
 ### Task p06-t01: Relocate the approval gate after render and QA
 
 **Files:**
