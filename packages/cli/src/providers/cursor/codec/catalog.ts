@@ -5,11 +5,15 @@ export type CursorPinSyntaxFamily =
   | 'grok-effort-fast';
 
 /**
- * A probe observation, recorded so a mapping carries its own approval evidence.
- * `submittedSelector` must equal the mapping's `frontmatterModel` and
- * `resolvedModel` its `ladderModelId`; a mapping edited without re-probing
- * therefore fails its own consistency check rather than silently inheriting an
- * approval it was never granted.
+ * What a probe submitted and what the harness resolved it to, transcribed from
+ * the probe evidence.
+ *
+ * `submittedSelector` and `resolvedModel` restate the mapping's
+ * `frontmatterModel` and `ladderModelId`. That duplication is the mechanism and
+ * must not be refactored away: these fields are an independent transcription of
+ * an observation, so a mapping edited without re-probing disagrees with its own
+ * record and fails the consistency test. Deriving them from the mapping would
+ * make that test pass by construction and verify nothing.
  */
 export interface CursorPinProbeRecord {
   submittedSelector: string;
@@ -40,19 +44,11 @@ function approvedMapping(
   options: {
     catalogue?: boolean;
     probeName?: string;
-    verifiedAt?: string;
-    evidencePath?: string;
+    // Supplied whole by the caller. Never assembled from the arguments above.
+    probeRecord?: CursorPinProbeRecord;
   } = {},
 ): CursorModelPinMapping {
-  const probeRecord: CursorPinProbeRecord | undefined =
-    options.verifiedAt && options.evidencePath
-      ? {
-          submittedSelector: frontmatterModel,
-          resolvedModel: ladderModelId,
-          verifiedAt: options.verifiedAt,
-          evidencePath: options.evidencePath,
-        }
-      : undefined;
+  const { probeRecord } = options;
 
   return {
     ladderModelId,
@@ -145,37 +141,79 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     'claude-opus-5-thinking-low',
     'claude-opus-5[effort=low]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-low', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus5-low',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5[effort=low]',
+        resolvedModel: 'claude-opus-5-thinking-low',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-5-thinking-medium',
     'claude-opus-5[effort=medium]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-medium', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus5-medium',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5[effort=medium]',
+        resolvedModel: 'claude-opus-5-thinking-medium',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-5-thinking-high',
     'claude-opus-5[effort=high]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-high', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus5-high',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5[effort=high]',
+        resolvedModel: 'claude-opus-5-thinking-high',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-5-thinking-xhigh',
     'claude-opus-5[effort=xhigh]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-xhigh', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus5-xhigh',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5[effort=xhigh]',
+        resolvedModel: 'claude-opus-5-thinking-xhigh',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-5-thinking-max',
     'claude-opus-5[effort=max]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-max', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus5-max',
+      probeRecord: {
+        submittedSelector: 'claude-opus-5[effort=max]',
+        resolvedModel: 'claude-opus-5-thinking-max',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'claude-opus-4-8-thinking-xhigh',
     'claude-opus-4-8[effort=xhigh]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus48-xhigh', ...G01_PROBE_2026_07_25 },
+    {
+      probeName: 'zz-pin-probe-opus48-xhigh',
+      probeRecord: {
+        submittedSelector: 'claude-opus-4-8[effort=xhigh]',
+        resolvedModel: 'claude-opus-4-8-thinking-xhigh',
+        ...G01_PROBE_2026_07_25,
+      },
+    },
   ),
   approvedMapping(
     'gpt-5.6-sol-xhigh',
