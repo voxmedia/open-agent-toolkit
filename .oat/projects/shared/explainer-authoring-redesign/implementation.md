@@ -45,7 +45,7 @@ oat_generated: false
 | Phase 7: End-to-end anti-regression fixture  | pending  | 1     | 0/1       |
 | Phase 8: Documentation and release closure   | pending  | 2     | 0/2       |
 
-**Total:** 6/21 tasks completed (21 = 20 planned + corrective p01-t02a)
+**Total:** 12/21 tasks completed (21 = 20 planned + corrective p01-t02a)
 
 ---
 
@@ -99,52 +99,57 @@ Inserted mid-phase after the first p01-t04 attempt blocked. See Deviations.
 
 ## Phase 2: Lifecycle caller wiring
 
-**Status:** pending
+**Status:** complete (parallel group, worktree `wt-p02`, merged `2e5ee9df`)
 **Started:** -
 
 ### Task p02-t01: Lifecycle callers construct the author callback
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `3571b345`
 
 ---
 
 ## Phase 3: Narrative renderer
 
-**Status:** pending
+**Status:** complete (parallel group, worktree `wt-p03`, merged `6c327e81`)
 **Started:** -
 
 ### Task p03-t01: Markdown parsing and AST safety validation
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `07f5be21`
 
 ### Task p03-t02: Themed block library and expansion path rule
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `0b01aa58`
 
 ### Task p03-t03: Diagram blocks rendered to inline SVG
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `ed612264`
 
 ---
 
 ## Phase 4: Artistic composer path
 
-**Status:** pending
+**Status:** complete (parallel group, worktree `wt-p04`, merged `97ef5349`)
 **Started:** -
 
 ### Task p04-t01: DOM safety validator with hash-pinned shell scripts
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `6051f28c`
+
+D3 enforcement verified empirically at the root, not just by reading the code:
+unmodified shell accepted, a mutated core script rejected
+(`core-script-hash-mismatch:0`), an authored extra script rejected
+(`core-script-count-mismatch`).
 
 ### Task p04-t02: Shell canvases
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `a5bd6a1b`
 
 ---
 
@@ -283,27 +288,34 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review   | Source Artifact                    | Planned / Documented                                                                                                | Actual / Accepted                                                      | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                             | Source of Truth                | Follow-up                                            |
-| --------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ---------------------------------------------------- |
-| p00 (pre-phase) | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites                                       | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`  | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`).                                                                                                                                                                                                                                                                  | `plan.md` (updated)            | None                                                 |
-| p00 (pre-phase) | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                                                                     | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1 | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.                                                                                                                                                                                                                                                                               | Commit `8c81513b`              | Consider upstreaming the fix to `main` independently |
-| p01-t02a        | `plan.md` Phase 1 task list        | Phase 1 had five tasks; p01-t04 was expected to stay green because "all readers went through the p01-t02 accessors" | Inserted a sixth, corrective task between p01-t03 and p01-t04          | That premise was false in two places invisible while every bundled recipe was v1: `renderArtifact` takes an exact four-key descriptor (`render.mjs:339-355`) and rejects normalized v2 floor entries, and p01-t02's dual-shape test used a live bundled recipe as its v1 example, so the v1 loader branch would have lost all coverage at p01-t04. Both sit in p01-t02-owned files, so p01-t04 could not repair them inside its declared boundary. | Commits `4a321ad4`, `97aebb08` | None                                                 |
-| p01-t04         | `plan.md` p01-t04 verification     | Suite stays green with no bundled-recipe test changes called out                                                    | Two v1-era tests in `recipes.test.mjs` updated deliberately            | The loader test asserted `schemaVersion === v1`, and `project recap requires all six accountability sections` asserted a hard error that stops applying once the recipe is v2. The enforcement half was dropped and the test renamed to "declares"; the `requiredNarrative` assertion was kept. The v1 guarantee is still held by p01-t02a's synthetic fixture.                                                                                    | `plan.md` (updated)            | p05-t01 must supply the replacement coverage warning |
+| Task / Review        | Source Artifact                    | Planned / Documented                                                                                                | Actual / Accepted                                                               | Reason                                                                                                                                                                                                                                                                                                                                                                                                                                             | Source of Truth                | Follow-up                                                                                              |
+| -------------------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| p00 (pre-phase)      | `plan.md` verification commands    | `node --test .agents/skills/explainer-kit/tests/` (bare directory) at 8 sites                                       | Explicit globs: `.../tests/*.test.mjs`, plus `tools/release/*.test.*`           | The directory form never worked on Node 22.17 — it resolves the dir as a module and throws `MODULE_NOT_FOUND` without running any suite. Repo convention is globs (`test:smoke`).                                                                                                                                                                                                                                                                  | `plan.md` (updated)            | None                                                                                                   |
+| p00 (pre-phase)      | n/a — pre-existing main regression | Plan assumed a green core suite at every commit                                                                     | Repaired 11 failures introduced by PR #170 (`ffcae8f0`) before Phase 1          | Phase 6 rewrites `contracts.mjs` / `run.mjs` / `records.mjs`, the same files implicated; a red baseline there would make our breakage indistinguishable from #170's.                                                                                                                                                                                                                                                                               | Commit `8c81513b`              | Consider upstreaming the fix to `main` independently                                                   |
+| p01-t02a             | `plan.md` Phase 1 task list        | Phase 1 had five tasks; p01-t04 was expected to stay green because "all readers went through the p01-t02 accessors" | Inserted a sixth, corrective task between p01-t03 and p01-t04                   | That premise was false in two places invisible while every bundled recipe was v1: `renderArtifact` takes an exact four-key descriptor (`render.mjs:339-355`) and rejects normalized v2 floor entries, and p01-t02's dual-shape test used a live bundled recipe as its v1 example, so the v1 loader branch would have lost all coverage at p01-t04. Both sit in p01-t02-owned files, so p01-t04 could not repair them inside its declared boundary. | Commits `4a321ad4`, `97aebb08` | None                                                                                                   |
+| p01-t04              | `plan.md` p01-t04 verification     | Suite stays green with no bundled-recipe test changes called out                                                    | Two v1-era tests in `recipes.test.mjs` updated deliberately                     | The loader test asserted `schemaVersion === v1`, and `project recap requires all six accountability sections` asserted a hard error that stops applying once the recipe is v2. The enforcement half was dropped and the test renamed to "declares"; the `requiredNarrative` assertion was kept. The v1 guarantee is still held by p01-t02a's synthetic fixture.                                                                                    | `plan.md` (updated)            | p05-t01 must supply the replacement coverage warning                                                   |
+| Parallel group setup | n/a — environment                  | Worktrees dispatched after verifying tests green                                                                    | All three phases aborted preflight on a dirty tree; restarted after remediation | `pnpm run worktree:init` runs a provider sync that restamps `.oat/sync/manifest.json` `oatVersion` from the committed `0.2.14` to the locally installed `0.2.17`. Dispatch was gated on tests passing but not on a clean tree. Reverted in all three; implementers given a narrow exemption for that one file. No work lost.                                                                                                                       | Base `b958bb86` unchanged      | Repo backlog candidate: `worktree:init` should not leave a fresh worktree dirty                        |
+| p02-t01              | AGENTS.md skill version-bump rule  | Bump `version:` for each changed canonical `SKILL.md`                                                               | No bump in this commit                                                          | The rule is PR-scoped, not edit-scoped. p02 touched `oat-explainer-kit` and `oat-project-complete`; the plan assigns those single bumps to p06-t04 and p08-t02 respectively, so bumping here would produce two bumps for one skill.                                                                                                                                                                                                                | `plan.md`                      | Verify both bumps actually land in p06-t04 / p08-t02                                                   |
+| p03-t02              | D1 origin propagation              | Renderer descriptors carry `origin`                                                                                 | Carried, but `run.mjs`'s `renderDescriptor()` still strips it                   | p03 widened `assertRecipeArtifact` to accept both the legacy four-key shape and the five-key `origin` form, avoiding a cross-boundary write into p06-owned `run.mjs`. The tolerance means a missed follow-through in p06-t02 would silently give expansion artifacts floor paths.                                                                                                                                                                  | Commit `5a85f31d` (plan note)  | p06-t02 must widen `renderDescriptor()` and assert the expansion path                                  |
+| p04-t01              | `plan.md` p04-t01 commit message   | Subject capitalized "DOM"                                                                                           | Lowercased to "dom"                                                             | Repo commitlint enforces subject-case and rejected the planned capitalization. Message-only; no code or boundary change.                                                                                                                                                                                                                                                                                                                           | Commit `6051f28c`              | None                                                                                                   |
+| p04-t02              | Shell identity marker placement    | Marker on the `<html>` element                                                                                      | Marker moved to `<body>` attributes                                             | The renderer matches the exact `<html lang="en">` opening when injecting theme mode; marking `<html>` would have required editing p03-owned `render.mjs` mid-parallel-group. `<body>` preserves compatibility with no cross-boundary write.                                                                                                                                                                                                        | Commit `a5bd6a1b`              | None                                                                                                   |
+| n/a — environment    | `pnpm lint`                        | Full lint green                                                                                                     | Type-aware lint pass fails repo-wide                                            | `oxlint-tsgolint` is not installed locally, so the `--type-aware` pass cannot run; the standard oxlint pass reports 0 errors in every package. Unrelated to this project — the whole merge touched only `.agents/` and `.oat/`, zero TypeScript.                                                                                                                                                                                                   | n/a                            | Must be resolved before p08-t02's `pnpm release:validate` or that gate fails for environmental reasons |
 
 ## Test Results
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage                                                                       |
-| ----- | --------- | ------ | ------ | ------------------------------------------------------------------------------ |
-| 1     | 158       | 158    | 0      | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153 |
-| 2     | -         | -      | -      | -                                                                              |
-| 3     | -         | -      | -      | -                                                                              |
-| 4     | -         | -      | -      | -                                                                              |
-| 5     | -         | -      | -      | -                                                                              |
-| 6     | -         | -      | -      | -                                                                              |
-| 7     | -         | -      | -      | -                                                                              |
-| 8     | -         | -      | -      | -                                                                              |
+| Phase        | Tests Run | Passed | Failed | Coverage                                                                                                                               |
+| ------------ | --------- | ------ | ------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| 1            | 158       | 158    | 0      | core suite (`.agents/skills/explainer-kit/tests/*.test.mjs`); baseline was 153                                                         |
+| 2-4 (merged) | 242       | 242    | 0      | core 188 + adapter 54, on the merged trunk; core is exactly 158 + 18 (p03) + 12 (p04), so the merge was additive with no coverage lost |
+| 2            | -         | -      | -      | -                                                                                                                                      |
+| 3            | -         | -      | -      | -                                                                                                                                      |
+| 4            | -         | -      | -      | -                                                                                                                                      |
+| 5            | -         | -      | -      | -                                                                                                                                      |
+| 6            | -         | -      | -      | -                                                                                                                                      |
+| 7            | -         | -      | -      | -                                                                                                                                      |
+| 8            | -         | -      | -      | -                                                                                                                                      |
 
 ## Final Summary (for PR/docs)
 
