@@ -223,6 +223,81 @@ test('viewport clipping distinguishes paged slides from unreachable content', as
       ['#bleed'],
       'content positioned past the viewport is unreachable',
     );
+    assert.deepEqual(
+      await clipped(
+        '<div id="scroller" style="position:relative;display:flex;overflow-x:auto;width:320px">' +
+          '<section id="first" style="min-width:320px">a</section>' +
+          '<section id="second" style="min-width:320px">b</section>' +
+          '<p id="behind" style="position:absolute;left:-400px;top:0">z</p></div>',
+      ),
+      ['#behind'],
+      'content before the scroll origin cannot be scrolled into view',
+    );
+    // Without a positioned scroller the absolute child escapes the scroller's
+    // containing block, so it never joins the scrollable content it sits in.
+    assert.deepEqual(
+      await clipped(
+        '<div id="past" style="display:flex;overflow-x:auto;width:320px">' +
+          '<section id="a" style="min-width:320px">a</section>' +
+          '<section id="b" style="min-width:320px">b</section>' +
+          '<p id="beyond" style="position:absolute;left:900px;top:0;width:120px">' +
+          'z</p></div>',
+      ),
+      ['#beyond'],
+      'content past the scrollable extent cannot be scrolled into view',
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+// Headings the author deliberately hides are not readability defects, while
+// visually hidden accessibility text and genuinely collapsed headings are.
+test('heading readability separates hidden panels from unreadable headings', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 320, height: 600 } });
+  const unreadable = async (body) => {
+    await page.setContent(`<body style="margin:0">${body}</body>`);
+    const { unreadableHeadings } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return unreadableHeadings.map(({ selector }) => selector);
+  };
+
+  try {
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="visible">Tour</h1>' +
+          '<div aria-hidden="true" style="display:none">' +
+          '<h2 id="panel">Collapsed panel</h2></div>',
+      ),
+      [],
+      'an aria-hidden display:none panel heading is not a readability defect',
+    );
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="visible">Tour</h1>' +
+          '<h2 id="sr" style="position:absolute;width:1px;height:1px;' +
+          'overflow:hidden;clip:rect(0,0,0,0)">Screen reader only</h2>',
+      ),
+      [],
+      'visually hidden accessibility headings still pass',
+    );
+    assert.deepEqual(
+      await unreadable('<h1 id="tiny" style="font-size:8px">Tour</h1>'),
+      ['#tiny'],
+      'a rendered heading below the legible floor still reports',
+    );
+    assert.deepEqual(
+      await unreadable('<h1 id="empty"> </h1>'),
+      ['#empty'],
+      'a rendered heading with no text still reports',
+    );
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="collapsed" style="height:0;overflow:hidden">Tour</h1>',
+      ),
+      ['#collapsed'],
+      'a rendered heading collapsed to zero height still reports',
+    );
   } finally {
     await browser.close();
   }
@@ -264,6 +339,26 @@ test('animation probe accepts suppressed motion and still reports perceptible mo
       ),
       false,
       'a running keyframe animation still reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}' +
+          '#probe::before{content:"*";animation:pulse 2s infinite}',
+      ),
+      false,
+      'a running pseudo-element keyframe animation reports',
+    );
+    assert.equal(
+      await disabled('#probe::after{content:"*";transition-duration:180ms}'),
+      false,
+      'a perceptible pseudo-element transition reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}#probe::before{animation:pulse 2s}',
+      ),
+      true,
+      'a pseudo-element that generates no content cannot animate',
     );
   } finally {
     await browser.close();

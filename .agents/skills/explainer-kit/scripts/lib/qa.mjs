@@ -211,11 +211,22 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       scrollWidth: element.scrollWidth
     }))
     .slice(0, 20);
-  const inScrollablePage = (element) => {
+  // Ancestry inside a horizontal scroller is not reachability: scrollLeft only
+  // ranges over 0..scrollWidth-clientWidth, so content sitting at a negative
+  // content offset or past the scrollable extent can never be scrolled into
+  // view and stays a genuine clipping defect.
+  const TOLERANCE = 2;
+  const scrollReachable = (element) => {
+    const rect = element.getBoundingClientRect();
     for (let node = element.parentElement; node; node = node.parentElement) {
       const style = getComputedStyle(node);
-      if (['auto', 'scroll'].includes(style.overflowX) &&
-        node.scrollWidth > node.clientWidth + 2) return true;
+      if (!['auto', 'scroll'].includes(style.overflowX)) continue;
+      if (node.scrollWidth - node.clientWidth <= TOLERANCE) continue;
+      const nodeRect = node.getBoundingClientRect();
+      const contentLeft =
+        rect.left - (nodeRect.left + node.clientLeft) + node.scrollLeft;
+      if (contentLeft >= -TOLERANCE &&
+        contentLeft + rect.width <= node.scrollWidth + TOLERANCE) return true;
     }
     return false;
   };
@@ -223,8 +234,8 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
     .filter((element) => {
       const rect = element.getBoundingClientRect();
       return rect.width > 0 && rect.height > 0 &&
-        (rect.left < -2 || rect.right > innerWidth + 2) &&
-        !inScrollablePage(element);
+        (rect.left < -TOLERANCE || rect.right > innerWidth + TOLERANCE) &&
+        !scrollReachable(element);
     })
     .map((element) => {
       const rect = element.getBoundingClientRect();
@@ -236,7 +247,20 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
       };
     })
     .slice(0, 20);
+  // A heading in a collapsed panel or an aria-hidden subtree is deliberately
+  // not presented, so it is out of scope rather than unreadable. Visually
+  // hidden accessibility text still renders a box and stays in scope.
+  const presented = (element) => {
+    const rendered = typeof element.checkVisibility === 'function'
+      ? element.checkVisibility({
+          visibilityProperty: true,
+          contentVisibilityAuto: true
+        })
+      : element.getClientRects().length > 0;
+    return rendered && element.closest('[aria-hidden="true"]') === null;
+  };
   const unreadableHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+    .filter(presented)
     .filter((heading) => {
       const style = getComputedStyle(heading);
       const rect = heading.getBoundingClientRect();
@@ -254,15 +278,21 @@ export const BROWSER_PROBE_EVALUATE = `(() => {
   // 0.01ms rather than 0s so transitionend still fires. That is suppressed
   // motion, not active motion, so anything under a millisecond counts as
   // disabled while a perceptible duration still reports.
+  // Motion is just as visible on a generated ::before/::after box as on the
+  // element itself, so all three are inspected. A pseudo-element that
+  // generates no content cannot animate and is skipped.
   const PERCEPTIBLE_SECONDS = 0.001;
-  const animationsDisabled = elements.every((element) => {
-    const style = getComputedStyle(element);
+  const motionless = (element, pseudo) => {
+    const style = getComputedStyle(element, pseudo);
+    if (pseudo && ['none', 'normal'].includes(style.content)) return true;
     const durations = (style.animationDuration + ',' + style.transitionDuration)
       .split(',')
       .map((value) => Number.parseFloat(value) || 0);
     return style.animationName === 'none' &&
       durations.every((value) => value < PERCEPTIBLE_SECONDS);
-  });
+  };
+  const animationsDisabled = elements.every((element) =>
+    [null, '::before', '::after'].every((pseudo) => motionless(element, pseudo)));
   return {
     pageOverflowX: root.scrollWidth > root.clientWidth + 2,
     clippedX,
