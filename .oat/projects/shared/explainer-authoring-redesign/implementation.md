@@ -41,11 +41,11 @@ oat_generated: false
 | Phase 3: Narrative renderer                  | pending  | 3     | 0/3       |
 | Phase 4: Artistic composer path              | pending  | 2     | 0/2       |
 | Phase 5: Guideline checker and render QA     | complete | 2     | 2/2       |
-| Phase 6: Pipeline integration, v1 retirement | pending  | 4     | 0/4       |
+| Phase 6: Pipeline integration, v1 retirement | complete | 4     | 4/4       |
 | Phase 7: End-to-end anti-regression fixture  | pending  | 1     | 0/1       |
 | Phase 8: Documentation and release closure   | pending  | 2     | 0/2       |
 
-**Total:** 14/21 tasks completed (21 = 20 planned + corrective p01-t02a)
+**Total:** 19/22 tasks completed (22 = 20 planned + correctives p01-t02a, p05-t02a)
 
 ---
 
@@ -172,34 +172,48 @@ now both exist, so the guarantee moved rather than disappeared.
 ### Task p05-t02: Render QA probe battery
 
 **Status:** complete
-**Commit:** `651aac80`
+**Commit:** `651aac80` (corrected by p05-t02a `c926b4fe`)
+
+### Task p05-t02a: Viewport clipping exempts paged deck slides (corrective)
+
+**Status:** complete
+**Commit:** `c926b4fe` (plan amendment: `e45c0c6e`)
+
+See Deviations.
 
 ---
 
 ## Phase 6: Pipeline integration and v1 retirement
 
-**Status:** pending
+**Status:** complete
+**Verification:** core 199/199, adapter 55/55, smoke 129/129, release 41/41
+**Carry-forward confirmed:** `renderDescriptor()` now passes `origin` through.
+Verified at the root by exercising `artifactPath` directly — floor artifacts
+keep today's URLs (`site/explainers/{slug}/index.html`) and expansion
+artifacts get D1 ID-bearing paths
+(`site/explainers/{slug}/{artifactId}/index.html`). This was the project's
+one silent-failure risk and it is closed.
 **Started:** -
 
 ### Task p06-t01: Relocate the approval gate after render and QA
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `144051f2`
 
 ### Task p06-t02: Author stage wiring and QA severity split
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `fb787584`
 
 ### Task p06-t03: Marking surfacing through core and adapter results
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `b4cbd5c2`
 
 ### Task p06-t04: Retire recipe v1 and migrate all remaining consumers
 
-**Status:** pending
-**Commit:** -
+**Status:** complete
+**Commit:** `781f8289`
 
 ---
 
