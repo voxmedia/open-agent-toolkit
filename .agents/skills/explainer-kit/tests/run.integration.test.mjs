@@ -218,6 +218,8 @@ test('interactive runs pause after rendered QA and do no external work before ap
     'built-not-durable',
     JSON.stringify(resumed.errors),
   );
+  assert.equal(resumed.marking, 'human-approved');
+  assert.equal(resumed.approval.marking, 'human-approved');
   assert.equal(approvedDurability.mock.callCount(), 1);
 });
 
@@ -399,6 +401,8 @@ test('unattended lifecycle sources persist review provenance without prompting',
   });
 
   assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(result.marking, 'auto-drafted');
+  assert.equal(result.approval.marking, 'auto-drafted');
   assert.equal(prompt.mock.callCount(), 0);
   const approval = JSON.parse(
     await readFile(
@@ -407,6 +411,7 @@ test('unattended lifecycle sources persist review provenance without prompting',
     ),
   );
   assert.equal(approval.status, 'approved');
+  assert.equal(approval.marking, 'auto-drafted');
   assert.deepEqual(approval.reviewedSource, reviewedSource);
   assert.deepEqual(approval.authorResultPaths, [
     'source/author/project-recap.json',
@@ -510,6 +515,7 @@ test('unattended author receives structured per-artifact context and retains val
   );
   assert.match(markdown, /audience-ready language/);
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.equal('marking' in manifest, false);
   assert.deepEqual(manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
   ]);

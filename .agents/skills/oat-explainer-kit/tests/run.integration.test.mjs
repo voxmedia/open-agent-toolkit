@@ -13,6 +13,7 @@ import { afterEach, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
+import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const tempDirs = [];
@@ -107,6 +108,10 @@ async function createFixture({ coreVersion = '1.0.0' } = {}) {
             manifestPath,
             buildRecordPath,
             outcome: 'built-not-durable',
+            marking:
+              request.mode === 'unattended'
+                ? 'auto-drafted'
+                : 'human-approved',
             warnings: ['core-warning'],
             reviewedSource: options.reviewedSource,
             authored,
@@ -251,6 +256,8 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
   );
   assert.equal(adapterResult.manifest.sourceCount, 5);
   assert.equal(adapterResult.result.outcome, 'built-not-durable');
+  assert.equal(adapterResult.result.marking, 'auto-drafted');
+  assert.equal(adapterResult.marking, 'auto-drafted');
   assert.deepEqual(adapterResult.result.warnings, ['core-warning']);
   assert.deepEqual(adapterResult.result.reviewedSource, {
     kind: 'approved-oat-artifacts',
@@ -325,12 +332,14 @@ test('passes direct and module authors through the adapter boundary', async () =
       source: 'direct',
       artifactId: artifact.id,
     }),
-    mode: 'unattended',
+    mode: 'interactive',
   });
   assert.deepEqual(directResult.result.authored, {
     source: 'direct',
     artifactId: 'project-recap',
   });
+  assert.equal(directResult.result.marking, 'human-approved');
+  assert.equal(directResult.marking, 'human-approved');
 
   const moduleFixture = await createFixture();
   const authorModulePath = join(moduleFixture.root, 'author.mjs');
@@ -434,23 +443,37 @@ test('rejects an omitted unattended author before invoking the core', async () =
   });
 });
 
-test('allows an interactive adapter call without an author', async () => {
+test('rejects an omitted author in both modes before invoking the core', async () => {
   const fixture = await createFixture();
-  const adapterResult = await runOatExplainer({
-    adapterRoot: fixture.adapterRoot,
-    userSkillsRoot: fixture.userSkillsRoot,
-    repoRoot: fixture.repoRoot,
-    invocation: 'project',
-    activeProject: '.oat/projects/shared/demo',
-    recipe: 'project-recap',
-    slug: 'interactive-no-author',
-    getConfig,
-    mode: 'interactive',
+  for (const mode of ['interactive', 'unattended']) {
+    await assert.rejects(
+      runOatExplainer({
+        adapterRoot: fixture.adapterRoot,
+        userSkillsRoot: fixture.userSkillsRoot,
+        repoRoot: fixture.repoRoot,
+        invocation: 'project',
+        activeProject: '.oat/projects/shared/demo',
+        recipe: 'project-recap',
+        slug: `${mode}-no-author`,
+        getConfig,
+        mode,
+      }),
+      (error) => error.code === 'E_AUTHOR_REQUIRED',
+    );
+  }
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
   });
+});
 
-  assert.equal(adapterResult.result.outcome, 'built-not-durable');
-  assert.equal(adapterResult.result.authored, null);
-  assert.match(await readFile(fixture.coreInvocationMarker, 'utf8'), /invoked/);
+test('completion recap intents always select unattended explainer mode', () => {
+  assert.equal(
+    explainerModeForIntent({
+      product: 'projectRecap',
+      decision: 'generate',
+    }),
+    'unattended',
+  );
 });
 
 test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {

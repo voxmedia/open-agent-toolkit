@@ -1136,12 +1136,18 @@ function resultFor(state, error) {
       : state.approval?.canResume === false
         ? 'incomplete'
         : 'built-not-durable',
+    ...(state.approval?.record?.marking && {
+      marking: state.approval.record.marking,
+    }),
     warnings: [...new Set(state.warnings)],
     discovery: state.discovery,
     ...(state.approval && {
       approval: {
         status: state.approval.status,
         path: state.approval.path,
+        ...(state.approval.record.marking && {
+          marking: state.approval.record.marking,
+        }),
       },
     }),
     ...(error && {
