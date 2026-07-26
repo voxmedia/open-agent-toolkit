@@ -72,11 +72,10 @@ output tokens, steps, tool calls, retries, or recoveries. Conversely, a cheap
 attempt is not economical when completion rate is low or operator intervention
 is high.
 
-Evaluate input, cached-input, and output tokens together with time to first
-token or first useful action, active runtime, total elapsed time, steps and tool
-calls, retries, completion rate, variance, and cost per attempted and completed
-task. Do not use token price alone as a proxy for wall-clock efficiency, and do
-not infer latency from trajectory length without a measured runtime.
+Evaluate input, cached-input, and output tokens together with the multi-measure
+speed contract from `model-selection-principles.md`. Do not use token price
+alone as a proxy for wall-clock efficiency, and do not infer latency from
+trajectory length without a measured runtime.
 
 ## Tool-Heavy Work
 

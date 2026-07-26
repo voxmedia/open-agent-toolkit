@@ -124,13 +124,30 @@ documents a capability difference. It does not satisfy a higher task-class
 floor. Choose it only when measured latency is worth the price and record it
 separately from the model and effort.
 
-Speed is a multi-measure contract, not a single throughput number. At minimum,
-record time to first token or first useful action, active agent runtime, total
-user-observed elapsed time, output tokens, steps or tool calls, completion rate,
-and variance. When available, also record output rate, input and cached-input
-tokens, retries, refusals, interventions, and cost per attempted and completed
-task. Do not relabel active runtime as elapsed time or infer latency from tokens
-or steps.
+Speed is a multi-measure contract, not a single throughput number. This section
+defines that contract; other references cite it rather than restating their own
+version.
+
+Required in any speed claim:
+
+- time to first token or first useful action;
+- active agent runtime;
+- total user-observed elapsed time;
+- output tokens;
+- steps, turns, or tool calls;
+- completion rate and variance.
+
+Record additionally when available:
+
+- output rate;
+- input and cached-input tokens;
+- retries, recoveries, refusals, and operator interventions;
+- service tier, rate limits, and agent-slot occupancy;
+- cost per attempted and completed task.
+
+Do not relabel active runtime as total elapsed time, and do not infer latency
+from tokens or steps. Trajectory measures cannot substitute for measured
+latency. Compare list pricing separately from total trajectory cost.
 
 ## Independent Review
 

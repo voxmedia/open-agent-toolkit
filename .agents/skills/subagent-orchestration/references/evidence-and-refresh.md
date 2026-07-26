@@ -106,14 +106,16 @@ publish a provider-independent effort conversion.
 - Sol's measured advantage is trajectory efficiency, not universal list-price
   leadership. Opus output token pricing can be lower while Sol costs less per
   completed task through fewer tokens, steps, turns, or recoveries.
-- Artificial Analysis Coding Agent Index (xhigh 67, max 66) and Frontier-Bench
-  (xhigh 44.4%, max 43.3%) are the two non-monotonic top-end Opus effort
-  results in the accepted packet. Frontier-Bench is vendor-operated and the
-  packet carries one self-reported row with no independently verified row, so
-  weight it below the Coding Agent Index rather than treating the two as equal
-  evidence. CursorBench is monotonic from xhigh to max, 69.3% to 70.0%; its
-  contribution is economic, with marginal cost per score point roughly 3.75x
-  worse above high than below it.
+- Two independent benchmarks show top-end Opus effort is non-monotonic:
+  Artificial Analysis Coding Agent Index (xhigh 67, max 66) and Frontier-Bench
+  (xhigh 44.4%, max 43.3%), both retrieved 2026-07-25. Frontier-Bench is
+  vendor-operated and its figure rests on a single self-reported row with no
+  independently verified counterpart, so weight it below the Coding Agent Index
+  rather than treating the two as equal evidence. CursorBench 3.2 is monotonic
+  over the same range, 69.3% to 70.0%; its contribution is economic, since
+  marginal cost per score point is roughly 3.75x worse above high than below
+  it. Together these support treating max as a route requiring justification,
+  not a strictly better rung.
 - Cyber-sensitive and valid dual-use work should start on Opus 5 with
   documented fallback handling where safeguards block the workflow. Opus 4.8
   remains a compatibility fallback, not the universal primary.
@@ -126,22 +128,10 @@ publish a provider-independent effort conversion.
 
 ## Speed and Wall-Clock Contract
 
-Speed evidence must distinguish:
-
-- time to first token and, when measurable, first useful action;
-- output rate;
-- active agent runtime;
-- total user-observed elapsed time;
-- input, cached-input, and output tokens;
-- steps, turns, and tool calls;
-- retries, recoveries, refusals, and operator interventions;
-- completion rate and variance;
-- service tier, rate limits, and agent-slot occupancy;
-- cost per attempted and completed task.
-
-Do not relabel active agent runtime as total elapsed time. Tokens, steps, or
-turns are trajectory measures and cannot substitute for measured latency.
-Compare pricing separately from total trajectory cost.
+Speed evidence must satisfy the multi-measure contract defined in
+`model-selection-principles.md`, which is the single authority for which
+measures are required and which are recorded when available. Do not restate a
+divergent list here.
 
 Every load-bearing quantitative claim requires claim-level provenance:
 
@@ -161,11 +151,12 @@ definition-unverified and must not be compared directly with it. Mutable
 leaderboards require row-level locators; a homepage or aggregate rank is not a
 sufficient source.
 
-This file records reconciled conclusions and the values that drive a rule. It
-is not the ledger. Full benchmark rows, source URLs, extraction methods, and
-arithmetic live in the dated evidence packet that produced them, which is the
-locator for every figure quoted here. Cite that packet rather than restating a
-leaderboard.
+This file records reconciled conclusions and the values that drive a rule, not
+the full ledger behind them. Every figure quoted here must name a publicly
+resolvable source: the benchmark, its version, and the retrieval date, so a
+reader outside the authoring environment can check it. Do not cite a private
+research artifact as a locator — an internal packet may hold the working
+arithmetic, but it cannot serve as provenance for published guidance.
 
 ## Research Independence and Acceptance
 
@@ -189,8 +180,18 @@ resolution; do not collapse them into an unsupported consensus.
 Before adding or changing a selector, verify the live launching surface,
 resolved identity, effort or thinking control, service tier, and absence of
 silent fallback. Direct-provider evidence can nominate a harness candidate but
-cannot prove its alias. Cursor Opus 5 selectors remain deferred until a live
-probe verifies those controls.
+cannot prove its alias.
+
+A selector ships only after a live probe verifies those controls for that
+specific mapping. Verification does not generalize: neither across rungs of one
+family nor across families, because a harness may substitute a default for any
+component it cannot resolve. Probe a non-default rung as well, or a result that
+merely matches the family default cannot distinguish an honored parameter from
+an ignored one.
+
+The six Cursor `claude-opus-5` and `claude-opus-4-8` mappings shipped on
+2026-07-25 met this gate; their resolved identities are listed in
+`provider-cursor.md`.
 
 After canonical changes:
 

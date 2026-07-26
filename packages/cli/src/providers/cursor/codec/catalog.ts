@@ -4,10 +4,25 @@ export type CursorPinSyntaxFamily =
   | 'composer-fast'
   | 'grok-effort-fast';
 
+/**
+ * A probe observation, recorded so a mapping carries its own approval evidence.
+ * `submittedSelector` must equal the mapping's `frontmatterModel` and
+ * `resolvedModel` its `ladderModelId`; a mapping edited without re-probing
+ * therefore fails its own consistency check rather than silently inheriting an
+ * approval it was never granted.
+ */
+export interface CursorPinProbeRecord {
+  submittedSelector: string;
+  resolvedModel: string;
+  verifiedAt: string;
+  evidencePath: string;
+}
+
 export interface CursorPinGateEvidence {
   gate: 'g01';
   probeName: string;
   disposition: 'approved';
+  probeRecord?: CursorPinProbeRecord;
 }
 
 export interface CursorModelPinMapping {
@@ -25,8 +40,20 @@ function approvedMapping(
   options: {
     catalogue?: boolean;
     probeName?: string;
+    verifiedAt?: string;
+    evidencePath?: string;
   } = {},
 ): CursorModelPinMapping {
+  const probeRecord: CursorPinProbeRecord | undefined =
+    options.verifiedAt && options.evidencePath
+      ? {
+          submittedSelector: frontmatterModel,
+          resolvedModel: ladderModelId,
+          verifiedAt: options.verifiedAt,
+          evidencePath: options.evidencePath,
+        }
+      : undefined;
+
   return {
     ladderModelId,
     frontmatterModel,
@@ -37,10 +64,17 @@ function approvedMapping(
         options.probeName ??
         `oat-pin-probe-${ladderModelId.replaceAll('.', '-')}`,
       disposition: 'approved',
+      ...(probeRecord ? { probeRecord } : {}),
     },
     catalogue: options.catalogue ?? true,
   };
 }
+
+const G01_PROBE_2026_07_25 = {
+  verifiedAt: '2026-07-25',
+  evidencePath:
+    '.oat/projects/shared/opus-5-model-guidance/references/g01-probe-results.md',
+} as const;
 
 export const CURSOR_MODEL_PIN_MAPPINGS = [
   approvedMapping('composer-2.5', 'composer-2.5[fast=true]', 'composer-fast'),
@@ -111,37 +145,37 @@ export const CURSOR_MODEL_PIN_MAPPINGS = [
     'claude-opus-5-thinking-low',
     'claude-opus-5[effort=low]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-low' },
+    { probeName: 'zz-pin-probe-opus5-low', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'claude-opus-5-thinking-medium',
     'claude-opus-5[effort=medium]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-medium' },
+    { probeName: 'zz-pin-probe-opus5-medium', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'claude-opus-5-thinking-high',
     'claude-opus-5[effort=high]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-high' },
+    { probeName: 'zz-pin-probe-opus5-high', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'claude-opus-5-thinking-xhigh',
     'claude-opus-5[effort=xhigh]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-xhigh' },
+    { probeName: 'zz-pin-probe-opus5-xhigh', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'claude-opus-5-thinking-max',
     'claude-opus-5[effort=max]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus5-max' },
+    { probeName: 'zz-pin-probe-opus5-max', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'claude-opus-4-8-thinking-xhigh',
     'claude-opus-4-8[effort=xhigh]',
     'claude-effort',
-    { probeName: 'zz-pin-probe-opus48-xhigh' },
+    { probeName: 'zz-pin-probe-opus48-xhigh', ...G01_PROBE_2026_07_25 },
   ),
   approvedMapping(
     'gpt-5.6-sol-xhigh',

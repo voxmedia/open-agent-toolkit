@@ -107,12 +107,16 @@ sources:
   - vault packet, Opus 5 Post Release Analysis/Cross-Model Review/
 
 claim_provenance: >-
-  Every quantitative claim in the updated guidance traces to the dated vault
-  evidence packet, which holds the row-level locators, selectors, effort,
-  harness, benchmark version, metric definitions, exclusions, extraction
-  methods, absolute inputs, and derived arithmetic. The guidance references
-  deliberately carry conclusions and rule-driving values only; the packet is
-  the locator. Retrieval date for all public evidence is 2026-07-25.
+  Every quantitative claim in the updated guidance is sourced to a publicly
+  resolvable benchmark named in the guidance itself — Artificial Analysis
+  Coding Agent Index, Frontier-Bench, and CursorBench 3.2 — each carrying its
+  version and a 2026-07-25 retrieval date. Those public sources are the
+  locators. A dated internal research packet holds the supporting working
+  detail (row-level selectors, effort, harness, metric definitions,
+  exclusions, extraction methods, absolute inputs, derived arithmetic) as this
+  repository's own audit trail. It is deliberately not cited as provenance in
+  the shipped skill, because the skill is published and an internal artifact is
+  unresolvable for any external consumer.
 
 independent_author: >-
   Two isolated lanes. Codex GPT-5 produced the Codex research packet and the

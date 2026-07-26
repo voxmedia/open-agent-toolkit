@@ -55,6 +55,33 @@ describe('cursor model pin catalogue', () => {
     }
   });
 
+  it('keeps each probe record consistent with the mapping it approves', () => {
+    for (const mapping of CURSOR_MODEL_PIN_MAPPINGS) {
+      const { probeRecord } = mapping.gateEvidence;
+      if (!probeRecord) {
+        continue;
+      }
+
+      // A mapping edited without re-probing must fail rather than inherit an
+      // approval that never covered the new selector.
+      expect(probeRecord.submittedSelector).toBe(mapping.frontmatterModel);
+      expect(probeRecord.resolvedModel).toBe(mapping.ladderModelId);
+      expect(probeRecord.verifiedAt).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(probeRecord.evidencePath).not.toBe('');
+    }
+  });
+
+  it('carries a probe record for every mapping approved by the 2026-07-25 probe', () => {
+    const probed = CURSOR_MODEL_PIN_MAPPINGS.filter(({ gateEvidence }) =>
+      gateEvidence.probeName.startsWith('zz-pin-probe-'),
+    );
+
+    expect(probed).toHaveLength(6);
+    for (const mapping of probed) {
+      expect(mapping.gateEvidence.probeRecord).toBeDefined();
+    }
+  });
+
   it('keeps approved aliases materializable outside the supported catalogue', () => {
     const supported = new Set(
       SUPPORTED_CURSOR_ROLE_TARGETS.map(({ ladderModelId }) => ladderModelId),

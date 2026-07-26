@@ -8,6 +8,11 @@ oat_status: complete
 **Status:** COMPLETE — all six subjects pass. Raw payloads preserved at
 `g01-probe-hooks.jsonl` (40 events).
 
+Three fields in those payloads were redacted before commit: `user_email`,
+`workspace_roots`, and the machine portion of `transcript_path`. None carries
+probe evidence — resolution is read from `subagent_model` — and all 40 events,
+including both negative-control fallbacks, are otherwise intact.
+
 ## Why this file exists
 
 `DR-260718-explicit-cursor-pin-mapping` requires mapping-specific, native-launch
