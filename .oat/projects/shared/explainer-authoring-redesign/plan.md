@@ -800,6 +800,17 @@ still hash-pinned). Route rendering by the floor/profile `authoring` value
 (markdown → narrative renderer; html → `html-safety.mjs`). Link accepted
 expansion artifacts from the floor hub via `artifactLinks`.
 
+**Carry-forward from p01-t02a and p03-t02 — do not miss this.** The render
+stage calls a `renderDescriptor()` helper in `run.mjs` that narrows floor
+entries to exactly `{id, type, template, required}`. It predates `origin` and
+strips it. p03-t02 made `assertRecipeArtifact` accept both that legacy shape
+and the five-key `origin` form, so the stripped descriptor still validates —
+which means a missed update here fails **silently**, handing expansion
+artifacts the floor path instead of the D1 `{artifactId}/index.html` path,
+with no error and no failing test. Widen `renderDescriptor()` to pass `origin`
+through, and assert the resulting expansion path in this task rather than
+relying on the transitional fallback.
+
 **Step 2:** Make the variable artifact set survive an interactive pause per
 D8, activating complete-set writes here — atomically with the author stage
 that first makes them satisfiable. The author stage populates the
