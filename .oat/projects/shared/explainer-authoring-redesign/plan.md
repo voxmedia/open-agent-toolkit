@@ -272,6 +272,52 @@ git add .agents/skills/explainer-kit/briefs
 git commit -m "feat(p01-t03): bundled author briefs carry the editorial bar"
 ```
 
+### Task p01-t02a: Make p01-t02 survive the v2 cutover (corrective)
+
+Inserted mid-flight, after p01-t03 landed. p01-t02's premise — that "all
+readers went through the accessors", so p01-t04 would stay green — proved
+false in two places that are unobservable while every bundled recipe is still
+v1. Both live in files p01-t02 owns, so p01-t04 cannot repair them within its
+declared boundary. This task lands the repairs as their own commit.
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+
+**Step 1:** `renderArtifact` rejects anything that is not an exact
+`{id, type, template, required}` descriptor
+(`render.mjs:339-355`), but a normalized v2 floor entry also carries
+`authoring`, `briefRef`, and `requiredNarrative`. Narrow the entry at the
+`render` stage call site in `run.mjs` and mirror the same projection in the
+`render.test.mjs` helpers. This is the interim shape; p03-t02 widens the
+descriptor to carry `origin` under D1.
+
+**Step 2:** p01-t02's dual-shape test uses the live `project-explainer`
+recipe as its v1 example, so p01-t04 would leave the v1 loader branch with no
+coverage at all. Replace it with a synthetic in-test v1 fixture and rebase the
+synthetic v2 fixture on it, so both branches stay exercised permanently.
+
+**Step 3:** Pin the coverage semantics that the cutover changes. Floor
+narrative coverage is a hard error under v1 and intentionally _not_ an error
+under v2, because it degrades to a guideline-checker warning in p05-t01. Assert
+both halves against the synthetic fixtures so the v1 guarantee cannot be lost
+silently and the v2 deferral is explicit rather than incidental.
+
+**Step 4: Verify**
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+Expected: 154/154 green, with the v1 branch still covered.
+
+**Step 5: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/run.mjs \
+  .agents/skills/explainer-kit/tests/render.test.mjs \
+  .agents/skills/explainer-kit/tests/recipes.test.mjs
+git commit -m "fix(p01-t02a): carry p01-t02 accessors across the v2 cutover"
+```
+
 ### Task p01-t04: Rewrite bundled recipes to v2
 
 **Files:**
@@ -304,8 +350,17 @@ Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 Expected: semantic assertions per recipe (floor ids/types/authoring identical
 to the v1 artifact set, `requiredNarrative` preserved per floor entry,
 profile sets and caps, every `briefRef` resolving to a p01-t03 file,
-`version` still `"1"`); the whole core suite stays green because all readers
-went through the p01-t02 accessors.
+`version` still `"1"`); the whole core suite stays green because the readers
+went through the p01-t02 accessors and p01-t02a carried them across the
+cutover.
+
+Two bundled-recipe tests in `recipes.test.mjs` assert v1-era facts and must be
+updated here, not worked around: the loader test asserting
+`schemaVersion === 'explainer-kit.recipe/v1'`, and the `project-recap`
+coverage test, whose hard-error assertion no longer holds once that recipe is
+v2. Keep its `requiredNarrative` assertion and drop only the enforcement half
+— the v1 guarantee is already held by p01-t02a's synthetic fixture, and v2
+coverage becomes a p05-t01 warning. Do not invert an assertion in place.
 
 **Step 3: Commit**
 
