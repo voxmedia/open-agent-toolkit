@@ -2,15 +2,16 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-26
+oat_last_updated: 2026-07-27
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_hill_phases: ['p02', 'p05'] # pause AFTER the provenance contract and after the default flip
+oat_plan_parallel_groups: [] # sequential; see Parallelism
+oat_plan_source: quick
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
+oat_template: true
 oat_generated: false
 ---
 
@@ -18,145 +19,450 @@ oat_generated: false
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make re-review scope narrowing the default behavior, with `false` as the explicit opt-out, and replace the local rail's unsound commit-message narrowing with guarded prior-reviewed-commit ranges so that silent narrowing is trustworthy.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Narrowing resolves a range from a prior review in the same lineage, guards it for existence and ancestry, classifies the result, and fails open to full scope. Provenance is written to both the review artifact and the tracked plan review row so it survives artifact archival. The tested helper module carries the canonical semantics; both rails mirror it in prose.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript ESM, vitest, oxlint/oxfmt, pnpm workspaces, Turborepo. Agent and skill contracts are Markdown with YAML frontmatter.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): match prior reviews by lineage`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Confirmed HiLL checkpoints with user
+- [x] Set `oat_plan_hill_phases` in frontmatter
+- [x] Evaluated phases for parallelism opportunities
+- [x] Set `oat_plan_parallel_groups` in frontmatter
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
+Declared sequential (`oat_plan_parallel_groups: []`).
 
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
+The write sets of the two rail phases (p03 local, p04 remote) are genuinely disjoint, so a naive file-boundary analysis would permit running them concurrently. They are kept sequential anyway because both phases are prose mirrors of the same semantics defined in p01, and the repository already documents that these mirrors drift silently without any test failing. Two agents independently transcribing the same guard into two skill files is precisely the condition that produces divergence, and no test would catch it. The phases are also small enough that concurrency would buy little.
 
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+p05 must follow p01–p04: flipping the default before the semantics are sound would leave intermediate commits in which narrowing is both silent and wrong.
 
 ---
 
 ## Dispatch Profile
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
+_No explicit constraints. Runtime selection chooses the tier._
 
 ---
 
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
+RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Phases p01 and p05 change TypeScript with existing test suites and use the TDD shape. Phases p02, p03, p04, and p06 change Markdown contracts and documentation, where the meaningful verification is contract self-consistency and cross-surface parity rather than a unit test; those tasks use a review-and-verify shape.
 
-## Phase 1: {Phase Name}
+## Phase 1: Range resolution core
 
-### Task p01-t01: {Task Name}
+Establishes the canonical semantics in the tested helper module before either rail mirrors them.
+
+### Task p01-t01: Match prior reviews by lineage
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `packages/cli/src/review-remote/narrowing.ts`
+- Modify: `packages/cli/src/review-remote/narrowing.test.ts`
 
 **Step 1: Write test (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Extend the tuple-matching tests so a candidate prior review must match the current review's lineage, not merely its project and scope:
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+- a gate-originated prior review with the same gate target and scope is eligible for a gate re-review
+- a gate-originated prior review with a **different** gate target is not eligible
+- a lifecycle (non-gate) prior review is not eligible for a gate invocation
+- a gate-originated prior review is not eligible for a lifecycle invocation
+- existing same-project/same-scope lifecycle matching continues to pass unchanged
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: New lineage tests fail (RED); pre-existing tests pass.
 
 **Step 2: Implement (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+Extend `PriorReview` and `NarrowingInput` with the lineage discriminator (invocation kind plus gate target when the invocation is a gate) and fold it into `matchesTuple`. Absent lineage on a legacy record means not eligible, consistent with fail-open-to-full-scope.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: All tests pass (GREEN).
 
 **Step 3: Refactor**
 
-{Any cleanup or improvements while tests stay green}
+Keep `matchesTuple` a single readable predicate; do not fan lineage handling out across the module.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
 Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
+git add packages/cli/src/review-remote/narrowing.ts packages/cli/src/review-remote/narrowing.test.ts
+git commit -m "feat(p01-t01): match prior reviews by review lineage"
 ```
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Narrow by default and remove the prompt
 
 **Files:**
 
-- {File list}
+- Modify: `packages/cli/src/review-remote/narrowing.ts`
+- Modify: `packages/cli/src/review-remote/narrowing.test.ts`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.ts` (only if the result shape it consumes changes)
 
 **Step 1: Write test (RED)**
 
-{Test code}
+- narrowing proceeds with no prompt when the preference is unset
+- narrowing proceeds with no prompt when the preference is `true`
+- the preference set to `false` yields full scope without consulting a prior review
+- guard failure still yields full-scope fallback with its reason preserved
+- explicit force-narrow still turns guard failure into a hard error
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: Prompt-related expectations fail (RED).
 
 **Step 2: Implement (GREEN)**
 
-{Implementation code or signatures}
+Remove the `prompted` concept from the result types and stop deriving it from `autoNarrow`. Replace the `autoNarrow` input with a resolved three-state preference where unset and `true` both narrow. Update `reviewer-dispatch.ts` only if it reads the removed field.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts src/review-remote/reviewer-dispatch.test.ts`
+Expected: All tests pass (GREEN).
 
 **Step 3: Refactor**
 
-{Optional cleanup}
+Delete now-unreachable prompt branches rather than leaving them behind a permanently false flag.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run: `pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors
 
 **Step 5: Commit**
 
 ```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
+git add packages/cli/src/review-remote/
+git commit -m "feat(p01-t02): narrow re-review scope by default and drop the prompt"
 ```
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Classify the resolved range
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Modify: `packages/cli/src/review-remote/narrowing.ts`
+- Modify: `packages/cli/src/review-remote/narrowing.test.ts`
+
+**Step 1: Write test (RED)**
+
+- a range with no commits classifies as `empty`
+- a range touching only the project's own tracking directory classifies as `bookkeeping-only`
+- a range touching a bundled template or a durable repository reference record classifies as `substantive`, not bookkeeping
+- a range mixing project tracking files and source files classifies as `substantive`
+- all three classifications still return a dispatchable range
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: Classification tests fail (RED).
+
+**Step 2: Implement (GREEN)**
+
+Add the classification to the narrow-range result. Scope the bookkeeping test to the project's own directory rather than the toolkit directory as a whole. The classification is reporting only — it must not gate, skip, or shorten the review — so a path-based test is sufficient here and the stronger closeout-only corroboration standard is deliberately not used.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: All tests pass (GREEN).
+
+**Step 3: Refactor**
+
+Record in a short comment that the path-based test is sufficient only because nothing is skipped on its result, so a later change that makes it authoritative knows it must be strengthened first.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/review-remote/
+git commit -m "feat(p01-t03): classify resolved re-review ranges"
+```
+
+---
+
+## Phase 2: Provenance contract
+
+Makes the reviewed commit durable and defines what a narrowed artifact must disclose. HiLL checkpoint after this phase.
+
+### Task p02-t01: Record the reviewed head on the review artifact
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+
+**Step 1: Change**
+
+Add the reviewed head commit to the review artifact frontmatter template as a required field for code reviews, and add the narrowed-review disclosure fields: the resolved range, and the prior artifact path plus prior reviewed head when the review narrowed.
+
+Add a rule to the artifact template section: a narrowed review must not restate requirements-coverage claims it did not itself verify. It either references the prior artifact's coverage or marks inherited rows as inherited.
+
+Bump frontmatter `version: 1.1.9` → `1.2.0`.
+
+**Step 2: Verify**
+
+Confirm the added fields do not collide with the existing gate-only frontmatter block, that the gate parsing contract paragraph still holds, and that the structured-output mode section is unaffected (it writes no artifact and therefore records no reviewed head).
+
+Run: `pnpm exec oxfmt --check .agents/agents/oat-reviewer.md`
+Expected: No formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add .agents/agents/oat-reviewer.md
+git commit -m "feat(p02-t01): record reviewed head and narrowing provenance on review artifacts"
+```
+
+---
+
+### Task p02-t02: Carry the reviewed head on the tracked plan review row
+
+**Files:**
+
+- Modify: `.oat/templates/plan.md`
+- Modify: `.agents/skills/oat-project-review-receive/SKILL.md`
+
+**Step 1: Change**
+
+Add a reviewed-head column to the plan Reviews table in the template. Update the review-receive contract so that when it records a review outcome it also writes the reviewed head into that row.
+
+Preserve the existing rule that review rows are never deleted; adding a column must not invalidate previously written rows, which will simply carry an empty value.
+
+Bump `oat-project-review-receive` frontmatter `version: 1.5.9` → `1.6.0`.
+
+**Step 2: Verify**
+
+Confirm an existing plan with the old five-column table still parses under the documented preservation rule and that a missing reviewed head reads as absent rather than malformed.
+
+Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-receive/SKILL.md'`
+Expected: No formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add .oat/templates/plan.md .agents/skills/oat-project-review-receive/SKILL.md
+git commit -m "feat(p02-t02): persist reviewed head on the tracked plan review row"
+```
+
+---
+
+## Phase 3: Local rail rewrite
+
+Replaces the commit-message narrowing with the semantics established in p01.
+
+### Task p03-t01: Replace Step 3a narrowing with guarded prior-head ranges
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+
+**Step 1: Change**
+
+Replace the commit-message grep and fixed lookback window in Step 3a with:
+
+- resolve the prior reviewed head in order — review artifact frontmatter, then the tracked plan review row, then full scope
+- restrict candidates to the same lineage per p01-t01
+- run the existence and ancestry guard before accepting a range
+- fall back to full scope on no prior review, missing head, failed guard, or disagreement between the two provenance sources, stating the reason
+
+State explicitly that a gate invocation narrows only from its own prior run on the same target, and never from a lifecycle review.
+
+**Step 2: Verify**
+
+Confirm the resulting Step 3a describes the same guard and the same range as `packages/cli/src/review-remote/narrowing.ts`, field for field. Confirm initial reviews remain unaffected and that explicit scope tokens still take priority.
+
+Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-provide/SKILL.md'`
+Expected: No formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide/SKILL.md
+git commit -m "fix(p03-t01): narrow local re-reviews from guarded prior reviewed head"
+```
+
+---
+
+### Task p03-t02: Drop the prompt and print a classified resolution line
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+
+**Step 1: Change**
+
+Remove the interactive confirm from the re-review path. Print one resolution line stating the resolved range, its classification (empty, bookkeeping-only, or substantive), and the reason narrowing applied or did not.
+
+Note in the same step that explicit scope tokens remain the per-invocation full-scope escape hatch, so no capability is lost with the prompt.
+
+Add the narrowed-artifact disclosure requirement from p02-t01 to the reviewer payload this skill builds, so a narrowed review is told to name the prior artifact it builds on.
+
+Bump `oat-project-review-provide` frontmatter `version: 1.3.22` → `1.4.0`.
+
+**Step 2: Verify**
+
+Confirm no remaining prompt path in the re-review flow, and that the Tier 3 inline reset path is consistent with the new narrowing rather than still reading every changed file from a full-scope assumption.
+
+Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-provide/SKILL.md'`
+Expected: No formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide/SKILL.md
+git commit -m "feat(p03-t02): drop the local re-review prompt and report the resolved range"
+```
+
+---
+
+## Phase 4: Remote rail alignment
+
+### Task p04-t01: Align both remote provide skills
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `.agents/skills/oat-review-provide-remote/SKILL.md`
+
+**Step 1: Change**
+
+Change the documented preference handling so unset narrows without prompting and only `false` forces full scope. Keep the existing per-invocation narrowing flags. Add the range classification to the reported narrowing decision. Add the lineage restriction to the prior-review filter.
+
+Bump frontmatter versions: `oat-project-review-provide-remote` `1.0.4` → `1.1.0`, `oat-review-provide-remote` `1.0.3` → `1.1.0`.
+
+**Step 2: Verify**
+
+Diff the narrowing prose in both skills against `narrowing.ts` and against the local rail's new Step 3a. All three must describe the same guard, the same resolution order, and the same classification vocabulary.
+
+Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-provide-remote/SKILL.md' '.agents/skills/oat-review-provide-remote/SKILL.md'`
+Expected: No formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-provide-remote/SKILL.md .agents/skills/oat-review-provide-remote/SKILL.md
+git commit -m "feat(p04-t01): align remote rails to default narrowing and lineage matching"
+```
+
+---
+
+## Phase 5: Config default flip
+
+Last behavior change, so no intermediate commit narrows silently on unsound semantics. HiLL checkpoint after this phase.
+
+### Task p05-t01: Default the preference to narrow
+
+**Files:**
+
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Write test (RED)**
+
+- resolving the preference with nothing configured returns `true` with source `default`
+- an explicit `false` at any layer still resolves to `false` with the correct source
+- an explicit `true` continues to resolve to `true`
+- the config metadata entry reports the new default
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/commands/config/index.test.ts`
+Expected: Default-value tests fail (RED).
+
+**Step 2: Implement (GREEN)**
+
+Change the resolved default from `null` to `true`, and update the config metadata `defaultValue` and description to describe narrowing as the default with `false` as the opt-out. Remove the "when unset, the skill prompts" language.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/commands/config/index.test.ts`
+Expected: All tests pass (GREEN).
+
+**Step 3: Refactor**
+
+Check no other resolved default in the same table was disturbed.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/config/ packages/cli/src/commands/config/
+git commit -m "feat(p05-t01): default re-review scope narrowing to enabled"
+```
+
+---
+
+## Phase 6: Documentation and release
+
+### Task p06-t01: Update documentation
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+
+**Step 1: Change**
+
+Update the three places the preference is described so they state the new default and drop the prompt. Rewrite the re-review narrowing section to describe prior-reviewed-head ranges, the guard, the lineage rule, and the resolution order.
+
+Set expectations honestly: narrowing applies opportunistically, and rebase or integration-merge heavy histories will often fall back to full scope by design. Remove the user-scope guidance example that sets the preference to `true`, which is now redundant.
+
+**Step 2: Verify**
+
+Run: `pnpm format && pnpm build:docs`
+Expected: No formatting diff; docs build succeeds
+
+**Step 3: Commit**
+
+```bash
+git add apps/oat-docs/docs/
+git commit -m "docs(p06-t01): document default re-review narrowing and guard semantics"
+```
+
+---
+
+### Task p06-t02: Refresh provider views, bump versions, validate release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: generated provider skill views under `.claude/`, `.cursor/`, `.codex/`
+
+**Step 1: Change**
+
+Refresh provider-linked views from the canonical sources, then bump all five public packages together from `0.2.19` to the next version. Both the CLI source changes and the bundled asset changes under `.agents/` and `.oat/templates/` independently require this lockstep bump.
+
+Run: `oat sync --scope all`
+
+**Step 2: Verify**
+
+Confirm each changed canonical skill and the reviewer agent carry exactly one frontmatter version increment across the final branch diff, and that provider views match their canonical sources.
+
+Run: `pnpm build && pnpm test && pnpm lint && pnpm type-check && pnpm format && pnpm release:validate`
+Expected: All pass. This is the definition of done for publishable package changes.
+
+**Step 3: Commit**
+
+```bash
+git add -A
+git commit -m "chore(p06-t02): sync provider views and bump public packages"
+```
 
 ---
 
@@ -164,15 +470,16 @@ git commit -m "feat(p01-t02): {description}"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
+| Scope | Type     | Status  | Date | Artifact |
+| ----- | -------- | ------- | ---- | -------- |
+| p01   | code     | pending | -    | -        |
+| p02   | code     | pending | -    | -        |
+| p03   | code     | pending | -    | -        |
+| p04   | code     | pending | -    | -        |
+| p05   | code     | pending | -    | -        |
+| p06   | code     | pending | -    | -        |
+| final | code     | pending | -    | -        |
+| plan  | artifact | pending | -    | -        |
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -189,10 +496,14 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 3 tasks - canonical range resolution (lineage, default narrowing, classification)
+- Phase 2: 2 tasks - durable reviewed-head provenance and narrowed-artifact disclosure
+- Phase 3: 2 tasks - local rail rewritten onto guarded prior-head ranges
+- Phase 4: 1 task - remote rails aligned
+- Phase 5: 1 task - config default flipped to narrow
+- Phase 6: 2 tasks - documentation, provider sync, lockstep version bump, release validation
 
-**Total: {N} tasks**
+**Total: 11 tasks**
 
 Ready for code review and merge.
 
@@ -200,7 +511,10 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Design: N/A (quick mode, straight to plan)
+- Spec: N/A (quick mode)
+- Upstream feedback that motivated this work: `.oat/projects/local/slow-review-triage/slow-review-feedback.md` (untracked local reference)
+- Canonical narrowing semantics: `packages/cli/src/review-remote/narrowing.ts`
+- Module/skill drift warning: `packages/cli/src/review-remote/README.md`
+- Closeout-only classifier referenced by the deferred skip-entirely idea: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
