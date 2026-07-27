@@ -79,10 +79,10 @@ oat_generated: false
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Implementation complete — all 8 phases plus Phase rev1 (final review
-fixes); awaiting re-review before PR
+**Status:** Complete — all 8 phases plus Phase rev1 (final review fixes); final
+review operator-accepted at `fixes_completed`, shipped as PR #179 (open)
 **Started:** 2026-07-25
-**Last Updated:** 2026-07-26
+**Last Updated:** 2026-07-27
 
 ## Current Phase
 
@@ -96,11 +96,13 @@ checkpoint is the final phase only (`p08`), resolved from
 checkpoint ran, producing the final review that Phase rev1 remediated. No
 external per-phase review gate is configured.
 
-**Gates at final state:** core 226, adapter 60, smoke 129, release 44 pass + 1
+**Gates at final state:** core 224, adapter 59, smoke 129, release 44 pass + 1
 skip (RC-integration, env-gated). `pnpm release:validate`, `pnpm lint`,
 `pnpm type-check`, and `pnpm test` all pass. All four suites gated every rev1
 commit, since narrow core+adapter verification is what let the ten findings
-escape.
+escape. Phase rev1 closed at core 226 and adapter 60; the post-revision scope
+reduction removed six tests with the behavior they described, and four
+post-closeout rendering fixes added three back.
 
 Plan phase closed as operator-accepted; `plan.md` frontmatter was aligned to
 `oat_status: complete` at implementation start, because ending the gate loop
@@ -148,9 +150,7 @@ None
 
 ## Next Milestone
 
-Re-review before PR: run `oat-project-review-provide code final`, then
-`oat-project-review-receive`, to move the final review event from
-`fixes_added` to `fixes_completed` and then `passed`. That review-status
-transition in `plan.md` is owned by the review-receive lifecycle, not by
-`prev1-t10`, whose declared boundary is `implementation.md` and `state.md`.
-After the review passes, run `oat-project-pr-final`.
+PR #179 review and merge. The re-review ran and its findings were triaged
+rather than looped again, so the final review event is recorded in `plan.md` at
+`fixes_completed` and operator-accepted rather than `passed`; the acceptance
+basis is written out there. No further review-receive cycle is planned.

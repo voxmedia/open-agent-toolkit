@@ -676,9 +676,10 @@ Track test execution during implementation.
 - Two rendering paths — a narrative renderer (Markdown, blocks, diagrams,
   timelines) and an artistic composer path for agent-authored HTML — with a
   hash-pinned safety validator gating the latter.
-- A guideline checker and a render QA stage that drives a real headless browser,
-  covering layout, reachability, heading readability, reduced-motion
-  compliance, keyboard operability, and theme toggling.
+- A guideline checker and an opt-in render QA stage covering layout,
+  reachability, heading readability, reduced-motion compliance, keyboard
+  operability, and theme toggling. The core never launches a browser itself; the
+  stage runs only when a caller injects a probe.
 - Approval relocated after render and QA, so a human approves what will
   actually ship rather than an intermediate plan, with resume-compatible
   approval records.
@@ -692,9 +693,11 @@ Track test execution during implementation.
 - Unsafe authored HTML is a hard error: `<form>` is not an allowed element, and
   submission attributes, dangerous URL schemes, and unpinned external resource
   references are rejected outright rather than warned about.
-- Render QA runs against a real browser by default. It reports
-  `render-qa-skipped-no-headless-runtime` only when no runtime exists, and
-  `render-qa-disabled-by-configuration` when `EXPLAINER_KIT_HEADLESS_PROBE=off`.
+- Render QA is opt-in and never self-launching. Without an injected probe the
+  stage records a single `render-qa-skipped-no-probe` warning and the run
+  continues; the earlier `render-qa-skipped-no-headless-runtime` and
+  `render-qa-disabled-by-configuration` reasons no longer exist, having collapsed
+  into that one ID when the auto-resolving runtime was cut.
 - Every QA and render finding carries exactly one stable warning ID, and render
   degradation warnings now reach the run result and the manifest instead of
   being computed and dropped.
@@ -726,8 +729,11 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Four suites green at every commit: core 226, adapter 60, smoke 129, release
-  44 pass + 1 skip (RC-integration, env-gated).
+- Four suites green at every commit, and green on the shipped branch at core
+  224, adapter 59, smoke 129, release 44 pass + 1 skip (RC-integration,
+  env-gated). Phase rev1 ended at core 226 and adapter 60; the post-revision
+  scope reduction then removed six tests along with the behavior they described,
+  and four post-closeout rendering fixes added three back.
 - `pnpm release:validate`, `pnpm lint`, `pnpm type-check`, and `pnpm test` all
   pass; `release:validate` includes the real-Chromium visual gate.
 - Non-vacuity proven rather than assumed at three high-risk points: the p07
