@@ -17,12 +17,34 @@
 
 ### Essential Commands
 
+- `pnpm check` - Lint and format checks per package, plus markdownlint over `apps/oat-docs/docs`
 - `pnpm build` - Build all packages and applications (excludes docs for speed)
 - `pnpm build:docs` - Build the docs site and its dependencies
-- `pnpm lint` - Lint code using oxlint
-- `pnpm format` - Check formatting (oxfmt --check); use `pnpm format:fix` to auto-fix
+- `pnpm lint` - Lint code using oxlint, plus `tools/smoke`
+- `pnpm format` - Check formatting (oxfmt --check), plus `.agents/skills/**/*.md` and `tools/smoke`; use `pnpm format:fix` to auto-fix
 - `pnpm type-check` - TypeScript type checking across all packages
 - `pnpm test` - Run tests across the workspace
+
+`pnpm check` and the `pnpm lint`/`pnpm format` pair overlap, but neither
+contains the other, so passing one does not predict the other. Only `pnpm check`
+runs markdownlint over the docs app, which is what catches docs violations such
+as a fenced code block with no language or a skipped heading level. Only
+`pnpm lint` and `pnpm format` reach `tools/smoke` and `.agents/skills/**/*.md`.
+
+### Definition of Done
+
+Every change runs the checks CI gates on, in this order:
+
+1. `pnpm check`
+2. `pnpm type-check`
+3. `pnpm test`
+4. `pnpm build`
+
+CI runs none of `pnpm lint`, `pnpm format`, or `pnpm build:docs`. Run `pnpm lint`
+and `pnpm format` whenever a change touches `tools/smoke` or `.agents/skills`,
+since nothing else covers them, and `pnpm build:docs` when it touches the docs
+app. Changes to publishable packages add `pnpm release:validate`, described
+under Package Management.
 
 ### Development Workflow
 
