@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-27
-oat_current_task_id: prev2-t01
+oat_current_task_id: prev2-t06
 oat_generated: false
 ---
 
@@ -34,23 +34,24 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                        | Status   | Tasks | Completed |
-| -------------------------------------------- | -------- | ----- | --------- |
-| Phase 1: Contracts, briefs, and recipes v2   | complete | 6     | 6/6       |
-| Phase 2: Lifecycle caller wiring             | complete | 1     | 1/1       |
-| Phase 3: Narrative renderer                  | complete | 3     | 3/3       |
-| Phase 4: Artistic composer path              | complete | 2     | 2/2       |
-| Phase 5: Guideline checker and render QA     | complete | 4     | 4/4       |
-| Phase 6: Pipeline integration, v1 retirement | complete | 4     | 4/4       |
-| Phase 7: End-to-end anti-regression fixture  | complete | 1     | 1/1       |
-| Phase 8: Documentation and release closure   | complete | 2     | 2/2       |
-| Phase rev1: Final review fixes               | complete | 10    | 10/10     |
-| Phase rev2: Remote review fixes              | pending  | 6     | 0/6       |
+| Phase                                        | Status      | Tasks | Completed |
+| -------------------------------------------- | ----------- | ----- | --------- |
+| Phase 1: Contracts, briefs, and recipes v2   | complete    | 6     | 6/6       |
+| Phase 2: Lifecycle caller wiring             | complete    | 1     | 1/1       |
+| Phase 3: Narrative renderer                  | complete    | 3     | 3/3       |
+| Phase 4: Artistic composer path              | complete    | 2     | 2/2       |
+| Phase 5: Guideline checker and render QA     | complete    | 4     | 4/4       |
+| Phase 6: Pipeline integration, v1 retirement | complete    | 4     | 4/4       |
+| Phase 7: End-to-end anti-regression fixture  | complete    | 1     | 1/1       |
+| Phase 8: Documentation and release closure   | complete    | 2     | 2/2       |
+| Phase rev1: Final review fixes               | complete    | 10    | 10/10     |
+| Phase rev2: Remote review fixes              | in_progress | 6     | 5/6       |
 
-**Total:** 33/39 tasks completed. The 23 implementation tasks (20 planned +
+**Total:** 38/39 tasks completed. The 23 implementation tasks (20 planned +
 correctives p01-t02a, p05-t02a, p05-t02b) and all 10 review-fix tasks from the
 final review are complete. Phase rev2 adds 6 fix tasks from the remote PR #179
-review and is not yet started.
+review; 5 are complete and `prev2-t06` is re-dispatched after a corrected task
+definition.
 
 `oat project status` reports `Progress: 20/20`, which is consistent, not drift.
 The control-plane task parser counts only IDs matching `pNN-tNN` or
@@ -470,29 +471,34 @@ read "Implementation in progress — Phase 1" and "0/20 tasks".
 **Fetch:** `npx agent-reviews --json --unresolved --pr 179` — 7 unresolved
 comments, of which 6 carried findings and 1 was a PR-summary comment.
 
-**Severity counts:** 0 Critical · 0 Important · 4 Medium · 2 Minor
+**Severity counts:** 0 Critical · 0 Important · 5 Medium · 1 Minor
 
 **Converted (6):**
 
-| Finding | Task        | Summary                                           |
-| ------- | ----------- | ------------------------------------------------- |
-| M2      | `prev2-t01` | Snippet `pre` renders a nested double frame       |
-| m1      | `prev2-t02` | Rail diagram labels inherit the node stroke       |
-| M1      | `prev2-t03` | Legacy approval pairs `html` authoring with `.md` |
-| M3      | `prev2-t04` | `expansion-type-limit-exceeded` never surfaces    |
-| M4      | `prev2-t05` | Probe drops `disableAnimations` and `injectedCss` |
-| m2      | `prev2-t06` | `shell` is validated-but-unused recipe config     |
+| Finding | Task        | Summary                                             |
+| ------- | ----------- | --------------------------------------------------- |
+| M2      | `prev2-t01` | Snippet `pre` renders a nested double frame         |
+| m1      | `prev2-t02` | Rail diagram labels inherit the node stroke         |
+| M1      | `prev2-t03` | Legacy approval pairs `html` authoring with `.md`   |
+| M3      | `prev2-t04` | `expansion-type-limit-exceeded` never surfaces      |
+| M4      | `prev2-t05` | Probe drops `disableAnimations` and `injectedCss`   |
+| m2      | `prev2-t06` | HTML profile without `shell` reads `undefined.html` |
 
 **Deferred:** none. **Dismissed:** none.
 
 **Verification before conversion.** Each finding was reproduced against the code
 at the root rather than accepted as reported. Two results changed the triage:
 
-- **m2's stated mechanism is false.** Bugbot claimed a missing `shell` makes
-  authoring read `templates/undefined.html`. Nothing reads `profile.shell`; shells
-  resolve from artifact type via `TEMPLATE_BY_TYPE` (`render.mjs:9-14`). The task
-  was re-scoped to the real defect — validated-but-unused configuration that can
-  drift from the type mapping — and downgraded to minor.
+- **m2 was initially re-scoped on a wrong verification, then restored.** The
+  original triage claimed Bugbot's mechanism was false because nothing reads
+  `profile.shell`, downgraded it to minor, and pointed the task at removing the
+  key. That was incorrect: `run.mjs:865-869` passes `profile.shell` into the
+  author request and `authorArtifact` reads `templates/${artifact.shell}.html`
+  (`:990`, `:468`), so a missing `shell` does produce `templates/undefined.html`.
+  The bad verification searched only `scripts/lib/*.mjs`; the consumer is in
+  `scripts/run.mjs`. `TEMPLATE_BY_TYPE` governs the `markdown` branch only.
+  Restored to medium and to the finding as reported. Following the re-scoped plan
+  would have removed a load-bearing key and broken html authoring.
 - **M4's severity framing was narrowed.** `probeRenderedPage` already sets
   `reducedMotion: 'reduce'`, so motion gated on `prefers-reduced-motion` is
   suppressed today. The genuine gaps are animations not gated on that query and
@@ -524,6 +530,57 @@ _- Outstanding Items_
 <!-- orchestration-runs-start -->
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+
+### Run 2026-07-27 · Phase rev2 · remote review fixes
+
+**Branch:** `tkstang/personal-explainer-kit`
+**Tier:** 1 (subagents) — Cursor-native
+**Policy:** high (managed capped, project state) → `gpt-5.6-sol-high`
+**Phase base:** `987de6b7`
+**Request ID:** `rev2-impl-2026-07-27T221652Z`
+**Dispatch stamp:** `Dispatch: scope=rev2 action=implementation role=implementer producer=unknown provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+**Selection reason:** `native-catalog` · **Candidates:** `[gpt-5.6-sol-high]`
+
+**Phase Outcomes**
+
+| Task        | Commit     | Verification                                                       | Revert-verify |
+| ----------- | ---------- | ------------------------------------------------------------------ | ------------- |
+| `prev2-t01` | `93d395da` | Pass; browser-confirmed single snippet frame, standalone unchanged | Confirmed     |
+| `prev2-t02` | `e695e889` | Pass; browser-confirmed flat labels, stroked rects, opacity intact | Confirmed     |
+| `prev2-t03` | `f496268d` | Pass                                                               | Confirmed     |
+| `prev2-t04` | `0e27108e` | Pass                                                               | Confirmed     |
+| `prev2-t05` | `82114224` | Pass, including real Chromium probe-controls test                  | Confirmed     |
+| `prev2-t06` | —          | Blocked before implementation                                      | —             |
+
+**Phase verification (reported):** core+adapter 289/289, smoke 129/129, release
+44 pass / 1 skip, `lint` pass, `type-check` pass, `release:validate` five
+packages pass, visual gate valid across 65 measurements.
+
+**Parallel groups:** none — sequential single-phase run.
+
+**Dispatch deviations, both root-caused to the root orchestrator:**
+
+1. First dispatch returned `NEEDS_CONTEXT` because the scope packet declared
+   `workflow_mode: spec-driven` and a `spec.md` path for a quick-mode project with
+   no spec. Root error from filling the packet template instead of reading
+   `oat_plan_source`. Corrected through the original handle per the
+   `NEEDS_CONTEXT` contract; zero commits and a clean tree at the time of the
+   block.
+2. Version-bump guidance in the brief named skill version `2.2.0`; the checkout
+   is at `2.0.0` (`oat-project-implement` is the skill at 2.2.0). The implementer
+   flagged the mismatch instead of bumping. No bump was needed: this PR already
+   carries `0.2.20 → 0.2.21` across the five lockstep packages and
+   `explainer-kit` `1.0.2 → 2.0.0`, satisfying the PR-scoped rule.
+
+**Outstanding Items**
+
+- `prev2-t06` blocked. The implementer found that live `run.mjs` reads
+  `profile.shell`, contradicting the review artifact's verification, and stopped
+  rather than removing a key the plan wrongly called dead. The block was correct;
+  root confirmed and reproduced `templates/undefined.html`, corrected `plan.md`,
+  the review artifact, and this document, and posted a retraction on the PR
+  comment where the false claim had been published. Task re-dispatched with the
+  finding restored as reported.
 
 <!-- orchestration-runs-end -->
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev2-t01
-oat_last_commit: a8f3c2c7
+oat_current_task: prev2-t06
+oat_last_commit: 82114224
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -73,7 +73,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/179 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-25T17:10:10.185Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-27T22:16:52Z'
+oat_project_state_updated: '2026-07-27T23:15:00Z'
 oat_generated: false
 ---
 
@@ -88,9 +88,9 @@ converted to `prev2-t01`..`prev2-t06`.
 
 ## Current Phase
 
-Implementation stands at 33/39 tasks (20 planned, 3 correctives, 10 rev1
-review-fix tasks complete; 6 rev2 remote review-fix tasks pending, next is
-`prev2-t01`). Phase rev1 closed the 7 Important and 3 Medium findings from
+Implementation stands at 38/39 tasks (20 planned, 3 correctives, 10 rev1
+review-fix tasks, and 5 of 6 rev2 remote review-fix tasks complete; `prev2-t06`
+is re-dispatched after its task definition was corrected). Phase rev1 closed the 7 Important and 3 Medium findings from
 the final code review at `4f156766`..`a8f3c2c7` plus the artifact-alignment
 commit. Tier 1 (subagents), dispatch policy `high` (managed capped, project
 state), resolved target `oat-phase-implementer-gpt-5-6-sol-high`. HiLL

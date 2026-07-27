@@ -1835,43 +1835,52 @@ git commit -m "fix(prev2-t05): apply declared probe animation and CSS controls"
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
-- Possibly modify: `.agents/skills/explainer-kit/recipes/*.json`
 
 **Step 1: Understand the issue**
 
-Review finding m2, `recipes.mjs:437`, **re-scoped after the reported mechanism
-was disproved.** The finding claims a missing `shell` makes authoring read
-`templates/undefined.html`. That cannot happen: nothing reads `profile.shell`.
-Its only references are the key declaration (`recipes.mjs:37`) and its
-conditional assertion (`:437-438`). Shells are resolved from artifact type via
-`TEMPLATE_BY_TYPE` (`render.mjs:9-14`).
+Review finding m2, `recipes.mjs:437`. **Correction: this task previously carried
+a re-scoping based on a false verification. Bugbot's original finding was right
+and the re-scoping was wrong.** Treat the finding as reported.
 
-The real defect is the inverse. `shell` is validated-but-unused configuration.
-All three bundled `authoring: html` profiles declare it, so it reads as
-load-bearing to a recipe author while having no effect, and it can drift from the
-type mapping with no check failing.
+`if ('shell' in profile)` validates `shell` only when the key is present, so an
+`authoring: html` expansion profile without `shell` loads as valid and then fails
+at authoring time reading `templates/undefined.html`.
+
+This is reachable and reproduced. `run.mjs:865` passes `shell: profile.shell`
+into the author request and `:866-869` sets `template` to `profile.shell` for
+non-markdown authoring; `authorArtifact` then reads
+`templates/${artifact.shell}.html` (`:990`, and again at `:468` on the
+approval-resume path). With `shell` absent, both resolve to the literal string
+`undefined`. The earlier claim that nothing reads `profile.shell` came from
+searching only `scripts/lib/*.mjs` — the consuming code is in `scripts/run.mjs`.
+`TEMPLATE_BY_TYPE` / `templateForType` governs only the `markdown` branch, not
+the `html` branch.
+
+Severity is medium, not minor. All four bundled recipes currently declare
+`shell` for their html profiles, so this is latent for shipped recipes but breaks
+any new or custom recipe that omits it, with an opaque `undefined.html` error.
 
 **Step 2: Implement fix**
 
-Decide between two resolutions and record which:
+Require `shell` whenever `profile.authoring === 'html'`, rather than only
+validating it when the key happens to be present. Keep it optional for
+`markdown` profiles, which correctly resolve their template by type. Fail with a
+message naming the profile and the missing key so the error is diagnosable at
+recipe-load time instead of surfacing as a missing template file.
 
-- Make the key real: have shell resolution consult `profile.shell` and fall back
-  to `TEMPLATE_BY_TYPE`, then require it whenever `authoring` is `html`.
-- Remove the key: drop it from `PROFILE_KEYS`, its assertion, and the bundled
-  recipes, leaving type-derived resolution as the single mechanism.
-
-Prefer removal unless a per-profile shell override is actually wanted, since a
-second resolution path is the thing that would let recipes and rendering drift.
+Do **not** remove the key — it is load-bearing for the html authoring path.
 
 **Step 3: Verify**
 
-If removed: assert a profile declaring `shell` is rejected as an unknown key, and
-confirm all bundled recipes still load. If made real: assert an `authoring: html`
-profile without `shell` is rejected, and that a declared shell is the one
-rendered.
+Assert that an `authoring: html` profile without `shell` is rejected at recipe
+load with a message naming the profile, that an `authoring: markdown` profile
+without `shell` still loads, and that all four bundled recipes still load.
 Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
 then `pnpm test:smoke` and `pnpm release:validate`.
-Expected: one resolution mechanism, enforced by a test.
+Revert-verify: restore the `'shell' in profile` guard and confirm the new
+rejection case fails.
+Expected: the invalid profile is caught at load time, never at
+`templates/undefined.html`.
 
 **Step 4: Commit**
 
