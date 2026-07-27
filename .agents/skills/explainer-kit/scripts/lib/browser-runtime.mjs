@@ -13,6 +13,27 @@ const CHROMIUM_CANDIDATES = Object.freeze([
   '/usr/bin/chromium',
   '/usr/bin/chromium-browser',
 ]);
+const PROBE_REQUEST_FIELDS = new Set([
+  'artifact',
+  'disableAnimations',
+  'evaluate',
+  'injectedCss',
+  'javascriptEnabled',
+  'keyboard',
+  'media',
+  'reducedMotion',
+  'scenario',
+  'themeToggle',
+  'viewport',
+  'wideContent',
+]);
+const DISABLE_ANIMATIONS_CSS = `*, *::before, *::after {
+  animation: none !important;
+  animation-duration: 0s !important;
+  transition: none !important;
+  transition-duration: 0s !important;
+  scroll-behavior: auto !important;
+}`;
 
 export const RUNTIME_UNAVAILABLE_REASONS = Object.freeze({
   driverMissing: 'browser-driver-not-installed',
@@ -158,14 +179,29 @@ export async function createBrowserProbeSession(options = {}) {
 }
 
 export async function probeRenderedPage(browser, url, request) {
+  assertProbeRequestFields(request);
   const page = await browser.newPage({
     viewport: request.viewport,
-    reducedMotion: 'reduce',
+    reducedMotion: request.reducedMotion ?? 'reduce',
     javaScriptEnabled: request.javascriptEnabled !== false,
   });
   try {
     if (request.media === 'print') {
-      await page.emulateMedia({ media: 'print', reducedMotion: 'reduce' });
+      await page.emulateMedia({
+        media: 'print',
+        reducedMotion: request.reducedMotion ?? 'reduce',
+      });
+    }
+    const stylesheet = probeStylesheet(request);
+    if (stylesheet) {
+      await page.route(url, async (route) => {
+        const response = await route.fetch();
+        const html = await response.text();
+        await route.fulfill({
+          response,
+          body: injectStylesheet(html, stylesheet),
+        });
+      });
     }
     await page.goto(url, { waitUntil: 'load' });
     if (request.wideContent) {
@@ -194,6 +230,48 @@ export async function probeRenderedPage(browser, url, request) {
   } finally {
     await page.close();
   }
+}
+
+function assertProbeRequestFields(request) {
+  if (!request || typeof request !== 'object' || Array.isArray(request)) {
+    throw new TypeError('Browser probe request must be an object.');
+  }
+  const unsupported = Object.keys(request).filter(
+    (field) => !PROBE_REQUEST_FIELDS.has(field),
+  );
+  if (unsupported.length > 0) {
+    throw new TypeError(
+      `Browser probe request has unsupported fields: ${unsupported.join(', ')}.`,
+    );
+  }
+  if (
+    request.disableAnimations !== undefined &&
+    typeof request.disableAnimations !== 'boolean'
+  ) {
+    throw new TypeError('Browser probe disableAnimations must be a boolean.');
+  }
+  if (
+    request.injectedCss !== undefined &&
+    typeof request.injectedCss !== 'string'
+  ) {
+    throw new TypeError('Browser probe injectedCss must be a string.');
+  }
+}
+
+function probeStylesheet(request) {
+  return [
+    request.injectedCss?.trim(),
+    request.disableAnimations ? DISABLE_ANIMATIONS_CSS : undefined,
+  ]
+    .filter(Boolean)
+    .join('\n');
+}
+
+function injectStylesheet(html, stylesheet) {
+  const style = `<style data-explainer-probe-controls>${stylesheet}</style>`;
+  return /<\/head\s*>/i.test(html)
+    ? html.replace(/<\/head\s*>/i, `${style}</head>`)
+    : `${style}${html}`;
 }
 
 export async function primeKeyboardFocus(page) {
