@@ -76,10 +76,23 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-07-25.1` is a live example: it adds Opus 5 rungs to the Cursor
-`balanced`, `high`, and `frontier` tiers and drops `claude-sonnet-5-high` from
-`economy`. An adopter still on the prior version keeps their existing Cursor
-tiers untouched until they take one of those actions.
+Version `2026-07-27.1` is a live example. It interleaves the Cursor `high` and
+`frontier` tiers so each alternates a GPT rung with a Claude rung, ending `high`
+at `gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`. It also
+drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
+`frontier`. Dropping the Opus max rung follows the non-monotonic top-end Opus
+evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
+which treats max as a route requiring justification rather than a strictly
+better rung; both models remain in the pin catalog and stay available to a
+hand-edited ladder. An adopter still on the prior version keeps their existing
+Cursor tiers untouched until they take one of the actions above.
+
+The terminal entries in that version are chosen, not incidental. Because the
+final candidate in a tier is the target its implementation-phase self-review
+pins, reordering a tier changes who reviews it even when the membership is
+untouched. Cross-family independence for the external phase gate and the
+lifecycle gate comes from `gates.execTargets` instead, which is configured
+separately and is not drawn from this ladder.
 
 Curating a ladder down has a consequence in the other direction. The
 `subagent-orchestration` guidance names a route per task class, and a route you
