@@ -74,6 +74,17 @@
   creation, and distinct idle-kill versus hard-cap outcomes. Medium-priority
   workflow maintenance tracks project-scoped gate overrides.
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
+- Explainer Kit follow-ups from the `explainer-authoring-redesign` closeout are
+  deliberately split by kind. `BL-260727-ship-mit-notices-inside` (high) is a
+  contained packaging and compliance fix: adapted MIT code ships without its
+  required notice because the repo-level `NOTICES.md` is not in the published
+  payload. `BL-260727-close-the-explainer-kit-visual` (medium) carries the
+  substantive capability work — the inline diagram renderer silently flattens
+  non-linear graphs, and upstream visual workflows stay unreachable from bundled
+  recipes. The redesign narrowed that second gap without closing it: `recipe/v2`
+  expansion profiles can now select the diagram and deck shells, and a recap run
+  confirmed the artistic path renders branching and cyclic diagrams correctly,
+  so the remaining defect is localized to the inline renderer's layout logic.
 
 <!-- OAT BACKLOG-INDEX -->
 
@@ -86,10 +97,12 @@
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
+| BL-260727-ship-mit-notices-inside        | Ship MIT notices inside distributed packages                           | open   | high     | task    | S        |
 | BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
 | BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
 | BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                        | open   | medium   | feature | M        |
 | BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                     | open   | medium   | feature | M        |
+| BL-260727-close-the-explainer-kit-visual | Close the Explainer Kit visual authoring capability gap                | open   | medium   | feature | L        |
 | BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract             | open   | medium   | feature | M        |
 | BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance          | open   | medium   | task    | S        |
 | BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos         | open   | medium   | task    |          |
