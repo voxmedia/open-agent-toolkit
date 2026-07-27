@@ -85,33 +85,34 @@
 
 <!-- OAT BACKLOG-INDEX -->
 
-| ID                                       | Title                                                                  | Status | Priority | Scope   | Estimate |
-| ---------------------------------------- | ---------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | M        |
-| BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
-| BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts | open   | high     | task    | M        |
-| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
-| BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
-| BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
-| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |
-| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                    | open   | high     | feature | M        |
-| BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version              | open   | high     | feature | S        |
-| BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                        | open   | medium   | feature | M        |
-| BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                     | open   | medium   | feature | M        |
-| BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract             | open   | medium   | feature | M        |
-| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance          | open   | medium   | task    | S        |
-| BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos         | open   | medium   | task    |          |
-| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs      | open   | medium   | feature | L        |
-| BL-260712-per-project-override           | Per-project override to disable configured external gates              | open   | medium   | feature | M        |
-| BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command          | open   | medium   | feature | M        |
-| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log             | open   | medium   | feature | S        |
-| BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)          | open   | medium   | task    |          |
-| BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync            | open   | medium   | feature | M        |
-| BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                          | open   | medium   | task    | S        |
-| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands             | open   | medium   | task    |          |
-| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                             | open   | medium   | task    | S        |
-| BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight            | open   | low      | task    | M        |
-| BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization | open   | low      | feature | M        |
+| ID                                       | Title                                                                         | Status | Priority | Scope   | Estimate |
+| ---------------------------------------- | ----------------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
+| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                              | open   | high     | feature | M        |
+| BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                                     | open   | high     | feature | L        |
+| BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts        | open   | high     | task    | M        |
+| BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches                | open   | high     | feature | M        |
+| BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch        | open   | high     | feature | M        |
+| BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills              | open   | high     | task    | S        |
+| BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                              | open   | high     | task    | S        |
+| BL-260711-skip-re-review-for-bookkeeping | Skip re-review for bookkeeping-only review findings                           | open   | high     | feature | M        |
+| BL-260718-warn-when-oat-sync-uses        | Warn when oat sync uses a different producing CLI version                     | open   | high     | feature | S        |
+| BL-260718-add-generated-runbook          | Add generated-runbook verification command pass                               | open   | medium   | feature | M        |
+| BL-260719-add-pinned-recon-agents        | Add pinned recon agents for reusable orchestration                            | open   | medium   | feature | M        |
+| BL-260718-document-execution-program     | Document execution-program artifact as stable OAT contract                    | open   | medium   | feature | M        |
+| BL-260714-executable-backstops           | Executable backstops for contract claims — authoring guidance                 | open   | medium   | task    | S        |
+| BL-260718-fix-oat-docs-generate-index    | Fix oat docs generate-index cwd-relative defaults in monorepos                | open   | medium   | task    |          |
+| BL-260706-front-load-recurring-gate      | Front-load recurring gate-finding classes into implementer briefs             | open   | medium   | feature | L        |
+| BL-260712-per-project-override           | Per-project override to disable configured external gates                     | open   | medium   | feature | M        |
+| BL-260718-rewrite-worktree-bootstrap     | Rewrite worktree bootstrap-group as tested TypeScript command                 | open   | medium   | feature | M        |
+| BL-260713-root-agent-judgment-logging    | Root-agent judgment logging responsibility for project log                    | open   | medium   | feature | S        |
+| BL-260718-support-fumadocs-in-oat-docs   | Support Fumadocs in oat docs nav sync (currently MkDocs-only)                 | open   | medium   | task    |          |
+| BL-260724-support-provider-directory     | Support provider directory symlinks as full collection sync                   | open   | medium   | feature | M        |
+| BL-260727-surface-implementer-dispatches | Surface implementer dispatches that sit at the ceiling without classification | open   | medium   | task    | M        |
+| BL-260726-validate-cursor-pin-effort     | Validate Cursor pin effort rungs at sync time                                 | open   | medium   | task    | S        |
+| BL-260726-validate-structured-output     | Validate structured-output contract in gate skill commands                    | open   | medium   | task    |          |
+| BL-260708-verify-cursor-gpt-5-6-subagent | Verify Cursor GPT-5.6 subagent model slugs                                    | open   | medium   | task    | S        |
+| BL-260725-classify-general-sync-owned    | Classify general sync-owned dirt in project-start preflight                   | open   | low      | task    | M        |
+| BL-260719-evaluate-broader-final-gate    | Evaluate broader final-gate freshness policy after narrow optimization        | open   | low      | feature | M        |
 
 <!-- END OAT BACKLOG-INDEX -->
 
