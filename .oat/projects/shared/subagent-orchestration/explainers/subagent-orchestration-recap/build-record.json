@@ -1,24 +1,24 @@
 {
   "schemaVersion": "explainer-kit.build-record/v1",
-  "runId": "run-d498d3d2-0c40-495c-a1e5-48df66c0f4ce",
+  "runId": "run-3f0d9f71-09d4-40ab-863f-97318b37bfc9",
   "renderStrategy": "default-only",
-  "startedAt": "2026-07-27T14:04:03.169Z",
+  "startedAt": "2026-07-27T19:35:00.455Z",
   "stages": [
     {
       "id": "validate",
       "status": "passed",
       "outputPaths": ["run-request.json"],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.192Z",
-      "completedAt": "2026-07-27T14:04:03.202Z"
+      "startedAt": "2026-07-27T19:35:00.474Z",
+      "completedAt": "2026-07-27T19:35:00.482Z"
     },
     {
       "id": "fact-base",
       "status": "passed",
       "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.211Z",
-      "completedAt": "2026-07-27T14:04:03.246Z"
+      "startedAt": "2026-07-27T19:35:00.490Z",
+      "completedAt": "2026-07-27T19:35:00.524Z"
     },
     {
       "id": "content",
@@ -36,8 +36,8 @@
         "source/author/execution-record.json"
       ],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.256Z",
-      "completedAt": "2026-07-27T14:04:03.385Z"
+      "startedAt": "2026-07-27T19:35:00.534Z",
+      "completedAt": "2026-07-27T19:35:00.661Z"
     },
     {
       "id": "theme",
@@ -46,8 +46,8 @@
       "warnings": [
         "No explicit style was selected; defaulted to clean-neutral."
       ],
-      "startedAt": "2026-07-27T14:04:03.394Z",
-      "completedAt": "2026-07-27T14:04:03.410Z"
+      "startedAt": "2026-07-27T19:35:00.670Z",
+      "completedAt": "2026-07-27T19:35:00.685Z"
     },
     {
       "id": "render",
@@ -60,8 +60,8 @@
         "site/explainers/subagent-orchestration-recap/execution-record/index.html"
       ],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.419Z",
-      "completedAt": "2026-07-27T14:04:03.492Z"
+      "startedAt": "2026-07-27T19:35:00.694Z",
+      "completedAt": "2026-07-27T19:35:00.753Z"
     },
     {
       "id": "qa",
@@ -74,26 +74,26 @@
         "site/explainers/subagent-orchestration-recap/execution-record/index.html"
       ],
       "warnings": ["render-qa-skipped-no-probe"],
-      "startedAt": "2026-07-27T14:04:03.501Z",
-      "completedAt": "2026-07-27T14:04:03.515Z"
+      "startedAt": "2026-07-27T19:35:00.762Z",
+      "completedAt": "2026-07-27T19:35:00.775Z"
     },
     {
       "id": "durability",
       "status": "skipped",
       "outputPaths": [],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.533Z",
-      "completedAt": "2026-07-27T14:04:03.533Z"
+      "startedAt": "2026-07-27T19:35:00.793Z",
+      "completedAt": "2026-07-27T19:35:00.793Z"
     },
     {
       "id": "publish",
       "status": "skipped",
       "outputPaths": [],
       "warnings": [],
-      "startedAt": "2026-07-27T14:04:03.541Z",
-      "completedAt": "2026-07-27T14:04:03.541Z"
+      "startedAt": "2026-07-27T19:35:00.802Z",
+      "completedAt": "2026-07-27T19:35:00.802Z"
     }
   ],
   "outcome": "built-not-durable",
-  "completedAt": "2026-07-27T14:04:03.541Z"
+  "completedAt": "2026-07-27T19:35:00.802Z"
 }

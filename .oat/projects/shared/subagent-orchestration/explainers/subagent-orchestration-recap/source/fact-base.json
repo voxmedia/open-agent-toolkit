@@ -1,6 +1,6 @@
 {
   "schemaVersion": "explainer-kit.fact-base/v1",
-  "generatedAt": "2026-07-27T14:04:03.221Z",
+  "generatedAt": "2026-07-27T19:35:00.500Z",
   "mode": "federated",
   "freshnessPolicy": "live-wins",
   "sources": [
@@ -12,7 +12,7 @@
       "sourceSetId": "subagent-orchestration",
       "authoritativeFor": ["phases", "validation-approach"],
       "hash": "sha256:0dce9c05d11ceb83e90255013c276c82921c7e318a212506e1b19b327b8ec9f9",
-      "observedAt": "2026-07-27T14:04:03.221Z"
+      "observedAt": "2026-07-27T19:35:00.499Z"
     },
     {
       "id": "design",
@@ -22,7 +22,7 @@
       "sourceSetId": "subagent-orchestration",
       "authoritativeFor": ["planned-architecture", "decisions", "risks"],
       "hash": "sha256:584c0e8062466067ebc273f1d223ea695f87d0e5d08874fc164a021f2d1f7f9a",
-      "observedAt": "2026-07-27T14:04:03.221Z"
+      "observedAt": "2026-07-27T19:35:00.499Z"
     },
     {
       "id": "implementation",
@@ -37,7 +37,7 @@
         "validation-evidence"
       ],
       "hash": "sha256:98582965e9e8a247301de85fbdeab99bc26a92f89631ec3e0d6d8af0f1d73057",
-      "observedAt": "2026-07-27T14:04:03.221Z"
+      "observedAt": "2026-07-27T19:35:00.499Z"
     },
     {
       "id": "summary",
@@ -47,14 +47,14 @@
       "sourceSetId": "subagent-orchestration",
       "authoritativeFor": ["outcome"],
       "hash": "sha256:4cb4e705d4defd1020214c2a7f8b96cf04b9f6112a6c59fd5b6b17c5abf7bfc8",
-      "observedAt": "2026-07-27T14:04:03.221Z"
+      "observedAt": "2026-07-27T19:35:00.499Z"
     },
     {
       "id": "critic:cursor-agent-critic",
       "kind": "other",
       "locator": "critic-callback:cursor-agent-critic",
-      "hash": "sha256:0f224749e79324abb021f13c9e1319a542ccc2f6c0a54a31f2bc78de33449dc5",
-      "observedAt": "2026-07-27T14:04:03.227Z"
+      "hash": "sha256:e3fe68aaa91f0cb973139cfb7eaedf9a4b0fe53af82969cf9eaf756ff27b25e9",
+      "observedAt": "2026-07-27T19:35:00.505Z"
     }
   ],
   "claims": [

@@ -1,24 +1,24 @@
 {
   "schemaVersion": "explainer-kit.build-record/v1",
-  "runId": "run-0479e5ce-3de3-4a12-bd5b-9be089fccee2",
+  "runId": "run-16d22ea4-dd75-4737-bf9a-1ea5a4002968",
   "renderStrategy": "default-only",
-  "startedAt": "2026-07-27T04:05:11.600Z",
+  "startedAt": "2026-07-27T19:34:59.311Z",
   "stages": [
     {
       "id": "validate",
       "status": "passed",
       "outputPaths": ["run-request.json"],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:11.621Z",
-      "completedAt": "2026-07-27T04:05:11.630Z"
+      "startedAt": "2026-07-27T19:34:59.335Z",
+      "completedAt": "2026-07-27T19:34:59.345Z"
     },
     {
       "id": "fact-base",
       "status": "passed",
       "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:11.639Z",
-      "completedAt": "2026-07-27T04:05:11.674Z"
+      "startedAt": "2026-07-27T19:34:59.356Z",
+      "completedAt": "2026-07-27T19:34:59.397Z"
     },
     {
       "id": "content",
@@ -36,8 +36,8 @@
         "source/author/walkthrough.json"
       ],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:11.684Z",
-      "completedAt": "2026-07-27T04:05:11.851Z"
+      "startedAt": "2026-07-27T19:34:59.409Z",
+      "completedAt": "2026-07-27T19:34:59.584Z"
     },
     {
       "id": "theme",
@@ -46,8 +46,8 @@
       "warnings": [
         "No explicit style was selected; defaulted to clean-neutral."
       ],
-      "startedAt": "2026-07-27T04:05:11.862Z",
-      "completedAt": "2026-07-27T04:05:11.882Z"
+      "startedAt": "2026-07-27T19:34:59.592Z",
+      "completedAt": "2026-07-27T19:34:59.610Z"
     },
     {
       "id": "render",
@@ -60,8 +60,8 @@
         "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html"
       ],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:11.892Z",
-      "completedAt": "2026-07-27T04:05:11.954Z"
+      "startedAt": "2026-07-27T19:34:59.619Z",
+      "completedAt": "2026-07-27T19:34:59.677Z"
     },
     {
       "id": "qa",
@@ -74,26 +74,26 @@
         "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html"
       ],
       "warnings": ["render-qa-skipped-no-probe"],
-      "startedAt": "2026-07-27T04:05:11.963Z",
-      "completedAt": "2026-07-27T04:05:11.978Z"
+      "startedAt": "2026-07-27T19:34:59.686Z",
+      "completedAt": "2026-07-27T19:34:59.699Z"
     },
     {
       "id": "durability",
       "status": "skipped",
       "outputPaths": [],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:11.996Z",
-      "completedAt": "2026-07-27T04:05:11.996Z"
+      "startedAt": "2026-07-27T19:34:59.717Z",
+      "completedAt": "2026-07-27T19:34:59.717Z"
     },
     {
       "id": "publish",
       "status": "skipped",
       "outputPaths": [],
       "warnings": [],
-      "startedAt": "2026-07-27T04:05:12.005Z",
-      "completedAt": "2026-07-27T04:05:12.005Z"
+      "startedAt": "2026-07-27T19:34:59.726Z",
+      "completedAt": "2026-07-27T19:34:59.726Z"
     }
   ],
   "outcome": "built-not-durable",
-  "completedAt": "2026-07-27T04:05:12.005Z"
+  "completedAt": "2026-07-27T19:34:59.726Z"
 }

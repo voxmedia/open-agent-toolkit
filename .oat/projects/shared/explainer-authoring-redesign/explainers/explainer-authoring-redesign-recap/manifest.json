@@ -1,21 +1,21 @@
 {
   "schemaVersion": "explainer-kit.manifest/v1",
-  "runId": "run-0479e5ce-3de3-4a12-bd5b-9be089fccee2",
+  "runId": "run-16d22ea4-dd75-4737-bf9a-1ea5a4002968",
   "slug": "explainer-authoring-redesign-recap",
   "recipe": {
     "id": "project-recap",
     "version": "1"
   },
-  "createdAt": "2026-07-27T04:05:12.014Z",
+  "createdAt": "2026-07-27T19:34:59.735Z",
   "source": {
     "factBasePath": "source/fact-base.json",
-    "factBaseHash": "sha256:002c5557b660bf56d684d0266077e93db5fdcc0d5f4adf612776c5c1d6d5a8b4",
+    "factBaseHash": "sha256:8e413f0a430c65b3373fc36b0af5c17a16c710c3b8db765020e140ba8d62b055",
     "inputHashes": {
       "inputs/plan": "sha256:593b364d7d3a9556dc0226d24ca8db5b3bf97cf06adccb6bb0f80c56e11935b3",
       "inputs/design": "sha256:03c56b4ab7abf577b0e8546b0c0876a8c65fc6870f06c3aabf87600bbbe47b88",
-      "inputs/implementation": "sha256:81db2034875ba2f875f9871563357725471d6866d51a6ebeecd5e5aae10e4ae0",
-      "inputs/summary": "sha256:00e5a6d56d2035692629afc81e1efbcfbc35f84297c6e91ce57fc27b1a8b5fa0",
-      "inputs/critic-cursor-agent-critic": "sha256:db338839e6436b9eee18376efa6c3839037b4f0db20ebf5957a8af53c3bbb124"
+      "inputs/implementation": "sha256:8856c9eb27dd5763d138e3f8bfe19541a719b17fd0bfa04b4bb623cceafa0978",
+      "inputs/summary": "sha256:20977512bd74e76de82e0c700c0ae4824652c6ee76a9fd7f7d0bd96d16bd4dd9",
+      "inputs/critic-cursor-agent-critic": "sha256:7cfd14fc1a7ce6830488230f30aff8db6955e811edb1d5ee25ff81e3206a6d18"
     },
     "authorResultPaths": [
       "source/author/project-recap.json",
@@ -38,7 +38,7 @@
       "renderedPath": "site/initiatives/explainer-authoring-redesign-recap/index.html",
       "mediaType": "text/html",
       "status": "built",
-      "hash": "sha256:d388f4ba07553462f7abdd705e9d90addc9e149e7caa3854a1c83c60886c93f2",
+      "hash": "sha256:e5a80d990920b1117d2b97f0da3199544c1f7001f41dd8ebd7756029f41a372a",
       "rebuildable": false
     },
     {
@@ -68,7 +68,7 @@
       "renderedPath": "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html",
       "mediaType": "text/html",
       "status": "built",
-      "hash": "sha256:12d0505974913f341c27c9c527da25ae6860afe2a16a16f4bac44e7626785cf1",
+      "hash": "sha256:24520f7ad43af3ae77946ee2e3c6a3900a92e83c87e182f323c55dc131142bbb",
       "rebuildable": false
     },
     {
@@ -84,30 +84,30 @@
   ],
   "immutableHashes": {
     "run-request.json": "sha256:48ccdb712623569741877cd5674450764f89e1e65e77af8bdab3765133772223",
-    "source/fact-base.json": "sha256:a5f97ffecfdbb9d23b03eb4aa8f1f374e058005d00d1f4592e95bced4db7385b",
-    "source/fact-base.md": "sha256:c01492a809466e14b7dffee58fdd8c5713b7a35ac0293442d80d36d2d5b90cd8",
-    "source/content-approval.json": "sha256:28412b5953bd70eee3b952c400cd5409862a79276e62c477aa0c2b8a0048aa45",
-    "source/author/project-recap.json": "sha256:c89eaccd4cbfbaee2b5063c054b048ce65d924798b676252a05c1f5c6398936d",
-    "source/author/authoring-paths.json": "sha256:d9a8385151710bf60d05a818adc8a1607af17fded11eccb262c500d38cf130e4",
-    "source/author/approval-sequence.json": "sha256:c457c594eff703269ea35dcc27a49b9a5c7563a3b597dc831ed9b2448baddb7e",
-    "source/author/review-loop.json": "sha256:b6e1e076eb2218c0caeab9d5dbd15a0be8c11aaf51a20cc3004212a10972852e",
-    "source/author/walkthrough.json": "sha256:88600adcdda485ec6bf084e21455f16afd3b38a8d289125a27d6f424f567c731",
+    "source/fact-base.json": "sha256:77124367962b7b7285d897f154d6dcd03a9fb699d4a18565067a925ca3f9ba34",
+    "source/fact-base.md": "sha256:fb40c9237caded1f0474c099360f666a0137a16c07dc1efa48ae8466cb7291ac",
+    "source/content-approval.json": "sha256:31fedcbd430eaa29d33cc8b9eeb4c73d1e875f679d901e0affcc54264e91664d",
+    "source/author/project-recap.json": "sha256:cf3e5872a531b001cf130b355083a8b1d201a0c9336527ed9198891bb71065db",
+    "source/author/authoring-paths.json": "sha256:5a42fbfb2fb3d16157812ec479deba32cb124ad53a0c8fddb87fc2d256364ecc",
+    "source/author/approval-sequence.json": "sha256:d447dd24bb3b5f5f24600f02e20e63fd52bf17b080beb91f7c6c628efe6db873",
+    "source/author/review-loop.json": "sha256:11be4f5563ccaca23700c48bee8d059924c5f2082710f1d16457a2056c1fae4d",
+    "source/author/walkthrough.json": "sha256:bd4ca429c3bd36303fae3f869ae042ec3615a8f2c4e34ca7ff0ddf43597d24c6",
     "source/content/project-recap.md": "sha256:68ff83183552639cf011e401e852d35a0d711daa67822ae8dcff6ce65b9ca905",
     "source/content/authoring-paths.html": "sha256:d1cf6061c162f76ec829d615e1f1be6e32e9ba887552694e92d705fed9e5d1ad",
     "source/content/approval-sequence.html": "sha256:c32a016abd47a2b0bedea88378d13bfb1f4e31cdce604af5861e41dcddda8b34",
     "source/content/review-loop.md": "sha256:096fcda5a3024ad926aa9da6abaab505229fcc449af1c205e8562ccbbb2052a1",
     "source/content/walkthrough.html": "sha256:bb25bef0ad046ed4ff6cf90f52e5ba9ce014d4f6f3f64c4c5e61c9f0b014883d",
     "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
-    "site/initiatives/explainer-authoring-redesign-recap/index.html": "sha256:d388f4ba07553462f7abdd705e9d90addc9e149e7caa3854a1c83c60886c93f2",
+    "site/initiatives/explainer-authoring-redesign-recap/index.html": "sha256:e5a80d990920b1117d2b97f0da3199544c1f7001f41dd8ebd7756029f41a372a",
     "site/diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html": "sha256:d1cf6061c162f76ec829d615e1f1be6e32e9ba887552694e92d705fed9e5d1ad",
     "site/diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html": "sha256:c32a016abd47a2b0bedea88378d13bfb1f4e31cdce604af5861e41dcddda8b34",
-    "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html": "sha256:12d0505974913f341c27c9c527da25ae6860afe2a16a16f4bac44e7626785cf1",
+    "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html": "sha256:24520f7ad43af3ae77946ee2e3c6a3900a92e83c87e182f323c55dc131142bbb",
     "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html": "sha256:bb25bef0ad046ed4ff6cf90f52e5ba9ce014d4f6f3f64c4c5e61c9f0b014883d"
   },
   "outcome": "built-not-durable",
   "buildRecord": {
     "path": "build-record.json",
-    "hash": "sha256:33056ff43afcabecad07283a0efe5c3f22f137cfab77eb7d4de827fffe8ad66c"
+    "hash": "sha256:da8cd1b88dcca2640165279d661659f56de17d1450c4da7a3dc6e4e9abfa15b5"
   },
   "warnings": [
     "No explicit style was selected; defaulted to clean-neutral.",

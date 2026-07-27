@@ -1207,9 +1207,10 @@ Track test execution during implementation.
 - Two rendering paths — a narrative renderer (Markdown, blocks, diagrams,
   timelines) and an artistic composer path for agent-authored HTML — with a
   hash-pinned safety validator gating the latter.
-- A guideline checker and a render QA stage that drives a real headless browser,
-  covering layout, reachability, heading readability, reduced-motion
-  compliance, keyboard operability, and theme toggling.
+- A guideline checker and an opt-in render QA stage covering layout,
+  reachability, heading readability, reduced-motion compliance, keyboard
+  operability, and theme toggling. The core never launches a browser itself; the
+  stage runs only when a caller injects a probe.
 - Approval relocated after render and QA, so a human approves what will
   actually ship rather than an intermediate plan, with resume-compatible
   approval records.
@@ -1223,9 +1224,11 @@ Track test execution during implementation.
 - Unsafe authored HTML is a hard error: `<form>` is not an allowed element, and
   submission attributes, dangerous URL schemes, and unpinned external resource
   references are rejected outright rather than warned about.
-- Render QA runs against a real browser by default. It reports
-  `render-qa-skipped-no-headless-runtime` only when no runtime exists, and
-  `render-qa-disabled-by-configuration` when `EXPLAINER_KIT_HEADLESS_PROBE=off`.
+- Render QA is opt-in and never self-launching. Without an injected probe the
+  stage records a single `render-qa-skipped-no-probe` warning and the run
+  continues; the earlier `render-qa-skipped-no-headless-runtime` and
+  `render-qa-disabled-by-configuration` reasons no longer exist, having collapsed
+  into that one ID when the auto-resolving runtime was cut.
 - Every QA and render finding carries exactly one stable warning ID, and render
   degradation warnings now reach the run result and the manifest instead of
   being computed and dropped.
@@ -1257,8 +1260,11 @@ Track test execution during implementation.
 
 **Verification performed:**
 
-- Four suites green at every commit: core 226, adapter 60, smoke 129, release
-  44 pass + 1 skip (RC-integration, env-gated).
+- Four suites green at every commit, and green on the shipped branch at core
+  224, adapter 59, smoke 129, release 44 pass + 1 skip (RC-integration,
+  env-gated). Phase rev1 ended at core 226 and adapter 60; the post-revision
+  scope reduction then removed six tests along with the behavior they described,
+  and four post-closeout rendering fixes added three back.
 - `pnpm release:validate`, `pnpm lint`, `pnpm type-check`, and `pnpm test` all
   pass; `release:validate` includes the real-Chromium visual gate.
 - Non-vacuity proven rather than assumed at three high-risk points: the p07
@@ -3020,16 +3026,18 @@ expectations out of schemas and into prose.
 ## What Was Implemented
 
 Eight phases, 20 planned tasks plus three correctives, then a 10-task revision
-phase and a final scope reduction. Shipped as PR #179: 68 commits, 98 files,
-+13,758/−1,541.
+phase, a final scope reduction, and four post-closeout rendering fixes. Shipped
+as PR #179: 77 commits, 109 files, +14,379/−1,544 as of `ba84368f`.
 
 - **Two authoring paths.** A narrative path promotes Markdown from provenance to
   actual renderer input, so tables, GFM-alert callouts, fenced timelines, and
   fenced diagrams render as structure instead of flattening to prose. An
   artistic path has the executing agent compose HTML from hash-pinned shells.
   Recipe policy selects the path through expansion profiles; the author does not.
-- **`recipe/v2` beside v1** via a dual-version loader, with bundled recipes and
-  fixtures migrated and finite per-recipe and per-type expansion caps enforced.
+- **`recipe/v2` replaces v1.** A dual-version loader carried both schemas
+  through the middle of the project, and `p06-t04` then retired
+  `explainer-kit.recipe/v1` at the 2.0.0 boundary. Bundled recipes and fixtures
+  were migrated, and finite per-recipe and per-type expansion caps are enforced.
 - **Guidelines degrade to warnings.** Floor-coverage misses emit
   `guideline-narrative-coverage-missing` rather than failing the run, while
   safety and provenance stay hard errors.
@@ -3043,7 +3051,7 @@ phase and a final scope reduction. Shipped as PR #179: 68 commits, 98 files,
   example, verified non-vacuous — breaking the table renderer fails 6 of 8
   assertions.
 
-Final gates: core 221, adapter 59, release 44 (1 env-gated skip), smoke 129,
+Final gates: core 224, adapter 59, release 44 (1 env-gated skip), smoke 129,
 plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
 
 ## Key Decisions
@@ -3102,6 +3110,16 @@ plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
   implementation; the final code review produced 10 findings, and a re-review of
   those 11 fix commits produced 8 more. The loop was ended deliberately rather
   than continued.
+- **No gate could see the styling surface.** The narrative renderer's markup and
+  the shells' stylesheets are separate surfaces, and every assertion covered the
+  former. Four defects reached rendered output through that gap, each found by
+  looking at the page rather than by a test or the release gate — the bare
+  section numeral, downscaled diagram labels, fragmented wrapped lists, and the
+  `engineer-tour` shell's entirely unstyled block output. The shell gap was
+  latent on `main` and became reachable only because this project's renderer
+  emits that markup. This is the concrete case for the project's decision that
+  the generating agent reviews output in a browser: the suite was green and
+  `release:validate` passed at every one of those points.
 
 ## Tradeoffs Made
 
@@ -3133,6 +3151,21 @@ plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
   clearing stale render/QA warnings on a corrected resume, and correcting the
   `f257f96d` deviation description. Core and adapter counts fell from 226 and 60
   to 221 and 59 as six tests were removed with the behavior they described.
+- **Rendering this project's own recap after closeout found four more defects**,
+  all in the styling surface no assertion covered. Three were narrow: bare
+  body-size section numerals in the house shells (`191bdfcf`), wrapped list items
+  reparsed as paragraphs so most lists broke into fragments (`bf0a8b43`), and
+  diagram SVGs carrying only a `viewBox` so they stretched to the column and
+  downscaled 14px labels to 8px (`0514b04d`). The fourth was larger
+  (`fb55ba94`): the `engineer-tour` shell styled none of the blocks the narrative
+  renderer emits, so deep-dive callouts rendered as bare text and tables without
+  structure, and `renderLegacyDiagram` drew 360-wide nodes at `x=80` into a
+  360-wide viewBox stacked past its 540 height, clipping every section-rail node
+  into a solid black bar. Both were revert-verified; the `.section-number` guard
+  was generalized to assert every structure the renderer emits, and a new test
+  asserts the section rail stays inside the shell viewport. Core and adapter now
+  stand at 224 and 59 — the 221 and 59 above plus the section-number guard, a
+  wrapped-list-item Markdown test, and the viewport-fit test.
 
 ## Follow-up Items
 
@@ -3148,6 +3181,20 @@ not warrant tracked work:
   appends separately, so direct consumers of that exported function lose it.
 - Autonomous prose richness remains verified by rendered example rather than by
   automated evaluation.
+
+Two further items were backlogged after closeout, on separate topics from the
+four above:
+
+- `BL-260727-ship-mit-notices-inside` — Ship MIT notices inside distributed
+  packages (high, task, S). Adapted MIT code (Nico Bailon's visual-explainer,
+  Obra Superpowers, shadcn/improve) ships without the required copyright and
+  permission notice, because repo-root `NOTICES.md` is not part of the published
+  package payload.
+- `BL-260727-close-the-explainer-kit-visual` — Close the Explainer Kit visual
+  authoring capability gap (medium, feature, L). The inline fenced-diagram
+  renderer silently flattens non-linear graphs — branches, fan-ins, and cycles —
+  into a linear chain, and the upstream visual-explainer workflows remain
+  unreachable from the bundled recipes.
 
 ## Workflow Observations
 
