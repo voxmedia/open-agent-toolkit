@@ -221,6 +221,15 @@ test('narrative shells style every structure the renderer emits', async () => {
   }
 });
 
+test('engineer tour snippets keep the frame on the outer panel only', async () => {
+  const tour = await template('engineer-tour.html');
+  const snippetPreRule = tour.match(/\.snippet pre\s*\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.match(snippetPreRule, /\bborder:\s*0\s*;/);
+  assert.match(snippetPreRule, /\bborder-radius:\s*0\s*;/);
+  assert.match(snippetPreRule, /\bbackground:\s*transparent\s*;/);
+});
+
 test('the section rail diagram stays inside the shell viewport', async () => {
   // The engineer-tour shell fixes the canvas at 360x540; nodes drawn outside it
   // are silently clipped and render as bars.
