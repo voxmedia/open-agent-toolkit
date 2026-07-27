@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.1.9
+version: 2.1.10
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -52,6 +52,13 @@ to be clean; each append is committed by the bookkeeping that owns it.
   dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
   never mirror that record. Do not write the project log at acceptance; append
   it with the phase-outcome entry after the child's report returns.
+- Implementing a phase in the root instead of dispatching an implementer is a
+  deviation from this skill, which dispatches one phase implementer per phase.
+  It is sometimes the right call, but it is never the silent default: record it
+  in the same dispatch record with the phase ID, the reason, and the model the
+  root was running. A phase that leaves no record cannot be distinguished later
+  from one that was never reached, and the project's model-selection provenance
+  is only as complete as its least-recorded phase.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`

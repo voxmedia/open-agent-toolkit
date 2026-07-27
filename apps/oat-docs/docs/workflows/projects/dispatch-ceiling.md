@@ -81,6 +81,15 @@ Version `2026-07-25.1` is a live example: it adds Opus 5 rungs to the Cursor
 `economy`. An adopter still on the prior version keeps their existing Cursor
 tiers untouched until they take one of those actions.
 
+Curating a ladder down has a consequence in the other direction. The
+`subagent-orchestration` guidance names a route per task class, and a route you
+prune becomes unreachable: the guidance still recommends it while the resolver
+rejects it as unconfigured. A ladder whose `economy` tier drops its mechanical
+route leaves mechanical work with nowhere to go but a higher tier. Keep at least
+one reachable rung for each task class the project uses, and prefer more than
+one candidate per tier, since a tier holding a single entry cannot express a
+choice.
+
 Before offering adoption, planning runs `oat config list --json` once and treats
 its output as the effective boundary across shared, repo-local, user, and
 bundled-default precedence. A complete effective ladder skips adoption even
