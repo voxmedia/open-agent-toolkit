@@ -130,6 +130,89 @@
       .diagram-scroll > svg {
         display: block;
       }
+      /* Narrative renderer block output. The renderer emits these for any
+         markdown artifact, so the shell must style them or the structure
+         renders as unformatted text. */
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-inline-start: 0.25rem solid var(--accent);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout--important {
+        border-inline-start-color: var(--success, var(--accent));
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger, var(--warning));
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        font-family: var(--mono);
+      }
+      code {
+        font-family: var(--mono);
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        color: var(--muted);
+        padding-inline-start: 1rem;
+      }
+      figure {
+        margin-inline: 0;
+      }
+      figcaption {
+        color: var(--muted);
+        font: 0.8rem/1.5 var(--mono);
+      }
       .diagram-rail {
         position: sticky;
         top: 0;
@@ -147,6 +230,19 @@
         display: block;
         width: 100%;
         height: auto;
+      }
+      .diagram-card .node {
+        fill: var(--panel-muted);
+        stroke: var(--accent);
+        stroke-width: 1.5;
+      }
+      .diagram-card .edge {
+        fill: none;
+        stroke: var(--muted);
+      }
+      .diagram-card text {
+        fill: var(--ink);
+        font: 0.85rem var(--sans);
       }
       .diagram-card .node,
       .diagram-card .edge {

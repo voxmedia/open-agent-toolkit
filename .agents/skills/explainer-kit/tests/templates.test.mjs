@@ -3,6 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { renderArtifact } from '../scripts/lib/render.mjs';
+import { resolveTheme } from '../scripts/lib/theme.mjs';
 
 const skillRoot = new URL('../', import.meta.url);
 const templateNames = [
@@ -199,15 +201,63 @@ test('house and engineer shells preserve sticky navigation and tour interactions
   assert.match(tour, /setAttribute\(['"]aria-expanded['"]/);
 });
 
-test('narrative shells style the section number the renderer always emits', async () => {
-  // renderArtifact emits <div class="section-number"> for every narrative
-  // section, so an unstyled shell renders bare numerals at body size.
+test('narrative shells style every structure the renderer emits', async () => {
+  // The narrative renderer emits this markup for any markdown artifact. A shell
+  // that omits a rule renders that structure as unformatted text, which no
+  // structural assertion elsewhere detects.
+  const required = [
+    [/\.section-number[^{]*\{[^}]*font:/, '.section-number'],
+    [/\.callout[^_-][^{]*\{[^}]*border/, '.callout'],
+    [/\.callout__label[^{]*\{[^}]*font:/, '.callout__label'],
+    [/\.timeline[^{]*\{/, '.timeline'],
+    [/\.table-scroll[^{]*[^}]*\{[^}]*overflow-x/, '.table-scroll'],
+    [/\bth,?\s*\n?\s*td[^{]*\{[^}]*padding/, 'th/td'],
+    [/\bpre[^{]*\{[^}]*(padding|overflow-x)/, 'pre'],
+  ];
   for (const name of ['house-style.html', 'engineer-tour.html']) {
-    assert.match(
-      await template(name),
-      /\.section-number[^{]*\{[^}]*font:/,
-      `${name} must style .section-number`,
-    );
+    const html = await template(name);
+    for (const [pattern, label] of required) {
+      assert.match(html, pattern, `${name} must style ${label}`);
+    }
+  }
+});
+
+test('the section rail diagram stays inside the shell viewport', async () => {
+  // The engineer-tour shell fixes the canvas at 360x540; nodes drawn outside it
+  // are silently clipped and render as bars.
+  const tour = await template('engineer-tour.html');
+  assert.match(tour, /viewBox="0 0 360 540"/);
+
+  const sections = Array.from({ length: 9 }, (_, index) => ({
+    id: `section-${index}`,
+    title: `Section ${index}`,
+    content: 'Body copy.',
+  }));
+  const { theme } = await resolveTheme({ style: 'clean-neutral' });
+  const { html } = await renderArtifact({
+    recipeArtifact: {
+      id: 'tour',
+      type: 'explainer',
+      template: 'engineer-tour',
+      required: true,
+      origin: 'floor',
+    },
+    content: {
+      artifactId: 'tour',
+      slug: 'viewport-fit',
+      title: 'Tour',
+      description: 'Viewport fit fixture.',
+      sections,
+    },
+    theme,
+    renderStrategy: 'default-only',
+  });
+
+  const nodes = [...html.matchAll(/<rect x="(\d+)" y="([\d.]+)" width="(\d+)" height="([\d.]+)"/g)];
+  assert.equal(nodes.length, sections.length);
+  for (const [, x, y, width, height] of nodes) {
+    assert.ok(Number(x) + Number(width) <= 360, `node overflows width: ${x}+${width}`);
+    assert.ok(Number(y) + Number(height) <= 540, `node overflows height: ${y}+${height}`);
   }
 });
 

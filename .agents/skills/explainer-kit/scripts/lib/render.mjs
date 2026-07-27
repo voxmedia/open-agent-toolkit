@@ -358,11 +358,18 @@ function renderSlides(sections, links, slug, renderedPath, baseUrl) {
     : slides;
 }
 
+// Nodes must fit the shell's 360x540 viewBox, so the step shrinks as sections
+// are added rather than overflowing the canvas.
 function renderLegacyDiagram(sections) {
+  const margin = 16;
+  const span = 540 - margin * 2;
+  const step = Math.min(96, span / Math.max(sections.length, 1));
+  const height = Math.max(24, step - 16);
   return sections
     .map((section, index) => {
-      const y = 80 + index * 120;
-      return `<g data-node="node-${index + 1}" class="node"><rect x="80" y="${y}" width="360" height="72" rx="8"></rect><text x="104" y="${y + 43}">${escapeHtml(section.title ?? humanize(section.id))}</text></g>`;
+      const y = margin + index * step;
+      const label = section.title ?? humanize(section.id);
+      return `<g data-node="node-${index + 1}" class="node"><rect x="${margin}" y="${y}" width="${360 - margin * 2}" height="${height}" rx="8"></rect><text x="${margin + 14}" y="${y + height / 2 + 5}">${escapeHtml(label)}</text></g>`;
     })
     .join('');
 }
