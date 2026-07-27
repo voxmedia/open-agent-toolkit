@@ -31,7 +31,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.18` rebuilds Explainer Kit authoring on two per-artifact paths,
+- CLI `0.2.21` rebuilds Explainer Kit authoring on two per-artifact paths,
   replacing slot-filling that produced structurally thin output. A narrative
   path promotes Markdown from provenance to actual renderer input, so tables,
   GFM-alert callouts, fenced timelines, and fenced diagrams render as
@@ -44,6 +44,24 @@ copying their content here. -->
   author provenance binds through trusted caller configuration with the core
   stamping time from its injected clock. Render QA is opt-in and never
   self-launching. `explainer-kit` 2.0.0 marks the author-contract boundary.
+- CLI `0.2.18` adopts Claude Opus 5 as the hard-reasoning and consequential
+  incumbent in `subagent-orchestration`, and admits six probe-verified Cursor
+  pin mappings — five `claude-opus-5` effort rungs plus
+  `claude-opus-4-8[effort=xhigh]`, which is catalogued for cyber-sensitive work
+  but deliberately kept out of the bundled recommendation. Recommendation
+  `2026-07-25.1` places Opus 5 across the Cursor `balanced`, `high`, and
+  `frontier` tiers and drops `claude-sonnet-5-high` from `economy` as strictly
+  dominated; the supported catalogue is now 18 flat IDs against 16 recommended
+  candidates. Unlike the earlier inconclusive Cursor verification, resolution
+  was observed directly from Cursor's `subagentStart` lifecycle hooks, which
+  the headless client does not emit. Approved mappings can now carry a probe
+  record that must match the selector it approves, so editing a mapping
+  without re-probing fails its own test. Probing also characterized a distinct
+  silent-fallback mode: Cursor substitutes a default for any selector
+  component it cannot resolve, and the default rung is family-specific rather
+  than always `high`. The reproducible method is documented at
+  `apps/oat-docs/docs/contributing/verifying-cursor-pins.md`; sync-time
+  validation is tracked as `BL-260726-validate-cursor-pin-effort`.
 - CLI `0.2.15` separates repository installation state from effective runtime
   availability: shared `.oat/config.json#tools` now reconciles only
   project-scoped canonical assets across install, update, and remove, while
@@ -179,7 +197,10 @@ copying their content here. -->
   exact Task correlation, control-gated candidate execution, and private-only
   raw identifiers. The current headless client exposed no Task events, so the
   controls were inconclusive and the configured recommendation remains
-  explicitly unvalidated.
+  explicitly unvalidated. _Resolved in `0.2.18`_: the missing channel was the
+  runtime, not the schema. Agent lifecycle hooks fire in the Cursor desktop app
+  but not in the headless client, and reading `subagentStart.subagent_model`
+  there produced the conclusive evidence this attempt could not obtain.
 - Reusable OAT subagent dispatch is split into a provider-neutral utility
   engine and a project lifecycle adapter. The engine owns capability,
   authorization, catalog, route/model/effort selection, launch evidence, and

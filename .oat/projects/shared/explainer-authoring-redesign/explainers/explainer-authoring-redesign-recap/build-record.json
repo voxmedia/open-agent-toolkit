@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-0479e5ce-3de3-4a12-bd5b-9be089fccee2",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-07-27T04:05:11.600Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": ["run-request.json"],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:11.621Z",
+      "completedAt": "2026-07-27T04:05:11.630Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:11.639Z",
+      "completedAt": "2026-07-27T04:05:11.674Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/content/project-recap.md",
+        "source/content/authoring-paths.html",
+        "source/content/approval-sequence.html",
+        "source/content/review-loop.md",
+        "source/content/walkthrough.html",
+        "source/author/project-recap.json",
+        "source/author/authoring-paths.json",
+        "source/author/approval-sequence.json",
+        "source/author/review-loop.json",
+        "source/author/walkthrough.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:11.684Z",
+      "completedAt": "2026-07-27T04:05:11.851Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": ["theme.resolved.json"],
+      "warnings": [
+        "No explicit style was selected; defaulted to clean-neutral."
+      ],
+      "startedAt": "2026-07-27T04:05:11.862Z",
+      "completedAt": "2026-07-27T04:05:11.882Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/explainer-authoring-redesign-recap/index.html",
+        "site/diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html",
+        "site/diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html",
+        "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html",
+        "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:11.892Z",
+      "completedAt": "2026-07-27T04:05:11.954Z"
+    },
+    {
+      "id": "qa",
+      "status": "warned",
+      "outputPaths": [
+        "site/initiatives/explainer-authoring-redesign-recap/index.html",
+        "site/diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html",
+        "site/diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html",
+        "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html",
+        "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html"
+      ],
+      "warnings": ["render-qa-skipped-no-probe"],
+      "startedAt": "2026-07-27T04:05:11.963Z",
+      "completedAt": "2026-07-27T04:05:11.978Z"
+    },
+    {
+      "id": "durability",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:11.996Z",
+      "completedAt": "2026-07-27T04:05:11.996Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-27T04:05:12.005Z",
+      "completedAt": "2026-07-27T04:05:12.005Z"
+    }
+  ],
+  "outcome": "built-not-durable",
+  "completedAt": "2026-07-27T04:05:12.005Z"
+}

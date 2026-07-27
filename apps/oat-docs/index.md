@@ -20,6 +20,7 @@
   - [Markdown Features](contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
   - [Smoke Testing](contributing/smoke-testing.md) — Runbook for the OAT live workflow smoke runner: preflight, scenarios, evidence, cleanup, and fixture maintenance.
+  - [Verifying Cursor Pins](contributing/verifying-cursor-pins.md) — Runbook for probe-verifying a Cursor model pin before shipping it: evidence channel, hook capture, subjects and controls, interpretation, and cleanup.
 - Docs Tooling
   - [Docs Tooling](docs-tooling/index.md) — Standalone adoption lane for docs app setup, docs commands, and docs maintenance workflows.
   - [Add Docs to a New Repo](docs-tooling/add-docs-to-a-repo.md) — Step-by-step guide for adding an OAT-managed docs app to a repository.

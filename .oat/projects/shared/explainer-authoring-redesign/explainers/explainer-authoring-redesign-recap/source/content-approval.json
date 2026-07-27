@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v2",
+  "runId": "run-0479e5ce-3de3-4a12-bd5b-9be089fccee2",
+  "mode": "unattended",
+  "status": "approved",
+  "marking": "auto-drafted",
+  "reviewedSource": {
+    "kind": "approved-oat-artifacts",
+    "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/personal-explainer-kit/.oat/projects/shared/explainer-authoring-redesign"
+  },
+  "authorResultPaths": [
+    "source/author/project-recap.json",
+    "source/author/authoring-paths.json",
+    "source/author/approval-sequence.json",
+    "source/author/review-loop.json",
+    "source/author/walkthrough.json"
+  ],
+  "attempts": [],
+  "artifacts": [
+    {
+      "artifactId": "project-recap",
+      "origin": "floor",
+      "authoring": "markdown",
+      "contentPath": "source/content/project-recap.md",
+      "authorResultPath": "source/author/project-recap.json"
+    },
+    {
+      "artifactId": "authoring-paths",
+      "origin": "expansion",
+      "profileId": "supporting-diagram",
+      "authoring": "html",
+      "contentPath": "source/content/authoring-paths.html",
+      "authorResultPath": "source/author/authoring-paths.json"
+    },
+    {
+      "artifactId": "approval-sequence",
+      "origin": "expansion",
+      "profileId": "supporting-diagram",
+      "authoring": "html",
+      "contentPath": "source/content/approval-sequence.html",
+      "authorResultPath": "source/author/approval-sequence.json"
+    },
+    {
+      "artifactId": "review-loop",
+      "origin": "expansion",
+      "profileId": "deep-dive",
+      "authoring": "markdown",
+      "contentPath": "source/content/review-loop.md",
+      "authorResultPath": "source/author/review-loop.json"
+    },
+    {
+      "artifactId": "walkthrough",
+      "origin": "expansion",
+      "profileId": "walkthrough-deck",
+      "authoring": "html",
+      "contentPath": "source/content/walkthrough.html",
+      "authorResultPath": "source/author/walkthrough.json"
+    }
+  ]
+}

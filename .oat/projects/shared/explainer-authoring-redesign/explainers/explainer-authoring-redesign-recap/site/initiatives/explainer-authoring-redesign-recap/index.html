@@ -1,0 +1,319 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, FOOTER
+  All replacement values are validated and escaped by the renderer.
+-->
+<html lang="en" data-render-strategy="default-only" data-theme-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Project Recap</title>
+    <meta name="description" content="Authored project recap." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --panel-muted: hsl(210 16% 94%);
+        --border: hsl(210 14% 82%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --success: hsl(145 45% 28%);
+        --warning: hsl(38 70% 30%);
+        --danger: hsl(0 55% 36%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 0.65rem;
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #eef1f5;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        color-scheme: light dark;
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.6;
+      }
+      a {
+        color: var(--accent);
+      }
+      .wrap {
+        display: grid;
+        grid-template-columns: minmax(10rem, 14rem) minmax(0, 1fr);
+        gap: 2rem;
+        max-width: 74rem;
+        margin: auto;
+        padding: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+        max-height: calc(100dvh - 4rem);
+        overflow-y: auto;
+      }
+      .toc-label,
+      .eyebrow,
+      .section-number {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.3rem 0.7rem;
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        font-weight: 650;
+      }
+      main {
+        min-width: 0;
+      }
+      h1,
+      h2,
+      h3 {
+        font-family: var(--serif);
+        line-height: 1.2;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2rem, 5vw, 3.4rem);
+        margin-block: 0.5rem 1rem;
+      }
+      h2 {
+        border-block-end: 1px solid var(--border);
+        padding-block-end: 0.45rem;
+        scroll-margin-top: 1rem;
+      }
+      section {
+        margin-block: 2.5rem;
+      }
+      .cards,
+      .lanes {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(100%, 15rem), 1fr));
+        gap: 1rem;
+      }
+      .card,
+      .lane,
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout {
+        border-inline-start: 0.25rem solid var(--accent);
+      }
+      .callout--tip,
+      .callout--note {
+        border-inline-start-color: var(--accent);
+      }
+      .callout--important {
+        border-inline-start-color: var(--success);
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger);
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        padding-inline-start: 1rem;
+        color: var(--muted);
+      }
+      .task-list {
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .task-list li {
+        display: flex;
+        align-items: baseline;
+        gap: 0.5rem;
+      }
+      .task-list li > p {
+        margin-block: 0.2rem;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      .diagram-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel-muted);
+        padding: 1rem;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      code,
+      pre {
+        font-family: var(--mono);
+      }
+      :not(pre) > code {
+        border-radius: calc(var(--radius) / 2);
+        background: var(--panel-muted);
+        padding: 0.1em 0.3em;
+      }
+      figure {
+        margin-inline: 0;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--panel);
+        padding: 1rem;
+      }
+      figcaption {
+        margin-block-start: 0.5rem;
+        color: var(--muted);
+        font-size: 0.9rem;
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        margin-block-start: 3rem;
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 46rem) {
+        .wrap {
+          grid-template-columns: 1fr;
+          padding: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          gap: 0.25rem;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-label {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+          white-space: nowrap;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <nav class="toc" aria-label="Page sections">
+        <div class="toc-label">Explainer Kit</div>
+        <a href="#overview" data-target="overview">Overview</a><a href="#original-request" data-target="original-request">Original request</a><a href="#key-agent-decisions" data-target="key-agent-decisions">Key agent decisions</a><a href="#as-built-architecture" data-target="as-built-architecture">As-built architecture</a><a href="#implementation-record" data-target="implementation-record">Implementation record</a><a href="#validation-evidence" data-target="validation-evidence">Validation evidence</a><a href="#outcome" data-target="outcome">Outcome</a><a href="../../diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html">Authoring Paths</a> <a href="../../diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html">Approval Sequence</a> <a href="../../explainers/explainer-authoring-redesign-recap/review-loop/index.html">Review Loop</a> <a href="../../decks/explainer-authoring-redesign-recap/walkthrough/index.html">Walkthrough</a>
+      </nav>
+      <main>
+        <header>
+          <div class="eyebrow">Explainer Kit</div>
+          <h1>Project Recap</h1>
+          <p>Authored project recap.</p>
+        </header>
+        <section id="overview"><div class="section-number">1</div><h2>Overview</h2><p>Explainer Kit stopped producing explainers worth reading. This project rebuilt how they are authored.</p><aside class="callout callout--note" data-callout="note"><div class="callout__label">Note</div><p>This recap was generated by the redesigned kit, running against its own project artifacts. It is both the deliverable and the first real test.</p></aside></section><section id="original-request"><div class="section-number">2</div><h2>Original request</h2><p>A recap the kit produced for an unrelated project was, in the reviewer&#39;s words, &quot;basic AF.&quot; The kit had passed every gate it owned while shipping a page nobody wanted to read.</p><p>The request was to find out why and fix the cause, not the symptom. Three constraints shaped the work:</p><ul><li><p>Recaps can be more structured than decks, but structure must come from guidance rather than rigid schemas.</p></li><li><p>Decks and explainers need genuine artistic freedom.</p></li><li><p>Runs should be recognizably consistent without being replicas. Two runs of the same project may legitimately differ.</p></li></ul><p>Success meant a kit whose output varies with its content instead of with its template.</p></section><section id="key-agent-decisions"><div class="section-number">3</div><h2>Key agent decisions</h2><div class="table-scroll"><table><thead><tr><th>Decision</th><th>Reason</th><th>Consequence</th></tr></thead><tbody><tr><td>Two authoring paths per artifact</td><td>One mode cannot serve both a structured recap and an expressive deck</td><td>Narrative artifacts render deterministically; artistic ones are composed by the agent</td></tr><tr><td>Prose carries quality, schemas carry identity</td><td>Editorial expectations encoded as schema became shape-checking, which is not quality</td><td>Richness is verified by reading output, not by assertion</td></tr><tr><td>Guidelines degrade to warnings</td><td>A floor miss is an editorial signal, not a corruption</td><td>Safety and provenance stay hard errors; everything else reports</td></tr><tr><td>Recipe policy owns expansion</td><td>If authors pick their own freedom level, every author picks the freest</td><td>Cohesion survives without forcing identical output</td></tr><tr><td>No content generator ships</td><td>Bundling one would recreate the rigidity being removed</td><td>The calling agent is the author, through a caller-owned seam</td></tr></tbody></table></div><p>The last decision is the load-bearing one. The kit does not write; it renders, validates, and records. A caller that supplies a weak author still gets weak output, and that was accepted deliberately.</p></section><section id="as-built-architecture"><div class="section-number">4</div><h2>As-built architecture</h2><p>Recipe policy decides how each artifact is authored. The author proposes what the content warrants. Neither side chooses both.</p><div class="diagram-scroll"><svg class="narrative-diagram" data-direction="LR" viewBox="0 0 1360 172" width="1360" height="172" role="img" aria-label="Diagram"><style>
+      .diagram-node-shape { fill: var(--panel, #ffffff); stroke: var(--accent, #2f56c9); stroke-width: 2; }
+      .diagram-node-label { fill: var(--ink, #16202e); font: 14px var(--sans, system-ui, sans-serif); text-anchor: middle; dominant-baseline: middle; }
+      .diagram-edge { fill: none; stroke: var(--muted, #4a5568); stroke-width: 2; }
+      .diagram-edge-label { fill: var(--muted, #4a5568); font: 12px var(--mono, ui-monospace, monospace); text-anchor: middle; }
+    </style><defs><marker id="diagram-arrow-87e1d6d8" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="var(--muted, #4a5568)"></path></marker></defs><g class="diagram-connection" data-from="Author" data-to="Render"><path class="diagram-edge" d="M 230 86 L 320 86" marker-end="url(#diagram-arrow-87e1d6d8)"></path></g><g class="diagram-connection" data-from="Render" data-to="Checks"><path class="diagram-edge" d="M 500 86 L 590 86" marker-end="url(#diagram-arrow-87e1d6d8)"></path></g><g class="diagram-connection" data-from="Checks" data-to="Approve"><path class="diagram-edge" d="M 770 86 L 860 86" marker-end="url(#diagram-arrow-87e1d6d8)"></path></g><g class="diagram-connection" data-from="Approve" data-to="Manifest"><path class="diagram-edge" d="M 1040 86 L 1130 86" marker-end="url(#diagram-arrow-87e1d6d8)"></path></g><g class="diagram-node" data-node="Author"><rect class="diagram-node-shape" x="50" y="50" width="180" height="72"></rect><text class="diagram-node-label" x="140" y="86">Author seam</text></g><g class="diagram-node" data-node="Render"><rect class="diagram-node-shape" x="320" y="50" width="180" height="72"></rect><text class="diagram-node-label" x="410" y="86">Render</text></g><g class="diagram-node" data-node="Checks"><rect class="diagram-node-shape" x="590" y="50" width="180" height="72"></rect><text class="diagram-node-label" x="680" y="86">Safety and guidelines</text></g><g class="diagram-node" data-node="Approve"><rect class="diagram-node-shape" x="860" y="50" width="180" height="72"></rect><text class="diagram-node-label" x="950" y="86">Approval</text></g><g class="diagram-node" data-node="Manifest"><rect class="diagram-node-shape" x="1130" y="50" width="180" height="72"></rect><text class="diagram-node-label" x="1220" y="86">Manifest</text></g></svg></div><p>That fence is the run pipeline, and it is deliberately linear: the inline renderer lays nodes out in sequence, so a chain is the shape it represents faithfully. The <em>branching</em> form — where the seam fans out to two renderers and they converge again — is a composed diagram on the artistic path, linked from this page. Choosing the right path per artifact is the redesign in miniature.</p><p>The two paths differ in what the agent hands over:</p><div class="table-scroll"><table><thead><tr><th></th><th>Narrative path</th><th>Artistic path</th></tr></thead><tbody><tr><td>Author returns</td><td>Markdown</td><td>HTML</td></tr><tr><td>Structure from</td><td>Deterministic renderer</td><td>Agent composition</td></tr><tr><td>Interactivity</td><td>None</td><td>Hash-pinned shell scripts only</td></tr><tr><td>Typical use</td><td>Recaps, deep dives</td><td>Decks, diagrams</td></tr></tbody></table></div><p>Markdown is the renderer&#39;s actual input, not a provenance record of something already rendered. Tables, alert callouts, fenced timelines, and fenced diagrams survive as structure.</p><p>Safety is positional rather than advisory. Artistic artifacts may be composed freely but may only carry scripts whose hashes are pinned, so an agent cannot introduce behavior while composing layout.</p></section><section id="implementation-record"><div class="section-number">5</div><h2>Implementation record</h2><div class="table-scroll"><table><thead><tr><th>Component</th><th>Notable change</th><th>Reference</th></tr></thead><tbody><tr><td>Recipe contract</td><td><code>recipe/v2</code> beside v1 via a dual-version loader, with finite expansion caps per recipe and per type</td><td><a href="https://github.com/voxmedia/open-agent-toolkit/pull/179">PR #179</a></td></tr><tr><td>Narrative renderer</td><td>Markdown promoted to renderer input; tables, callouts, timelines, and a Mermaid diagram subset</td><td><a href="https://github.com/voxmedia/open-agent-toolkit/pull/179">PR #179</a></td></tr><tr><td>Artistic composer</td><td>Agent-composed HTML validated against hash-pinned core shell scripts</td><td><a href="https://github.com/voxmedia/open-agent-toolkit/blob/tkstang/personal-explainer-kit/.oat/repo/reference/decisions/DR-260726-core-shell-scripts-are-hash.md">DR-260726-core-shell-scripts-are-hash</a></td></tr><tr><td>Guideline checker</td><td>Floor misses emit warnings; safety and provenance remain errors</td><td><a href="https://github.com/voxmedia/open-agent-toolkit/pull/179">PR #179</a></td></tr><tr><td>Approval</td><td>Moved after render and QA, accepted set persisted in <code>content-approval/v2</code></td><td><a href="https://github.com/voxmedia/open-agent-toolkit/pull/179">PR #179</a></td></tr><tr><td>Provenance</td><td>Identity and method bind through trusted caller config; core stamps time</td><td><a href="https://github.com/voxmedia/open-agent-toolkit/pull/179">PR #179</a></td></tr></tbody></table></div><ol class="timeline"><li><time>2026-07-19</time><span>Redesign brainstorm converges on two authoring paths</span></li><li><time>2026-07-25</time><span>Plan accepted by operator after six review cycles</span></li><li><time>2026-07-26</time><span>Eight phases land, then ten review fixes</span></li><li><time>2026-07-26</time><span>Render QA cut to opt-in; project shipped</span></li></ol><p>The work ran as 8 phases and 20 planned tasks, plus three correctives, a 10-task revision phase, and a final scope reduction. Phases 2, 3, and 4 ran in parallel on disjoint write sets.</p></section><section id="validation-evidence"><div class="section-number">6</div><h2>Validation evidence</h2><div class="table-scroll"><table><thead><tr><th>Check</th><th>Command</th><th>Result</th></tr></thead><tbody><tr><td>Core suite</td><td><code>node --test .agents/skills/explainer-kit/tests/*.test.mjs</code></td><td>224 pass</td></tr><tr><td>Adapter suite</td><td><code>node --test .agents/skills/oat-explainer-kit/tests/*.test.mjs</code></td><td>59 pass</td></tr><tr><td>Smoke</td><td><code>node --test tools/smoke/**/*.test.mjs</code></td><td>129 pass</td></tr><tr><td>Release tooling</td><td><code>node --test tools/release/*.test.mjs</code></td><td>44 pass, 1 environment-gated skip</td></tr><tr><td>Release gate</td><td><code>pnpm release:validate</code></td><td>pass, including real-Chromium visual checks</td></tr><tr><td>Anti-regression</td><td><code>node --test .agents/skills/explainer-kit/tests/e2e-recap.test.mjs</code></td><td>pass, and verified non-vacuous</td></tr></tbody></table></div><p>The anti-regression fixture was checked by breaking the table renderer on purpose: 6 of its 8 assertions failed, confirming it measures rendering rather than restating it.</p><aside class="callout callout--important" data-callout="important"><div class="callout__label">Important</div><p>Automated tests are not sufficient here, and this run proved it. After the suite above was green, three defects were found by opening the page in a browser: section numerals rendering as body text, diagram labels downscaled to 8px, and wrapped list items splitting into separate lists. The linked process deep-dive records what that implies.</p></aside></section><section id="outcome"><div class="section-number">7</div><h2>Outcome</h2><p>Working now: content-driven artifact sets within policy caps, Markdown that renders as structure, an artistic path that cannot smuggle in behavior, warnings that inform instead of blocking, and resumable approval that survives a rejected draft.</p><p>Not shipped: automatic render QA. It was built during the revision phase and then removed. It had grown to own a browser dependency and a large share of the test surface, and the published CLI did not ship the driver it imported. The agent generating an explainer reviews it in a browser instead.</p><p>The next reader should run the kit on a real project and judge the output by reading it. That is the only test that matters for this change, and it is the test the redesign was built to pass.</p></section>
+        <footer>Authored from the retained reconciled fact base. <a href="../../diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html">Authoring Paths</a> <a href="../../diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html">Approval Sequence</a> <a href="../../explainers/explainer-authoring-redesign-recap/review-loop/index.html">Review Loop</a> <a href="../../decks/explainer-authoring-redesign-recap/walkthrough/index.html">Walkthrough</a></footer>
+      </main>
+    </div>
+    <script>
+      (() => {
+        const links = [...document.querySelectorAll('.toc a[href^="#"]')];
+        const targets = links
+          .map((link) => document.querySelector(link.getAttribute('href')))
+          .filter(Boolean);
+        const observer = new IntersectionObserver(
+          (entries) => {
+            for (const entry of entries) {
+              if (!entry.isIntersecting) continue;
+              links.forEach((link) =>
+                link.classList.toggle(
+                  'active',
+                  link.getAttribute('href') === `#${entry.target.id}`,
+                ),
+              );
+            }
+          },
+          { rootMargin: '-15% 0px -70% 0px' },
+        );
+        targets.forEach((target) => observer.observe(target));
+      })();
+    </script>
+  </body>
+</html>

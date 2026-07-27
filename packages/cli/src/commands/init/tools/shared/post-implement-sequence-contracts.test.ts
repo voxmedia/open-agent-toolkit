@@ -739,4 +739,98 @@ describe('post-implementation sequence contracts', () => {
       'Only an `allowed` and fresh exit-gate disposition falls through',
     );
   });
+
+  describe('project-log write timing and commit ownership', () => {
+    it('never appends to the project log while a child owns the worktree', () => {
+      const skill = readImplementSkill();
+      const normalized = normalizeWhitespace(skill);
+
+      expect(normalized).toContain(
+        'Never append while a dispatched child owns the worktree',
+      );
+      expect(normalized).toContain(
+        "Do not write the project log at acceptance; append it with the phase-outcome entry after the child's report returns.",
+      );
+    });
+
+    it('keeps the acceptance-time dispatch record that logging no longer carries', () => {
+      const normalized = normalizeWhitespace(readImplementSkill());
+
+      expect(normalized).toContain(
+        'record the acceptance in the generic dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`',
+      );
+      expect(normalized).toContain('never mirror that record');
+    });
+
+    it('defers review-orchestration appends to a terminal phase outcome', () => {
+      const normalized = normalizeWhitespace(readImplementSkill());
+
+      expect(normalized).toContain(
+        'Defer that append to the terminal phase outcome; appending when the reviewer returns dirties the tree before a fix child is dispatched into it.',
+      );
+    });
+
+    it('keeps the executable review route from appending before a fix dispatch', () => {
+      // The entry file states the contract, but `phase-execution.md` is the
+      // route that runs. Asserting only the entry is how the immediate append
+      // survived the first pass.
+      const route = normalizeWhitespace(
+        readFileSync(
+          join(
+            import.meta.dirname,
+            '../../../../../../../.agents/skills/oat-project-implement/references/phase-execution.md',
+          ),
+          'utf8',
+        ),
+      );
+
+      expect(route).not.toMatch(
+        /After successful validation, append exactly once/i,
+      );
+      expect(route).toContain('do not append it here');
+      expect(route).toContain(
+        'No project-log write happens anywhere between a reviewer returning and a fix child being dispatched.',
+      );
+    });
+
+    it('stages the project log conditionally in all three bookkeeping blocks', () => {
+      const skill = readImplementSkill();
+      const staging = skill.match(
+        /\[ -f .*project-log\.md.*\] && git add .*project-log\.md/g,
+      );
+
+      expect(staging).toHaveLength(3);
+      expect(normalizeWhitespace(skill)).toContain(
+        'Stage it only when it exists; logging can be disabled.',
+      );
+    });
+
+    it('makes every append site responsible for committing on terminal paths', () => {
+      const normalized = normalizeWhitespace(readImplementSkill());
+
+      expect(normalized).toContain(
+        '**Any step that appends to the project log owns committing it** before it returns, parks, or stops',
+      );
+      expect(normalized).toContain(
+        'STOP and park returns, validation failure, invalid-run aborts, and retry exhaustion all bypass this phase boundary',
+      );
+    });
+
+    it('leaves the phase implementer clean-worktree requirement unconditional', () => {
+      const implementer = readFileSync(
+        join(
+          import.meta.dirname,
+          '../../../../../../../.agents/agents/oat-phase-implementer.md',
+        ),
+        'utf8',
+      );
+      const normalized = normalizeWhitespace(implementer);
+
+      expect(normalized).toContain('Confirm the current worktree is clean');
+      expect(normalized).toContain('the worktree is clean');
+      // The fix keeps the log out of child-owned windows rather than carving
+      // an exemption into the child's check.
+      expect(normalized).not.toMatch(/project-log/i);
+    });
+  });
 });

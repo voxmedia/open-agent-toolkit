@@ -1,0 +1,60 @@
+{
+  "schemaVersion": "explainer-kit.content-approval/v2",
+  "runId": "run-d498d3d2-0c40-495c-a1e5-48df66c0f4ce",
+  "mode": "unattended",
+  "status": "approved",
+  "marking": "auto-drafted",
+  "reviewedSource": {
+    "kind": "approved-oat-artifacts",
+    "locator": "/Users/thomas.stang/orca/workspaces/open-agent-toolkit/personal-explainer-kit/.oat/projects/shared/subagent-orchestration"
+  },
+  "authorResultPaths": [
+    "source/author/project-recap.json",
+    "source/author/ownership-split.json",
+    "source/author/selection-to-launch.json",
+    "source/author/routing-policy.json",
+    "source/author/execution-record.json"
+  ],
+  "attempts": [],
+  "artifacts": [
+    {
+      "artifactId": "project-recap",
+      "origin": "floor",
+      "authoring": "markdown",
+      "contentPath": "source/content/project-recap.md",
+      "authorResultPath": "source/author/project-recap.json"
+    },
+    {
+      "artifactId": "ownership-split",
+      "origin": "expansion",
+      "profileId": "supporting-diagram",
+      "authoring": "html",
+      "contentPath": "source/content/ownership-split.html",
+      "authorResultPath": "source/author/ownership-split.json"
+    },
+    {
+      "artifactId": "selection-to-launch",
+      "origin": "expansion",
+      "profileId": "supporting-diagram",
+      "authoring": "html",
+      "contentPath": "source/content/selection-to-launch.html",
+      "authorResultPath": "source/author/selection-to-launch.json"
+    },
+    {
+      "artifactId": "routing-policy",
+      "origin": "expansion",
+      "profileId": "deep-dive",
+      "authoring": "markdown",
+      "contentPath": "source/content/routing-policy.md",
+      "authorResultPath": "source/author/routing-policy.json"
+    },
+    {
+      "artifactId": "execution-record",
+      "origin": "expansion",
+      "profileId": "deep-dive",
+      "authoring": "markdown",
+      "contentPath": "source/content/execution-record.md",
+      "authorResultPath": "source/author/execution-record.json"
+    }
+  ]
+}

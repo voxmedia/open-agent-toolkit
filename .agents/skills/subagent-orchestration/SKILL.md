@@ -1,6 +1,6 @@
 ---
 name: subagent-orchestration
-version: 1.0.0
+version: 1.0.1
 description: Use when delegating work to subagents or choosing a model for a task — routing by task class, selecting provider-specific models and effort, and verifying subagent claims. Covers OpenAI/Codex, Anthropic/Claude, and Cursor.
 compatibility: Self-contained; no OAT installation required.
 user-invocable: true

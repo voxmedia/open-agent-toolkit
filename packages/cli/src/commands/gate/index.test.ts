@@ -4836,18 +4836,26 @@ describe('oat gate', () => {
       },
     });
 
+    const diagnostics: string[] = [];
     const capture = await runReviewGate({
       root,
       home,
       runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
       appendProjectLog: async () => {
         throw new Error('project log is unwritable');
       },
     });
 
-    expect(capture.warn).toEqual([
-      expect.stringContaining('project log is unwritable'),
-    ]);
+    // JSON mode suppresses logger.warn, so the failure must reach automation
+    // through the diagnostic channel instead.
+    expect(capture.warn).toEqual([]);
+    expect(diagnostics.map((line) => JSON.parse(line))).toContainEqual(
+      expect.objectContaining({
+        type: 'gate-project-log-append-failed',
+        reason: expect.stringContaining('project log is unwritable'),
+      }),
+    );
     expect(capture.jsonPayloads[0]).toMatchObject({
       status: 'blocked',
       outcome: 'review_completed_blocking_findings',
@@ -4855,6 +4863,188 @@ describe('oat gate', () => {
       handoff: expect.stringContaining('oat-project-review-receive'),
     });
     expect(process.exitCode).toBe(1);
+  });
+
+  function initGitRepo(root: string): (args: string[]) => string {
+    const git = (args: string[]): string =>
+      execFileSync('git', args, {
+        cwd: root,
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+
+    git(['init', '--initial-branch=main']);
+    git(['config', 'user.email', 'gate@example.test']);
+    git(['config', 'user.name', 'Gate Test']);
+    git(['config', 'commit.gpgsign', 'false']);
+    git(['add', '-A']);
+    git(['commit', '-m', 'baseline']);
+    return git;
+  }
+
+  it('commits its own project log append so the worktree stays clean', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const git = initGitRepo(root);
+    const baseline = git(['rev-parse', 'HEAD']);
+
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(capture.warn).toEqual([]);
+    expect(git(['rev-parse', 'HEAD'])).not.toBe(baseline);
+    expect(
+      git(['status', '--porcelain', '--', `${projectPath}/project-log.md`]),
+    ).toBe('');
+    expect(git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${projectPath}/project-log.md`,
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('scopes the project log commit and leaves unrelated dirty files alone', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const git = initGitRepo(root);
+    await writeFile(join(root, 'unrelated.md'), 'edited\n', 'utf8');
+
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(git(['show', '--name-only', '--format=', 'HEAD'])).toBe(
+      `${projectPath}/project-log.md`,
+    );
+    expect(git(['status', '--porcelain', '--', 'unrelated.md'])).toContain(
+      'unrelated.md',
+    );
+  });
+
+  it('creates no commit when project logging is disabled', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    await writeFile(
+      join(root, '.oat', 'config.json'),
+      `${JSON.stringify({ workflow: { projectLog: false } })}\n`,
+      'utf8',
+    );
+    const git = initGitRepo(root);
+    const baseline = git(['rev-parse', 'HEAD']);
+
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(git(['rev-parse', 'HEAD'])).toBe(baseline);
+  });
+
+  it('reports a staging failure without changing the gate result', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    initGitRepo(root);
+    // A held index lock fails staging while the append itself succeeds, which
+    // isolates the commit failure path from the append failure path.
+    await writeFile(join(root, '.git', 'index.lock'), '', 'utf8');
+
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({
+          root,
+          projectPath,
+          finding: 'important',
+        });
+      },
+    });
+
+    const diagnostics: string[] = [];
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(diagnostics.map((line) => JSON.parse(line))).toContainEqual(
+      expect.objectContaining({ type: 'gate-project-log-commit-failed' }),
+    );
+    expect(capture.jsonPayloads[0]).toMatchObject({ status: 'blocked' });
+    expect(process.exitCode).toBe(1);
+  });
+
+  it('unstages the log when the commit itself fails after staging', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const git = initGitRepo(root);
+    // A failing pre-commit hook lets `git add` succeed and `git commit` fail,
+    // which is the path the index.lock case cannot reach.
+    await writeFile(
+      join(root, '.git', 'hooks', 'pre-commit'),
+      '#!/bin/sh\nexit 1\n',
+      { encoding: 'utf8', mode: 0o755 },
+    );
+
+    const runner = createProcessRunner({
+      onExecute: async () => {
+        await writeReviewArtifact({ root, projectPath, finding: 'clean' });
+      },
+    });
+
+    const diagnostics: string[] = [];
+    await runReviewGate({
+      root,
+      home,
+      runProcess: runner.runProcess,
+      writeDiagnostic: (message) => diagnostics.push(message),
+      appendProjectLog: appendProjectLogFromDisk,
+      args: ['--target', 'codex-default', '--review-scope', 'p02', 'Review'],
+    });
+
+    expect(diagnostics.map((line) => JSON.parse(line))).toContainEqual(
+      expect.objectContaining({ type: 'gate-project-log-commit-failed' }),
+    );
+    // Dirty is an acceptable outcome here; staged is not.
+    expect(git(['diff', '--cached', '--name-only'])).toBe('');
+    expect(
+      git(['status', '--porcelain', '--', `${projectPath}/project-log.md`]),
+    ).not.toBe('');
   });
 
   it('injects headless context and keeps JSON stdout envelope-only', async () => {

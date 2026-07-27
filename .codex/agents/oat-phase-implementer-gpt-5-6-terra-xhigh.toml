@@ -104,9 +104,12 @@ replaces every task and phase verification command below.
 
 ### 1. Verify Phase Base
 
-Confirm the current worktree is clean and its HEAD equals `phase_base_head` or
-is an allowed descendant of `expected_base_sha`. For a plan-declared parallel
-group, verify this before any task edit.
+Confirm the current worktree is clean and its HEAD exactly equals
+`phase_base_head`. When `expected_base_sha` is supplied, separately confirm
+that `phase_base_head` equals it or is an explicitly allowed descendant. Never
+use ancestry from `expected_base_sha` as a substitute for the exact
+`phase_base_head` check. For a plan-declared parallel group, verify this before
+any task edit.
 
 When smoke containment, ownership registration, expected base, or fixture
 readiness proves the run invalid, return `INVALID_RUN_ABORT` with the evidence.

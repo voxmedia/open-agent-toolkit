@@ -1,0 +1,247 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, DIAGRAM, LEGEND
+  DIAGRAM contains validated inline SVG children; external diagram runtimes are not allowed.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Why does approval come after render and QA?</title>
+    <meta name="description" content="A reviewer cannot judge an artifact that has not been rendered, so the gate moved downstream of render and Render QA. A rejection does not discard the run: the accepted artifact set is persisted in the approval record, so an edit resumes and re-renders without re-invoking the author." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --border: hsl(210 14% 80%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --elevated: #eef1f5;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --accent-secondary: #0e7180;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: clamp(1rem, 4vw, 3rem);
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+      main {
+        max-width: 80rem;
+        margin: auto;
+      }
+      header {
+        max-width: 55rem;
+        margin-block-end: 1.5rem;
+      }
+      h1 {
+        margin-block: 0 0.4rem;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        line-height: 1.1;
+        text-wrap: balance;
+      }
+      header p,
+      .diagram-hint {
+        color: var(--muted);
+      }
+      .diagram-shell {
+        position: relative;
+        min-width: 0;
+      }
+      .diagram-hint {
+        font: 0.75rem/1.4 var(--mono);
+      }
+      .diagram-viewport {
+        position: relative;
+        width: 100%;
+        min-height: min(65vh, 40rem);
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--panel);
+        cursor: grab;
+      }
+      .diagram-viewport.is-panning {
+        cursor: grabbing;
+        user-select: none;
+      }
+      .diagram-canvas {
+        display: block;
+        width: 100%;
+        min-width: 42rem;
+        height: auto;
+        transform-origin: top left;
+      }
+      .diagram-canvas text {
+        fill: var(--ink);
+        font-family: var(--sans);
+      }
+      .diagram-canvas .node {
+        fill: var(--panel);
+        stroke: var(--accent);
+      }
+      .diagram-canvas .edge {
+        fill: none;
+        stroke: var(--muted);
+      }
+      .zoom-controls {
+        position: absolute;
+        z-index: 2;
+        inset: 0.6rem 0.6rem auto auto;
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--panel);
+      }
+      .zoom-controls button {
+        min-width: 2rem;
+        min-height: 2rem;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-block-start: 1rem;
+        color: var(--muted);
+        font: 0.8rem/1.5 var(--mono);
+      }
+      @media (max-width: 45rem) {
+        .diagram-canvas {
+          min-width: 34rem;
+        }
+      }
+    </style>
+  </head>
+  <body data-explainer-shell="diagram-shell">
+    <main>
+      <header>
+        <h1 id="diagram-title" data-shell-anchor="diagram-title">Why does approval come after render and QA?</h1>
+        <p id="diagram-description" data-shell-anchor="diagram-description">
+          A reviewer cannot judge an artifact that has not been rendered, so the gate moved downstream of render and Render QA. A rejection does not discard the run: the accepted artifact set is persisted in the approval record, so an edit resumes and re-renders without re-invoking the author.
+        </p>
+      </header>
+      <section
+        class="diagram-shell"
+        data-shell-anchor="diagram-shell"
+        aria-labelledby="diagram-title"
+      >
+        <p class="diagram-hint">
+          Use the controls or Ctrl/Command + wheel to zoom; drag to pan.
+        </p>
+        <div
+          class="zoom-controls"
+          data-shell-anchor="zoom-controls"
+          aria-label="Diagram zoom"
+        >
+          <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+          <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
+          <button type="button" data-zoom="reset" aria-label="Reset zoom">
+            ↺
+          </button>
+        </div>
+        <div class="diagram-viewport" data-shell-anchor="diagram-viewport">
+          <svg
+            class="diagram-canvas"
+            data-shell-anchor="diagram-canvas"
+            viewBox="0 0 1200 720"
+            role="img"
+            aria-labelledby="diagram-title diagram-description"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <!-- AUTHOR EXTENSION REGION: accessible inline SVG diagram -->
+            <defs><marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M 0 0 L 10 5 L 0 10 z" fill="currentColor" opacity="0.55"></path></marker></defs><g data-node="author"><rect class="node" x="20" y="120" width="180" height="96" rx="10" stroke-width="2" style="stroke: #2f56c9"></rect><text x="110" y="162" text-anchor="middle" font-size="21" font-weight="600">Author</text><text x="110" y="188" text-anchor="middle" font-size="16" opacity="0.75">content</text></g><g data-node="render"><rect class="node" x="245" y="120" width="180" height="96" rx="10" stroke-width="2" style="stroke: #0e7180"></rect><text x="335" y="162" text-anchor="middle" font-size="21" font-weight="600">Render</text><text x="335" y="188" text-anchor="middle" font-size="16" opacity="0.75">artifacts</text></g><g data-node="render-qa"><rect class="node" x="470" y="120" width="190" height="96" rx="10" stroke-width="2" style="stroke: #965108"></rect><text x="565" y="162" text-anchor="middle" font-size="21" font-weight="600">Render QA</text><text x="565" y="188" text-anchor="middle" font-size="16" opacity="0.75">opt-in probe</text></g><g data-node="approval-gate"><rect class="node" x="705" y="120" width="200" height="96" rx="10" stroke-width="2" style="stroke: #6a4fc4"></rect><text x="805" y="162" text-anchor="middle" font-size="21" font-weight="600">Approval gate</text><text x="805" y="188" text-anchor="middle" font-size="16" opacity="0.75">after render</text></g><g data-node="manifest"><rect class="node" x="975" y="120" width="165" height="96" rx="10" stroke-width="2" style="stroke: #2f56c9"></rect><text x="1057.5" y="162" text-anchor="middle" font-size="21" font-weight="600">Manifest</text><text x="1057.5" y="188" text-anchor="middle" font-size="16" opacity="0.75">durable</text></g><g data-node="edit-resume"><rect class="node" x="470" y="470" width="250" height="96" rx="10" stroke-width="2" style="stroke: #965108"></rect><text x="595" y="512" text-anchor="middle" font-size="21" font-weight="600">Edit + resume</text><text x="595" y="538" text-anchor="middle" font-size="16" opacity="0.75">from approval record</text></g><path class="edge" d="M 200 168 L 245 168" stroke-width="2" marker-end="url(#arrow)"></path><path class="edge" d="M 425 168 L 470 168" stroke-width="2" marker-end="url(#arrow)"></path><path class="edge" d="M 660 168 L 705 168" stroke-width="2" marker-end="url(#arrow)"></path><path class="edge" d="M 905 168 L 975 168" stroke-width="2" marker-end="url(#arrow)"></path><text x="940" y="150" text-anchor="middle" font-size="15" opacity="0.8" font-family="ui-monospace, monospace">approved</text><path class="edge" d="M 805 216 C 805 370 620 370 620 470" stroke-width="2" marker-end="url(#arrow)"></path><text x="830" y="300" text-anchor="middle" font-size="15" opacity="0.8" font-family="ui-monospace, monospace">rejected</text><path class="edge" d="M 470 518 C 335 518 335 300 335 216" stroke-width="2" marker-end="url(#arrow)"></path><text x="290" y="380" text-anchor="middle" font-size="15" opacity="0.8" font-family="ui-monospace, monospace">re-render</text>
+            <!-- END AUTHOR EXTENSION REGION -->
+          </svg>
+        </div>
+        <div
+          class="legend"
+          data-shell-anchor="diagram-legend"
+          aria-label="Diagram legend"
+        >
+          <!-- AUTHOR EXTENSION REGION: optional visual legend -->
+          <span>Approval sees rendered output, not a plan</span><span>Rejection resumes from the approval record</span><span>The author is not re-invoked on resume</span>
+          <!-- END AUTHOR EXTENSION REGION -->
+        </div>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const viewport = document.querySelector('.diagram-viewport');
+        const canvas = document.querySelector('.diagram-canvas');
+        let zoom = 1;
+        let dragging = false;
+        let originX = 0;
+        let originY = 0;
+        let scrollX = 0;
+        let scrollY = 0;
+        const apply = () => {
+          canvas.style.transform = `scale(${zoom})`;
+        };
+        document.querySelectorAll('[data-zoom]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const action = button.dataset.zoom;
+            zoom =
+              action === 'reset'
+                ? 1
+                : Math.min(
+                    3,
+                    Math.max(0.5, zoom * (action === 'in' ? 1.2 : 0.8)),
+                  );
+            apply();
+          });
+        });
+        viewport.addEventListener(
+          'wheel',
+          (event) => {
+            if (!event.ctrlKey && !event.metaKey) return;
+            event.preventDefault();
+            zoom = Math.min(
+              3,
+              Math.max(0.5, zoom * (event.deltaY < 0 ? 1.1 : 0.9)),
+            );
+            apply();
+          },
+          { passive: false },
+        );
+        viewport.addEventListener('pointerdown', (event) => {
+          dragging = true;
+          originX = event.clientX;
+          originY = event.clientY;
+          scrollX = viewport.scrollLeft;
+          scrollY = viewport.scrollTop;
+          viewport.classList.add('is-panning');
+          viewport.setPointerCapture(event.pointerId);
+        });
+        viewport.addEventListener('pointermove', (event) => {
+          if (!dragging) return;
+          viewport.scrollLeft = scrollX - (event.clientX - originX);
+          viewport.scrollTop = scrollY - (event.clientY - originY);
+        });
+        viewport.addEventListener('pointerup', () => {
+          dragging = false;
+          viewport.classList.remove('is-panning');
+        });
+      })();
+    </script>
+  </body>
+</html>

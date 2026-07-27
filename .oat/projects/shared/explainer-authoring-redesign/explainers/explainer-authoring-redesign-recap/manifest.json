@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-0479e5ce-3de3-4a12-bd5b-9be089fccee2",
+  "slug": "explainer-authoring-redesign-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-27T04:05:12.014Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:002c5557b660bf56d684d0266077e93db5fdcc0d5f4adf612776c5c1d6d5a8b4",
+    "inputHashes": {
+      "inputs/plan": "sha256:593b364d7d3a9556dc0226d24ca8db5b3bf97cf06adccb6bb0f80c56e11935b3",
+      "inputs/design": "sha256:03c56b4ab7abf577b0e8546b0c0876a8c65fc6870f06c3aabf87600bbbe47b88",
+      "inputs/implementation": "sha256:81db2034875ba2f875f9871563357725471d6866d51a6ebeecd5e5aae10e4ae0",
+      "inputs/summary": "sha256:00e5a6d56d2035692629afc81e1efbcfbc35f84297c6e91ce57fc27b1a8b5fa0",
+      "inputs/critic-cursor-agent-critic": "sha256:db338839e6436b9eee18376efa6c3839037b4f0db20ebf5957a8af53c3bbb124"
+    },
+    "authorResultPaths": [
+      "source/author/project-recap.json",
+      "source/author/authoring-paths.json",
+      "source/author/approval-sequence.json",
+      "source/author/review-loop.json",
+      "source/author/walkthrough.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.md",
+      "renderedPath": "site/initiatives/explainer-authoring-redesign-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:d388f4ba07553462f7abdd705e9d90addc9e149e7caa3854a1c83c60886c93f2",
+      "rebuildable": false
+    },
+    {
+      "id": "authoring-paths",
+      "type": "diagram",
+      "contentPath": "source/content/authoring-paths.html",
+      "renderedPath": "site/diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:d1cf6061c162f76ec829d615e1f1be6e32e9ba887552694e92d705fed9e5d1ad",
+      "rebuildable": false
+    },
+    {
+      "id": "approval-sequence",
+      "type": "diagram",
+      "contentPath": "source/content/approval-sequence.html",
+      "renderedPath": "site/diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:c32a016abd47a2b0bedea88378d13bfb1f4e31cdce604af5861e41dcddda8b34",
+      "rebuildable": false
+    },
+    {
+      "id": "review-loop",
+      "type": "explainer",
+      "contentPath": "source/content/review-loop.md",
+      "renderedPath": "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:12d0505974913f341c27c9c527da25ae6860afe2a16a16f4bac44e7626785cf1",
+      "rebuildable": false
+    },
+    {
+      "id": "walkthrough",
+      "type": "deck",
+      "contentPath": "source/content/walkthrough.html",
+      "renderedPath": "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:bb25bef0ad046ed4ff6cf90f52e5ba9ce014d4f6f3f64c4c5e61c9f0b014883d",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:48ccdb712623569741877cd5674450764f89e1e65e77af8bdab3765133772223",
+    "source/fact-base.json": "sha256:a5f97ffecfdbb9d23b03eb4aa8f1f374e058005d00d1f4592e95bced4db7385b",
+    "source/fact-base.md": "sha256:c01492a809466e14b7dffee58fdd8c5713b7a35ac0293442d80d36d2d5b90cd8",
+    "source/content-approval.json": "sha256:28412b5953bd70eee3b952c400cd5409862a79276e62c477aa0c2b8a0048aa45",
+    "source/author/project-recap.json": "sha256:c89eaccd4cbfbaee2b5063c054b048ce65d924798b676252a05c1f5c6398936d",
+    "source/author/authoring-paths.json": "sha256:d9a8385151710bf60d05a818adc8a1607af17fded11eccb262c500d38cf130e4",
+    "source/author/approval-sequence.json": "sha256:c457c594eff703269ea35dcc27a49b9a5c7563a3b597dc831ed9b2448baddb7e",
+    "source/author/review-loop.json": "sha256:b6e1e076eb2218c0caeab9d5dbd15a0be8c11aaf51a20cc3004212a10972852e",
+    "source/author/walkthrough.json": "sha256:88600adcdda485ec6bf084e21455f16afd3b38a8d289125a27d6f424f567c731",
+    "source/content/project-recap.md": "sha256:68ff83183552639cf011e401e852d35a0d711daa67822ae8dcff6ce65b9ca905",
+    "source/content/authoring-paths.html": "sha256:d1cf6061c162f76ec829d615e1f1be6e32e9ba887552694e92d705fed9e5d1ad",
+    "source/content/approval-sequence.html": "sha256:c32a016abd47a2b0bedea88378d13bfb1f4e31cdce604af5861e41dcddda8b34",
+    "source/content/review-loop.md": "sha256:096fcda5a3024ad926aa9da6abaab505229fcc449af1c205e8562ccbbb2052a1",
+    "source/content/walkthrough.html": "sha256:bb25bef0ad046ed4ff6cf90f52e5ba9ce014d4f6f3f64c4c5e61c9f0b014883d",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/explainer-authoring-redesign-recap/index.html": "sha256:d388f4ba07553462f7abdd705e9d90addc9e149e7caa3854a1c83c60886c93f2",
+    "site/diagrams/explainer-authoring-redesign-recap/authoring-paths/index.html": "sha256:d1cf6061c162f76ec829d615e1f1be6e32e9ba887552694e92d705fed9e5d1ad",
+    "site/diagrams/explainer-authoring-redesign-recap/approval-sequence/index.html": "sha256:c32a016abd47a2b0bedea88378d13bfb1f4e31cdce604af5861e41dcddda8b34",
+    "site/explainers/explainer-authoring-redesign-recap/review-loop/index.html": "sha256:12d0505974913f341c27c9c527da25ae6860afe2a16a16f4bac44e7626785cf1",
+    "site/decks/explainer-authoring-redesign-recap/walkthrough/index.html": "sha256:bb25bef0ad046ed4ff6cf90f52e5ba9ce014d4f6f3f64c4c5e61c9f0b014883d"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:33056ff43afcabecad07283a0efe5c3f22f137cfab77eb7d4de827fffe8ad66c"
+  },
+  "warnings": [
+    "No explicit style was selected; defaulted to clean-neutral.",
+    "render-qa-skipped-no-probe"
+  ]
+}

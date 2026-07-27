@@ -1,10 +1,10 @@
 # Evidence and Refresh Policy
 
 ```yaml
-guidance_version: 2026-07-21
-last_verified: 2026-07-21
-review_after: 2026-09-04
-stale_after: 2026-10-19
+guidance_version: 2026-07-25
+last_verified: 2026-07-25
+review_after: 2026-09-08
+stale_after: 2026-10-23
 ```
 
 This file governs dated provider examples. It does not override a live catalog,
@@ -17,8 +17,11 @@ authorization boundary.
 - `review-required`: older than 45 days, a newer family is observed, or a material control, price, tool, context, alias, or harness change is detected.
 - `stale`: older than 90 days, named models are unavailable or deprecated, or the launching surface can no longer express the recorded controls.
 
-Provider mappings in this package become review-required on 2026-09-04 and
-stale on 2026-10-19 unless re-verified earlier.
+Provider mappings in this package become review-required on 2026-09-08 and
+stale on 2026-10-23 unless re-verified earlier, or on the earlier date a
+reference states in its own header. `provider-cursor.md` carries an earlier
+2026-09-04 review date because its catalog was not re-verified in the
+2026-07-25 refresh.
 
 ## Immediate Review Triggers
 
@@ -61,24 +64,61 @@ When evidence is incomplete, retain the incumbent or route one class up.
 
 Do not use aggregate leaderboard rank as a universal model order.
 
+## Comparable-Rung Analysis
+
+For cross-provider analysis, show same-labelled effort rungs first when they
+exist, then show empirically interesting practical substitutions as a separate
+view. Label the model, effort, service tier, harness, benchmark version, and
+retrieval date for every row.
+
+Same-labelled rungs are comparable observations, not equivalent controls.
+CursorBench, provider-native coding-agent harnesses, and common-agent harnesses
+produce different Opus-to-Sol relationships. Preserve that disagreement; never
+publish a provider-independent effort conversion.
+
 ## Current Evidence Summary
 
 - OpenAI positions GPT-5.6 Sol as frontier, Terra as balanced, and Luna as
   high-volume. Official guidance starts at medium generally, but independent
   coding-agent data shows meaningful Luna/Terra quality cliffs below high for
   repository work. The dated mechanical Codex floor is therefore Luna high.
-- Anthropic positions Sonnet 5 as the speed/intelligence workhorse, Opus 4.8 as
-  a complex coding and enterprise model, and Fable 5 as the most capable widely
-  released model. Their effort defaults and recommendations differ by model.
+- Post-release Opus 5 evidence supports medium for normal substantive Claude
+  work and high for hard reasoning. Use xhigh for a reasoning-depth bottleneck
+  or evaluated long-horizon gain; max is selective and requires an effort
+  sweep. Consequence adds independent review rather than automatically raising
+  effort.
+- Sonnet 5 is a conditional route when measured latency, throughput, access,
+  rate limits, or end-to-end workload economics win. Fable 5 is an
+  eligibility-gated specialist; its missing-domain-concept or long-horizon
+  reviewer instantiation remains provisional, and zero-data-retention
+  requirements exclude the current route.
 - CursorBench supports Composer 2.5 as an economical bounded coding worker.
   Cursor explicitly documents Composer fast as the same intelligence at a
   higher latency tier price.
+- Mechanical reconnaissance remains harness-specific: Luna high in Codex,
+  Haiku 4.5 in Claude, and Composer 2.5 in Cursor. Direct API mini or nano
+  routes are limited to strict extraction, classification, or similarly
+  mechanically verified work.
 - OpenAI's long-context evidence disqualifies Luna for some very large-context
-  work even when Luna's nominal context window accepts the input.
-- Anthropic documents benign false positives from Fable's stronger cyber
-  classifier. This is operational evidence to consider when routing
-  cyber-sensitive work, not a capability weakness or a reason to invert the
-  general Opus-first policy.
+  work even when Luna's nominal context window accepts the input. Sol's current
+  direct-API requests above 272K input tokens carry a 2× input and 1.5× output
+  price step.
+- Sol's measured advantage is trajectory efficiency, not universal list-price
+  leadership. Opus output token pricing can be lower while Sol costs less per
+  completed task through fewer tokens, steps, turns, or recoveries.
+- Two independent benchmarks show top-end Opus effort is non-monotonic:
+  Artificial Analysis Coding Agent Index (xhigh 67, max 66) and Frontier-Bench
+  (xhigh 44.4%, max 43.3%), both retrieved 2026-07-25. Frontier-Bench is
+  vendor-operated and its figure rests on a single self-reported row with no
+  independently verified counterpart, so weight it below the Coding Agent Index
+  rather than treating the two as equal evidence. CursorBench 3.2 is monotonic
+  over the same range, 69.3% to 70.0%; its contribution is economic, since
+  marginal cost per score point is roughly 3.75x worse above high than below
+  it. Together these support treating max as a route requiring justification,
+  not a strictly better rung.
+- Cyber-sensitive and valid dual-use work should start on Opus 5 with
+  documented fallback handling where safeguards block the workflow. Opus 4.8
+  remains a compatibility fallback, not the universal primary.
 - Cursor disclosed that Cursor repository data entered Grok 4.5's training
   mixture. Its CursorBench ranking is evidence of competitiveness, not proof
   of superiority over nearby frontier models. Practical use supports Grok 4.5
@@ -86,7 +126,98 @@ Do not use aggregate leaderboard rank as a universal model order.
   implementation, and hard-reasoning economy routes, with cross-family review
   retained for consequential conclusions.
 
+## Speed and Wall-Clock Contract
+
+Speed evidence must satisfy the multi-measure contract defined in
+`model-selection-principles.md`, which is the single authority for which
+measures are required and which are recorded when available. Do not restate a
+divergent list here.
+
+Every load-bearing quantitative claim requires claim-level provenance:
+
+- a direct result locator, retrieval date, and stable source identity;
+- exact model selector, effort, reasoning mode, service tier, harness, and
+  benchmark version;
+- metric definition, aggregation basis, exclusions, and extraction method;
+- absolute input values before any derived ratio or delta;
+- the formula and units for each derived value;
+- cache, fallback, refusal, retry, and completion treatment;
+- unresolved source gaps stated explicitly rather than inferred away.
+
+The Coding Agent Index time measure is average active agent wall time per task.
+It excludes environment startup and verifier or judge time, and must not be
+relabeled as total user-observed elapsed time. AA-Briefcase time remains
+definition-unverified and must not be compared directly with it. Mutable
+leaderboards require row-level locators; a homepage or aggregate rank is not a
+sufficient source.
+
+This file records reconciled conclusions and the values that drive a rule, not
+the full ledger behind them. Every figure quoted here must name a publicly
+resolvable source: the benchmark, its version, and the retrieval date, so a
+reader outside the authoring environment can check it. Do not cite a private
+research artifact as a locator — an internal packet may hold the working
+arithmetic, but it cannot serve as provenance for published guidance.
+
+## Research Independence and Acceptance
+
+A policy refresh requires:
+
+1. a neutral research brief and isolated independent author lanes;
+2. a source ledger with claim-level provenance for each lane;
+3. reciprocal or independent review that did not author the claim under review;
+4. fact reconciliation before routing synthesis;
+5. a cross-model synthesis that preserves contradictions and uncertainty;
+6. explicit human acceptance of the update scope;
+7. canonical-first application;
+8. downstream parity verification by read-back.
+
+The author and reviewer may use the same evidence, but reviewer output must be
+independently produced. Agreement is not proof. Record disagreements and their
+resolution; do not collapse them into an unsupported consensus.
+
+## Live-Catalog and Downstream Gates
+
+Before adding or changing a selector, verify the live launching surface,
+resolved identity, effort or thinking control, service tier, and absence of
+silent fallback. Direct-provider evidence can nominate a harness candidate but
+cannot prove its alias.
+
+A selector ships only after a live probe verifies those controls for that
+specific mapping. Verification does not generalize: neither across rungs of one
+family nor across families, because a harness may substitute a default for any
+component it cannot resolve. Probe a non-default rung as well, or a result that
+merely matches the family default cannot distinguish an honored parameter from
+an ignored one.
+
+The six Cursor `claude-opus-5` and `claude-opus-4-8` mappings shipped on
+2026-07-25 met this gate; their resolved identities are listed in
+`provider-cursor.md`.
+
+After canonical changes:
+
+1. inventory exact mirrors, wrappers, generated views, and application-specific
+   consumers before synchronization;
+2. use each consumer's supported sync or bundle mechanism;
+3. read back every consumer, including each machine where user-scope copies
+   exist;
+4. require byte-for-byte equality for mirrors and documented semantic parity
+   for intentional wrappers;
+5. search live prompts, rules, code, and configuration for copied historical
+   selectors or effort defaults;
+6. record intentional exceptions and fail the gate while unexplained
+   divergence remains.
+
 ## Reverification Record
+
+One record describes one provider reference. When a single refresh cycle
+updates several provider references, emit one record per provider inside a
+`records:` list and lift the cycle-level fields — `verified_at`, `sources`,
+`claim_provenance`, `independent_author`, `independent_reviewer`,
+`incumbent_changes`, `reason`, `downstream_consumers`, `downstream_parity`, and
+`unresolved_items` — to the parent so they are stated once rather than
+duplicated per provider. Each record then carries only `provider`,
+`harness_context`, `catalog_source`, `models_considered`, `controls_verified`,
+and `eligibility_verified`.
 
 When updating a provider reference, record:
 
@@ -97,7 +228,14 @@ harness_context: exact launching surface
 catalog_source: tool schema | CLI list | API catalog | UI snapshot
 models_considered: exact selectors
 controls_verified: effort, service tier, reasoning mode, context, tools
-sources: official docs and relevant benchmarks
+eligibility_verified: retention, access, pricing thresholds, safeguards
+sources: direct locators for official docs and relevant benchmark rows
+claim_provenance: selector, effort, harness, metric, locator, retrieval date
+independent_author: identity and model family
+independent_reviewer: identity and model family
 incumbent_changes: additions, replacements, removals, or none
 reason: scheduled review or trigger
+downstream_consumers: mirrors, wrappers, generated views, applications
+downstream_parity: hashes or documented semantic comparison
+unresolved_items: gaps, provisional routes, and deferred probes
 ```

@@ -1,0 +1,116 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "runId": "run-d498d3d2-0c40-495c-a1e5-48df66c0f4ce",
+  "slug": "subagent-orchestration-recap",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-27T14:04:03.549Z",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:0488c2fb3cb32359a8db3c9a484b0b41bc9ad4758c273b5442cfb853476885dc",
+    "inputHashes": {
+      "inputs/plan": "sha256:0dce9c05d11ceb83e90255013c276c82921c7e318a212506e1b19b327b8ec9f9",
+      "inputs/design": "sha256:584c0e8062466067ebc273f1d223ea695f87d0e5d08874fc164a021f2d1f7f9a",
+      "inputs/implementation": "sha256:98582965e9e8a247301de85fbdeab99bc26a92f89631ec3e0d6d8af0f1d73057",
+      "inputs/summary": "sha256:4cb4e705d4defd1020214c2a7f8b96cf04b9f6112a6c59fd5b6b17c5abf7bfc8",
+      "inputs/critic-cursor-agent-critic": "sha256:0f224749e79324abb021f13c9e1319a542ccc2f6c0a54a31f2bc78de33449dc5"
+    },
+    "authorResultPaths": [
+      "source/author/project-recap.json",
+      "source/author/ownership-split.json",
+      "source/author/selection-to-launch.json",
+      "source/author/routing-policy.json",
+      "source/author/execution-record.json"
+    ]
+  },
+  "theme": {
+    "path": "theme.resolved.json",
+    "hash": "sha256:483ad6f5121e8645f454feefbf8547e11c995fa9ad23343cd1ccfd43f487801f",
+    "derived": false
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "contentPath": "source/content/project-recap.md",
+      "renderedPath": "site/initiatives/subagent-orchestration-recap/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:83a72895e0acd7130e56d398ef3daf7b7c51c275ab1ec88209dde64cadbaa1f0",
+      "rebuildable": false
+    },
+    {
+      "id": "ownership-split",
+      "type": "diagram",
+      "contentPath": "source/content/ownership-split.html",
+      "renderedPath": "site/diagrams/subagent-orchestration-recap/ownership-split/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:d6b1f45dca0ed01d8241e238c648ed44e20e9f04cba01ebfb03c66d30c785825",
+      "rebuildable": false
+    },
+    {
+      "id": "selection-to-launch",
+      "type": "diagram",
+      "contentPath": "source/content/selection-to-launch.html",
+      "renderedPath": "site/diagrams/subagent-orchestration-recap/selection-to-launch/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:b08a70d88e04551298d778d4b87f305fb43004bc5ef02a2b4376b401469484cb",
+      "rebuildable": false
+    },
+    {
+      "id": "routing-policy",
+      "type": "explainer",
+      "contentPath": "source/content/routing-policy.md",
+      "renderedPath": "site/explainers/subagent-orchestration-recap/routing-policy/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:f79cbb9d00c9dd4f471dc40bf9fd82302fa90333a172bb4340f85267ed37d295",
+      "rebuildable": false
+    },
+    {
+      "id": "execution-record",
+      "type": "explainer",
+      "contentPath": "source/content/execution-record.md",
+      "renderedPath": "site/explainers/subagent-orchestration-recap/execution-record/index.html",
+      "mediaType": "text/html",
+      "status": "built",
+      "hash": "sha256:0a01e998e3a412a4080a4e906ace5694c9374bcaf26a6e361ef774804ea96957",
+      "rebuildable": false
+    }
+  ],
+  "immutableHashes": {
+    "run-request.json": "sha256:5f9abeb452f51ddf6e163f9570a313f2cfb6a72445c41f2abc7bf83b2fd0a06c",
+    "source/fact-base.json": "sha256:2d09ecb312b66b1258f981b8195ee9dc9101164e1f1ff8d9a213f88d4c05b0c1",
+    "source/fact-base.md": "sha256:93151b405ea8c90a8cc33ad1a030cf8a73c9430280ff5737eb763e8fbbfcf814",
+    "source/content-approval.json": "sha256:7759dafc4f80b9af58cd2f9d4364791f4e9928f0a498399f83fbf8d975dddebb",
+    "source/author/project-recap.json": "sha256:861760521d307e33780a0698865d23c696bb71361709120c4814e8585eb94c00",
+    "source/author/ownership-split.json": "sha256:eb575c814bccb06c2bc5ae47d3b546b2c13ccc72eec70fee5bc971aac415e53f",
+    "source/author/selection-to-launch.json": "sha256:0273557a9a0c16a2eca5ba1805f0add47075145e487da0b8a3a9025ab1e148a2",
+    "source/author/routing-policy.json": "sha256:46d5a5db6d14cf22b5a2effb208770cf566eb1e6b811bb337fa2ce98061f31b1",
+    "source/author/execution-record.json": "sha256:5458ade9e2fc3d9756fb633114cdfea19fc8cae2d82de685ef507ee50a965f2e",
+    "source/content/project-recap.md": "sha256:dd0489dffd01d85551a5b86840c261d689daf91bcec73b39da904f627baa6c6a",
+    "source/content/ownership-split.html": "sha256:d6b1f45dca0ed01d8241e238c648ed44e20e9f04cba01ebfb03c66d30c785825",
+    "source/content/selection-to-launch.html": "sha256:b08a70d88e04551298d778d4b87f305fb43004bc5ef02a2b4376b401469484cb",
+    "source/content/routing-policy.md": "sha256:86fc6d6d7d9c600553f11c287685689194a2233b683162a29e8f7bbca94c04ec",
+    "source/content/execution-record.md": "sha256:04fc33dca68826ad60fd7a4549e3f6ca14da35493ccad8061d1c6cda3f78d8d2",
+    "theme.resolved.json": "sha256:82c4bf82ac817bb8c04c83bb971d2c2b22aa621384689fb4e0d0fa3a62498f27",
+    "site/initiatives/subagent-orchestration-recap/index.html": "sha256:83a72895e0acd7130e56d398ef3daf7b7c51c275ab1ec88209dde64cadbaa1f0",
+    "site/diagrams/subagent-orchestration-recap/ownership-split/index.html": "sha256:d6b1f45dca0ed01d8241e238c648ed44e20e9f04cba01ebfb03c66d30c785825",
+    "site/diagrams/subagent-orchestration-recap/selection-to-launch/index.html": "sha256:b08a70d88e04551298d778d4b87f305fb43004bc5ef02a2b4376b401469484cb",
+    "site/explainers/subagent-orchestration-recap/routing-policy/index.html": "sha256:f79cbb9d00c9dd4f471dc40bf9fd82302fa90333a172bb4340f85267ed37d295",
+    "site/explainers/subagent-orchestration-recap/execution-record/index.html": "sha256:0a01e998e3a412a4080a4e906ace5694c9374bcaf26a6e361ef774804ea96957"
+  },
+  "outcome": "built-not-durable",
+  "buildRecord": {
+    "path": "build-record.json",
+    "hash": "sha256:e3468729680f13a4eb86893902fc9075884a3671224146edfe3d73dd41b86d4a"
+  },
+  "warnings": [
+    "No explicit style was selected; defaulted to clean-neutral.",
+    "render-qa-skipped-no-probe"
+  ]
+}

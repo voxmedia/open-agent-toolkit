@@ -1,0 +1,35 @@
+{
+  "schemaVersion": "explainer-kit.author-result/v2",
+  "artifactId": "project-recap",
+  "content": {
+    "markdown": "Model-selection policy had been copied into every skill that dispatched a\nsubagent, and the copies had started to disagree. This project made one of them\ncanonical and portable.\n\n## Original request\n\nOAT's dispatch skill carried two different things in one place: durable\njudgment about how much model a task deserves, and the machinery for actually\nlaunching a child agent. Because the judgment lived inside OAT-specific\ntooling, anyone who wanted the judgment had to take the machinery with it — so\nconsumers copied the guidance instead, and the copies drifted.\n\nThe request was to separate them without breaking the launch safeguards, and\nwithout a rename that would churn every consumer at the same time.\n\n## Key agent decisions\n\n| Decision | Reason | Consequence |\n| --- | --- | --- |\n| Split guidance from mechanics | Model policy and launch machinery change on different clocks and for different reasons | One canonical source for routing; dispatch keeps authorization, liveness, and recovery |\n| Directional dependency | Guidance is useful without OAT; dispatch is not useful without guidance | Installing dispatch pulls guidance in; guidance installs alone |\n| Opus-first Claude routing | Cost savings belong in the high-volume bounded layer, not the low-volume root orchestrator | Fable is reserved for genuinely exceptional escalation |\n| Additive evidence only | Existing dispatch records must stay valid across the change | New guidance and tier evidence is optional, with legacy and enriched fixtures proving it |\n| Keep the existing skill name | A rename would obscure the ownership change under consumer churn | `oat-dispatch-subagents` stays; a generic rename is separate work |\n\nThe directional dependency is the load-bearing one. It is what makes the\nguidance layer genuinely portable rather than nominally extracted.\n\n## As-built architecture\n\nA caller classifies a bounded task; the dispatch engine resolves that class to\nan authorized route and launches once.\n\n```diagram\ngraph LR\nClassify[Classify task] --> Guidance[Load guidance]\nGuidance --> Catalog[Intersect live catalog]\nCatalog --> Route[Authorize route]\nRoute --> Launch[Launch once]\n```\n\nThat fence is the happy path, and it is linear. What it cannot show is the\nshape that matters most here: the dependency between the two layers runs one\nway, and the path has two places where it deliberately refuses to continue.\nBoth are composed diagrams linked from this page.\n\nThe split assigns ownership like this:\n\n| | Guidance layer | Mechanics layer |\n| --- | --- | --- |\n| Skill | `subagent-orchestration` | `oat-dispatch-subagents` |\n| Owns | Task classes, selection principles, dated provider matrices, refresh policy | Capability probing, catalog intersection, routes, liveness, recovery, records |\n| Installs alone | Yes | No |\n| Audience | Any agent, including outside OAT | OAT lifecycle callers |\n\n## Implementation record\n\n| Component | Notable change | Reference |\n| --- | --- | --- |\n| Guidance skill | New user-invocable skill: five task classes, durable principles, dated provider guidance, refresh rules | [PR #172](https://github.com/voxmedia/open-agent-toolkit/pull/172) |\n| Dispatch skill | Reduced to mechanics while preserving probing, native-first routing, acceptance terminality, and fail-closed behavior | [PR #172](https://github.com/voxmedia/open-agent-toolkit/pull/172) |\n| Consumers | Reviewer, implementer, planning, lifecycle-adapter, Cursor Cloud, and repo-improvement consumers migrated to a fixed loading order | [PR #172](https://github.com/voxmedia/open-agent-toolkit/pull/172) |\n| Distribution | Directional utility installation across provider sync and bundled CLI assets | [PR #172](https://github.com/voxmedia/open-agent-toolkit/pull/172) |\n| Compatibility | Legacy and enriched dispatch-record fixtures make additive evidence executable | [PR #172](https://github.com/voxmedia/open-agent-toolkit/pull/172) |\n\n```timeline\n2026-07-23 — Plan gate blocks; findings fixed and operator override recorded\n2026-07-23 — Phases 1 and 2 pass after one fix iteration each\n2026-07-23 — Phase 3 blocked on stale boundaries, then recovered\n2026-07-23 — Final and cross-family exit gates pass with zero findings\n```\n\n## Validation evidence\n\n| Check | Result |\n| --- | --- |\n| Phase reviews | p01, p02, p05 passed after one fix iteration; p04 passed with zero findings |\n| Final lifecycle review | Clean |\n| Cross-family exit gates | Two runs at critical:0, important:0, medium:0, minor:0 |\n| Repository verification | Workspace tests, lint, type-check, package and docs builds |\n| Distribution | Release validation, registry checks, docs-link crawling, provider-sync dry runs |\n\n> [!IMPORTANT]\n> The plan gate did not pass on its own. It blocked with one Important and one\n> Medium finding, and the project proceeded under an explicit operator override\n> after those were fixed. Every subsequent review was clean, but the record\n> should say override rather than pass.\n\n## Outcome\n\nWorking now: one canonical routing policy that installs and reads on its own,\ndispatch mechanics that fail closed without it, migrated consumers loading\nprinciples and exactly one provider reference in a fixed order, and dispatch\nrecords that stayed valid across the change.\n\nDeliberately not done: renaming `oat-dispatch-subagents` to something\nprovider-neutral. The name is now slightly wrong, and correcting it would have\nburied the ownership change under a consumer migration. User-scope installation\nof the guidance skill is also deferred until project-level distribution has\noperating evidence.\n\nThe linked deep-dive on routing policy is the part worth reusing elsewhere; the\nexecution record is the part worth reading if you run this workflow.\n"
+  },
+  "provenance": {
+    "authorId": "cursor-agent",
+    "generatedAt": "2026-07-27T14:04:03.265Z",
+    "method": "interactive-session-authoring",
+    "trust": "self-asserted"
+  },
+  "proposedArtifacts": [
+    {
+      "id": "ownership-split",
+      "profileId": "supporting-diagram",
+      "rationale": "The whole project is an asymmetric dependency between two layers, and asymmetry is exactly what a linear fence cannot show."
+    },
+    {
+      "id": "selection-to-launch",
+      "profileId": "supporting-diagram",
+      "rationale": "The selection path has two safety branches — fail-closed on missing guidance and terminal acceptance — that only read clearly as a diagram."
+    },
+    {
+      "id": "routing-policy",
+      "profileId": "deep-dive",
+      "rationale": "The five task classes and their escalation boundaries are the reusable part of this work and deserve more space than the hub can give."
+    },
+    {
+      "id": "execution-record",
+      "profileId": "deep-dive",
+      "rationale": "A phase was blocked and recovered under operator authorization; that run record is evidence about the dispatch workflow itself, not about the feature."
+    }
+  ]
+}

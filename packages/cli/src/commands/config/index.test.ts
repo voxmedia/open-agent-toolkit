@@ -1954,7 +1954,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-07-11.1');
+      expect(recommendation.version).toBe('2026-07-25.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -1997,16 +1997,24 @@ describe('oat config', () => {
           economy: {
             candidates: [
               'composer-2.5',
-              'claude-sonnet-5-high',
               'gpt-5.6-luna-high',
               'gpt-5.6-luna-xhigh',
             ],
           },
           balanced: {
-            candidates: ['cursor-grok-4.5-high', 'gpt-5.6-terra-high'],
+            candidates: [
+              'cursor-grok-4.5-high',
+              'gpt-5.6-terra-high',
+              'claude-opus-5-thinking-low',
+            ],
           },
           high: {
-            candidates: ['gpt-5.6-sol-medium', 'gpt-5.6-sol-high'],
+            candidates: [
+              'gpt-5.6-sol-medium',
+              'gpt-5.6-sol-high',
+              'claude-opus-5-thinking-medium',
+              'claude-opus-5-thinking-high',
+            ],
           },
           frontier: {
             candidates: [
@@ -2014,6 +2022,8 @@ describe('oat config', () => {
               'claude-fable-5-thinking-xhigh',
               'gpt-5.6-sol-xhigh',
               'gpt-5.6-sol-max',
+              'claude-opus-5-thinking-xhigh',
+              'claude-opus-5-thinking-max',
             ],
           },
         },

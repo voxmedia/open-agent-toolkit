@@ -1,7 +1,7 @@
 ---
-guidance_version: 2026-07-22
-last_verified: 2026-07-22
-review_after: 2026-09-04
+guidance_version: 2026-07-25
+last_verified: 2026-07-25
+review_after: 2026-09-08
 ---
 
 # Codex and OpenAI Model Selection
@@ -33,23 +33,49 @@ name includes `codex`.
 
 ## Dated Task-Class Matrix
 
-| Task class               | Default                 | Economy                                                                                            | Escalation                                           | Floor notes                                                    |
-| ------------------------ | ----------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------------------------- |
-| `mechanical-recon`       | `gpt-5.6-luna`, `high`  | Direct API only: `gpt-5.4-mini` medium; `gpt-5.4-nano` medium for strict extraction/classification | `gpt-5.6-terra`, medium or high                      | Do not use Luna none/low for broad repository work.            |
-| `intelligent-recon`      | `gpt-5.6-terra`, `high` | Terra `medium` with tight scope and verification                                                   | Sol `medium`, then `high`                            | A silent miss disqualifies Terra none/low.                     |
-| `default-implementation` | `gpt-5.6-sol`, `medium` | Terra `high` for independently bounded, strongly tested work                                       | Sol `high`                                           | Luna is not the normal implementation lead.                    |
-| `hard-reasoning`         | `gpt-5.6-sol`, `high`   | Sol `medium` only after narrowing the problem                                                      | Sol `xhigh`                                          | Do not automatically escalate Terra to xhigh/max; move to Sol. |
-| `consequential`          | `gpt-5.6-sol`, `xhigh`  | No routine economy route                                                                           | Sol `max`, or a separately evaluated Sol `pro` route | Require independent review and root-owned authorization.       |
+| Task class               | Default                                        | Economy                                                                                            | Escalation                                                                                                       | Floor notes                                                                                     |
+| ------------------------ | ---------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| `mechanical-recon`       | `gpt-5.6-luna`, `high`                         | Direct API only: `gpt-5.4-mini` medium; `gpt-5.4-nano` medium for strict extraction/classification | `gpt-5.6-terra`, medium or high                                                                                  | Do not use Luna none/low for broad repository work.                                             |
+| `intelligent-recon`      | `gpt-5.6-terra`, `high`                        | Terra `medium` with tight scope and verification                                                   | Sol `medium`, then `high`                                                                                        | A silent miss disqualifies Terra none/low.                                                      |
+| `default-implementation` | `gpt-5.6-sol`, `medium`                        | Terra `high` for independently bounded, strongly tested work                                       | Sol `high`                                                                                                       | Luna is not the normal implementation lead.                                                     |
+| `hard-reasoning`         | `gpt-5.6-sol`, `high`                          | Sol `medium` only after narrowing the problem                                                      | Sol `xhigh`                                                                                                      | Do not automatically escalate Terra to xhigh/max; move to Sol.                                  |
+| `consequential`          | `gpt-5.6-sol`, `high`, plus independent review | No routine economy route                                                                           | Sol `xhigh` when deeper reasoning is required; `max` or a separately evaluated `pro` route only after evaluation | Consequence adds review and root authorization; it does not automatically require xhigh or max. |
 
 `reasoning.mode: "pro"` is a separate quality/latency/cost control on GPT-5.6,
 not a model slug and not an effort label. Record it independently. Evaluate it
 against max or xhigh on representative consequential work before adopting it.
+
+The task-class ladder is work-shape based. Sol is the code-first,
+trajectory-efficient route for implementation and hard reasoning; this does
+not establish a provider-independent ranking against interpretation-heavy
+models in other harnesses. Consequential work requires independent review and
+root-owned authorization. It does not automatically force Sol xhigh or max:
+choose effort from reasoning depth, then add the consequence controls.
 
 ## Long-Context Floor
 
 For very large context, prefer Sol or Terra. Published GPT-5.6 results show a
 large Luna retention drop in the 256K-to-1M range. Large context does not change
 the task class, but it may disqualify Luna, mini, or nano.
+
+For Sol requests above 272K input tokens, the current direct-API price step is
+2× input and 1.5× output. Apply the threshold to the whole request and verify
+the live pricing contract before cost-sensitive dispatch. Crossing this
+threshold can change the economical route even when Sol remains the capability
+choice.
+
+## Trajectory Economics
+
+Token list price and total trajectory cost are separate. A model with a higher
+output-token price can still cost less per completed task when it uses fewer
+output tokens, steps, tool calls, retries, or recoveries. Conversely, a cheap
+attempt is not economical when completion rate is low or operator intervention
+is high.
+
+Evaluate input, cached-input, and output tokens together with the multi-measure
+speed contract from `model-selection-principles.md`. Do not use token price
+alone as a proxy for wall-clock efficiency, and do not infer latency from
+trajectory length without a measured runtime.
 
 ## Tool-Heavy Work
 

@@ -1326,7 +1326,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-quick-start',
-        version: '2.3.3',
+        version: '2.3.4',
         finalizedHeading: '### Step 3.6: Run Plan Artifact Review Loop',
         gateHeading: '### Gate Execution',
         completionHeading:
@@ -1694,7 +1694,11 @@ describe('validateOatSkills', () => {
   it('routes implementation phases through bounded progressive disclosure', async () => {
     const entry = await readRawRepoFile(implementSkillPath);
 
-    expect(entry.split('\n').length).toBeLessThanOrEqual(225);
+    // Raised from 225 for the project-log write-timing invariant, which
+    // governs every append point listed in the entry and so cannot move to a
+    // reference. The structural assertions below still enforce that step
+    // bodies stay out of the entry.
+    expect(entry.split('\n').length).toBeLessThanOrEqual(232);
     for (const path of implementReferencePaths) {
       expect(entry).toContain(`references/${path}`);
     }
@@ -2077,14 +2081,14 @@ describe('validateOatSkills', () => {
 
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
-      ['.agents/agents/oat-phase-implementer.md', '1.0.9'],
+      ['.agents/agents/oat-phase-implementer.md', '1.0.10'],
       ['.agents/agents/oat-reviewer.md', '1.1.9'],
       ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
       ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
-      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.3'],
+      ['.agents/skills/oat-project-quick-start/SKILL.md', '2.3.4'],
     ] as const;
 
     for (const [path, expectedVersion] of runtimeSurfaces) {
@@ -2329,7 +2333,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.9');
+    expect(agent.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.0.10');
     expect(agent.match(/^description:\s*(.+)$/m)?.[1]).toMatch(
       /implements one plan phase end-to-end/i,
     );
@@ -2340,6 +2344,9 @@ describe('validateOatSkills', () => {
     );
     expect(agent).toMatch(/one\s+verified\s+commit per task/i);
     expect(agent).toContain('between-task transition check');
+    expect(agent).toMatch(
+      /HEAD exactly equals\s+`phase_base_head`[\s\S]{0,300}Never\s+use ancestry from `expected_base_sha` as a substitute/i,
+    );
     expect(agent).toContain('git -c core.hooksPath=/dev/null commit');
     expect(agent).toContain('`--no-verify`');
     expect(agent).toContain('Phase-Wide Self-Review');
@@ -3654,8 +3661,8 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.17'],
       ['oat-project-plan', '1.4.3'],
-      ['oat-project-quick-start', '2.3.3'],
-      ['oat-project-import-plan', '1.4.7'],
+      ['oat-project-quick-start', '2.3.4'],
+      ['oat-project-import-plan', '1.4.8'],
       ['oat-project-review-provide', '1.3.22'],
     ] as const;
 
@@ -4450,7 +4457,7 @@ describe('validateOatSkills', () => {
     );
     const content = await readFile(skillPath, 'utf8');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.3');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.3.4');
   });
 
   it('documents quick-start selective config fallback to collaborative', async () => {
