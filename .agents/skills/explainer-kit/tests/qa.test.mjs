@@ -184,6 +184,48 @@ test('guideline checker preserves over-limit expansion warnings', () => {
   });
 });
 
+test('guideline checker preserves per-type expansion warnings', () => {
+  const recipe = guidelineRecipe();
+  recipe.expansion.profiles[0].maxCount = 2;
+  recipe.expansion.limits = {
+    maxArtifacts: 2,
+    maxPerType: { diagram: 1 },
+  };
+  const expansion = evaluateExpansionProposals(recipe, [
+    {
+      id: 'diagram-one',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the top-level flow.',
+    },
+    {
+      id: 'diagram-two',
+      profileId: 'supporting-diagram',
+      rationale: 'Would exceed the declared diagram cap.',
+    },
+  ]);
+  const report = checkGuidelines({
+    recipe,
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2><svg class="narrative-diagram" role="img" aria-label="Architecture diagram"></svg></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><th>Check</th></tr><tr><td>Passed</td></tr></table></section>`),
+      },
+    ],
+    expansion,
+  });
+
+  assert.equal(expansion.valid, true);
+  assert.equal(expansion.rejected[0].reason, 'type-limit');
+  assert.deepEqual(report, {
+    valid: true,
+    warnings: [GUIDELINE_WARNING_IDS.expansionTypeLimit],
+  });
+});
+
 test('rejects unresolved tokens, configured leaks and non-inline assets', async () => {
   const seededLeak = await readFile(
     new URL('fixtures/seeded-leak.html', import.meta.url),

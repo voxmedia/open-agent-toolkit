@@ -40,6 +40,11 @@ export const GUIDELINE_WARNING_IDS = Object.freeze({
   expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
   expansionTypeLimit: 'expansion-type-limit-exceeded',
 });
+const EXPANSION_WARNING_BY_REJECTION_REASON = new Map([
+  ['profile-limit', GUIDELINE_WARNING_IDS.expansionProfileLimit],
+  ['recipe-limit', GUIDELINE_WARNING_IDS.expansionArtifactLimit],
+  ['type-limit', GUIDELINE_WARNING_IDS.expansionTypeLimit],
+]);
 export const RENDER_WARNING_IDS = Object.freeze({
   unsupportedDiagram: 'render-unsupported-diagram',
   headingDepthJump: 'render-heading-depth-jump',
@@ -847,20 +852,13 @@ function addExpansionWarnings(warnings, expansion) {
     );
   }
 
-  const knownWarnings = new Set([
-    GUIDELINE_WARNING_IDS.expansionProfileLimit,
-    GUIDELINE_WARNING_IDS.expansionArtifactLimit,
-  ]);
+  const knownWarnings = new Set(EXPANSION_WARNING_BY_REJECTION_REASON.values());
   for (const warning of expansion.warnings) {
     if (knownWarnings.has(warning)) warnings.add(warning);
   }
   for (const rejected of expansion.rejected) {
-    if (rejected?.reason === 'profile-limit') {
-      warnings.add(GUIDELINE_WARNING_IDS.expansionProfileLimit);
-    }
-    if (rejected?.reason === 'recipe-limit') {
-      warnings.add(GUIDELINE_WARNING_IDS.expansionArtifactLimit);
-    }
+    const warning = EXPANSION_WARNING_BY_REJECTION_REASON.get(rejected?.reason);
+    if (warning) warnings.add(warning);
   }
 }
 
