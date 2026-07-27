@@ -230,6 +230,18 @@ test('engineer tour snippets keep the frame on the outer panel only', async () =
   assert.match(snippetPreRule, /\bbackground:\s*transparent\s*;/);
 });
 
+test('engineer tour rail strokes node shapes without outlining labels', async () => {
+  const tour = await template('engineer-tour.html');
+  const nodeGroupRule =
+    tour.match(/\.diagram-card \.node\s*\{([^}]*)\}/)?.[1] ?? '';
+  const nodeShapeRule =
+    tour.match(/\.diagram-card \.node rect\s*\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.doesNotMatch(nodeGroupRule, /\bstroke\s*:/);
+  assert.match(nodeShapeRule, /\bstroke:\s*var\(--accent\)\s*;/);
+  assert.match(nodeShapeRule, /\bstroke-width:\s*1\.5\s*;/);
+});
+
 test('the section rail diagram stays inside the shell viewport', async () => {
   // The engineer-tour shell fixes the canvas at 360x540; nodes drawn outside it
   // are silently clipped and render as bars.
