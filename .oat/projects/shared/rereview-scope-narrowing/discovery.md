@@ -187,7 +187,11 @@ exit-gate machinery already maintains in project state.
   review, so they are absent or wrong for manual and auto reviews.
 - Couples the ordinary re-review path to gate-specific bookkeeping.
 
-**Chosen:** Neither as originally framed — superseded by A′ above.
+**Chosen:** Neither as originally framed — superseded by A′ above **for the
+lifecycle rail**. Option B's source is, however, the correct provenance for the
+gate rail's own lineage; see Decision 9. The rejection here is scoped to using
+gate state as provenance for ordinary and manual lifecycle reviews, not to the
+gate narrowing from its own records.
 
 **Summary:** Record the reviewed head commit on the review artifact, matching
 the remote rail, and mirror it onto the tracked plan review row so the
@@ -258,6 +262,33 @@ review that actually happened.
    invalidate a prior reviewed commit. Narrowing pays off on linear stretches
    and fails open elsewhere. This is accepted behavior, not a defect to design
    around.
+9. **Narrowing follows review lineage, not invocation type:** A review narrows
+   only from a prior review in its own lineage. A configured gate narrows from
+   its own prior run on the same gate target and scope; it never narrows from
+   the lifecycle review. The lifecycle review narrows from prior lifecycle
+   reviews of the same scope.
+
+   This replaces an earlier proposal to exclude gate invocations from
+   narrowing entirely, which was cut along the wrong axis. What threatens a
+   configured independent gate is inheriting _another_ reviewer's coverage,
+   not narrowing as such. A gate re-running after its own blocked attempt
+   already read the full scope and formed its own judgment; forcing it to
+   re-read everything to confirm a fix is not independence. The remediation
+   loop is short, frequent, and almost entirely redundant, so it is where
+   narrowing pays best.
+
+   Two consequences follow. A gate whose prior attempt timed out has no
+   completed review and no reviewed head, so it has no baseline and reviews in
+   full. And each rail draws provenance from its own records: the gate rail
+   already tracks its own reviewed head in exit-gate state, which is the right
+   source for gate lineage even though that same state was rejected as
+   provenance for the lifecycle rail in Option B. Neither rail reaches into
+   the other's records.
+
+   Mechanically this extends the existing prior-review match tuple with the
+   gate target rather than adding a new mechanism, and gate-originated
+   artifacts already carry the target and run identifiers needed to establish
+   lineage.
 
 ## Constraints
 
@@ -303,6 +334,13 @@ review that actually happened.
   pass.
 - Review artifacts written before this change do not narrow anything.
 - An initial review is unaffected regardless of the preference.
+- A configured gate re-running after its own blocked attempt narrows to the
+  commits since that attempt's reviewed head.
+- A configured gate does not narrow from a lifecycle review, and a lifecycle
+  review does not narrow from a gate run. A gate running for the first time on
+  a scope reviews it in full even when a lifecycle review already passed it.
+- A configured gate whose prior attempt produced no completed review reviews in
+  full.
 - Documentation describing the preference matches the new default everywhere it
   appears, and sets the expectation that narrowing applies opportunistically
   rather than on every re-review.
@@ -342,16 +380,12 @@ review that actually happened.
 
 ## Open Questions
 
-- **Gate invocations:** Should narrowing apply when a review is invoked by a
-  configured independent gate? A configured cross-family exit gate exists to
-  produce an independent opinion, and handing it a pre-narrowed range
-  partially defeats that purpose — silently, and by default. The same
-  distinction was already drawn upstream for freshness reuse, where configured
-  independent gates were excluded. Unresolved; it changes default behavior and
-  should be settled before planning.
+None blocking.
 
-The prior-reviewed-commit provenance question was resolved during discovery,
-first to Option A and then to the durable A′ refinement.
+Two questions were raised and resolved during discovery: prior-reviewed-commit
+provenance, settled first to Option A and then to the durable A′ refinement;
+and whether gate invocations narrow, settled to the lineage rule in Decision 9
+after an initial blanket exclusion was rejected as too coarse.
 
 ## Assumptions
 
