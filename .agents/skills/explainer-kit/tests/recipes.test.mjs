@@ -354,6 +354,22 @@ test('recipe v2 rejects malformed profiles, ids, types, and finite caps', () => 
   }
 });
 
+test('html expansion profiles require shells while markdown profiles do not', () => {
+  const missingHtmlShell = recipeV2();
+  delete missingHtmlShell.expansion.profiles[0].shell;
+  assert.throws(
+    () => validateRecipe(missingHtmlShell, 'missing-html-shell'),
+    /supporting-diagram.*shell.*non-empty string/i,
+  );
+
+  const markdownWithoutShell = recipeV2();
+  assert.equal('shell' in markdownWithoutShell.expansion.profiles[1], false);
+  assert.equal(
+    validateRecipe(markdownWithoutShell, 'markdown-without-shell'),
+    markdownWithoutShell,
+  );
+});
+
 test('expansion proposals reject over-limit entries without making floor misses errors', () => {
   const recipe = recipeV2();
   const thinContent = contentModel(recipe);

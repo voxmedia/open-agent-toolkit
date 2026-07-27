@@ -434,8 +434,11 @@ function validateV2Shape(recipe, file) {
       `${file} expansion profile briefRef`,
     );
     assertFiniteCount(profile.maxCount, `${file} expansion profile maxCount`);
-    if ('shell' in profile) {
-      assertNonEmptyString(profile.shell, `${file} expansion profile shell`);
+    if (profile.authoring === 'html' || 'shell' in profile) {
+      assertNonEmptyString(
+        profile.shell,
+        `${file} expansion profile ${profile.profileId} shell`,
+      );
     }
   }
   assertUnique(profileIds, `${file} expansion profileIds`);
