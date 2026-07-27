@@ -206,7 +206,6 @@ test('narrative shells style every structure the renderer emits', async () => {
   // that omits a rule renders that structure as unformatted text, which no
   // structural assertion elsewhere detects.
   const required = [
-    [/\.section-number[^{]*\{[^}]*font:/, '.section-number'],
     [/\.callout[^_-][^{]*\{[^}]*border/, '.callout'],
     [/\.callout__label[^{]*\{[^}]*font:/, '.callout__label'],
     [/\.timeline[^{]*\{/, '.timeline'],

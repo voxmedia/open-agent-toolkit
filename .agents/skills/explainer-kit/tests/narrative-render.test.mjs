@@ -92,7 +92,7 @@ source[Source] -->|validated| output("Rendered output")
   assert.equal(first.html, second.html);
   assert.deepEqual(first.warnings, []);
   assert.match(first.html, /<section id="overview">/);
-  assert.match(first.html, /<div class="section-number">1<\/div>/);
+  assert.doesNotMatch(first.html, /section-number/);
   assert.match(first.html, /<h1>Internal heading<\/h1>/);
   assert.match(first.html, /<strong>strong<\/strong>/);
   assert.match(first.html, /<em>emphasis<\/em>/);

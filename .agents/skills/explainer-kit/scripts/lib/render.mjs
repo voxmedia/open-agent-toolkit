@@ -217,7 +217,7 @@ function renderSections(sections, { tour = false } = {}) {
       const tourAttributes = tour
         ? ` data-active-nodes="node-${index + 1}" data-active-edges=""`
         : '';
-      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><div class="section-number">${index + 1}</div><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2>${renderMarkdownNodes(section.ast.children)}</section>`;
+      return `<section id="${escapeAttribute(section.anchor)}"${tourAttributes}><h2>${escapeHtml(section.title ?? humanize(section.id))}</h2>${renderMarkdownNodes(section.ast.children)}</section>`;
     })
     .join('');
 }
