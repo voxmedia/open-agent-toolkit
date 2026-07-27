@@ -12,6 +12,10 @@ const MODES = new Set(['interactive', 'unattended']);
 const STATUSES = new Set(['pending', 'approved', 'rejected']);
 const ORIGINS = new Set(['floor', 'expansion']);
 const AUTHORING_TYPES = new Set(['markdown', 'html']);
+const CONTENT_EXTENSIONS = new Map([
+  ['markdown', 'md'],
+  ['html', 'html'],
+]);
 const SAFE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const DECISIONS = new Map([
   ['approve', 'approved'],
@@ -163,14 +167,23 @@ function legacyFloorArtifacts(run, authorResultPaths = []) {
   const resultPaths = new Set(authorResultPaths);
   return recipeFloor(recipe).map((artifact) => {
     const authorResultPath = `source/author/${artifact.id}.json`;
+    const authoring = artifact.authoring ?? 'markdown';
     return {
       artifactId: artifact.id,
       origin: 'floor',
-      authoring: artifact.authoring ?? 'markdown',
-      contentPath: `source/content/${artifact.id}.md`,
+      authoring,
+      contentPath: contentPathFor(artifact.id, authoring),
       ...(resultPaths.has(authorResultPath) && { authorResultPath }),
     };
   });
+}
+
+function contentPathFor(artifactId, authoring) {
+  const extension = CONTENT_EXTENSIONS.get(authoring);
+  if (!extension) {
+    throw new Error(`Unsupported content authoring mode: ${authoring}`);
+  }
+  return `source/content/${artifactId}.${extension}`;
 }
 
 function optionalArtifacts(artifacts) {

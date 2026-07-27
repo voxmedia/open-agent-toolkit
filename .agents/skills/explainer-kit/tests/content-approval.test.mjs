@@ -36,12 +36,12 @@ afterEach(async () => {
   );
 });
 
-async function makeRun(mode = 'interactive') {
+async function makeRun(mode = 'interactive', recipeId = 'project-explainer') {
   const outputRoot = await mkdtemp(join(tmpdir(), 'content-approval-'));
   tempDirs.push(outputRoot);
   return initializeRun({
     schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: 'project-explainer', version: '1' },
+    recipe: { id: recipeId, version: '1' },
     slug: 'approval-demo',
     outputRoot,
     factBase: {
@@ -212,6 +212,27 @@ test('normalizes legacy v1 approval records onto floor content files', async () 
 
   await resolveContentApproval(run, 'interactive');
   assert.deepEqual(await readApproval(run), normalized);
+});
+
+test('normalizes legacy HTML floors onto HTML content files', async () => {
+  const run = await makeRun('interactive', 'engineer-tour');
+  await writeApproval(run, {
+    schemaVersion: 'explainer-kit.content-approval/v1',
+    runId: run.runId,
+    mode: 'interactive',
+    status: 'pending',
+    attempts: [],
+  });
+
+  const normalized = await readContentApproval(run);
+  assert.deepEqual(normalized.artifacts, [
+    {
+      artifactId: 'engineer-tour',
+      origin: 'floor',
+      authoring: 'html',
+      contentPath: 'source/content/engineer-tour.html',
+    },
+  ]);
 });
 
 test('normalizes legacy unattended marking and available author-result paths', async () => {
