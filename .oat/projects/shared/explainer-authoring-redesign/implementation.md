@@ -1,9 +1,9 @@
 ---
-oat_status: complete
-oat_ready_for: oat-project-review-provide
+oat_status: in_progress
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-26
-oat_current_task_id: null
+oat_last_updated: 2026-07-27
+oat_current_task_id: prev2-t01
 oat_generated: false
 ---
 
@@ -45,10 +45,12 @@ oat_generated: false
 | Phase 7: End-to-end anti-regression fixture  | complete | 1     | 1/1       |
 | Phase 8: Documentation and release closure   | complete | 2     | 2/2       |
 | Phase rev1: Final review fixes               | complete | 10    | 10/10     |
+| Phase rev2: Remote review fixes              | pending  | 6     | 0/6       |
 
-**Total:** 33/33 tasks completed. The 23 implementation tasks (20 planned +
+**Total:** 33/39 tasks completed. The 23 implementation tasks (20 planned +
 correctives p01-t02a, p05-t02a, p05-t02b) and all 10 review-fix tasks from the
-final review are complete.
+final review are complete. Phase rev2 adds 6 fix tasks from the remote PR #179
+review and is not yet started.
 
 `oat project status` reports `Progress: 20/20`, which is consistent, not drift.
 The control-plane task parser counts only IDs matching `pNN-tNN` or
@@ -457,6 +459,57 @@ sentinel, not the literal `complete` it previously carried), true task counts
 (33/33), per-task rev1 outcomes, final suite counts, and a filled Final
 Summary. `state.md`'s body was brought in line with its frontmatter — it still
 read "Implementation in progress — Phase 1" and "0/20 tasks".
+
+---
+
+## Remote Review Received (2026-07-27)
+
+**PR:** [#179](https://github.com/voxmedia/open-agent-toolkit/pull/179)
+**Reviewer:** Cursor Bugbot (automated)
+**Artifact:** `reviews/archived/remote-pr-179-review-2026-07-27T221652Z.md`
+**Fetch:** `npx agent-reviews --json --unresolved --pr 179` — 7 unresolved
+comments, of which 6 carried findings and 1 was a PR-summary comment.
+
+**Severity counts:** 0 Critical · 0 Important · 4 Medium · 2 Minor
+
+**Converted (6):**
+
+| Finding | Task        | Summary                                           |
+| ------- | ----------- | ------------------------------------------------- |
+| M2      | `prev2-t01` | Snippet `pre` renders a nested double frame       |
+| m1      | `prev2-t02` | Rail diagram labels inherit the node stroke       |
+| M1      | `prev2-t03` | Legacy approval pairs `html` authoring with `.md` |
+| M3      | `prev2-t04` | `expansion-type-limit-exceeded` never surfaces    |
+| M4      | `prev2-t05` | Probe drops `disableAnimations` and `injectedCss` |
+| m2      | `prev2-t06` | `shell` is validated-but-unused recipe config     |
+
+**Deferred:** none. **Dismissed:** none.
+
+**Verification before conversion.** Each finding was reproduced against the code
+at the root rather than accepted as reported. Two results changed the triage:
+
+- **m2's stated mechanism is false.** Bugbot claimed a missing `shell` makes
+  authoring read `templates/undefined.html`. Nothing reads `profile.shell`; shells
+  resolve from artifact type via `TEMPLATE_BY_TYPE` (`render.mjs:9-14`). The task
+  was re-scoped to the real defect — validated-but-unused configuration that can
+  drift from the type mapping — and downgraded to minor.
+- **M4's severity framing was narrowed.** `probeRenderedPage` already sets
+  `reducedMotion: 'reduce'`, so motion gated on `prefers-reduced-motion` is
+  suppressed today. The genuine gaps are animations not gated on that query and
+  `injectedCss` being ignored without error.
+
+**M1 has a live trigger:** `recipes/engineer-tour.json` declares its floor
+artifact as `authoring: html`, so the path mismatch is reachable through a
+bundled recipe.
+
+**M2 and m1 are regressions from this PR's own post-review rendering fixes**,
+introduced when narrative block styling was ported into `engineer-tour.html` and
+the rail diagram was given default node styling. Both degrade every rendered
+deep-dive and were found by viewing a generated artifact in a browser — the
+review path this project's design calls for, and one the existing structural
+tests do not cover. They are ordered first in Phase rev2.
+
+**Cycle count for the `remote` scope:** 1 of 3.
 
 ---
 

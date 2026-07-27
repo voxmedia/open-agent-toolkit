@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev2-t01
 oat_last_commit: a8f3c2c7
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p08'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p08'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -73,21 +73,24 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: https://github.com/voxmedia/open-agent-toolkit/pull/179 # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-25T17:10:10.185Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-26T21:24:05Z'
+oat_project_state_updated: '2026-07-27T22:16:52Z'
 oat_generated: false
 ---
 
 # Project State: explainer-authoring-redesign
 
-**Status:** Complete — all 8 phases plus Phase rev1 (final review fixes); final
-review operator-accepted at `fixes_completed`, shipped as PR #179 (open)
+**Status:** In progress — Phase rev2 (remote review fixes). All 8 phases plus
+Phase rev1 are complete and the final review was operator-accepted at
+`fixes_completed`; PR #179 (open) then returned 6 unresolved Bugbot findings,
+converted to `prev2-t01`..`prev2-t06`.
 **Started:** 2026-07-25
 **Last Updated:** 2026-07-27
 
 ## Current Phase
 
-Implementation is complete: 33/33 tasks (20 planned, 3 correctives, 10
-review-fix tasks). Phase rev1 closed the 7 Important and 3 Medium findings from
+Implementation stands at 33/39 tasks (20 planned, 3 correctives, 10 rev1
+review-fix tasks complete; 6 rev2 remote review-fix tasks pending, next is
+`prev2-t01`). Phase rev1 closed the 7 Important and 3 Medium findings from
 the final code review at `4f156766`..`a8f3c2c7` plus the artifact-alignment
 commit. Tier 1 (subagents), dispatch policy `high` (managed capped, project
 state), resolved target `oat-phase-implementer-gpt-5-6-sol-high`. HiLL

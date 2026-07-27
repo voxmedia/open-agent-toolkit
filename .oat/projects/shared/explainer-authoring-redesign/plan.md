@@ -1600,18 +1600,299 @@ git add .oat/projects/shared/explainer-authoring-redesign
 git commit -m "docs(prev1-t10): align lifecycle artifacts with shipped state"
 ```
 
+## Phase rev2: Remote review fixes
+
+Fix tasks from the `remote` PR #179 review
+(`reviews/archived/remote-pr-179-review-2026-07-27T221652Z.md`): 4 Medium and
+2 Minor findings from Cursor Bugbot, each independently reproduced at the root
+before conversion. One finding's stated mechanism was disproved and re-scoped;
+see `prev2-t06`.
+
+Ordered so the two shell regressions this PR introduced land first — they
+degrade every rendered deep-dive and are the cheapest to verify visually — then
+the contract and plumbing fixes, then the dead-configuration cleanup.
+
+Verification note: `node --test` requires glob patterns in this repo, never a
+bare directory. Every task must leave core, adapter, smoke, and release suites
+green. Tasks touching shell CSS must be confirmed in a browser against a
+generated artifact, not by assertion alone: both regressions in this round were
+invisible to the existing structural tests.
+
+### Task prev2-t01: (review) Stop snippet code blocks rendering a double frame
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/templates/engineer-tour.html`
+- Modify: `.agents/skills/explainer-kit/tests/templates.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M2, `engineer-tour.html:192`. The global `pre` rule sets
+`border`, `border-radius`, and `background`. `.snippet pre` (`:115`) is more
+specific but declares only `max-width`, `margin`, `overflow-x`, `padding`, and
+`font-family`, so border and background fall through from the global rule.
+`.snippet` (`:95`) already draws a border and background, so every expandable
+snippet renders a frame nested inside a frame. Introduced by this PR when
+narrative block styling was ported into the shell.
+
+**Step 2: Implement fix**
+
+Reset `border`, `border-radius`, and `background` on `.snippet pre` so the
+`.snippet` panel owns the frame. Do not weaken the global `pre` rule — standalone
+fenced code outside a snippet still needs it. Confirm `house-style.html` does not
+have the same collision before assuming it is tour-only.
+
+**Step 3: Verify**
+
+Assert that `.snippet pre` neutralizes the frame the global `pre` rule applies.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke`.
+Then render an artifact containing an expandable snippet and confirm in a browser
+that exactly one frame is drawn. Revert-verify: restore the unreset rule and
+confirm the new assertion fails.
+Expected: single frame; standalone fenced code unchanged.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/templates .agents/skills/explainer-kit/tests
+git commit -m "fix(prev2-t01): stop snippet code blocks drawing a nested frame"
+```
+
+### Task prev2-t02: (review) Stop rail diagram labels inheriting the node stroke
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/templates/engineer-tour.html`
+- Modify: `.agents/skills/explainer-kit/tests/templates.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding m1, `engineer-tour.html:233`. `.diagram-card .node` sets `stroke`
+and `stroke-width` on the `<g>` that wraps both the `<rect>` and the `<text>`
+(see the markup emitted at `render.mjs:372`). SVG stroke presentation inherits to
+children and `.diagram-card text` overrides `fill` only, so section labels render
+as outlined glyphs. Introduced by this PR alongside M2.
+
+**Step 2: Implement fix**
+
+Scope the node stroke to the shape rather than the group — apply it to
+`.diagram-card .node rect` — or explicitly clear `stroke` on
+`.diagram-card text`. Prefer scoping to the shape so future node geometry
+inherits the intended treatment. Keep the `:not(.active)` opacity behavior and
+the existing transition working.
+
+**Step 3: Verify**
+
+Assert that label text is not stroked while node shapes still are.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke`.
+Then render a deep-dive and confirm in a browser that rail labels are legible
+flat glyphs and active/inactive highlighting still works. Revert-verify the new
+assertion.
+Expected: unstroked labels; highlighting intact.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/templates .agents/skills/explainer-kit/tests
+git commit -m "fix(prev2-t02): scope diagram node stroke to the shape"
+```
+
+### Task prev2-t03: (review) Pair legacy approval content paths with their authoring mode
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/content-approval.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/content-approval.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M1, `content-approval.mjs:170`. `legacyFloorArtifacts` copies
+`authoring` from the live v2 recipe (`artifact.authoring ?? 'markdown'`) but
+hardcodes `contentPath: source/content/<id>.md`. An HTML floor artifact
+normalizes to `authoring: 'html'` with a Markdown path, describing content the
+artistic path cannot load or validate. Reachable through a bundled recipe:
+`recipes/engineer-tour.json` declares its floor artifact as `authoring: html`.
+
+**Step 2: Implement fix**
+
+Derive the content path extension from the resolved `authoring` value so `html`
+yields `source/content/<id>.html`. Use the same mapping the live path uses rather
+than a second inline conditional, so the two cannot drift.
+
+**Step 3: Verify**
+
+Add a case normalizing a legacy approval for a recipe whose floor artifact is
+`authoring: html`, and assert the path extension matches the authoring mode.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke`.
+Revert-verify: restore the hardcoded `.md` and confirm the new case fails.
+Expected: html floor artifacts resolve to `.html`; markdown unchanged.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib .agents/skills/explainer-kit/tests
+git commit -m "fix(prev2-t03): derive legacy approval content paths from authoring mode"
+```
+
+### Task prev2-t04: (review) Carry type-limit findings through the guideline checker
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M3, `qa.mjs:850`. `addExpansionWarnings` filters
+`expansion.warnings` through a `knownWarnings` set containing only
+`expansionProfileLimit` and `expansionArtifactLimit`, and its rejected-reason
+loop handles `profile-limit` and `recipe-limit` but not `type-limit`. So
+`GUIDELINE_WARNING_IDS.expansionTypeLimit` is dead and declared `maxPerType`
+overruns never reach the manifest.
+
+This is a producer/consumer seam gap, not a producer bug: `recipes.mjs:189`
+emits the warning and `tests/recipes.test.mjs:491` already asserts it lands in
+`evaluated.warnings`. The passing producer test is what let the drop escape.
+
+**Step 2: Implement fix**
+
+Add `expansionTypeLimit` to `knownWarnings` and handle the `type-limit` rejected
+reason alongside the other two. Check whether the three reason strings and three
+warning IDs can be driven from one mapping rather than parallel lists, since this
+is the second time they have drifted apart.
+
+**Step 3: Verify**
+
+Add a `checkGuidelines` case where proposals exceed a declared `maxPerType` and
+assert `expansion-type-limit-exceeded` reaches the returned warnings — asserting
+at the `checkGuidelines` boundary, not at `evaluateExpansionProposals`, since the
+latter already passes.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke`.
+Revert-verify: remove the ID from `knownWarnings` and confirm the new case fails.
+Expected: type-cap overruns surface as manifest warnings.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib .agents/skills/explainer-kit/tests
+git commit -m "fix(prev2-t04): surface expansion type-limit findings in guideline checks"
+```
+
+### Task prev2-t05: (review) Apply the animation controls the probe request declares
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/browser-runtime.test.mjs`
+
+**Step 1: Understand the issue**
+
+Review finding M4, `browser-runtime.mjs:160`. `runBrowserProbes` sends
+`disableAnimations` and `injectedCss` (`qa.mjs:490-491`), but
+`probeRenderedPage` reads only `viewport`, `javascriptEnabled`, `media`,
+`wideContent`, `evaluate`, and `themeToggle`. Both fields are dropped silently.
+
+Scope correction from the review: the page context already sets
+`reducedMotion: 'reduce'` (`:163`, and again for print at `:168`), so motion
+gated on `prefers-reduced-motion` is suppressed today. The actual gaps are
+animations not gated on that query, and `injectedCss` being ignored with no
+error — which makes the `animations-enabled` check (`qa.mjs:557`) unable to
+verify what it reports.
+
+**Step 2: Implement fix**
+
+Apply `injectedCss` to the page before navigation completes, and honor
+`disableAnimations` with a stylesheet that neutralizes animation and transition
+duration regardless of media query. Reject or warn on unrecognized request
+fields rather than ignoring them, so a future dropped field fails loudly instead
+of silently.
+
+**Step 3: Verify**
+
+Add a probe test asserting injected CSS is present in the page and that an
+animation not gated on `prefers-reduced-motion` is neutralized when
+`disableAnimations` is set.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke` and the release visual gate
+(`pnpm release:validate:visual`).
+Revert-verify: drop the application and confirm the new assertions fail.
+Expected: `animations-enabled` reflects real page state.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit/scripts/lib .agents/skills/explainer-kit/tests
+git commit -m "fix(prev2-t05): apply declared probe animation and CSS controls"
+```
+
+### Task prev2-t06: (review) Resolve the unused `shell` recipe key
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Possibly modify: `.agents/skills/explainer-kit/recipes/*.json`
+
+**Step 1: Understand the issue**
+
+Review finding m2, `recipes.mjs:437`, **re-scoped after the reported mechanism
+was disproved.** The finding claims a missing `shell` makes authoring read
+`templates/undefined.html`. That cannot happen: nothing reads `profile.shell`.
+Its only references are the key declaration (`recipes.mjs:37`) and its
+conditional assertion (`:437-438`). Shells are resolved from artifact type via
+`TEMPLATE_BY_TYPE` (`render.mjs:9-14`).
+
+The real defect is the inverse. `shell` is validated-but-unused configuration.
+All three bundled `authoring: html` profiles declare it, so it reads as
+load-bearing to a recipe author while having no effect, and it can drift from the
+type mapping with no check failing.
+
+**Step 2: Implement fix**
+
+Decide between two resolutions and record which:
+
+- Make the key real: have shell resolution consult `profile.shell` and fall back
+  to `TEMPLATE_BY_TYPE`, then require it whenever `authoring` is `html`.
+- Remove the key: drop it from `PROFILE_KEYS`, its assertion, and the bundled
+  recipes, leaving type-derived resolution as the single mechanism.
+
+Prefer removal unless a per-profile shell override is actually wanted, since a
+second resolution path is the thing that would let recipes and rendering drift.
+
+**Step 3: Verify**
+
+If removed: assert a profile declaring `shell` is rejected as an unknown key, and
+confirm all bundled recipes still load. If made real: assert an `authoring: html`
+profile without `shell` is rejected, and that a declared shell is the one
+rendered.
+Run: `node --test .agents/skills/explainer-kit/tests/*.test.mjs`
+then `pnpm test:smoke` and `pnpm release:validate`.
+Expected: one resolution mechanism, enforced by a test.
+
+**Step 4: Commit**
+
+```bash
+git add .agents/skills/explainer-kit
+git commit -m "fix(prev2-t06): resolve the unused shell recipe key"
+```
+
 ## Reviews
 
-| Scope | Type     | Status          | Date       | Artifact                                            |
-| ----- | -------- | --------------- | ---------- | --------------------------------------------------- |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md  |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md  |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md  |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md  |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md  |
-| plan  | artifact | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md  |
-| final | code     | fixes_added     | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md |
-| final | code     | fixes_completed | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md |
+| Scope  | Type      | Status          | Date       | Artifact                                                    |
+| ------ | --------- | --------------- | ---------- | ----------------------------------------------------------- |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T183814Z.md          |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T190445Z.md          |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T191042Z.md          |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T194853Z.md          |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T202242Z.md          |
+| plan   | artifact  | fixes_completed | 2026-07-25 | reviews/artifact-plan-review-2026-07-25T204842Z.md          |
+| final  | code      | fixes_added     | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md         |
+| final  | code      | fixes_completed | 2026-07-26 | reviews/archived/final-review-2026-07-26T155422Z.md         |
+| remote | github-pr | fixes_added     | 2026-07-27 | reviews/archived/remote-pr-179-review-2026-07-27T221652Z.md |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -1656,8 +1937,9 @@ gate-passed, and the review loop was deliberately ended rather than continued.
 - Phase 7: 1 task — e2e anti-regression fixture
 - Phase 8: 2 tasks — docs, then remaining bumps + sync + release validation
 - Phase rev1: 10 tasks — final review fixes (7 Important, 3 Medium)
+- Phase rev2: 6 tasks — remote PR #179 review fixes (4 Medium, 2 Minor)
 
-**Total: 30 planned tasks** (20 original + 10 review fixes; 23 implementation
+**Total: 36 planned tasks** (20 original + 16 review fixes; 23 implementation
 tasks were actually executed, including correctives p01-t02a, p05-t02a, and
 p05-t02b)
 
