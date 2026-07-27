@@ -1,9 +1,9 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-implement
+oat_status: complete
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-07-27
-oat_current_task_id: prev2-t06
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -34,24 +34,22 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase                                        | Status      | Tasks | Completed |
-| -------------------------------------------- | ----------- | ----- | --------- |
-| Phase 1: Contracts, briefs, and recipes v2   | complete    | 6     | 6/6       |
-| Phase 2: Lifecycle caller wiring             | complete    | 1     | 1/1       |
-| Phase 3: Narrative renderer                  | complete    | 3     | 3/3       |
-| Phase 4: Artistic composer path              | complete    | 2     | 2/2       |
-| Phase 5: Guideline checker and render QA     | complete    | 4     | 4/4       |
-| Phase 6: Pipeline integration, v1 retirement | complete    | 4     | 4/4       |
-| Phase 7: End-to-end anti-regression fixture  | complete    | 1     | 1/1       |
-| Phase 8: Documentation and release closure   | complete    | 2     | 2/2       |
-| Phase rev1: Final review fixes               | complete    | 10    | 10/10     |
-| Phase rev2: Remote review fixes              | in_progress | 6     | 5/6       |
+| Phase                                        | Status   | Tasks | Completed |
+| -------------------------------------------- | -------- | ----- | --------- |
+| Phase 1: Contracts, briefs, and recipes v2   | complete | 6     | 6/6       |
+| Phase 2: Lifecycle caller wiring             | complete | 1     | 1/1       |
+| Phase 3: Narrative renderer                  | complete | 3     | 3/3       |
+| Phase 4: Artistic composer path              | complete | 2     | 2/2       |
+| Phase 5: Guideline checker and render QA     | complete | 4     | 4/4       |
+| Phase 6: Pipeline integration, v1 retirement | complete | 4     | 4/4       |
+| Phase 7: End-to-end anti-regression fixture  | complete | 1     | 1/1       |
+| Phase 8: Documentation and release closure   | complete | 2     | 2/2       |
+| Phase rev1: Final review fixes               | complete | 10    | 10/10     |
+| Phase rev2: Remote review fixes              | complete | 6     | 6/6       |
 
-**Total:** 38/39 tasks completed. The 23 implementation tasks (20 planned +
-correctives p01-t02a, p05-t02a, p05-t02b) and all 10 review-fix tasks from the
-final review are complete. Phase rev2 adds 6 fix tasks from the remote PR #179
-review; 5 are complete and `prev2-t06` is re-dispatched after a corrected task
-definition.
+**Total:** 39/39 tasks completed. The 23 implementation tasks (20 planned +
+correctives p01-t02a, p05-t02a, p05-t02b), all 10 review-fix tasks from the final
+review, and all 6 remote review-fix tasks from PR #179 are complete.
 
 `oat project status` reports `Progress: 20/20`, which is consistent, not drift.
 The control-plane task parser counts only IDs matching `pNN-tNN` or
@@ -550,11 +548,15 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 | `prev2-t03` | `f496268d` | Pass                                                               | Confirmed     |
 | `prev2-t04` | `0e27108e` | Pass                                                               | Confirmed     |
 | `prev2-t05` | `82114224` | Pass, including real Chromium probe-controls test                  | Confirmed     |
-| `prev2-t06` | —          | Blocked before implementation                                      | —             |
+| `prev2-t06` | `6ff2172b` | Pass; html requires `shell`, markdown optional, 4 recipes load     | Confirmed     |
 
-**Phase verification (reported):** core+adapter 289/289, smoke 129/129, release
-44 pass / 1 skip, `lint` pass, `type-check` pass, `release:validate` five
-packages pass, visual gate valid across 65 measurements.
+**Phase verification:** core+adapter 290/290, smoke 129/129, release 44 pass /
+1 skip, plus `check`, `lint`, `format`, `type-check`, `test`, `build`, and
+`release:validate` (five packages) passing, and the visual gate valid across 65
+measurements. Root independently re-ran core (231) and adapter (59) and
+behaviorally confirmed the `prev2-t06` contract: a bundled recipe loads, an
+`html` profile with `shell` removed is rejected naming the profile, and a
+`markdown` profile without `shell` still loads.
 
 **Parallel groups:** none — sequential single-phase run.
 
@@ -574,13 +576,21 @@ packages pass, visual gate valid across 65 measurements.
 
 **Outstanding Items**
 
-- `prev2-t06` blocked. The implementer found that live `run.mjs` reads
-  `profile.shell`, contradicting the review artifact's verification, and stopped
-  rather than removing a key the plan wrongly called dead. The block was correct;
-  root confirmed and reproduced `templates/undefined.html`, corrected `plan.md`,
-  the review artifact, and this document, and posted a retraction on the PR
-  comment where the false claim had been published. Task re-dispatched with the
-  finding restored as reported.
+None. All six tasks complete.
+
+`prev2-t06` was blocked on the first attempt and is worth preserving as a
+process outcome. The implementer found that live `run.mjs` reads `profile.shell`,
+contradicting this project's own review artifact, and stopped rather than
+removing a key the plan wrongly called dead. The block was correct: root
+reproduced `templates/undefined.html`, corrected `plan.md`, the review artifact,
+and this document, and posted a retraction on the PR comment where the false
+claim had been published. The task was then re-dispatched with the finding
+restored as Bugbot reported it and landed as `6ff2172b`, changing only
+`recipes.mjs` and `recipes.test.mjs` with `run.mjs` untouched as instructed.
+
+The fix requires `shell` when `authoring === 'html'` while leaving it optional
+for `markdown`, so the invalid profile now fails at recipe load with the profile
+named instead of surfacing as a missing template file.
 
 <!-- orchestration-runs-end -->
 
