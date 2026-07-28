@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -25,12 +25,12 @@ oat_template_name: implementation
 | ----- | ----------- | ----- | --------- |
 | p01   | completed   | 3     | 3/3       |
 | p02   | completed   | 3     | 3/3       |
-| p03   | in_progress | 2     | 0/2       |
-| p04   | pending     | 1     | 0/1       |
+| p03   | completed   | 2     | 2/2       |
+| p04   | in_progress | 1     | 0/1       |
 | p05   | pending     | 1     | 0/1       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 6/13 tasks completed
+**Total:** 8/13 tasks completed
 
 ---
 
@@ -161,18 +161,48 @@ resurfacing gate:
 
 ## Phase 3: Local rail rewrite
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-28
+**Completed:** 2026-07-28
+
+### Phase Summary
+
+- Replaced commit-message and fixed-lookback narrowing with guarded
+  prior-reviewed-head ranges sourced from matching review lineage.
+- Removed the re-review narrowing prompt while preserving explicit base/range
+  precedence and the `false` opt-out.
+- Added exactly-one resolution reporting with range classification and honest
+  narrowed-review provenance for reviewers and Tier 3 inline execution.
+- Phase review passed after one bounded Medium-finding fix round.
 
 ### Task p03-t01: Replace Step 3a narrowing with guarded prior-head ranges
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `38c553cdd60d6becc3e10daa344bed325f8ea6b9`
+
+**Outcome:** The local lifecycle rail now resolves matching artifact and ledger
+heads, requires agreement and full-SHA/existence/ancestry guards, and fails open
+to normal full scope.
 
 ### Task p03-t02: Drop the prompt and print a classified resolution line
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `1c478918f7489ec11664531eb0f511e08fc34f0c`
+
+**Outcome:** Re-reviews resolve without an interactive narrowing decision and
+report the final range, classification, and reason while preserving explicit
+override semantics.
+
+**Boundary cleanup:** `f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f`
+removed an incidental generated autonomy-contract update, leaving the net phase
+change within the declared skill boundary.
+
+**Review fix:** `28afd27b4959f4ef535f961b7348e5d0dfeb438b`
+made opt-out precedence explicit, preserved re-review classification for
+explicit ranges, and aligned manual/auto lifecycle equivalence.
+
+**Verification:** 63 focused semantic and skill-contract tests passed;
+formatting, diff hygiene, and narrowed root re-review passed.
 
 ---
 
@@ -291,6 +321,29 @@ resurfacing gate:
 **Outstanding items:** M1, M2, and M3 are registered under Deferred Findings
 (Medium) for mandatory final disposition.
 
+### Run 3 — Phase p03
+
+**Date:** 2026-07-28
+**Outcome:** passed
+**Phase base:** `6e6aff962f22b743baea3ba556936a63e4b83fc4`
+**Implementation head:** `f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f`
+**Final fix head:** `28afd27b4959f4ef535f961b7348e5d0dfeb438b`
+**Fix iterations:** 1
+
+| Task    | Commit                                     | Result |
+| ------- | ------------------------------------------ | ------ |
+| p03-t01 | `38c553cdd60d6becc3e10daa344bed325f8ea6b9` | passed |
+| p03-t02 | `1c478918f7489ec11664531eb0f511e08fc34f0c` | passed |
+
+**Root review:**
+`reviews/archived/p03-review-2026-07-28T220431Z.md`
+(blocked: 3 Medium)
+
+**Passing re-review:**
+`reviews/archived/p03-review-2026-07-28T221100Z.md`
+
+**Outstanding items:** none.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -310,7 +363,11 @@ resurfacing gate:
 - [x] p02-t03: Fail open without durable lineage — `33e4506ef`
 - [x] p02 review fix — `0908e1cf8`
 - [x] p02 lifecycle review and independent phase gate passed
-- [ ] p03-t01: Replace Step 3a narrowing with guarded prior-head ranges
+- [x] p03-t01: Replace Step 3a narrowing with guarded prior-head ranges — `38c553cdd`
+- [x] p03-t02: Drop the prompt and report the resolved range — `1c478918f`
+- [x] p03 boundary cleanup — `f914b9ea1`
+- [x] p03 review fix — `28afd27b4`
+- [ ] p04-t01: Align both remote provide skills
 
 **Decisions:**
 
@@ -320,6 +377,8 @@ resurfacing gate:
 - Phase 1 required one bounded review-fix round and then passed re-review.
 - Phase 2 required one bounded Important-finding fix round; its independent gate
   passed with three Medium findings deferred for mandatory final disposition.
+- Phase 3 required one bounded Medium-finding fix round and then passed narrowed
+  re-review.
 
 ---
 
@@ -343,7 +402,7 @@ resurfacing gate:
 | ----- | ---------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------- |
 | p01   | Focused + full CLI suite, lint, type-check, format, review             | 3,395  | 0      | Lineage, preference, guard, classification, integration               |
 | p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open |
-| p03   | -                                                                      | -      | -      | -                                                                     |
+| p03   | Focused semantic + skill-contract tests, format, diff, reviews         | 63     | 0      | Local precedence, lineage, guards, classification, Tier 3             |
 | p04   | -                                                                      | -      | -      | -                                                                     |
 | p05   | -                                                                      | -      | -      | -                                                                     |
 | p06   | -                                                                      | -      | -      | -                                                                     |

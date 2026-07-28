@@ -632,7 +632,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
 | p01    | code     | fixes_completed | 2026-07-28 | reviews/archived/p01-review-2026-07-28T204348Z.md           | -                                        | -          | -                    |
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/archived/p02-review-2026-07-28T211745Z.md           | 33e4506ef7211d75faa30402ea6b1a11e278e475 | auto       | -                    |
-| p03    | code     | fixes_completed | 2026-07-28 | reviews/p03-review-2026-07-28T220431Z.md                    | f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f | auto       | -                    |
+| p03    | code     | fixes_completed | 2026-07-28 | reviews/archived/p03-review-2026-07-28T220431Z.md           | f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f | auto       | -                    |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
@@ -645,7 +645,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p01    | code     | passed          | 2026-07-28 | reviews/archived/p01-review-2026-07-28T205203Z.md           | -                                        | -          | -                    |
 | p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T212511Z.md           | 0908e1cf87a50f6fd81f10ab30735ac88e5e9813 | auto       | -                    |
 | p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T214026Z.md           | a53071f308e7f6db07c4f0bc0ddeef7ac6c17b9a | gate       | cursor-fable-5-xhigh |
-| p03    | code     | passed          | 2026-07-28 | reviews/p03-review-2026-07-28T221100Z.md                    | 28afd27b4959f4ef535f961b7348e5d0dfeb438b | auto       | -                    |
+| p03    | code     | passed          | 2026-07-28 | reviews/archived/p03-review-2026-07-28T221100Z.md           | 28afd27b4959f4ef535f961b7348e5d0dfeb438b | auto       | -                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
