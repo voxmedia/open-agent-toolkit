@@ -38,6 +38,10 @@ export async function runOatExplainer({
   authorModulePath,
   critic,
   criticModulePath,
+  browserProbe,
+  browserProbeModulePath,
+  visualCritic,
+  visualCriticModulePath,
   coreOptions = {},
 }) {
   const compatibility = await checkCoreCompatibility({
@@ -136,11 +140,33 @@ export async function runOatExplainer({
     criticModulePath,
     coreOptions,
   });
+  const reviewProvidersRequired =
+    recipe === 'project-recap' && mode === 'unattended';
+  const lifecycleBrowserProbe = await resolveLifecycleBrowserProbe({
+    browserProbe,
+    browserProbeModulePath,
+    coreOptions,
+    required: reviewProvidersRequired,
+  });
+  const lifecycleVisualCritic = await resolveLifecycleVisualCritic({
+    visualCritic,
+    visualCriticModulePath,
+    coreOptions,
+    required: reviewProvidersRequired,
+  });
+  assertDistinctProviderRoles({
+    author: lifecycleAuthor,
+    factCritic: lifecycleCritic,
+    browserProbe: lifecycleBrowserProbe,
+    visualCritic: lifecycleVisualCritic,
+  });
   const result = await core.runExplainer(request, {
     ...coreOptions,
     ...(lifecycleSetPlanner && { planSet: lifecycleSetPlanner }),
     ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
+    ...(lifecycleBrowserProbe && { browserProbe: lifecycleBrowserProbe }),
+    ...(lifecycleVisualCritic && { visualCritic: lifecycleVisualCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
     reviewedSource: bound.reviewedSource,
   });
@@ -340,7 +366,7 @@ async function resolveLifecycleCritic({
   if (!callback) {
     return null;
   }
-  return async (request) => {
+  const wrapped = async (request) => {
     const result = await callback(request);
     if (
       !result ||
@@ -358,6 +384,174 @@ async function resolveLifecycleCritic({
     }
     return result;
   };
+  return markProviderIdentity(wrapped, callback);
+}
+
+async function resolveLifecycleBrowserProbe({
+  browserProbe,
+  browserProbeModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.browserProbe !== undefined) {
+    throw new TypeError(
+      'coreOptions.browserProbe is not supported at the OAT adapter boundary; supply browserProbe directly.',
+    );
+  }
+  const callback = await resolveProviderCallback({
+    callback: browserProbe,
+    modulePath: browserProbeModulePath,
+    exportName: 'browserProbe',
+    label: 'browser probe',
+  });
+  if (!callback) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one provider-neutral browser probe callback or browser probe module entry point.',
+    );
+    error.code = 'E_BROWSER_PROBE_REQUIRED';
+    throw error;
+  }
+  const wrapped = async (request) => {
+    const result = await callback(request);
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      typeof result.pageOverflowX !== 'boolean' ||
+      !Array.isArray(result.clippedX) ||
+      !Array.isArray(result.viewportClipped) ||
+      !Array.isArray(result.unreadableHeadings) ||
+      typeof result.reducedMotion !== 'boolean' ||
+      !result.keyboard ||
+      typeof result.keyboard !== 'object'
+    ) {
+      throw new Error(
+        'Provider-neutral browser probe result does not match the browser evidence result contract.',
+      );
+    }
+    return result;
+  };
+  return markProviderIdentity(wrapped, callback);
+}
+
+async function resolveLifecycleVisualCritic({
+  visualCritic,
+  visualCriticModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.visualCritic !== undefined) {
+    throw new TypeError(
+      'coreOptions.visualCritic is not supported at the OAT adapter boundary; supply visualCritic directly.',
+    );
+  }
+  const callback = await resolveProviderCallback({
+    callback: visualCritic,
+    modulePath: visualCriticModulePath,
+    exportName: 'visualCritic',
+    label: 'visual critic',
+  });
+  if (!callback) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one provider-neutral visual critic callback or visual critic module entry point.',
+    );
+    error.code = 'E_VISUAL_CRITIC_REQUIRED';
+    throw error;
+  }
+  const wrapped = async (request, evidenceInput) => {
+    const result = await callback(request, evidenceInput);
+    if (
+      !result ||
+      typeof result !== 'object' ||
+      result.schemaVersion !== 'explainer-kit.visual-review-result/v1' ||
+      typeof result.reviewId !== 'string' ||
+      !/^[a-z0-9][a-z0-9._-]*$/.test(result.reviewId) ||
+      result.requestId !== request?.requestId ||
+      result.requestHash !== request?.requestHash ||
+      typeof result.reviewedAt !== 'string' ||
+      Number.isNaN(Date.parse(result.reviewedAt)) ||
+      !['pass', 'correct', 'fail'].includes(result.disposition) ||
+      !Array.isArray(result.artifactIds) ||
+      result.artifactIds.length !== request?.renderedArtifacts?.length ||
+      result.artifactIds.some(
+        (artifactId, index) =>
+          artifactId !== request.renderedArtifacts[index]?.artifactId,
+      ) ||
+      !Array.isArray(result.findings) ||
+      result.findings.some((finding) => !finding || typeof finding !== 'object')
+    ) {
+      throw new Error(
+        'Provider-neutral visual critic result does not match the visual review result contract.',
+      );
+    }
+    return result;
+  };
+  return markProviderIdentity(wrapped, callback);
+}
+
+async function resolveProviderCallback({
+  callback,
+  modulePath,
+  exportName,
+  label,
+}) {
+  if (callback !== undefined && typeof callback !== 'function') {
+    throw new TypeError(`${exportName} must be a function when supplied.`);
+  }
+  if (callback !== undefined && modulePath !== undefined) {
+    throw new Error(
+      `Supply only one provider-neutral ${label} callback or ${label} module entry point.`,
+    );
+  }
+  if (modulePath === undefined) return callback ?? null;
+  if (typeof modulePath !== 'string' || modulePath.trim().length === 0) {
+    throw new TypeError(`${exportName}ModulePath must be a non-empty path.`);
+  }
+  let providerModule;
+  try {
+    providerModule = await import(
+      pathToFileURL(resolve(modulePath.trim())).href
+    );
+  } catch (cause) {
+    throw new Error(
+      `Unable to load provider-neutral ${label} module at ${modulePath}.`,
+      { cause },
+    );
+  }
+  if (typeof providerModule[exportName] !== 'function') {
+    throw new TypeError(
+      `Provider-neutral ${label} module must export a ${exportName} function.`,
+    );
+  }
+  return providerModule[exportName];
+}
+
+const PROVIDER_IDENTITY = Symbol('oat-explainer-provider-identity');
+
+function markProviderIdentity(wrapper, callback) {
+  Object.defineProperty(wrapper, PROVIDER_IDENTITY, { value: callback });
+  return wrapper;
+}
+
+function providerIdentity(callback) {
+  return callback?.[PROVIDER_IDENTITY] ?? callback;
+}
+
+function assertDistinctProviderRoles(callbacks) {
+  const entries = Object.entries(callbacks).filter(([, callback]) => callback);
+  for (let left = 0; left < entries.length; left += 1) {
+    for (let right = left + 1; right < entries.length; right += 1) {
+      if (
+        providerIdentity(entries[left][1]) ===
+        providerIdentity(entries[right][1])
+      ) {
+        throw new Error(
+          `Provider roles ${entries[left][0]} and ${entries[right][0]} must use distinct callback identities.`,
+        );
+      }
+    }
+  }
 }
 
 async function readManifest(result, request) {

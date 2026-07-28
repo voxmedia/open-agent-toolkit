@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.3
+version: 1.0.4
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
@@ -21,6 +21,8 @@ Adapt OAT project context into the versioned request consumed by the canonical
 - Resolve project explainer and recap intent before invoking the core.
 - Resolve one provider-neutral set planner for unattended project recaps.
 - Require lifecycle callers to construct a brief-aware author seam.
+- Require first-class browser-evidence and whole-set visual-review providers
+  for unattended project recaps.
 
 ## Dependency Direction
 
@@ -87,6 +89,20 @@ medium-specific guidance; an optional visual-explainer installation may enhance
 provider execution but is never required. The adapter validates and resolves
 executable inputs before passing them to `core.runExplainer`; callbacks and
 module paths never enter the persisted run request.
+
+Also read `references/visual-review-callback.md`. Unattended `project-recap`
+runs require exactly one browser-evidence provider and one whole-set visual
+critic. In-process callers supply `browserProbe` and `visualCritic`; JSON/CLI
+callers supply `browserProbeModulePath` and `visualCriticModulePath`, naming
+modules with matching function exports. These are first-class adapter inputs;
+do not place either provider in `coreOptions`.
+
+The adapter resolves all executable providers before core invocation, enforces
+direct-versus-module mutual exclusion, and requires distinct identities for
+authoring, fact criticism, browser evidence, and visual criticism. A missing
+required provider fails before the core runs. A runtime browser or visual-review
+failure is retained by the core as `built-needs-review`, never as a successful
+durability or publication outcome.
 
 Unattended project runs pass `approved-oat-artifacts` provenance to the core's
 content-approval seam and never prompt. Automated completion and

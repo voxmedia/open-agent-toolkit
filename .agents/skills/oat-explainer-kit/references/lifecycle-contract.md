@@ -86,6 +86,30 @@ The resolved callback is passed only as the `author` option to
 `run-request.json`, or another retained data contract. Interactive runs use the
 same author contract and differ only at the later approval gate.
 
+## Browser and visual-review execution
+
+Every unattended `project-recap` must provide exactly one browser-evidence
+provider and exactly one whole-set visual critic through the adapter's
+first-class boundary. In-process callers pass `browserProbe` and
+`visualCritic`. JSON-only and official CLI callers pass
+`browserProbeModulePath` and `visualCriticModulePath`, naming modules whose
+matching exports are functions. Direct-plus-module conflicts, invalid exports,
+and the legacy `coreOptions.browserProbe` or `coreOptions.visualCritic` route
+fail before core invocation.
+
+The author, fact critic, browser probe, and visual critic must have distinct
+callback identities. The adapter validates provider-neutral callback results,
+then passes only the resolved callbacks to `core.runExplainer`. Executable
+callbacks and module paths never enter the retained run request. See
+`visual-review-callback.md` for the browser request/result and byte-bound
+whole-set review contracts.
+
+The core retains canonical 320, 768, and 1440 viewport screenshots, paired
+metrics, each review request/result, cohesion observations, and any one-pass
+revision record. Missing, malformed, thrown, stale, or failed review-chain
+evidence terminates as `built-needs-review`; durability and publication remain
+blocked.
+
 ## Tracked-run finalization
 
 `planTrackedRunFinalization(request, context)` is the shared command planner for

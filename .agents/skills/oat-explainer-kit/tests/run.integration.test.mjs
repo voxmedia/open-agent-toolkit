@@ -142,6 +142,10 @@ async function createFixture({ coreVersion = '2.0.2' } = {}) {
             warnings: ['core-warning'],
             reviewedSource: options.reviewedSource,
             authored,
+            providerSeams: {
+              browserProbe: typeof options.browserProbe === 'function',
+              visualCritic: typeof options.visualCritic === 'function',
+            },
           };
         }
       `,
@@ -233,6 +237,11 @@ async function passingVisualCritic(request) {
     findings: [],
   };
 }
+
+const REQUIRED_REVIEW_PROVIDERS = {
+  browserProbe: completeBrowserProbe,
+  visualCritic: passingVisualCritic,
+};
 
 function getConfig(key) {
   return Promise.resolve({
@@ -339,6 +348,7 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
   const canonicalProjectRoot = await realpath(fixture.projectRoot);
@@ -408,6 +418,7 @@ trap 'rmdir "$lock"' EXIT INT TERM
       slug: 'cli-config-style',
       author: fixtureAuthor,
       planSet: fixturePlanSet,
+      ...REQUIRED_REVIEW_PROVIDERS,
       mode: 'unattended',
     });
 
@@ -477,12 +488,173 @@ test('passes direct and module authors through the adapter boundary', async () =
     getConfig,
     authorModulePath,
     planSetModulePath,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
   assert.deepEqual(
     moduleResult.result.authored.map(({ artifactId }) => artifactId),
     ['project-recap', 'architecture', 'deck'],
   );
+});
+
+test('passes first-class direct and module browser and visual-review providers', async () => {
+  const directFixture = await createFixture();
+  const direct = await runOatExplainer({
+    adapterRoot: directFixture.adapterRoot,
+    userSkillsRoot: directFixture.userSkillsRoot,
+    repoRoot: directFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'direct-review-providers',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    browserProbe: completeBrowserProbe,
+    visualCritic: passingVisualCritic,
+    mode: 'unattended',
+  });
+  assert.deepEqual(direct.result.providerSeams, {
+    browserProbe: true,
+    visualCritic: true,
+  });
+
+  const moduleFixture = await createFixture();
+  const browserProbeModulePath = join(moduleFixture.root, 'browser-probe.mjs');
+  const visualCriticModulePath = join(moduleFixture.root, 'visual-critic.mjs');
+  await writeFile(
+    browserProbeModulePath,
+    'export async function browserProbe() { return {}; }\n',
+  );
+  await writeFile(
+    visualCriticModulePath,
+    'export async function visualCritic() { return {}; }\n',
+  );
+  const fromModules = await runOatExplainer({
+    adapterRoot: moduleFixture.adapterRoot,
+    userSkillsRoot: moduleFixture.userSkillsRoot,
+    repoRoot: moduleFixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'module-review-providers',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    browserProbeModulePath,
+    visualCriticModulePath,
+    mode: 'unattended',
+  });
+  assert.deepEqual(fromModules.result.providerSeams, {
+    browserProbe: true,
+    visualCritic: true,
+  });
+});
+
+test('rejects missing, invalid, conflicting, and reused review providers before core invocation', async () => {
+  const fixture = await createFixture();
+  const invalidBrowserModule = join(fixture.root, 'invalid-browser.mjs');
+  const invalidVisualModule = join(fixture.root, 'invalid-visual.mjs');
+  await writeFile(
+    invalidBrowserModule,
+    'export const browserProbe = "invalid";\n',
+  );
+  await writeFile(
+    invalidVisualModule,
+    'export const visualCritic = "invalid";\n',
+  );
+  const context = {
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'review-provider-contract',
+    getConfig,
+    author: fixtureAuthor,
+    planSet: fixturePlanSet,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer(context),
+    (error) => error.code === 'E_BROWSER_PROBE_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({ ...context, browserProbe: completeBrowserProbe }),
+    (error) => error.code === 'E_VISUAL_CRITIC_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbeModulePath: invalidBrowserModule,
+      visualCritic: passingVisualCritic,
+    }),
+    /browser probe module must export a browserProbe function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbe: completeBrowserProbe,
+      visualCriticModulePath: invalidVisualModule,
+    }),
+    /visual critic module must export a visualCritic function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbe: completeBrowserProbe,
+      browserProbeModulePath: invalidBrowserModule,
+      visualCritic: passingVisualCritic,
+    }),
+    /only one.*browser probe/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbe: completeBrowserProbe,
+      visualCritic: passingVisualCritic,
+      visualCriticModulePath: invalidVisualModule,
+    }),
+    /only one.*visual critic/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbe: completeBrowserProbe,
+      visualCritic: passingVisualCritic,
+      coreOptions: { browserProbe: completeBrowserProbe },
+    }),
+    /coreOptions\.browserProbe is not supported/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      browserProbe: completeBrowserProbe,
+      visualCritic: passingVisualCritic,
+      coreOptions: { visualCritic: passingVisualCritic },
+    }),
+    /coreOptions\.visualCritic is not supported/i,
+  );
+
+  const sharedProvider = async () => ({});
+  for (const reuse of [
+    { author: sharedProvider, visualCritic: sharedProvider },
+    { critic: sharedProvider, visualCritic: sharedProvider },
+  ]) {
+    await assert.rejects(
+      runOatExplainer({
+        ...context,
+        ...REQUIRED_REVIEW_PROVIDERS,
+        ...reuse,
+      }),
+      /provider roles .* must use distinct callback identities/i,
+    );
+  }
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
 });
 
 test('rejects missing, invalid, and conflicting author module inputs at the adapter boundary', async () => {
@@ -677,10 +849,7 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     authorModulePath,
     planSetModulePath,
     criticModulePath,
-    coreOptions: {
-      browserProbe: completeBrowserProbe,
-      visualCritic: passingVisualCritic,
-    },
+    ...REQUIRED_REVIEW_PROVIDERS,
     getConfig,
     mode: 'unattended',
   });
@@ -755,6 +924,7 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   };
 
@@ -804,6 +974,7 @@ test('passes a supplied fact base through the normalized adapter request', async
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
   const canonicalFactBasePath = await realpath(factBasePath);
@@ -829,6 +1000,7 @@ test('propagates failed core results when no manifest was produced', async () =>
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
+    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
 

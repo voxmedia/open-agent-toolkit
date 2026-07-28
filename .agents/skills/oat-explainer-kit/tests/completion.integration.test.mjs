@@ -52,11 +52,16 @@ const authorCallbackPath = resolve(
   repoRoot,
   '.agents/skills/oat-explainer-kit/references/author-callback.md',
 );
+const visualReviewCallbackPath = resolve(
+  repoRoot,
+  '.agents/skills/oat-explainer-kit/references/visual-review-callback.md',
+);
 const completionSkill = await readFile(completionSkillPath, 'utf8');
 const lifecycleContract = await readFile(lifecycleContractPath, 'utf8');
 const closeoutReference = await readFile(closeoutReferencePath, 'utf8');
 const adapterSkill = await readFile(adapterSkillPath, 'utf8');
 const authorCallback = await readFile(authorCallbackPath, 'utf8');
+const visualReviewCallback = await readFile(visualReviewCallbackPath, 'utf8');
 
 function sectionBetween(source, start, end) {
   const startIndex = source.indexOf(start);
@@ -215,6 +220,27 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
     lifecycleContract,
     /Every adapter run in both interactive and unattended modes must provide exactly\s+one provider-neutral author seam/,
   );
+});
+
+test('adapter guidance exposes first-class browser and visual-review providers', () => {
+  for (const input of [
+    'browserProbe',
+    'browserProbeModulePath',
+    'visualCritic',
+    'visualCriticModulePath',
+  ]) {
+    const pattern = new RegExp(`\`${input}\``);
+    assert.match(adapterSkill, pattern);
+    assert.match(lifecycleContract, pattern);
+    assert.match(visualReviewCallback, pattern);
+  }
+  assert.match(visualReviewCallback, /canonical 320, 768, and 1440\s+widths/);
+  assert.match(
+    visualReviewCallback,
+    /request's exact `requestId` and `requestHash`/,
+  );
+  assert.match(visualReviewCallback, /produces `built-needs-review`/);
+  assert.match(lifecycleContract, /distinct\s+callback identities/);
 });
 
 test('passes only the selected shared-project recap to archive and supports no-recap completion', () => {
@@ -652,10 +678,8 @@ async function recapFromEvidence({
       executedAt: '2026-07-20T12:00:00.000Z',
       findings: [],
     }),
-    coreOptions: {
-      browserProbe: completionBrowserProbe,
-      visualCritic: completionVisualCritic,
-    },
+    browserProbe: completionBrowserProbe,
+    visualCritic: completionVisualCritic,
     getConfig: async (key) => ({
       status: 'ok',
       key,
