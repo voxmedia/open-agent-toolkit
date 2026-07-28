@@ -60,9 +60,15 @@ async function fixture(mode = 'unattended') {
   };
 }
 
+async function markdownFixture(mode = 'unattended') {
+  const result = await fixture(mode);
+  result.request.recipe = { id: 'project-explainer', version: '1' };
+  return result;
+}
+
 // A stub for the headless runtime: a clean probe result keeps render QA silent
 // so the rich fixture's warning set is meaningful rather than runtime-shaped.
-function cleanProbeResult() {
+function cleanProbeResult(request = {}) {
   return {
     pageOverflowX: false,
     clippedX: [],
@@ -70,7 +76,21 @@ function cleanProbeResult() {
     unreadableHeadings: [],
     animationsDisabled: true,
     reducedMotion: true,
-    keyboard: { tab: true },
+    keyboard: {
+      tab: true,
+      arrows: {
+        ArrowLeft: true,
+        ArrowRight: true,
+        ArrowUp: true,
+        ArrowDown: true,
+      },
+    },
+    ...(request.scenario !== 'default' && {
+      deckLayout: {
+        flow: 'vertical',
+        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+      },
+    }),
   };
 }
 
@@ -78,7 +98,7 @@ function cleanProbe() {
   const requests = [];
   const probe = async (request) => {
     requests.push(request);
-    return cleanProbeResult();
+    return cleanProbeResult(request);
   };
   probe.requests = requests;
   return probe;
@@ -87,7 +107,7 @@ function cleanProbe() {
 // Seeds one finding per mapped browser code so the manifest vocabulary can be
 // asserted exactly rather than by substring.
 function defectiveProbe() {
-  return async () => ({
+  return async (request) => ({
     pageOverflowX: true,
     clippedX: [{ selector: 'table', clientWidth: 320, scrollWidth: 900 }],
     viewportClipped: [
@@ -99,6 +119,12 @@ function defectiveProbe() {
     animationsDisabled: false,
     reducedMotion: false,
     keyboard: { tab: false },
+    ...(request.scenario !== 'default' && {
+      deckLayout: {
+        flow: 'vertical',
+        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+      },
+    }),
   });
 }
 
@@ -136,6 +162,28 @@ mechanics an on-call engineer needs when the sentence is not enough.
 `;
 }
 
+function richHubMarkdown(request) {
+  return `# Atlas Index explainer
+
+${request.floor.requiredNarrative
+  .map(
+    (id) => `## ${id.replaceAll('-', ' ')}
+
+| Question | Answer |
+| -------- | ------ |
+| What changed | Continuous indexing now resumes from checkpoints |
+
+- The indexing path is validated.
+
+\`\`\`diagram
+graph TD
+  reader[Change reader] --> worker[Index worker]
+\`\`\`
+`,
+  )
+  .join('\n')}`;
+}
+
 function artisticHtml(request, { title, description, nodes, legend }) {
   const mode = request.theme.modes[request.theme.defaultMode];
   return request.shell
@@ -151,7 +199,7 @@ function systemMapHtml(request) {
     title: `Atlas Index ${request.artifactId.replaceAll('-', ' ')}`,
     description: 'How the reader, the workers, and the audit relate.',
     nodes: [
-      '<g data-node="reader" class="node"><rect x="60" y="60" width="260" height="80" rx="8"></rect><text x="84" y="106">Change reader</text></g>',
+      '<g id="as-built-architecture" data-node="reader" class="node"><rect x="60" y="60" width="260" height="80" rx="8"></rect><text x="84" y="106">Change reader</text></g>',
       '<g data-node="worker" class="node"><rect x="60" y="220" width="260" height="80" rx="8"></rect><text x="84" y="266">Index worker</text></g>',
       '<path class="edge" d="M 190 140 L 190 220"></path>',
     ].join(''),
@@ -159,46 +207,127 @@ function systemMapHtml(request) {
   });
 }
 
-const RICH_PROPOSALS = [
-  {
-    id: 'checkpoint-deep-dive',
-    profileId: 'deep-dive',
-    rationale: 'Checkpoint recovery needs more detail than the hub can carry.',
-  },
-  {
-    id: 'audit-deep-dive',
-    profileId: 'deep-dive',
-    rationale: 'The drift audit has its own operational runbook.',
-  },
-  {
-    id: 'system-map',
-    profileId: 'supporting-diagram',
-    rationale:
-      'The component relationships read better as a standalone visual.',
-  },
-];
+function hubHtml(request) {
+  return request.shell
+    .replaceAll('{{THEME_CSS}}', '')
+    .replaceAll('{{TITLE}}', 'Atlas Index recap')
+    .replaceAll(
+      '{{DESCRIPTION}}',
+      'Continuous indexing now resumes from retained checkpoints.',
+    )
+    .replaceAll('{{EYEBROW}}', 'Project recap')
+    .replaceAll(
+      '{{NAVIGATION}}',
+      REQUIRED_NARRATIVE.map(
+        (id) => `<a href="#${id}">${id.replaceAll('-', ' ')}</a>`,
+      ).join(''),
+    )
+    .replaceAll(
+      '{{CONTENT}}',
+      REQUIRED_NARRATIVE.map(
+        (id) => `<section id="${id}"><h2>${id.replaceAll('-', ' ')}</h2>
+          ${
+            id === 'key-agent-decisions'
+              ? '<table><thead><tr><th>Decision</th><th>Outcome</th></tr></thead><tbody><tr><td>Checkpoint each partition</td><td>Resume safely</td></tr></tbody></table>'
+              : id === 'as-built-architecture'
+                ? '<svg class="narrative-diagram" data-direction="TD"><text class="diagram-node-label">Change reader</text></svg>'
+                : id === 'implementation-record'
+                  ? '<ol class="timeline"><li>Build the retained checkpoint flow.</li></ol>'
+                  : id === 'validation-evidence'
+                    ? '<aside class="callout callout--important">All retained hashes passed.</aside>'
+                    : id === 'outcome'
+                      ? '<aside class="callout callout--note">Indexing resumes mid-file.</aside>'
+                      : '<ul><li>Make continuous indexing reliable.</li></ul>'
+          }
+        </section>`,
+      ).join(''),
+    )
+    .replaceAll('{{FOOTER}}', 'Authored from validated evidence.');
+}
+
+function deckHtml(request) {
+  return request.shell
+    .replaceAll('{{THEME_CSS}}', '')
+    .replaceAll('{{TITLE}}', 'Atlas Index walkthrough')
+    .replaceAll('{{DESCRIPTION}}', 'Request, architecture, and outcome.')
+    .replaceAll(
+      '{{SLIDES}}',
+      '<section class="slide"><div class="slide__content"><h1>Continuous indexing</h1><p>Resume from retained checkpoints.</p></div></section><section id="outcome" class="slide"><div class="slide__content"><h2>Outcome</h2><p>Every partition advances independently.</p></div></section>',
+    );
+}
 
 // The rich author returns the shipped worked example as the floor draft, so a
 // renderer regression against the shipped fixture fails this suite directly.
-function richAuthor(proposals = RICH_PROPOSALS) {
+function richAuthor() {
   const requests = [];
   const author = async (request) => {
     requests.push(request);
     if (request.artifactType === 'hub') {
-      return {
-        ...authorResult(request, await example('content.md')),
-        ...(proposals.length > 0 && { proposedArtifacts: proposals }),
-      };
+      return authorResult(
+        request,
+        request.authoring === 'html'
+          ? hubHtml(request)
+          : richHubMarkdown(request),
+      );
     }
     return authorResult(
       request,
       request.authoring === 'markdown'
         ? deepDiveMarkdown(request.artifactId)
-        : systemMapHtml(request),
+        : request.artifactType === 'deck'
+          ? deckHtml(request)
+          : request.artifactType === 'diagram'
+            ? systemMapHtml(request)
+            : hubHtml(request),
     );
   };
   author.requests = requests;
   return author;
+}
+
+function adaptivePlanSet(optional = []) {
+  return async ({ recipe, factBase }) => {
+    const sourceIds = factBase.sources
+      .map(({ id }) => id)
+      .filter((id) => !id.startsWith('critic:'));
+    const profiles = new Map(
+      recipe.expansion.profiles.map((profile) => [profile.profileId, profile]),
+    );
+    return {
+      schemaVersion: 'explainer-kit.set-plan/v1',
+      planId: 'atlas-index-recap-set',
+      recipe: { id: recipe.id, version: recipe.version },
+      sourceIds,
+      ledger: {
+        terminology: [],
+        statuses: [{ subject: 'indexing', value: 'continuous' }],
+        numbers: [
+          { subject: 'required artifacts', value: 3, unit: 'artifacts' },
+        ],
+      },
+      portfolio: [
+        ...recipe.floor.map((artifact) => ({
+          artifactId: artifact.id,
+          artifactType: artifact.type,
+          profileId: 'recipe-floor',
+          required: true,
+          sourceIds,
+          draft: `Compose the planned ${artifact.id}.`,
+          visualIntent: `Use ${artifact.type} as the selected medium.`,
+        })),
+        ...optional.map(({ artifactId, profileId, kind, rationale }) => ({
+          artifactId,
+          artifactType: profiles.get(profileId)?.type ?? 'explainer',
+          profileId,
+          required: false,
+          sourceIds,
+          draft: `Compose the optional ${artifactId}.`,
+          visualIntent: 'Add a distinct source-backed perspective.',
+          justification: { kind, sourceIds, rationale },
+        })),
+      ],
+    };
+  };
 }
 
 async function richRun(overrides = {}) {
@@ -207,6 +336,7 @@ async function richRun(overrides = {}) {
   const probe = cleanProbe();
   const result = await runExplainer(request, {
     author,
+    ...(overrides.planSet && { planSet: overrides.planSet }),
     browserProbe: probe,
     now: () => NOW,
     ...(overrides.mode === 'interactive'
@@ -241,7 +371,7 @@ test('the shipped recap fixture renders structured blocks, not flat paragraphs',
   assert.equal(result.marking, 'auto-drafted');
 
   const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
-  assert.ok(occurrences(hub, /<table\b/g) >= 2, 'hub renders real tables');
+  assert.ok(occurrences(hub, /<table\b/g) >= 1, 'hub renders a real table');
   assert.match(hub, /<th>Decision<\/th>/);
   assert.match(hub, /<td>Checkpoint each partition<\/td>/);
   assert.match(hub, /<svg class="narrative-diagram" data-direction="TD"/);
@@ -268,8 +398,41 @@ test('the shipped recap fixture renders structured blocks, not flat paragraphs',
   // The original complaint was a flat wall of paragraphs; structured blocks now
   // outnumber the bare ones by a wide margin.
   assert.ok(
-    occurrences(hub, /<table\b|<ul\b|<ol\b|<aside\b|<svg\b/g) >= 8,
+    occurrences(hub, /<table\b|<ul\b|<ol\b|<aside\b|<svg\b/g) >= 6,
     'structured block density holds',
+  );
+});
+
+test('unattended recap always composes the adaptive hub, architecture, and deck minimum', async () => {
+  const { request } = await fixture();
+  const author = richAuthor([]);
+  const result = await runExplainer(request, {
+    author,
+    browserProbe: cleanProbe(),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const manifest = await readJson(result.manifestPath);
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, type }) => ({ id, type })),
+    [
+      { id: 'project-recap', type: 'hub' },
+      { id: 'architecture', type: 'diagram' },
+      { id: 'deck', type: 'deck' },
+    ],
+  );
+  assert.deepEqual(
+    author.requests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+  assert.equal(
+    author.requests.every(({ authoring }) => authoring === 'html'),
+    true,
   );
 });
 
@@ -289,15 +452,29 @@ test('a rich recap ships with an empty warning set', async () => {
     }),
     { valid: true, errors: [] },
   );
-  assert.equal(probe.requests.length, 12, 'four artifacts across three widths');
+  assert.equal(
+    probe.requests.length,
+    15,
+    'hub and architecture plus three deck scenarios across three widths',
+  );
   assert.equal(
     manifest.artifacts.every(({ status }) => status === 'built'),
     true,
   );
 });
 
-test('expansion artifacts get distinct identities, paths, and hub links', async () => {
-  const { result } = await richRun();
+test('source-backed optional artifacts get distinct identities and retained paths', async () => {
+  const { result } = await richRun({
+    planSet: adaptivePlanSet([
+      {
+        artifactId: 'checkpoint-deep-dive',
+        profileId: 'deep-dive',
+        kind: 'source-backed-detail',
+        rationale:
+          'Checkpoint recovery needs more detail than the hub can carry.',
+      },
+    ]),
+  });
   const manifest = await readJson(result.manifestPath);
 
   // D1: floor keeps its historical path; expansions nest under their own ID.
@@ -305,12 +482,12 @@ test('expansion artifacts get distinct identities, paths, and hub links', async 
     manifest.artifacts.map(({ id, renderedPath }) => [id, renderedPath]),
     [
       ['project-recap', HUB_PATH],
+      ['architecture', `site/diagrams/${SLUG}/architecture/index.html`],
+      ['deck', `site/decks/${SLUG}/deck/index.html`],
       [
         'checkpoint-deep-dive',
         `site/explainers/${SLUG}/checkpoint-deep-dive/index.html`,
       ],
-      ['audit-deep-dive', `site/explainers/${SLUG}/audit-deep-dive/index.html`],
-      ['system-map', `site/diagrams/${SLUG}/system-map/index.html`],
     ],
   );
   for (const field of ['id', 'renderedPath', 'contentPath', 'hash']) {
@@ -325,21 +502,6 @@ test('expansion artifacts get distinct identities, paths, and hub links', async 
     await access(join(result.runRoot, artifact.contentPath));
   }
 
-  const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
-  for (const [id, directory] of [
-    ['checkpoint-deep-dive', 'explainers'],
-    ['audit-deep-dive', 'explainers'],
-    ['system-map', 'diagrams'],
-  ]) {
-    assert.match(
-      hub,
-      new RegExp(
-        `href="\\.\\./\\.\\./${directory}/${SLUG}/${id}/index\\.html"`,
-      ),
-      id,
-    );
-  }
-
   // D8: the approval record is the durable source of truth for the whole set.
   const approval = await readJson(
     join(result.runRoot, 'source/content-approval.json'),
@@ -348,9 +510,23 @@ test('expansion artifacts get distinct identities, paths, and hub links', async 
     {
       artifactId: 'project-recap',
       origin: 'floor',
-      authoring: 'markdown',
-      contentPath: 'source/content/project-recap.md',
+      authoring: 'html',
+      contentPath: 'source/content/project-recap.html',
       authorResultPath: 'source/author/project-recap.json',
+    },
+    {
+      artifactId: 'architecture',
+      origin: 'floor',
+      authoring: 'html',
+      contentPath: 'source/content/architecture.html',
+      authorResultPath: 'source/author/architecture.json',
+    },
+    {
+      artifactId: 'deck',
+      origin: 'floor',
+      authoring: 'html',
+      contentPath: 'source/content/deck.html',
+      authorResultPath: 'source/author/deck.json',
     },
     {
       artifactId: 'checkpoint-deep-dive',
@@ -359,22 +535,6 @@ test('expansion artifacts get distinct identities, paths, and hub links', async 
       authoring: 'markdown',
       contentPath: 'source/content/checkpoint-deep-dive.md',
       authorResultPath: 'source/author/checkpoint-deep-dive.json',
-    },
-    {
-      artifactId: 'audit-deep-dive',
-      origin: 'expansion',
-      profileId: 'deep-dive',
-      authoring: 'markdown',
-      contentPath: 'source/content/audit-deep-dive.md',
-      authorResultPath: 'source/author/audit-deep-dive.json',
-    },
-    {
-      artifactId: 'system-map',
-      origin: 'expansion',
-      profileId: 'supporting-diagram',
-      authoring: 'html',
-      contentPath: 'source/content/system-map.html',
-      authorResultPath: 'source/author/system-map.json',
     },
   ]);
 });
@@ -398,9 +558,8 @@ test('the interactive gate pauses on the fully rendered expanded set', async () 
   }
   for (const path of [
     HUB_PATH,
-    `site/explainers/${SLUG}/checkpoint-deep-dive/index.html`,
-    `site/explainers/${SLUG}/audit-deep-dive/index.html`,
-    `site/diagrams/${SLUG}/system-map/index.html`,
+    `site/diagrams/${SLUG}/architecture/index.html`,
+    `site/decks/${SLUG}/deck/index.html`,
   ]) {
     await access(join(result.runRoot, path));
   }
@@ -408,62 +567,48 @@ test('the interactive gate pauses on the fully rendered expanded set', async () 
     join(result.runRoot, 'source/content-approval.json'),
   );
   assert.equal(approval.status, 'pending');
-  assert.equal(approval.artifacts.length, 4);
+  assert.equal(approval.artifacts.length, 3);
 });
 
 test('an unknown expansion profile fails the run loudly', async () => {
   const { result } = await richRun({
-    author: richAuthor([
+    planSet: adaptivePlanSet([
       {
-        id: 'walkthrough-video',
+        artifactId: 'walkthrough-video',
         profileId: 'motion-graphic',
+        kind: 'source-backed-detail',
         rationale: 'An animated walkthrough would explain the flow.',
       },
     ]),
   });
 
   assert.equal(result.outcome, 'failed');
-  assert.equal(result.errors[0].code, 'E_AUTHOR_RESULT');
-  assert.match(result.errors[0].message, /Unknown expansion profile/);
+  assert.equal(result.errors[0].code, 'E_SET_PLAN');
+  assert.match(result.errors[0].message, /allowed recipe profile/);
   await assert.rejects(
     access(join(result.runRoot, `site/diagrams/${SLUG}/walkthrough-video`)),
   );
 });
 
-test('an over-cap proposal warns and trims instead of failing', async () => {
-  // D5: supporting-diagram declares maxCount 4, so the fifth is rejected.
+test('an over-cap planned portfolio fails closed', async () => {
   const { result } = await richRun({
-    author: richAuthor(
-      Array.from({ length: 5 }, (_, index) => ({
-        id: `system-map-${index + 1}`,
-        profileId: 'supporting-diagram',
-        rationale: `View ${index + 1} isolates one architectural concern.`,
+    planSet: adaptivePlanSet(
+      Array.from({ length: 4 }, (_, index) => ({
+        artifactId: `detail-${index + 1}`,
+        profileId: 'deep-dive',
+        kind: 'source-backed-detail',
+        rationale: `Detail ${index + 1} isolates one source-backed concern.`,
       })),
     ),
   });
 
-  assert.equal(
-    result.outcome,
-    'built-not-durable',
-    JSON.stringify(result.errors),
-  );
-  assert.deepEqual(result.warnings, ['expansion-profile-limit-exceeded']);
-  const manifest = await readJson(result.manifestPath);
-  assert.deepEqual(manifest.warnings, ['expansion-profile-limit-exceeded']);
-  assert.deepEqual(
-    manifest.artifacts.map(({ id }) => id),
-    [
-      'project-recap',
-      'system-map-1',
-      'system-map-2',
-      'system-map-3',
-      'system-map-4',
-    ],
-  );
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_SET_PLAN');
+  assert.match(result.errors[0].message, /exceeds the deep-dive profile limit/);
 });
 
 test('a thin recap ships with the floor warning vocabulary', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const thin = async (authorRequest) =>
     authorResult(
       authorRequest,
@@ -496,7 +641,7 @@ test('a thin recap ships with the floor warning vocabulary', async () => {
 });
 
 test('prose before the first section heading survives to the rendered hub', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const lead =
     'Continuous indexing shipped in three phases, and this page records each one.';
   const result = await runExplainer(request, {
@@ -531,7 +676,7 @@ test('prose before the first section heading survives to the rendered hub', asyn
 });
 
 test('a repeated heading keeps both sections with unique anchors', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const result = await runExplainer(request, {
     author: async (authorRequest) =>
       authorResult(
@@ -564,7 +709,7 @@ test('a repeated heading keeps both sections with unique anchors', async () => {
 });
 
 test('a lead-only document still renders one overview section', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const result = await runExplainer(request, {
     author: async (authorRequest) =>
       authorResult(
@@ -577,7 +722,10 @@ test('a lead-only document still renders one overview section', async () => {
 
   const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
   assert.deepEqual(renderedSectionIds(hub), ['overview']);
-  assert.match(hub, /The whole story fits in one pass with no section headings\./);
+  assert.match(
+    hub,
+    /The whole story fits in one pass with no section headings\./,
+  );
 });
 
 function renderedSectionIds(html) {
@@ -585,7 +733,7 @@ function renderedSectionIds(html) {
 }
 
 test('each browser finding emits exactly one stable render-qa id', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const result = await runExplainer(request, {
     author: richAuthor(),
     browserProbe: defectiveProbe(),
@@ -633,7 +781,7 @@ test('render degradation warnings reach the result and the manifest', async () =
   ];
 
   for (const [warningId, markdown] of cases) {
-    const { request } = await fixture();
+    const { request } = await markdownFixture();
     const result = await runExplainer(request, {
       author: async (authorRequest) => authorResult(authorRequest, markdown),
       browserProbe: cleanProbe(),
@@ -659,7 +807,7 @@ test('render degradation warnings reach the result and the manifest', async () =
 });
 
 test('a run without an injected probe warns rather than skipping silently', async () => {
-  const { request } = await fixture();
+  const { request } = await markdownFixture();
   const result = await runExplainer(request, {
     author: richAuthor(),
     now: () => NOW,

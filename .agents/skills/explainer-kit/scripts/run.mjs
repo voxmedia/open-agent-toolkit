@@ -25,6 +25,7 @@ import {
   recipeRequiredNarrative,
   shouldStopDiscovery,
   validateContentModel,
+  validatePlannedPortfolio,
   validateSourceBindings,
 } from './lib/recipes.mjs';
 import {
@@ -124,6 +125,16 @@ export async function runExplainer(request, options = {}) {
           planSet: options.planSet,
         });
         state.setPlan = planned.plan;
+        const portfolioValidation = validatePlannedPortfolio(
+          recipe,
+          state.setPlan.portfolio,
+        );
+        if (!portfolioValidation.valid) {
+          throw codedError(
+            'E_SET_PLAN',
+            `Invalid planned portfolio: ${portfolioValidation.errors.join('; ')}`,
+          );
+        }
         state.setPlanPaths = await writeSetPlanRecords(run, planned);
         await createAuthoredContent(state, options, now);
         return {
@@ -462,8 +473,7 @@ async function hydrateResumableState(state) {
   state.resumedApprovalStatus = approval.status;
   // Reopened stages rerun against the corrected content, so carrying their
   // prior warnings forward would outlive the fix that resolved them.
-  const rerunning =
-    approval.status === 'rejected' ? REOPENED_ON_REJECTION : [];
+  const rerunning = approval.status === 'rejected' ? REOPENED_ON_REJECTION : [];
   state.warnings.push(
     ...record.stages
       .filter(({ id }) => !rerunning.includes(id))
@@ -1031,11 +1041,7 @@ async function authorArtifact(state, artifact, author, trust) {
   }
   const retained = {
     ...structuredClone(result),
-    provenance: resolveAuthorProvenance(
-      result.provenance,
-      trust,
-      artifact.id,
-    ),
+    provenance: resolveAuthorProvenance(result.provenance, trust, artifact.id),
   };
   const retainedValidation = validateContract('author-result/v2', retained);
   if (!retainedValidation.valid) {
@@ -1107,9 +1113,7 @@ function markdownContentModel(artifact, slug, markdown, artifactLinks) {
 
   // Prose between the document title and the first `##` is authored content,
   // so it is carried as a leading section rather than silently dropped.
-  const bodyStart = titleMatch
-    ? titleMatch.index + titleMatch[0].length
-    : 0;
+  const bodyStart = titleMatch ? titleMatch.index + titleMatch[0].length : 0;
   const lead = markdown.slice(bodyStart, headings[0].index).trim();
   const authoredIds = new Set(
     headings.map((heading) => slugify(heading[1].trim())),

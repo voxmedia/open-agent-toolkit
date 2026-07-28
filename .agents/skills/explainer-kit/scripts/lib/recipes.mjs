@@ -34,7 +34,11 @@ const PROFILE_REQUIRED_KEYS = [
   'profileId',
   'type',
 ];
-const PROFILE_KEYS = [...PROFILE_REQUIRED_KEYS, 'shell'];
+const PROFILE_KEYS = [
+  ...PROFILE_REQUIRED_KEYS,
+  'allowedJustificationKinds',
+  'shell',
+];
 const EXPANSION_LIMIT_KEYS = ['maxArtifacts', 'maxPerType'];
 const DISCOVERY_LIMIT_KEYS = ['consecutiveNoNewFindingsRounds', 'maxRounds'];
 const SOURCE_KINDS = new Set([
@@ -116,9 +120,7 @@ export function evaluateExpansionProposals(recipe, proposals) {
   const seenIds = new Set();
   const acceptedByProfile = new Map();
   const acceptedByType = new Map();
-  const maxPerType = new Map(
-    Object.entries(expansion.limits.maxPerType ?? {}),
-  );
+  const maxPerType = new Map(Object.entries(expansion.limits.maxPerType ?? {}));
 
   if (!Array.isArray(proposals)) {
     return {
@@ -180,7 +182,10 @@ export function evaluateExpansionProposals(recipe, proposals) {
     // A declared type cap binds across profiles, so proposals cannot spread
     // over sibling profiles that share one artifact type to evade it.
     const typeCount = acceptedByType.get(profile.type) ?? 0;
-    if (maxPerType.has(profile.type) && typeCount >= maxPerType.get(profile.type)) {
+    if (
+      maxPerType.has(profile.type) &&
+      typeCount >= maxPerType.get(profile.type)
+    ) {
       rejected.push({
         ...structuredClone(proposal),
         status: 'rejected',
@@ -298,6 +303,53 @@ export function validateContentModel(recipe, contentModel) {
     const count = sectionCounts.get(sectionId) ?? 0;
     if (count > 1) {
       errors.push(`Duplicate narrative section: ${sectionId}`);
+    }
+  }
+  return { valid: errors.length === 0, errors };
+}
+
+export function validatePlannedPortfolio(recipe, portfolio) {
+  const errors = [];
+  if (!Array.isArray(portfolio)) {
+    return { valid: false, errors: ['Planned portfolio must be an array'] };
+  }
+  const floorIds = new Set(recipeFloor(recipe).map(({ id }) => id));
+  const expansion = recipeExpansion(recipe);
+  const profiles = new Map(
+    expansion.profiles.map((profile) => [profile.profileId, profile]),
+  );
+  const counts = new Map();
+  let optionalCount = 0;
+
+  for (const artifact of portfolio) {
+    if (floorIds.has(artifact?.artifactId)) continue;
+    optionalCount += 1;
+    const profile = profiles.get(artifact?.profileId);
+    if (!profile) {
+      errors.push(`Unknown planned profile: ${artifact?.profileId}`);
+      continue;
+    }
+    counts.set(profile.profileId, (counts.get(profile.profileId) ?? 0) + 1);
+    if (!isObject(artifact.justification)) {
+      errors.push(
+        `Optional artifact ${artifact.artifactId} requires a source-backed justification`,
+      );
+      continue;
+    }
+    if (
+      !profile.allowedJustificationKinds?.includes(artifact.justification.kind)
+    ) {
+      errors.push(
+        `Optional artifact ${artifact.artifactId} justification ${artifact.justification.kind} is not allowed for ${profile.profileId}`,
+      );
+    }
+  }
+  if (optionalCount > expansion.limits.maxArtifacts) {
+    errors.push('Planned portfolio exceeds the recipe optional-artifact limit');
+  }
+  for (const [profileId, count] of counts) {
+    if (count > profiles.get(profileId).maxCount) {
+      errors.push(`Planned portfolio exceeds the ${profileId} profile limit`);
     }
   }
   return { valid: errors.length === 0, errors };
@@ -434,6 +486,12 @@ function validateV2Shape(recipe, file) {
       `${file} expansion profile briefRef`,
     );
     assertFiniteCount(profile.maxCount, `${file} expansion profile maxCount`);
+    if ('allowedJustificationKinds' in profile) {
+      assertUniqueNonEmptyStrings(
+        profile.allowedJustificationKinds,
+        `${file} expansion profile allowedJustificationKinds`,
+      );
+    }
     if (profile.authoring === 'html' || 'shell' in profile) {
       assertNonEmptyString(
         profile.shell,
