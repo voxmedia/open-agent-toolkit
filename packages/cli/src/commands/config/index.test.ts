@@ -2783,6 +2783,26 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('describe workflow.autoNarrowReReviewScope shows enabled-by-default metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'workflow.autoNarrowReReviewScope',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: workflow.autoNarrowReReviewScope',
+      );
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: true');
+      expect(capture.info[0]).toContain('Narrowing is enabled by default');
+      expect(capture.info[0]).toContain('false opts out');
+      expect(capture.info[0]).not.toContain('When unset, the skill prompts');
+      expect(process.exitCode).toBe(0);
+    });
+
     it('describe workflow.postImplementSequence shows full enum', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });

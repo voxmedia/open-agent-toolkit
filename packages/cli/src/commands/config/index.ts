@@ -793,12 +793,12 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'boolean',
-    defaultValue: 'unset',
+    defaultValue: 'true',
     mutability: 'read/write',
     owningCommand:
       'oat config set workflow.autoNarrowReReviewScope <true|false>',
     description:
-      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide when re-reviewing completed fix tasks. Has no effect on initial reviews (there is nothing to narrow to). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Automatically narrows re-review scope to changes since the prior same-lineage review. Narrowing is enabled by default; false opts out to full scope. Has no effect on initial reviews (there is nothing to narrow to). Resolution: env > local > shared > user > default.',
   },
   {
     key: 'workflow.autoArtifactReview.plan',
