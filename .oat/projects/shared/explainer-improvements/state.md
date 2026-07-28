@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T15:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T15:21:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p02 review remediation attempt 2 of 3 implemented; re-review pending
+Phase p03 implementation in progress
 
 ## Artifacts
 
@@ -129,7 +129,9 @@ Phase p02 review remediation attempt 2 of 3 implemented; re-review pending
 - ✓ p02-t13 anchors set-plan resume to an external approval token
 - ✓ Root verification passed the complete p02 union (141/141) and
   `pnpm release:validate`
-- ⧗ Fresh narrowed p02 re-review pending for I3-R1
+- ✓ Fresh narrowed p02 re-review passed with no findings
+- ✓ Phase p02 closed after remediation attempt 2/3
+- ⧗ Phase p03 begins at p03-t01
 
 ## Blockers
 
@@ -137,5 +139,5 @@ None
 
 ## Next Milestone
 
-Run a fresh narrowed root-owned review of p02-t13, then either close Phase p02
-or enter the final permitted remediation attempt 3/3.
+Execute p03-t01 through p03-t04, then run root verification and the configured
+Phase p03 code review.

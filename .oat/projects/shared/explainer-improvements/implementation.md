@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | review_pending |    13 |     13/13 |
-| p03   | pending        |     4 |       0/4 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----: | --------: |
+| p01   | complete    |     7 |       7/7 |
+| p02   | complete    |    13 |     13/13 |
+| p03   | in_progress |     4 |       0/4 |
+| p04   | pending     |     3 |       0/3 |
+| p05   | pending     |     4 |       0/4 |
 
 **Total:** 20/31 tasks completed
 
@@ -88,7 +88,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** review_pending
+**Status:** complete
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -119,13 +119,13 @@ oat_generated: false
 
 **Verification:**
 
-- Complete Phase p02 focused union — 125/125 passed.
+- Complete Phase p02 focused union — 141/141 passed.
 - `pnpm check`, `pnpm lint`, `pnpm format`, `pnpm type-check`, and `pnpm build`
   passed.
 - `pnpm test` passed, including 129/129 smoke tests.
 - `pnpm release:validate` passed five public packages and 65 visual
   measurements.
-- Root reran the 125-test union and release validation with a clean worktree.
+- Root reran the 141-test union and release validation with a clean worktree.
 
 ### Phase Review
 
@@ -147,11 +147,14 @@ oat_generated: false
 - p02-t13 implemented the external approval-resume token in remediation
   attempt 2/3.
 - Root verification passed the complete Phase p02 union (141/141) and
-  `pnpm release:validate`; fresh narrowed re-review is pending.
+  `pnpm release:validate`.
+- Final re-review artifact: `reviews/20260728-p02-code-review-r2.md`
+- Final verdict: `PASS` — 0 Critical, 0 Important, 0 Medium, 0 Minor. Phase
+  p02 is closed.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
-**Status:** pending
+**Status:** in_progress
 
 - [ ] p03-t01 — Retain browser screenshots and metrics at three viewports
 - [ ] p03-t02 — Add an independent whole-set visual critic
@@ -295,6 +298,11 @@ oat_generated: false
 - Scope: verify I3-R1 and detect regressions in the external resume-token
   boundary
 - Review-remediation attempt: 2/3
+- Outcome: `PASS`
+- Artifact: `reviews/20260728-p02-code-review-r2.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Verification: focused 56/56 and Phase p02 union 141/141
+- Phase disposition: complete; continue with p03-t01
 - Dispatch: scope=p02 action=re-review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -331,14 +339,14 @@ oat_generated: false
 | Phase | Tests Run                                                       | Passed | Failed | Coverage                |
 | ----- | --------------------------------------------------------------- | -----: | -----: | ----------------------- |
 | p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed |
-| p02   | -                                                               |      - |      - | -                       |
+| p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed |
 | p03   | -                                                               |      - |      - | -                       |
 | p04   | -                                                               |      - |      - | -                       |
 | p05   | -                                                               |      - |      - | -                       |
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 30 tasks and the final review._
+_Fill from implementation evidence after all 31 tasks and the final review._
 
 ## References
 
