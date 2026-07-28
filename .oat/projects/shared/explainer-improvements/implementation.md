@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | review_pending |     7 |       7/7 |
-| p02   | pending        |     5 |       0/5 |
-| p03   | pending        |     4 |       0/4 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | pending  |     5 |       0/5 |
+| p03   | pending  |     4 |       0/4 |
+| p04   | pending  |     3 |       0/3 |
+| p05   | pending  |     4 |       0/4 |
 
 **Total:** 7/23 tasks completed
 
@@ -31,7 +31,7 @@ oat_generated: false
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** review_pending
+**Status:** complete
 
 - [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
 - [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
@@ -68,7 +68,9 @@ oat_generated: false
 
 - Request: `explainer-improvements-p01-review-20260728T030636Z`
 - Artifact: `reviews/20260728-p01-code-review.md`
-- Verdict: `BLOCKED` — 0 Critical, 2 Important, 3 Medium, 0 Minor
+- Initial verdict: `BLOCKED` — 0 Critical, 2 Important, 3 Medium, 0 Minor
+- Remediation verdict: `PASS` — 0 Critical, 0 Important, 1 Medium, 0 Minor
+- Verified remediation range: `d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1`
 - Blocking fixes: p01-t05 (notice source/version provenance) and p01-t06
   (source-grounded, hash-verified golden evidence)
 - Non-blocking follow-ups retained in the review artifact: absolute-path
@@ -81,6 +83,8 @@ oat_generated: false
   review continuation.
 - p01-t07 aligned both repository and smoke version contracts; full phase
   acceptance verification passed with a clean worktree.
+- The bounded review continuation passed with zero Critical and zero Important
+  findings. M2 remains a non-blocking curated backlog-overview maintenance item.
 
 ## Phase 2: Set-level visual authoring runtime
 

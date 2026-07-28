@@ -10,7 +10,16 @@ oat_implementation_request_id: explainer-improvements-p01-20260728T015427Z
 oat_phase_base: 5d964f2205315149fa31e8f3813f36504f52a750
 oat_reviewed_head: d2a2af8c1291d46174a72c16cce925129e5252f6
 oat_review_range: 5d964f2205315149fa31e8f3813f36504f52a750..d2a2af8c1291d46174a72c16cce925129e5252f6
-oat_tracking_baseline: 4b7b2ab926ff5f813e4cf1161b00d3d45a855e55
+oat_initial_tracking_baseline: 4b7b2ab926ff5f813e4cf1161b00d3d45a855e55
+oat_remediation_verified_at: 2026-07-28T04:11:12Z
+oat_remediation_head: 16d314f691572ea9f5eadea0802429ea5513d8a1
+oat_remediation_range: d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1
+oat_tracking_baseline: 30fdce79e33c978b289cb8896cd238879e803bff
+oat_remediation_tasks: [p01-t05, p01-t06, p01-t07]
+oat_remediation_retry_usage: 1/1
+oat_current_verdict: pass
+oat_supplied_remediation_head: 16d314f645c62103a11528e6d33e418968a3e166
+oat_supplied_tracking_baseline: 30fdce790a8fb7156f59d5b4167b52a92021273f
 oat_tasks: [p01-t01, p01-t02, p01-t03, p01-t04]
 oat_reviewer_target: oat-reviewer-gpt-5-6-sol-high
 oat_model_axis: selected:gpt-5.6-sol-high
@@ -26,11 +35,16 @@ oat_dispatch_stamp: 'Dispatch: scope=p01 action=review role=reviewer producer=un
 **Phase:** p01 — Compliance and bounded quality baseline
 **Review request:** `explainer-improvements-p01-review-20260728T030636Z`
 **Implementation request:** `explainer-improvements-p01-20260728T015427Z`
-**Tasks:** `p01-t01`, `p01-t02`, `p01-t03`, `p01-t04`
+**Original tasks:** `p01-t01`, `p01-t02`, `p01-t03`, `p01-t04`
+**Remediation tasks:** `p01-t05`, `p01-t06`, `p01-t07`
 **Base:** `5d964f2205315149fa31e8f3813f36504f52a750`
-**Head:** `d2a2af8c1291d46174a72c16cce925129e5252f6`
-**Range:** `5d964f2205315149fa31e8f3813f36504f52a750..d2a2af8c1291d46174a72c16cce925129e5252f6`
-**Current committed tracking baseline:** `4b7b2ab926ff5f813e4cf1161b00d3d45a855e55`
+**Original head:** `d2a2af8c1291d46174a72c16cce925129e5252f6`
+**Original range:** `5d964f2205315149fa31e8f3813f36504f52a750..d2a2af8c1291d46174a72c16cce925129e5252f6`
+**Remediation verified:** 2026-07-28T04:11:12Z
+**Remediation head:** `16d314f691572ea9f5eadea0802429ea5513d8a1`
+**Remediation range:** `d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1`
+**Current committed tracking baseline:** `30fdce79e33c978b289cb8896cd238879e803bff`
+**Remediation retry usage:** 1/1
 **Reviewer target:** `oat-reviewer-gpt-5-6-sol-high`
 **Dispatch axes:** `model_axis=selected:gpt-5.6-sol-high`; `effort_axis=not-applicable`
 **Dispatch stamp:** `Dispatch: scope=p01 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
@@ -40,16 +54,15 @@ oat_dispatch_stamp: 'Dispatch: scope=p01 action=review role=reviewer producer=un
 
 ## Verdict
 
-**BLOCKED.** Phase p01 does not pass the blocking threshold because it has two
-Important findings. The packed license bodies, five-package lockstep release,
-backlog terminal-state mechanics, successor ordering, and generated asset
-parity are sound, but notice provenance and the golden benchmark oracle do not
-meet their declared acceptance contracts.
+**PASS.** The bounded remediation resolves both Important findings and the M1
+and M3 Medium findings without introducing a new Critical or Important
+regression. M2 remains an actionable, non-blocking Medium backlog-maintenance
+finding.
 
-Findings: 0 critical, 2 important, 3 medium, 0 minor
+Findings: 0 critical, 0 important, 1 medium, 0 minor
 
-**Blocking threshold:** Failed — zero Critical but two Important findings.
-**Blocking fixes required:** Yes.
+**Blocking threshold:** Passed — zero Critical and zero Important findings.
+**Blocking fixes required:** No.
 
 ## Evidence Sources
 
@@ -67,7 +80,98 @@ The project uses import workflow mode. Review evidence used:
 `spec.md`, `design.md`, and `discovery.md` are absent, which is allowed for this
 import-mode project.
 
-## Findings
+## Remediation Verification
+
+### Scope resolution
+
+The prompt-supplied full remediation and tracking SHAs do not exist:
+`16d314f645c62103a11528e6d33e418968a3e166` and
+`30fdce790a8fb7156f59d5b4167b52a92021273f`. Their short prefixes resolve
+uniquely, agree with the current plan, implementation, state, and commit
+subjects, and establish the exact commits used here:
+
+- Remediation head:
+  `16d314f691572ea9f5eadea0802429ea5513d8a1`
+- Current tracking baseline and `HEAD`:
+  `30fdce79e33c978b289cb8896cd238879e803bff`
+
+The authoritative remediation verification range is therefore
+`d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1`.
+This range is unambiguous and contains the root tracking commits plus
+`p01-t05`, `p01-t06`, and `p01-t07`.
+
+### Dispositions
+
+| Finding | Disposition                 | Verification                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| ------- | --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| I1      | Resolved                    | `NOTICES.md` now ships the canonical visual-explainer URL and `0.8.1` marker. The packed-text contract requires all three adapted-source URLs, version markers, copyright lines, and complete MIT bodies, and the real `pnpm pack` test passes.                                                                                                                                                                                               |
+| I2      | Resolved                    | All three descriptors enumerate and hash retained source records, hub/architecture/deck outputs, browser evidence, and three screenshots. The loader recomputes hashes, checks producer metadata, grounds every claim, validates topology and exact minimum-set membership, verifies Chromium evidence, and resolves every rubric pointer. The unsupported simple threshold/recovery-task claim was replaced with exact source claim `F-103`. |
+| M1      | Resolved                    | Recursive portability validation uses POSIX and Windows path semantics and rejects temporary/arbitrary POSIX roots, Windows drive paths, UNC paths, home-relative paths, and `file://`; four explicit negative tests pass.                                                                                                                                                                                                                    |
+| M2      | Open — Medium, non-blocking | The curated backlog overview remains stale. It was intentionally not included in the single remediation pass and does not block this PASS.                                                                                                                                                                                                                                                                                                    |
+| M3      | Resolved                    | Plan, implementation, and state now agree on 23 total tasks, with p01 at 7/7 and the final-summary placeholder updated to 23.                                                                                                                                                                                                                                                                                                                 |
+
+### p01-t07 version contract
+
+The canonical `.agents/skills/explainer-kit/SKILL.md` version is `2.0.1`.
+Repository validation expects `explainer-kit` `2.0.1` while preserving
+`oat-explainer-kit` `1.0.2`, and smoke compatibility asserts the same pair.
+Both focused suites pass, so the shipped skill bump and both compatibility
+contracts agree.
+
+### Current Findings
+
+#### Critical
+
+None.
+
+#### Important
+
+None.
+
+#### Medium
+
+- **M2 — The regenerated backlog index preserves a now-false operating
+  picture**
+  (`.oat/repo/pjm/backlog/index.md:85`)
+  - Issue: The curated overview still says
+    `BL-260727-ship-mit-notices-inside` is open and describes the XL visual item
+    as one unsplit substantive item, even though Phase p01 archived the notice
+    item and created five successors.
+  - Impact: Backlog readers receive conflicting status and decomposition
+    guidance from the canonical index.
+  - Fix: During later backlog maintenance, update only the curated overview,
+    refresh `current-state.md` if needed, regenerate the managed table, and
+    require no residual diff.
+
+#### Minor
+
+None.
+
+### Commands Run and Results
+
+| Command                                                                                               | Result                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| `git diff --check d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1` | Passed with no output.                                                                                                                 |
+| `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`   | Passed 17/17; real packed CLI notice provenance passed.                                                                                |
+| `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`                          | Passed 17/17: three valid fixtures, nine semantic/evidence mutations, four structural path rejections, and supported-locator coverage. |
+| `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`                 | Passed 113/113, including canonical `explainer-kit` `2.0.1`.                                                                           |
+| `node --test tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`                                | Passed 2/2, including wrapper compatibility with `explainer-kit` `2.0.1`.                                                              |
+
+Root-recorded evidence was also reconciled with current implementation
+tracking: `pnpm test` passed 3,384 package tests and 129 smoke tests;
+`pnpm release:validate` passed all five packages and 65 visual measurements;
+and root verification recorded a clean worktree. These broad commands were not
+rerun during this bounded continuation.
+
+No new Critical or Important regression was found in the remediation range.
+
+## Initial Review — Historical Context
+
+The initial review verdict was **BLOCKED** with 0 Critical, 2 Important, 3
+Medium, and 0 Minor findings. The original findings and rationale are preserved
+below unchanged as the history that authorized this single remediation pass.
+
+### Initial Findings
 
 ### Critical
 
@@ -172,7 +276,7 @@ None.
 
 None.
 
-## Requirements and Design Alignment
+## Initial Requirements and Design Alignment — Historical
 
 Design alignment is not applicable because this import-mode project has no
 design artifact.
@@ -194,7 +298,7 @@ the plan. The lack of a `pnpm-lock.yaml` diff is defensible because the five
 workspace package versions are represented through workspace links and real
 packed release validation passed.
 
-## Commands Run and Results
+## Initial Commands Run and Results — Historical
 
 | Command                                                                                                           | Result                                                                                                                                                                              |
 | ----------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -212,7 +316,12 @@ packed release validation passed.
 | `pnpm exec oxfmt .oat/projects/shared/explainer-improvements/reviews/20260728-p01-code-review.md`                 | Passed; the review artifact was formatted.                                                                                                                                          |
 | `pnpm exec markdownlint-cli2 .oat/projects/shared/explainer-improvements/reviews/20260728-p01-code-review.md`     | Could not run because `markdownlint-cli2` is not installed in this workspace; this path is outside the docs-only markdownlint gate.                                                 |
 
-## Recommended Next Step
+## Initial Recommended Next Step — Historical
 
 Convert I1 and I2 into bounded blocking fix tasks, retain M1-M3 as actionable
 non-blocking tasks, and run the project review-receive workflow before Phase 2.
+
+## Current Recommended Next Step
+
+Return this updated artifact to the root review-receive flow. No further
+automatic remediation is authorized; retain M2 for later backlog maintenance.
