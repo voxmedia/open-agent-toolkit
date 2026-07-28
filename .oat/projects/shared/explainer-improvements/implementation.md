@@ -238,6 +238,18 @@ oat_generated: false
   nonexistent schema paths. Root corrected the boundary; no retry was consumed.
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
+### Run 4 — Phase p02 remediation re-review
+
+- Request: `explainer-improvements-p02-review-r1-20260728T142000Z`
+- Launch intent: persisted
+- Review range: `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
+- Tracking baseline: `c4f5f68e86c46356fb079087158176e376a3a240`
+- Planned artifact: `reviews/20260728-p02-code-review-r1.md`
+- Scope: verify the five original Important findings and detect regressions in
+  their fix surfaces
+- Review-remediation attempt: 1/3
+- Dispatch: scope=p02 action=re-review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
