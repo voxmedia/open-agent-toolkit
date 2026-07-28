@@ -76,10 +76,36 @@ To pick up a new version, compare your
 `workflow.dispatchCeiling.recommendationVersion` against the bundled version,
 then either edit the affected cells by hand or clear them and re-adopt.
 
-Version `2026-07-25.1` is a live example: it adds Opus 5 rungs to the Cursor
-`balanced`, `high`, and `frontier` tiers and drops `claude-sonnet-5-high` from
-`economy`. An adopter still on the prior version keeps their existing Cursor
-tiers untouched until they take one of those actions.
+Version `2026-07-27.1` is a live example. It interleaves the Cursor `high` and
+`frontier` tiers so each alternates a GPT rung with a Claude rung, ending `high`
+at `gpt-5.6-sol-high` and `frontier` at `claude-fable-5-thinking-high`. It also
+drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
+`frontier`. Dropping the Opus max rung follows the non-monotonic top-end Opus
+evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
+which treats max as a route requiring justification rather than a strictly
+better rung. Dropping the Fable xhigh rung is a recommendation judgment rather
+than a measured finding: `subagent-orchestration/references/provider-claude.md`
+permits either Fable rung for a qualified specialist case, and this ladder takes
+the cheaper one absent a comparison favoring xhigh. The evidence record above
+does not compare the two rungs. Both models remain in the pin catalog and stay
+available to a hand-edited ladder. An adopter still on the prior version keeps their existing
+Cursor tiers untouched until they take one of the actions above.
+
+The terminal entries in that version are chosen, not incidental. Because the
+final candidate in a tier is the target its implementation-phase self-review
+pins, reordering a tier changes who reviews it even when the membership is
+untouched. Cross-family independence for the external phase gate and the
+lifecycle gate comes from `gates.execTargets` instead, which is configured
+separately and is not drawn from this ladder.
+
+Curating a ladder down has a consequence in the other direction. The
+`subagent-orchestration` guidance names a route per task class, and a route you
+prune becomes unreachable: the guidance still recommends it while the resolver
+rejects it as unconfigured. A ladder whose `economy` tier drops its mechanical
+route leaves mechanical work with nowhere to go but a higher tier. Keep at least
+one reachable rung for each task class the project uses, and prefer more than
+one candidate per tier, since a tier holding a single entry cannot express a
+choice.
 
 Before offering adoption, planning runs `oat config list --json` once and treats
 its output as the effective boundary across shared, repo-local, user, and
@@ -213,10 +239,10 @@ candidate in each tier:
   tiers.
 - **Cursor:** verified multi-family flat IDs across Composer, Claude (Sonnet,
   Opus, and Fable), GPT, and Grok. Two counts apply and they differ: the
-  bundled recommendation carries 16 Cursor candidates across the four tiers,
-  while the materialization catalogue carries 18 flat IDs. The extra entries
-  are approved mappings deliberately kept out of the recommendation but still
-  materializable. The catalogue maps each flat ladder ID to a separate
+  bundled recommendation carries 14 Cursor candidates across the four tiers,
+  while the materialization catalogue carries 18 flat IDs. The four extra
+  entries are approved mappings deliberately kept out of the recommendation but
+  still materializable. The catalogue maps each flat ladder ID to a separate
   bracket-form frontmatter model; OAT does not derive or normalize either
   value.
 
