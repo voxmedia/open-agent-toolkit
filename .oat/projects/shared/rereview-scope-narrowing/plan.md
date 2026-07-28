@@ -628,20 +628,21 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                                    |
-| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
-| p01    | code     | received | 2026-07-28 | reviews/p01-review-2026-07-28T204348Z.md                    |
-| p02    | code     | pending  | -          | -                                                           |
-| p03    | code     | pending  | -          | -                                                           |
-| p04    | code     | pending  | -          | -                                                           |
-| p05    | code     | pending  | -          | -                                                           |
-| p06    | code     | pending  | -          | -                                                           |
-| final  | code     | pending  | -          | -                                                           |
-| plan   | artifact | passed   | 2026-07-27 | inline (structured)                                         |
-| spec   | artifact | n/a      | -          | -                                                           |
-| design | artifact | n/a      | -          | -                                                           |
-| plan   | artifact | received | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
-| plan   | artifact | passed   | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T182554Z.md |
+| Scope  | Type     | Status          | Date       | Artifact                                                    |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | fixes_completed | 2026-07-28 | reviews/archived/p01-review-2026-07-28T204348Z.md           |
+| p02    | code     | pending         | -          | -                                                           |
+| p03    | code     | pending         | -          | -                                                           |
+| p04    | code     | pending         | -          | -                                                           |
+| p05    | code     | pending         | -          | -                                                           |
+| p06    | code     | pending         | -          | -                                                           |
+| final  | code     | pending         | -          | -                                                           |
+| plan   | artifact | passed          | 2026-07-27 | inline (structured)                                         |
+| spec   | artifact | n/a             | -          | -                                                           |
+| design | artifact | n/a             | -          | -                                                           |
+| plan   | artifact | received        | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
+| plan   | artifact | passed          | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T182554Z.md |
+| p01    | code     | passed          | 2026-07-28 | reviews/archived/p01-review-2026-07-28T205203Z.md           |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
