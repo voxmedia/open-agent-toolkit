@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t06
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----: | --------: |
-| p01   | complete    |     7 |       7/7 |
-| p02   | in_progress |     5 |       0/5 |
-| p03   | pending     |     4 |       0/4 |
-| p04   | pending     |     3 |       0/3 |
-| p05   | pending     |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | fixes_pending |     7 |       5/7 |
+| p03   | pending       |     4 |       0/4 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 7/23 tasks completed
+**Total:** 12/25 tasks completed
 
 ---
 
@@ -88,13 +88,15 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** in_progress
+**Status:** fixes_pending
 
-- [ ] p02-t01 — Bundle versioned visual authoring and review guidance
-- [ ] p02-t02 — Define provider-neutral set-plan and visual-review contracts
-- [ ] p02-t03 — Add one set-planning stage and immutable retained records
-- [ ] p02-t04 — Make project recap an adaptive three-artifact visual set
-- [ ] p02-t05 — Bind set planning and composition through the OAT adapter
+- [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
+- [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
+- [x] p02-t03 — Add one set-planning stage and immutable retained records (`6593a08a`)
+- [x] p02-t04 — Make project recap an adaptive three-artifact visual set (`6d1c9f9d`)
+- [x] p02-t05 — Bind set planning and composition through the OAT adapter (`8514de88`)
+- [ ] p02-t06 — Align integration fixtures with adaptive recap sets
+- [ ] p02-t07 — Align explainer family version contracts
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -160,7 +162,7 @@ oat_generated: false
 ### Run 2 — Phase p02 implementation
 
 - Request: `explainer-improvements-p02-20260728T041600Z`
-- Launch acceptance: pending
+- Launch acceptance: accepted
 - Phase base: `2dff0d9414e73a2924951b2be90337d23967aee7`
 - Route: native Cursor materialized role, background
 - Target: `oat-phase-implementer-gpt-5-6-sol-high`
@@ -170,6 +172,12 @@ oat_generated: false
 - Policy/ceiling: `high` / `gpt-5.6-sol-high`
 - Retry limit: `1`
 - Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Outcome: `DONE_WITH_CONCERNS`
+- Phase head: `8514de880088ffd3e16512c7e1756f33d9d9cddc`
+- Commit range: `b54863f19d5db6df47b1538e791adadaf76f0306..8514de880088ffd3e16512c7e1756f33d9d9cddc`
+- Verification: check, lint, format, type-check, build, release validation, and diff check passed
+- Concern: eight adaptive recap integration assumptions and two explainer-family version contracts remain stale
+- Bounded fixes: p02-t06 and p02-t07; retry usage 0/1
 
 <!-- orchestration-runs-end -->
 
@@ -209,7 +217,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 23 tasks and the final review._
+_Fill from implementation evidence after all 25 tasks and the final review._
 
 ## References
 

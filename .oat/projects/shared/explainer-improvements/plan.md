@@ -421,6 +421,56 @@ semantics while provider resolution remains adapter-owned.
 
 ---
 
+### Task p02-t06: Align integration fixtures with adaptive recap sets
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Preserve the eight RED failures proving pre-adaptive fixtures still assume
+   one Markdown recap instead of the required hub, architecture, and deck.
+2. Update fixture planners, author callbacks, retained-path assertions, resume
+   checks, QA expectations, and CLI module fixtures to exercise all three
+   required HTML artifacts with identical immutable set context.
+3. Keep negative tests targeted at their intended contract failure rather than
+   allowing an unrelated missing-draft or wrong-content-path error to mask the
+   assertion.
+4. Run
+   `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs`
+   and the union of every Phase p02 focused test; require all to exit 0.
+5. Commit as `test(p02-t06): align adaptive recap integration`.
+
+**Acceptance:** Core integration coverage asserts the adaptive-three behavior
+without weakening approval, resume, QA, provenance, or fail-closed semantics.
+
+---
+
+### Task p02-t07: Align explainer family version contracts
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+
+**Steps:**
+
+1. Preserve RED evidence that repository validation still expects
+   `explainer-kit@2.0.1` and `oat-explainer-kit@1.0.2`, and that smoke coverage
+   carries the same stale pins.
+2. Update only those exact family expectations to
+   `explainer-kit@2.0.2` and `oat-explainer-kit@1.0.3`.
+3. Run the focused CLI validation test, wrapper compatibility smoke test,
+   `pnpm test`, and `pnpm release:validate`; require all to exit 0.
+4. Commit as `test(p02-t07): align explainer skill versions`.
+
+**Acceptance:** Canonical skills, repository validation, smoke compatibility,
+the full test suite, and packed public-package validation agree on the Phase
+p02 versions.
+
+---
+
 ## Phase 3: Independent browser critic and hard loop cap
 
 ### Task p03-t01: Retain browser screenshots and metrics at three viewports
@@ -777,12 +827,12 @@ review. Additional review cycles are not authorized.
 **Summary:**
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
-- Phase 2: 5 tasks — bundled guidance, contracts, set planner, adaptive set, adapter
+- Phase 2: 7 tasks — bundled guidance, contracts, set planner, adaptive set, adapter, and verification fixes
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 23 tasks**
+**Total: 25 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
