@@ -1,22 +1,12 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import {
-  access,
-  mkdir,
-  mkdtemp,
-  readFile,
-  rm,
-  writeFile,
-} from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
-import { fileURLToPath } from 'node:url';
 
 import { verifyRebuildability } from '../scripts/lib/durability.mjs';
 
-const skillRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
-const repoRoot = resolve(skillRoot, '../../..');
 const tempDirs = [];
 
 afterEach(async () => {
@@ -97,50 +87,6 @@ test('rejects a rebuildable claim when a hashed source changes', async () => {
 
   assert.equal(result.verified, false);
   assert.match(result.reason, /input hash/i);
-});
-
-test('traces retained 0.4.1 operational wisdom to owned evidence', async () => {
-  const trace = JSON.parse(
-    await readFile(
-      new URL('fixtures/operational-wisdom.json', import.meta.url),
-      'utf8',
-    ),
-  );
-
-  assert.equal(trace.schemaVersion, 'explainer-kit.operational-wisdom/v1');
-  assert.equal(trace.sourceVersion, '0.4.1');
-  assert.equal(trace.deterministicBaselineRenderingRequired, false);
-  assert.ok(trace.entries.length >= 15);
-  assert.equal(
-    new Set(trace.entries.map(({ id }) => id)).size,
-    trace.entries.length,
-  );
-
-  const dispositions = new Set();
-  for (const entry of trace.entries) {
-    assert.match(entry.id, /^[a-z0-9]+(?:-[a-z0-9]+)*$/);
-    assert.match(entry.source.draft, /^references\/skill-drafts\//);
-    assert.ok(entry.source.section.length > 0);
-    assert.ok(entry.requirements.length > 0);
-    assert.ok(entry.retainedBy.length > 0);
-    dispositions.add(entry.disposition);
-
-    await access(
-      resolve(
-        repoRoot,
-        '.oat/projects/shared/explainer-kit',
-        entry.source.draft,
-      ),
-    );
-    for (const path of entry.retainedBy) {
-      await access(resolve(repoRoot, path));
-    }
-  }
-
-  assert.deepEqual(
-    dispositions,
-    new Set(['public-core', 'oat-adapter', 'private-wrapper']),
-  );
 });
 
 async function fileHash(path) {

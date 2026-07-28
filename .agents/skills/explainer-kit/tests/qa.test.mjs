@@ -1,18 +1,28 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
+  RUNTIME_UNAVAILABLE_REASONS,
+  resolveHeadlessRuntime,
+} from '../scripts/lib/browser-runtime.mjs';
+import {
+  GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
+  RENDER_QA_WARNING_IDS,
   auditArtifactSet,
   checkArtifactCohesion,
+  checkGuidelines,
   checkHtmlStructure,
   checkSourceDumping,
   runBrowserProbes,
 } from '../scripts/lib/qa.mjs';
+import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
-import { runRenderQaCli } from '../scripts/render-qa.mjs';
+import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
 
 const fixture = (
   body = '<h1>System overview</h1><p>Ready.</p>',
@@ -46,6 +56,41 @@ const deck = () =>
     </script></body>`,
   );
 
+const guidelineRecipe = () => ({
+  schemaVersion: 'explainer-kit.recipe/v2',
+  id: 'guideline-fixture',
+  version: '1',
+  sourceRoles: [],
+  floor: [
+    {
+      id: 'recap',
+      type: 'hub',
+      authoring: 'markdown',
+      template: 'house-style',
+      required: true,
+      briefRef: 'briefs/fixture.md',
+      requiredNarrative: ['request', 'architecture', 'outcome'],
+    },
+  ],
+  expansion: {
+    profiles: [
+      {
+        profileId: 'supporting-diagram',
+        type: 'diagram',
+        authoring: 'html',
+        briefRef: 'briefs/supporting-diagram.md',
+        shell: 'diagram-shell',
+        maxCount: 1,
+      },
+    ],
+    limits: { maxArtifacts: 1 },
+  },
+  discoveryLimits: {
+    consecutiveNoNewFindingsRounds: 1,
+    maxRounds: 1,
+  },
+});
+
 test('accepts a self-contained, balanced and accessible artifact', () => {
   const report = checkHtmlStructure({
     id: 'overview',
@@ -55,6 +100,130 @@ test('accepts a self-contained, balanced and accessible artifact', () => {
   });
 
   assert.deepEqual(report, { valid: true, issues: [] });
+});
+
+test('guideline checker reports stable non-blocking floor warning ids', () => {
+  const report = checkGuidelines({
+    recipe: guidelineRecipe(),
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(
+          '<h1>Recap</h1><section id="request"><h2>Request</h2><p>Ship it.</p></section><section id="outcome"><h2>Outcome</h2><p>Done.</p></section>',
+        ),
+      },
+    ],
+  });
+
+  assert.equal(report.valid, true);
+  assert.deepEqual(report.warnings, [
+    GUIDELINE_WARNING_IDS.narrativeCoverage,
+    GUIDELINE_WARNING_IDS.architectureDiagram,
+    GUIDELINE_WARNING_IDS.structuredDepth,
+  ]);
+});
+
+test('guideline checker accepts rich coverage with an inline diagram', () => {
+  const report = checkGuidelines({
+    recipe: guidelineRecipe(),
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2><svg class="narrative-diagram" role="img" aria-label="Architecture diagram"></svg></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><th>Check</th></tr><tr><td>Passed</td></tr></table></section>`),
+      },
+    ],
+  });
+
+  assert.deepEqual(report, { valid: true, warnings: [] });
+});
+
+test('guideline checker preserves over-limit expansion warnings', () => {
+  const recipe = guidelineRecipe();
+  const expansion = evaluateExpansionProposals(recipe, [
+    {
+      id: 'diagram-one',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the top-level flow.',
+    },
+    {
+      id: 'diagram-two',
+      profileId: 'supporting-diagram',
+      rationale: 'Show a second flow.',
+    },
+  ]);
+  const report = checkGuidelines({
+    recipe,
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><td>Passed</td></tr></table></section>`),
+      },
+      {
+        id: 'diagram-one',
+        type: 'diagram',
+        html: fixture('<h1>Architecture diagram</h1>'),
+      },
+    ],
+    expansion,
+  });
+
+  assert.equal(expansion.valid, true);
+  assert.equal(expansion.rejected[0].reason, 'profile-limit');
+  assert.deepEqual(report, {
+    valid: true,
+    warnings: [GUIDELINE_WARNING_IDS.expansionProfileLimit],
+  });
+});
+
+test('guideline checker preserves per-type expansion warnings', () => {
+  const recipe = guidelineRecipe();
+  recipe.expansion.profiles[0].maxCount = 2;
+  recipe.expansion.limits = {
+    maxArtifacts: 2,
+    maxPerType: { diagram: 1 },
+  };
+  const expansion = evaluateExpansionProposals(recipe, [
+    {
+      id: 'diagram-one',
+      profileId: 'supporting-diagram',
+      rationale: 'Show the top-level flow.',
+    },
+    {
+      id: 'diagram-two',
+      profileId: 'supporting-diagram',
+      rationale: 'Would exceed the declared diagram cap.',
+    },
+  ]);
+  const report = checkGuidelines({
+    recipe,
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        html: fixture(`<h1>Recap</h1>
+          <section id="request"><h2>Request</h2><ul><li>Ship it.</li></ul></section>
+          <section id="architecture"><h2>Architecture</h2><svg class="narrative-diagram" role="img" aria-label="Architecture diagram"></svg></section>
+          <section id="outcome"><h2>Outcome</h2><table><tr><th>Check</th></tr><tr><td>Passed</td></tr></table></section>`),
+      },
+    ],
+    expansion,
+  });
+
+  assert.equal(expansion.valid, true);
+  assert.equal(expansion.rejected[0].reason, 'type-limit');
+  assert.deepEqual(report, {
+    valid: true,
+    warnings: [GUIDELINE_WARNING_IDS.expansionTypeLimit],
+  });
 });
 
 test('rejects unresolved tokens, configured leaks and non-inline assets', async () => {
@@ -287,6 +456,22 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
           scrollWidth: 900,
         },
       ],
+      viewportClipped: [
+        {
+          selector: '.diagram-node',
+          left: -20,
+          right: 280,
+          viewportWidth: 320,
+        },
+      ],
+      unreadableHeadings: [
+        {
+          selector: 'h2',
+          text: 'Clipped heading',
+          fontSize: 9,
+        },
+      ],
+      animationsDisabled: false,
       reducedMotion: false,
       keyboard: { tab: false },
     }),
@@ -295,6 +480,9 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
   for (const code of [
     'viewport-overflow',
     'inner-x-overflow',
+    'viewport-clipping',
+    'heading-readability',
+    'animations-enabled',
     'reduced-motion',
     'keyboard-navigation',
   ]) {
@@ -303,6 +491,135 @@ test('browser probes reject page and inner-container x-axis clipping', async () 
       code,
     );
   }
+});
+
+test('render QA stage serves built artifacts and emits seeded layout warnings', async (t) => {
+  const siteDir = await mkdtemp(join(tmpdir(), 'explainer-render-qa-'));
+  t.after(() => rm(siteDir, { recursive: true, force: true }));
+  await mkdir(join(siteDir, 'pages'), { recursive: true });
+  await Promise.all([
+    writeFile(
+      join(siteDir, 'pages', 'clipped-diagram.html'),
+      fixture(
+        '<h1>Diagram</h1><svg class="narrative-diagram" data-defect="clipped"></svg>',
+      ),
+    ),
+    writeFile(
+      join(siteDir, 'pages', 'overflowing-table.html'),
+      fixture(
+        '<h1>Evidence</h1><table data-defect="overflow"><tr><td>Wide</td></tr></table>',
+      ),
+    ),
+  ]);
+
+  const requests = [];
+  const report = await runRenderQaStage({
+    siteDir,
+    artifacts: [
+      {
+        id: 'clipped-diagram',
+        type: 'hub',
+        renderedPath: 'site/pages/clipped-diagram.html',
+      },
+      {
+        id: 'overflowing-table',
+        type: 'hub',
+        renderedPath: 'site/pages/overflowing-table.html',
+      },
+    ],
+    widths: [320],
+    browserProbe: async (request) => {
+      requests.push(request);
+      const html = await fetch(request.artifact.url).then((response) =>
+        response.text(),
+      );
+      return {
+        pageOverflowX: html.includes('data-defect="overflow"'),
+        clippedX: html.includes('data-defect="overflow"')
+          ? [{ selector: 'table', clientWidth: 320, scrollWidth: 900 }]
+          : [],
+        viewportClipped: html.includes('data-defect="clipped"')
+          ? [{ selector: '.narrative-diagram', left: -10, right: 310 }]
+          : [],
+        unreadableHeadings: [],
+        animationsDisabled: true,
+        reducedMotion: true,
+        keyboard: { tab: true },
+      };
+    },
+  });
+
+  assert.ok(requests.every(({ disableAnimations }) => disableAnimations));
+  assert.deepEqual(report, {
+    valid: true,
+    skipped: false,
+    warnings: [
+      RENDER_QA_WARNING_IDS.viewportClipping,
+      RENDER_QA_WARNING_IDS.documentOverflow,
+      RENDER_QA_WARNING_IDS.innerContainerOverflow,
+    ],
+    issues: report.issues,
+    probes: 2,
+  });
+});
+
+test('render QA stage records one stable warning when no probe is available', async () => {
+  const report = await runRenderQaStage({
+    siteDir: '/not-read-when-skipped',
+    artifacts: [
+      {
+        id: 'recap',
+        type: 'hub',
+        renderedPath: 'site/recap.html',
+      },
+    ],
+  });
+
+  assert.deepEqual(report, {
+    valid: true,
+    skipped: true,
+    warnings: [RENDER_QA_WARNING_IDS.skippedNoProbe],
+    issues: [],
+    probes: 0,
+  });
+});
+
+test('runtime resolution reports capability rather than assuming a driver', async () => {
+  assert.deepEqual(
+    await resolveHeadlessRuntime({
+      loadDriver: async () => {
+        throw new Error('Cannot find package');
+      },
+    }),
+    { available: false, reason: RUNTIME_UNAVAILABLE_REASONS.driverMissing },
+  );
+  assert.deepEqual(
+    await resolveHeadlessRuntime({
+      loadDriver: async () => ({
+        chromium: {
+          launch: () => {},
+          executablePath: () => '/nowhere/chromium',
+        },
+      }),
+      fileExists: () => false,
+      env: {},
+    }),
+    { available: false, reason: RUNTIME_UNAVAILABLE_REASONS.executableMissing },
+  );
+
+  const resolved = await resolveHeadlessRuntime({
+    loadDriver: async () => ({
+      chromium: {
+        launch: () => 'browser',
+        executablePath: () => '/opt/chromium',
+      },
+    }),
+    fileExists: (candidate) => candidate === '/opt/chromium',
+    env: {},
+  });
+  assert.equal(resolved.available, true);
+  assert.equal(resolved.executablePath, '/opt/chromium');
+  assert.equal(resolved.launch(), 'browser');
 });
 
 test('browser probes require both deck arrow pairs', async () => {

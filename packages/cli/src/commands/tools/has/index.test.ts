@@ -3,7 +3,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { buildCommandContext, capture } = vi.hoisted(() => {
-  const capture = {
+  const loggerCapture = {
     info: [] as string[],
     warn: [] as string[],
     error: [] as string[],
@@ -12,7 +12,7 @@ const { buildCommandContext, capture } = vi.hoisted(() => {
     jsonPayloads: [] as unknown[],
   };
   return {
-    capture,
+    capture: loggerCapture,
     buildCommandContext: vi.fn((options) => ({
       scope: options.scope ?? 'all',
       dryRun: false,
@@ -22,12 +22,12 @@ const { buildCommandContext, capture } = vi.hoisted(() => {
       home: '/home/user',
       interactive: false,
       logger: {
-        info: (message: string) => capture.info.push(message),
-        warn: (message: string) => capture.warn.push(message),
-        error: (message: string) => capture.error.push(message),
-        success: (message: string) => capture.success.push(message),
-        debug: (message: string) => capture.debug.push(message),
-        json: (payload: unknown) => capture.jsonPayloads.push(payload),
+        info: (message: string) => loggerCapture.info.push(message),
+        warn: (message: string) => loggerCapture.warn.push(message),
+        error: (message: string) => loggerCapture.error.push(message),
+        success: (message: string) => loggerCapture.success.push(message),
+        debug: (message: string) => loggerCapture.debug.push(message),
+        json: (payload: unknown) => loggerCapture.jsonPayloads.push(payload),
       },
     })),
   };

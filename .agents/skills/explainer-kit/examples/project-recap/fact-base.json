@@ -1,0 +1,104 @@
+{
+  "schemaVersion": "explainer-kit.fact-base/v1",
+  "generatedAt": "2026-03-09T18:00:00Z",
+  "mode": "supplied",
+  "freshnessPolicy": "live-wins",
+  "sources": [
+    {
+      "id": "atlas-index-project",
+      "kind": "file",
+      "locator": "https://docs.example.com/atlas-index/project-record",
+      "hash": "sha256:1f0c4d2b8a6e5937c41d0b7a2e8f36154c9d0ab7e25f8341d6c07b9ae4315f28",
+      "observedAt": "2026-03-09T18:00:00Z"
+    }
+  ],
+  "claims": [
+    {
+      "id": "F-101",
+      "text": "Nightly full rebuilds were replaced by incremental indexing with no change to the public query contract.",
+      "status": "confirmed",
+      "sections": ["original-request"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#request"
+        }
+      ]
+    },
+    {
+      "id": "F-102",
+      "text": "Checkpoints are partition-local, index writes are idempotent, and the full rebuild survives as a recovery path.",
+      "status": "confirmed",
+      "sections": ["key-agent-decisions"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#decisions"
+        }
+      ]
+    },
+    {
+      "id": "F-103",
+      "text": "A checkpointed change reader feeds idempotent workers, and a scheduled audit samples both sides for drift.",
+      "status": "confirmed",
+      "sections": ["as-built-architecture"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#as-built"
+        }
+      ]
+    },
+    {
+      "id": "F-104",
+      "text": "Checkpoint persistence, replay-safe workers, and the drift audit shipped across three sequential milestones.",
+      "status": "confirmed",
+      "sections": ["implementation-record"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#milestones"
+        }
+      ]
+    },
+    {
+      "id": "F-105",
+      "text": "Contract, interrupted-restart, duplicate-batch, and sampled parity suites all passed before cutover.",
+      "status": "confirmed",
+      "sections": ["validation-evidence"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#validation"
+        }
+      ]
+    },
+    {
+      "id": "F-106",
+      "text": "Incremental indexing is active and the nightly rebuild is documented as a recovery-only procedure.",
+      "status": "confirmed",
+      "sections": ["outcome"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#outcome"
+        }
+      ]
+    }
+  ],
+  "unresolvedClaims": [
+    {
+      "id": "F-107",
+      "text": "Retention of audit samples beyond ninety days awaits a governance decision.",
+      "reason": "needs-confirmation",
+      "sections": ["validation-evidence"],
+      "citations": [
+        {
+          "sourceId": "atlas-index-project",
+          "locator": "project-record#open-questions"
+        }
+      ]
+    }
+  ],
+  "overrides": []
+}

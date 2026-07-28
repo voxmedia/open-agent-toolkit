@@ -1,6 +1,6 @@
 ---
 name: oat-wave-execute
-version: 1.7.1
+version: 1.8.0
 description: Use when executing a wave of external implementation plans as a wrapper OAT project — scaffolding, drift refresh, parallel worktree groups, briefs, gates, merge choreography, and closeout.
 argument-hint: '<wave-id> [plan-names...] (e.g. wave-2 http-listener-before-indexing ...)'
 disable-model-invocation: false
@@ -411,24 +411,17 @@ exactly:
 `schemaVersion, generatedAt, mode, freshnessPolicy, sources, claims, unresolvedClaims, overrides`.
 
 The caller also owns CONTENT AUTHORING, exactly as it owns critic execution and
-fact-base synthesis: the kit's pipeline validates structure and fact
-consistency, but nothing in it owns prose quality. An unattended recap run
-without a caller-supplied authoring path emits raw federated artifact text as
-deck prose (stoa W6 live evidence, run-19af6e55: implementation.md pasted
-verbatim, frontmatter included, tables flattened to run-on prose — every
-automated gate passed it). The explainer-kit now enforces this seam: every
-unattended run requires exactly one provider-neutral author seam — in-process
-callers supply an `author(request)` callback; JSON/CLI callers supply
-`authorModulePath` naming a module with an `author` function export. The core
-invokes it once per recipe artifact with an `explainer-kit.author-request/v1`
-document and expects an `explainer-kit.author-result/v1` reply; runs fail if
-the author is absent, returns an invalid result, or copies excessive verbatim
-source text. Recap callers MUST satisfy that seam by authoring content from
-the synthesized fact base plus the recipe outline (LLM-authored from
-summary/synthesis material, as the operator-approved W6 rebuild demonstrates)
-or NOT run the unattended build, recording the skip disposition per the
-optional-step rule. Callbacks and module paths never enter the persisted run
-request.
+fact-base synthesis: the kit validates structure and fact consistency, but
+nothing in it owns prose quality. Every recap run requires exactly one
+provider-neutral author seam — in-process callers supply an `author(request)`
+callback; JSON/CLI callers supply `authorModulePath` naming a module with an
+`author` function export. The core invokes it for every floor and accepted
+expansion artifact with `author-request/v2`: the artifact brief is inlined,
+the fact base is attached, and artistic requests include the resolved theme
+and hash-pinned shell. Authors may propose only recipe-declared expansion
+profiles and return `author-result/v2`; runs fail on absent or invalid author
+results or excessive verbatim source copying. Callbacks and module paths never
+enter persisted run requests.
 
 The mechanical caller constructs an `explainer-kit.run-request/v1` document whose
 required keys are exactly:

@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "explainer-kit.recipe/v1",
+  "schemaVersion": "explainer-kit.recipe/v2",
   "id": "project-recap",
   "version": "1",
   "sourceRoles": [
@@ -11,22 +11,54 @@
       "maxBindings": 1
     }
   ],
-  "requiredNarrative": [
-    "original-request",
-    "key-agent-decisions",
-    "as-built-architecture",
-    "implementation-record",
-    "validation-evidence",
-    "outcome"
-  ],
-  "artifacts": [
+  "floor": [
     {
       "id": "project-recap",
       "type": "hub",
+      "authoring": "markdown",
       "template": "house-style",
-      "required": true
+      "required": true,
+      "briefRef": "briefs/project-recap.md",
+      "requiredNarrative": [
+        "original-request",
+        "key-agent-decisions",
+        "as-built-architecture",
+        "implementation-record",
+        "validation-evidence",
+        "outcome"
+      ]
     }
   ],
+  "expansion": {
+    "profiles": [
+      {
+        "profileId": "supporting-diagram",
+        "type": "diagram",
+        "authoring": "html",
+        "briefRef": "briefs/supporting-diagram.md",
+        "shell": "diagram-shell",
+        "maxCount": 4
+      },
+      {
+        "profileId": "deep-dive",
+        "type": "explainer",
+        "authoring": "markdown",
+        "briefRef": "briefs/deep-dive.md",
+        "maxCount": 3
+      },
+      {
+        "profileId": "walkthrough-deck",
+        "type": "deck",
+        "authoring": "html",
+        "briefRef": "briefs/walkthrough-deck.md",
+        "shell": "deck-shell",
+        "maxCount": 1
+      }
+    ],
+    "limits": {
+      "maxArtifacts": 6
+    }
+  },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,
     "maxRounds": 8

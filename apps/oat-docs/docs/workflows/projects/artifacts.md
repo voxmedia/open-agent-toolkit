@@ -58,7 +58,7 @@ failure outcomes and successful intermediates, rejects an existing dated
 destination, and requires the selected path to stay under the project's
 `explainers/` directory with a `project-recap` manifest. Verification covers
 the exact retained bytes for the privacy-safe request, content approval, fact
-base JSON and Markdown, declared author results, authored Markdown, resolved
+base JSON and Markdown, declared author results, authored content, resolved
 theme, and every built artifact. Canonical fact-base and theme hashes remain
 normalized-object identities; `manifest.immutableHashes` independently covers
 serialized file bytes. Missing, stale, or tampered coverage fails before the

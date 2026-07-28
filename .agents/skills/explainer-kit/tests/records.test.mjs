@@ -15,6 +15,7 @@ import { afterEach, test } from 'node:test';
 import { canonicalHash } from '../scripts/lib/contracts.mjs';
 import {
   initializeRun,
+  reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
 } from '../scripts/lib/records.mjs';
@@ -72,6 +73,8 @@ function manifest(run, buildRecord, overrides = {}) {
     },
     artifacts: [],
     immutableHashes: {
+      'run-request.json': HASH,
+      'source/content-approval.json': HASH,
       'source/fact-base.json': HASH,
       'source/fact-base.md': HASH,
       'theme.resolved.json': HASH,
@@ -208,6 +211,64 @@ test('updates stages monotonically and rejects regressions or reordering', async
   await assert.rejects(
     updateBuildRecord(run, { id: 'content', status: 'running' }),
     /prior|order/i,
+  );
+});
+
+test('reopens a completed stage range before downstream work with an audit warning', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  for (const id of [
+    'validate',
+    'fact-base',
+    'content',
+    'theme',
+    'render',
+    'qa',
+  ]) {
+    await updateBuildRecord(run, { id, status: 'running' });
+    await updateBuildRecord(run, {
+      id,
+      status: 'passed',
+      outputPaths: [`${id}.out`],
+    });
+  }
+
+  const reopened = await reopenBuildStages(run, {
+    ids: ['render', 'qa'],
+    reason: 'content-rejected',
+  });
+
+  assert.equal(reopened.outcome, 'incomplete');
+  for (const id of ['render', 'qa']) {
+    const stage = reopened.stages.find((candidate) => candidate.id === id);
+    assert.equal(stage.status, 'pending');
+    assert.deepEqual(stage.outputPaths, []);
+    assert.match(stage.warnings.at(-1), /^stage-reopened:content-rejected:/);
+  }
+});
+
+test('refuses to reopen stages after downstream work has started', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  for (const id of [
+    'validate',
+    'fact-base',
+    'content',
+    'theme',
+    'render',
+    'qa',
+    'durability',
+  ]) {
+    await updateBuildRecord(run, { id, status: 'running' });
+    await updateBuildRecord(run, { id, status: 'passed' });
+  }
+
+  await assert.rejects(
+    reopenBuildStages(run, {
+      ids: ['render', 'qa'],
+      reason: 'content-rejected',
+    }),
+    /before downstream work/i,
   );
 });
 

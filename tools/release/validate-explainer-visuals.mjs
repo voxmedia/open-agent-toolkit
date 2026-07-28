@@ -1,18 +1,27 @@
 #!/usr/bin/env node
 
 import { randomBytes } from 'node:crypto';
-import { existsSync } from 'node:fs';
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import { createServer } from 'node:http';
 import { dirname, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { chromium } from '@playwright/test';
-
+import {
+  launchInstalledChromium,
+  probeRenderedPage,
+} from '../../.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs';
 import {
   runReleaseVisualMatrix,
   selectReleaseVisualMatrix,
 } from '../../.agents/skills/explainer-kit/scripts/render-qa.mjs';
+
+// The release gate drives the same runtime the core resolves for its own render
+// QA stage, so a green gate is evidence about the shipped probe path.
+export {
+  primeKeyboardFocus,
+  pressTabFromDocument,
+  probeArrowKey,
+} from '../../.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs';
 
 export async function runExplainerVisualValidation({
   matrix = selectReleaseVisualMatrix(),
@@ -42,7 +51,7 @@ export async function runExplainerVisualValidation({
         const route = `/${randomBytes(12).toString('hex')}.html`;
         pages.set(route, request.artifact.html);
         try {
-          const result = await probePage(
+          const result = await probeRenderedPage(
             browser,
             `http://127.0.0.1:${address.port}${route}`,
             request,
@@ -109,220 +118,6 @@ export async function runExplainerVisualValidationCli(
     );
     return 1;
   }
-}
-
-async function launchInstalledChromium() {
-  const configured = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH;
-  const bundled = chromium.executablePath();
-  const executablePath = [
-    configured,
-    bundled,
-    '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome',
-    '/Applications/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing',
-    '/Applications/Chromium.app/Contents/MacOS/Chromium',
-    '/usr/bin/google-chrome',
-    '/usr/bin/google-chrome-stable',
-    '/usr/bin/chromium',
-    '/usr/bin/chromium-browser',
-  ].find((candidate) => candidate && existsSync(candidate));
-  if (!executablePath) {
-    throw new Error(
-      'No installed Playwright Chromium/Chrome executable is available.',
-    );
-  }
-  return chromium.launch({ headless: true, executablePath });
-}
-
-async function probePage(browser, url, request) {
-  const page = await browser.newPage({
-    viewport: request.viewport,
-    reducedMotion: 'reduce',
-    javaScriptEnabled: request.javascriptEnabled !== false,
-  });
-  try {
-    if (request.media === 'print') {
-      await page.emulateMedia({ media: 'print', reducedMotion: 'reduce' });
-    }
-    await page.goto(url, { waitUntil: 'load' });
-    if (request.wideContent) {
-      await page.evaluate(({ containerSelector, width }) => {
-        const container = document.querySelector(containerSelector);
-        if (!container) return;
-        const probe = document.createElement('div');
-        probe.dataset.releaseWideContent = 'true';
-        probe.style.width = `${width}px`;
-        if (matchMedia('print').matches) probe.style.maxWidth = '100%';
-        probe.style.height = '1px';
-        container.append(probe);
-      }, request.wideContent);
-    }
-
-    const layout = await page.evaluate(request.evaluate);
-    const keyboard = await probeKeyboard(page, request);
-    const themeToggle = request.themeToggle
-      ? await probeThemeToggle(page, request.themeToggle)
-      : layout.themeToggle;
-    return {
-      ...layout,
-      keyboard,
-      ...(themeToggle && { themeToggle }),
-    };
-  } finally {
-    await page.close();
-  }
-}
-
-export async function primeKeyboardFocus(page) {
-  await page.bringToFront();
-  await page.mouse.click(1, 1);
-  await page.evaluate(() => {
-    window.focus();
-    const body = document.body;
-    const originalTabIndex = body.getAttribute('tabindex');
-    try {
-      body.setAttribute('tabindex', '-1');
-      body.focus({ preventScroll: true });
-    } finally {
-      if (originalTabIndex === null) {
-        body.removeAttribute('tabindex');
-      } else {
-        body.setAttribute('tabindex', originalTabIndex);
-      }
-    }
-  });
-}
-
-export async function pressTabFromDocument(
-  page,
-  { pressTab = () => page.keyboard.press('Tab') } = {},
-) {
-  for (let attempt = 0; attempt < 2; attempt += 1) {
-    await primeKeyboardFocus(page);
-    await pressTab();
-    const advanced = await page.evaluate(() => {
-      const focused =
-        document.activeElement !== document.body &&
-        document.activeElement !== document.documentElement;
-      const visibleFocusable = [
-        ...document.querySelectorAll(
-          'a[href], button, input, select, textarea, [tabindex]',
-        ),
-      ].some((element) => {
-        const style = getComputedStyle(element);
-        return (
-          style.display !== 'none' &&
-          style.visibility !== 'hidden' &&
-          element.getClientRects().length > 0
-        );
-      });
-      return focused || !visibleFocusable;
-    });
-    if (advanced) return true;
-    await page.waitForTimeout(25);
-  }
-  return page.evaluate(() => {
-    const visibleControls = [
-      ...document.querySelectorAll(
-        'a[href], button, input, select, textarea, [tabindex]',
-      ),
-    ].filter((element) => {
-      if (!(element instanceof HTMLElement) || element.matches(':disabled')) {
-        return false;
-      }
-      const style = getComputedStyle(element);
-      return style.display !== 'none' && style.visibility !== 'hidden';
-    });
-    return (
-      visibleControls.length === 0 ||
-      visibleControls.some((element) => element.tabIndex >= 0)
-    );
-  });
-}
-
-async function probeKeyboard(page, request) {
-  const tab = await pressTabFromDocument(page);
-  if (!request.keyboard.arrows) return { tab };
-
-  const arrows = {};
-  for (const key of request.keyboard.arrows) {
-    arrows[key] = await probeArrowKey(page, key);
-  }
-  return { tab, arrows };
-}
-
-export async function probeArrowKey(page, key) {
-  const positive = key === 'ArrowRight' || key === 'ArrowDown';
-  const makeRoomKey = positive ? 'ArrowLeft' : 'ArrowRight';
-  await page.bringToFront();
-  let before = await deckPosition(page);
-  for (let attempt = 0; attempt < 5; attempt += 1) {
-    const hasRoom = positive
-      ? before.current < before.total
-      : before.current > 1;
-    if (hasRoom) break;
-    await page.keyboard.press(makeRoomKey);
-    before = await deckPosition(page);
-    if (positive ? before.current < before.total : before.current > 1) {
-      break;
-    }
-    await page.waitForTimeout(25);
-    before = await deckPosition(page);
-  }
-  if (positive ? before.current >= before.total : before.current <= 1) {
-    return false;
-  }
-  for (let attempt = 0; attempt < 3; attempt += 1) {
-    await page.keyboard.press(key);
-    let after = await deckPosition(page);
-    if (
-      positive ? after.current > before.current : after.current < before.current
-    ) {
-      return true;
-    }
-    await page.waitForTimeout(25);
-    after = await deckPosition(page);
-    if (
-      positive ? after.current > before.current : after.current < before.current
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-async function deckPosition(page) {
-  return page.evaluate(() => {
-    const text = document.querySelector('#deck-counter')?.textContent ?? '';
-    const [current, total] = text
-      .split('/')
-      .map((value) => Number.parseInt(value, 10));
-    return { current, total };
-  });
-}
-
-async function probeThemeToggle(page, themeToggle) {
-  const locator = page.locator(themeToggle.selector);
-  const present = (await locator.count()) === 1;
-  if (!present) return { present: false };
-  const initialMode = await page.evaluate(
-    () => document.documentElement.dataset.themeMode,
-  );
-  await locator.focus();
-  await page.keyboard.press('Enter');
-  const toggledMode = await page.evaluate(
-    () => document.documentElement.dataset.themeMode,
-  );
-  await page.reload({ waitUntil: 'load' });
-  const persistedMode = await page.evaluate(
-    () => document.documentElement.dataset.themeMode,
-  );
-  return {
-    present: true,
-    initialMode,
-    toggledMode,
-    keyboardOperable: toggledMode !== initialMode,
-    persisted: persistedMode === toggledMode,
-  };
 }
 
 function listen(server) {

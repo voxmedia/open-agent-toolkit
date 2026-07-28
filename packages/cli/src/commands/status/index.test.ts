@@ -306,7 +306,9 @@ function createHarness(options: TestHarnessOptions = {}): {
     scanCanonical,
     scanBundledManagedAgents: scanBundledManagedCodexAgents,
     getAdapters: () => adapters,
-    getActiveAdapters: vi.fn(async (adapters: ProviderAdapter[]) => adapters),
+    getActiveAdapters: vi.fn(
+      async (activeAdapters: ProviderAdapter[]) => activeAdapters,
+    ),
     getSyncMappings: vi.fn(getSyncMappings),
     getAdoptionSources: vi.fn(getAdoptionSources),
     detectDrift: vi.fn(async () => {

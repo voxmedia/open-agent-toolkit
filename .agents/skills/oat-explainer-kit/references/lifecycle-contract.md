@@ -71,18 +71,20 @@ On a stale-write conflict, the caller must re-read state, resolve precedence
 again, and decide whether a write is still required. It must not retry the old
 record blindly.
 
-## Unattended author execution
+## Author execution
 
-Every unattended adapter run must provide exactly one provider-neutral author
-seam. In-process callers pass `author`; JSON-only and official CLI callers put
-`authorModulePath` in the adapter context, naming a module whose `author` export
-is a function. Missing module files, invalid exports, and direct-plus-module
-conflicts fail at the adapter boundary.
+Every adapter run in both interactive and unattended modes must provide exactly
+one provider-neutral author seam. In-process callers pass `author`; JSON-only
+and official CLI callers put `authorModulePath` in the adapter context, naming
+a module whose `author` export is a function. Missing module files, invalid
+exports, and direct-plus-module conflicts fail at the adapter boundary. See
+`author-callback.md` for brief, fact-base, shell, theme, result, and expansion
+handling.
 
 The resolved callback is passed only as the `author` option to
 `core.runExplainer`. It is never copied into `ExplainerRunRequestV1`,
-`run-request.json`, or another retained data contract. Interactive runs may
-omit an author and retain their existing reviewed-source path.
+`run-request.json`, or another retained data contract. Interactive runs use the
+same author contract and differ only at the later approval gate.
 
 ## Tracked-run finalization
 
