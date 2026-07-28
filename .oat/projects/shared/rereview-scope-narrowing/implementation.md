@@ -548,7 +548,8 @@ the final checkpoint.
 - [x] p06-t02: Verify cross-surface semantic parity — no-op
 - [x] p06-t03: Sync provider views and bump public packages — `f95864d2e`
 - [x] p06 bundled public-package version fix — `87455b33c`
-- [ ] final automatic review and HiLL disposition
+- [x] final automatic review — no new defects; deferred ledger revalidated
+- [ ] final HiLL deferred-finding disposition
 
 **Decisions:**
 

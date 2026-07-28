@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T23:37:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T23:56:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Final HiLL checkpoint — automatic final review pending
+Final HiLL checkpoint — deferred-finding disposition pending
 
 ## Artifacts
 
@@ -103,7 +103,8 @@ Final HiLL checkpoint — automatic final review pending
 - ✓ Phase 4 completed and reviewed
 - ✓ Phase 5 completed; lifecycle review and independent gate passed
 - ✓ Phase 6 completed and reviewed
-- ⧗ Automatic final review and deferred-finding disposition pending
+- ✓ Automatic final review found no new defects
+- ⧗ Human disposition required for three deferred Mediums and one Minor
 
 ## Blockers
 
@@ -111,4 +112,4 @@ None
 
 ## Next Milestone
 
-Complete the automatic final review, then present the p06 HiLL checkpoint
+Record final deferred-finding decisions and complete the p06 HiLL checkpoint
