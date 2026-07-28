@@ -1,0 +1,52 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.author-result/v2",
+  "title": "AuthorResultV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "artifactId", "content", "provenance"],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.author-result/v2" },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "content": {
+      "type": "object",
+      "additionalProperties": false,
+      "oneOf": [{ "required": ["markdown"] }, { "required": ["html"] }],
+      "properties": {
+        "markdown": { "type": "string", "minLength": 1 },
+        "html": { "type": "string", "minLength": 1 }
+      }
+    },
+    "provenance": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorId", "generatedAt"],
+      "properties": {
+        "authorId": { "type": "string", "minLength": 1 },
+        "generatedAt": { "type": "string", "format": "date-time" },
+        "method": { "type": "string", "minLength": 1 },
+        "trust": {
+          "description": "Stamped by the core on the retained record only. An author callback that asserts it is rejected.",
+          "enum": ["caller-bound", "self-asserted"]
+        }
+      }
+    },
+    "proposedArtifacts": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "profileId", "rationale"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+          },
+          "profileId": { "type": "string", "minLength": 1 },
+          "rationale": { "type": "string", "minLength": 1 }
+        }
+      },
+      "uniqueItems": true
+    }
+  }
+}

@@ -3,6 +3,8 @@ import { readFile, readdir } from 'node:fs/promises';
 import { test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { renderArtifact } from '../scripts/lib/render.mjs';
+import { resolveTheme } from '../scripts/lib/theme.mjs';
 
 const skillRoot = new URL('../', import.meta.url);
 const templateNames = [
@@ -40,6 +42,53 @@ const requiredTokens = {
     'FOOTER',
   ],
 };
+const canvasContracts = {
+  'deck-shell.html': {
+    anchors: [
+      'deck',
+      'deck-controls',
+      'deck-counter',
+      'deck-progress',
+      'deck-progress-bar',
+    ],
+    extensionRegions: 1,
+    scripts: 2,
+  },
+  'diagram-shell.html': {
+    anchors: [
+      'diagram-title',
+      'diagram-description',
+      'diagram-shell',
+      'zoom-controls',
+      'diagram-viewport',
+      'diagram-canvas',
+      'diagram-legend',
+    ],
+    extensionRegions: 2,
+    scripts: 1,
+  },
+  'engineer-tour.html': {
+    anchors: [
+      'tour-layout',
+      'tour-navigation',
+      'tour-body',
+      'diagram-rail',
+      'diagram-card',
+    ],
+    extensionRegions: 4,
+    scripts: 1,
+  },
+};
+const requiredThemeTokens = [
+  '--canvas',
+  '--panel',
+  '--border',
+  '--ink',
+  '--muted',
+  '--accent',
+  '--sans',
+  '--mono',
+];
 const forbiddenProduction = [
   /voxops/i,
   /vox media/i,
@@ -62,9 +111,9 @@ test('production templates are complete neutral shells with documented tokens', 
   for (const name of templateNames) {
     const html = await template(name);
     assert.match(html, /^<!doctype html>/i, name);
-    assert.match(html, /<html lang="en">/i, name);
+    assert.match(html, /<html\b[^>]*\blang="en"(?:\s[^>]*)?>/i, name);
     assert.match(html, /<head>[\s\S]*<\/head>/i, name);
-    assert.match(html, /<body>[\s\S]*<\/body>\s*<\/html>\s*$/i, name);
+    assert.match(html, /<body\b[^>]*>[\s\S]*<\/body>\s*<\/html>\s*$/i, name);
     assert.match(html, /TEMPLATE CONTRACT:/, name);
 
     const documented = html.match(/TEMPLATE CONTRACT: ([A-Z_, ]+)/)?.[1] ?? '';
@@ -84,6 +133,47 @@ test('production templates are complete neutral shells with documented tokens', 
       />\s*(?:Point one|Lane A|Node A|Section A)\s*</i,
       name,
     );
+  }
+});
+
+test('artistic shells expose theme wiring, validation anchors, and extension regions', async () => {
+  for (const [name, contract] of Object.entries(canvasContracts)) {
+    const html = await template(name);
+    const shellName = name.replace(/\.html$/, '');
+
+    assert.match(
+      html,
+      new RegExp(
+        `<body\\b[^>]*\\bdata-explainer-shell="${shellName}"[^>]*>`,
+        'i',
+      ),
+      name,
+    );
+    for (const token of requiredThemeTokens) {
+      assert.match(html, new RegExp(`${token}\\s*:`), `${name}: ${token}`);
+      assert.match(
+        html,
+        new RegExp(`var\\(${token}\\)`),
+        `${name}: ${token} wiring`,
+      );
+    }
+    for (const anchor of contract.anchors) {
+      const matches = html.match(
+        new RegExp(`data-shell-anchor="${anchor}"`, 'g'),
+      );
+      assert.equal(matches?.length, 1, `${name}: ${anchor}`);
+    }
+
+    const starts = html.match(/<!-- AUTHOR EXTENSION REGION:/g) ?? [];
+    const ends = html.match(/<!-- END AUTHOR EXTENSION REGION -->/g) ?? [];
+    assert.equal(starts.length, contract.extensionRegions, name);
+    assert.equal(ends.length, starts.length, name);
+
+    const scripts = html.match(/<script\b[^>]*>[\s\S]*?<\/script>/gi) ?? [];
+    assert.equal(scripts.length, contract.scripts, name);
+    for (const script of scripts) {
+      assert.doesNotMatch(script, /<script\b[^>]+\bsrc\s*=/i, name);
+    }
   }
 });
 
@@ -109,6 +199,86 @@ test('house and engineer shells preserve sticky navigation and tour interactions
   assert.match(tour, /IntersectionObserver/);
   assert.match(tour, /querySelectorAll\(['"]\.snippet-toggle['"]\)/);
   assert.match(tour, /setAttribute\(['"]aria-expanded['"]/);
+});
+
+test('narrative shells style every structure the renderer emits', async () => {
+  // The narrative renderer emits this markup for any markdown artifact. A shell
+  // that omits a rule renders that structure as unformatted text, which no
+  // structural assertion elsewhere detects.
+  const required = [
+    [/\.callout[^_-][^{]*\{[^}]*border/, '.callout'],
+    [/\.callout__label[^{]*\{[^}]*font:/, '.callout__label'],
+    [/\.timeline[^{]*\{/, '.timeline'],
+    [/\.table-scroll[^{]*[^}]*\{[^}]*overflow-x/, '.table-scroll'],
+    [/\bth,?\s*\n?\s*td[^{]*\{[^}]*padding/, 'th/td'],
+    [/\bpre[^{]*\{[^}]*(padding|overflow-x)/, 'pre'],
+  ];
+  for (const name of ['house-style.html', 'engineer-tour.html']) {
+    const html = await template(name);
+    for (const [pattern, label] of required) {
+      assert.match(html, pattern, `${name} must style ${label}`);
+    }
+  }
+});
+
+test('engineer tour snippets keep the frame on the outer panel only', async () => {
+  const tour = await template('engineer-tour.html');
+  const snippetPreRule = tour.match(/\.snippet pre\s*\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.match(snippetPreRule, /\bborder:\s*0\s*;/);
+  assert.match(snippetPreRule, /\bborder-radius:\s*0\s*;/);
+  assert.match(snippetPreRule, /\bbackground:\s*transparent\s*;/);
+});
+
+test('engineer tour rail strokes node shapes without outlining labels', async () => {
+  const tour = await template('engineer-tour.html');
+  const nodeGroupRule =
+    tour.match(/\.diagram-card \.node\s*\{([^}]*)\}/)?.[1] ?? '';
+  const nodeShapeRule =
+    tour.match(/\.diagram-card \.node rect\s*\{([^}]*)\}/)?.[1] ?? '';
+
+  assert.doesNotMatch(nodeGroupRule, /\bstroke\s*:/);
+  assert.match(nodeShapeRule, /\bstroke:\s*var\(--accent\)\s*;/);
+  assert.match(nodeShapeRule, /\bstroke-width:\s*1\.5\s*;/);
+});
+
+test('the section rail diagram stays inside the shell viewport', async () => {
+  // The engineer-tour shell fixes the canvas at 360x540; nodes drawn outside it
+  // are silently clipped and render as bars.
+  const tour = await template('engineer-tour.html');
+  assert.match(tour, /viewBox="0 0 360 540"/);
+
+  const sections = Array.from({ length: 9 }, (_, index) => ({
+    id: `section-${index}`,
+    title: `Section ${index}`,
+    content: 'Body copy.',
+  }));
+  const { theme } = await resolveTheme({ style: 'clean-neutral' });
+  const { html } = await renderArtifact({
+    recipeArtifact: {
+      id: 'tour',
+      type: 'explainer',
+      template: 'engineer-tour',
+      required: true,
+      origin: 'floor',
+    },
+    content: {
+      artifactId: 'tour',
+      slug: 'viewport-fit',
+      title: 'Tour',
+      description: 'Viewport fit fixture.',
+      sections,
+    },
+    theme,
+    renderStrategy: 'default-only',
+  });
+
+  const nodes = [...html.matchAll(/<rect x="(\d+)" y="([\d.]+)" width="(\d+)" height="([\d.]+)"/g)];
+  assert.equal(nodes.length, sections.length);
+  for (const [, x, y, width, height] of nodes) {
+    assert.ok(Number(x) + Number(width) <= 360, `node overflows width: ${x}+${width}`);
+    assert.ok(Number(y) + Number(height) <= 540, `node overflows height: ${y}+${height}`);
+  }
 });
 
 test('diagram shell preserves an inline accessible diagram viewport', async () => {

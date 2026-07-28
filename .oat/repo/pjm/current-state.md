@@ -31,6 +31,19 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.21` rebuilds Explainer Kit authoring on two per-artifact paths,
+  replacing slot-filling that produced structurally thin output. A narrative
+  path promotes Markdown from provenance to actual renderer input, so tables,
+  GFM-alert callouts, fenced timelines, and fenced diagrams render as
+  structure; an artistic path has the agent compose HTML from hash-pinned
+  shells. Recipe policy chooses the path, not the author. `recipe/v2` replaces
+  v1, which is retired at the 2.0.0 boundary, and carries finite per-recipe and
+  per-type expansion caps, guideline misses degrade to warnings while safety and
+  provenance stay hard errors, approval moves after render and QA with the
+  accepted set persisted in `content-approval/v2` for faithful resume, and
+  author provenance binds through trusted caller configuration with the core
+  stamping time from its injected clock. Render QA is opt-in and never
+  self-launching. `explainer-kit` 2.0.0 marks the author-contract boundary.
 - CLI `0.2.18` adopts Claude Opus 5 as the hard-reasoning and consequential
   incumbent in `subagent-orchestration`, and admits six probe-verified Cursor
   pin mappings — five `claude-opus-5` effort rungs plus

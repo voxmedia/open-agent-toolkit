@@ -24,6 +24,7 @@
         --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         --serif: ui-serif, Georgia, serif;
         --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
         {{THEME_CSS}}
       }
       * {
@@ -56,8 +57,7 @@
         padding-block: 2.5rem;
       }
       .toc-brand,
-      .eyebrow,
-      .section-number {
+      .eyebrow {
         color: var(--muted);
         font: 0.7rem/1.4 var(--mono);
         letter-spacing: 0.12em;
@@ -116,11 +116,104 @@
         max-width: 100%;
         margin: 0;
         overflow-x: auto;
+        border: 0;
+        border-radius: 0;
+        background: transparent;
         padding: 1rem;
         font-family: var(--mono);
       }
       .snippet:not(.open) pre {
         display: none;
+      }
+      .diagram-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
+      }
+      /* Narrative renderer block output. The renderer emits these for any
+         markdown artifact, so the shell must style them or the structure
+         renders as unformatted text. */
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-inline-start: 0.25rem solid var(--accent);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout--important {
+        border-inline-start-color: var(--success, var(--accent));
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger, var(--warning));
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        font-family: var(--mono);
+      }
+      code {
+        font-family: var(--mono);
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        color: var(--muted);
+        padding-inline-start: 1rem;
+      }
+      figure {
+        margin-inline: 0;
+      }
+      figcaption {
+        color: var(--muted);
+        font: 0.8rem/1.5 var(--mono);
       }
       .diagram-rail {
         position: sticky;
@@ -139,6 +232,19 @@
         display: block;
         width: 100%;
         height: auto;
+      }
+      .diagram-card .node rect {
+        fill: var(--panel-muted);
+        stroke: var(--accent);
+        stroke-width: 1.5;
+      }
+      .diagram-card .edge {
+        fill: none;
+        stroke: var(--muted);
+      }
+      .diagram-card text {
+        fill: var(--ink);
+        font: 0.85rem var(--sans);
       }
       .diagram-card .node,
       .diagram-card .edge {
@@ -199,25 +305,43 @@
       }
     </style>
   </head>
-  <body>
-    <div class="layout">
-      <nav class="toc" aria-label="Tour sections">
+  <body data-explainer-shell="engineer-tour">
+    <div class="layout" data-shell-anchor="tour-layout">
+      <nav
+        class="toc"
+        data-shell-anchor="tour-navigation"
+        aria-label="Tour sections"
+      >
         <div class="toc-brand">{{EYEBROW}}</div>
+        <!-- AUTHOR EXTENSION REGION: section navigation -->
         {{NAVIGATION}}
+        <!-- END AUTHOR EXTENSION REGION -->
       </nav>
-      <main class="tour-body">
+      <main class="tour-body" data-shell-anchor="tour-body">
         <header>
           <div class="eyebrow">{{EYEBROW}}</div>
           <h1>{{TITLE}}</h1>
           <p>{{DESCRIPTION}}</p>
         </header>
+        <!-- AUTHOR EXTENSION REGION: narrative tour sections -->
         {{CONTENT}}
-        <footer>{{FOOTER}}</footer>
+        <!-- END AUTHOR EXTENSION REGION -->
+        <footer>
+          <!-- AUTHOR EXTENSION REGION: supporting references and next steps -->
+          {{FOOTER}}
+          <!-- END AUTHOR EXTENSION REGION -->
+        </footer>
       </main>
-      <aside class="diagram-rail" aria-label="System diagram">
-        <div class="diagram-card">
+      <aside
+        class="diagram-rail"
+        data-shell-anchor="diagram-rail"
+        aria-label="System diagram"
+      >
+        <div class="diagram-card" data-shell-anchor="diagram-card">
           <svg viewBox="0 0 360 540" role="img" aria-label="{{TITLE}}">
+            <!-- AUTHOR EXTENSION REGION: synchronized system diagram -->
             {{DIAGRAM}}
+            <!-- END AUTHOR EXTENSION REGION -->
           </svg>
         </div>
       </aside>

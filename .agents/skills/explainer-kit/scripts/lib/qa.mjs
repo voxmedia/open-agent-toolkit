@@ -1,3 +1,6 @@
+import { findUnpinnedResourceRefs } from './html-safety.mjs';
+import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
+
 const VOID_ELEMENTS = new Set([
   'area',
   'base',
@@ -14,14 +17,148 @@ const VOID_ELEMENTS = new Set([
   'track',
   'wbr',
 ]);
-const EXTERNAL_ASSET_PATTERN =
-  /<(?:script|iframe|source|img|audio|video|object|embed)\b[^>]*(?:src|data)\s*=\s*["'](?!data:)[^"']+/i;
 const INLINE_ASSET_VIOLATION_PATTERN =
   /<link\b|@import\b|url\(\s*["']?(?!data:|#)/i;
 const TOKEN_PATTERN = /{{\s*[A-Z][A-Z0-9_]*\s*}}/g;
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+const INLINE_DIAGRAM_PATTERN =
+  /<svg\b(?=[^>]*(?:\bclass\s*=\s*["'][^"']*\bdiagram\b|\baria-label\s*=\s*["'][^"']*(?:architecture|diagram)))[^>]*>/i;
+const STRUCTURED_BLOCK_PATTERNS = [
+  /<table\b/i,
+  /<(?:ul|ol)\b/i,
+  /<aside\b[^>]*\bclass\s*=\s*["'][^"']*\bcallout\b/i,
+  /<blockquote\b/i,
+  /<figure\b/i,
+];
 
 export const REPRESENTATIVE_WIDTHS = Object.freeze([320, 768, 1440]);
+export const GUIDELINE_WARNING_IDS = Object.freeze({
+  narrativeCoverage: 'guideline-narrative-coverage-missing',
+  architectureDiagram: 'guideline-architecture-diagram-missing',
+  structuredDepth: 'guideline-structured-depth-missing',
+  expansionProfileLimit: 'expansion-profile-limit-exceeded',
+  expansionArtifactLimit: 'expansion-artifact-limit-exceeded',
+  expansionTypeLimit: 'expansion-type-limit-exceeded',
+});
+const EXPANSION_WARNING_BY_REJECTION_REASON = new Map([
+  ['profile-limit', GUIDELINE_WARNING_IDS.expansionProfileLimit],
+  ['recipe-limit', GUIDELINE_WARNING_IDS.expansionArtifactLimit],
+  ['type-limit', GUIDELINE_WARNING_IDS.expansionTypeLimit],
+]);
+export const RENDER_WARNING_IDS = Object.freeze({
+  unsupportedDiagram: 'render-unsupported-diagram',
+  headingDepthJump: 'render-heading-depth-jump',
+  timelineEntryShape: 'render-timeline-entry-shape',
+  legacyRawHtmlEscaped: 'render-legacy-raw-html-escaped',
+});
+export const RENDER_QA_WARNING_IDS = Object.freeze({
+  documentOverflow: 'render-qa-document-overflow',
+  innerContainerOverflow: 'render-qa-inner-container-overflow',
+  viewportClipping: 'render-qa-viewport-clipping',
+  headingReadability: 'render-qa-heading-unreadable',
+  animationsEnabled: 'render-qa-animations-enabled',
+  reducedMotion: 'render-qa-reduced-motion',
+  keyboardNavigation: 'render-qa-keyboard-navigation',
+  themeToggle: 'render-qa-theme-toggle',
+  deckNoJsLayout: 'render-qa-deck-no-js-layout',
+  deckPrintLayout: 'render-qa-deck-print-layout',
+  skippedNoProbe: 'render-qa-skipped-no-probe',
+});
+const RENDER_QA_WARNING_BY_CODE = new Map([
+  ['viewport-overflow', RENDER_QA_WARNING_IDS.documentOverflow],
+  ['inner-x-overflow', RENDER_QA_WARNING_IDS.innerContainerOverflow],
+  ['viewport-clipping', RENDER_QA_WARNING_IDS.viewportClipping],
+  ['heading-readability', RENDER_QA_WARNING_IDS.headingReadability],
+  ['animations-enabled', RENDER_QA_WARNING_IDS.animationsEnabled],
+  ['reduced-motion', RENDER_QA_WARNING_IDS.reducedMotion],
+  ['keyboard-navigation', RENDER_QA_WARNING_IDS.keyboardNavigation],
+  ['theme-toggle', RENDER_QA_WARNING_IDS.themeToggle],
+  ['deck-no-js-layout', RENDER_QA_WARNING_IDS.deckNoJsLayout],
+  ['deck-print-layout', RENDER_QA_WARNING_IDS.deckPrintLayout],
+]);
+
+export function renderQaWarningIds(issues) {
+  if (!Array.isArray(issues)) {
+    throw new TypeError('Render QA issues must be an array.');
+  }
+  return [
+    ...new Set(
+      issues
+        .map(({ code }) => RENDER_QA_WARNING_BY_CODE.get(code))
+        .filter(Boolean),
+    ),
+  ];
+}
+
+// Degradation findings are prefixed rather than looked up so a newly added
+// render warning code surfaces instead of being silently dropped.
+export function renderWarningIds(warnings) {
+  if (!Array.isArray(warnings)) {
+    throw new TypeError('Render warnings must be an array.');
+  }
+  if (warnings.some(({ code } = {}) => typeof code !== 'string' || !code)) {
+    throw new TypeError('Every render warning requires a string code.');
+  }
+  return [...new Set(warnings.map(({ code }) => `render-${code}`))];
+}
+
+export function checkGuidelines({ recipe, artifacts, expansion } = {}) {
+  if (!Array.isArray(artifacts)) {
+    throw new TypeError('Guideline checker artifacts must be an array.');
+  }
+  if (
+    artifacts.some(
+      (artifact) =>
+        !isPlainObject(artifact) ||
+        typeof artifactId(artifact) !== 'string' ||
+        typeof artifact.type !== 'string' ||
+        typeof artifact.html !== 'string',
+    )
+  ) {
+    throw new TypeError(
+      'Guideline checker artifacts require id, type, and HTML.',
+    );
+  }
+
+  const floor = recipeFloor(recipe);
+  const builtById = new Map(
+    artifacts.map((artifact) => [artifactId(artifact), artifact]),
+  );
+  const narrativeFloor = floor.filter(
+    (artifact) => recipeRequiredNarrative(recipe, artifact.id).length > 0,
+  );
+  const warnings = new Set();
+
+  const missesNarrative = narrativeFloor.some((floorArtifact) => {
+    const built = builtById.get(floorArtifact.id);
+    const required = recipeRequiredNarrative(recipe, floorArtifact.id);
+    return (
+      !built ||
+      required.some((sectionId) => !hasElementId(built.html, sectionId))
+    );
+  });
+  if (missesNarrative) {
+    warnings.add(GUIDELINE_WARNING_IDS.narrativeCoverage);
+  }
+
+  const hasDiagram =
+    artifacts.some(({ type }) => type === 'diagram') ||
+    artifacts.some(({ html }) => INLINE_DIAGRAM_PATTERN.test(html));
+  if (!hasDiagram) {
+    warnings.add(GUIDELINE_WARNING_IDS.architectureDiagram);
+  }
+
+  const hasStructuredDepth = narrativeFloor.some((floorArtifact) => {
+    const html = builtById.get(floorArtifact.id)?.html ?? '';
+    return STRUCTURED_BLOCK_PATTERNS.some((pattern) => pattern.test(html));
+  });
+  if (narrativeFloor.length > 0 && !hasStructuredDepth) {
+    warnings.add(GUIDELINE_WARNING_IDS.structuredDepth);
+  }
+
+  addExpansionWarnings(warnings, expansion);
+  return { valid: true, warnings: [...warnings] };
+}
 
 export function checkSourceDumping({
   authoredText,
@@ -81,24 +218,111 @@ function shingles(value, size) {
 
 export const BROWSER_PROBE_EVALUATE = `(() => {
   const root = document.documentElement;
-  const clippedX = [...document.querySelectorAll('body *')]
+  const elements = [...document.querySelectorAll('body *')];
+  const selector = (element) => element.id ? '#' + CSS.escape(element.id) :
+    element.classList.length ? '.' + [...element.classList].map(CSS.escape).join('.') :
+    element.tagName.toLowerCase();
+  const clippedX = elements
     .filter((element) => {
       const style = getComputedStyle(element);
       return element.scrollWidth > element.clientWidth + 2 &&
         ['hidden', 'clip'].includes(style.overflowX);
     })
     .map((element) => ({
-      selector: element.id ? '#' + CSS.escape(element.id) :
-        element.classList.length ? '.' + [...element.classList].map(CSS.escape).join('.') :
-        element.tagName.toLowerCase(),
+      selector: selector(element),
       overflowX: getComputedStyle(element).overflowX,
       clientWidth: element.clientWidth,
       scrollWidth: element.scrollWidth
     }))
     .slice(0, 20);
+  // Ancestry inside a horizontal scroller is not reachability: scrollLeft only
+  // ranges over 0..scrollWidth-clientWidth, so content sitting at a negative
+  // content offset or past the scrollable extent can never be scrolled into
+  // view and stays a genuine clipping defect.
+  const TOLERANCE = 2;
+  const scrollReachable = (element) => {
+    const rect = element.getBoundingClientRect();
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      if (!['auto', 'scroll'].includes(style.overflowX)) continue;
+      if (node.scrollWidth - node.clientWidth <= TOLERANCE) continue;
+      const nodeRect = node.getBoundingClientRect();
+      const contentLeft =
+        rect.left - (nodeRect.left + node.clientLeft) + node.scrollLeft;
+      if (contentLeft >= -TOLERANCE &&
+        contentLeft + rect.width <= node.scrollWidth + TOLERANCE) return true;
+    }
+    return false;
+  };
+  const viewportClipped = elements
+    .filter((element) => {
+      const rect = element.getBoundingClientRect();
+      return rect.width > 0 && rect.height > 0 &&
+        (rect.left < -TOLERANCE || rect.right > innerWidth + TOLERANCE) &&
+        !scrollReachable(element);
+    })
+    .map((element) => {
+      const rect = element.getBoundingClientRect();
+      return {
+        selector: selector(element),
+        left: rect.left,
+        right: rect.right,
+        viewportWidth: innerWidth
+      };
+    })
+    .slice(0, 20);
+  // A heading in a collapsed panel or an aria-hidden subtree is deliberately
+  // not presented, so it is out of scope rather than unreadable. Visually
+  // hidden accessibility text still renders a box and stays in scope.
+  const presented = (element) => {
+    const rendered = typeof element.checkVisibility === 'function'
+      ? element.checkVisibility({
+          visibilityProperty: true,
+          contentVisibilityAuto: true
+        })
+      : element.getClientRects().length > 0;
+    return rendered && element.closest('[aria-hidden="true"]') === null;
+  };
+  const unreadableHeadings = [...document.querySelectorAll('h1,h2,h3,h4,h5,h6')]
+    .filter(presented)
+    .filter((heading) => {
+      const style = getComputedStyle(heading);
+      const rect = heading.getBoundingClientRect();
+      const fontSize = Number.parseFloat(style.fontSize);
+      return !heading.textContent.trim() || rect.width <= 0 || rect.height <= 0 ||
+        !Number.isFinite(fontSize) || fontSize < 12;
+    })
+    .map((heading) => ({
+      selector: selector(heading),
+      text: heading.textContent.trim(),
+      fontSize: Number.parseFloat(getComputedStyle(heading).fontSize)
+    }))
+    .slice(0, 20);
+  // Reduced-motion styling conventionally collapses transitions to a token
+  // 0.01ms rather than 0s so transitionend still fires. That is suppressed
+  // motion, not active motion, so anything under a millisecond counts as
+  // disabled while a perceptible duration still reports.
+  // Motion is just as visible on a generated ::before/::after box as on the
+  // element itself, so all three are inspected. A pseudo-element that
+  // generates no content cannot animate and is skipped.
+  const PERCEPTIBLE_SECONDS = 0.001;
+  const motionless = (element, pseudo) => {
+    const style = getComputedStyle(element, pseudo);
+    if (pseudo && ['none', 'normal'].includes(style.content)) return true;
+    const durations = (style.animationDuration + ',' + style.transitionDuration)
+      .split(',')
+      .map((value) => Number.parseFloat(value) || 0);
+    return style.animationName === 'none' &&
+      durations.every((value) => value < PERCEPTIBLE_SECONDS);
+  };
+  const animationsDisabled = elements.every((element) =>
+    [null, '::before', '::after'].every((pseudo) => motionless(element, pseudo)));
   return {
     pageOverflowX: root.scrollWidth > root.clientWidth + 2,
     clippedX,
+    viewportClipped,
+    unreadableHeadings,
+    animationsDisabled,
     reducedMotion: matchMedia('(prefers-reduced-motion: reduce)').matches,
     deckLayout: document.querySelector('.deck') ? {
       flow: getComputedStyle(document.querySelector('.deck')).display === 'block' ?
@@ -150,13 +374,12 @@ export function checkHtmlStructure({
     }
   }
 
-  if (
-    EXTERNAL_ASSET_PATTERN.test(html) ||
-    INLINE_ASSET_VIOLATION_PATTERN.test(html)
-  ) {
+  const unpinnedRefs = findUnpinnedResourceRefs(html);
+  if (unpinnedRefs.length > 0 || INLINE_ASSET_VIOLATION_PATTERN.test(html)) {
     add(
       'external-asset',
       'Final HTML assets must be inline and self-contained.',
+      ...(unpinnedRefs.length > 0 ? [{ refs: unpinnedRefs.slice(0, 10) }] : []),
     );
   }
 
@@ -269,6 +492,9 @@ export async function runBrowserProbes({
           scenario,
           viewport: { width, height: representativeHeight(width) },
           reducedMotion: 'reduce',
+          disableAnimations: true,
+          injectedCss:
+            '*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}',
           evaluate: BROWSER_PROBE_EVALUATE,
           keyboard:
             artifact.type === 'deck' && scenario === 'default'
@@ -312,6 +538,30 @@ export async function runBrowserProbes({
             code: 'inner-x-overflow',
             message: 'An inner container clips content on the x axis.',
             details: result.clippedX,
+          });
+        }
+        if ((result.viewportClipped ?? []).length > 0) {
+          issues.push({
+            ...context,
+            code: 'viewport-clipping',
+            message: 'Rendered content is clipped outside the viewport.',
+            details: result.viewportClipped,
+          });
+        }
+        if ((result.unreadableHeadings ?? []).length > 0) {
+          issues.push({
+            ...context,
+            code: 'heading-readability',
+            message: 'A heading is not visibly readable.',
+            details: result.unreadableHeadings,
+          });
+        }
+        if (result.animationsDisabled === false) {
+          issues.push({
+            ...context,
+            code: 'animations-enabled',
+            message:
+              'Render QA observed active animation or transition timing.',
           });
         }
         if (!result.reducedMotion) {
@@ -532,6 +782,18 @@ function validateProbeResult(result, artifactId, width, request) {
       `Browser probe for ${artifactId} at ${width}px returned an invalid result.`,
     );
   }
+  if (
+    (result.viewportClipped !== undefined &&
+      !Array.isArray(result.viewportClipped)) ||
+    (result.unreadableHeadings !== undefined &&
+      !Array.isArray(result.unreadableHeadings)) ||
+    (result.animationsDisabled !== undefined &&
+      typeof result.animationsDisabled !== 'boolean')
+  ) {
+    throw new TypeError(
+      `Browser layout probe for ${artifactId} at ${width}px returned an invalid result.`,
+    );
+  }
   if (request.themeToggle && !isPlainObject(result.themeToggle)) {
     throw new TypeError(
       `Browser theme probe for ${artifactId} at ${width}px returned an invalid result.`,
@@ -561,6 +823,43 @@ function representativeHeight(width) {
   if (width <= 480) return 640;
   if (width <= 900) return 1024;
   return 900;
+}
+
+function artifactId(artifact) {
+  return artifact?.id ?? artifact?.artifactId;
+}
+
+function hasElementId(html, id) {
+  const escaped = id.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return new RegExp(`\\bid\\s*=\\s*["']${escaped}["']`, 'i').test(html);
+}
+
+function addExpansionWarnings(warnings, expansion) {
+  if (expansion === undefined) return;
+  if (
+    !isPlainObject(expansion) ||
+    !Array.isArray(expansion.errors) ||
+    !Array.isArray(expansion.rejected) ||
+    !Array.isArray(expansion.warnings)
+  ) {
+    throw new TypeError(
+      'Guideline checker expansion must be an evaluated proposal result.',
+    );
+  }
+  if (expansion.valid !== true || expansion.errors.length > 0) {
+    throw new TypeError(
+      'Guideline checker cannot convert expansion proposal errors into warnings.',
+    );
+  }
+
+  const knownWarnings = new Set(EXPANSION_WARNING_BY_REJECTION_REASON.values());
+  for (const warning of expansion.warnings) {
+    if (knownWarnings.has(warning)) warnings.add(warning);
+  }
+  for (const rejected of expansion.rejected) {
+    const warning = EXPANSION_WARNING_BY_REJECTION_REASON.get(rejected?.reason);
+    if (warning) warnings.add(warning);
+  }
 }
 
 function isPlainObject(value) {

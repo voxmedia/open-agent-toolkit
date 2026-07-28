@@ -733,8 +733,8 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '1.0.2'],
-      ['oat-explainer-kit', '1.0.1'],
+      ['explainer-kit', '2.0.0'],
+      ['oat-explainer-kit', '1.0.2'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -1335,7 +1335,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.1.9',
+        version: '2.2.0',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1688,7 +1688,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1909,7 +1909,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2338,7 +2338,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2589,10 +2589,10 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-receive', '1.5.9'],
       ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.1.9'],
+      ['oat-project-implement', '2.2.0'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
-      ['oat-project-complete', '1.5.4'],
+      ['oat-project-complete', '1.6.0'],
       ['oat-project-next', '1.0.11'],
     ] as const;
 
@@ -3678,7 +3678,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.9'],
+      ['oat-project-implement', '2.2.0'],
       ['oat-project-review-provide', '1.3.22'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;

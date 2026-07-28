@@ -24,6 +24,7 @@
         --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         --serif: ui-serif, Georgia, serif;
         --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
         {{THEME_CSS}}
       }
       * {
@@ -38,6 +39,9 @@
         background: var(--canvas);
         color: var(--ink);
         font-family: var(--sans);
+      }
+      noscript p {
+        color: var(--muted);
       }
       .deck {
         display: flex;
@@ -197,16 +201,28 @@
       }
     </style>
   </head>
-  <body>
+  <body data-explainer-shell="deck-shell">
     <noscript>
       <p>This deck remains available below as a readable vertical document.</p>
     </noscript>
-    <main class="deck" aria-label="{{TITLE}}">{{SLIDES}}</main>
-    <nav class="deck-controls" aria-label="Slide navigation">
+    <main class="deck" data-shell-anchor="deck" aria-label="{{TITLE}}">
+      <!-- AUTHOR EXTENSION REGION: semantic section.slide frames -->
+      {{SLIDES}}
+      <!-- END AUTHOR EXTENSION REGION -->
+    </main>
+    <nav
+      class="deck-controls"
+      data-shell-anchor="deck-controls"
+      aria-label="Slide navigation"
+    >
       <button type="button" data-direction="-1" aria-label="Previous slide">
         ←
       </button>
-      <span id="deck-counter" aria-live="polite"></span>
+      <span
+        id="deck-counter"
+        data-shell-anchor="deck-counter"
+        aria-live="polite"
+      ></span>
       <button type="button" data-direction="1" aria-label="Next slide">
         →
       </button>
@@ -214,11 +230,15 @@
     <div
       class="deck-progress"
       id="deck-progress"
+      data-shell-anchor="deck-progress"
       role="progressbar"
       aria-label="Slide progress"
       aria-valuemin="1"
     >
-      <span class="deck-progress__bar"></span>
+      <span
+        class="deck-progress__bar"
+        data-shell-anchor="deck-progress-bar"
+      ></span>
     </div>
     <script>
       (() => {

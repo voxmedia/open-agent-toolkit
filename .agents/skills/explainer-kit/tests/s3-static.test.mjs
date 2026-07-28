@@ -475,6 +475,8 @@ async function createFixture() {
       },
     ],
     immutableHashes: {
+      'run-request.json': `sha256:${'a'.repeat(64)}`,
+      'source/content-approval.json': `sha256:${'a'.repeat(64)}`,
       'source/fact-base.json': `sha256:${'a'.repeat(64)}`,
       'source/fact-base.md': `sha256:${'a'.repeat(64)}`,
       'source/content/hub.md': `sha256:${'c'.repeat(64)}`,

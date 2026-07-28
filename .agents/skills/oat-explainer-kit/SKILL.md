@@ -1,6 +1,6 @@
 ---
 name: oat-explainer-kit
-version: 1.0.1
+version: 1.0.2
 description: Use when building project explainers or recaps from OAT configuration, state, and lifecycle artifacts.
 disable-model-invocation: false
 user-invocable: true
@@ -19,6 +19,7 @@ Adapt OAT project context into the versioned request consumed by the canonical
 - Derive canonical project or repository output roots.
 - Bind OAT lifecycle artifacts to generic recipe source roles.
 - Resolve project explainer and recap intent before invoking the core.
+- Require lifecycle callers to construct a brief-aware author seam.
 
 ## Dependency Direction
 
@@ -33,7 +34,7 @@ rollback, and operator-owned real-wrapper gate, use `references/migration.md`.
 
 Before reading OAT config or invoking the core, call
 `scripts/check-core.mjs#checkCoreCompatibility` with this installed skill
-directory and minimum core version `1.0.0`. Continue only when it returns
+directory and minimum core version `2.0.0`. Continue only when it returns
 `ok: true`.
 
 - Missing core: stop and show
@@ -54,7 +55,7 @@ Call `scripts/run.mjs#runOatExplainer` with the repository root, project
 invocation, active project path, recipe, slug, lifecycle mode, and any explicit
 runtime overrides. The adapter:
 
-1. checks the user-scoped installed core at minimum version `1.0.0`;
+1. checks the user-scoped installed core at minimum version `2.0.0`;
 2. resolves only the public `explainers.*` and `workflow.explainers.*` keys;
 3. derives the canonical project output root;
 4. binds approved OAT artifacts to the recipe's single `project` source set;
@@ -68,13 +69,19 @@ Missing optional artifacts are omitted, but at least one approved lifecycle
 artifact is required. An explicit supplied fact-base path bypasses artifact
 federation and is passed through as `factBase.mode: supplied`.
 
+Before invocation, read `references/author-callback.md` and construct exactly
+one provider-neutral author seam in both modes: in-process callers supply
+`author`, while JSON/CLI callers supply `authorModulePath` naming a module with
+an `author` function export. The callback consumes `author-request/v2` with the
+recipe brief and fact base inlined, plus theme and any recipe-selected artistic
+shell. It may propose expansion only through recipe profile IDs. The adapter
+validates and resolves that executable input before passing it to
+`core.runExplainer`; callbacks and module paths never enter the persisted run
+request.
+
 Unattended project runs pass `approved-oat-artifacts` provenance to the core's
-content-approval seam and never prompt. Every unattended run also requires
-exactly one provider-neutral author seam: in-process callers supply `author`,
-while JSON/CLI callers supply `authorModulePath` naming a module with an
-`author` function export. The adapter validates and resolves that executable
-input before passing it to `core.runExplainer`; callbacks and module paths never
-enter the persisted run request.
+content-approval seam and never prompt. Automated completion and
+implementation-tail recaps always use `mode: unattended`.
 
 Federated runs still require an explicit provider-neutral critic callback.
 In-process callers may supply `critic` (or `coreOptions.critic` for

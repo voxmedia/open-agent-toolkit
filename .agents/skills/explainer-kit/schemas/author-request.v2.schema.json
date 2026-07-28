@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.author-request/v2",
+  "title": "AuthorRequestV2",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "artifactId",
+    "artifactType",
+    "authoring",
+    "brief",
+    "factBase",
+    "theme"
+  ],
+  "properties": {
+    "schemaVersion": { "const": "explainer-kit.author-request/v2" },
+    "artifactId": { "type": "string", "minLength": 1 },
+    "artifactType": {
+      "enum": ["hub", "diagram", "explainer", "deck", "catalog"]
+    },
+    "authoring": { "enum": ["markdown", "html"] },
+    "brief": { "type": "string", "minLength": 1 },
+    "factBase": { "$ref": "explainer-kit.fact-base/v1" },
+    "shell": { "type": "string", "minLength": 1 },
+    "theme": { "$ref": "explainer-kit.theme/v1" },
+    "floor": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["requiredNarrative"],
+      "properties": {
+        "requiredNarrative": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      }
+    }
+  }
+}

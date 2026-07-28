@@ -306,7 +306,7 @@ async function createFixture({ prepareInputs = async () => {} } = {}) {
     writeJson(
       join(root, '.agents/skills/explainer-kit/recipes/project-recap.json'),
       {
-        schemaVersion: 'explainer-kit.recipe/v1',
+        schemaVersion: 'explainer-kit.recipe/v2',
         id: 'project-recap',
         version: '1',
       },
@@ -314,7 +314,7 @@ async function createFixture({ prepareInputs = async () => {} } = {}) {
     writeJson(
       join(root, '.agents/skills/explainer-kit/recipes/project-explainer.json'),
       {
-        schemaVersion: 'explainer-kit.recipe/v1',
+        schemaVersion: 'explainer-kit.recipe/v2',
         id: 'project-explainer',
         version: '1',
       },

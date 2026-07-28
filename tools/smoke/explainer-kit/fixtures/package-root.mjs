@@ -192,22 +192,20 @@ async function writeAuthorModule(path) {
     path,
     `export async function author(request) {
   return {
-    schemaVersion: 'explainer-kit.author-result/v1',
-    artifactId: request.artifact.id,
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
     content: {
-      title: 'Packaged Project Explainer',
-      description: 'A packaged execution generated from approved project evidence.',
-      sections: request.narrativeOutline.map(({ id, title }) => ({
-        id,
-        title,
-        prose: \`The packaged author synthesized the \${title.toLowerCase()} section from approved project evidence while preserving the destination-neutral explainer contract.\`,
-      })),
+      markdown: \`# Packaged Project Explainer\\n\\n\${request.floor.requiredNarrative
+        .map(
+          (id) =>
+            \`## \${id}\\n\\nThe packaged author synthesized \${id} from approved project evidence while preserving the destination-neutral explainer contract.\`,
+        )
+        .join('\\n\\n')}\\n\`,
     },
     provenance: {
       authorId: 'packaged-layout-provider-neutral-author',
       generatedAt: '${NOW}',
       method: 'structured-evidence-synthesis',
-      model: 'packaged-layout-author/v1',
     },
   };
 }

@@ -1,11 +1,11 @@
 import { readFileSync } from 'node:fs';
 
-const RECIPE_SCHEMA_VERSION = 'explainer-kit.recipe/v1';
-const RECIPE_ROOT_KEYS = [
-  'artifacts',
+const RECIPE_SCHEMA_V2 = 'explainer-kit.recipe/v2';
+const RECIPE_V2_ROOT_KEYS = [
   'discoveryLimits',
+  'expansion',
+  'floor',
   'id',
-  'requiredNarrative',
   'schemaVersion',
   'sourceRoles',
   'version',
@@ -17,7 +17,25 @@ const SOURCE_ROLE_KEYS = [
   'required',
   'role',
 ];
-const ARTIFACT_KEYS = ['id', 'required', 'template', 'type'];
+const FLOOR_KEYS = [
+  'authoring',
+  'briefRef',
+  'id',
+  'required',
+  'requiredNarrative',
+  'template',
+  'type',
+];
+const EXPANSION_KEYS = ['limits', 'profiles'];
+const PROFILE_REQUIRED_KEYS = [
+  'authoring',
+  'briefRef',
+  'maxCount',
+  'profileId',
+  'type',
+];
+const PROFILE_KEYS = [...PROFILE_REQUIRED_KEYS, 'shell'];
+const EXPANSION_LIMIT_KEYS = ['maxArtifacts', 'maxPerType'];
 const DISCOVERY_LIMIT_KEYS = ['consecutiveNoNewFindingsRounds', 'maxRounds'];
 const SOURCE_KINDS = new Set([
   'file',
@@ -27,7 +45,15 @@ const SOURCE_KINDS = new Set([
   'session',
   'other',
 ]);
-const ARTIFACT_TYPES = new Set(['hub', 'diagram', 'explainer', 'deck']);
+const ARTIFACT_TYPES = new Set([
+  'hub',
+  'diagram',
+  'explainer',
+  'deck',
+  'catalog',
+]);
+const AUTHORING_TYPES = new Set(['markdown', 'html']);
+const SAFE_ID = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 const RECIPE_FILES = [
   'project-explainer.json',
   'project-recap.json',
@@ -53,6 +79,142 @@ export function loadRecipe(id, version) {
     throw error;
   }
   return structuredClone(recipe);
+}
+
+export function recipeFloor(recipe) {
+  if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
+    return structuredClone(recipe.floor);
+  }
+  throw new TypeError('Recipe has an unsupported schemaVersion');
+}
+
+export function recipeExpansion(recipe) {
+  if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
+    return structuredClone(recipe.expansion);
+  }
+  throw new TypeError('Recipe has an unsupported schemaVersion');
+}
+
+export function recipeRequiredNarrative(recipe, artifactId) {
+  if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
+    const artifact = recipe.floor.find(({ id }) => id === artifactId);
+    return [...(artifact?.requiredNarrative ?? [])];
+  }
+  throw new TypeError('Recipe has an unsupported schemaVersion');
+}
+
+export function evaluateExpansionProposals(recipe, proposals) {
+  const floorIds = new Set(recipeFloor(recipe).map(({ id }) => id));
+  const expansion = recipeExpansion(recipe);
+  const profiles = new Map(
+    expansion.profiles.map((profile) => [profile.profileId, profile]),
+  );
+  const errors = [];
+  const accepted = [];
+  const rejected = [];
+  const warnings = new Set();
+  const seenIds = new Set();
+  const acceptedByProfile = new Map();
+  const acceptedByType = new Map();
+  const maxPerType = new Map(
+    Object.entries(expansion.limits.maxPerType ?? {}),
+  );
+
+  if (!Array.isArray(proposals)) {
+    return {
+      valid: false,
+      accepted,
+      rejected,
+      warnings: [],
+      errors: ['Expansion proposals must be an array'],
+    };
+  }
+
+  for (const proposal of proposals) {
+    if (
+      !isObject(proposal) ||
+      !hasExactKeys(proposal, ['id', 'profileId', 'rationale'])
+    ) {
+      errors.push(
+        'Expansion proposals require only id, profileId, and rationale',
+      );
+      continue;
+    }
+    if (!SAFE_ID.test(proposal.id)) {
+      errors.push(`Unsafe expansion artifact id: ${proposal.id}`);
+      continue;
+    }
+    if (floorIds.has(proposal.id)) {
+      errors.push(`Expansion artifact id collides with floor: ${proposal.id}`);
+      continue;
+    }
+    if (seenIds.has(proposal.id)) {
+      errors.push(`Duplicate expansion artifact id: ${proposal.id}`);
+      continue;
+    }
+    seenIds.add(proposal.id);
+
+    const profile = profiles.get(proposal.profileId);
+    if (!profile) {
+      errors.push(`Unknown expansion profile: ${proposal.profileId}`);
+      continue;
+    }
+    if (
+      typeof proposal.rationale !== 'string' ||
+      proposal.rationale.length === 0
+    ) {
+      errors.push(`Expansion proposal ${proposal.id} requires a rationale`);
+      continue;
+    }
+
+    const profileCount = acceptedByProfile.get(profile.profileId) ?? 0;
+    if (profileCount >= profile.maxCount) {
+      rejected.push({
+        ...structuredClone(proposal),
+        status: 'rejected',
+        reason: 'profile-limit',
+      });
+      warnings.add('expansion-profile-limit-exceeded');
+      continue;
+    }
+    // A declared type cap binds across profiles, so proposals cannot spread
+    // over sibling profiles that share one artifact type to evade it.
+    const typeCount = acceptedByType.get(profile.type) ?? 0;
+    if (maxPerType.has(profile.type) && typeCount >= maxPerType.get(profile.type)) {
+      rejected.push({
+        ...structuredClone(proposal),
+        status: 'rejected',
+        reason: 'type-limit',
+      });
+      warnings.add('expansion-type-limit-exceeded');
+      continue;
+    }
+    if (accepted.length >= expansion.limits.maxArtifacts) {
+      rejected.push({
+        ...structuredClone(proposal),
+        status: 'rejected',
+        reason: 'recipe-limit',
+      });
+      warnings.add('expansion-artifact-limit-exceeded');
+      continue;
+    }
+
+    accepted.push({
+      ...structuredClone(proposal),
+      status: 'accepted',
+      profile: structuredClone(profile),
+    });
+    acceptedByProfile.set(profile.profileId, profileCount + 1);
+    acceptedByType.set(profile.type, typeCount + 1);
+  }
+
+  return {
+    valid: errors.length === 0,
+    accepted,
+    rejected,
+    warnings: [...warnings],
+    errors,
+  };
 }
 
 export function validateSourceBindings(recipe, bindings) {
@@ -100,7 +262,7 @@ export function validateContentModel(recipe, contentModel) {
   }
 
   if (
-    !recipe.artifacts.some(
+    !recipeFloor(recipe).some(
       (artifact) => artifact.id === contentModel.artifactId,
     )
   ) {
@@ -129,11 +291,12 @@ export function validateContentModel(recipe, contentModel) {
     }
   }
 
-  for (const sectionId of recipe.requiredNarrative) {
+  for (const sectionId of recipeRequiredNarrative(
+    recipe,
+    contentModel.artifactId,
+  )) {
     const count = sectionCounts.get(sectionId) ?? 0;
-    if (count === 0) {
-      errors.push(`Missing required narrative section: ${sectionId}`);
-    } else if (count > 1) {
+    if (count > 1) {
       errors.push(`Duplicate narrative section: ${sectionId}`);
     }
   }
@@ -162,19 +325,16 @@ export function shouldStopDiscovery(recipe, findingsByRound) {
     .every((count) => count === 0);
 }
 
-function validateRecipe(recipe, file) {
+export function validateRecipe(recipe, file = 'recipe') {
   assertObject(recipe, `${file} recipe`);
-  assertExactKeys(recipe, RECIPE_ROOT_KEYS, `${file} recipe`);
-  assert(
-    recipe.schemaVersion === RECIPE_SCHEMA_VERSION,
-    `${file} has unsupported schemaVersion`,
-  );
+  if (recipe.schemaVersion === RECIPE_SCHEMA_V2) {
+    assertExactKeys(recipe, RECIPE_V2_ROOT_KEYS, `${file} recipe`);
+    validateV2Shape(recipe, file);
+  } else {
+    assert(false, `${file} has unsupported schemaVersion`);
+  }
   assertNonEmptyString(recipe.id, `${file} id`);
   assertNonEmptyString(recipe.version, `${file} version`);
-  assertUniqueNonEmptyStrings(
-    recipe.requiredNarrative,
-    `${file} requiredNarrative`,
-  );
 
   assert(
     Array.isArray(recipe.sourceRoles) && recipe.sourceRoles.length > 0,
@@ -207,38 +367,124 @@ function validateRecipe(recipe, file) {
   }
   assertUnique(roleNames, `${file} source role names`);
 
+  validateDiscoveryLimits(recipe.discoveryLimits, file);
+  return recipe;
+}
+
+function validateV2Shape(recipe, file) {
   assert(
-    Array.isArray(recipe.artifacts) && recipe.artifacts.length > 0,
-    `${file} artifacts must be a non-empty array`,
+    Array.isArray(recipe.floor) && recipe.floor.length > 0,
+    `${file} floor must be a non-empty array`,
   );
-  const artifactIds = [];
-  for (const artifact of recipe.artifacts) {
-    assertObject(artifact, `${file} artifact`);
-    assertExactKeys(artifact, ARTIFACT_KEYS, `${file} artifact`);
-    assertNonEmptyString(artifact.id, `${file} artifact id`);
-    artifactIds.push(artifact.id);
+  const floorIds = [];
+  for (const artifact of recipe.floor) {
+    assertObject(artifact, `${file} floor entry`);
+    assertExactKeys(artifact, FLOOR_KEYS, `${file} floor entry`);
+    assertSafeId(artifact.id, `${file} floor id`);
+    floorIds.push(artifact.id);
     assert(
       ARTIFACT_TYPES.has(artifact.type),
-      `${file} artifact has unsupported type`,
+      `${file} floor has unsupported type`,
     );
-    assertNonEmptyString(artifact.template, `${file} artifact template`);
-    assert(typeof artifact.required === 'boolean', `${file} artifact required`);
+    assert(
+      AUTHORING_TYPES.has(artifact.authoring),
+      `${file} floor has unsupported authoring`,
+    );
+    assertNonEmptyString(artifact.template, `${file} floor template`);
+    assertNonEmptyString(artifact.briefRef, `${file} floor briefRef`);
+    assert(typeof artifact.required === 'boolean', `${file} floor required`);
+    assertUniqueNonEmptyStrings(
+      artifact.requiredNarrative,
+      `${file} floor requiredNarrative`,
+    );
   }
-  assertUnique(artifactIds, `${file} artifact ids`);
+  assertUnique(floorIds, `${file} floor ids`);
 
-  assertObject(recipe.discoveryLimits, `${file} discoveryLimits`);
+  assertObject(recipe.expansion, `${file} expansion`);
+  assertExactKeys(recipe.expansion, EXPANSION_KEYS, `${file} expansion`);
+  assert(
+    Array.isArray(recipe.expansion.profiles),
+    `${file} expansion profiles must be an array`,
+  );
+  const profileIds = [];
+  for (const profile of recipe.expansion.profiles) {
+    assertObject(profile, `${file} expansion profile`);
+    assertAllowedKeys(
+      profile,
+      PROFILE_KEYS,
+      PROFILE_REQUIRED_KEYS,
+      `${file} expansion profile`,
+    );
+    assertSafeId(profile.profileId, `${file} expansion profileId`);
+    profileIds.push(profile.profileId);
+    assert(
+      !floorIds.includes(profile.profileId),
+      `${file} expansion profileId collides with floor id`,
+    );
+    assert(
+      ARTIFACT_TYPES.has(profile.type),
+      `${file} expansion profile has unsupported type`,
+    );
+    assert(
+      AUTHORING_TYPES.has(profile.authoring),
+      `${file} expansion profile has unsupported authoring`,
+    );
+    assertNonEmptyString(
+      profile.briefRef,
+      `${file} expansion profile briefRef`,
+    );
+    assertFiniteCount(profile.maxCount, `${file} expansion profile maxCount`);
+    if (profile.authoring === 'html' || 'shell' in profile) {
+      assertNonEmptyString(
+        profile.shell,
+        `${file} expansion profile ${profile.profileId} shell`,
+      );
+    }
+  }
+  assertUnique(profileIds, `${file} expansion profileIds`);
+
+  assertObject(recipe.expansion.limits, `${file} expansion limits`);
+  assertAllowedKeys(
+    recipe.expansion.limits,
+    EXPANSION_LIMIT_KEYS,
+    ['maxArtifacts'],
+    `${file} expansion limits`,
+  );
+  assertFiniteCount(
+    recipe.expansion.limits.maxArtifacts,
+    `${file} expansion maxArtifacts`,
+  );
+  if ('maxPerType' in recipe.expansion.limits) {
+    assertObject(
+      recipe.expansion.limits.maxPerType,
+      `${file} expansion maxPerType`,
+    );
+    for (const [type, limit] of Object.entries(
+      recipe.expansion.limits.maxPerType,
+    )) {
+      assert(
+        ARTIFACT_TYPES.has(type),
+        `${file} expansion maxPerType has unsupported type`,
+      );
+      assertFiniteCount(limit, `${file} expansion maxPerType ${type}`);
+    }
+  }
+}
+
+function validateDiscoveryLimits(discoveryLimits, file) {
+  assertObject(discoveryLimits, `${file} discoveryLimits`);
   assertExactKeys(
-    recipe.discoveryLimits,
+    discoveryLimits,
     DISCOVERY_LIMIT_KEYS,
     `${file} discoveryLimits`,
   );
   assert(
-    recipe.discoveryLimits.consecutiveNoNewFindingsRounds === 2,
+    discoveryLimits.consecutiveNoNewFindingsRounds === 2,
     `${file} discovery must stop after exactly two no-new-findings rounds`,
   );
   assert(
-    Number.isInteger(recipe.discoveryLimits.maxRounds) &&
-      recipe.discoveryLimits.maxRounds >= 2,
+    Number.isInteger(discoveryLimits.maxRounds) &&
+      discoveryLimits.maxRounds >= 2,
     `${file} discovery maxRounds must be an integer of at least two`,
   );
 }
@@ -248,11 +494,25 @@ function assertObject(value, label) {
 }
 
 function assertExactKeys(value, expected, label) {
-  const actual = Object.keys(value).sort();
+  const matches = hasExactKeys(value, expected);
+  assert(matches, `${label} has unknown or missing keys`);
+}
+
+function assertAllowedKeys(value, allowed, required, label) {
+  const actual = Object.keys(value);
   assert(
-    actual.length === expected.length &&
-      actual.every((key, index) => key === expected[index]),
+    actual.every((key) => allowed.includes(key)) &&
+      required.every((key) => key in value),
     `${label} has unknown or missing keys`,
+  );
+}
+
+function hasExactKeys(value, expected) {
+  const actual = Object.keys(value).sort();
+  const sortedExpected = [...expected].sort();
+  return (
+    actual.length === sortedExpected.length &&
+    actual.every((key, index) => key === sortedExpected[index])
   );
 }
 
@@ -260,6 +520,18 @@ function assertNonEmptyString(value, label) {
   assert(
     typeof value === 'string' && value.length > 0,
     `${label} must be a non-empty string`,
+  );
+}
+
+function assertSafeId(value, label) {
+  assertNonEmptyString(value, label);
+  assert(SAFE_ID.test(value), `${label} must be a safe slug`);
+}
+
+function assertFiniteCount(value, label) {
+  assert(
+    Number.isInteger(value) && Number.isFinite(value) && value >= 0,
+    `${label} must be a finite non-negative integer`,
   );
 }
 

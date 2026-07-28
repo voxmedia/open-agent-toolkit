@@ -751,7 +751,13 @@ Before generating, inspect the active project's explainer runs. A fresh `project
 Resolve recap intent through `oat-explainer-kit`. When `OAT_AUTONOMOUS=1` and no fresh recap exists, attempt `project-recap` exactly once; missing or stale persisted intent cannot suppress this autonomous attempt. Interactive mode honors the adapter's resolved persisted or workflow intent.
 
 Invoke the `oat-explainer-kit` adapter first, then run its shared tracked-run finalizer in `dedicated` mode for a successful build. Use the adapter result and finalizer result as returned; do not improvise commits, durability evidence, or reruns. Outcomes `failed` and `built-not-durable` are recorded warnings, never blockers for final HiLL approval, completion reporting, or later PR steps.
-Supply the provider-neutral critic callback (or validated critic module entry point for JSON/CLI invocation) on every federated adapter run.
+For an adapter invocation, construct exactly one brief-aware,
+provider-neutral author seam using
+`oat-explainer-kit/references/author-callback.md`. In-process callers pass
+`author`; JSON/CLI callers pass a validated `authorModulePath`. Supply it
+alongside the existing `critic` callback (or validated
+`criticModulePath`), and always invoke this implementation-tail recap with
+`mode: unattended`.
 
 Always include the selected or attempted recap's outcome and run path in the
 implementation completion report. If `summary.md` exists, append or refresh its

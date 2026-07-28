@@ -6,6 +6,7 @@ import { afterEach, test } from 'node:test';
 
 import { chromium } from '@playwright/test';
 
+import { BROWSER_PROBE_EVALUATE } from '../../.agents/skills/explainer-kit/scripts/lib/qa.mjs';
 import { selectReleaseVisualMatrix } from '../../.agents/skills/explainer-kit/scripts/render-qa.mjs';
 import {
   probeArrowKey,
@@ -185,4 +186,181 @@ test('CLI retains machine-readable browser measurements', async () => {
   const retained = JSON.parse(await readFile(output, 'utf8'));
   assert.equal(retained.valid, true);
   assert.equal(retained.measurements.length, 1);
+});
+
+// The deck shell is a horizontal scroll-snap carousel, so its off-screen
+// slides are reachable by design. Exempting them must not blind the probe to
+// content that is genuinely unreachable.
+test('viewport clipping distinguishes paged slides from unreachable content', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 320, height: 600 } });
+  const clipped = async (body) => {
+    await page.setContent(`<body style="margin:0">${body}</body>`);
+    const { viewportClipped } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return viewportClipped.map(({ selector }) => selector);
+  };
+
+  try {
+    assert.deepEqual(
+      await clipped(
+        '<div style="display:flex;overflow-x:auto;width:320px">' +
+          '<section id="first" style="min-width:320px">a</section>' +
+          '<section id="second" style="min-width:320px">b</section></div>',
+      ),
+      [],
+      'paged slides in a horizontal scroll container are reachable',
+    );
+    assert.deepEqual(
+      await clipped(
+        '<div style="width:320px;overflow:hidden">' +
+          '<p id="wide" style="width:900px">x</p></div>',
+      ),
+      ['#wide'],
+      'content clipped by an overflow-hidden ancestor is unreachable',
+    );
+    assert.deepEqual(
+      await clipped('<p id="bleed" style="position:absolute;left:400px">y</p>'),
+      ['#bleed'],
+      'content positioned past the viewport is unreachable',
+    );
+    assert.deepEqual(
+      await clipped(
+        '<div id="scroller" style="position:relative;display:flex;overflow-x:auto;width:320px">' +
+          '<section id="first" style="min-width:320px">a</section>' +
+          '<section id="second" style="min-width:320px">b</section>' +
+          '<p id="behind" style="position:absolute;left:-400px;top:0">z</p></div>',
+      ),
+      ['#behind'],
+      'content before the scroll origin cannot be scrolled into view',
+    );
+    // Without a positioned scroller the absolute child escapes the scroller's
+    // containing block, so it never joins the scrollable content it sits in.
+    assert.deepEqual(
+      await clipped(
+        '<div id="past" style="display:flex;overflow-x:auto;width:320px">' +
+          '<section id="a" style="min-width:320px">a</section>' +
+          '<section id="b" style="min-width:320px">b</section>' +
+          '<p id="beyond" style="position:absolute;left:900px;top:0;width:120px">' +
+          'z</p></div>',
+      ),
+      ['#beyond'],
+      'content past the scrollable extent cannot be scrolled into view',
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+// Headings the author deliberately hides are not readability defects, while
+// visually hidden accessibility text and genuinely collapsed headings are.
+test('heading readability separates hidden panels from unreadable headings', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({ viewport: { width: 320, height: 600 } });
+  const unreadable = async (body) => {
+    await page.setContent(`<body style="margin:0">${body}</body>`);
+    const { unreadableHeadings } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return unreadableHeadings.map(({ selector }) => selector);
+  };
+
+  try {
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="visible">Tour</h1>' +
+          '<div aria-hidden="true" style="display:none">' +
+          '<h2 id="panel">Collapsed panel</h2></div>',
+      ),
+      [],
+      'an aria-hidden display:none panel heading is not a readability defect',
+    );
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="visible">Tour</h1>' +
+          '<h2 id="sr" style="position:absolute;width:1px;height:1px;' +
+          'overflow:hidden;clip:rect(0,0,0,0)">Screen reader only</h2>',
+      ),
+      [],
+      'visually hidden accessibility headings still pass',
+    );
+    assert.deepEqual(
+      await unreadable('<h1 id="tiny" style="font-size:8px">Tour</h1>'),
+      ['#tiny'],
+      'a rendered heading below the legible floor still reports',
+    );
+    assert.deepEqual(
+      await unreadable('<h1 id="empty"> </h1>'),
+      ['#empty'],
+      'a rendered heading with no text still reports',
+    );
+    assert.deepEqual(
+      await unreadable(
+        '<h1 id="collapsed" style="height:0;overflow:hidden">Tour</h1>',
+      ),
+      ['#collapsed'],
+      'a rendered heading collapsed to zero height still reports',
+    );
+  } finally {
+    await browser.close();
+  }
+});
+
+// Shells honor prefers-reduced-motion with the conventional 0.01ms transition
+// so transitionend still fires. Accepting that must not blind the probe to
+// motion a reader would actually see.
+test('animation probe accepts suppressed motion and still reports perceptible motion', async () => {
+  const browser = await chromium.launch();
+  const page = await browser.newPage({
+    viewport: { width: 320, height: 600 },
+    reducedMotion: 'reduce',
+  });
+  const disabled = async (style) => {
+    await page.setContent(
+      `<style>${style}</style><body style="margin:0"><p id="probe">a</p></body>`,
+    );
+    const { animationsDisabled } = await page.evaluate(BROWSER_PROBE_EVALUATE);
+    return animationsDisabled;
+  };
+
+  try {
+    assert.equal(
+      await disabled(
+        '@media (prefers-reduced-motion: reduce){*,*::before,*::after{transition-duration:0.01ms !important}}',
+      ),
+      true,
+      'the reduced-motion 0.01ms idiom is suppressed motion',
+    );
+    assert.equal(
+      await disabled('#probe{transition-duration:180ms}'),
+      false,
+      'a perceptible transition still reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}#probe{animation:pulse 2s infinite}',
+      ),
+      false,
+      'a running keyframe animation still reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}' +
+          '#probe::before{content:"*";animation:pulse 2s infinite}',
+      ),
+      false,
+      'a running pseudo-element keyframe animation reports',
+    );
+    assert.equal(
+      await disabled('#probe::after{content:"*";transition-duration:180ms}'),
+      false,
+      'a perceptible pseudo-element transition reports',
+    );
+    assert.equal(
+      await disabled(
+        '@keyframes pulse{to{opacity:0}}#probe::before{animation:pulse 2s}',
+      ),
+      true,
+      'a pseudo-element that generates no content cannot animate',
+    );
+  } finally {
+    await browser.close();
+  }
 });

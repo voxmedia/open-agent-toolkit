@@ -134,14 +134,23 @@ test('private wrapper resolves personal inputs, runs the actual core, consumes i
   assert.equal(writeStoaNote.mock.callCount(), 1);
   assert.equal(syncGoogleDoc.mock.callCount(), 1);
   assert.equal(publishManifest.mock.callCount(), 1);
-  assert.deepEqual(wrapped.authorProvenance, [
-    {
-      authorId: 'private-wrapper-provider-neutral-author',
-      generatedAt: NOW,
-      method: 'structured-evidence-synthesis',
-      model: 'private-wrapper-author/v1',
-    },
-  ]);
+  assert.deepEqual(
+    wrapped.authorProvenance.map(
+      ({ generatedAt: _generatedAt, ...identity }) => identity,
+    ),
+    [
+      {
+        authorId: 'private-wrapper-provider-neutral-author',
+        method: 'structured-evidence-synthesis',
+        trust: 'self-asserted',
+      },
+    ],
+  );
+  // Generation time comes from the core's injected clock, so the author
+  // module's backdated claim never reaches the retained record.
+  for (const { generatedAt } of wrapped.authorProvenance) {
+    assert.equal(generatedAt, NOW);
+  }
   assert.equal(
     wrapped.publishReceipt.schemaVersion,
     'explainer-kit.publish-receipt/v1',
@@ -191,8 +200,8 @@ test('skill documents freeze the pre/core/post seam and migration controls', asy
   assert.match(adapterSkill, /references\/migration\.md/);
   assert.match(personalDraft, /https:\/\/dy4vzrzaexuy5\.cloudfront\.net/);
 
-  assert.match(coreSkill, /^version: 1\.0\.2$/m);
-  assert.match(adapterSkill, /^version: 1\.0\.1$/m);
+  assert.match(coreSkill, /^version: 2\.0\.0$/m);
+  assert.match(adapterSkill, /^version: 1\.0\.2$/m);
   assert.doesNotMatch(coreTree, /dy4vzrzaexuy5\.cloudfront\.net/);
 });
 
@@ -243,23 +252,20 @@ function suppliedFactBase() {
 
 async function providerNeutralAuthor(request) {
   return {
-    schemaVersion: 'explainer-kit.author-result/v1',
-    artifactId: request.artifact.id,
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
     content: {
-      title: 'Private Wrapper Compatibility',
-      description:
-        'A provider-neutral wrapper run built from approved private inputs.',
-      sections: request.narrativeOutline.map(({ id, title }) => ({
-        id,
-        title,
-        prose: `The private wrapper author synthesized the ${title.toLowerCase()} section from approved evidence before the wrapper consumed the versioned manifest.`,
-      })),
+      markdown: `# Private Wrapper Compatibility\n\n${request.floor.requiredNarrative
+        .map(
+          (id) =>
+            `## ${id}\n\nThe private wrapper author synthesized ${id} from approved evidence before the wrapper consumed the versioned manifest.`,
+        )
+        .join('\n\n')}\n`,
     },
     provenance: {
       authorId: 'private-wrapper-provider-neutral-author',
-      generatedAt: NOW,
+      generatedAt: '2019-01-01T00:00:00.000Z',
       method: 'structured-evidence-synthesis',
-      model: 'private-wrapper-author/v1',
     },
   };
 }

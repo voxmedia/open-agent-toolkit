@@ -30,13 +30,25 @@ claims, sources, overrides, and the freshness policy. It returns:
 No provider name, command, credential, or dispatch protocol is part of this
 contract.
 
-Every unattended run also requires a provider-neutral author callback. An
-in-process caller supplies `options.author(request)`; a JSON-only CLI caller
-uses `--author-module author.mjs`. The core invokes it once per recipe artifact
-with an `AuthorRequestV1` containing the exact narrative outline, reconciled
-fact base, and bounded-discovery context. It must return an `AuthorResultV1`
-with every required section in order, non-empty prose, and non-secret
-provenance. The executable callback is never persisted in `run-request.json`.
+Every run, interactive or unattended, also requires a provider-neutral author
+callback; a run without one fails `E_AUTHOR_REQUIRED`. An in-process caller
+supplies `options.author(request)`; a JSON-only CLI caller uses
+`--author-module author.mjs`. The core invokes it once per resolved artifact
+with an `explainer-kit.author-request/v2` payload containing the artifact
+identity and type, the artifact's authoring path, the inlined brief, the
+reconciled fact base, the resolved theme, the shell source for artistic
+artifacts, the required narrative sections for narrative floor artifacts, and
+bounded-discovery context. It must return an `explainer-kit.author-result/v2`
+carrying exactly one of `content.markdown` or `content.html`, matching the
+artifact's declared authoring path, plus non-secret provenance. A floor result
+may also carry `proposedArtifacts` of `{id, profileId, rationale}`; the
+referenced expansion profile supplies the type, authoring path, brief, and
+shell. The executable callback is never persisted in `run-request.json`.
+
+Unknown profile IDs and unsafe, duplicate, or floor-colliding artifact IDs are
+hard errors. Proposals beyond a profile's `maxCount` or the recipe's
+`expansion.limits.maxArtifacts` are rejected with a warning and the run
+continues.
 
 ## Explicit source forms
 
@@ -57,7 +69,8 @@ provenance. The executable callback is never persisted in `run-request.json`.
 An unattended request asserts that its explicit source artifacts are already
 approved. It does not prompt, and it fails before narrative serialization when
 the author is absent, returns an invalid result, or copies excessive verbatim
-source text. Interactive review and same-run approval/resume remain unchanged.
+source text. It auto-approves with `auto-drafted` marking once the artifacts are
+built and checked.
 
 ## Pipeline and retained package
 
@@ -65,19 +78,30 @@ The core executes:
 
 1. validate request and recipe
 2. reconcile or check the fact base
-3. apply bounded discovery and obtain or create recipe content
+3. apply bounded discovery
 4. resolve one theme
-5. render typed artifacts
-6. run structural and optional browser QA
-7. write the manifest and build record
+5. author each floor artifact against its brief, evaluate expansion proposals,
+   and author each accepted expansion artifact
+6. render typed artifacts through the narrative renderer or validate
+   agent-composed HTML, per each artifact's declared authoring path
+7. run structural, guideline, and optional browser QA
+8. resolve content approval — the interactive gate pauses here, after render and
+   QA and before anything is published or persisted externally
+9. write the manifest and build record
 
 The run package retains the privacy-safe `run-request.json`,
 `source/content-approval.json`, `source/fact-base.json`,
-`source/fact-base.md`, `source/content/*.md`, optional structured
-`source/author/*.json` results, `theme.resolved.json`, rendered `site/` files,
-`manifest.json`, and `build-record.json` as far as each stage succeeds. A stage
-failure records a structured error and recovery action without deleting earlier
-outputs. Raw art direction is omitted unless the request explicitly opts in.
+`source/fact-base.md`, authored content under `source/content/*.md` and
+`source/content/*.html`, structured `source/author/*.json` results,
+`theme.resolved.json`, rendered `site/` files, `manifest.json`, and
+`build-record.json` as far as each stage succeeds. A stage failure records a
+structured error and recovery action without deleting earlier outputs. Raw art
+direction is omitted unless the request explicitly opts in.
+
+Build-record stages are terminal once `passed` or `warned`. A rejected run that
+is later approved reopens the render and QA stages through a narrowly guarded
+record-level reset so the corrected sources are re-rendered and re-validated,
+leaving an auditable trail rather than approving stale artifacts.
 
 When a caller supplies `discover({ round, recipe, factBase })`, the callback
 returns the findings added in that round. The core stops after two consecutive
@@ -93,7 +117,7 @@ Durability and publishing are never implicit.
   `record-durability.mjs`; the core never creates commits. The first evidence
   commit must contain every path and byte hash in `manifest.immutableHashes`:
   the privacy-safe request, content approval, fact-base JSON and Markdown,
-  declared author results, all content Markdown, the resolved theme, and every
+  declared author results, all authored content, the resolved theme, and every
   built artifact retained in the package. Mutable `manifest.json` and
   `build-record.json` remain excluded for the separate evidence update.
   Schema-v1 manifests created before complete-package coverage are rejected
@@ -110,7 +134,9 @@ verified. Publishing remains independently human-gated by the caller.
 ## Result
 
 `runExplainer` returns the run root, manifest path, build-record path, outcome,
-warnings, and bounded-discovery summary. Input validation and unsupported
+warnings, approval status and marking, and bounded-discovery summary. The
+marking rides in the result and the approval record only; `manifest/v1` stays
+frozen and carries no marking field. Input validation and unsupported
 recipes reject before output mutation. Failures after initialization return a
 `failed` result with paths to the retained record and intermediates.
 

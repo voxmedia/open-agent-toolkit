@@ -20,6 +20,7 @@
         --accent: hsl(215 28% 32%);
         --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
         --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
         {{THEME_CSS}}
       }
       * {
@@ -125,35 +126,56 @@
       }
     </style>
   </head>
-  <body>
+  <body data-explainer-shell="diagram-shell">
     <main>
       <header>
-        <h1 id="diagram-title">{{TITLE}}</h1>
-        <p id="diagram-description">{{DESCRIPTION}}</p>
+        <h1 id="diagram-title" data-shell-anchor="diagram-title">{{TITLE}}</h1>
+        <p id="diagram-description" data-shell-anchor="diagram-description">
+          {{DESCRIPTION}}
+        </p>
       </header>
-      <section class="diagram-shell" aria-labelledby="diagram-title">
+      <section
+        class="diagram-shell"
+        data-shell-anchor="diagram-shell"
+        aria-labelledby="diagram-title"
+      >
         <p class="diagram-hint">
           Use the controls or Ctrl/Command + wheel to zoom; drag to pan.
         </p>
-        <div class="zoom-controls" aria-label="Diagram zoom">
+        <div
+          class="zoom-controls"
+          data-shell-anchor="zoom-controls"
+          aria-label="Diagram zoom"
+        >
           <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
           <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
           <button type="button" data-zoom="reset" aria-label="Reset zoom">
             ↺
           </button>
         </div>
-        <div class="diagram-viewport">
+        <div class="diagram-viewport" data-shell-anchor="diagram-viewport">
           <svg
             class="diagram-canvas"
+            data-shell-anchor="diagram-canvas"
             viewBox="0 0 1200 720"
             role="img"
             aria-labelledby="diagram-title diagram-description"
             xmlns="http://www.w3.org/2000/svg"
           >
+            <!-- AUTHOR EXTENSION REGION: accessible inline SVG diagram -->
             {{DIAGRAM}}
+            <!-- END AUTHOR EXTENSION REGION -->
           </svg>
         </div>
-        <div class="legend" aria-label="Diagram legend">{{LEGEND}}</div>
+        <div
+          class="legend"
+          data-shell-anchor="diagram-legend"
+          aria-label="Diagram legend"
+        >
+          <!-- AUTHOR EXTENSION REGION: optional visual legend -->
+          {{LEGEND}}
+          <!-- END AUTHOR EXTENSION REGION -->
+        </div>
       </section>
     </main>
     <script>

@@ -11,7 +11,7 @@ Use this section when you want to choose the right OAT skill for a task. If you 
 
 - [Writing Skills](../../contributing/skills.md) - Contributor guide to skill authoring, contracts, and governance.
 - [Docs Workflows](../../docs-tooling/workflows.md) - How docs CLI helpers and docs skills work together.
-- [Explainer Kit](explainer-kit.md) - Core and OAT adapter usage, recipes, themes, lifecycle policy, durability, and publishing.
+- [Explainer Kit](explainer-kit.md) - Core and OAT adapter usage, recipes and expansion profiles, the two authoring paths, warnings and QA severity, themes, lifecycle policy, durability, and publishing.
 - [Repo Improve](repo-improve.md) - Source modes, external-plan boundaries, optional tracking, and OAT import handoff.
 
 ## Key Skills by Use Case
