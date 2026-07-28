@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t13
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | fixes_pending |    13 |     12/13 |
-| p03   | pending       |     4 |       0/4 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | review_pending |    13 |     13/13 |
+| p03   | pending        |     4 |       0/4 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 19/31 tasks completed
+**Total:** 20/31 tasks completed
 
 ---
 
@@ -88,7 +88,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -102,7 +102,7 @@ oat_generated: false
 - [x] p02-t10 — Protect retained set-plan records across resume (`92254004`)
 - [x] p02-t11 — Deliver bundled authoring guidance to callbacks (`5f57e743`)
 - [x] p02-t12 — Add an explicit deterministic recap fallback (`4c469ea8`)
-- [ ] p02-t13 — Anchor retained set plans to the approval resume boundary
+- [x] p02-t13 — Anchor retained set plans to the approval resume boundary (`995468f3`)
 
 ### Phase Implementation Summary
 
@@ -144,7 +144,10 @@ oat_generated: false
   Four original findings are resolved; coordinated cross-record set-plan
   mutation remains accepted because no immutable value crosses the approval
   resume boundary.
-- Blocking fix: p02-t13, remediation attempt 2/3.
+- p02-t13 implemented the external approval-resume token in remediation
+  attempt 2/3.
+- Root verification passed the complete Phase p02 union (141/141) and
+  `pnpm release:validate`; fresh narrowed re-review is pending.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -274,6 +277,12 @@ oat_generated: false
 - Review-remediation attempt: 2/3
 - Context reference: Node.js 22.17 `crypto.createHash` and fixed-length
   `crypto.timingSafeEqual` contracts verified through Context7
+- Outcome: `DONE`
+- Commit: `995468f31f9ff39f16be910abe26693a214afd28`
+- RED/GREEN: coordinated tamper accepted at RED (53/54), then rejected at
+  GREEN with focused tests 56/56
+- Root verification: Phase p02 141/141 and release validation passed
+- Boundary: exactly six authorized files; worktree clean
 - Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

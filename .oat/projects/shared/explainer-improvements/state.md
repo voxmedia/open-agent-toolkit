@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t13
-oat_last_commit: 4c469ea8eda39971c742e29a6a33b84db41607b6
+oat_current_task: p03-t01
+oat_last_commit: 995468f31f9ff39f16be910abe26693a214afd28
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T14:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T15:07:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p02 review remediation attempt 2 of 3 pending
+Phase p02 review remediation attempt 2 of 3 implemented; re-review pending
 
 ## Artifacts
 
@@ -126,7 +126,10 @@ Phase p02 review remediation attempt 2 of 3 pending
 - ✓ Fresh root-owned p02 re-review resolved four of five original Important
   findings over
   `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
-- ⧗ p02-t13 is the single bounded remediation task for attempt 2/3
+- ✓ p02-t13 anchors set-plan resume to an external approval token
+- ✓ Root verification passed the complete p02 union (141/141) and
+  `pnpm release:validate`
+- ⧗ Fresh narrowed p02 re-review pending for I3-R1
 
 ## Blockers
 
@@ -134,5 +137,5 @@ None
 
 ## Next Milestone
 
-Implement p02-t13 to bind retained set-plan bytes to an external approval
-resume token, then run a fresh narrowed root-owned review.
+Run a fresh narrowed root-owned review of p02-t13, then either close Phase p02
+or enter the final permitted remediation attempt 3/3.
