@@ -407,45 +407,28 @@ Cursor rules:
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
   or infer capability from its spelling. The materialized mapping and resolver
   alone translate it to a native variant.
-- Classify the phase by task class, then choose a candidate before resolving.
-  Do not reuse the Codex effort bands. They are defined on an effort axis Cursor
-  does not expose, since Cursor carries effort inside the candidate string and
-  reports `effort_axis=not-applicable`. Classify with the five task classes in
-  `subagent-orchestration/references/model-selection-principles.md`, which are
-  the same keys the Cursor table is indexed by, and take its stronger-class
-  tie-break when uncertain.
-- Read that class's row in
-  `subagent-orchestration/references/provider-cursor.md`. Each row names an
-  explicit candidate ID for its default route and states when the economy or
-  escalation route applies instead. Take the named ID for the route whose
-  conditions the phase meets. That table is the sanctioned basis for capability,
-  which is what keeps this compatible with the opacity rule above: you are
-  reading a row keyed on the ID, not interpreting how the ID is spelled.
-- Match the named ID against the configured ladder. For implementation and fix
-  work every candidate from the lowest tier through the project's named maximum
-  is eligible, not only members of the ceiling tier. Pass the named ID when it
-  is configured and eligible. When it is not, take another ID named in the same
-  row — the economy route for a bounded, testable scope, or the escalation route
-  when the phase meets its conditions — and record which substitution you made
-  and why.
-- Never rank candidates by ladder position. A tier may interleave families and
-  routes deliberately, so an earlier entry is not a weaker one: in a `high` tier
-  configured as `claude-opus-5-thinking-medium`, `gpt-5.6-sol-medium`,
-  `claude-opus-5-thinking-high`, `gpt-5.6-sol-high`, the first entry is the
-  escalation route for `default-implementation` and the second is its default.
-  Selecting the earliest configured member of a row would route routine work to
-  escalation. Position carries exactly one meaning, fixed elsewhere in this
-  reference: the final candidate in a tier is that tier's reviewer ceiling.
-- Always pass `--candidate-model`. Omitting it does not ask the resolver to
-  choose; it selects the ceiling. With no preferred value to compare against,
-  the resolver takes the capped branch and sets the selected value to the policy
-  value, so the dispatch reports `selectionMode=capped` with the selected model
-  equal to the cap. That pairing is the signature of a skipped classification
-  rather than evidence that the ceiling was warranted, and it resolves without
-  error, so nothing else will flag it.
+- Select the concrete candidate before resolving, and select it through the
+  Task-Class Resolution contract in
+  `oat-dispatch-subagents/references/provider-cursor.md`, intersected with the
+  dated class guidance in the active `subagent-orchestration` selection
+  reference. That contract owns the decision; do not restate it here and do not
+  merge the two references. The Codex effort bands above are not a substitute:
+  they are defined on an effort axis Cursor does not expose, since Cursor
+  carries effort inside the candidate string and reports
+  `effort_axis=not-applicable`.
+- Eligibility is wider than the ceiling tier. For implementation and fix work
+  every candidate from the lowest tier through the project's named maximum is
+  eligible, so a phase below the ceiling class has somewhere to land.
+- The managed-capped route takes the exact-candidate branch above, so
+  `--candidate-model` is required. Omitting it does not ask the resolver to
+  choose; with no preferred value to compare against it takes the capped branch
+  and sets the selected value to the policy value, reporting
+  `selectionMode=capped` with the selected model equal to the cap. That pairing
+  is the signature of a skipped selection rather than evidence that the ceiling
+  was warranted, and it resolves without error, so nothing else will flag it.
 - A ceiling is a maximum, not a target. Selecting the cap is correct only when
-  the classification independently arrives there; reaching it because no
-  candidate was chosen is a defect.
+  task-class resolution independently arrives there; reaching it because no
+  candidate was selected is a defect.
 - For managed capped phase-implementer/fix dispatch, call
   `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <phase-id> --report-action implementation --json`.
   For bounded fixes, reuse the exact phase target with a bounded fix scope.

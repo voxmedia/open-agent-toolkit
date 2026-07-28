@@ -60,14 +60,14 @@ still require enough capability to use tools, follow scope, and return complete
 evidence. Prefer scripts over models when a deterministic program fully solves
 the task.
 
-A named route is only real where the dispatch configuration can reach it. These
-references name a route per task class, but a harness selects from a configured
-ladder, and a route absent from that ladder is unreachable no matter how clearly
-it is named here. Pruning a ladder therefore retires routes silently: the
-guidance still recommends them and the resolver rejects them as unconfigured.
-Keep at least one reachable rung per task class the project actually uses, and
-enough distinct rungs that a classification has somewhere to land — a tier
-holding a single candidate cannot express a choice, only a default.
+A named route is only usable where the harness can actually select it. The
+models named per task class in these references are dated examples, and a
+harness will often expose a different set. When a named route is unavailable,
+substitute one meeting the same class floor, or move one class up; never fall
+through to the strongest model on offer merely because the named one was
+missing. Where a harness restricts selection to a configured set, keep enough
+distinct entries that a classification has somewhere to land — a set holding a
+single entry cannot express a choice, only a default.
 
 ## Escalation Boundaries
 
@@ -186,8 +186,7 @@ varies its reviewer stops being comparable across runs and a regression becomes
 indistinguishable from a change of reviewer. That is a determinism argument
 rather than a depth argument, and it applies to the gate's own reviewer, not to
 review generally: it neither raises the authoring route nor licenses treating
-consequence as a reason for top effort elsewhere. OAT's managed capped policy
-works this way; see `oat-project-implement/references/dispatch-and-dry-run.md`.
+consequence as a reason for top effort elsewhere.
 
 ## Staleness
 
