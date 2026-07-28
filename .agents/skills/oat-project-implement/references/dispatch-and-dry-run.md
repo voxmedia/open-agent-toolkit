@@ -105,6 +105,16 @@ Do not print `[0/N]` for this preflight step. The implementation denominator
 is not established by capability detection; use the literal `[preflight]`
 label above.
 
+**Root-inline phases:** the preflight above records the tier reason once for the
+run, so a sanctioned Tier 2 run needs no further per-phase record. Implementing
+a phase in the root during a Tier 1 run is different: subagents were available
+and approved, and the root took the work anyway. That is a deviation and must be
+recorded, but no child was accepted, so the generic dispatch record cannot carry
+it — that record is keyed on launch state the deviation does not have. Record it
+instead under a `Root-inline phase` heading placed beside the generic record at
+the same `$PROJECT_PATH/implementation.md#<run-anchor>`, giving the phase ID,
+the reason the root did not dispatch, and the model the root was running.
+
 **Tier lock:** tier is locked for the remainder of the run only after the
 dispatch target is resolved. Subsequent phase-implementer, optional nested,
 fix-continuation, and review dispatches use the same tier. Tier controls
@@ -501,7 +511,7 @@ Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | max | provider-default | not-applicable}
 Policy source: {repo config | project state | preflight prompt}
 Provider default effort: {value | unknown | not-applicable}
-Selection mode: {capped | uncapped | review-target | no-review-target | inherit-default}
+Selection mode: {candidate | capped | uncapped | review-target | no-review-target | inherit-default | unresolved}
 Route level: {0 | 1 | ... | none}
 Model axis: { selected:<value> | inherited | not-applicable | host-auto }
 Effort axis: { selected:<value> | provider-default | inherited | not-applicable | host-auto }
@@ -518,11 +528,17 @@ provider also classifies on an effort axis, that classification stays in
 `Preferred effort`; Cursor reports `effort_axis=not-applicable` and carries the
 class alone.
 
-A managed-capped implementer or fix dispatch must carry a class.
-`not-classified` is reserved for routes that make no selection, and on a
-managed-capped route it pairs with `Selection mode: capped` to mark the defect
-described under Cursor rules. That pairing is what distinguishes a justified cap
-selection from a silent one.
+A managed-capped implementer or fix dispatch must carry a class. Because it
+takes the exact-candidate branch, a correct one resolves to
+`Selection mode: candidate`, or to `unresolved` when the requested candidate is
+not selectable. `not-classified` is reserved for routes that make no selection,
+and on a managed-capped route it pairs with `Selection mode: capped` to mark the
+defect described under Cursor rules: the resolver reports `capped` precisely
+because no candidate was supplied to select. That pairing is what distinguishes
+a justified selection from a silent one.
+
+Mirror the resolver's `selectionMode` values exactly. Omitting one forces a
+correct dispatch to log a value that means something else.
 
 For an explicit inherit/default fallback (for example a base `oat-reviewer`
 under inherit policy), the log reads `Route: none; level=none`,

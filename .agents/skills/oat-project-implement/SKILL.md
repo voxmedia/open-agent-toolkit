@@ -52,9 +52,9 @@ to be clean; each append is committed by the bookkeeping that owns it.
   dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
   never mirror that record. Do not write the project log at acceptance; append
   it with the phase-outcome entry after the child's report returns.
-- Implementing a phase in the root rather than dispatching an implementer is a
-  deviation, never a silent default. No child is accepted, so record the phase
-  ID, reason, and root model under a `Root-inline phase` heading of its own.
+- Implementing a phase in the root during a Tier 1 run is a deviation, never a
+  silent default: record the phase ID, reason, and root model under a sibling
+  `Root-inline phase` heading at that run anchor. Sanctioned Tier 2 needs none.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`

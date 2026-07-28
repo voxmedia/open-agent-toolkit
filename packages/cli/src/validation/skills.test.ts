@@ -2533,11 +2533,14 @@ describe('validateOatSkills', () => {
     const dispatch = await readRawRepoFile(
       '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
     );
-    const cursorRules = dispatch.slice(
-      dispatch.indexOf('Cursor rules:'),
-      dispatch.indexOf('Payload-first invariant'),
-    );
-    expect(cursorRules).not.toHaveLength(0);
+    // Guard both markers before slicing: a missing one yields -1, which would
+    // silently widen the slice to most of the file and let the assertions below
+    // pass against text outside the Cursor rules.
+    const cursorStart = dispatch.indexOf('Cursor rules:');
+    const cursorEnd = dispatch.indexOf('Payload-first invariant');
+    expect(cursorStart).toBeGreaterThanOrEqual(0);
+    expect(cursorEnd).toBeGreaterThan(cursorStart);
+    const cursorRules = dispatch.slice(cursorStart, cursorEnd);
 
     // Selection defers to the canonical mechanics contract instead of
     // restating it from the provider guidance table. Merging the two is what
@@ -2578,6 +2581,35 @@ describe('validateOatSkills', () => {
     expect(dispatch).toMatch(
       /`not-classified`[\s\S]{0,300}`Selection mode: capped`/,
     );
+  });
+
+  it('mirrors every resolver selection mode in the structured dispatch log', async () => {
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+    const resolver = await readRawRepoFile(
+      'packages/cli/src/commands/project/dispatch-ceiling/index.ts',
+    );
+
+    const union = /type DispatchSelectionMode =\s*([\s\S]*?);/.exec(
+      resolver,
+    )?.[1];
+    expect(union).toBeDefined();
+    const resolverModes = [...(union ?? '').matchAll(/'([a-z-]+)'/g)].map(
+      (match) => match[1] ?? '',
+    );
+    expect(resolverModes).toContain('candidate');
+
+    const logged = /^Selection mode: \{([^}]+)\}$/m.exec(dispatch)?.[1];
+    expect(logged).toBeDefined();
+    const loggedModes = (logged ?? '').split('|').map((value) => value.trim());
+
+    // A mode the resolver can return but the log cannot express forces a
+    // correct dispatch to record a value that means something else. The
+    // exact-candidate branch returns `candidate`, so omitting it pushes a
+    // properly classified selection onto `capped`, the skipped-selection
+    // signature.
+    expect(loggedModes.toSorted()).toEqual(resolverModes.toSorted());
   });
 
   it('keeps preferred and exact-candidate resolver selection mutually exclusive', async () => {
