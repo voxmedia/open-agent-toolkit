@@ -646,7 +646,8 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T212511Z.md           | 0908e1cf87a50f6fd81f10ab30735ac88e5e9813 | auto       | -                    |
 | p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T214026Z.md           | a53071f308e7f6db07c4f0bc0ddeef7ac6c17b9a | gate       | cursor-fable-5-xhigh |
 | p03    | code     | passed          | 2026-07-28 | reviews/archived/p03-review-2026-07-28T221100Z.md           | 28afd27b4959f4ef535f961b7348e5d0dfeb438b | auto       | -                    |
-| p04    | code     | received        | 2026-07-28 | reviews/p04-review-2026-07-28T223723Z.md                    | 942458eb27065c3208774be2e7fe57b0b0fe0c34 | auto       | -                    |
+| p04    | code     | fixes_completed | 2026-07-28 | reviews/p04-review-2026-07-28T223723Z.md                    | 942458eb27065c3208774be2e7fe57b0b0fe0c34 | auto       | -                    |
+| p04    | code     | passed          | 2026-07-28 | reviews/p04-review-2026-07-28T225031Z.md                    | 6fed0cf0bc8e225dcb137795b3aed4fdb871014b | auto       | -                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
