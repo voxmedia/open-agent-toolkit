@@ -426,12 +426,33 @@ export function checkHtmlStructure({
   return { valid: issues.length === 0, issues };
 }
 
-export function checkArtifactCohesion(artifacts) {
+export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
   if (!Array.isArray(artifacts)) {
     throw new TypeError('Artifact cohesion input must be an array.');
   }
   const issues = [];
   const groups = ['terminology', 'numericClaims', 'statuses'];
+  const expected = ledger
+    ? {
+        terminology: new Map(
+          (ledger.terminology ?? []).map(({ term }) => [term, term]),
+        ),
+        numericClaims: new Map(
+          (ledger.numbers ?? []).map(({ subject, value }) => [subject, value]),
+        ),
+        statuses: new Map(
+          (ledger.statuses ?? []).map(({ subject, value }) => [subject, value]),
+        ),
+      }
+    : null;
+
+  if (expected && groups.some((group) => expected[group].size === 0)) {
+    issues.push({
+      code: 'cohesion-ledger-empty',
+      message:
+        'Adaptive recap cohesion requires non-empty terminology, numeric, and status ledger entries.',
+    });
+  }
 
   for (const group of groups) {
     const claims = new Map();
@@ -462,6 +483,38 @@ export function checkArtifactCohesion(artifacts) {
             ],
           });
         }
+      }
+    }
+    if (expected) {
+      for (const [claim, expectedValue] of expected[group]) {
+        const observed = claims.get(claim);
+        if (
+          !observed ||
+          observed.normalized !== normalizeClaim(expectedValue)
+        ) {
+          issues.push({
+            code: 'cohesion-claim-unobserved',
+            message: `Rendered artifacts do not observably support ${group}.${claim}.`,
+            claim,
+          });
+        }
+      }
+    }
+  }
+
+  if (expected) {
+    for (const artifact of artifacts) {
+      const count = groups.reduce(
+        (total, group) =>
+          total + Object.keys(artifact?.cohesion?.[group] ?? {}).length,
+        0,
+      );
+      if (count === 0) {
+        issues.push({
+          code: 'cohesion-observations-empty',
+          message: `Artifact ${String(artifact?.id)} has no observed shared-ledger evidence.`,
+          artifactId: artifact?.id,
+        });
       }
     }
   }
@@ -693,7 +746,14 @@ export async function auditArtifactSet({
     id: artifact.id,
     ...checkHtmlStructure({ ...artifact, denylist }),
   }));
-  const cohesion = checkArtifactCohesion(artifactsWithCohesion);
+  const cohesion = checkArtifactCohesion(artifactsWithCohesion, {
+    ...(setPlan?.recipe?.id === 'project-recap' &&
+      Object.values(setPlan.ledger ?? {}).some(
+        (entries) => Array.isArray(entries) && entries.length > 0,
+      ) && {
+        ledger: setPlan.ledger,
+      }),
+  });
   const browser = browserProbe
     ? await runBrowserProbes({
         artifacts,

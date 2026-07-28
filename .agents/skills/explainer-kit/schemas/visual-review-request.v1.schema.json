@@ -50,11 +50,32 @@
         },
         "renderedPath": { "$ref": "#/$defs/safeRelativePath" },
         "renderedHash": { "$ref": "#/$defs/hash" },
+        "cohesionObservations": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/cohesionObservation" },
+          "uniqueItems": true
+        },
         "evidence": {
           "type": "array",
           "items": { "$ref": "#/$defs/evidence" },
           "minItems": 1,
           "uniqueItems": true
+        }
+      }
+    },
+    "cohesionObservation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "contentHash", "group", "claim", "value"],
+      "properties": {
+        "artifactId": { "$ref": "#/$defs/safeId" },
+        "contentHash": { "$ref": "#/$defs/hash" },
+        "group": {
+          "enum": ["terminology", "statuses", "numericClaims"]
+        },
+        "claim": { "type": "string", "minLength": 1 },
+        "value": {
+          "oneOf": [{ "type": "string", "minLength": 1 }, { "type": "number" }]
         }
       }
     },

@@ -537,6 +537,22 @@ function validateCrossRecord(kind, value, context, errors) {
       : [];
     const plannedIds = new Set(plannedArtifactIds);
     const renderedIds = new Set();
+    const requiresObservedCohesion = value.plan?.recipe?.id === 'project-recap';
+    const expectedCohesion = expectedLedgerClaims(value.plan?.ledger);
+    const observedCohesion = new Set();
+    if (
+      requiresObservedCohesion &&
+      ['terminology', 'statuses', 'numericClaims'].some(
+        (group) => expectedCohesion[group].size === 0,
+      )
+    ) {
+      add(
+        errors,
+        '$.plan.ledger',
+        'cohesion-ledger-empty',
+        'Adaptive recap review requires non-empty terminology, status, and numeric ledger entries.',
+      );
+    }
     for (const [index, artifact] of (Array.isArray(value.renderedArtifacts)
       ? value.renderedArtifacts
       : []
@@ -558,6 +574,47 @@ function validateCrossRecord(kind, value, context, errors) {
         );
       }
       renderedIds.add(artifact?.artifactId);
+      const observations = Array.isArray(artifact?.cohesionObservations)
+        ? artifact.cohesionObservations
+        : [];
+      if (requiresObservedCohesion && observations.length === 0) {
+        add(
+          errors,
+          `$.renderedArtifacts[${index}].cohesionObservations`,
+          'cohesion-observations-empty',
+          'Every adaptive recap artifact must expose observed shared-ledger evidence.',
+        );
+      }
+      for (const [observationIndex, observation] of observations.entries()) {
+        if (
+          observation?.artifactId !== artifact?.artifactId ||
+          observation?.contentHash !== artifact?.renderedHash
+        ) {
+          add(
+            errors,
+            `$.renderedArtifacts[${index}].cohesionObservations[${observationIndex}]`,
+            'cohesion-binding-mismatch',
+            'Cohesion observations must bind to their artifact and exact rendered content hash.',
+          );
+          continue;
+        }
+        const expected = expectedCohesion[observation.group]?.get(
+          observation.claim,
+        );
+        if (
+          expected === undefined ||
+          normalizeComparable(expected) !== normalizeComparable(observation.value)
+        ) {
+          add(
+            errors,
+            `$.renderedArtifacts[${index}].cohesionObservations[${observationIndex}]`,
+            'cohesion-contradiction',
+            'Observed cohesion evidence must match an applicable shared-ledger value.',
+          );
+          continue;
+        }
+        observedCohesion.add(`${observation.group}:${observation.claim}`);
+      }
     }
     for (const artifactId of plannedArtifactIds) {
       if (!renderedIds.has(artifactId)) {
@@ -567,6 +624,20 @@ function validateCrossRecord(kind, value, context, errors) {
           'missing-artifact',
           `Rendered review set is missing planned artifact ${artifactId}.`,
         );
+      }
+    }
+    if (requiresObservedCohesion) {
+      for (const [group, claims] of Object.entries(expectedCohesion)) {
+        for (const claim of claims.keys()) {
+          if (!observedCohesion.has(`${group}:${claim}`)) {
+            add(
+              errors,
+              '$.renderedArtifacts',
+              'cohesion-claim-unobserved',
+              `Shared-ledger claim ${group}.${claim} is not observable in the rendered set.`,
+            );
+          }
+        }
       }
     }
   }
@@ -846,6 +917,24 @@ export function visualReviewRequestPayload(request) {
 
 export function visualReviewRequestId(requestHash) {
   return `visual-review-${String(requestHash).replace(/^sha256:/, '')}`;
+}
+
+function expectedLedgerClaims(ledger) {
+  return {
+    terminology: new Map(
+      (ledger?.terminology ?? []).map(({ term }) => [term, term]),
+    ),
+    statuses: new Map(
+      (ledger?.statuses ?? []).map(({ subject, value }) => [subject, value]),
+    ),
+    numericClaims: new Map(
+      (ledger?.numbers ?? []).map(({ subject, value }) => [subject, value]),
+    ),
+  };
+}
+
+function normalizeComparable(value) {
+  return String(value).trim().toLocaleLowerCase();
 }
 
 function validateSetPlan(value, errors) {

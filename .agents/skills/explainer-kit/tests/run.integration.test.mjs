@@ -99,7 +99,18 @@ function authorResult(authorRequest, overrides = {}) {
   const requiredNarrative = authorRequest.floor?.requiredNarrative ?? [
     'overview',
   ];
-  const markdown = `# Authored ${authorRequest.artifactId}\n\n${requiredNarrative
+  const ledgerText = [
+    ...(authorRequest.setContext?.ledger?.terminology ?? []).map(
+      ({ term }) => term,
+    ),
+    ...(authorRequest.setContext?.ledger?.statuses ?? []).map(
+      ({ value }) => value,
+    ),
+    ...(authorRequest.setContext?.ledger?.numbers ?? []).map(
+      ({ value, unit }) => `${value} ${unit}`,
+    ),
+  ].join('; ');
+  const markdown = `# Authored ${authorRequest.artifactId}\n\n${ledgerText}\n\n${requiredNarrative
     .map(
       (id, index) =>
         `## ${humanize(id)}\n\nSection ${index + 1} explains the verified ${humanize(id).toLowerCase()} in concise, audience-ready language.${index === 0 ? ` ${authorRequest.factBase.claims[0]?.text ?? ''}` : ''}`,
@@ -112,7 +123,7 @@ function authorResult(authorRequest, overrides = {}) {
     .replaceAll('{{NAVIGATION}}', '')
     .replaceAll(
       '{{CONTENT}}',
-      '<section id="overview"><h2>Overview</h2><p>Authored artifact.</p></section>',
+      `<section id="overview"><h2>Overview</h2><p>Authored artifact. ${ledgerText}</p></section>`,
     )
     .replaceAll(
       '{{DIAGRAM}}',

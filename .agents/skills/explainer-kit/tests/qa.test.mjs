@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { mock, test } from 'node:test';
 
 import {
@@ -889,6 +889,28 @@ test('rejects inconsistent terminology, numeric claims and statuses', () => {
   }
 });
 
+test('rejects recap QA when applicable ledger claims are empty or unobserved', async () => {
+  const setPlan = {
+    recipe: { id: 'project-recap' },
+    ledger: {
+      terminology: [{ term: 'config-blind core', meaning: 'Runtime.' }],
+      statuses: [],
+      numbers: [{ subject: 'source sets', value: 7, unit: 'sets' }],
+    },
+  };
+  const report = await auditArtifactSet({
+    artifacts: [{ id: 'hub', type: 'hub', html: fixture() }],
+    setPlan,
+  });
+  assert.equal(report.valid, false);
+  assert.ok(
+    report.issues.some(({ code }) => code === 'cohesion-ledger-empty'),
+  );
+  assert.ok(
+    report.issues.some(({ code }) => code === 'cohesion-claim-unobserved'),
+  );
+});
+
 test('composes structural, cohesion and optional browser checks', async () => {
   const report = await auditArtifactSet({
     artifacts: [
@@ -912,7 +934,7 @@ test('composes structural, cohesion and optional browser checks', async () => {
   assert.equal(report.artifacts.length, 2);
 });
 
-test('independent visual review binds the full rendered set and actionable rubric findings', async () => {
+test('independent visual review binds the full rendered set and actionable rubric findings', async (t) => {
   const plan = {
     schemaVersion: 'explainer-kit.set-plan/v1',
     planId: 'review-set',
@@ -945,9 +967,25 @@ test('independent visual review binds the full rendered set and actionable rubri
       metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
     })),
   );
+  const runRoot = await mkdtemp(join(tmpdir(), 'explainer-visual-review-'));
+  t.after(() => rm(runRoot, { recursive: true, force: true }));
+  for (const { renderedPath } of rendered) {
+    await mkdir(dirname(join(runRoot, renderedPath)), { recursive: true });
+    await writeFile(
+      join(runRoot, renderedPath),
+      '<p>core reviewed 3 artifacts</p>',
+    );
+  }
+  for (const { screenshotPath, metricsPath } of evidence) {
+    await mkdir(dirname(join(runRoot, screenshotPath)), { recursive: true });
+    await writeFile(join(runRoot, screenshotPath), Buffer.from([1, 2, 3]));
+    await writeFile(join(runRoot, metricsPath), '{}');
+  }
   const visualCritic = mock.fn(async (request) => ({
     schemaVersion: 'explainer-kit.visual-review-result/v1',
     reviewId: 'visual-review-1',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
     reviewedAt: '2026-07-17T20:00:00Z',
     disposition: 'fail',
     artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
@@ -967,6 +1005,7 @@ test('independent visual review binds the full rendered set and actionable rubri
     rendered,
     evidence,
     visualCritic,
+    runRoot,
   });
 
   assert.equal(visualCritic.mock.callCount(), 1);

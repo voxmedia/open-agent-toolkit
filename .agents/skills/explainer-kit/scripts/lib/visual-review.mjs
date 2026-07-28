@@ -91,6 +91,12 @@ export async function buildVisualReviewRequest({
       artifactId,
       renderedPath,
       renderedHash: snapshots.get(renderedPath).hash,
+      cohesionObservations: cohesionObservationsFromLedger({
+        artifactId,
+        content: snapshots.get(renderedPath).bytes,
+        contentHash: snapshots.get(renderedPath).hash,
+        ledger: plan?.ledger,
+      }),
       evidence: evidence
         .filter((item) => item.artifactId === artifactId)
         .map(({ viewport, screenshotPath, metricsPath }) => ({
@@ -158,6 +164,42 @@ export function cohesionEvidenceFromLedger(artifacts, plan) {
   });
 }
 
+export function cohesionObservationsFromLedger({
+  artifactId,
+  content,
+  contentHash,
+  ledger,
+}) {
+  const text = visibleText(Buffer.isBuffer(content) ? content.toString() : content);
+  return [
+    ...observedEntries(
+      ledger?.terminology,
+      'terminology',
+      ({ term }) => term,
+      ({ term }) => term,
+      text,
+    ),
+    ...observedEntries(
+      ledger?.statuses,
+      'statuses',
+      ({ subject }) => subject,
+      ({ value }) => value,
+      text,
+    ),
+    ...observedEntries(
+      ledger?.numbers,
+      'numericClaims',
+      ({ subject }) => subject,
+      ({ value }) => value,
+      text,
+    ),
+  ].map((observation) => ({
+    artifactId,
+    contentHash,
+    ...observation,
+  }));
+}
+
 function observedClaims(entries, keyOf, valueOf, text) {
   return Object.fromEntries(
     (entries ?? [])
@@ -166,6 +208,18 @@ function observedClaims(entries, keyOf, valueOf, text) {
       )
       .map((entry) => [keyOf(entry), valueOf(entry)]),
   );
+}
+
+function observedEntries(entries, group, keyOf, valueOf, text) {
+  return (entries ?? [])
+    .filter((entry) =>
+      text.includes(String(valueOf(entry)).toLocaleLowerCase()),
+    )
+    .map((entry) => ({
+      group,
+      claim: keyOf(entry),
+      value: valueOf(entry),
+    }));
 }
 
 function visibleText(value) {

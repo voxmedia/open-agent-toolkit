@@ -214,6 +214,13 @@ test('set and visual review schemas carry closed shared context', async () => {
   assert.ok(
     reviewRequest.$defs.renderedArtifact.required.includes('renderedHash'),
   );
+  assert.ok(
+    reviewRequest.$defs.renderedArtifact.properties.cohesionObservations,
+  );
+  assert.equal(
+    reviewRequest.$defs.cohesionObservation.properties.group.enum.length,
+    3,
+  );
   assert.equal(
     reviewRequest.$defs.renderedArtifact.properties.evidence.uniqueItems,
     true,

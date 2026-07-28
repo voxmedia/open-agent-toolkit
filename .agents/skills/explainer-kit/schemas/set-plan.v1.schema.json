@@ -46,6 +46,7 @@
     "ledger": {
       "type": "object",
       "additionalProperties": false,
+      "description": "Shared cohesion claims. A fully empty ledger explicitly identifies a lower-tier plan without applicable shared claims; adaptive recap review requires every group to be non-empty and observed.",
       "required": ["terminology", "statuses", "numbers"],
       "properties": {
         "terminology": {

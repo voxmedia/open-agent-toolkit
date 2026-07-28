@@ -291,6 +291,29 @@ function visualReviewRequest() {
       artifactId,
       renderedPath: `site/${artifactId}/index.html`,
       renderedHash: HASH_A,
+      cohesionObservations: [
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'terminology',
+          claim: 'set planner',
+          value: 'set planner',
+        },
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'statuses',
+          claim: 'runtime',
+          value: 'in progress',
+        },
+        {
+          artifactId,
+          contentHash: HASH_A,
+          group: 'numericClaims',
+          claim: 'required artifacts',
+          value: 3,
+        },
+      ],
       evidence: [
         {
           viewport: 'desktop',
@@ -593,6 +616,41 @@ test('rejects stale visual review identities and post-request byte bindings', ()
       ({ code }) => code === 'request-hash-mismatch',
     ),
   );
+});
+
+test('rejects empty or content-detached recap cohesion observations', () => {
+  for (const mutate of [
+    (request) => {
+      request.plan.ledger = { terminology: [], statuses: [], numbers: [] };
+      request.renderedArtifacts.forEach(
+        (artifact) => (artifact.cohesionObservations = []),
+      );
+    },
+    (request) => {
+      request.renderedArtifacts[0].cohesionObservations[0].contentHash = HASH_B;
+    },
+    (request) => {
+      request.renderedArtifacts.forEach(
+        (artifact) =>
+          (artifact.cohesionObservations =
+            artifact.cohesionObservations.filter(
+              ({ group }) => group !== 'statuses',
+            )),
+      );
+    },
+  ]) {
+    const request = visualReviewRequest();
+    mutate(request);
+    request.requestHash = canonicalHash(
+      Object.fromEntries(
+        Object.entries(request).filter(
+          ([key]) => !['requestId', 'requestHash'].includes(key),
+        ),
+      ),
+    );
+    request.requestId = visualReviewRequestId(request.requestHash);
+    assert.equal(validateContract('visual-review-request', request).valid, false);
+  }
 });
 
 test('accepts v2 expansion proposals while recipe policy remains external', () => {
