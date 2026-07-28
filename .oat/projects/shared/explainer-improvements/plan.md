@@ -628,6 +628,45 @@ default unattended recaps remain artistic and never auto-downgrade.
 
 ---
 
+### Task p02-t13: Anchor retained set plans to the approval resume boundary
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+
+**Steps:**
+
+1. Add a RED coordinated-tamper test that changes the retained result, mutable
+   request plan hash, portfolio, and drafts consistently, then proves resume
+   fails before planner, author, durability, or publish callbacks.
+2. Before an interactive run returns incomplete, derive an opaque versioned
+   resume token from the run identity and raw-byte hashes of all five retained
+   set-plan records, and expose it through the approval result.
+3. Require the caller to echo that externally retained token with every
+   interactive approval-resume decision. Validate its closed format and compare
+   it against the recomputed token before hydrating any retained plan, author,
+   or content state; missing or mismatched tokens fail with
+   `E_APPROVAL_RESUME`.
+4. Keep the trust anchor outside the mutable run root. Do not derive the
+   expected value from the retained set-plan, approval, build, or projection
+   files being checked.
+5. Preserve rejected-correction flow, valid no-replan/no-reauthor resume, and
+   complete final manifest immutable coverage. Document the approval-resume
+   token handoff and verify deterministic token behavior.
+6. Run the focused record, core integration, and rebuildability tests.
+7. Commit as `fix(p02-t13): anchor set plan resume`.
+
+**Acceptance:** Coordinated mutation of every currently cross-checked set-plan
+record cannot change resumed composition because approval resume is bound to an
+external pre-pause token.
+
+---
+
 ## Phase 3: Independent browser critic and hard loop cap
 
 ### Task p03-t01: Retain browser screenshots and metrics at three viewports
@@ -956,17 +995,18 @@ another review cycle.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                            |
-| ------ | -------- | --------------- | ---------- | ----------------------------------- |
-| p01    | code     | passed          | 2026-07-28 | reviews/20260728-p01-code-review.md |
-| p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review.md |
-| p03    | code     | pending         | -          | -                                   |
-| p04    | code     | pending         | -          | -                                   |
-| p05    | code     | pending         | -          | -                                   |
-| final  | code     | pending         | -          | -                                   |
-| spec   | artifact | pending         | -          | -                                   |
-| design | artifact | pending         | -          | -                                   |
-| plan   | artifact | passed          | 2026-07-28 | -                                   |
+| Scope  | Type     | Status          | Date       | Artifact                               |
+| ------ | -------- | --------------- | ---------- | -------------------------------------- |
+| p01    | code     | passed          | 2026-07-28 | reviews/20260728-p01-code-review.md    |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review.md    |
+| p02    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p02-code-review-r1.md |
+| p03    | code     | pending         | -          | -                                      |
+| p04    | code     | pending         | -          | -                                      |
+| p05    | code     | pending         | -          | -                                      |
+| final  | code     | pending         | -          | -                                      |
+| spec   | artifact | pending         | -          | -                                      |
+| design | artifact | pending         | -          | -                                      |
+| plan   | artifact | passed          | 2026-07-28 | -                                      |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -986,12 +1026,12 @@ additional unrelated review cycles.
 **Summary:**
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
-- Phase 2: 12 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
+- Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 30 tasks**
+**Total: 31 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

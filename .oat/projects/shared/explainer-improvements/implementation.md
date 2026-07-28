@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t13
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | review_pending |    12 |     12/12 |
-| p03   | pending        |     4 |       0/4 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | fixes_pending |    13 |     12/13 |
+| p03   | pending       |     4 |       0/4 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 19/30 tasks completed
+**Total:** 19/31 tasks completed
 
 ---
 
@@ -88,7 +88,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -102,6 +102,7 @@ oat_generated: false
 - [x] p02-t10 — Protect retained set-plan records across resume (`92254004`)
 - [x] p02-t11 — Deliver bundled authoring guidance to callbacks (`5f57e743`)
 - [x] p02-t12 — Add an explicit deterministic recap fallback (`4c469ea8`)
+- [ ] p02-t13 — Anchor retained set plans to the approval resume boundary
 
 ### Phase Implementation Summary
 
@@ -138,6 +139,12 @@ oat_generated: false
   `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
 - Root verification: complete Phase p02 union 138/138 and release validation
   passed with a clean worktree.
+- Fresh re-review artifact: `reviews/20260728-p02-code-review-r1.md`
+- Re-review verdict: `BLOCKED` — 0 Critical, 1 Important, 0 Medium, 0 Minor.
+  Four original findings are resolved; coordinated cross-record set-plan
+  mutation remains accepted because no immutable value crosses the approval
+  resume boundary.
+- Blocking fix: p02-t13, remediation attempt 2/3.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -248,6 +255,13 @@ oat_generated: false
 - Scope: verify the five original Important findings and detect regressions in
   their fix surfaces
 - Review-remediation attempt: 1/3
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260728-p02-code-review-r1.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Resolution: I1, I2, I4, and I5 resolved; I3 remains open as I3-R1
+- Verification: 138/138 focused tests passed; coordinated-tamper probe exposed
+  the missing external pre-pause anchor
+- Next remediation: p02-t13 as attempt 2/3
 - Dispatch: scope=p02 action=re-review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -269,14 +283,15 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                  | Source of Truth                     | Follow-up        |
-| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------- | ----------------------------------- | ---------------- |
-| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began            | `1151a0d7` and `plan.md`            | p01-t01          |
-| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04          |
-| p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps              | p01 review artifact                 | p01-t05, p01-t06 |
-| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`            | root focused test                   | p01-t07          |
-| p02 retry policy      | project state   | One review-remediation retry                       | Up to three bounded retries         | Operator override on 2026-07-28                         | user instruction and `state.md`     | p02-t08–p02-t12  |
-| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                  | Corrected one path; removed one     | Recipe validation has no standalone schema file         | repository file inventory           | p02-t12          |
+| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                             | Source of Truth                     | Follow-up        |
+| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------ | ----------------------------------- | ---------------- |
+| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began                       | `1151a0d7` and `plan.md`            | p01-t01          |
+| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta            | package manifests and bundle script | p01-t04          |
+| p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps                         | p01 review artifact                 | p01-t05, p01-t06 |
+| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`                       | root focused test                   | p01-t07          |
+| p02 retry policy      | project state   | One review-remediation retry                       | Up to three bounded retries         | Operator override on 2026-07-28                                    | user instruction and `state.md`     | p02-t08–p02-t12  |
+| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                  | Corrected one path; removed one     | Recipe validation has no standalone schema file                    | repository file inventory           | p02-t12          |
+| p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other             | Add an external resume token        | A coordinated edit can recompute every mutable projection and hash | p02 re-review artifact              | p02-t13          |
 
 ## Test Results
 

@@ -1,5 +1,5 @@
 ---
-oat_current_task: p03-t01
+oat_current_task: p02-t13
 oat_last_commit: 4c469ea8eda39971c742e29a6a33b84db41607b6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T14:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T14:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p02 review remediation attempt 1 of 3 implemented; re-review pending
+Phase p02 review remediation attempt 2 of 3 pending
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Phase p02 review remediation attempt 1 of 3 implemented; re-review pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 30 tasks currently tracked
+- ✓ Five phases / 31 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -123,8 +123,10 @@ Phase p02 review remediation attempt 1 of 3 implemented; re-review pending
 - ✓ p02-t08 through p02-t12 implemented in five atomic commits
 - ✓ Root remediation verification passed the complete p02 union (138/138)
   and `pnpm release:validate`
-- ⧗ Fresh root-owned p02 re-review pending over
+- ✓ Fresh root-owned p02 re-review resolved four of five original Important
+  findings over
   `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
+- ⧗ p02-t13 is the single bounded remediation task for attempt 2/3
 
 ## Blockers
 
@@ -132,5 +134,5 @@ None
 
 ## Next Milestone
 
-Run a fresh root-owned p02 review over the bounded remediation range, then
-either close Phase p02 or enter remediation attempt 2/3.
+Implement p02-t13 to bind retained set-plan bytes to an external approval
+resume token, then run a fresh narrowed root-owned review.
