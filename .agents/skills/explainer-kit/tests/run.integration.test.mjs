@@ -11,7 +11,7 @@ import {
   writeFile,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
 
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
@@ -900,6 +900,95 @@ test('plans one immutable set after facts and before every artifact author', asy
   ]) {
     await access(join(result.runRoot, path));
   }
+});
+
+test('invokes an independent critic once with the complete rendered recap set', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const browserProbe = mock.fn(async (probeRequest) => {
+    if (probeRequest.screenshotPath) {
+      await mkdir(dirname(probeRequest.screenshotPath), { recursive: true });
+      await writeFile(probeRequest.screenshotPath, Buffer.from([1, 2, 3]));
+    }
+    const result = {
+      pageOverflowX: false,
+      clippedX: [],
+      viewportClipped: [],
+      unreadableHeadings: [],
+      animationsDisabled: true,
+      reducedMotion: true,
+      keyboard: {
+        tab: true,
+        ...(probeRequest.artifact.type === 'deck' &&
+          probeRequest.scenario === 'default' && {
+            ArrowLeft: true,
+            ArrowRight: true,
+            ArrowUp: true,
+            ArrowDown: true,
+          }),
+      },
+    };
+    if (probeRequest.artifact.type === 'deck') {
+      result.deckLayout =
+        probeRequest.scenario === 'default'
+          ? { flow: 'horizontal', overflowX: 'auto', scrollSnap: true }
+          : {
+              flow: 'vertical',
+              overflowX:
+                probeRequest.scenario === 'print' ? 'visible' : 'auto',
+              scrollSnap: false,
+            };
+    }
+    return result;
+  });
+  const visualCritic = mock.fn(async (reviewRequest) => ({
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'recap-review-1',
+    reviewedAt: NOW,
+    disposition: 'pass',
+    artifactIds: reviewRequest.renderedArtifacts.map(
+      ({ artifactId }) => artifactId,
+    ),
+    findings: [],
+  }));
+
+  const result = await runExplainerCore(fixture.request, {
+    author,
+    planSet: async (plannerRequest) => plannedSet(plannerRequest),
+    browserProbe,
+    visualCritic,
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'built-not-durable', JSON.stringify(result.errors));
+  assert.notEqual(visualCritic, author);
+  assert.equal(visualCritic.mock.callCount(), 1);
+  const reviewRequest = visualCritic.mock.calls[0].arguments[0];
+  assert.deepEqual(
+    reviewRequest.renderedArtifacts.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+  assert.ok(
+    reviewRequest.renderedArtifacts.every(
+      ({ evidence }) =>
+        evidence.length === 3 &&
+        new Set(evidence.map(({ viewport }) => viewport)).size === 3,
+    ),
+  );
+  assert.equal(result.visualReview.disposition, 'pass');
+
+  const sharedCallback = mock.fn(async (request) => authorResult(request));
+  const rejectedFixture = await suppliedFixture('project-recap');
+  const rejected = await runExplainerCore(rejectedFixture.request, {
+    author: sharedCallback,
+    planSet: async (plannerRequest) => plannedSet(plannerRequest),
+    browserProbe,
+    visualCritic: sharedCallback,
+    now: () => NOW,
+  });
+  assert.equal(rejected.outcome, 'failed');
+  assert.equal(rejected.errors[0].code, 'E_VISUAL_REVIEW');
+  assert.equal(sharedCallback.mock.callCount(), 3);
 });
 
 test('fails before composition on invalid set sources, ledger conflicts, or missing drafts', async () => {

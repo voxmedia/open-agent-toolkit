@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { writeJsonAtomic } from './fs-safe.mjs';
 import { findUnpinnedResourceRefs } from './html-safety.mjs';
 import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
+import { cohesionEvidenceFromLedger } from './visual-review.mjs';
 
 const VOID_ELEMENTS = new Set([
   'area',
@@ -681,16 +682,18 @@ export async function auditArtifactSet({
   widths,
   evidenceRoot,
   requireBrowserEvidence = false,
+  setPlan,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Render QA requires at least one artifact.');
   }
 
-  const structural = artifacts.map((artifact) => ({
+  const artifactsWithCohesion = cohesionEvidenceFromLedger(artifacts, setPlan);
+  const structural = artifactsWithCohesion.map((artifact) => ({
     id: artifact.id,
     ...checkHtmlStructure({ ...artifact, denylist }),
   }));
-  const cohesion = checkArtifactCohesion(artifacts);
+  const cohesion = checkArtifactCohesion(artifactsWithCohesion);
   const browser = browserProbe
     ? await runBrowserProbes({
         artifacts,

@@ -46,6 +46,7 @@ import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
 import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import { resolveTheme } from './lib/theme.mjs';
+import { runVisualReview } from './lib/visual-review.mjs';
 
 // Stages a rejected draft reruns once its content is corrected.
 const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
@@ -90,6 +91,8 @@ export async function runExplainer(request, options = {}) {
     reopenedWarnings: {},
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
+    browserEvidence: [],
+    visualReview: null,
     resumeToken: null,
     resumedApprovalStatus: null,
   };
@@ -333,9 +336,14 @@ async function auditRenderedArtifacts(
   }));
   const report = await auditArtifactSet({
     artifacts: probeArtifacts,
+    setPlan: state.setPlan,
     ...(options.denylist && { denylist: options.denylist }),
     ...(browserProbe && { browserProbe }),
     ...(options.widths && { widths: options.widths }),
+    ...(browserProbe && requiresRecapVisualReview(state) && {
+      evidenceRoot: state.run.runRoot,
+      requireBrowserEvidence: true,
+    }),
   });
   const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
   const warningIssues = report.issues.filter(
@@ -366,6 +374,16 @@ async function auditRenderedArtifacts(
       errors.map(({ code, message }) => `${code}: ${message}`).join('; '),
     );
   }
+  state.browserEvidence = report.browser?.evidence ?? [];
+  const visualCritic = resolveVisualCritic(options);
+  if (visualCritic) {
+    state.visualReview = await runVisualReview({
+      plan: state.setPlan,
+      rendered: state.rendered,
+      evidence: state.browserEvidence,
+      visualCritic,
+    });
+  }
   state.warnings.push(...qaWarnings);
   const warnings = [
     ...(state.reopenedWarnings.qa ?? []),
@@ -376,6 +394,33 @@ async function auditRenderedArtifacts(
     warnings,
     status: warnings.length > 0 ? 'warned' : 'passed',
   };
+}
+
+function resolveVisualCritic(options) {
+  if (options.visualCritic === undefined) return null;
+  if (typeof options.visualCritic !== 'function') {
+    throw codedError(
+      'E_VISUAL_REVIEW',
+      'options.visualCritic must be a function when supplied.',
+    );
+  }
+  if (
+    options.visualCritic === options.author ||
+    options.visualCritic === options.critic
+  ) {
+    throw codedError(
+      'E_VISUAL_REVIEW',
+      'The visual critic must be distinct from the artifact author and fact critic.',
+    );
+  }
+  return options.visualCritic;
+}
+
+function requiresRecapVisualReview(state) {
+  return (
+    state.recipe.id === 'project-recap' &&
+    state.run.request.mode === 'unattended'
+  );
 }
 
 function isHardQaIssue(code) {
@@ -1490,6 +1535,9 @@ function resultFor(state, error) {
         }),
         ...(state.resumeToken && { resumeToken: state.resumeToken }),
       },
+    }),
+    ...(state.visualReview && {
+      visualReview: structuredClone(state.visualReview.result),
     }),
     ...(error && {
       errors: [{ code: error.code ?? 'E_RUN', message: safeMessage(error) }],

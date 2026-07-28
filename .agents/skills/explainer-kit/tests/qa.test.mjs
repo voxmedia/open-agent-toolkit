@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { test } from 'node:test';
+import { mock, test } from 'node:test';
 
 import {
   RUNTIME_UNAVAILABLE_REASONS,
@@ -22,6 +22,7 @@ import {
 import { evaluateExpansionProposals } from '../scripts/lib/recipes.mjs';
 import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
+import { runVisualReview } from '../scripts/lib/visual-review.mjs';
 import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
 
 const fixture = (
@@ -909,6 +910,77 @@ test('composes structural, cohesion and optional browser checks', async () => {
   assert.equal(report.valid, true);
   assert.equal(report.browser, null);
   assert.equal(report.artifacts.length, 2);
+});
+
+test('independent visual review binds the full rendered set and actionable rubric findings', async () => {
+  const plan = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'review-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['project'],
+    ledger: {
+      terminology: [{ term: 'core', meaning: 'Runtime boundary.' }],
+      statuses: [{ subject: 'quality', value: 'reviewed' }],
+      numbers: [{ subject: 'artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: ['hub', 'architecture', 'deck'].map((artifactId) => ({
+      artifactId,
+      artifactType: artifactId === 'deck' ? 'deck' : 'hub',
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds: ['project'],
+      draft: `Compose ${artifactId}.`,
+      visualIntent: `Make ${artifactId} clear.`,
+    })),
+  };
+  const rendered = plan.portfolio.map(({ artifactId }) => ({
+    artifactId,
+    renderedPath: `site/${artifactId}/index.html`,
+  }));
+  const evidence = rendered.flatMap(({ artifactId }) =>
+    ['mobile', 'tablet', 'desktop'].map((viewport) => ({
+      artifactId,
+      viewport,
+      screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
+      metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
+    })),
+  );
+  const visualCritic = mock.fn(async (request) => ({
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'visual-review-1',
+    reviewedAt: '2026-07-17T20:00:00Z',
+    disposition: 'fail',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [
+      {
+        artifactId: 'hub',
+        rubric: 'first-viewport',
+        severity: 'important',
+        evidence: 'The outcome is below the first viewport.',
+        correction: 'Move the outcome into the lead panel.',
+      },
+    ],
+  }));
+
+  const review = await runVisualReview({
+    plan,
+    rendered,
+    evidence,
+    visualCritic,
+  });
+
+  assert.equal(visualCritic.mock.callCount(), 1);
+  assert.deepEqual(
+    review.request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    ['hub', 'architecture', 'deck'],
+  );
+  assert.ok(
+    review.request.renderedArtifacts.every(
+      ({ evidence: artifactEvidence }) => artifactEvidence.length === 3,
+    ),
+  );
+  assert.equal(review.result.disposition, 'fail');
+  assert.equal(review.result.findings[0].artifactId, 'hub');
 });
 
 test('CLI reads an explicit request and returns machine-readable QA', async () => {
