@@ -207,10 +207,18 @@ export async function writeVisualReviewAttempt(
     for (const evidence of artifact.evidence) {
       const screenshotPath = `${directory}/evidence/${artifact.artifactId}/${evidence.viewport}.png`;
       const metricsPath = `${directory}/evidence/${artifact.artifactId}/${evidence.viewport}.json`;
-      await copyConfinedEvidence(run.runRoot, evidence.screenshotPath, screenshotPath);
-      await copyConfinedEvidence(run.runRoot, evidence.metricsPath, metricsPath);
-      evidence.screenshotPath = screenshotPath;
-      evidence.metricsPath = metricsPath;
+      await copyConfinedEvidence(
+        run.runRoot,
+        evidence.screenshotPath,
+        screenshotPath,
+        evidence.screenshotHash,
+      );
+      await copyConfinedEvidence(
+        run.runRoot,
+        evidence.metricsPath,
+        metricsPath,
+        evidence.metricsHash,
+      );
       paths.push(screenshotPath, metricsPath);
     }
   }
@@ -261,12 +269,22 @@ export async function writeVisualRevision(
   return [VISUAL_REVISION_PATH];
 }
 
-async function copyConfinedEvidence(runRoot, sourcePath, targetPath) {
+async function copyConfinedEvidence(
+  runRoot,
+  sourcePath,
+  targetPath,
+  expectedHash,
+) {
   const confined = await resolveRootConfinedPath(runRoot, sourcePath);
   if (!confined.valid) {
     throw new Error(`Visual review evidence is not run-root confined: ${sourcePath}`);
   }
-  await writeFileAtomic(runRoot, targetPath, await readFile(confined.absolutePath));
+  const bytes = await readFile(confined.absolutePath);
+  const hash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  if (hash !== expectedHash) {
+    throw new Error(`Visual review evidence hash changed before retention: ${sourcePath}`);
+  }
+  await writeFileAtomic(runRoot, targetPath, bytes);
 }
 
 export async function reopenBuildStages(run, { ids, reason }) {

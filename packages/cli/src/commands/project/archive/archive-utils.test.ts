@@ -528,6 +528,37 @@ describe('archive utils', () => {
     await expect(access(projectPath)).resolves.toBeUndefined();
   });
 
+  it('rejects an incomplete immutable visual-review evidence chain', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath);
+    const requestPath = 'qa/visual-review/attempt-1/request.json';
+    const request = '{}\n';
+    await mkdir(dirname(join(recap.runRoot, requestPath)), { recursive: true });
+    await writeFile(join(recap.runRoot, requestPath), request);
+    const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
+      immutableHashes: Record<string, string>;
+    };
+    manifest.immutableHashes[requestPath] =
+      `sha256:${createHash('sha256').update(request).digest('hex')}`;
+    await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
+
+    await expect(
+      archiveProjectOnCompletion(
+        {
+          repoRoot,
+          projectPath,
+          projectName: 'demo',
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        },
+        { timestamp: () => '2026-04-01T12:34:56Z' },
+      ),
+    ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+  });
+
   it('fails without overwrite when the recap destination already exists', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

@@ -44,6 +44,15 @@ const fixture = (
   <body><main>${body}</main></body>
 </html>`;
 
+function png(width, height) {
+  const bytes = Buffer.alloc(45);
+  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
+  return bytes;
+}
+
 const deck = () =>
   fixture(
     '<h1>Briefing</h1><section class="slide"><h2>Ready</h2></section>',
@@ -454,7 +463,10 @@ test('retains bounded screenshot and metrics evidence at all recap viewports', a
       await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
         recursive: true,
       });
-      await writeFile(request.screenshotPath, Buffer.from([1, 2, 3]));
+      await writeFile(
+        request.screenshotPath,
+        png(request.viewport.width, request.viewport.height),
+      );
       return {
         pageOverflowX: false,
         clippedX: [],
@@ -521,7 +533,10 @@ test('rejects partial required recap browser evidence while lower tiers remain e
       await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
         recursive: true,
       });
-      await writeFile(request.screenshotPath, Buffer.from([1]));
+      await writeFile(
+        request.screenshotPath,
+        png(request.viewport.width, request.viewport.height),
+      );
     }
     return {
       pageOverflowX: false,
@@ -557,6 +572,38 @@ test('rejects partial required recap browser evidence while lower tiers remain e
   });
   assert.equal(lowerTier.valid, true);
   assert.equal('evidence' in lowerTier, false);
+});
+
+test('rejects non-PNG and viewport-mismatched screenshot evidence', async (t) => {
+  for (const [label, screenshot] of [
+    ['text', () => Buffer.from('not a png')],
+    ['dimensions', ({ width, height }) => png(width + 1, height)],
+  ]) {
+    const evidenceRoot = await mkdtemp(
+      join(tmpdir(), `explainer-qa-${label}-`),
+    );
+    t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+    const report = await runBrowserProbes({
+      artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+      evidenceRoot,
+      requireEvidence: true,
+      probe: async (request) => {
+        await mkdir(dirname(request.screenshotPath), { recursive: true });
+        await writeFile(request.screenshotPath, screenshot(request.viewport));
+        return {
+          pageOverflowX: false,
+          clippedX: [],
+          viewportClipped: [],
+          unreadableHeadings: [],
+          animationsDisabled: true,
+          reducedMotion: true,
+          keyboard: { tab: true },
+        };
+      },
+    });
+    assert.equal(report.valid, false, label);
+    assert.equal(report.evidence.length, 0, label);
+  }
 });
 
 test('browser probes reject page and inner-container x-axis clipping', async () => {
@@ -978,7 +1025,15 @@ test('independent visual review binds the full rendered set and actionable rubri
   }
   for (const { screenshotPath, metricsPath } of evidence) {
     await mkdir(dirname(join(runRoot, screenshotPath)), { recursive: true });
-    await writeFile(join(runRoot, screenshotPath), Buffer.from([1, 2, 3]));
+    const viewport = evidence.find(
+      (item) => item.screenshotPath === screenshotPath,
+    ).viewport;
+    const size = {
+      mobile: [320, 640],
+      tablet: [768, 1024],
+      desktop: [1440, 900],
+    }[viewport];
+    await writeFile(join(runRoot, screenshotPath), png(...size));
     await writeFile(join(runRoot, metricsPath), '{}');
   }
   const visualCritic = mock.fn(async (request) => ({

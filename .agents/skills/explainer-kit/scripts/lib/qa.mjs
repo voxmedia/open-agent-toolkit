@@ -1,4 +1,4 @@
-import { stat } from 'node:fs/promises';
+import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { writeJsonAtomic } from './fs-safe.mjs';
@@ -806,12 +806,30 @@ async function retainBrowserEvidence({
       message: `Browser screenshot evidence for ${artifactId} at ${viewportSize.width}px is empty or exceeds ${MAX_SCREENSHOT_BYTES} bytes.`,
     };
   }
+  const screenshotBytes = await readFile(join(evidenceRoot, screenshotPath));
+  const dimensions = pngDimensions(screenshotBytes);
+  if (
+    !dimensions ||
+    dimensions.width !== viewportSize.width ||
+    dimensions.height !== viewportSize.height
+  ) {
+    return {
+      valid: false,
+      message: `Browser screenshot evidence for ${artifactId} at ${viewportSize.width}px must be a viewport-matched PNG.`,
+    };
+  }
   await writeJsonAtomic(evidenceRoot, metricsPath, {
     schemaVersion: 'explainer-kit.browser-evidence/v1',
     artifactId,
     viewport,
     viewportSize,
     scenario: 'default',
+    capture: {
+      format: 'png',
+      fullPage: false,
+      reducedMotion: 'reduce',
+      animationsDisabled: true,
+    },
     screenshotPath,
     metrics: structuredClone(result),
   });
@@ -826,6 +844,23 @@ async function retainBrowserEvidence({
       metricsPath,
     },
   };
+}
+
+export function pngDimensions(bytes) {
+  if (!Buffer.isBuffer(bytes) || bytes.length < 45) return null;
+  if (!bytes.subarray(0, 8).equals(Buffer.from('89504e470d0a1a0a', 'hex'))) {
+    return null;
+  }
+  if (
+    bytes.readUInt32BE(8) !== 13 ||
+    bytes.subarray(12, 16).toString('ascii') !== 'IHDR' ||
+    bytes.subarray(-8, -4).toString('ascii') !== 'IEND'
+  ) {
+    return null;
+  }
+  const width = bytes.readUInt32BE(16);
+  const height = bytes.readUInt32BE(20);
+  return width > 0 && height > 0 ? { width, height } : null;
 }
 
 function browserEvidenceId(value) {

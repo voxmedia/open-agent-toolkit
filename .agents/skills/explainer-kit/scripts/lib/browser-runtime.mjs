@@ -161,7 +161,16 @@ export async function createBrowserProbeSession(options = {}) {
 
   return {
     available: true,
-    runtime: { name: runtime.name, version: browser.version() },
+    runtime: {
+      name: runtime.name,
+      version: browser.version(),
+      capture: {
+        format: 'png',
+        fullPage: false,
+        reducedMotion: 'reduce',
+        animationsDisabled: true,
+      },
+    },
     probe: async (probeRequest) => {
       const route = `/${randomBytes(12).toString('hex')}.html`;
       pages.set(route, probeRequest.artifact.html);
@@ -229,7 +238,7 @@ export async function probeRenderedPage(browser, url, request) {
       await mkdir(dirname(request.screenshotPath), { recursive: true });
       await page.screenshot({
         path: request.screenshotPath,
-        fullPage: true,
+        fullPage: false,
       });
     }
     return {

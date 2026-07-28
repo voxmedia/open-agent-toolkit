@@ -18,6 +18,15 @@ const SOURCE_SKILLS_ROOT = resolve(
 const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
 const tempDirs = [];
 
+function png(width, height) {
+  const bytes = Buffer.alloc(45);
+  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
+  return bytes;
+}
+
 afterEach(async () => {
   await Promise.all(
     tempDirs.splice(0).map((dir) => rm(dir, { recursive: true, force: true })),
@@ -488,7 +497,11 @@ async function completionPlanSet({ recipe, factBase }) {
     planId: 'completion-evidence-recap',
     recipe: { id: recipe.id, version: recipe.version },
     sourceIds,
-    ledger: { terminology: [], statuses: [], numbers: [] },
+    ledger: {
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
+      statuses: [{ subject: 'completion', value: 'passed' }],
+      numbers: [{ subject: 'checks', value: 3, unit: 'checks' }],
+    },
     portfolio: recipe.floor.map((artifact) => ({
       artifactId: artifact.id,
       artifactType: artifact.type,
@@ -506,7 +519,7 @@ async function completionBrowserProbe(request) {
     await mkdir(dirname(request.screenshotPath), { recursive: true });
     await writeFile(
       request.screenshotPath,
-      `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+      png(request.viewport.width, request.viewport.height),
     );
   }
   return {
@@ -538,6 +551,8 @@ async function completionVisualCritic(request) {
   return {
     schemaVersion: 'explainer-kit.visual-review-result/v1',
     reviewId: 'completion-evidence-visual-review',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
     reviewedAt: '2026-07-20T12:00:00.000Z',
     disposition: 'pass',
     artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
@@ -587,7 +602,9 @@ async function thinLifecycleAuthor(request) {
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
-    content: { [request.authoring]: content },
+    content: {
+      [request.authoring]: withCohesionMarker(content, request.authoring),
+    },
     provenance: {
       authorId: 'thin-lifecycle-author',
       generatedAt: '2026-07-20T12:00:00.000Z',
@@ -777,7 +794,7 @@ async function authorFromLifecycleEvidence(request) {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
     content: {
-      [request.authoring]:
+      [request.authoring]: withCohesionMarker(
         request.authoring === 'markdown'
           ? `# ${title(request.artifactId)}\n\n${sections.join('\n')}`
           : lifecycleEvidenceHtml(request, {
@@ -787,6 +804,8 @@ async function authorFromLifecycleEvidence(request) {
               components,
               checks,
             }),
+        request.authoring,
+      ),
     },
     provenance: {
       authorId: 'evidence-derived-lifecycle-author',
@@ -794,6 +813,15 @@ async function authorFromLifecycleEvidence(request) {
       method: 'provider-neutral-callback',
     },
   };
+}
+
+function withCohesionMarker(content, authoring) {
+  const marker = 'project passed 3 checks';
+  return authoring === 'html'
+    ? content.includes('</body>')
+      ? content.replace('</body>', `<p>${marker}</p></body>`)
+      : `${content}<p>${marker}</p>`
+    : `${content}\n\n${marker}\n`;
 }
 
 function lifecycleEvidenceHtml(

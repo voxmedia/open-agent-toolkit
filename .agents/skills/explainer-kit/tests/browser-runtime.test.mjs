@@ -93,7 +93,7 @@ test('probe rejects unrecognized request fields', async () => {
   );
 });
 
-test('probe writes deterministic full-page screenshot evidence', async (t) => {
+test('probe writes deterministic viewport screenshot evidence', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'explainer-browser-evidence-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   const screenshotPath = join(root, 'qa/browser/hub/mobile.png');
@@ -135,5 +135,5 @@ test('probe writes deterministic full-page screenshot evidence', async (t) => {
     },
   );
 
-  assert.deepEqual(screenshots, [{ path: screenshotPath, fullPage: true }]);
+  assert.deepEqual(screenshots, [{ path: screenshotPath, fullPage: false }]);
 });

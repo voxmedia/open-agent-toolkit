@@ -819,16 +819,45 @@ function validateCrossRecord(kind, value, context, errors) {
         `Legacy manifest is missing immutable coverage for ${missingLegacyPaths.join(', ')}; regenerate the recap package before archival.`,
       );
     }
-    if (
-      expectedImmutable.size !== recordedImmutable.size ||
-      [...expectedImmutable].some((path) => !recordedImmutable.has(path))
-    ) {
+    if ([...expectedImmutable].some((path) => !recordedImmutable.has(path))) {
       add(
         errors,
         '$.immutableHashes',
         'immutable-package-incomplete',
         'Manifest immutable hashes must cover the complete retained fact-base, set plan, content, theme, and required built artifact package.',
       );
+    }
+    const hasVisualEvidence = [...recordedImmutable].some((path) =>
+      path.startsWith('qa/visual-review/'),
+    );
+    if (
+      hasVisualEvidence &&
+      [
+        'qa/visual-review/attempt-1/request.json',
+        'qa/visual-review/attempt-1/result.json',
+      ].some((path) => !recordedImmutable.has(path))
+    ) {
+      add(
+        errors,
+        '$.immutableHashes',
+        'visual-review-chain-incomplete',
+        'Retained visual review evidence requires its bound attempt request and result.',
+      );
+    }
+    for (const path of recordedImmutable) {
+      if (
+        (path.startsWith('qa/browser/') ||
+          path.includes('/visual-review/attempt-')) &&
+        path.endsWith('.png') &&
+        !recordedImmutable.has(path.replace(/\.png$/, '.json'))
+      ) {
+        add(
+          errors,
+          '$.immutableHashes',
+          'visual-review-chain-incomplete',
+          `Screenshot evidence ${path} is missing its immutable metrics record.`,
+        );
+      }
     }
 
     const record = context.buildRecord;

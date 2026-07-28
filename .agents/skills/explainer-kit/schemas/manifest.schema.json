@@ -112,6 +112,7 @@
     },
     "hashMap": {
       "type": "object",
+      "description": "Raw-byte SHA-256 coverage for the complete immutable package, including required browser, cohesion, visual-review attempt, and revision evidence.",
       "propertyNames": { "$ref": "#/$defs/safeRelativePath" },
       "additionalProperties": { "$ref": "#/$defs/hash" }
     },

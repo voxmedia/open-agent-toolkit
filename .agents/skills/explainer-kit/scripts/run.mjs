@@ -1677,6 +1677,11 @@ async function immutableHashesFor(state) {
     ...state.setPlanPaths,
     ...state.authorResultPaths,
     ...state.contentPaths.values(),
+    ...state.browserEvidence.flatMap(({ screenshotPath, metricsPath }) => [
+      screenshotPath,
+      metricsPath,
+    ]),
+    ...state.visualReviewPaths,
     ...(state.theme ? ['theme.resolved.json'] : []),
     ...state.artifacts
       .filter(

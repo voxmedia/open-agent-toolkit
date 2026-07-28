@@ -24,6 +24,15 @@ const NOW = '2026-07-17T20:00:00Z';
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
 
+function png(width, height) {
+  const bytes = Buffer.alloc(45);
+  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
+  return bytes;
+}
+
 afterEach(async () => {
   mock.reset();
   await Promise.all(
@@ -176,7 +185,10 @@ function layoutProbe({ pageOverflowX }) {
 async function retainingBrowserProbe(probeRequest) {
   if (probeRequest.screenshotPath) {
     await mkdir(dirname(probeRequest.screenshotPath), { recursive: true });
-    await writeFile(probeRequest.screenshotPath, Buffer.from([1, 2, 3]));
+    await writeFile(
+      probeRequest.screenshotPath,
+      png(probeRequest.viewport.width, probeRequest.viewport.height),
+    );
   }
   const result = {
     pageOverflowX: false,
@@ -955,7 +967,10 @@ test('invokes an independent critic once with the complete rendered recap set', 
   const browserProbe = mock.fn(async (probeRequest) => {
     if (probeRequest.screenshotPath) {
       await mkdir(dirname(probeRequest.screenshotPath), { recursive: true });
-      await writeFile(probeRequest.screenshotPath, Buffer.from([1, 2, 3]));
+      await writeFile(
+        probeRequest.screenshotPath,
+        png(probeRequest.viewport.width, probeRequest.viewport.height),
+      );
     }
     const result = {
       pageOverflowX: false,
@@ -991,10 +1006,7 @@ test('invokes an independent critic once with the complete rendered recap set', 
   const visualCritic = mock.fn(async (reviewRequest, evidenceInput) => {
     const firstScreenshot =
       reviewRequest.renderedArtifacts[0].evidence[0].screenshotPath;
-    assert.deepEqual(
-      await evidenceInput.read(firstScreenshot),
-      Buffer.from([1, 2, 3]),
-    );
+    assert.deepEqual(await evidenceInput.read(firstScreenshot), png(320, 640));
     return {
       schemaVersion: 'explainer-kit.visual-review-result/v1',
       reviewId: 'recap-review-1',
@@ -1033,6 +1045,30 @@ test('invokes an independent critic once with the complete rendered recap set', 
     ),
   );
   assert.equal(result.visualReview.disposition, 'pass');
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  const immutablePaths = Object.keys(manifest.immutableHashes);
+  assert.ok(
+    reviewRequest.renderedArtifacts
+      .flatMap(({ evidence }) =>
+        evidence.flatMap(({ screenshotPath, metricsPath }) => [
+          screenshotPath,
+          metricsPath,
+        ]),
+      )
+      .every((path) => immutablePaths.includes(path)),
+  );
+  assert.ok(
+    [
+      'qa/visual-review/attempt-1/request.json',
+      'qa/visual-review/attempt-1/result.json',
+    ].every((path) => immutablePaths.includes(path)),
+  );
+  assert.equal(
+    immutablePaths.filter((path) =>
+      path.startsWith('qa/visual-review/attempt-1/evidence/'),
+    ).length,
+    18,
+  );
 
   const sharedCallback = mock.fn(async (request) => authorResult(request));
   const rejectedFixture = await suppliedFixture('project-recap');

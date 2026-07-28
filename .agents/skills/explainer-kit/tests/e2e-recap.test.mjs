@@ -16,6 +16,15 @@ import { runExplainer } from '../scripts/run.mjs';
 
 const NOW = '2026-03-09T18:00:00Z';
 const SLUG = 'atlas-index-recap';
+
+function png(width, height) {
+  const bytes = Buffer.alloc(45);
+  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
+  return bytes;
+}
 const REQUIRED_NARRATIVE = [
   'original-request',
   'key-agent-decisions',
@@ -109,7 +118,7 @@ function cleanProbe() {
       await mkdir(dirname(request.screenshotPath), { recursive: true });
       await writeFile(
         request.screenshotPath,
-        `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+        png(request.viewport.width, request.viewport.height),
       );
     }
     return cleanProbeResult(request);
@@ -122,6 +131,8 @@ async function passingVisualCritic(request) {
   return {
     schemaVersion: 'explainer-kit.visual-review-result/v1',
     reviewId: 'e2e-recap-visual-review',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
     reviewedAt: NOW,
     disposition: 'pass',
     artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
@@ -324,7 +335,9 @@ function adaptivePlanSet(optional = []) {
       recipe: { id: recipe.id, version: recipe.version },
       sourceIds,
       ledger: {
-        terminology: [],
+        terminology: [
+          { term: 'indexing', meaning: 'Continuous Atlas indexing.' },
+        ],
         statuses: [{ subject: 'indexing', value: 'continuous' }],
         numbers: [
           { subject: 'required artifacts', value: 3, unit: 'artifacts' },

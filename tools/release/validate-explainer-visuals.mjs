@@ -77,6 +77,12 @@ export async function runExplainerVisualValidation({
       browser: {
         name: 'Chromium',
         version: browser.version(),
+        capture: {
+          format: 'png',
+          fullPage: false,
+          reducedMotion: 'reduce',
+          animationsDisabled: true,
+        },
       },
       matrixCases: report.cases,
       measurements,

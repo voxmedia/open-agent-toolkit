@@ -17,6 +17,15 @@ import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const tempDirs = [];
+
+function png(width, height) {
+  const bytes = Buffer.alloc(45);
+  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
+  bytes.writeUInt32BE(width, 16);
+  bytes.writeUInt32BE(height, 20);
+  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
+  return bytes;
+}
 const SOURCE_SKILLS_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',
@@ -160,7 +169,11 @@ async function fixturePlanSet({ recipe }) {
     planId: 'fixture-adaptive-recap',
     recipe,
     sourceIds: ['plan'],
-    ledger: { terminology: [], statuses: [], numbers: [] },
+    ledger: {
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
+      statuses: [{ subject: 'implementation', value: 'validated' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
     portfolio: ['project-recap', 'architecture', 'deck'].map(
       (artifactId, index) => ({
         artifactId,
@@ -180,7 +193,7 @@ async function completeBrowserProbe(request) {
     await mkdir(dirname(request.screenshotPath), { recursive: true });
     await writeFile(
       request.screenshotPath,
-      `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+      png(request.viewport.width, request.viewport.height),
     );
   }
   return {
@@ -212,6 +225,8 @@ async function passingVisualCritic(request) {
   return {
     schemaVersion: 'explainer-kit.visual-review-result/v1',
     reviewId: 'adapter-core-visual-review',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
     reviewedAt: '2026-07-18T00:00:00.000Z',
     disposition: 'pass',
     artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
@@ -925,6 +940,7 @@ export async function author(request) {
   for (const [token, value] of Object.entries(replacements)) {
     html = html.replaceAll(\`{{\${token}}}\`, value);
   }
+  html += '<p>project validated 3 artifacts</p>';
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
@@ -962,7 +978,7 @@ async function writeValidPlanSetModule(path) {
     recipe: { id: recipe.id, version: recipe.version },
     sourceIds,
     ledger: {
-      terminology: [],
+      terminology: [{ term: 'project', meaning: 'The tracked project.' }],
       statuses: [{ subject: 'implementation', value: 'validated' }],
       numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
     },

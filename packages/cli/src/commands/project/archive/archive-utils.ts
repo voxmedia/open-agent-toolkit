@@ -663,7 +663,6 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
   ]);
   if (
     expectedImmutablePaths.size === 0 ||
-    expectedImmutablePaths.size !== recordedImmutablePaths.length ||
     [...expectedImmutablePaths].some(
       (relativePath) => !(relativePath in value.immutableHashes),
     ) ||
@@ -677,6 +676,31 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     throw new CliError(
       'Selected project recap manifest immutable hashes do not cover the complete v1 package.',
     );
+  }
+  if (
+    recordedImmutablePaths.some((path) =>
+      path.startsWith('qa/visual-review/'),
+    ) &&
+    [
+      'qa/visual-review/attempt-1/request.json',
+      'qa/visual-review/attempt-1/result.json',
+    ].some((path) => !(path in value.immutableHashes))
+  ) {
+    throw new CliError(
+      'Selected project recap manifest has an incomplete visual-review evidence chain.',
+    );
+  }
+  for (const path of recordedImmutablePaths) {
+    if (
+      (path.startsWith('qa/browser/') ||
+        path.includes('/visual-review/attempt-')) &&
+      path.endsWith('.png') &&
+      !(path.replace(/\.png$/, '.json') in value.immutableHashes)
+    ) {
+      throw new CliError(
+        `Selected project recap manifest screenshot evidence \`${path}\` is missing its immutable metrics record.`,
+      );
+    }
   }
 
   return value;
