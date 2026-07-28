@@ -22,6 +22,7 @@ import { buildReviewBody } from '../../body-builder';
 import { parseMarkerBlock } from '../../marker-parser';
 import {
   pickNarrowingTarget,
+  priorReviewFromMarker,
   type GitInvoker,
   type PriorReview,
 } from '../../narrowing';
@@ -226,5 +227,103 @@ describe('project-rail: posted-body round-trip with project markers', () => {
     expect(parseMarkerBlock(projectBody)?.oat_project).toBe(PROJECT);
     // Ad-hoc body omits the project key entirely (the rail discriminator).
     expect(parseMarkerBlock(adHocBody)?.oat_project).toBeUndefined();
+  });
+
+  it('round-trips a same-target gate marker into an eligible narrowing candidate', async () => {
+    const body = buildReviewBody({
+      headSha: PRIOR_SHA,
+      scope: SCOPE,
+      project: PROJECT,
+      invocation: 'gate',
+      gateTarget: 'cursor-fable-5-xhigh',
+      summary: 'Gate review.',
+      findings: [],
+    }).body;
+    const marker = parseMarkerBlock(body);
+    expect(marker).not.toBeNull();
+    if (marker === null) {
+      throw new Error('built gate marker must parse');
+    }
+
+    const result = await pickNarrowingTarget({
+      reviews: [priorReviewFromMarker(marker, '2026-05-29T10:00:00Z')],
+      rail: 'project',
+      project: PROJECT,
+      scope: SCOPE,
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+      headSha: HEAD_SHA,
+      git: reachableGit,
+    });
+
+    expect(result.kind).toBe('narrow-range');
+  });
+
+  it.each([
+    {
+      name: 'a different gate target',
+      lineage: { kind: 'gate' as const, target: 'cursor-fable-5-high' },
+    },
+    {
+      name: 'lifecycle lineage',
+      lineage: { kind: 'lifecycle' as const },
+    },
+  ])('rejects a gate marker for $name', async ({ lineage }) => {
+    const body = buildReviewBody({
+      headSha: PRIOR_SHA,
+      scope: SCOPE,
+      project: PROJECT,
+      invocation: 'gate',
+      gateTarget: 'cursor-fable-5-xhigh',
+      summary: 'Gate review.',
+      findings: [],
+    }).body;
+    const marker = parseMarkerBlock(body);
+    if (marker === null) {
+      throw new Error('built gate marker must parse');
+    }
+
+    const result = await pickNarrowingTarget({
+      reviews: [priorReviewFromMarker(marker, '2026-05-29T10:00:00Z')],
+      rail: 'project',
+      project: PROJECT,
+      scope: SCOPE,
+      lineage,
+      headSha: HEAD_SHA,
+      git: reachableGit,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('rejects an invocation-less legacy marker after parser composition', async () => {
+    const marker = parseMarkerBlock(`<!-- oat-review-metadata
+oat_provide_remote: true
+oat_review_head_sha: ${PRIOR_SHA}
+oat_review_scope: ${SCOPE}
+oat_project: ${PROJECT}
+-->`);
+    if (marker === null) {
+      throw new Error('legacy marker must preserve non-lineage metadata');
+    }
+
+    const result = await pickNarrowingTarget({
+      reviews: [priorReviewFromMarker(marker, '2026-05-29T10:00:00Z')],
+      rail: 'project',
+      project: PROJECT,
+      scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
+      headSha: HEAD_SHA,
+      git: reachableGit,
+    });
+
+    expect(marker.oat_review_head_sha).toBe(PRIOR_SHA);
+    expect(marker.oat_review_invocation).toBeUndefined();
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
   });
 });

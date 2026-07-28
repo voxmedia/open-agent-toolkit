@@ -534,6 +534,38 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('fails open remote review discovery errors without unnecessary enumeration', () => {
+    const skillPaths = [
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-review-provide-remote/SKILL.md',
+    ];
+
+    for (const path of skillPaths) {
+      const content = readRepoFile(path);
+      expect(content, `${path} stable discovery reason`).toContain(
+        '`prior-reviews-unavailable`',
+      );
+      expect(content, `${path} automatic fail-open`).toMatch(
+        /automatic path[\s\S]{0,180}fails open to full PR scope/i,
+      );
+      expect(content, `${path} forced hard error`).toMatch(
+        /forced `--narrow`[\s\S]{0,180}hard error/i,
+      );
+      expect(content, `${path} diagnostic preservation`).toMatch(
+        /diagnostic detail[\s\S]{0,120}(?:stderr|parse error)/i,
+      );
+      expect(content, `${path} disabled enumeration skip`).toMatch(
+        /`--no-narrow`[\s\S]{0,180}skips `gh api` review enumeration entirely/i,
+      );
+      expect(content, `${path} preference-false enumeration skip`).toMatch(
+        /only `false` forces full PR scope[\s\S]{0,120}skips `gh api` review enumeration entirely/i,
+      );
+      expect(content, `${path} response parsing failure`).toMatch(
+        /response-level enumeration\/parsing failure/i,
+      );
+    }
+  });
+
   it('dispatches concrete Cursor reviews through resolver-selected native variants', () => {
     const local = readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',

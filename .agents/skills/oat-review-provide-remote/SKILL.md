@@ -143,20 +143,28 @@ gh pr view "$PR" --json title,body,headRefOid,baseRefName,state
 
 ### Step 3: Detect Prior Reviews + Narrow Scope
 
-List prior PR reviews and parse each body's GitHub review marker block. Candidate discovery belongs to this rail: use only marker blocks where `oat_provide_remote: true`, `oat_review_scope == "ad-hoc"`, no `oat_project` key is present, and the invocation is in the ad-hoc lifecycle lineage (`manual` or `auto`). Project-rail, gate, and legacy markers without usable lineage are ineligible. This rail has no project-plan or local lifecycle Reviews-table fallback.
+Resolve preference and per-invocation flags before candidate enumeration:
+
+1. `--no-narrow` forces full PR scope with reason `narrowing-disabled` and skips `gh api` review enumeration entirely.
+2. `--narrow` forces a narrowing attempt even when the configured preference is `false`.
+3. With neither flag, unset and `true` attempt narrowing; only `false` forces full PR scope with reason `narrowing-disabled` and skips `gh api` review enumeration entirely.
+
+Only when narrowing will be attempted, list prior PR reviews and parse each body's GitHub review marker block. Capture command status and stderr separately:
 
 ```bash
-gh api "/repos/{owner}/{repo}/pulls/$PR/reviews"
+if ! REVIEWS_JSON=$(gh api "/repos/{owner}/{repo}/pulls/$PR/reviews" 2>"$REVIEWS_ERROR_FILE"); then
+  # Candidate discovery failed; apply the policy below.
+fi
 ```
 
-Take the most recent eligible marker by submitted timestamp. Candidate discovery and marker provenance remain rail-specific; only after this rail supplies that candidate apply the shared decision, guard, fallback, and classification semantics mirrored by `packages/cli/src/review-remote/narrowing.ts`.
+Treat a nonzero `gh api` result or a response-level enumeration/parsing failure as discovery failure. Preserve a concise diagnostic detail from stderr or the parse error; do not treat individual irrelevant or lineage-ineligible marker blocks as response-level failure.
 
-Apply preference and per-invocation flags without prompting:
+- With forced `--narrow`, discovery failure is a hard error with reason `prior-reviews-unavailable`; report the diagnostic and stop instead of pretending to narrow.
+- On the automatic path, discovery failure fails open to full PR scope with stable reason `prior-reviews-unavailable` plus the diagnostic detail, then continues to review the full PR diff.
 
-1. `--no-narrow` forces full PR scope with reason `narrowing-disabled`.
-2. `--narrow` forces a narrowing attempt even when the configured preference is `false`.
-3. With neither flag, unset and `true` attempt narrowing; only `false` forces full PR scope with reason `narrowing-disabled`.
-4. When no eligible marker supplies a full 40-character hexadecimal `oat_review_head_sha`, use full PR scope with reason `no-prior-review`. Do not run Git guards for an invalid candidate.
+After successful enumeration, candidate discovery belongs to this rail: use only marker blocks where `oat_provide_remote: true`, `oat_review_scope == "ad-hoc"`, no `oat_project` key is present, and the invocation is in the ad-hoc lifecycle lineage (`manual` or `auto`). Project-rail, gate, and invocation-less or unknown legacy markers remain unknown and ineligible. This rail has no project-plan or local lifecycle Reviews-table fallback.
+
+Take the most recent eligible marker by submitted timestamp. Candidate discovery and marker provenance remain rail-specific; only after this rail supplies that candidate apply the shared guard, fallback, and classification semantics mirrored by `packages/cli/src/review-remote/narrowing.ts`. When no eligible marker supplies a full 40-character hexadecimal `oat_review_head_sha`, use full PR scope with reason `no-prior-review`. Do not run Git guards for an invalid candidate.
 
 Before accepting `<prior_sha>..<PR_HEAD_SHA>`, run the stale-SHA guard (design.md → Error Handling → Stale prior-review SHA):
 

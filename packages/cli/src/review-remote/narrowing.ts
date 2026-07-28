@@ -10,7 +10,7 @@
  * misleading partial range.
  */
 
-import type { ReviewInvocation } from './marker-parser';
+import type { MarkerBlock, ReviewInvocation } from './marker-parser';
 
 const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
@@ -20,7 +20,7 @@ export type ReviewLineage =
   | { kind: 'lifecycle' }
   | { kind: 'gate'; target: string };
 
-export type ReviewInvocationKind = ReviewInvocation | 'gate';
+export type ReviewInvocationKind = ReviewInvocation;
 
 /** A prior provide-remote review, distilled from its parsed marker block. */
 export interface PriorReview {
@@ -46,6 +46,42 @@ export interface ReviewLedgerProvenance {
   gateTarget?: string;
   artifact: string;
   submittedAt: string;
+}
+
+/**
+ * Normalize one parsed GitHub marker into a narrowing candidate. Unknown
+ * invocation and target-less gate markers preserve their metadata but carry no
+ * lineage, so tuple matching rejects them and fails open.
+ */
+export function priorReviewFromMarker(
+  marker: MarkerBlock,
+  submittedAt: string,
+): PriorReview {
+  const lineage = markerLineage(marker);
+  return {
+    headSha: marker.oat_review_head_sha,
+    scope: marker.oat_review_scope,
+    ...(marker.oat_project ? { project: marker.oat_project } : {}),
+    ...(marker.oat_review_invocation
+      ? { invocation: marker.oat_review_invocation }
+      : {}),
+    ...(lineage ? { lineage } : {}),
+    submittedAt,
+  };
+}
+
+function markerLineage(marker: MarkerBlock): ReviewLineage | undefined {
+  if (
+    marker.oat_review_invocation === 'manual' ||
+    marker.oat_review_invocation === 'auto'
+  ) {
+    return { kind: 'lifecycle' };
+  }
+
+  const gateTarget = marker.oat_gate_target?.trim();
+  return marker.oat_review_invocation === 'gate' && gateTarget
+    ? { kind: 'gate', target: gateTarget }
+    : undefined;
 }
 
 /**

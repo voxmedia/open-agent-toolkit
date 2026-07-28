@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseMarkerBlock } from './marker-parser';
 import {
   pickNarrowingTarget,
   priorReviewFromLedger,
+  priorReviewFromMarker,
   type GitInvoker,
   type PriorReview,
   type ReviewLedgerProvenance,
@@ -240,6 +242,119 @@ describe('pickNarrowingTarget — matching', () => {
       lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+});
+
+describe('pickNarrowingTarget — parsed marker lineage composition', () => {
+  function markerReview(lines: string[]): PriorReview {
+    const marker = parseMarkerBlock(
+      `<!-- oat-review-metadata\n${[
+        'oat_provide_remote: true',
+        `oat_review_head_sha: ${SHA_A}`,
+        'oat_review_scope: p02',
+        'oat_project: .oat/projects/shared/x',
+        ...lines,
+      ].join('\n')}\n-->`,
+    );
+    expect(marker).not.toBeNull();
+    if (marker === null) {
+      throw new Error('test marker must parse');
+    }
+    return priorReviewFromMarker(marker, '2026-05-01T00:00:00Z');
+  }
+
+  const base = {
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    headSha: HEAD,
+    git: PASSING_GIT,
+  };
+
+  it('narrows a gate re-review from a parsed same-target gate marker', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-xhigh',
+        ]),
+      ],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(result.kind).toBe('narrow-range');
+  });
+
+  it('rejects parsed gate markers from another target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-high',
+        ]),
+      ],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('keeps parsed gate and lifecycle markers isolated', async () => {
+    const gateForLifecycle = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-xhigh',
+        ]),
+      ],
+      lineage: { kind: 'lifecycle' },
+    });
+    const lifecycleForGate = await pickNarrowingTarget({
+      ...base,
+      reviews: [markerReview(['oat_review_invocation: manual'])],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(gateForLifecycle).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+    expect(lifecycleForGate).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it.each([
+    {
+      name: 'an invocation-less legacy marker',
+      lines: [],
+    },
+    {
+      name: 'an unknown invocation marker',
+      lines: ['oat_review_invocation: future-mode'],
+    },
+    {
+      name: 'a target-less gate marker',
+      lines: ['oat_review_invocation: gate'],
+    },
+  ])('fails open for $name', async ({ lines }) => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [markerReview(lines)],
+      lineage: { kind: 'lifecycle' },
     });
 
     expect(result).toMatchObject({

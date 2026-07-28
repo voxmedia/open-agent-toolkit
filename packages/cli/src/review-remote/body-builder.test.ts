@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { buildReviewBody, mapVerdict } from './body-builder';
+import { buildReviewBody, mapVerdict, type BuildInput } from './body-builder';
 import { parseMarkerBlock } from './marker-parser';
 
 const FULL_SHA = 'c'.repeat(40);
@@ -164,6 +164,54 @@ describe('buildReviewBody', () => {
     expect(parsed?.oat_review_invocation).toBe('manual');
     expect(parsed?.oat_review_scope).toBe('final');
     expect(parsed?.oat_provide_remote).toBe(true);
+  });
+
+  it('round-trips a gate invocation with its exact target', () => {
+    const { body } = buildReviewBody({
+      headSha: FULL_SHA,
+      scope: 'p02',
+      project: '.oat/projects/shared/remote-review',
+      invocation: 'gate',
+      gateTarget: 'cursor-fable-5-xhigh',
+      summary: 'Gate review.',
+      findings: [],
+    });
+
+    const parsed = parseMarkerBlock(body);
+    expect(parsed?.oat_review_invocation).toBe('gate');
+    expect(parsed?.oat_gate_target).toBe('cursor-fable-5-xhigh');
+  });
+
+  it.each(['', '   ', ' padded-target '])(
+    'rejects a gate invocation with an invalid exact target %j',
+    (gateTarget) => {
+      expect(() =>
+        buildReviewBody({
+          headSha: FULL_SHA,
+          scope: 'p02',
+          project: '.oat/projects/shared/remote-review',
+          invocation: 'gate',
+          gateTarget,
+          summary: 'Invalid gate review.',
+          findings: [],
+        }),
+      ).toThrow('gate invocation requires an exact non-empty gateTarget');
+    },
+  );
+
+  it('rejects a lifecycle invocation carrying a gate target at runtime', () => {
+    const invalid = {
+      headSha: FULL_SHA,
+      scope: 'p02',
+      invocation: 'manual',
+      gateTarget: 'cursor-fable-5-xhigh',
+      summary: 'Invalid lifecycle review.',
+      findings: [],
+    } as unknown as BuildInput;
+
+    expect(() => buildReviewBody(invalid)).toThrow(
+      'lifecycle invocation must not include gateTarget',
+    );
   });
 
   it('renders a Findings outside the PR diff subsection with file:line and body', () => {
