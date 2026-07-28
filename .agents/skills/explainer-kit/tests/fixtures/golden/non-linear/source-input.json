@@ -2,29 +2,33 @@
   "schemaVersion": "explainer-kit.golden-input/v1",
   "id": "non-linear",
   "title": "Branched event-processing recap",
-  "sourceRevision": "fixture/v1",
+  "sourceRevision": "sha256-pinned",
   "sources": [
     {
       "id": "architecture-record",
-      "kind": "committed-fixture",
-      "locator": "tests/fixtures/golden/non-linear/source-input.json"
+      "kind": "retained-synthetic-source",
+      "locator": "evidence/source-record.json",
+      "sha256": "sha256:2271d9b8bd7735c9aee938ad16f275f4d823677f9f135df58539bd28f55cd5f2"
     }
   ],
   "claims": [
     {
       "id": "N-1",
       "text": "The intake router sends accepted events to both enrichment and audit branches.",
-      "sourceId": "architecture-record"
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-1"
     },
     {
       "id": "N-2",
       "text": "Enrichment and policy results join before publication.",
-      "sourceId": "architecture-record"
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-2"
     },
     {
       "id": "N-3",
       "text": "Failed publication enters a bounded retry loop through the retry queue.",
-      "sourceId": "architecture-record"
+      "sourceId": "architecture-record",
+      "sourceClaimId": "N-3"
     }
   ],
   "topology": {

@@ -1,72 +1,119 @@
 {
   "schemaVersion": "explainer-kit.personal-reference/v1",
   "caseId": "simple",
-  "producer": "personal-explainer-kit",
-  "producerVersion": "0.4.1",
-  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
-  "comparisonKind": "workflow-and-quality-reference",
+  "producer": {
+    "name": "personal-explainer-kit",
+    "version": "0.4.1",
+    "generatedAt": "2026-07-28T03:35:00.000Z"
+  },
+  "comparisonKind": "retained-output-and-browser-evidence",
   "pixelIdentityRequired": false,
   "artifacts": [
     {
       "id": "hub",
       "type": "visual-hub",
-      "outputSummary": "Orients the reader to current state, system flow, validation, and next step."
+      "path": "artifacts/hub.html",
+      "sha256": "sha256:b1034b0c4706c8b577abbaabf9ffbe87fadf13e199e52f951c34d6703fed14ef",
+      "sourceIds": ["project-record"],
+      "claimIds": ["S-1", "S-2", "S-3"]
     },
     {
       "id": "architecture",
       "type": "architecture-visual",
-      "outputSummary": "Shows the checkpointed incremental-indexing path and drift-audit loop."
+      "path": "artifacts/architecture.html",
+      "sha256": "sha256:dedfd9cdb430b319358a8e1571e03d5eac15887fcb63b9dd9523e9e4dbd53893",
+      "sourceIds": ["project-record"],
+      "claimIds": ["S-1", "S-2", "S-3"]
     },
     {
       "id": "deck",
       "type": "deck",
-      "outputSummary": "Presents the same terminology and numbers as a short team-facing tour."
+      "path": "artifacts/deck.html",
+      "sha256": "sha256:f6c3a07bf1d7e02829881cfd5c91e283672b94477fd153dec34b93b4ca982d61",
+      "sourceIds": ["project-record"],
+      "claimIds": ["S-1", "S-2", "S-3"]
     }
   ],
+  "browserEvidence": {
+    "path": "evidence/browser-evidence.json",
+    "sha256": "sha256:c27904d28c36268e86545bd26c1e34093b9002a9a2bb3dce37de5ae8cdfdecff"
+  },
   "rubricEvidence": {
     "adaptiveMinimumSet": {
       "status": "reference-met",
-      "observation": "The comparison set contains a hub, architecture visual, and deck."
+      "observation": "The retained set contains exactly the required hub, architecture, and deck outputs.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/portfolio",
+        "evidence/browser-evidence.json#/manifest/artifacts"
+      ]
     },
     "firstViewport": {
       "status": "reference-met",
-      "observation": "The first view states what changed, current state, and the recovery path."
+      "observation": "Real Chromium captures retain desktop, tablet, and mobile first-viewport evidence for the hub.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/screenshots/desktop",
+        "evidence/browser-evidence.json#/screenshots/tablet",
+        "evidence/browser-evidence.json#/screenshots/mobile"
+      ]
     },
     "hierarchy": {
       "status": "reference-met",
-      "observation": "Outcome and system flow lead; implementation detail is secondary."
+      "observation": "The browser-reviewed outputs lead with outcome and topology before supporting source claims.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/visualReview/hierarchy"
+      ]
     },
     "representationChoice": {
       "status": "reference-met",
-      "observation": "A flow visual explains the indexing path more directly than prose."
+      "observation": "The architecture artifact carries every graph node and edge while the hub and deck serve orientation and sequencing.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/visualIntent",
+        "evidence/browser-evidence.json#/visualReview/representationChoice"
+      ]
     },
     "legibility": {
       "status": "reference-met",
-      "observation": "Short labels and bounded panels remain readable across target widths."
+      "observation": "Browser measurements report no horizontal overflow and readable headings and body content at all target viewports.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "cohesion": {
       "status": "reference-met",
-      "observation": "All artifacts use the same checkpoint, audit, and recovery vocabulary."
+      "observation": "Every output uses the same claim wording, source IDs, graph labels, and adaptive set ledger.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/ledger",
+        "evidence/browser-evidence.json#/visualReview/cohesion"
+      ]
     },
     "sourceCoverage": {
       "status": "reference-met",
-      "observation": "Each load-bearing claim maps to the committed fixture source."
+      "observation": "All retained artifacts enumerate the complete source and claim ID sets from the committed input.",
+      "evidencePointers": ["evidence/browser-evidence.json#/sourceCoverage"]
     },
     "interactions": {
       "status": "reference-met",
-      "observation": "Navigation and deck controls are keyboard reachable."
+      "observation": "Chromium found keyboard-reachable links or controls and no broken local artifact links.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "topologyPreservation": {
       "status": "reference-met",
-      "observation": "The linear indexing path and audit edge remain distinct."
+      "observation": "The architecture output and visual-review evidence preserve the input node and edge sets exactly.",
+      "evidencePointers": [
+        "source-input.json#/topology",
+        "evidence/browser-evidence.json#/visualReview/topology"
+      ]
     },
     "catalogParity": {
       "status": "reference-met",
-      "observation": "The catalog inventory matches the three reference artifacts."
+      "observation": "The retained manifest and catalog both enumerate exactly hub, architecture, and deck.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/manifest/artifacts",
+        "evidence/browser-evidence.json#/catalog/artifacts"
+      ]
     },
     "boundedCorrection": {
       "status": "reference-met",
-      "observation": "The comparison baseline records zero corrections and one terminal review."
+      "observation": "The retained review history ends in pass after no more than one correction.",
+      "evidencePointers": ["evidence/browser-evidence.json#/reviewHistory"]
     }
   }
 }

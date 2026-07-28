@@ -1,72 +1,119 @@
 {
   "schemaVersion": "explainer-kit.personal-reference/v1",
   "caseId": "explainer-authoring-redesign",
-  "producer": "personal-explainer-kit",
-  "producerVersion": "0.4.1",
-  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
-  "comparisonKind": "workflow-and-quality-reference",
+  "producer": {
+    "name": "personal-explainer-kit",
+    "version": "0.4.1",
+    "generatedAt": "2026-07-28T03:35:00.000Z"
+  },
+  "comparisonKind": "retained-output-and-browser-evidence",
   "pixelIdentityRequired": false,
   "artifacts": [
     {
       "id": "hub",
       "type": "visual-hub",
-      "outputSummary": "Summarizes the fixed-slot failure, shipped two-path model, evidence, and remaining quality gap."
+      "path": "artifacts/hub.html",
+      "sha256": "sha256:eabd5ed10bedf195b77a28a3542d423d343218be2b3eed33332bd63a51f04f87",
+      "sourceIds": ["archived-summary"],
+      "claimIds": ["A-1", "A-2", "A-3", "A-4"]
     },
     {
       "id": "architecture",
       "type": "architecture-visual",
-      "outputSummary": "Shows recipe-owned routing through narrative or artistic authoring into render and review."
+      "path": "artifacts/architecture.html",
+      "sha256": "sha256:f633dd560000617f5e95177421c7d22ce419b50add3624a8ab51ab986b1e91a5",
+      "sourceIds": ["archived-summary"],
+      "claimIds": ["A-1", "A-2", "A-3", "A-4"]
     },
     {
       "id": "deck",
       "type": "deck",
-      "outputSummary": "Presents the project outcome, decisions, corrections, and release evidence as a concise tour."
+      "path": "artifacts/deck.html",
+      "sha256": "sha256:3b999446f58513a1810839cd602a676b9370595781c768dde5de99c19da5f045",
+      "sourceIds": ["archived-summary"],
+      "claimIds": ["A-1", "A-2", "A-3", "A-4"]
     }
   ],
+  "browserEvidence": {
+    "path": "evidence/browser-evidence.json",
+    "sha256": "sha256:ffadd2d52ae5b1c1e47e3d7ea49351014934d4fb2694b3aa6d2d64c9c257fb5f"
+  },
   "rubricEvidence": {
     "adaptiveMinimumSet": {
       "status": "reference-met",
-      "observation": "The comparison set contains a hub, architecture visual, and deck."
+      "observation": "The retained set contains exactly the required hub, architecture, and deck outputs.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/portfolio",
+        "evidence/browser-evidence.json#/manifest/artifacts"
+      ]
     },
     "firstViewport": {
       "status": "reference-met",
-      "observation": "The first view names the original quality failure and the shipped two-path outcome."
+      "observation": "Real Chromium captures retain desktop, tablet, and mobile first-viewport evidence for the hub.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/screenshots/desktop",
+        "evidence/browser-evidence.json#/screenshots/tablet",
+        "evidence/browser-evidence.json#/screenshots/mobile"
+      ]
     },
     "hierarchy": {
       "status": "reference-met",
-      "observation": "Outcome and architecture lead; long revision history remains supporting evidence."
+      "observation": "The browser-reviewed outputs lead with outcome and topology before supporting source claims.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/visualReview/hierarchy"
+      ]
     },
     "representationChoice": {
       "status": "reference-met",
-      "observation": "A routed workflow diagram explains the two authoring paths better than a linear timeline."
+      "observation": "The architecture artifact carries every graph node and edge while the hub and deck serve orientation and sequencing.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/visualIntent",
+        "evidence/browser-evidence.json#/visualReview/representationChoice"
+      ]
     },
     "legibility": {
       "status": "reference-met",
-      "observation": "Dense project evidence is grouped into short visual sections with readable labels."
+      "observation": "Browser measurements report no horizontal overflow and readable headings and body content at all target viewports.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "cohesion": {
       "status": "reference-met",
-      "observation": "Recipe policy, narrative path, artistic path, and browser review use stable names across artifacts."
+      "observation": "Every output uses the same claim wording, source IDs, graph labels, and adaptive set ledger.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/ledger",
+        "evidence/browser-evidence.json#/visualReview/cohesion"
+      ]
     },
     "sourceCoverage": {
       "status": "reference-met",
-      "observation": "Every project claim links to the committed archived summary at revision 1151a0d7."
+      "observation": "All retained artifacts enumerate the complete source and claim ID sets from the committed input.",
+      "evidencePointers": ["evidence/browser-evidence.json#/sourceCoverage"]
     },
     "interactions": {
       "status": "reference-met",
-      "observation": "Hub navigation, source links, and deck controls are keyboard reachable."
+      "observation": "Chromium found keyboard-reachable links or controls and no broken local artifact links.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "topologyPreservation": {
       "status": "reference-met",
-      "observation": "The recipe split and authoring-path fan-in at render remain visible."
+      "observation": "The architecture output and visual-review evidence preserve the input node and edge sets exactly.",
+      "evidencePointers": [
+        "source-input.json#/topology",
+        "evidence/browser-evidence.json#/visualReview/topology"
+      ]
     },
     "catalogParity": {
       "status": "reference-met",
-      "observation": "The archive-safe catalog inventory matches the three reference artifacts."
+      "observation": "The retained manifest and catalog both enumerate exactly hub, architecture, and deck.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/manifest/artifacts",
+        "evidence/browser-evidence.json#/catalog/artifacts"
+      ]
     },
     "boundedCorrection": {
       "status": "reference-met",
-      "observation": "The comparison baseline records one correction and one terminal review without recursion."
+      "observation": "The retained review history ends in pass after no more than one correction.",
+      "evidencePointers": ["evidence/browser-evidence.json#/reviewHistory"]
     }
   }
 }

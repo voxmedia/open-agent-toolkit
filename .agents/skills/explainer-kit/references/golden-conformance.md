@@ -14,18 +14,23 @@ Each directory under `tests/fixtures/golden/` is self-contained:
 - `explainer-authoring-redesign` checks an archive-only rebuild from a dense
   completed project record.
 
-Every case has four inputs:
+Every case retains the complete oracle:
 
-| File                          | Contract                                           |
-| ----------------------------- | -------------------------------------------------- |
-| `descriptor.json`             | Portable paths to the other case files             |
-| `source-input.json`           | Stable claims, sources, topology, reader questions |
-| `rubric.json`                 | Required machine-readable quality checks           |
-| `personal-kit-reference.json` | Checked-in comparison outputs and rubric evidence  |
+| Path                             | Contract                                                       |
+| -------------------------------- | -------------------------------------------------------------- |
+| `descriptor.json`                | Producer metadata plus the path and SHA-256 of every file      |
+| `source-input.json`              | Source-grounded claims, topology, and reader questions         |
+| `rubric.json`                    | Required checks and resolvable JSON evidence pointers          |
+| `personal-kit-reference.json`    | Exact hub/architecture/deck membership and artifact hashes     |
+| `evidence/source-record.json`    | Retained source claims, upstream repository hash, and topology |
+| `evidence/browser-evidence.json` | Chromium metadata, measurements, review, manifest, and catalog |
+| `evidence/screenshots/*.png`     | Desktop, tablet, and mobile captures of the reference hub      |
+| `artifacts/*.html`               | Representative personal-kit hub, architecture, and deck        |
 
-Generated runtime evidence may be added beneath the same case directory in the
-golden execution phase. Hand-edited generated output is not accepted as passing
-evidence.
+The descriptor's retained-file set is repository-relative and content
+addressed. The loader recomputes every hash, resolves each source record and
+rubric pointer, and rejects a missing or changed file. A status label or prose
+summary without those retained outputs does not satisfy the contract.
 
 ## Required rubric
 
@@ -44,17 +49,26 @@ fields:
 10. `catalogParity`
 11. `boundedCorrection`
 
-Each check declares the retained machine-readable evidence paths that a golden
-run must produce. A passing set includes the adaptive minimum, preserves source
-meaning and topology, has catalog-to-manifest parity, and reaches a passing
-terminal review after zero or one correction.
+Each check declares JSON pointers into retained machine-readable evidence. A
+passing set contains exactly the hub, architecture, and deck; preserves source
+meaning and topology; has catalog-to-manifest parity; includes real browser
+captures and measurements; and reaches a passing terminal review after zero or
+one correction.
 
 ## Comparison evidence
 
-`explainer-kit.personal-reference/v1` records the reference artifact set and one
-observation for every rubric field. `producerVersion` pins the workflow oracle
-used for comparison. `pixelIdentityRequired` is always `false`; reviewers judge
+`explainer-kit.personal-reference/v1` records each reference artifact's path,
+SHA-256, source IDs, and claim IDs plus one resolvable evidence-pointer set for
+every rubric field. The producer object pins the personal-kit version and
+generation time. `pixelIdentityRequired` is always `false`; reviewers judge
 clarity, representation, behavior, and evidence rather than visual identity.
+
+Claims are accepted only when their source ID exists and their text exactly
+matches a claim in the retained source record. Repository-backed records also
+pin the upstream repository file and prove every retained claim occurs there.
+Architecture output must enumerate every input node and edge, and retained
+browser evidence must carry Chromium version, viewport, capture time,
+screenshot hash, overflow, readability, keyboard, and link results.
 
 The reference files are durable inputs, not executable dependencies. Runtime
 tests must not load an operator plugin, home directory, active project, or
@@ -63,7 +77,8 @@ moving branch.
 ## Portability rules
 
 - Descriptor paths are relative to their case and cannot escape it.
-- Committed JSON cannot contain home-directory or `file://` locators.
-- Stable repository-relative locators and pinned revisions are allowed.
-- Every claim and required topology edge is present in the committed source
-  input so later runs do not need the original workstation.
+- POSIX roots, Windows drive paths, UNC paths, home-relative paths, and
+  `file://` locators are rejected wherever they occur in committed evidence.
+- Repository-relative paths and supported `https://` source URLs are allowed.
+- Every claim, topology node, and topology edge resolves to retained,
+  hash-verified evidence, so later runs do not need the original workstation.

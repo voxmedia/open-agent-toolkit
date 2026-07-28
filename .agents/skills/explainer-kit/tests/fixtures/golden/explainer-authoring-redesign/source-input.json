@@ -2,34 +2,39 @@
   "schemaVersion": "explainer-kit.golden-input/v1",
   "id": "explainer-authoring-redesign",
   "title": "Explainer authoring redesign recap",
-  "sourceRevision": "1151a0d7",
+  "sourceRevision": "sha256-pinned",
   "sources": [
     {
       "id": "archived-summary",
-      "kind": "repository-reference",
-      "locator": ".oat/repo/reference/project-summaries/20260728-explainer-authoring-redesign.md"
+      "kind": "retained-repository-source",
+      "locator": "evidence/source-record.json",
+      "sha256": "sha256:9fa802f45b3939ff717f2e61aafc6bfea69f4cab5de3876368fa9299708756b5"
     }
   ],
   "claims": [
     {
       "id": "A-1",
-      "text": "The project replaced fixed authoring slots with narrative and artistic paths selected by recipe policy.",
-      "sourceId": "archived-summary"
+      "text": "Recipe policy selects the path through expansion profiles; the author does not.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-1"
     },
     {
       "id": "A-2",
-      "text": "Author identity and method are caller-owned while the core validates provenance and hash-pinned shells.",
-      "sourceId": "archived-summary"
+      "text": "Explainer authoring is two-path with a caller-owned author seam.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-2"
     },
     {
       "id": "A-3",
-      "text": "Rendered-browser review found styling defects that structural tests and release validation did not detect.",
-      "sourceId": "archived-summary"
+      "text": "No gate could see the styling surface.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-3"
     },
     {
       "id": "A-4",
-      "text": "The merged foundation closed with 231 core tests, 59 adapter tests, and release validation passing.",
-      "sourceId": "archived-summary"
+      "text": "Final gates: core 231, adapter 59, release 44 (1 env-gated skip), smoke 129, plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.",
+      "sourceId": "archived-summary",
+      "sourceClaimId": "A-4"
     }
   ],
   "topology": {

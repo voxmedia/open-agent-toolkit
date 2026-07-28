@@ -1,72 +1,119 @@
 {
   "schemaVersion": "explainer-kit.personal-reference/v1",
   "caseId": "non-linear",
-  "producer": "personal-explainer-kit",
-  "producerVersion": "0.4.1",
-  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
-  "comparisonKind": "workflow-and-quality-reference",
+  "producer": {
+    "name": "personal-explainer-kit",
+    "version": "0.4.1",
+    "generatedAt": "2026-07-28T03:35:00.000Z"
+  },
+  "comparisonKind": "retained-output-and-browser-evidence",
   "pixelIdentityRequired": false,
   "artifacts": [
     {
       "id": "hub",
       "type": "visual-hub",
-      "outputSummary": "Orients the reader to the event path, branch purposes, and retry outcome."
+      "path": "artifacts/hub.html",
+      "sha256": "sha256:bab73f4cbebc2f8162e53081af282dd1b6efdb02598a12ccc82c449605b87f77",
+      "sourceIds": ["architecture-record"],
+      "claimIds": ["N-1", "N-2", "N-3"]
     },
     {
       "id": "architecture",
       "type": "architecture-visual",
-      "outputSummary": "Uses artistic SVG composition to preserve the branch, fan-in, and retry cycle."
+      "path": "artifacts/architecture.html",
+      "sha256": "sha256:a39d10124fc7b84efe3f30f5c978f852aec828a3089fc636ad5e53f0c7f81960",
+      "sourceIds": ["architecture-record"],
+      "claimIds": ["N-1", "N-2", "N-3"]
     },
     {
       "id": "deck",
       "type": "deck",
-      "outputSummary": "Explains the same graph in progressive team-facing frames without changing topology."
+      "path": "artifacts/deck.html",
+      "sha256": "sha256:8469e269ecc0e85acb7481974c2cb2833b5823943ab1658760f5a266873ea1d6",
+      "sourceIds": ["architecture-record"],
+      "claimIds": ["N-1", "N-2", "N-3"]
     }
   ],
+  "browserEvidence": {
+    "path": "evidence/browser-evidence.json",
+    "sha256": "sha256:d58b84fa778b9e1a997bb70ada7c068247e603a715683c128ff99f56d4c06d5c"
+  },
   "rubricEvidence": {
     "adaptiveMinimumSet": {
       "status": "reference-met",
-      "observation": "The comparison set contains a hub, architecture visual, and deck."
+      "observation": "The retained set contains exactly the required hub, architecture, and deck outputs.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/portfolio",
+        "evidence/browser-evidence.json#/manifest/artifacts"
+      ]
     },
     "firstViewport": {
       "status": "reference-met",
-      "observation": "The first view names the event path and visually exposes the branch."
+      "observation": "Real Chromium captures retain desktop, tablet, and mobile first-viewport evidence for the hub.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/screenshots/desktop",
+        "evidence/browser-evidence.json#/screenshots/tablet",
+        "evidence/browser-evidence.json#/screenshots/mobile"
+      ]
     },
     "hierarchy": {
       "status": "reference-met",
-      "observation": "The main flow leads while audit and retry remain visible supporting paths."
+      "observation": "The browser-reviewed outputs lead with outcome and topology before supporting source claims.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/visualReview/hierarchy"
+      ]
     },
     "representationChoice": {
       "status": "reference-met",
-      "observation": "Artistic graph composition is selected because sequential inline layout cannot preserve the topology."
+      "observation": "The architecture artifact carries every graph node and edge while the hub and deck serve orientation and sequencing.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/visualIntent",
+        "evidence/browser-evidence.json#/visualReview/representationChoice"
+      ]
     },
     "legibility": {
       "status": "reference-met",
-      "observation": "Node labels, edge directions, and the retry loop remain distinguishable at target widths."
+      "observation": "Browser measurements report no horizontal overflow and readable headings and body content at all target viewports.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "cohesion": {
       "status": "reference-met",
-      "observation": "Router, audit, join, publish, and retry names stay identical across the set."
+      "observation": "Every output uses the same claim wording, source IDs, graph labels, and adaptive set ledger.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/setPlan/ledger",
+        "evidence/browser-evidence.json#/visualReview/cohesion"
+      ]
     },
     "sourceCoverage": {
       "status": "reference-met",
-      "observation": "Every declared edge and explanatory claim maps to the committed fixture."
+      "observation": "All retained artifacts enumerate the complete source and claim ID sets from the committed input.",
+      "evidencePointers": ["evidence/browser-evidence.json#/sourceCoverage"]
     },
     "interactions": {
       "status": "reference-met",
-      "observation": "Diagram controls and deck navigation are keyboard reachable."
+      "observation": "Chromium found keyboard-reachable links or controls and no broken local artifact links.",
+      "evidencePointers": ["evidence/browser-evidence.json#/browserMetrics"]
     },
     "topologyPreservation": {
       "status": "reference-met",
-      "observation": "The router branch, enrichment-policy fan-in, and publish-retry cycle are all retained."
+      "observation": "The architecture output and visual-review evidence preserve the input node and edge sets exactly.",
+      "evidencePointers": [
+        "source-input.json#/topology",
+        "evidence/browser-evidence.json#/visualReview/topology"
+      ]
     },
     "catalogParity": {
       "status": "reference-met",
-      "observation": "The catalog inventory matches the three reference artifacts."
+      "observation": "The retained manifest and catalog both enumerate exactly hub, architecture, and deck.",
+      "evidencePointers": [
+        "evidence/browser-evidence.json#/manifest/artifacts",
+        "evidence/browser-evidence.json#/catalog/artifacts"
+      ]
     },
     "boundedCorrection": {
       "status": "reference-met",
-      "observation": "The comparison baseline records one topology correction and one terminal review."
+      "observation": "The retained review history ends in pass after no more than one correction.",
+      "evidencePointers": ["evidence/browser-evidence.json#/reviewHistory"]
     }
   }
 }

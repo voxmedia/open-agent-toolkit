@@ -5,5 +5,90 @@
   "inputPath": "source-input.json",
   "rubricPath": "rubric.json",
   "referenceEvidencePath": "personal-kit-reference.json",
-  "purpose": "Baseline first-viewport clarity, cohesive set planning, source coverage, and bounded review."
+  "purpose": "Baseline first-viewport clarity, cohesive set planning, source coverage, and bounded review.",
+  "producer": {
+    "name": "personal-explainer-kit",
+    "version": "0.4.1",
+    "generatedAt": "2026-07-28T03:35:00.000Z"
+  },
+  "sourceIds": ["project-record"],
+  "retainedFiles": [
+    {
+      "path": "source-input.json",
+      "sha256": "sha256:3f1e94512f66626674b84262d9f216328b0e7531593e1bb0818e73e95a532f2b",
+      "role": "golden-input",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "rubric.json",
+      "sha256": "sha256:c86f38b8f3737d3d0f52d42656ff4ef8af0c7932f1be13c03506785e9101ea4b",
+      "role": "rubric",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "personal-kit-reference.json",
+      "sha256": "sha256:2a0b2122ffec7557e2be8a6de63fc332ec59991beb1abf9600f904397d927f36",
+      "role": "reference-descriptor",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/source-record.json",
+      "sha256": "sha256:2b973e08276605f79ce3f978359dd15543ca44571762f7d798422ecae03f5811",
+      "role": "source-evidence",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/browser-evidence.json",
+      "sha256": "sha256:c27904d28c36268e86545bd26c1e34093b9002a9a2bb3dce37de5ae8cdfdecff",
+      "role": "browser-evidence",
+      "mediaType": "application/json",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "artifacts/hub.html",
+      "sha256": "sha256:b1034b0c4706c8b577abbaabf9ffbe87fadf13e199e52f951c34d6703fed14ef",
+      "role": "hub-output",
+      "mediaType": "text/html",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "artifacts/architecture.html",
+      "sha256": "sha256:dedfd9cdb430b319358a8e1571e03d5eac15887fcb63b9dd9523e9e4dbd53893",
+      "role": "architecture-output",
+      "mediaType": "text/html",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "artifacts/deck.html",
+      "sha256": "sha256:f6c3a07bf1d7e02829881cfd5c91e283672b94477fd153dec34b93b4ca982d61",
+      "role": "deck-output",
+      "mediaType": "text/html",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/screenshots/desktop.png",
+      "sha256": "sha256:e5ad9169576c881eceefdecfe9c0b382aa8f1a44846adafe959f18af494c30f9",
+      "role": "browser-screenshot",
+      "mediaType": "image/png",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/screenshots/tablet.png",
+      "sha256": "sha256:9246c5a7db977a8630fc80c81e661ca22183bc8a1e69986c932c3186a53d69c9",
+      "role": "browser-screenshot",
+      "mediaType": "image/png",
+      "sourceIds": ["project-record"]
+    },
+    {
+      "path": "evidence/screenshots/mobile.png",
+      "sha256": "sha256:0e24ab50bd2494f5c56336f6b12dabb77e6e7c3714cf5137deffde6471a98bbb",
+      "role": "browser-screenshot",
+      "mediaType": "image/png",
+      "sourceIds": ["project-record"]
+    }
+  ]
 }
