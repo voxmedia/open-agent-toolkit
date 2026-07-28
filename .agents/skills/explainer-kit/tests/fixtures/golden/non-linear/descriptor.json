@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "explainer-kit.golden-fixture/v1",
+  "id": "non-linear",
+  "title": "Branched and cyclic event-processing architecture",
+  "inputPath": "source-input.json",
+  "rubricPath": "rubric.json",
+  "referenceEvidencePath": "personal-kit-reference.json",
+  "purpose": "Prove branch, fan-in, and cycle topology is preserved or explicitly rejected instead of flattened."
+}

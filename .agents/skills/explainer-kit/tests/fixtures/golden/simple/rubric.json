@@ -1,0 +1,56 @@
+{
+  "schemaVersion": "explainer-kit.golden-rubric/v1",
+  "checks": {
+    "adaptiveMinimumSet": {
+      "required": true,
+      "evidence": ["set-plan.portfolio", "manifest.artifacts"]
+    },
+    "firstViewport": {
+      "required": true,
+      "evidence": [
+        "screenshots.desktop",
+        "screenshots.tablet",
+        "screenshots.mobile"
+      ]
+    },
+    "hierarchy": {
+      "required": true,
+      "evidence": ["visual-review.hierarchy"]
+    },
+    "representationChoice": {
+      "required": true,
+      "evidence": [
+        "set-plan.visualIntent",
+        "visual-review.representationChoice"
+      ]
+    },
+    "legibility": {
+      "required": true,
+      "evidence": ["browser-metrics.overflow", "browser-metrics.readability"]
+    },
+    "cohesion": {
+      "required": true,
+      "evidence": ["set-plan.ledger", "visual-review.cohesion"]
+    },
+    "sourceCoverage": {
+      "required": true,
+      "evidence": ["set-plan.sourceCoverage", "manifest.sourceBacklinks"]
+    },
+    "interactions": {
+      "required": true,
+      "evidence": ["browser-metrics.keyboard", "browser-metrics.links"]
+    },
+    "topologyPreservation": {
+      "required": true,
+      "evidence": ["input.topology", "visual-review.topology"]
+    },
+    "catalogParity": {
+      "required": true,
+      "evidence": ["manifest.artifacts", "catalog.artifacts"]
+    },
+    "boundedCorrection": {
+      "required": true,
+      "evidence": ["review-history.attempts", "review-history.corrections"]
+    }
+  }
+}

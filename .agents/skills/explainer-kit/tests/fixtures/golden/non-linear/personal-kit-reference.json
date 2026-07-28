@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "explainer-kit.personal-reference/v1",
+  "caseId": "non-linear",
+  "producer": "personal-explainer-kit",
+  "producerVersion": "0.4.1",
+  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
+  "comparisonKind": "workflow-and-quality-reference",
+  "pixelIdentityRequired": false,
+  "artifacts": [
+    {
+      "id": "hub",
+      "type": "visual-hub",
+      "outputSummary": "Orients the reader to the event path, branch purposes, and retry outcome."
+    },
+    {
+      "id": "architecture",
+      "type": "architecture-visual",
+      "outputSummary": "Uses artistic SVG composition to preserve the branch, fan-in, and retry cycle."
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "outputSummary": "Explains the same graph in progressive team-facing frames without changing topology."
+    }
+  ],
+  "rubricEvidence": {
+    "adaptiveMinimumSet": {
+      "status": "reference-met",
+      "observation": "The comparison set contains a hub, architecture visual, and deck."
+    },
+    "firstViewport": {
+      "status": "reference-met",
+      "observation": "The first view names the event path and visually exposes the branch."
+    },
+    "hierarchy": {
+      "status": "reference-met",
+      "observation": "The main flow leads while audit and retry remain visible supporting paths."
+    },
+    "representationChoice": {
+      "status": "reference-met",
+      "observation": "Artistic graph composition is selected because sequential inline layout cannot preserve the topology."
+    },
+    "legibility": {
+      "status": "reference-met",
+      "observation": "Node labels, edge directions, and the retry loop remain distinguishable at target widths."
+    },
+    "cohesion": {
+      "status": "reference-met",
+      "observation": "Router, audit, join, publish, and retry names stay identical across the set."
+    },
+    "sourceCoverage": {
+      "status": "reference-met",
+      "observation": "Every declared edge and explanatory claim maps to the committed fixture."
+    },
+    "interactions": {
+      "status": "reference-met",
+      "observation": "Diagram controls and deck navigation are keyboard reachable."
+    },
+    "topologyPreservation": {
+      "status": "reference-met",
+      "observation": "The router branch, enrichment-policy fan-in, and publish-retry cycle are all retained."
+    },
+    "catalogParity": {
+      "status": "reference-met",
+      "observation": "The catalog inventory matches the three reference artifacts."
+    },
+    "boundedCorrection": {
+      "status": "reference-met",
+      "observation": "The comparison baseline records one topology correction and one terminal review."
+    }
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "explainer-kit.golden-fixture/v1",
+  "id": "simple",
+  "title": "Simple incremental-indexing project",
+  "inputPath": "source-input.json",
+  "rubricPath": "rubric.json",
+  "referenceEvidencePath": "personal-kit-reference.json",
+  "purpose": "Baseline first-viewport clarity, cohesive set planning, source coverage, and bounded review."
+}

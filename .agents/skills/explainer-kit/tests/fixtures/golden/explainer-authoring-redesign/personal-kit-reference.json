@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "explainer-kit.personal-reference/v1",
+  "caseId": "explainer-authoring-redesign",
+  "producer": "personal-explainer-kit",
+  "producerVersion": "0.4.1",
+  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
+  "comparisonKind": "workflow-and-quality-reference",
+  "pixelIdentityRequired": false,
+  "artifacts": [
+    {
+      "id": "hub",
+      "type": "visual-hub",
+      "outputSummary": "Summarizes the fixed-slot failure, shipped two-path model, evidence, and remaining quality gap."
+    },
+    {
+      "id": "architecture",
+      "type": "architecture-visual",
+      "outputSummary": "Shows recipe-owned routing through narrative or artistic authoring into render and review."
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "outputSummary": "Presents the project outcome, decisions, corrections, and release evidence as a concise tour."
+    }
+  ],
+  "rubricEvidence": {
+    "adaptiveMinimumSet": {
+      "status": "reference-met",
+      "observation": "The comparison set contains a hub, architecture visual, and deck."
+    },
+    "firstViewport": {
+      "status": "reference-met",
+      "observation": "The first view names the original quality failure and the shipped two-path outcome."
+    },
+    "hierarchy": {
+      "status": "reference-met",
+      "observation": "Outcome and architecture lead; long revision history remains supporting evidence."
+    },
+    "representationChoice": {
+      "status": "reference-met",
+      "observation": "A routed workflow diagram explains the two authoring paths better than a linear timeline."
+    },
+    "legibility": {
+      "status": "reference-met",
+      "observation": "Dense project evidence is grouped into short visual sections with readable labels."
+    },
+    "cohesion": {
+      "status": "reference-met",
+      "observation": "Recipe policy, narrative path, artistic path, and browser review use stable names across artifacts."
+    },
+    "sourceCoverage": {
+      "status": "reference-met",
+      "observation": "Every project claim links to the committed archived summary at revision 1151a0d7."
+    },
+    "interactions": {
+      "status": "reference-met",
+      "observation": "Hub navigation, source links, and deck controls are keyboard reachable."
+    },
+    "topologyPreservation": {
+      "status": "reference-met",
+      "observation": "The recipe split and authoring-path fan-in at render remain visible."
+    },
+    "catalogParity": {
+      "status": "reference-met",
+      "observation": "The archive-safe catalog inventory matches the three reference artifacts."
+    },
+    "boundedCorrection": {
+      "status": "reference-met",
+      "observation": "The comparison baseline records one correction and one terminal review without recursion."
+    }
+  }
+}

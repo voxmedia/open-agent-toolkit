@@ -1,0 +1,72 @@
+{
+  "schemaVersion": "explainer-kit.personal-reference/v1",
+  "caseId": "simple",
+  "producer": "personal-explainer-kit",
+  "producerVersion": "0.4.1",
+  "comparisonCapturedAt": "2026-07-28T00:00:00Z",
+  "comparisonKind": "workflow-and-quality-reference",
+  "pixelIdentityRequired": false,
+  "artifacts": [
+    {
+      "id": "hub",
+      "type": "visual-hub",
+      "outputSummary": "Orients the reader to current state, system flow, validation, and next step."
+    },
+    {
+      "id": "architecture",
+      "type": "architecture-visual",
+      "outputSummary": "Shows the checkpointed incremental-indexing path and drift-audit loop."
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "outputSummary": "Presents the same terminology and numbers as a short team-facing tour."
+    }
+  ],
+  "rubricEvidence": {
+    "adaptiveMinimumSet": {
+      "status": "reference-met",
+      "observation": "The comparison set contains a hub, architecture visual, and deck."
+    },
+    "firstViewport": {
+      "status": "reference-met",
+      "observation": "The first view states what changed, current state, and the recovery path."
+    },
+    "hierarchy": {
+      "status": "reference-met",
+      "observation": "Outcome and system flow lead; implementation detail is secondary."
+    },
+    "representationChoice": {
+      "status": "reference-met",
+      "observation": "A flow visual explains the indexing path more directly than prose."
+    },
+    "legibility": {
+      "status": "reference-met",
+      "observation": "Short labels and bounded panels remain readable across target widths."
+    },
+    "cohesion": {
+      "status": "reference-met",
+      "observation": "All artifacts use the same checkpoint, audit, and recovery vocabulary."
+    },
+    "sourceCoverage": {
+      "status": "reference-met",
+      "observation": "Each load-bearing claim maps to the committed fixture source."
+    },
+    "interactions": {
+      "status": "reference-met",
+      "observation": "Navigation and deck controls are keyboard reachable."
+    },
+    "topologyPreservation": {
+      "status": "reference-met",
+      "observation": "The linear indexing path and audit edge remain distinct."
+    },
+    "catalogParity": {
+      "status": "reference-met",
+      "observation": "The catalog inventory matches the three reference artifacts."
+    },
+    "boundedCorrection": {
+      "status": "reference-met",
+      "observation": "The comparison baseline records zero corrections and one terminal review."
+    }
+  }
+}

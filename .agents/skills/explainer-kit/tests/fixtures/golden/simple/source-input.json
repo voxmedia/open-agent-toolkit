@@ -1,0 +1,51 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "simple",
+  "title": "Atlas Index recap",
+  "sourceRevision": "fixture/v1",
+  "sources": [
+    {
+      "id": "project-record",
+      "kind": "committed-fixture",
+      "locator": "examples/project-recap/fact-base.json"
+    }
+  ],
+  "claims": [
+    {
+      "id": "S-1",
+      "text": "Incremental indexing replaced nightly full rebuilds without changing the public query contract.",
+      "sourceId": "project-record"
+    },
+    {
+      "id": "S-2",
+      "text": "Partition-local checkpoints and idempotent writes make retries safe.",
+      "sourceId": "project-record"
+    },
+    {
+      "id": "S-3",
+      "text": "A scheduled drift audit opens a recovery task only after a configured threshold is crossed.",
+      "sourceId": "project-record"
+    }
+  ],
+  "topology": {
+    "kind": "linear-with-audit",
+    "nodes": [
+      "change-reader",
+      "batch-queue",
+      "index-worker",
+      "search-index",
+      "drift-audit"
+    ],
+    "edges": [
+      ["change-reader", "batch-queue"],
+      ["batch-queue", "index-worker"],
+      ["index-worker", "search-index"],
+      ["search-index", "drift-audit"]
+    ]
+  },
+  "readerQuestions": [
+    "What changed?",
+    "How does indexing recover?",
+    "What proves the cutover is safe?"
+  ]
+}

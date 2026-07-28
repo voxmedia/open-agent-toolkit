@@ -1,0 +1,75 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "non-linear",
+  "title": "Branched event-processing recap",
+  "sourceRevision": "fixture/v1",
+  "sources": [
+    {
+      "id": "architecture-record",
+      "kind": "committed-fixture",
+      "locator": "tests/fixtures/golden/non-linear/source-input.json"
+    }
+  ],
+  "claims": [
+    {
+      "id": "N-1",
+      "text": "The intake router sends accepted events to both enrichment and audit branches.",
+      "sourceId": "architecture-record"
+    },
+    {
+      "id": "N-2",
+      "text": "Enrichment and policy results join before publication.",
+      "sourceId": "architecture-record"
+    },
+    {
+      "id": "N-3",
+      "text": "Failed publication enters a bounded retry loop through the retry queue.",
+      "sourceId": "architecture-record"
+    }
+  ],
+  "topology": {
+    "kind": "branched-fan-in-cycle",
+    "nodes": [
+      "intake",
+      "router",
+      "enrichment",
+      "audit",
+      "policy",
+      "join",
+      "publish",
+      "retry"
+    ],
+    "edges": [
+      ["intake", "router"],
+      ["router", "enrichment"],
+      ["router", "audit"],
+      ["enrichment", "join"],
+      ["audit", "policy"],
+      ["policy", "join"],
+      ["join", "publish"],
+      ["publish", "retry"],
+      ["retry", "router"]
+    ],
+    "requiredStructures": [
+      {
+        "type": "branch",
+        "from": "router",
+        "to": ["enrichment", "audit"]
+      },
+      {
+        "type": "fan-in",
+        "from": ["enrichment", "policy"],
+        "to": "join"
+      },
+      {
+        "type": "cycle",
+        "path": ["router", "enrichment", "join", "publish", "retry", "router"]
+      }
+    ]
+  },
+  "readerQuestions": [
+    "Where does the flow branch?",
+    "Where do results join?",
+    "How is a failed publication retried?"
+  ]
+}

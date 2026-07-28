@@ -1,0 +1,9 @@
+{
+  "schemaVersion": "explainer-kit.golden-fixture/v1",
+  "id": "explainer-authoring-redesign",
+  "title": "Archived Explainer Kit authoring redesign",
+  "inputPath": "source-input.json",
+  "rubricPath": "rubric.json",
+  "referenceEvidencePath": "personal-kit-reference.json",
+  "purpose": "Rebuild a dense archived project recap without an active project, moving branch, or machine-local source."
+}

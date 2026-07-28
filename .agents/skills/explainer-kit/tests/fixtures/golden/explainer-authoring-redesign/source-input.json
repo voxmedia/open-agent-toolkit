@@ -1,0 +1,61 @@
+{
+  "schemaVersion": "explainer-kit.golden-input/v1",
+  "id": "explainer-authoring-redesign",
+  "title": "Explainer authoring redesign recap",
+  "sourceRevision": "1151a0d7",
+  "sources": [
+    {
+      "id": "archived-summary",
+      "kind": "repository-reference",
+      "locator": ".oat/repo/reference/project-summaries/20260728-explainer-authoring-redesign.md"
+    }
+  ],
+  "claims": [
+    {
+      "id": "A-1",
+      "text": "The project replaced fixed authoring slots with narrative and artistic paths selected by recipe policy.",
+      "sourceId": "archived-summary"
+    },
+    {
+      "id": "A-2",
+      "text": "Author identity and method are caller-owned while the core validates provenance and hash-pinned shells.",
+      "sourceId": "archived-summary"
+    },
+    {
+      "id": "A-3",
+      "text": "Rendered-browser review found styling defects that structural tests and release validation did not detect.",
+      "sourceId": "archived-summary"
+    },
+    {
+      "id": "A-4",
+      "text": "The merged foundation closed with 231 core tests, 59 adapter tests, and release validation passing.",
+      "sourceId": "archived-summary"
+    }
+  ],
+  "topology": {
+    "kind": "authoring-workflow",
+    "nodes": [
+      "fact-base",
+      "recipe-policy",
+      "narrative-author",
+      "artistic-author",
+      "render",
+      "browser-review",
+      "publish"
+    ],
+    "edges": [
+      ["fact-base", "recipe-policy"],
+      ["recipe-policy", "narrative-author"],
+      ["recipe-policy", "artistic-author"],
+      ["narrative-author", "render"],
+      ["artistic-author", "render"],
+      ["render", "browser-review"],
+      ["browser-review", "publish"]
+    ]
+  },
+  "readerQuestions": [
+    "Why did fixed-slot authoring fail?",
+    "What changed in the shipped architecture?",
+    "Which evidence proves the redesign and its remaining gap?"
+  ]
+}
