@@ -733,8 +733,8 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '2.0.0'],
-      ['oat-explainer-kit', '1.0.2'],
+      ['explainer-kit', '2.0.1'],
+      ['oat-explainer-kit', '1.0.3'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
@@ -2112,12 +2112,14 @@ describe('validateOatSkills', () => {
       /applicable gate set[\s\S]{0,120}produced\s+diff[\s\S]{0,120}including artifact writes/i,
     );
 
-    for (const path of runtimeSurfaces.slice(1).map(([path]) => path)) {
-      const content = await readRepoFile(path);
-      expect(content, `${path} relevant changed-file checks`).toMatch(
+    for (const surfacePath of runtimeSurfaces
+      .slice(1)
+      .map(([entryPath]) => entryPath)) {
+      const content = await readRepoFile(surfacePath);
+      expect(content, `${surfacePath} relevant changed-file checks`).toMatch(
         /only repository checks relevant to the files\s+changed/i,
       );
-      expect(content, `${path} no unrelated full suites`).toMatch(
+      expect(content, `${surfacePath} no unrelated full suites`).toMatch(
         /does not imply unrelated full\s+test suites/i,
       );
     }

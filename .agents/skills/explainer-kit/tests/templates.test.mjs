@@ -273,11 +273,21 @@ test('the section rail diagram stays inside the shell viewport', async () => {
     renderStrategy: 'default-only',
   });
 
-  const nodes = [...html.matchAll(/<rect x="(\d+)" y="([\d.]+)" width="(\d+)" height="([\d.]+)"/g)];
+  const nodes = [
+    ...html.matchAll(
+      /<rect x="(\d+)" y="([\d.]+)" width="(\d+)" height="([\d.]+)"/g,
+    ),
+  ];
   assert.equal(nodes.length, sections.length);
   for (const [, x, y, width, height] of nodes) {
-    assert.ok(Number(x) + Number(width) <= 360, `node overflows width: ${x}+${width}`);
-    assert.ok(Number(y) + Number(height) <= 540, `node overflows height: ${y}+${height}`);
+    assert.ok(
+      Number(x) + Number(width) <= 360,
+      `node overflows width: ${x}+${width}`,
+    );
+    assert.ok(
+      Number(y) + Number(height) <= 540,
+      `node overflows height: ${y}+${height}`,
+    );
   }
 });
 

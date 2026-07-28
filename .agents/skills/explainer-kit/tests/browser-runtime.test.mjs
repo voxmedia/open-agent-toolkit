@@ -41,9 +41,7 @@ test('probe applies injected CSS and neutralizes non-gated motion', async (t) =>
       disableAnimations: true,
       injectedCss: ':root { --probe-injected: present; }',
       evaluate: () => {
-        const animated = getComputedStyle(
-          document.querySelector('#animated'),
-        );
+        const animated = getComputedStyle(document.querySelector('#animated'));
         return {
           pageOverflowX: false,
           clippedX: [],
