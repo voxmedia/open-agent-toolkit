@@ -632,7 +632,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
 | p01    | code     | fixes_completed | 2026-07-28 | reviews/archived/p01-review-2026-07-28T204348Z.md           | -                                        | -          | -                    |
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/archived/p02-review-2026-07-28T211745Z.md           | 33e4506ef7211d75faa30402ea6b1a11e278e475 | auto       | -                    |
-| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
+| p03    | code     | received        | 2026-07-28 | reviews/p03-review-2026-07-28T220431Z.md                    | f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f | auto       | -                    |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
