@@ -50,6 +50,13 @@ const RAW_SECRET_KEYS = new Set([
 ]);
 const DATE_TIME_PATTERN =
   /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$/;
+const SET_PLAN_RECORD_PATHS = [
+  'source/set-plan/request.json',
+  'source/set-plan/result.json',
+  'source/set-plan/ledger.json',
+  'source/set-plan/portfolio.json',
+  'source/set-plan/drafts.json',
+];
 
 export function validateContract(kind, value, context = {}) {
   const schema = resolveContractSchema(kind, value);
@@ -660,10 +667,17 @@ function validateCrossRecord(kind, value, context, errors) {
       'run-request.json',
       'source/content-approval.json',
     ];
+    const recordedImmutable = isObject(value.immutableHashes)
+      ? new Set(Object.keys(value.immutableHashes))
+      : new Set();
+    const retainsSetPlan =
+      value.recipe?.id === 'project-recap' ||
+      SET_PLAN_RECORD_PATHS.some((path) => recordedImmutable.has(path));
     const expectedImmutable = new Set([
       ...requiredProvenance,
       value.source?.factBasePath,
       'source/fact-base.md',
+      ...(retainsSetPlan ? SET_PLAN_RECORD_PATHS : []),
       ...(Array.isArray(value.source?.authorResultPaths)
         ? value.source.authorResultPaths
         : []),
@@ -679,9 +693,6 @@ function validateCrossRecord(kind, value, context, errors) {
         : []),
     ]);
     expectedImmutable.delete(undefined);
-    const recordedImmutable = isObject(value.immutableHashes)
-      ? new Set(Object.keys(value.immutableHashes))
-      : new Set();
     const missingLegacyPaths = requiredProvenance.filter(
       (path) => !recordedImmutable.has(path),
     );
@@ -701,7 +712,7 @@ function validateCrossRecord(kind, value, context, errors) {
         errors,
         '$.immutableHashes',
         'immutable-package-incomplete',
-        'Manifest immutable hashes must cover the complete retained fact-base, content, theme, and required built artifact package.',
+        'Manifest immutable hashes must cover the complete retained fact-base, set plan, content, theme, and required built artifact package.',
       );
     }
 

@@ -800,7 +800,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
   const fixture = await suppliedFixture('project-recap');
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };
   const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
-  const planSet = async (plannerRequest) => {
+  const planSet = mock.fn(async (plannerRequest) => {
     const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
     const optional = (
       artifactId,
@@ -837,7 +837,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
         'The audit flow warrants a dedicated source-backed explanation.',
       ),
     ]);
-  };
+  });
 
   const rejected = await runExplainerCore(interactiveRequest, {
     author,
@@ -914,6 +914,11 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
     JSON.stringify(resumed.errors),
   );
   assert.equal(author.mock.callCount(), 5, 'resume must not re-invoke author');
+  assert.equal(
+    planSet.mock.callCount(),
+    1,
+    'resume must not re-invoke planner',
+  );
   const approved = JSON.parse(await readFile(approvalPath, 'utf8'));
   assert.deepEqual(approved.artifacts, rejectedApproval.artifacts);
   const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
@@ -974,6 +979,123 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
     ),
     /A reviewed architecture artifact\./,
   );
+});
+
+test('resume rejects retained set-plan, identity, and path tampering before callbacks', async () => {
+  const mutations = [
+    [
+      'set-plan request',
+      'source/set-plan/request.json',
+      (record) => {
+        record.factBaseHash = `sha256:${'b'.repeat(64)}`;
+      },
+    ],
+    [
+      'set-plan result',
+      'source/set-plan/result.json',
+      (record) => {
+        record.portfolio[0].draft = 'Tampered result draft.';
+      },
+    ],
+    [
+      'set-plan ledger',
+      'source/set-plan/ledger.json',
+      (record) => {
+        record.planId = 'tampered-plan';
+      },
+    ],
+    [
+      'set-plan portfolio',
+      'source/set-plan/portfolio.json',
+      (record) => {
+        record.artifacts[0].visualIntent = 'Tampered visual intent.';
+      },
+    ],
+    [
+      'set-plan drafts',
+      'source/set-plan/drafts.json',
+      (record) => {
+        record.drafts[0].draft = 'Tampered projection draft.';
+      },
+    ],
+    [
+      'approval artifact identity',
+      'source/content-approval.json',
+      (record) => {
+        record.artifacts[0].artifactId = 'tampered-artifact';
+      },
+    ],
+    [
+      'approval author path',
+      'source/content-approval.json',
+      (record) => {
+        record.artifacts[0].authorResultPath =
+          'source/author/tampered-artifact.json';
+        record.authorResultPaths[0] = 'source/author/tampered-artifact.json';
+      },
+    ],
+    [
+      'approval content path',
+      'source/content-approval.json',
+      (record) => {
+        record.artifacts[0].contentPath =
+          'source/content/tampered-artifact.html';
+      },
+    ],
+    [
+      'retained author identity',
+      'source/author/project-recap.json',
+      (record) => {
+        record.artifactId = 'tampered-artifact';
+      },
+    ],
+  ];
+
+  for (const [label, relativePath, mutate] of mutations) {
+    const fixture = await suppliedFixture('project-recap');
+    const interactiveRequest = { ...fixture.request, mode: 'interactive' };
+    const planSet = mock.fn(async (plannerRequest) =>
+      plannedSet(plannerRequest),
+    );
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
+    const rejected = await runExplainerCore(interactiveRequest, {
+      planSet,
+      author,
+      now: () => NOW,
+      reviewedSource: {
+        decision: 'reject',
+        reviewedAt: NOW,
+        reviewer: 'operator',
+        corrections: ['Review the retained draft.'],
+      },
+    });
+    assert.equal(rejected.outcome, 'incomplete', label);
+    assert.equal(planSet.mock.callCount(), 1, label);
+    assert.equal(author.mock.callCount(), 3, label);
+
+    const path = join(rejected.runRoot, relativePath);
+    const record = JSON.parse(await readFile(path, 'utf8'));
+    mutate(record);
+    await writeFile(path, `${JSON.stringify(record, null, 2)}\n`);
+
+    const resumed = await runExplainerCore(interactiveRequest, {
+      planSet,
+      author,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+      },
+    });
+
+    assert.equal(resumed.outcome, 'failed', label);
+    assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME', label);
+    assert.equal(planSet.mock.callCount(), 1, label);
+    assert.equal(author.mock.callCount(), 3, label);
+  }
 });
 
 test('authors cannot mutate the validated portfolio with expansion proposals', async () => {

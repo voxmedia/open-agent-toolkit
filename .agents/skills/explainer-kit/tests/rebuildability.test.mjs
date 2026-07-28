@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { validateContract } from '../scripts/lib/contracts.mjs';
 import { verifyRebuildability } from '../scripts/lib/durability.mjs';
 
 const tempDirs = [];
@@ -105,7 +106,10 @@ test('bundles self-contained visual authoring and review guidance', async () => 
     ['authoring', authoring],
     ['review', review],
   ]) {
-    assert.doesNotMatch(guidance, /\/Users\/|~\/|\.agents\/skills\/visual-explainer/);
+    assert.doesNotMatch(
+      guidance,
+      /\/Users\/|~\/|\.agents\/skills\/visual-explainer/,
+    );
     assert.match(guidance, /optional/i, name);
   }
   for (const topic of [
@@ -121,6 +125,56 @@ test('bundles self-contained visual authoring and review guidance', async () => 
   assert.match(review, /first viewport/i);
   assert.match(review, /medium fit/i);
   assert.match(review, /pass|correct|fail/i);
+});
+
+test('requires every retained set-plan record in recap immutable coverage', () => {
+  const hash = `sha256:${'a'.repeat(64)}`;
+  const setPlanPaths = [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ];
+  const manifest = {
+    schemaVersion: 'explainer-kit.manifest/v1',
+    runId: 'run-1',
+    slug: 'project-recap',
+    recipe: { id: 'project-recap', version: '1' },
+    createdAt: '2026-07-17T20:00:00Z',
+    source: {
+      factBasePath: 'source/fact-base.json',
+      factBaseHash: hash,
+      inputHashes: {},
+    },
+    theme: {
+      path: 'theme.resolved.json',
+      hash,
+      derived: false,
+    },
+    artifacts: [],
+    immutableHashes: Object.fromEntries(
+      [
+        'run-request.json',
+        'source/content-approval.json',
+        'source/fact-base.json',
+        'source/fact-base.md',
+        'theme.resolved.json',
+        ...setPlanPaths,
+      ].map((path) => [path, hash]),
+    ),
+    outcome: 'built-not-durable',
+    buildRecord: { path: 'build-record.json', hash },
+    warnings: [],
+  };
+
+  assert.equal(validateContract('manifest', manifest).valid, true);
+  delete manifest.immutableHashes[setPlanPaths.at(-1)];
+  assert.ok(
+    validateContract('manifest', manifest).errors.some(
+      ({ code }) => code === 'immutable-package-incomplete',
+    ),
+  );
 });
 
 async function fileHash(path) {

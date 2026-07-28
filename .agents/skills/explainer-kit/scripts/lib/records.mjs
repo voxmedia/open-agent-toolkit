@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { access, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { validateContract } from './contracts.mjs';
+import { canonicalHash, validateContract } from './contracts.mjs';
 import { createConfinedRunRoot, writeJsonAtomic } from './fs-safe.mjs';
 
 const STAGE_IDS = [
@@ -21,6 +21,13 @@ const ALLOWED_TRANSITIONS = {
   pending: new Set(['running', 'failed', 'skipped']),
   running: new Set(['running', 'passed', 'warned', 'failed']),
 };
+export const SET_PLAN_RECORD_PATHS = Object.freeze([
+  'source/set-plan/request.json',
+  'source/set-plan/result.json',
+  'source/set-plan/ledger.json',
+  'source/set-plan/portfolio.json',
+  'source/set-plan/drafts.json',
+]);
 
 export async function initializeRun(request) {
   if (!isObject(request)) {
@@ -244,8 +251,12 @@ export async function writeSetPlanRecords(run, { request, plan }) {
   }
   assertValidContract('set-plan', plan);
 
+  const retainedRequest = {
+    ...structuredClone(request),
+    planHash: canonicalHash(plan),
+  };
   const records = [
-    ['source/set-plan/request.json', request],
+    ['source/set-plan/request.json', retainedRequest],
     ['source/set-plan/result.json', plan],
     [
       'source/set-plan/ledger.json',
@@ -292,6 +303,120 @@ export async function writeSetPlanRecords(run, { request, plan }) {
     await writeJsonAtomic(run.runRoot, relativePath, value);
   }
   return records.map(([relativePath]) => relativePath);
+}
+
+export async function readSetPlanRecords(run, { factBase, recipe }) {
+  assertRun(run);
+  if (
+    !isObject(factBase) ||
+    !Array.isArray(factBase.sources) ||
+    !isObject(recipe) ||
+    typeof recipe.id !== 'string' ||
+    typeof recipe.version !== 'string'
+  ) {
+    throw resumeRecordError(
+      'Retained set-plan validation requires the fact base and active recipe.',
+    );
+  }
+
+  let values;
+  try {
+    values = await Promise.all(
+      SET_PLAN_RECORD_PATHS.map((relativePath) =>
+        readJson(join(run.runRoot, relativePath)),
+      ),
+    );
+  } catch (error) {
+    throw resumeRecordError(
+      `Unable to read the complete retained set plan: ${error.message}`,
+    );
+  }
+  const [request, plan, ledger, portfolio, drafts] = values;
+  const requestKeys = [
+    'discovery',
+    'factBaseHash',
+    'planHash',
+    'recipe',
+    'schemaVersion',
+    'sourceIds',
+  ];
+  if (
+    !isObject(request) ||
+    canonicalHash(Object.keys(request).sort()) !== canonicalHash(requestKeys) ||
+    request.schemaVersion !== 'explainer-kit.set-plan-request/v1' ||
+    canonicalHash(request.recipe) !==
+      canonicalHash({ id: recipe.id, version: recipe.version }) ||
+    request.factBaseHash !== canonicalHash(factBase) ||
+    request.planHash !== canonicalHash(plan) ||
+    !isObject(request.discovery) ||
+    !Number.isInteger(request.discovery.rounds) ||
+    request.discovery.rounds < 0 ||
+    !Array.isArray(request.discovery.findings) ||
+    !['not-requested', 'two-empty-rounds', 'hard-maximum'].includes(
+      request.discovery.reason,
+    )
+  ) {
+    throw resumeRecordError(
+      'Retained set-plan request does not match the fact base and active recipe.',
+    );
+  }
+
+  const planValidation = validateContract('set-plan', plan);
+  if (!planValidation.valid) {
+    throw resumeRecordError('Retained set-plan result is invalid.');
+  }
+  const expectedSourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  if (
+    canonicalHash(plan.recipe) !==
+      canonicalHash({ id: recipe.id, version: recipe.version }) ||
+    canonicalHash(request.sourceIds) !== canonicalHash(expectedSourceIds) ||
+    canonicalHash(plan.sourceIds) !== canonicalHash(request.sourceIds)
+  ) {
+    throw resumeRecordError(
+      'Retained set-plan request and result identities have drifted.',
+    );
+  }
+
+  const expectedLedger = {
+    schemaVersion: 'explainer-kit.set-plan-ledger/v1',
+    planId: plan.planId,
+    ...plan.ledger,
+  };
+  const expectedPortfolio = {
+    schemaVersion: 'explainer-kit.set-plan-portfolio/v1',
+    planId: plan.planId,
+    artifacts: plan.portfolio,
+  };
+  const expectedDrafts = {
+    schemaVersion: 'explainer-kit.set-plan-drafts/v1',
+    drafts: plan.portfolio.map(
+      ({ artifactId, draft, visualIntent, justification }) => ({
+        artifactId,
+        draft,
+        visualIntent,
+        ...(justification && { justification }),
+      }),
+    ),
+  };
+  for (const [label, actual, expected] of [
+    ['ledger', ledger, expectedLedger],
+    ['portfolio', portfolio, expectedPortfolio],
+    ['drafts', drafts, expectedDrafts],
+  ]) {
+    if (canonicalHash(actual) !== canonicalHash(expected)) {
+      throw resumeRecordError(
+        `Retained set-plan ${label} projection does not match the canonical result.`,
+      );
+    }
+  }
+
+  return {
+    request,
+    plan,
+    paths: [...SET_PLAN_RECORD_PATHS],
+  };
 }
 
 function normalizeRequestSlug(slug) {
@@ -346,6 +471,12 @@ function assertRun(run) {
   ) {
     throw new TypeError('Run must be returned by initializeRun().');
   }
+}
+
+function resumeRecordError(message) {
+  const error = new Error(message);
+  error.code = 'E_APPROVAL_RESUME';
+  return error;
 }
 
 async function clearRunRoot(run) {

@@ -5,7 +5,10 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { resolveContentApproval } from './lib/content-approval.mjs';
+import {
+  readContentApproval,
+  resolveContentApproval,
+} from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
@@ -30,12 +33,14 @@ import {
 } from './lib/recipes.mjs';
 import {
   initializeRun,
+  readSetPlanRecords,
   reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
   writeSetPlanRecords,
 } from './lib/records.mjs';
 import { artifactPath, renderArtifact } from './lib/render.mjs';
+import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
 import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 
@@ -452,22 +457,47 @@ async function loadResumableRun(request) {
 }
 
 async function hydrateResumableState(state) {
-  const [factBase, approval, theme, record, setPlan] = await Promise.all([
+  const [factBase, approval, theme, record] = await Promise.all([
     readJson(join(state.run.runRoot, 'source/fact-base.json')),
-    readJson(join(state.run.runRoot, 'source/content-approval.json')),
+    readContentApproval(state.run).catch((error) => {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Retained content approval is invalid: ${error.message}`,
+      );
+    }),
     readJson(join(state.run.runRoot, 'theme.resolved.json')),
     readJson(state.run.buildRecordPath),
-    readJson(join(state.run.runRoot, 'source/set-plan/result.json')),
   ]);
+  for (const [kind, value] of [
+    ['fact-base', factBase],
+    ['theme', theme],
+    ['build-record', record],
+  ]) {
+    const validation = validateContract(kind, value);
+    if (!validation.valid) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Retained ${kind} record is invalid during approval resume.`,
+      );
+    }
+  }
+  const retainedPlan = await readSetPlanRecords(state.run, {
+    factBase,
+    recipe: state.recipe,
+  });
+  const portfolioValidation = validatePlannedPortfolio(
+    state.recipe,
+    retainedPlan.plan.portfolio,
+  );
+  if (!portfolioValidation.valid) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      `Retained set-plan portfolio is invalid: ${portfolioValidation.errors.join('; ')}`,
+    );
+  }
   state.factBase = factBase;
-  state.setPlan = setPlan;
-  state.setPlanPaths = [
-    'source/set-plan/request.json',
-    'source/set-plan/result.json',
-    'source/set-plan/ledger.json',
-    'source/set-plan/portfolio.json',
-    'source/set-plan/drafts.json',
-  ];
+  state.setPlan = retainedPlan.plan;
+  state.setPlanPaths = retainedPlan.paths;
   state.theme = theme;
   state.themeWarnings = [];
   state.resumedApprovalStatus = approval.status;
@@ -484,14 +514,41 @@ async function hydrateResumableState(state) {
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
   state.contentModels = [];
-  const persistedArtifacts = Array.isArray(approval.artifacts)
-    ? approval.artifacts
-    : recipeFloor(state.recipe).map((artifact) => ({
-        artifactId: artifact.id,
-        origin: 'floor',
-        authoring: artifact.authoring ?? 'markdown',
-        contentPath: `source/content/${artifact.id}.md`,
-      }));
+  const persistedArtifacts = validateResumedArtifactBindings(state, approval);
+  for (const persisted of persistedArtifacts) {
+    const authorPath = await resolveRootConfinedPath(
+      state.run.runRoot,
+      persisted.authorResultPath,
+    );
+    if (!authorPath.valid) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Retained author path for ${persisted.artifactId} is not confined to the run.`,
+      );
+    }
+    const authorResult = await readJson(authorPath.absolutePath);
+    const validation = validateContract('author-result/v2', authorResult);
+    if (!validation.valid || authorResult.artifactId !== persisted.artifactId) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Retained author result identity for ${persisted.artifactId} is invalid.`,
+      );
+    }
+  }
+  const confinedContent = new Map();
+  for (const persisted of persistedArtifacts) {
+    const contentPath = await resolveRootConfinedPath(
+      state.run.runRoot,
+      persisted.contentPath,
+    );
+    if (!contentPath.valid) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Retained content path for ${persisted.artifactId} is not confined to the run.`,
+      );
+    }
+    confinedContent.set(persisted.artifactId, contentPath.absolutePath);
+  }
   for (const persisted of persistedArtifacts) {
     const artifact = resolvedArtifactFromApproval(state.recipe, persisted);
     if (artifact.authoring === 'html') {
@@ -500,15 +557,13 @@ async function hydrateResumableState(state) {
       );
     }
     const content = await readFile(
-      join(state.run.runRoot, persisted.contentPath),
+      confinedContent.get(persisted.artifactId),
       'utf8',
     );
     state.resolvedArtifacts.push(artifact);
     state.authoredContent.set(artifact.id, content);
     state.contentPaths.set(artifact.id, persisted.contentPath);
-    if (persisted.authorResultPath) {
-      state.authorResultPaths.push(persisted.authorResultPath);
-    }
+    state.authorResultPaths.push(persisted.authorResultPath);
   }
   const links = expansionLinks(state.resolvedArtifacts);
   for (const artifact of state.resolvedArtifacts) {
@@ -1196,6 +1251,54 @@ function approvalArtifacts(state) {
   }));
 }
 
+function validateResumedArtifactBindings(state, approval) {
+  const expected = plannedArtifacts(state.recipe, state.setPlan).map(
+    (artifact) => ({
+      artifactId: artifact.id,
+      origin: artifact.origin,
+      ...(artifact.profileId && { profileId: artifact.profileId }),
+      authoring: artifact.authoring,
+      contentPath: `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,
+      authorResultPath: `source/author/${artifact.id}.json`,
+    }),
+  );
+  if (
+    !Array.isArray(approval.artifacts) ||
+    !Array.isArray(approval.authorResultPaths)
+  ) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'Approval resume requires retained artifact and author-result bindings.',
+    );
+  }
+  const persistedById = new Map(
+    approval.artifacts.map((artifact) => [artifact.artifactId, artifact]),
+  );
+  if (
+    persistedById.size !== expected.length ||
+    canonicalHash(approval.authorResultPaths) !==
+      canonicalHash(expected.map(({ authorResultPath }) => authorResultPath))
+  ) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'Approval artifact set does not match the retained set-plan portfolio.',
+    );
+  }
+  for (const artifact of expected) {
+    const persisted = persistedById.get(artifact.artifactId);
+    if (
+      persisted === undefined ||
+      canonicalHash(persisted) !== canonicalHash(artifact)
+    ) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Approval artifact binding for ${artifact.artifactId} has drifted from the retained set plan.`,
+      );
+    }
+  }
+  return expected;
+}
+
 function expansionLinks(artifacts) {
   return artifacts
     .filter(({ origin }) => origin === 'expansion')
@@ -1286,6 +1389,7 @@ async function immutableHashesFor(state) {
     'source/fact-base.json',
     'source/fact-base.md',
     'source/content-approval.json',
+    ...state.setPlanPaths,
     ...state.authorResultPaths,
     ...state.contentPaths.values(),
     ...(state.theme ? ['theme.resolved.json'] : []),

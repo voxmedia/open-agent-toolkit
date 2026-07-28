@@ -16,6 +16,7 @@ import { canonicalHash } from '../scripts/lib/contracts.mjs';
 import { loadRecipe } from '../scripts/lib/recipes.mjs';
 import {
   initializeRun,
+  readSetPlanRecords,
   reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
@@ -316,11 +317,13 @@ test('writes manifests atomically without leaving temporary siblings', async () 
 test('retains immutable versioned set-plan request, result, ledger, portfolio, and drafts', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
+  const factBase = { sources: [{ id: 'project' }] };
   const planRequest = {
     schemaVersion: 'explainer-kit.set-plan-request/v1',
     recipe: { id: 'project-recap', version: '1' },
-    factBaseHash: HASH,
+    factBaseHash: canonicalHash(factBase),
     sourceIds: ['project'],
+    discovery: { rounds: 0, findings: [], reason: 'not-requested' },
   };
   const plan = {
     schemaVersion: 'explainer-kit.set-plan/v1',
@@ -373,6 +376,116 @@ test('retains immutable versioned set-plan request, result, ledger, portfolio, a
     }),
     /immutable|already exist/i,
   );
+
+  assert.deepEqual(
+    await readSetPlanRecords(run, {
+      factBase,
+      recipe: { id: 'project-recap', version: '1' },
+    }),
+    {
+      request: { ...planRequest, planHash: canonicalHash(plan) },
+      plan,
+      paths,
+    },
+  );
+});
+
+test('rejects tampering in every retained set-plan record', async () => {
+  const mutations = [
+    [
+      'request',
+      (records) => {
+        records.request.factBaseHash = `sha256:${'b'.repeat(64)}`;
+      },
+    ],
+    [
+      'result',
+      (records) => {
+        records.plan.planId = 'tampered-plan';
+      },
+    ],
+    [
+      'ledger projection',
+      (records) => {
+        records.ledger.planId = 'tampered-plan';
+      },
+    ],
+    [
+      'portfolio projection',
+      (records) => {
+        records.portfolio.artifacts[0].draft = 'Tampered draft.';
+      },
+    ],
+    [
+      'draft projection',
+      (records) => {
+        records.drafts.drafts[0].draft = 'Tampered draft.';
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const outputRoot = await temporaryDirectory();
+    const run = await initializeRun(request(outputRoot));
+    const factBase = { sources: [{ id: 'project' }] };
+    const planRequest = {
+      schemaVersion: 'explainer-kit.set-plan-request/v1',
+      recipe: { id: 'project-recap', version: '1' },
+      factBaseHash: canonicalHash(factBase),
+      sourceIds: ['project'],
+      discovery: { rounds: 0, findings: [], reason: 'not-requested' },
+    };
+    const plan = {
+      schemaVersion: 'explainer-kit.set-plan/v1',
+      planId: 'project-recap-set',
+      recipe: { id: 'project-recap', version: '1' },
+      sourceIds: ['project'],
+      ledger: { terminology: [], statuses: [], numbers: [] },
+      portfolio: [
+        {
+          artifactId: 'project-recap',
+          artifactType: 'hub',
+          profileId: 'recipe-floor',
+          required: true,
+          sourceIds: ['project'],
+          draft: 'Lead with the validated outcome.',
+          visualIntent: 'Orient the reader in the first viewport.',
+        },
+      ],
+    };
+    await writeSetPlanRecords(run, { request: planRequest, plan });
+    const recordPaths = {
+      request: 'source/set-plan/request.json',
+      plan: 'source/set-plan/result.json',
+      ledger: 'source/set-plan/ledger.json',
+      portfolio: 'source/set-plan/portfolio.json',
+      drafts: 'source/set-plan/drafts.json',
+    };
+    const records = Object.fromEntries(
+      await Promise.all(
+        Object.entries(recordPaths).map(async ([key, path]) => [
+          key,
+          JSON.parse(await readFile(join(run.runRoot, path), 'utf8')),
+        ]),
+      ),
+    );
+    mutate(records);
+    for (const [key, path] of Object.entries(recordPaths)) {
+      await writeFile(
+        join(run.runRoot, path),
+        `${JSON.stringify(records[key], null, 2)}\n`,
+      );
+    }
+
+    await assert.rejects(
+      readSetPlanRecords(run, {
+        factBase,
+        recipe: { id: 'project-recap', version: '1' },
+      }),
+      (error) => error.code === 'E_APPROVAL_RESUME',
+      label,
+    );
+  }
 });
 
 test('rejects omitted reconciled sources and declared sources without artifact coverage', async () => {
