@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t06
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | fixes_pending |     7 |       5/7 |
-| p03   | pending       |     4 |       0/4 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | review_pending |     7 |       7/7 |
+| p03   | pending        |     4 |       0/4 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 12/25 tasks completed
+**Total:** 14/25 tasks completed
 
 ---
 
@@ -88,15 +88,38 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
 - [x] p02-t03 — Add one set-planning stage and immutable retained records (`6593a08a`)
 - [x] p02-t04 — Make project recap an adaptive three-artifact visual set (`6d1c9f9d`)
 - [x] p02-t05 — Bind set planning and composition through the OAT adapter (`8514de88`)
-- [ ] p02-t06 — Align integration fixtures with adaptive recap sets
-- [ ] p02-t07 — Align explainer family version contracts
+- [x] p02-t06 — Align integration fixtures with adaptive recap sets (`379bca67`)
+- [x] p02-t07 — Align explainer family version contracts (`86fc4b6a`)
+
+### Phase Implementation Summary
+
+**Outcome:**
+
+- Bundled medium-specific authoring and independent visual-review guidance now
+  ships without a home-directory or optional-plugin dependency.
+- Provider-neutral set-plan and review contracts govern one immutable shared
+  ledger, source coverage, portfolio, drafts, and visual intent.
+- Unattended project recaps require the adaptive hub, architecture, and deck
+  minimum; source-backed optional artifacts remain bounded.
+- The OAT adapter owns provider resolution and fails before composition when
+  adaptive capability is absent.
+
+**Verification:**
+
+- Complete Phase p02 focused union — 125/125 passed.
+- `pnpm check`, `pnpm lint`, `pnpm format`, `pnpm type-check`, and `pnpm build`
+  passed.
+- `pnpm test` passed, including 129/129 smoke tests.
+- `pnpm release:validate` passed five public packages and 65 visual
+  measurements.
+- Root reran the 125-test union and release validation with a clean worktree.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -178,6 +201,9 @@ oat_generated: false
 - Verification: check, lint, format, type-check, build, release validation, and diff check passed
 - Concern: eight adaptive recap integration assumptions and two explainer-family version contracts remain stale
 - Bounded fixes: p02-t06 and p02-t07; retry usage 0/1
+- Fix continuation base/head: `ac953a8ad22bc12c2df8aaf6c1a7aa18af0dba13..86fc4b6acc737a995783210699cee055e7860a45`
+- Fix continuation outcome: `DONE`; retry usage 1/1; focused and phase-wide verification passed
+- Fix continuation Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
