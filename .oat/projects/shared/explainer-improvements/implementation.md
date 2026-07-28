@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t05
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |     5 |       4/5 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | review_pending |     5 |       5/5 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 24/32 tasks completed
+**Total:** 25/32 tasks completed
 
 ---
 
@@ -154,13 +154,36 @@ oat_generated: false
 
 ## Phase 3: Independent browser critic and hard loop cap
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p03-t01 — Retain browser screenshots and metrics at three viewports (`5c10fdc3`)
 - [x] p03-t02 — Add an independent whole-set visual critic (`8f0a6708`)
 - [x] p03-t03 — Enforce exactly one correction pass and final review (`3343ea1a`)
 - [x] p03-t04 — Block publication and durability on missing or failed review (`9b9570d1`)
-- [ ] p03-t05 — Align phase-wide visual-review integration fixtures
+- [x] p03-t05 — Align phase-wide visual-review integration fixtures (`73469c56`)
+
+### Phase Implementation Summary
+
+**Outcome:**
+
+- Every adaptive-set artifact retains deterministic 320, 768, and 1440
+  screenshot evidence with paired browser metrics.
+- A provider-neutral whole-set visual critic reviews the complete rendered set
+  independently from fact criticism and artifact authorship.
+- The visual correction state machine permits one targeted correction and one
+  final review, with all attempts retained.
+- Missing or failed review evidence terminates as `built-needs-review` before
+  durability, publication, finalization, or archive export.
+
+**Verification:**
+
+- Focused p03-t05 fixture verification — 48/48 passed.
+- Complete Phase p03 union — 365/365 passed.
+- Full repository — 3,627/3,627 passed.
+- `pnpm check`, `pnpm lint`, `pnpm format`, `pnpm type-check`, `pnpm build`,
+  and `pnpm release:validate` passed.
+- Root reran the 48-test aligned-fixture set and release validation with a
+  clean worktree.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -341,6 +364,11 @@ oat_generated: false
   expectations are confined to three out-of-bound integration fixture files
   and are now bounded as p03-t05; this is pre-review verification work and
   consumes no review-remediation retry.
+- p03-t05 continuation outcome: `DONE`
+- p03-t05 commit: `73469c565d6c07cf62a45abcb4fc8454c495fe8e`
+- Final verification: focused 48/48, Phase p03 365/365, repository 3,627/3,627,
+  release validation 65 visual measurements, exact three-file boundary, clean
+  worktree
 - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -378,7 +406,7 @@ oat_generated: false
 | ----- | --------------------------------------------------------------- | -----: | -----: | ----------------------- |
 | p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed |
 | p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed |
-| p03   | -                                                               |      - |      - | -                       |
+| p03   | focused union, full suite, release validation                   |    365 |      0 | Phase acceptance passed |
 | p04   | -                                                               |      - |      - | -                       |
 | p05   | -                                                               |      - |      - | -                       |
 
