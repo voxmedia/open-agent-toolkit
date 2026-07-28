@@ -23,6 +23,7 @@ import {
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
+  writeVisualReviewFailure,
   writeVisualRevision,
 } from '../scripts/lib/records.mjs';
 import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
@@ -200,6 +201,40 @@ test('retains one bounded visual revision record for corrected artifacts', async
   );
 });
 
+test('retains structured partial evidence for a failed visual review attempt', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const error = Object.assign(new Error('critic provider unavailable'), {
+    code: 'E_VISUAL_REVIEW',
+  });
+
+  const paths = await writeVisualReviewFailure(run, {
+    attempt: 1,
+    error,
+    evidence: [
+      {
+        screenshotPath: 'qa/browser/project-recap/320.png',
+        metricsPath: 'qa/browser/project-recap/320.json',
+      },
+    ],
+  });
+
+  assert.deepEqual(paths, ['qa/review-gate/attempt-1-error.json']);
+  assert.deepEqual(
+    JSON.parse(await readFile(join(run.runRoot, paths[0]), 'utf8')),
+    {
+      schemaVersion: 'explainer-kit.visual-review-error/v1',
+      attempt: 1,
+      code: 'E_VISUAL_REVIEW',
+      message: 'critic provider unavailable',
+      evidencePaths: [
+        'qa/browser/project-recap/320.png',
+        'qa/browser/project-recap/320.json',
+      ],
+    },
+  );
+});
+
 test('computes built-needs-review from a terminal recap review gate', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(
@@ -227,9 +262,7 @@ test('computes built-needs-review from a terminal recap review gate', async () =
         id,
         status: id === 'qa' ? 'warned' : 'passed',
         warnings:
-          id === 'qa'
-            ? ['visual-review-required:browser-probe-missing']
-            : [],
+          id === 'qa' ? ['visual-review-required:browser-probe-missing'] : [],
       });
     }
   }

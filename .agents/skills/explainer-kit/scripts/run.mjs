@@ -42,6 +42,7 @@ import {
   writeManifestAtomic,
   writeSetPlanRecords,
   writeVisualReviewAttempt,
+  writeVisualReviewFailure,
   writeVisualRevision,
 } from './lib/records.mjs';
 import { artifactPath, renderArtifact } from './lib/render.mjs';
@@ -96,6 +97,7 @@ export async function runExplainer(request, options = {}) {
     browserEvidence: [],
     visualReview: null,
     visualReviewPaths: [],
+    visualReviewAttempt: 0,
     reviewGateBlocked: false,
     resumeToken: null,
     resumedApprovalStatus: null,
@@ -295,11 +297,36 @@ async function executeQaStage(state, options, now) {
   await executeStage(state.run, 'qa', options, async () => {
     const htmlSafetyErrors = [];
     const qaWarnings = [];
-    return auditRenderedArtifacts(state, options, now, {
-      browserProbe: resolveBrowserProbe(options),
-      htmlSafetyErrors,
-      qaWarnings,
-    });
+    try {
+      return await auditRenderedArtifacts(state, options, now, {
+        browserProbe: resolveBrowserProbe(options),
+        htmlSafetyErrors,
+        qaWarnings,
+      });
+    } catch (error) {
+      const reviewError = normalizeReviewGateError(state, error);
+      if (!reviewError) {
+        throw error;
+      }
+      const warning = reviewGateWarning(reviewError);
+      state.reviewGateBlocked = true;
+      state.warnings.push(warning);
+      state.visualReviewPaths.push(
+        ...(await writeVisualReviewFailure(state.run, {
+          attempt: state.visualReviewAttempt || 1,
+          error: reviewError,
+          evidence: state.browserEvidence,
+        })),
+      );
+      return {
+        outputPaths: [
+          ...state.rendered.map(({ renderedPath }) => renderedPath),
+          ...state.visualReviewPaths,
+        ],
+        warnings: [warning],
+        status: 'warned',
+      };
+    }
   });
 }
 
@@ -315,7 +342,16 @@ function resolveBrowserProbe(options) {
       'options.browserProbe must be a function when supplied.',
     );
   }
-  return options.browserProbe;
+  return async (...args) => {
+    try {
+      return await options.browserProbe(...args);
+    } catch (error) {
+      throw codedError(
+        'E_VISUAL_REVIEW',
+        `Browser evidence callback failed: ${error?.message ?? String(error)}`,
+      );
+    }
+  };
 }
 
 async function auditRenderedArtifacts(
@@ -351,11 +387,13 @@ async function auditRenderedArtifacts(
     setPlan: state.setPlan,
     ...(options.denylist && { denylist: options.denylist }),
     ...(browserProbe && { browserProbe }),
-    ...(options.widths && { widths: options.widths }),
-    ...(browserProbe && requiresRecapVisualReview(state) && {
-      evidenceRoot: state.run.runRoot,
-      requireBrowserEvidence: true,
-    }),
+    ...(options.widths &&
+      !requiresRecapVisualReview(state) && { widths: options.widths }),
+    ...(browserProbe &&
+      requiresRecapVisualReview(state) && {
+        evidenceRoot: state.run.runRoot,
+        requireBrowserEvidence: true,
+      }),
   });
   const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
   const warningIssues = report.issues.filter(
@@ -407,18 +445,20 @@ async function auditRenderedArtifacts(
         setPlan: state.setPlan,
         ...(options.denylist && { denylist: options.denylist }),
         ...(browserProbe && { browserProbe }),
-        ...(options.widths && { widths: options.widths }),
-        ...(browserProbe && requiresRecapVisualReview(state) && {
-          evidenceRoot: state.run.runRoot,
-          requireBrowserEvidence: true,
-        }),
+        ...(options.widths &&
+          !requiresRecapVisualReview(state) && { widths: options.widths }),
+        ...(browserProbe &&
+          requiresRecapVisualReview(state) && {
+            evidenceRoot: state.run.runRoot,
+            requireBrowserEvidence: true,
+          }),
       });
       const finalHardIssues = finalReport.issues.filter((issue) =>
         isHardQaIssue(issue.code),
       );
       if (finalHardIssues.length > 0) {
         throw codedError(
-          'E_QA',
+          'E_VISUAL_CORRECTION',
           finalHardIssues
             .map(({ code, message }) => `${code}: ${message}`)
             .join('; '),
@@ -494,24 +534,31 @@ function requiresRecapVisualReview(state) {
 }
 
 async function reviewAndRetain(state, visualCritic, attempt) {
-  state.visualReview = await runVisualReview({
-    plan: state.setPlan,
-    rendered: state.rendered,
-    evidence: state.browserEvidence,
-    visualCritic,
-    runRoot: state.run.runRoot,
-  });
-  state.visualReviewPaths.push(
-    ...(await writeVisualReviewAttempt(state.run, {
-      attempt,
-      review: state.visualReview,
-    })),
-  );
+  state.visualReviewAttempt = attempt;
+  try {
+    state.visualReview = await runVisualReview({
+      plan: state.setPlan,
+      rendered: state.rendered,
+      evidence: state.browserEvidence,
+      visualCritic,
+      runRoot: state.run.runRoot,
+    });
+    state.visualReviewPaths.push(
+      ...(await writeVisualReviewAttempt(state.run, {
+        attempt,
+        review: state.visualReview,
+      })),
+    );
+  } catch (error) {
+    throw codedError('E_VISUAL_REVIEW', error?.message ?? String(error));
+  }
 }
 
 async function applyVisualCorrection(state, options, now) {
   const findings = state.visualReview.result.findings;
-  const artifactIds = [...new Set(findings.map(({ artifactId }) => artifactId))];
+  const artifactIds = [
+    ...new Set(findings.map(({ artifactId }) => artifactId)),
+  ];
   const correctionAuthor = options.correctArtifact ?? options.author;
   if (typeof correctionAuthor !== 'function') {
     throw codedError(
@@ -533,19 +580,21 @@ async function applyVisualCorrection(state, options, now) {
     }
     const artifact = state.resolvedArtifacts[artifactIndex];
     const previousContent = state.authoredContent.get(artifactId);
-    const item = await authorArtifact(
-      state,
-      artifact,
-      correctionAuthor,
-      trust,
-      {
+    let item;
+    try {
+      item = await authorArtifact(state, artifact, correctionAuthor, trust, {
         attempt: 1,
         findings: structuredClone(
           findings.filter((finding) => finding.artifactId === artifactId),
         ),
         previousContentPath: state.contentPaths.get(artifactId),
-      },
-    );
+      });
+    } catch (error) {
+      throw codedError(
+        'E_VISUAL_CORRECTION',
+        `Visual correction callback failed for ${artifactId}: ${error?.message ?? String(error)}`,
+      );
+    }
     if ((item.result.proposedArtifacts ?? []).length > 0) {
       throw codedError(
         'E_VISUAL_CORRECTION',
@@ -634,6 +683,27 @@ function isHardQaIssue(code) {
       'unresolved-token',
     ].includes(code) || code.startsWith('cohesion-')
   );
+}
+
+function isReviewGateError(error) {
+  return ['E_VISUAL_REVIEW', 'E_VISUAL_CORRECTION'].includes(error?.code);
+}
+
+function normalizeReviewGateError(state, error) {
+  if (!requiresRecapVisualReview(state)) return null;
+  if (isReviewGateError(error)) return error;
+  if (/^Browser (?:layout |theme |deck )?probe\b/.test(error?.message ?? '')) {
+    return codedError('E_VISUAL_REVIEW', error.message);
+  }
+  return null;
+}
+
+function reviewGateWarning(error) {
+  const reason =
+    error?.code === 'E_VISUAL_CORRECTION'
+      ? 'correction-failed'
+      : 'review-chain-failed';
+  return `visual-review-required:${reason}:${String(error?.message ?? 'unknown visual review failure')}`;
 }
 
 function artisticRender(state, artifact) {

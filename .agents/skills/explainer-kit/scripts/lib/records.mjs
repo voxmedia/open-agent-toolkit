@@ -179,10 +179,7 @@ export async function updateBuildRecord(run, stage) {
   return record;
 }
 
-export async function writeVisualReviewAttempt(
-  run,
-  { attempt, review } = {},
-) {
+export async function writeVisualReviewAttempt(run, { attempt, review } = {}) {
   assertRun(run);
   if (![1, 2].includes(attempt) || !isObject(review)) {
     throw new TypeError('Visual review records require attempt 1 or 2.');
@@ -197,7 +194,9 @@ export async function writeVisualReviewAttempt(
     { visualReviewRequest: review.request },
   );
   if (!requestValidation.valid || !resultValidation.valid) {
-    throw new Error('Visual review records must contain valid bound contracts.');
+    throw new Error(
+      'Visual review records must contain valid bound contracts.',
+    );
   }
 
   const directory = `qa/visual-review/attempt-${attempt}`;
@@ -229,10 +228,35 @@ export async function writeVisualReviewAttempt(
   return [...paths, requestPath, resultPath];
 }
 
-export async function writeVisualRevision(
+export async function writeVisualReviewFailure(
   run,
-  { artifactIds, changes } = {},
+  { attempt, error, evidence = [] } = {},
 ) {
+  assertRun(run);
+  if (
+    ![1, 2].includes(attempt) ||
+    !(error instanceof Error) ||
+    !Array.isArray(evidence)
+  ) {
+    throw new TypeError(
+      'Visual review failures require an attempt, Error, and evidence array.',
+    );
+  }
+  const path = `qa/review-gate/attempt-${attempt}-error.json`;
+  await writeJsonAtomic(run.runRoot, path, {
+    schemaVersion: 'explainer-kit.visual-review-error/v1',
+    attempt,
+    code: error.code ?? 'E_VISUAL_REVIEW',
+    message: error.message,
+    evidencePaths: evidence.flatMap(({ screenshotPath, metricsPath }) => [
+      screenshotPath,
+      metricsPath,
+    ]),
+  });
+  return [path];
+}
+
+export async function writeVisualRevision(run, { artifactIds, changes } = {}) {
   assertRun(run);
   if (
     !Array.isArray(artifactIds) ||
@@ -277,12 +301,16 @@ async function copyConfinedEvidence(
 ) {
   const confined = await resolveRootConfinedPath(runRoot, sourcePath);
   if (!confined.valid) {
-    throw new Error(`Visual review evidence is not run-root confined: ${sourcePath}`);
+    throw new Error(
+      `Visual review evidence is not run-root confined: ${sourcePath}`,
+    );
   }
   const bytes = await readFile(confined.absolutePath);
   const hash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
   if (hash !== expectedHash) {
-    throw new Error(`Visual review evidence hash changed before retention: ${sourcePath}`);
+    throw new Error(
+      `Visual review evidence hash changed before retention: ${sourcePath}`,
+    );
   }
   await writeFileAtomic(runRoot, targetPath, bytes);
 }

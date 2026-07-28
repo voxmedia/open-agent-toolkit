@@ -221,6 +221,17 @@ async function retainingBrowserProbe(probeRequest) {
   return result;
 }
 
+async function malformedBrowserProbe(probeRequest) {
+  if (probeRequest.screenshotPath) {
+    await mkdir(dirname(probeRequest.screenshotPath), { recursive: true });
+    await writeFile(
+      probeRequest.screenshotPath,
+      png(probeRequest.viewport.width, probeRequest.viewport.height),
+    );
+  }
+  return {};
+}
+
 function humanize(value) {
   return value
     .split('-')
@@ -996,8 +1007,7 @@ test('invokes an independent critic once with the complete rendered recap set', 
           ? { flow: 'horizontal', overflowX: 'auto', scrollSnap: true }
           : {
               flow: 'vertical',
-              overflowX:
-                probeRequest.scenario === 'print' ? 'visible' : 'auto',
+              overflowX: probeRequest.scenario === 'print' ? 'visible' : 'auto',
               scrollSnap: false,
             };
     }
@@ -1029,7 +1039,11 @@ test('invokes an independent critic once with the complete rendered recap set', 
     now: () => NOW,
   });
 
-  assert.equal(result.outcome, 'built-not-durable', JSON.stringify(result.errors));
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
   assert.notEqual(visualCritic, author);
   assert.equal(visualCritic.mock.callCount(), 1);
   const reviewRequest = visualCritic.mock.calls[0].arguments[0];
@@ -1079,8 +1093,13 @@ test('invokes an independent critic once with the complete rendered recap set', 
     visualCritic: sharedCallback,
     now: () => NOW,
   });
-  assert.equal(rejected.outcome, 'failed');
-  assert.equal(rejected.errors[0].code, 'E_VISUAL_REVIEW');
+  assert.equal(rejected.outcome, 'built-needs-review');
+  assert.equal(rejected.errors?.length ?? 0, 0);
+  assert.ok(
+    rejected.warnings.some((warning) =>
+      warning.startsWith('visual-review-required:review-chain-failed:'),
+    ),
+  );
   assert.equal(sharedCallback.mock.callCount(), 3);
 });
 
@@ -1107,6 +1126,20 @@ test('caps visual review at one correction and one final review', async (t) => {
       expectedReviews: 2,
       expectedFinal: 'fail',
     },
+    {
+      name: 'retains a throwing final review as a handoff',
+      dispositions: ['correct', 'throw'],
+      expectedAuthors: 4,
+      expectedReviews: 2,
+      expectedFinal: 'error',
+    },
+    {
+      name: 'retains a malformed final review as a handoff',
+      dispositions: ['correct', 'malformed'],
+      expectedAuthors: 4,
+      expectedReviews: 2,
+      expectedFinal: 'error',
+    },
   ];
 
   for (const scenario of cases) {
@@ -1127,6 +1160,12 @@ test('caps visual review at one correction and one final review', async (t) => {
       let reviewIndex = 0;
       const visualCritic = mock.fn(async (reviewRequest) => {
         const disposition = scenario.dispositions[reviewIndex++];
+        if (disposition === 'throw') {
+          throw new Error('final critic provider unavailable');
+        }
+        if (disposition === 'malformed') {
+          return { disposition: 'pass' };
+        }
         return {
           schemaVersion: 'explainer-kit.visual-review-result/v1',
           reviewId: `recap-review-${reviewIndex}`,
@@ -1169,7 +1208,10 @@ test('caps visual review at one correction and one final review', async (t) => {
       );
       assert.equal(author.mock.callCount(), scenario.expectedAuthors);
       assert.equal(visualCritic.mock.callCount(), scenario.expectedReviews);
-      assert.equal(result.visualReview.disposition, scenario.expectedFinal);
+      assert.equal(
+        result.visualReview.disposition,
+        scenario.expectedFinal === 'error' ? 'correct' : scenario.expectedFinal,
+      );
       await access(
         join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
       );
@@ -1182,12 +1224,24 @@ test('caps visual review at one correction and one final review', async (t) => {
           { code: 'ENOENT' },
         );
       } else {
-        await access(
-          join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
-        );
-        await access(
-          join(result.runRoot, 'qa/visual-review/attempt-2/result.json'),
-        );
+        if (scenario.expectedFinal === 'error') {
+          await access(
+            join(result.runRoot, 'qa/review-gate/attempt-2-error.json'),
+          );
+          await assert.rejects(
+            access(
+              join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
+            ),
+            { code: 'ENOENT' },
+          );
+        } else {
+          await access(
+            join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
+          );
+          await access(
+            join(result.runRoot, 'qa/visual-review/attempt-2/result.json'),
+          );
+        }
         const revision = JSON.parse(
           await readFile(
             join(result.runRoot, 'qa/visual-review/revision.json'),
@@ -1230,6 +1284,46 @@ test('fails closed before durability and publication when recap review is missin
       visualDisposition: 'fail',
       strategy: 'publish',
     },
+    {
+      name: 'malformed browser metrics',
+      browserProbe: malformedBrowserProbe,
+      visualDisposition: 'pass',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+    },
+    {
+      name: 'throwing browser evidence callback',
+      browserProbe: async () => {
+        throw new Error('browser provider unavailable');
+      },
+      visualDisposition: 'pass',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+    },
+    {
+      name: 'throwing initial critic',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'throw',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+    },
+    {
+      name: 'malformed initial critic result',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'malformed',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+    },
+    {
+      name: 'throwing correction callback',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'correct',
+      strategy: 'publish',
+      warning: 'visual-review-required:correction-failed:',
+      correctArtifact: async () => {
+        throw new Error('correction provider unavailable');
+      },
+    },
   ]) {
     await t.test(scenario.name, async () => {
       const fixture = await suppliedFixture('project-recap');
@@ -1238,29 +1332,37 @@ test('fails closed before durability and publication when recap review is missin
       const visualCritic =
         scenario.visualDisposition === null
           ? undefined
-          : mock.fn(async (reviewRequest) => ({
-              schemaVersion: 'explainer-kit.visual-review-result/v1',
-              reviewId: 'blocking-review',
-              requestId: reviewRequest.requestId,
-              requestHash: reviewRequest.requestHash,
-              reviewedAt: NOW,
-              disposition: scenario.visualDisposition,
-              artifactIds: reviewRequest.renderedArtifacts.map(
-                ({ artifactId }) => artifactId,
-              ),
-              findings:
-                scenario.visualDisposition === 'pass'
-                  ? []
-                  : [
-                      {
-                        artifactId: 'project-recap',
-                        rubric: 'first-viewport',
-                        severity: 'important',
-                        evidence: 'The outcome remains below the fold.',
-                        correction: 'Move the outcome into the lead panel.',
-                      },
-                    ],
-            }));
+          : mock.fn(async (reviewRequest) => {
+              if (scenario.visualDisposition === 'throw') {
+                throw new Error('critic provider unavailable');
+              }
+              if (scenario.visualDisposition === 'malformed') {
+                return { disposition: 'pass' };
+              }
+              return {
+                schemaVersion: 'explainer-kit.visual-review-result/v1',
+                reviewId: 'blocking-review',
+                requestId: reviewRequest.requestId,
+                requestHash: reviewRequest.requestHash,
+                reviewedAt: NOW,
+                disposition: scenario.visualDisposition,
+                artifactIds: reviewRequest.renderedArtifacts.map(
+                  ({ artifactId }) => artifactId,
+                ),
+                findings:
+                  scenario.visualDisposition === 'pass'
+                    ? []
+                    : [
+                        {
+                          artifactId: 'project-recap',
+                          rubric: 'first-viewport',
+                          severity: 'important',
+                          evidence: 'The outcome remains below the fold.',
+                          correction: 'Move the outcome into the lead panel.',
+                        },
+                      ],
+              };
+            });
       const reviewedRequest = {
         ...fixture.request,
         durability:
@@ -1274,10 +1376,7 @@ test('fails closed before durability and publication when recap review is missin
                   s3Uri: 's3://example-bucket/explainers',
                   publicBaseUrl: 'https://docs.example.com/explainers',
                   awsRegion: 'us-east-1',
-                  siteRoot: join(
-                    fixture.outputRoot,
-                    'project-recap-demo/site',
-                  ),
+                  siteRoot: join(fixture.outputRoot, 'project-recap-demo/site'),
                   manifestPath: join(
                     fixture.outputRoot,
                     'project-recap-demo/manifest.json',
@@ -1293,6 +1392,9 @@ test('fails closed before durability and publication when recap review is missin
           browserProbe: scenario.browserProbe,
         }),
         ...(visualCritic && { visualCritic }),
+        ...(scenario.correctArtifact && {
+          correctArtifact: scenario.correctArtifact,
+        }),
         durability,
         publish,
         now: () => NOW,
@@ -1309,6 +1411,7 @@ test('fails closed before durability and publication when recap review is missin
       );
       assert.equal(durability.mock.callCount(), 0);
       assert.equal(publish.mock.callCount(), 0);
+      assert.ok((visualCritic?.mock.callCount() ?? 0) <= 2);
       const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
       const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
       assert.equal(manifest.outcome, 'built-needs-review');
@@ -1316,41 +1419,44 @@ test('fails closed before durability and publication when recap review is missin
       assert.ok(manifest.artifacts.every(({ status }) => status === 'built'));
       assert.ok(
         manifest.warnings.some((warning) =>
-          warning.startsWith('visual-review-required:'),
+          warning.startsWith(scenario.warning ?? 'visual-review-required:'),
         ),
       );
     });
   }
 
-  await t.test('passing browser and critic evidence remains eligible', async () => {
-    const fixture = await suppliedFixture('project-recap');
-    const durability = mock.fn(async () => {});
-    const result = await runExplainerCore(
-      { ...fixture.request, durability: { strategy: 'commit' } },
-      {
-        author: async (authorRequest) => authorResult(authorRequest),
-        planSet: async (plannerRequest) => plannedSet(plannerRequest),
-        browserProbe: retainingBrowserProbe,
-        visualCritic: async (reviewRequest) => ({
-          schemaVersion: 'explainer-kit.visual-review-result/v1',
-          reviewId: 'passing-review',
-          requestId: reviewRequest.requestId,
-          requestHash: reviewRequest.requestHash,
-          reviewedAt: NOW,
-          disposition: 'pass',
-          artifactIds: reviewRequest.renderedArtifacts.map(
-            ({ artifactId }) => artifactId,
-          ),
-          findings: [],
-        }),
-        durability,
-        now: () => NOW,
-      },
-    );
+  await t.test(
+    'passing browser and critic evidence remains eligible',
+    async () => {
+      const fixture = await suppliedFixture('project-recap');
+      const durability = mock.fn(async () => {});
+      const result = await runExplainerCore(
+        { ...fixture.request, durability: { strategy: 'commit' } },
+        {
+          author: async (authorRequest) => authorResult(authorRequest),
+          planSet: async (plannerRequest) => plannedSet(plannerRequest),
+          browserProbe: retainingBrowserProbe,
+          visualCritic: async (reviewRequest) => ({
+            schemaVersion: 'explainer-kit.visual-review-result/v1',
+            reviewId: 'passing-review',
+            requestId: reviewRequest.requestId,
+            requestHash: reviewRequest.requestHash,
+            reviewedAt: NOW,
+            disposition: 'pass',
+            artifactIds: reviewRequest.renderedArtifacts.map(
+              ({ artifactId }) => artifactId,
+            ),
+            findings: [],
+          }),
+          durability,
+          now: () => NOW,
+        },
+      );
 
-    assert.equal(result.outcome, 'built-not-durable');
-    assert.equal(durability.mock.callCount(), 1);
-  });
+      assert.equal(result.outcome, 'built-not-durable');
+      assert.equal(durability.mock.callCount(), 1);
+    },
+  );
 });
 
 test('fails before composition on invalid set sources, ledger conflicts, or missing drafts', async () => {
@@ -2173,9 +2279,7 @@ test('runs both canonical recipes config-free from directories without .oat file
 
     assert.equal(
       result.outcome,
-      recipe === 'project-recap'
-        ? 'built-needs-review'
-        : 'built-not-durable',
+      recipe === 'project-recap' ? 'built-needs-review' : 'built-not-durable',
     );
     assert.equal(critic.mock.callCount(), 0);
     const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
