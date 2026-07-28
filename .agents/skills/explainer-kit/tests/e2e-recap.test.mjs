@@ -1,7 +1,14 @@
 import assert from 'node:assert/strict';
-import { access, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import {
+  access,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
@@ -98,10 +105,28 @@ function cleanProbe() {
   const requests = [];
   const probe = async (request) => {
     requests.push(request);
+    if (request.screenshotPath) {
+      await mkdir(dirname(request.screenshotPath), { recursive: true });
+      await writeFile(
+        request.screenshotPath,
+        `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+      );
+    }
     return cleanProbeResult(request);
   };
   probe.requests = requests;
   return probe;
+}
+
+async function passingVisualCritic(request) {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'e2e-recap-visual-review',
+    reviewedAt: NOW,
+    disposition: 'pass',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [],
+  };
 }
 
 // Seeds one finding per mapped browser code so the manifest vocabulary can be
@@ -336,12 +361,13 @@ async function richRun(overrides = {}) {
   const probe = cleanProbe();
   const result = await runExplainer(request, {
     author,
-    ...(overrides.planSet && { planSet: overrides.planSet }),
+    planSet: overrides.planSet ?? adaptivePlanSet(),
     browserProbe: probe,
     now: () => NOW,
     ...(overrides.mode === 'interactive'
       ? {}
       : {
+          visualCritic: passingVisualCritic,
           reviewedSource: {
             kind: 'lifecycle-artifacts',
             locator: '.oat/projects/shared/atlas-index/implementation.md',
@@ -408,7 +434,9 @@ test('unattended recap always composes the adaptive hub, architecture, and deck 
   const author = richAuthor([]);
   const result = await runExplainer(request, {
     author,
+    planSet: adaptivePlanSet(),
     browserProbe: cleanProbe(),
+    visualCritic: passingVisualCritic,
     now: () => NOW,
   });
 
@@ -442,7 +470,9 @@ test('explicit deterministic fallback composes the same portfolio from Markdown'
   const author = richAuthor();
   const result = await runExplainer(request, {
     author,
+    planSet: adaptivePlanSet(),
     browserProbe: cleanProbe(),
+    visualCritic: passingVisualCritic,
     now: () => NOW,
   });
 

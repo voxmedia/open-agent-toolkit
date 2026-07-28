@@ -188,7 +188,7 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
   assert.match(adapterSkill, /`references\/author-callback\.md`/);
   assert.match(
     adapterSkill,
-    /construct exactly\s+one provider-neutral author seam in both modes/,
+    /Construct exactly\s+one provider-neutral author seam in both modes/,
   );
   assert.match(authorCallback, /`explainer-kit\.author-request\/v2`/);
   assert.match(authorCallback, /`brief`/);
@@ -197,8 +197,11 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
   assert.match(authorCallback, /`theme`/);
   assert.match(authorCallback, /`shell`/);
   assert.match(authorCallback, /`proposedArtifacts`/);
-  assert.match(authorCallback, /`profileId`/);
-  assert.match(authorCallback, /both interactive and unattended modes/);
+  assert.match(authorCallback, /`plannedArtifact`/);
+  assert.match(
+    authorCallback,
+    /Interactive invocations use the same author\s+contract/,
+  );
   assert.match(
     lifecycleContract,
     /Every adapter run in both interactive and unattended modes must provide exactly\s+one provider-neutral author seam/,
@@ -367,7 +370,10 @@ test('the documented author seam turns lifecycle evidence into a rich recap', as
       ['ingest-worker', 'Streams partitions and emits checkpoints.'],
       ['index-store', 'Holds the committed offsets for every partition.'],
     ],
-    checks: [['pnpm test', '284 passing'], ['pnpm lint', 'clean']],
+    checks: [
+      ['pnpm test', '284 passing'],
+      ['pnpm lint', 'clean'],
+    ],
   });
 
   assert.equal(
@@ -443,19 +449,7 @@ test('a thin author fails the same richness check the rich one passes', async ()
     decisions: ['Checkpoint each partition.'],
     components: [['ingest-worker', 'Streams partitions.']],
     checks: [['pnpm test', 'passing']],
-    author: async (request) => ({
-      schemaVersion: 'explainer-kit.author-result/v2',
-      artifactId: request.artifactId,
-      content: {
-        markdown:
-          '# Project recap\n\nThe project shipped and the tests passed.\n',
-      },
-      provenance: {
-        authorId: 'thin-lifecycle-author',
-        generatedAt: '2026-07-20T12:00:00.000Z',
-        method: 'provider-neutral-callback',
-      },
-    }),
+    author: thinLifecycleAuthor,
   });
 
   assert.equal(
@@ -466,7 +460,6 @@ test('a thin author fails the same richness check the rich one passes', async ()
   for (const warning of [
     'guideline-narrative-coverage-missing',
     'guideline-structured-depth-missing',
-    'guideline-architecture-diagram-missing',
   ]) {
     assert.ok(
       thin.result.result.warnings.includes(warning),
@@ -485,6 +478,123 @@ const REQUIRED_NARRATIVE = [
   'validation-evidence',
   'outcome',
 ];
+
+async function completionPlanSet({ recipe, factBase }) {
+  const sourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'completion-evidence-recap',
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: recipe.floor.map((artifact) => ({
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds,
+      draft: `Compose ${artifact.id} from completion evidence.`,
+      visualIntent: `Use the planned ${artifact.type} medium.`,
+    })),
+  };
+}
+
+async function completionBrowserProbe(request) {
+  if (request.screenshotPath) {
+    await mkdir(dirname(request.screenshotPath), { recursive: true });
+    await writeFile(
+      request.screenshotPath,
+      `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+    );
+  }
+  return {
+    pageOverflowX: false,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: {
+      tab: true,
+      arrows: {
+        ArrowLeft: true,
+        ArrowRight: true,
+        ArrowUp: true,
+        ArrowDown: true,
+      },
+    },
+    ...(request.scenario !== 'default' && {
+      deckLayout: {
+        flow: 'vertical',
+        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+      },
+    }),
+  };
+}
+
+async function completionVisualCritic(request) {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'completion-evidence-visual-review',
+    reviewedAt: '2026-07-20T12:00:00.000Z',
+    disposition: 'pass',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [],
+  };
+}
+
+async function thinLifecycleAuthor(request) {
+  let content =
+    '# Project recap\n\nThe project shipped and the tests passed.\n';
+  if (request.authoring === 'html') {
+    content =
+      request.artifactType === 'diagram'
+        ? request.shell
+            .replaceAll('{{THEME_CSS}}', '')
+            .replaceAll('{{TITLE}}', 'Thin architecture')
+            .replaceAll('{{DESCRIPTION}}', 'One component.')
+            .replaceAll('{{DIAGRAM}}', '<g data-node="worker"></g>')
+            .replaceAll('{{LEGEND}}', '<span>worker</span>')
+        : request.artifactType === 'deck'
+          ? request.shell
+              .replaceAll('{{THEME_CSS}}', '')
+              .replaceAll('{{TITLE}}', 'Thin deck')
+              .replaceAll('{{DESCRIPTION}}', 'One outcome.')
+              .replaceAll(
+                '{{SLIDES}}',
+                '<section class="slide"><div class="slide__content"><h1>Project shipped</h1></div></section>',
+              )
+          : request.shell
+              .replaceAll('{{THEME_CSS}}', '')
+              .replaceAll('{{TITLE}}', 'Project recap')
+              .replaceAll(
+                '{{DESCRIPTION}}',
+                'The project shipped and the tests passed.',
+              )
+              .replaceAll('{{EYEBROW}}', 'Project recap')
+              .replaceAll(
+                '{{NAVIGATION}}',
+                '<a href="#original-request">Original request</a>',
+              )
+              .replaceAll(
+                '{{CONTENT}}',
+                '<section id="original-request"><h2>Original request</h2><p>The project shipped and the tests passed.</p></section>',
+              )
+              .replaceAll('{{FOOTER}}', 'Thin lifecycle recap.');
+  }
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: request.artifactId,
+    content: { [request.authoring]: content },
+    provenance: {
+      authorId: 'thin-lifecycle-author',
+      generatedAt: '2026-07-20T12:00:00.000Z',
+      method: 'provider-neutral-callback',
+    },
+  };
+}
 
 async function recapFromEvidence({
   slug,
@@ -519,11 +629,16 @@ async function recapFromEvidence({
     recipe: 'project-recap',
     slug,
     author,
+    planSet: completionPlanSet,
     critic: async () => ({
       criticId: 'autonomy-check-critic',
       executedAt: '2026-07-20T12:00:00.000Z',
       findings: [],
     }),
+    coreOptions: {
+      browserProbe: completionBrowserProbe,
+      visualCritic: completionVisualCritic,
+    },
     getConfig: async (key) => ({
       status: 'ok',
       key,
@@ -539,6 +654,7 @@ async function recapFromEvidence({
     }),
     mode: 'unattended',
   });
+  assert.ok(result.manifest, JSON.stringify(result.result));
   const hubPath = result.manifest.artifacts?.find(
     ({ id }) => id === 'project-recap',
   )?.renderedPath;
@@ -567,7 +683,7 @@ function lifecycleArtifacts({ decisions, components, checks }) {
  */
 async function authorFromLifecycleEvidence(request) {
   assert.equal(request.schemaVersion, 'explainer-kit.author-request/v2');
-  assert.equal(request.authoring, 'markdown');
+  assert.equal(request.authoring, 'html');
   assert.ok(request.brief.length > 0, 'the request must carry a brief');
 
   const intent = briefIntent(request.brief);
@@ -583,11 +699,19 @@ async function authorFromLifecycleEvidence(request) {
   });
   const checks = bulletsUnder(evidence.implementation, 'Checks').map((line) => {
     const separator = line.indexOf(': ');
-    return { command: line.slice(0, separator), observed: line.slice(separator + 2) };
+    return {
+      command: line.slice(0, separator),
+      observed: line.slice(separator + 2),
+    };
   });
 
   const sections = request.floor.requiredNarrative.map((id) => {
-    const body = [`## ${title(id)}`, '', intent.get(id) ?? `Derived from the ${id} evidence.`, ''];
+    const body = [
+      `## ${title(id)}`,
+      '',
+      intent.get(id) ?? `Derived from the ${id} evidence.`,
+      '',
+    ];
     if (id === 'original-request') {
       body.push(
         ...bulletsUnder(evidence.plan, 'Constraints').map(
@@ -630,7 +754,9 @@ async function authorFromLifecycleEvidence(request) {
       body.push(
         '| Check | Observed |',
         '| --- | --- |',
-        ...checks.map(({ command, observed }) => `| ${command} | ${observed} |`),
+        ...checks.map(
+          ({ command, observed }) => `| ${command} | ${observed} |`,
+        ),
         '',
       );
     }
@@ -651,7 +777,16 @@ async function authorFromLifecycleEvidence(request) {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
     content: {
-      markdown: `# ${title(request.artifactId)}\n\n${sections.join('\n')}`,
+      [request.authoring]:
+        request.authoring === 'markdown'
+          ? `# ${title(request.artifactId)}\n\n${sections.join('\n')}`
+          : lifecycleEvidenceHtml(request, {
+              intent,
+              evidence,
+              decisions,
+              components,
+              checks,
+            }),
     },
     provenance: {
       authorId: 'evidence-derived-lifecycle-author',
@@ -661,14 +796,94 @@ async function authorFromLifecycleEvidence(request) {
   };
 }
 
+function lifecycleEvidenceHtml(
+  request,
+  { intent, evidence, decisions, components, checks },
+) {
+  if (request.artifactType === 'diagram') {
+    const nodes = components
+      .map(
+        ({ name }, index) =>
+          `<g${index === 0 ? ' id="as-built-architecture"' : ''} data-node="${name}" class="node"><rect x="60" y="${60 + index * 160}" width="260" height="80" rx="8"></rect><text x="84" y="${106 + index * 160}">${name}</text></g>`,
+      )
+      .join('');
+    return request.shell
+      .replaceAll('{{THEME_CSS}}', '')
+      .replaceAll('{{TITLE}}', title(request.artifactId))
+      .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+      .replaceAll('{{DIAGRAM}}', nodes)
+      .replaceAll(
+        '{{LEGEND}}',
+        components.map(({ name }) => `<span>${name}</span>`).join(''),
+      );
+  }
+  if (request.artifactType === 'deck') {
+    return request.shell
+      .replaceAll('{{THEME_CSS}}', '')
+      .replaceAll('{{TITLE}}', title(request.artifactId))
+      .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+      .replaceAll(
+        '{{SLIDES}}',
+        `<section class="slide"><div class="slide__content"><h1>${firstSentence(evidence.summary)}</h1><ul>${decisions.map((decision) => `<li>${decision}</li>`).join('')}</ul></div></section><section id="outcome" class="slide"><div class="slide__content"><h2>Validation evidence</h2><ul>${checks.map(({ command, observed }) => `<li>${command}: ${observed}</li>`).join('')}</ul></div></section>`,
+      );
+  }
+
+  const content = REQUIRED_NARRATIVE.map((id) => {
+    let structure = `<p>${intent.get(id) ?? `Derived from the ${id} evidence.`}</p>`;
+    if (id === 'original-request') {
+      structure += `<ul>${bulletsUnder(evidence.plan, 'Constraints')
+        .map((line) => `<li>${line}</li>`)
+        .join(
+          '',
+        )}</ul><ol class="timeline"><li>${firstSentence(evidence.plan)}</li><li>${firstSentence(evidence.summary)}</li></ol>`;
+    } else if (id === 'key-agent-decisions') {
+      structure += `<ul>${decisions
+        .map((decision) => `<li>${decision}</li>`)
+        .join('')}</ul>`;
+    } else if (id === 'as-built-architecture') {
+      structure += `<svg class="narrative-diagram" data-direction="TD">${components
+        .map(({ name }) => `<text class="diagram-node-label">${name}</text>`)
+        .join('')}</svg>`;
+    } else if (id === 'implementation-record') {
+      structure += `<table><thead><tr><th>Component</th><th>Change</th></tr></thead><tbody>${components
+        .map(({ name, role }) => `<tr><td>${name}</td><td>${role}</td></tr>`)
+        .join('')}</tbody></table>`;
+    } else if (id === 'validation-evidence') {
+      structure += `<table><thead><tr><th>Check</th><th>Observed</th></tr></thead><tbody>${checks
+        .map(
+          ({ command, observed }) =>
+            `<tr><td>${command}</td><td>${observed}</td></tr>`,
+        )
+        .join('')}</tbody></table>`;
+    } else if (id === 'outcome') {
+      structure += `<aside class="callout callout--note">${firstSentence(evidence.summary)}</aside>`;
+    }
+    return `<section id="${id}"><h2>${title(id)}</h2>${structure}</section>`;
+  }).join('');
+
+  return request.shell
+    .replaceAll('{{THEME_CSS}}', '')
+    .replaceAll('{{TITLE}}', title(request.artifactId))
+    .replaceAll('{{DESCRIPTION}}', firstSentence(evidence.summary))
+    .replaceAll('{{EYEBROW}}', 'Project recap')
+    .replaceAll(
+      '{{NAVIGATION}}',
+      REQUIRED_NARRATIVE.map((id) => `<a href="#${id}">${title(id)}</a>`).join(
+        '',
+      ),
+    )
+    .replaceAll('{{CONTENT}}', content)
+    .replaceAll('{{FOOTER}}', 'Authored from lifecycle evidence.');
+}
+
 function briefIntent(brief) {
   return new Map(
-    [...brief.matchAll(/^- \*\*(.+?):\*\*\s*([\s\S]*?)(?=\n- \*\*|\n\n#|$)/gm)].map(
-      ([, label, text]) => [
-        label.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
-        text.replaceAll(/\s+/g, ' ').trim(),
-      ],
-    ),
+    [
+      ...brief.matchAll(/^- \*\*(.+?):\*\*\s*([\s\S]*?)(?=\n- \*\*|\n\n#|$)/gm),
+    ].map(([, label, text]) => [
+      label.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
+      text.replaceAll(/\s+/g, ' ').trim(),
+    ]),
   );
 }
 

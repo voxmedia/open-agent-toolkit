@@ -175,6 +175,50 @@ async function fixturePlanSet({ recipe }) {
   };
 }
 
+async function completeBrowserProbe(request) {
+  if (request.screenshotPath) {
+    await mkdir(dirname(request.screenshotPath), { recursive: true });
+    await writeFile(
+      request.screenshotPath,
+      `deterministic:${request.artifactId}:${request.width}:${request.scenario}`,
+    );
+  }
+  return {
+    pageOverflowX: false,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: {
+      tab: true,
+      arrows: {
+        ArrowLeft: true,
+        ArrowRight: true,
+        ArrowUp: true,
+        ArrowDown: true,
+      },
+    },
+    ...(request.scenario !== 'default' && {
+      deckLayout: {
+        flow: 'vertical',
+        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
+      },
+    }),
+  };
+}
+
+async function passingVisualCritic(request) {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'adapter-core-visual-review',
+    reviewedAt: '2026-07-18T00:00:00.000Z',
+    disposition: 'pass',
+    artifactIds: request.renderedArtifacts.map(({ artifactId }) => artifactId),
+    findings: [],
+  };
+}
+
 function getConfig(key) {
   return Promise.resolve({
     status: 'ok',
@@ -618,6 +662,10 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     authorModulePath,
     planSetModulePath,
     criticModulePath,
+    coreOptions: {
+      browserProbe: completeBrowserProbe,
+      visualCritic: passingVisualCritic,
+    },
     getConfig,
     mode: 'unattended',
   });
