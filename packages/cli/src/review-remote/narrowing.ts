@@ -18,6 +18,8 @@ export type ReviewLineage =
   | { kind: 'lifecycle' }
   | { kind: 'gate'; target: string };
 
+export type ReviewInvocationKind = ReviewInvocation | 'gate';
+
 /** A prior provide-remote review, distilled from its parsed marker block. */
 export interface PriorReview {
   /** Full 40-char SHA recorded by the prior review. */
@@ -26,11 +28,64 @@ export interface PriorReview {
   scope: string;
   /** Project path — present only for project-rail reviews. */
   project?: string;
-  invocation: ReviewInvocation;
+  invocation?: ReviewInvocationKind;
   /** Review lineage; absent on legacy records, which are not eligible. */
   lineage?: ReviewLineage;
   /** ISO-8601 review submission timestamp, used for descending sort. */
   submittedAt: string;
+}
+
+/** Provenance persisted on one tracked Reviews ledger row. */
+export interface ReviewLedgerProvenance {
+  reviewedHead: string;
+  scope: string;
+  project?: string;
+  invocation?: string;
+  gateTarget?: string;
+  artifact: string;
+  submittedAt: string;
+}
+
+/**
+ * Normalize durable ledger provenance into the same candidate shape used by
+ * artifact-sourced reviews. Both sources then pass through {@link matchesTuple}
+ * and cannot drift into separate lineage predicates.
+ */
+export function priorReviewFromLedger(
+  row: ReviewLedgerProvenance,
+): PriorReview {
+  const invocation = isReviewInvocationKind(row.invocation)
+    ? row.invocation
+    : undefined;
+  const lineage = ledgerLineage(row);
+
+  return {
+    headSha: row.reviewedHead,
+    scope: row.scope,
+    ...(row.project ? { project: row.project } : {}),
+    ...(invocation ? { invocation } : {}),
+    ...(lineage ? { lineage } : {}),
+    submittedAt: row.submittedAt,
+  };
+}
+
+function isReviewInvocationKind(
+  invocation: string | undefined,
+): invocation is ReviewInvocationKind {
+  return (
+    invocation === 'manual' || invocation === 'auto' || invocation === 'gate'
+  );
+}
+
+function ledgerLineage(row: ReviewLedgerProvenance): ReviewLineage | undefined {
+  if (row.invocation === 'manual' || row.invocation === 'auto') {
+    return { kind: 'lifecycle' };
+  }
+
+  const gateTarget = row.gateTarget?.trim();
+  return row.invocation === 'gate' && gateTarget
+    ? { kind: 'gate', target: gateTarget }
+    : undefined;
 }
 
 /**

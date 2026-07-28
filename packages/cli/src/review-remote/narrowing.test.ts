@@ -2,8 +2,10 @@ import { describe, expect, it } from 'vitest';
 
 import {
   pickNarrowingTarget,
+  priorReviewFromLedger,
   type GitInvoker,
   type PriorReview,
+  type ReviewLedgerProvenance,
 } from './narrowing';
 
 const SHA_A = 'a'.repeat(40);
@@ -39,6 +41,20 @@ function stubGit(opts: {
 }
 
 const PASSING_GIT = stubGit({ exists: true, ancestor: true });
+
+function ledgerReview(
+  overrides: Partial<ReviewLedgerProvenance> = {},
+): PriorReview {
+  return priorReviewFromLedger({
+    reviewedHead: SHA_A,
+    scope: 'p02',
+    project: '.oat/projects/shared/x',
+    invocation: 'manual',
+    artifact: 'reviews/archived/p02-review.md',
+    submittedAt: '2026-05-01T00:00:00Z',
+    ...overrides,
+  });
+}
 
 describe('pickNarrowingTarget — matching', () => {
   it('returns full-scope-fallback (no-prior) when no prior review matches', async () => {
@@ -224,6 +240,106 @@ describe('pickNarrowingTarget — matching', () => {
       lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+});
+
+describe('pickNarrowingTarget — durable ledger lineage', () => {
+  const base = {
+    reviews: [] as PriorReview[],
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    headSha: HEAD,
+    git: PASSING_GIT,
+  };
+
+  it('fails open when a lifecycle row is the only baseline for a gate invocation', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [ledgerReview()],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('fails open when a gate row belongs to a different target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'claude-default',
+        }),
+      ],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('narrows from a gate row with the same target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'codex-default',
+        }),
+      ],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+    });
+  });
+
+  it('fails open when a gate row is the only baseline for a lifecycle invocation', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'codex-default',
+        }),
+      ],
+      lineage: { kind: 'lifecycle' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('fails open for a legacy row with a head but no lineage qualifier', async () => {
+    const legacyRow = priorReviewFromLedger({
+      reviewedHead: SHA_A,
+      scope: 'p02',
+      project: '.oat/projects/shared/x',
+      artifact: 'reviews/archived/p02-review.md',
+      submittedAt: '2026-05-01T00:00:00Z',
+    });
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [legacyRow],
+      lineage: { kind: 'lifecycle' },
     });
 
     expect(result).toMatchObject({
