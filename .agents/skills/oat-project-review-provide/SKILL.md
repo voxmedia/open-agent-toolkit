@@ -315,34 +315,46 @@ nominal project scope. An explicitly supplied `base_sha=<sha>` or
 scope identifiers (`pNN`, `pNN-pMM`, `final`, and task IDs) identify the review
 scope but do not override re-review narrowing.
 
-For every code review, detect re-review context before normal scope resolution.
-Unless an explicit range override was supplied, also resolve narrowing
-provenance:
+For every code review, detect re-review context independently from deciding
+whether to narrow:
 
 1. Set `REVIEW_HEAD` to the full commit from
    `git rev-parse HEAD^{commit}`. Resolve the current lineage:
    - `manual` and `auto` invocations use lifecycle lineage.
    - A `gate` invocation uses gate lineage qualified by its exact
      `oat_gate_target`.
-2. Find the newest prior completed code review for the same project, exact
-   nominal scope, and lineage. If one exists, set `IS_RE_REVIEW=true`. A
-   lifecycle review matches only another lifecycle review. A gate review
-   matches only a prior gate run with the same exact gate target; it never
-   narrows from a lifecycle review or from another gate target.
-3. Unless an explicit range override was supplied, resolve
-   `PRIOR_REVIEWED_HEAD` from these provenance sources:
+2. Resolve `workflow.autoNarrowReReviewScope` before any prior-review lookup or
+   Git guard. Unset and `true` enable automatic narrowing; `false` disables it.
+   Do not perform candidate work yet.
+3. Find the newest prior completed code review for the same project, exact
+   nominal scope, and lineage. Do this even when an explicit range override was
+   supplied. If one exists, set `IS_RE_REVIEW=true`. Lifecycle lineage treats
+   `manual` and `auto` as interchangeable. Gate lineage matches only a prior
+   `gate` review with the same exact gate target; it never matches a lifecycle
+   review or another gate target.
+4. If an explicit range override was supplied, resolve that exact range through
+   the explicit-input rules below, set the resolution reason to
+   `explicit base/range override`, and skip automatic narrowing.
+5. Otherwise, when the resolved preference is `false`, set the resolution
+   reason to `narrowing disabled`, skip all prior-head candidate lookup and
+   guards, and continue to normal full-scope resolution. Do not replace that
+   reason with a provenance or guard reason.
+6. Only when automatic narrowing is enabled, resolve `PRIOR_REVIEWED_HEAD` from
+   these provenance sources:
    - First inspect the matching prior review artifact at its active path or
      locally archived counterpart and read its full `oat_review_head_sha`.
    - Then inspect the matching append-ordered event row in the tracked
      `plan.md` Reviews table and read its `Reviewed Head`. Match row provenance
-     by `Scope`, `Type=code`, `Invocation`, and, for gates, `Gate Target`;
-     legacy rows without lineage qualifiers are ineligible.
+     by `Scope`, `Type=code`, and invocation lineage: `manual` and `auto` are
+     interchangeable lifecycle values; `gate` matches only `gate` with the same
+     exact `Gate Target`. Legacy rows without a usable lineage qualifier are
+     ineligible.
    - When both matching sources exist, they must name the same reviewed head.
      If they disagree, do not prefer either source.
    - When the artifact is absent (for example, after receive/archive), use the
      matching tracked row. When neither source yields a candidate, this is an
      initial review or provenance is unavailable.
-4. Accept a candidate only when it is exactly 40 hexadecimal characters and
+7. Accept a candidate only when it is exactly 40 hexadecimal characters and
    both guards pass:
 
    ```bash
@@ -354,16 +366,14 @@ provenance:
    `SCOPE_RANGE="$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD"`. Mark the range resolved
    and skip the normal scope-resolution rules below.
 
-5. Fail open to normal full-scope resolution when this is an initial review,
+8. Fail open to normal full-scope resolution when this is an initial review,
    neither provenance source yields a valid candidate, the sources disagree,
    the commit does not exist, or the ancestry guard fails. State the specific
    fallback reason; never infer narrowing from ambiguous or legacy lineage.
 
-After resolving a valid guarded range, apply
-`workflow.autoNarrowReReviewScope`: unset and `true` accept the narrowed range
-automatically; `false` selects normal full scope automatically. If no valid
-range was resolved, continue with normal full-scope resolution automatically.
-The re-review path has no interactive narrowing decision.
+If no valid guarded range was resolved, continue with normal full-scope
+resolution automatically. The re-review path has no interactive narrowing
+decision.
 
 **Priority order for scope resolution (only when Step 3a did not resolve a
 narrowed range):**
@@ -419,7 +429,8 @@ narrowed range):**
 **Step 3b: Classify and Report Re-Review Resolution**
 
 After `SCOPE_RANGE` is final, classify it for reporting whenever
-`IS_RE_REVIEW=true`:
+`IS_RE_REVIEW=true`, including when an explicit base or SHA-range override
+supplied the exact final range:
 
 - `empty`: `git diff --name-only "$SCOPE_RANGE"` returns no files.
 - `bookkeeping-only`: every changed path is inside the exact active project
