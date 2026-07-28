@@ -2,12 +2,14 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import { verifyRebuildability } from '../scripts/lib/durability.mjs';
 
 const tempDirs = [];
+const skillRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 afterEach(async () => {
   await Promise.all(
@@ -87,6 +89,38 @@ test('rejects a rebuildable claim when a hashed source changes', async () => {
 
   assert.equal(result.verified, false);
   assert.match(result.reason, /input hash/i);
+});
+
+test('bundles self-contained visual authoring and review guidance', async () => {
+  const [skill, authoring, review] = await Promise.all([
+    readFile(join(skillRoot, 'SKILL.md'), 'utf8'),
+    readFile(join(skillRoot, 'references/visual-authoring.md'), 'utf8'),
+    readFile(join(skillRoot, 'references/visual-review.md'), 'utf8'),
+  ]);
+
+  assert.match(skill, /^version: 2\.0\.2$/m);
+  assert.match(skill, /references\/visual-authoring\.md/);
+  assert.match(skill, /references\/visual-review\.md/);
+  for (const [name, guidance] of [
+    ['authoring', authoring],
+    ['review', review],
+  ]) {
+    assert.doesNotMatch(guidance, /\/Users\/|~\/|\.agents\/skills\/visual-explainer/);
+    assert.match(guidance, /optional/i, name);
+  }
+  for (const topic of [
+    /representation/i,
+    /hierarchy/i,
+    /diagram/i,
+    /deck/i,
+    /table/i,
+    /responsive navigation/i,
+  ]) {
+    assert.match(authoring, topic);
+  }
+  assert.match(review, /first viewport/i);
+  assert.match(review, /medium fit/i);
+  assert.match(review, /pass|correct|fail/i);
 });
 
 async function fileHash(path) {

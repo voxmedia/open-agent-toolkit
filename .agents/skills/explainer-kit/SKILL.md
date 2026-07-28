@@ -1,6 +1,6 @@
 ---
 name: explainer-kit
-version: 2.0.1
+version: 2.0.2
 description: Use when building destination-neutral visual explainer artifacts from explicit, versioned inputs.
 user-invocable: true
 allowed-tools: Read, Write, Edit, Bash, Grep, Glob, Agent, mcp__*
@@ -84,6 +84,11 @@ artifacts. It accepts only a schema-valid
 overlap, retains each validated result under `source/author/` and its content
 under `source/content/<artifact>.md` or `.html`, and never prompts.
 
+Authors follow the bundled medium-specific rules in
+`references/visual-authoring.md`. They do not require a home-directory plugin:
+an optional installed visual-explainer capability may enhance composition, but
+the bundled briefs, shells, and guidance are the complete unattended baseline.
+
 Markdown content is parsed to a validated AST and rendered through the themed
 block library, including GFM tables and task lists, GFM alert callouts, fenced
 `timeline` blocks, and fenced `diagram` blocks rendered to inline SVG at build
@@ -136,6 +141,10 @@ findings — narrative-coverage, architecture-diagram, and structured-depth
 guideline misses, rejected over-limit proposals, and render-QA layout findings —
 append stable warning IDs to the manifest's `warnings[]` and let the run
 succeed.
+
+Visual critics use the independent whole-set rubric in
+`references/visual-review.md`, which separates review judgment from
+medium-specific authoring rules.
 
 Render QA is opt-in. It runs only against an injected `browserProbe`, and the
 core never launches a browser of its own — reviewing the rendered output in a
