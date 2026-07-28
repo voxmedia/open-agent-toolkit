@@ -13,7 +13,8 @@
     "renderedArtifacts": {
       "type": "array",
       "items": { "$ref": "#/$defs/renderedArtifact" },
-      "minItems": 1
+      "minItems": 1,
+      "uniqueItems": true
     }
   },
   "$defs": {
@@ -35,7 +36,8 @@
         "evidence": {
           "type": "array",
           "items": { "$ref": "#/$defs/evidence" },
-          "minItems": 1
+          "minItems": 1,
+          "uniqueItems": true
         }
       }
     },

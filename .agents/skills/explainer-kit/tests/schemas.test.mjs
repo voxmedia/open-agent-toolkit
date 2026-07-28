@@ -189,14 +189,23 @@ test('set and visual review schemas carry closed shared context', async () => {
     'portfolio',
   ]);
   assert.equal(plan.properties.portfolio.minItems, 1);
-  assert.deepEqual(
-    plan.$defs.ledger.required,
-    ['terminology', 'statuses', 'numbers'],
-  );
-  assert.deepEqual(
-    reviewResult.properties.disposition.enum,
-    ['pass', 'correct', 'fail'],
-  );
+  assert.deepEqual(plan.$defs.ledger.required, [
+    'terminology',
+    'statuses',
+    'numbers',
+  ]);
+  assert.deepEqual(reviewResult.properties.disposition.enum, [
+    'pass',
+    'correct',
+    'fail',
+  ]);
   assert.ok(reviewRequest.required.includes('renderedArtifacts'));
+  assert.equal(reviewRequest.properties.renderedArtifacts.uniqueItems, true);
+  assert.equal(
+    reviewRequest.$defs.renderedArtifact.properties.evidence.uniqueItems,
+    true,
+  );
   assert.ok(reviewResult.required.includes('artifactIds'));
+  assert.equal(reviewResult.properties.artifactIds.uniqueItems, true);
+  assert.equal(reviewResult.properties.findings.uniqueItems, true);
 });

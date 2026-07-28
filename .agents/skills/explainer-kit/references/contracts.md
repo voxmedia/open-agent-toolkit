@@ -91,8 +91,13 @@ Visual review uses provider-neutral
 `explainer-kit.visual-review-result/v1` envelopes. The request combines the
 shared plan with rendered artifact paths and viewport evidence. The result
 names the complete artifact set, artifact-scoped rubric findings, and exactly
-one `pass`, `correct`, or `fail` disposition. Provider, model, command,
-credential, and dispatch fields are not part of any core contract.
+one `pass`, `correct`, or `fail` disposition. Application validation must pass
+the reviewed request as `visualReviewRequest` context when validating the
+result. Request artifacts must exactly equal the planned portfolio, result
+artifact IDs must exactly equal that reviewed set, and every finding must name
+one of those artifacts. `pass` permits no findings; `correct` and `fail`
+require at least one correction finding. Provider, model, command, credential,
+and dispatch fields are not part of any core contract.
 
 ## Explicit source forms
 

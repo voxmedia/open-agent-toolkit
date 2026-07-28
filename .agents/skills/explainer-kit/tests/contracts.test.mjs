@@ -386,12 +386,17 @@ test('validates author contract v2 by kind, kind+version, and schema id', () => 
 });
 
 test('validates provider-neutral set planning and visual review envelopes', () => {
-  for (const [kind, fixture] of [
-    ['set-plan', setPlan()],
-    ['visual-review-request', visualReviewRequest()],
-    ['visual-review-result', visualReviewResult()],
+  const reviewRequest = visualReviewRequest();
+  for (const [kind, fixture, context] of [
+    ['set-plan', setPlan(), undefined],
+    ['visual-review-request', reviewRequest, undefined],
+    [
+      'visual-review-result',
+      visualReviewResult(),
+      { visualReviewRequest: reviewRequest },
+    ],
   ]) {
-    assert.deepEqual(validateContract(kind, fixture), {
+    assert.deepEqual(validateContract(kind, fixture, context), {
       valid: true,
       errors: [],
     });
@@ -439,7 +444,10 @@ test('rejects set drift, unjustified optional artifacts, and detached authors', 
 test('rejects unknown review dispositions and artifact references', () => {
   const disposition = visualReviewResult();
   disposition.disposition = 'maybe';
-  assert.equal(validateContract('visual-review-result', disposition).valid, false);
+  assert.equal(
+    validateContract('visual-review-result', disposition).valid,
+    false,
+  );
 
   const request = visualReviewRequest();
   request.renderedArtifacts[0].artifactId = 'unknown-artifact';
@@ -447,6 +455,77 @@ test('rejects unknown review dispositions and artifact references', () => {
     validateContract('visual-review-request', request).errors.some(
       ({ code }) => code === 'unknown-artifact',
     ),
+  );
+});
+
+test('binds visual reviews to the exact complete rendered set', () => {
+  for (const [label, mutate] of [
+    [
+      'omitted rendered artifact',
+      (request) => {
+        request.renderedArtifacts.pop();
+      },
+    ],
+    [
+      'extra rendered artifact',
+      (request) => {
+        request.renderedArtifacts.push({
+          ...structuredClone(request.renderedArtifacts[0]),
+          artifactId: 'extra',
+        });
+      },
+    ],
+    [
+      'duplicate rendered artifact identity',
+      (request) => {
+        request.renderedArtifacts.push({
+          ...structuredClone(request.renderedArtifacts[0]),
+          renderedPath: 'site/duplicate/index.html',
+        });
+      },
+    ],
+  ]) {
+    const request = visualReviewRequest();
+    mutate(request);
+    assert.equal(
+      validateContract('visual-review-request', request).valid,
+      false,
+      label,
+    );
+  }
+
+  const reviewRequest = visualReviewRequest();
+  const partial = visualReviewResult();
+  partial.artifactIds.pop();
+  assert.equal(
+    validateContract('visual-review-result', partial, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  const detached = visualReviewResult();
+  detached.findings[0].artifactId = 'detached';
+  assert.equal(
+    validateContract('visual-review-result', detached, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  const passingWithCorrections = visualReviewResult();
+  passingWithCorrections.disposition = 'pass';
+  assert.equal(
+    validateContract('visual-review-result', passingWithCorrections, {
+      visualReviewRequest: reviewRequest,
+    }).valid,
+    false,
+  );
+
+  assert.equal(
+    validateContract('visual-review-result', visualReviewResult()).valid,
+    false,
+    'a result without its reviewed request is detached',
   );
 });
 

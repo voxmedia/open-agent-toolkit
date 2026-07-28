@@ -27,7 +27,8 @@
     },
     "findings": {
       "type": "array",
-      "items": { "$ref": "#/$defs/finding" }
+      "items": { "$ref": "#/$defs/finding" },
+      "uniqueItems": true
     }
   },
   "$defs": {

@@ -492,14 +492,14 @@ function validateCrossRecord(kind, value, context, errors) {
   }
 
   if (kind === 'visual-review-request') {
-    const plannedIds = new Set(
-      Array.isArray(value.plan?.portfolio)
-        ? value.plan.portfolio.map(({ artifactId }) => artifactId)
-        : [],
-    );
+    const plannedArtifactIds = Array.isArray(value.plan?.portfolio)
+      ? value.plan.portfolio.map(({ artifactId }) => artifactId)
+      : [];
+    const plannedIds = new Set(plannedArtifactIds);
     const renderedIds = new Set();
-    for (const [index, artifact] of (
-      Array.isArray(value.renderedArtifacts) ? value.renderedArtifacts : []
+    for (const [index, artifact] of (Array.isArray(value.renderedArtifacts)
+      ? value.renderedArtifacts
+      : []
     ).entries()) {
       if (!plannedIds.has(artifact?.artifactId)) {
         add(
@@ -518,6 +518,89 @@ function validateCrossRecord(kind, value, context, errors) {
         );
       }
       renderedIds.add(artifact?.artifactId);
+    }
+    for (const artifactId of plannedArtifactIds) {
+      if (!renderedIds.has(artifactId)) {
+        add(
+          errors,
+          '$.renderedArtifacts',
+          'missing-artifact',
+          `Rendered review set is missing planned artifact ${artifactId}.`,
+        );
+      }
+    }
+  }
+
+  if (kind === 'visual-review-result') {
+    const reviewRequest = context.visualReviewRequest;
+    if (!isObject(reviewRequest)) {
+      add(
+        errors,
+        '$',
+        'review-request-required',
+        'Visual review results must be validated with their reviewed request.',
+      );
+      return;
+    }
+
+    const requestValidation = validateContract(
+      'visual-review-request',
+      reviewRequest,
+    );
+    if (!requestValidation.valid) {
+      add(
+        errors,
+        '$',
+        'invalid-review-request',
+        'Visual review result cannot bind to an invalid reviewed request.',
+      );
+    }
+
+    const reviewedArtifactIds = Array.isArray(reviewRequest.renderedArtifacts)
+      ? reviewRequest.renderedArtifacts.map(({ artifactId }) => artifactId)
+      : [];
+    const reviewedIds = new Set(reviewedArtifactIds);
+    const resultArtifactIds = Array.isArray(value.artifactIds)
+      ? value.artifactIds
+      : [];
+    const resultIds = new Set(resultArtifactIds);
+    if (
+      resultIds.size !== reviewedIds.size ||
+      reviewedArtifactIds.some((artifactId) => !resultIds.has(artifactId))
+    ) {
+      add(
+        errors,
+        '$.artifactIds',
+        'review-set-mismatch',
+        'Visual review result artifact IDs must equal the complete reviewed request set.',
+      );
+    }
+    for (const [index, finding] of (Array.isArray(value.findings)
+      ? value.findings
+      : []
+    ).entries()) {
+      if (!reviewedIds.has(finding?.artifactId)) {
+        add(
+          errors,
+          `$.findings[${index}].artifactId`,
+          'detached-finding',
+          'Visual review findings must reference an artifact in the reviewed request.',
+        );
+      }
+    }
+    const findingCount = Array.isArray(value.findings)
+      ? value.findings.length
+      : 0;
+    if (
+      (value.disposition === 'pass' && findingCount > 0) ||
+      (['correct', 'fail'].includes(value.disposition) && findingCount === 0)
+    ) {
+      add(
+        errors,
+        '$.disposition',
+        'disposition-findings-mismatch',
+        'Pass requires no findings; correct and fail require at least one correction finding.',
+      );
     }
   }
 
@@ -705,8 +788,9 @@ function validateSetPlan(value, errors) {
     Array.isArray(value.sourceIds) ? value.sourceIds : [],
   );
   const artifactIds = new Set();
-  for (const [index, artifact] of (
-    Array.isArray(value.portfolio) ? value.portfolio : []
+  for (const [index, artifact] of (Array.isArray(value.portfolio)
+    ? value.portfolio
+    : []
   ).entries()) {
     if (artifactIds.has(artifact?.artifactId)) {
       add(
@@ -740,10 +824,7 @@ function validateSetPlan(value, errors) {
     for (const sourceId of Array.isArray(artifact?.justification?.sourceIds)
       ? artifact.justification.sourceIds
       : []) {
-      if (
-        !sourceIds.has(sourceId) ||
-        !artifact.sourceIds?.includes(sourceId)
-      ) {
+      if (!sourceIds.has(sourceId) || !artifact.sourceIds?.includes(sourceId)) {
         add(
           errors,
           `$.portfolio[${index}].justification.sourceIds`,
@@ -760,11 +841,15 @@ function validateSetPlan(value, errors) {
     ['numbers', (entry) => entry?.subject],
   ]) {
     const seen = new Map();
-    for (const [index, entry] of (
-      Array.isArray(value.ledger?.[field]) ? value.ledger[field] : []
+    for (const [index, entry] of (Array.isArray(value.ledger?.[field])
+      ? value.ledger[field]
+      : []
     ).entries()) {
       const key = identity(entry);
-      if (seen.has(key) && canonicalStringify(seen.get(key)) !== canonicalStringify(entry)) {
+      if (
+        seen.has(key) &&
+        canonicalStringify(seen.get(key)) !== canonicalStringify(entry)
+      ) {
         add(
           errors,
           `$.ledger.${field}[${index}]`,
