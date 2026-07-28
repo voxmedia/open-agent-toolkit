@@ -12,6 +12,8 @@
 
 import type { ReviewInvocation } from './marker-parser';
 
+const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
+
 export type ReviewRail = 'ad-hoc' | 'project';
 
 export type ReviewLineage =
@@ -159,6 +161,10 @@ export type NarrowingResult =
 
 /** Does a prior review match the current rail, project, scope, and lineage? */
 function matchesTuple(review: PriorReview, input: NarrowingInput): boolean {
+  if (!FULL_COMMIT_SHA.test(review.headSha)) {
+    return false;
+  }
+
   const sameLineage =
     review.lineage !== undefined &&
     review.lineage.kind === input.lineage.kind &&

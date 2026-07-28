@@ -349,6 +349,98 @@ describe('pickNarrowingTarget — durable ledger lineage', () => {
   });
 });
 
+describe('pickNarrowingTarget — candidate head validation', () => {
+  const base = {
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    lineage: { kind: 'lifecycle' as const },
+    headSha: HEAD,
+  };
+
+  const guardMustNotRun: GitInvoker = {
+    objectExists: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    isAncestor: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    fetchRef: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    changedFiles: async () => {
+      throw new Error('invalid candidate must not reach range classification');
+    },
+  };
+
+  it.each([
+    {
+      name: 'an abbreviated artifact-sourced head',
+      candidate: review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: 'abc1234',
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    },
+    {
+      name: 'a symbolic row-sourced head',
+      candidate: priorReviewFromLedger({
+        reviewedHead: 'HEAD',
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+        invocation: 'manual',
+        artifact: 'reviews/archived/p02-review.md',
+        submittedAt: '2026-05-01T00:00:00Z',
+      }),
+    },
+    {
+      name: 'a non-hex artifact-sourced head',
+      candidate: review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: 'z'.repeat(40),
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    },
+  ])('fails open before Git guards for $name', async ({ candidate }) => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [candidate],
+      git: guardMustNotRun,
+    });
+
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('accepts a valid full 40-character hexadecimal row-sourced head', async () => {
+    const validHead = 'A'.repeat(40);
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        priorReviewFromLedger({
+          reviewedHead: validHead,
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          invocation: 'manual',
+          artifact: 'reviews/archived/p02-review.md',
+          submittedAt: '2026-05-01T00:00:00Z',
+        }),
+      ],
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: validHead,
+      headSha: HEAD,
+    });
+  });
+});
+
 describe('pickNarrowingTarget — stale-SHA guard', () => {
   const base = {
     reviews: [review({ submittedAt: '2026-05-01T00:00:00Z', headSha: SHA_A })],
