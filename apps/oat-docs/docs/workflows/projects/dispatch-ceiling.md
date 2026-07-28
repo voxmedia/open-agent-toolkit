@@ -84,9 +84,10 @@ drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
 evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
 which treats max as a route requiring justification rather than a strictly
 better rung. Dropping the Fable xhigh rung is a recommendation judgment rather
-than a measured finding: the evidence record permits either Fable rung for a
-qualified specialist case, and this ladder takes the cheaper one absent a
-comparison favoring xhigh. Both models remain in the pin catalog and stay
+than a measured finding: `subagent-orchestration/references/provider-claude.md`
+permits either Fable rung for a qualified specialist case, and this ladder takes
+the cheaper one absent a comparison favoring xhigh. The evidence record above
+does not compare the two rungs. Both models remain in the pin catalog and stay
 available to a hand-edited ladder. An adopter still on the prior version keeps their existing
 Cursor tiers untouched until they take one of the actions above.
 
