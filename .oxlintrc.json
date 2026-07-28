@@ -15,7 +15,7 @@
     "eslint/prefer-template": "error",
     "eslint/eqeqeq": ["error", "smart"],
     "eslint/no-empty": "error",
-    "eslint/no-shadow": "off",
+    "eslint/no-shadow": "error",
     "typescript/no-explicit-any": "warn",
     "typescript/no-floating-promises": "error",
     "typescript/no-misused-promises": "error",

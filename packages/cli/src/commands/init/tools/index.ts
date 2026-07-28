@@ -1440,13 +1440,16 @@ export function createInitToolsCommand(
   for (const packCommand of packCommands) {
     command.addCommand(packCommand);
   }
-  command.action(async (_options: unknown, command: Command) => {
+  command.action(async (_options: unknown, actionCommand: Command) => {
     const context = dependencies.buildCommandContext(
-      readGlobalOptions(command),
+      readGlobalOptions(actionCommand),
     );
     const selectedPacks = await runInitTools(context, dependencies);
-    setInstalledCanonicalPaths(command, canonicalPathsForPacks(selectedPacks));
-    await reconcileAfterInstall(command);
+    setInstalledCanonicalPaths(
+      actionCommand,
+      canonicalPathsForPacks(selectedPacks),
+    );
+    await reconcileAfterInstall(actionCommand);
   });
 
   return command;

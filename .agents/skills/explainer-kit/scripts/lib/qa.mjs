@@ -770,7 +770,7 @@ function normalizeClaim(value) {
   throw new TypeError('Cohesion claims must be strings, numbers, or booleans.');
 }
 
-function validateProbeResult(result, artifactId, width, request) {
+function validateProbeResult(result, id, width, request) {
   if (
     !isPlainObject(result) ||
     typeof result.pageOverflowX !== 'boolean' ||
@@ -779,7 +779,7 @@ function validateProbeResult(result, artifactId, width, request) {
     !isPlainObject(result.keyboard)
   ) {
     throw new TypeError(
-      `Browser probe for ${artifactId} at ${width}px returned an invalid result.`,
+      `Browser probe for ${id} at ${width}px returned an invalid result.`,
     );
   }
   if (
@@ -791,17 +791,17 @@ function validateProbeResult(result, artifactId, width, request) {
       typeof result.animationsDisabled !== 'boolean')
   ) {
     throw new TypeError(
-      `Browser layout probe for ${artifactId} at ${width}px returned an invalid result.`,
+      `Browser layout probe for ${id} at ${width}px returned an invalid result.`,
     );
   }
   if (request.themeToggle && !isPlainObject(result.themeToggle)) {
     throw new TypeError(
-      `Browser theme probe for ${artifactId} at ${width}px returned an invalid result.`,
+      `Browser theme probe for ${id} at ${width}px returned an invalid result.`,
     );
   }
   if (request.scenario !== 'default' && !isPlainObject(result.deckLayout)) {
     throw new TypeError(
-      `Browser deck probe for ${artifactId} at ${width}px returned an invalid result.`,
+      `Browser deck probe for ${id} at ${width}px returned an invalid result.`,
     );
   }
 }

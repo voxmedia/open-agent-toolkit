@@ -45,8 +45,8 @@ describe('fs/io', () => {
 
     const strategy = await createSymlink(srcDir, linkDir);
 
-    const stat = await lstat(linkDir);
-    expect(stat.isSymbolicLink()).toBe(true);
+    const linkStat = await lstat(linkDir);
+    expect(linkStat.isSymbolicLink()).toBe(true);
     expect(strategy).toBe('symlink');
   });
 
@@ -62,8 +62,8 @@ describe('fs/io', () => {
     const linkTarget = await readlink(linkDir);
     expect(isAbsolute(linkTarget)).toBe(false);
     // Verify the symlink still resolves correctly
-    const stat = await lstat(linkDir);
-    expect(stat.isSymbolicLink()).toBe(true);
+    const linkStat = await lstat(linkDir);
+    expect(linkStat.isSymbolicLink()).toBe(true);
   });
 
   it('createSymlink creates a file symlink with relative target', async () => {
@@ -158,8 +158,8 @@ describe('fs/io', () => {
 
     await ensureDir(nested);
 
-    const stat = await lstat(nested);
-    expect(stat.isDirectory()).toBe(true);
+    const dirStat = await lstat(nested);
+    expect(dirStat.isDirectory()).toBe(true);
   });
 
   it('fileExists returns true for existing files and false when missing', async () => {

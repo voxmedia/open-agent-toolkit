@@ -74,7 +74,12 @@ export async function runRenderQaStage({
     };
   }
 
-  return probeSiteArtifacts({ siteDir, artifacts, probe: browserProbe, widths });
+  return probeSiteArtifacts({
+    siteDir,
+    artifacts,
+    probe: browserProbe,
+    widths,
+  });
 }
 
 async function probeSiteArtifacts({ siteDir, artifacts, probe, widths }) {

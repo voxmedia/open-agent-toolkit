@@ -116,9 +116,7 @@ export function evaluateExpansionProposals(recipe, proposals) {
   const seenIds = new Set();
   const acceptedByProfile = new Map();
   const acceptedByType = new Map();
-  const maxPerType = new Map(
-    Object.entries(expansion.limits.maxPerType ?? {}),
-  );
+  const maxPerType = new Map(Object.entries(expansion.limits.maxPerType ?? {}));
 
   if (!Array.isArray(proposals)) {
     return {
@@ -180,7 +178,10 @@ export function evaluateExpansionProposals(recipe, proposals) {
     // A declared type cap binds across profiles, so proposals cannot spread
     // over sibling profiles that share one artifact type to evade it.
     const typeCount = acceptedByType.get(profile.type) ?? 0;
-    if (maxPerType.has(profile.type) && typeCount >= maxPerType.get(profile.type)) {
+    if (
+      maxPerType.has(profile.type) &&
+      typeCount >= maxPerType.get(profile.type)
+    ) {
       rejected.push({
         ...structuredClone(proposal),
         status: 'rejected',
