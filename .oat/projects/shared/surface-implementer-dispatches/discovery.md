@@ -1,6 +1,6 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-quick-start
 oat_blockers: []
 oat_last_updated: 2026-07-28
 oat_generated: false
@@ -115,10 +115,12 @@ decider.
 
 ## Open Questions
 
-- **Report schema:** does Dispatch Report V1 permit additive nullable
-  classification/diagnostic fields, or should this introduce V2?
-- **Disclosure representation:** should resolver disclosures reuse a generic
-  diagnostic shape or use a separate advisory/disclosure collection?
+Resolved during lightweight design:
+
+- Dispatch Report V1 receives additive nullable classification and notices;
+  existing field meanings and the compatibility stamp remain unchanged.
+- A shared structured notice shape represents both warnings and advisories,
+  while each command derives notices from its own effective context.
 
 ## Assumptions
 

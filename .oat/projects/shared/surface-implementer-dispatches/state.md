@@ -13,8 +13,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -71,25 +71,25 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T19:31:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T23:50:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: surface-implementer-dispatches
 
-**Status:** Discovery
+**Status:** Design complete
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-28
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Design - Lightweight architecture approved; ready for plan generation
 
 ## Artifacts
 
-- **Discovery:** `discovery.md` (in_progress)
+- **Discovery:** `discovery.md` (complete)
 - **Spec:** N/A (quick mode)
-- **Design:** N/A (quick mode unless lightweight design is needed)
+- **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 
@@ -98,7 +98,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
 - ✓ Existing backlog scope and prior review decisions collected
-- ⧗ Resolving lightweight design depth
+- ✓ Lightweight design approved
+- ⧗ Preparing executable implementation plan
 
 ## Blockers
 
@@ -106,4 +107,4 @@ None
 
 ## Next Milestone
 
-Confirm design depth, then generate an executable implementation plan
+Generate and review an executable implementation plan
