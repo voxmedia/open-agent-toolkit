@@ -61,20 +61,21 @@ export interface NarrowingInput {
   git: GitInvoker;
   /** `--narrow` was passed explicitly: guard failure becomes a hard error. */
   forceNarrow?: boolean;
-  /** `workflow.autoNarrowReReviewScope === true`: never prompt. */
-  autoNarrow?: boolean;
+  /** Resolved preference: unset and true narrow; false forces full scope. */
+  narrowingPreference?: boolean;
   /** Diff-only mode (no ephemeral worktree): fetch the single ref first. */
   diffOnly?: boolean;
 }
 
-export type FullScopeReason = 'no-prior-review' | 'stale-sha';
+export type FullScopeReason =
+  | 'narrowing-disabled'
+  | 'no-prior-review'
+  | 'stale-sha';
 
 export interface NarrowRangeResult {
   kind: 'narrow-range';
   priorSha: string;
   headSha: string;
-  /** Whether the caller still owes the user a confirm prompt. */
-  prompted: boolean;
 }
 
 export interface FullScopeFallbackResult {
@@ -82,7 +83,6 @@ export interface FullScopeFallbackResult {
   reason: FullScopeReason;
   /** The stale SHA that triggered the fallback, when applicable. */
   priorSha?: string;
-  prompted: boolean;
 }
 
 export interface HardErrorResult {
@@ -159,12 +159,18 @@ async function guardPasses(
 export async function pickNarrowingTarget(
   input: NarrowingInput,
 ): Promise<NarrowingResult> {
+  if (input.narrowingPreference === false) {
+    return {
+      kind: 'full-scope-fallback',
+      reason: 'narrowing-disabled',
+    };
+  }
+
   const prior = mostRecentMatch(input);
   if (!prior) {
     return {
       kind: 'full-scope-fallback',
       reason: 'no-prior-review',
-      prompted: false,
     };
   }
 
@@ -174,8 +180,6 @@ export async function pickNarrowingTarget(
       kind: 'narrow-range',
       priorSha: prior.headSha,
       headSha: input.headSha,
-      // Auto-narrow skips the prompt; otherwise the caller still confirms.
-      prompted: !input.autoNarrow,
     };
   }
 
@@ -188,13 +192,10 @@ export async function pickNarrowingTarget(
     };
   }
 
-  // Otherwise fall back to full scope. Auto-narrow surfaces this as the
-  // auto-fallback notice (no prompt); manual mode does not prompt here either —
-  // the fallback is informational.
+  // Otherwise fail open to full scope and preserve the guard failure reason.
   return {
     kind: 'full-scope-fallback',
     reason: 'stale-sha',
     priorSha: prior.headSha,
-    prompted: false,
   };
 }

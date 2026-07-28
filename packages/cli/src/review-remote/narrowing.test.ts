@@ -283,29 +283,63 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
     }
   });
 
-  it('auto-narrow config never prompts and still falls back on guard failure', async () => {
+  it('narrows without prompting when the preference is unset', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({ kind: 'narrow-range' });
+    expect(result).not.toHaveProperty('prompted');
+  });
+
+  it('narrows without prompting when the preference is true', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+      narrowingPreference: true,
+    });
+
+    expect(result).toMatchObject({ kind: 'narrow-range' });
+    expect(result).not.toHaveProperty('prompted');
+  });
+
+  it('uses full scope without consulting a prior review when the preference is false', async () => {
+    const git: GitInvoker = {
+      objectExists: async () => {
+        throw new Error('guard must not run');
+      },
+      isAncestor: async () => {
+        throw new Error('guard must not run');
+      },
+      fetchRef: async () => {
+        throw new Error('guard must not run');
+      },
+    };
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      git,
+      narrowingPreference: false,
+    });
+
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'narrowing-disabled',
+    });
+  });
+
+  it('preserves the guard failure reason in the full-scope fallback', async () => {
     const result = await pickNarrowingTarget({
       ...base,
       git: stubGit({ exists: true, ancestor: false }),
-      autoNarrow: true,
     });
-    expect(result.kind).toBe('full-scope-fallback');
-    if (result.kind === 'full-scope-fallback') {
-      expect(result.reason).toBe('stale-sha');
-      expect(result.prompted).toBe(false);
-    }
-  });
 
-  it('auto-narrow config never prompts on a successful narrow', async () => {
-    const result = await pickNarrowingTarget({
-      ...base,
-      git: stubGit({ exists: true, ancestor: true }),
-      autoNarrow: true,
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'stale-sha',
+      priorSha: SHA_A,
     });
-    expect(result.kind).toBe('narrow-range');
-    if (result.kind === 'narrow-range') {
-      expect(result.prompted).toBe(false);
-    }
   });
 });
 
