@@ -843,6 +843,7 @@ review evidence still terminates as `built-needs-review`.
 - Modify: `.agents/skills/explainer-kit/schemas/visual-review-result.v1.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`

@@ -419,6 +419,11 @@ oat_generated: false
 - Review-remediation attempt: 1/3
 - Context references: Playwright 1.51 screenshot/viewport APIs and Node.js
   22.17 Buffer signature/big-endian parsing APIs verified through Context7
+- Initial outcome: `INVALID_RUN_ABORT` before edits; no remediation retry
+  consumed
+- Preflight correction: p03-t06 now includes `scripts/run.mjs`, whose
+  `reviewAndRetain()` call site owns the confined run root required to bind and
+  revalidate exact evidence bytes
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
