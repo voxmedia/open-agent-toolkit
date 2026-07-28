@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "explainer-kit.visual-review-request/v1",
+  "title": "VisualReviewRequestV1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "plan", "renderedArtifacts"],
+  "properties": {
+    "schemaVersion": {
+      "const": "explainer-kit.visual-review-request/v1"
+    },
+    "plan": { "$ref": "explainer-kit.set-plan/v1" },
+    "renderedArtifacts": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/renderedArtifact" },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "safeRelativePath": {
+      "type": "string",
+      "minLength": 1,
+      "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$))(?!.*\\\\).+$"
+    },
+    "renderedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["artifactId", "renderedPath", "evidence"],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "renderedPath": { "$ref": "#/$defs/safeRelativePath" },
+        "evidence": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/evidence" },
+          "minItems": 1
+        }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["viewport", "screenshotPath", "metricsPath"],
+      "properties": {
+        "viewport": { "enum": ["desktop", "tablet", "mobile"] },
+        "screenshotPath": { "$ref": "#/$defs/safeRelativePath" },
+        "metricsPath": { "$ref": "#/$defs/safeRelativePath" }
+      }
+    }
+  }
+}

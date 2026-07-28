@@ -14,6 +14,9 @@ const SCHEMA_FILES = {
   'publish-receipt': 'publish-receipt.schema.json',
   'author-request/v2': 'author-request.v2.schema.json',
   'author-result/v2': 'author-result.v2.schema.json',
+  'set-plan': 'set-plan.v1.schema.json',
+  'visual-review-request': 'visual-review-request.v1.schema.json',
+  'visual-review-result': 'visual-review-result.v1.schema.json',
 };
 const DEFAULT_SCHEMA_KEYS = {
   'author-request': 'author-request/v2',
@@ -477,6 +480,47 @@ function validateCrossRecord(kind, value, context, errors) {
     }
   }
 
+  if (kind === 'set-plan') {
+    validateSetPlan(value, errors);
+  }
+
+  if (
+    ['author-request', 'author-request/v2'].includes(kind) ||
+    value.schemaVersion === 'explainer-kit.author-request/v2'
+  ) {
+    validateAuthorSetContext(value, errors);
+  }
+
+  if (kind === 'visual-review-request') {
+    const plannedIds = new Set(
+      Array.isArray(value.plan?.portfolio)
+        ? value.plan.portfolio.map(({ artifactId }) => artifactId)
+        : [],
+    );
+    const renderedIds = new Set();
+    for (const [index, artifact] of (
+      Array.isArray(value.renderedArtifacts) ? value.renderedArtifacts : []
+    ).entries()) {
+      if (!plannedIds.has(artifact?.artifactId)) {
+        add(
+          errors,
+          `$.renderedArtifacts[${index}].artifactId`,
+          'unknown-artifact',
+          'Rendered artifact is not present in the shared set plan.',
+        );
+      }
+      if (renderedIds.has(artifact?.artifactId)) {
+        add(
+          errors,
+          `$.renderedArtifacts[${index}].artifactId`,
+          'duplicate-artifact',
+          'Rendered artifact IDs must be unique.',
+        );
+      }
+      renderedIds.add(artifact?.artifactId);
+    }
+  }
+
   if (kind === 'manifest') {
     const paths = [];
     for (const artifact of Array.isArray(value.artifacts)
@@ -653,6 +697,115 @@ function validateCrossRecord(kind, value, context, errors) {
         );
       }
     }
+  }
+}
+
+function validateSetPlan(value, errors) {
+  const sourceIds = new Set(
+    Array.isArray(value.sourceIds) ? value.sourceIds : [],
+  );
+  const artifactIds = new Set();
+  for (const [index, artifact] of (
+    Array.isArray(value.portfolio) ? value.portfolio : []
+  ).entries()) {
+    if (artifactIds.has(artifact?.artifactId)) {
+      add(
+        errors,
+        `$.portfolio[${index}].artifactId`,
+        'duplicate-artifact',
+        'Set-plan artifact IDs must be unique.',
+      );
+    }
+    artifactIds.add(artifact?.artifactId);
+    for (const sourceId of Array.isArray(artifact?.sourceIds)
+      ? artifact.sourceIds
+      : []) {
+      if (!sourceIds.has(sourceId)) {
+        add(
+          errors,
+          `$.portfolio[${index}].sourceIds`,
+          'unknown-source',
+          `Artifact source ${sourceId} is not declared by the set plan.`,
+        );
+      }
+    }
+    if (artifact?.required === false && !isObject(artifact.justification)) {
+      add(
+        errors,
+        `$.portfolio[${index}].justification`,
+        'optional-justification-required',
+        'Optional artifacts require a source-backed justification.',
+      );
+    }
+    for (const sourceId of Array.isArray(artifact?.justification?.sourceIds)
+      ? artifact.justification.sourceIds
+      : []) {
+      if (
+        !sourceIds.has(sourceId) ||
+        !artifact.sourceIds?.includes(sourceId)
+      ) {
+        add(
+          errors,
+          `$.portfolio[${index}].justification.sourceIds`,
+          'unknown-source',
+          `Justification source ${sourceId} must be declared by the plan and artifact.`,
+        );
+      }
+    }
+  }
+
+  for (const [field, identity] of [
+    ['terminology', (entry) => entry?.term],
+    ['statuses', (entry) => entry?.subject],
+    ['numbers', (entry) => entry?.subject],
+  ]) {
+    const seen = new Map();
+    for (const [index, entry] of (
+      Array.isArray(value.ledger?.[field]) ? value.ledger[field] : []
+    ).entries()) {
+      const key = identity(entry);
+      if (seen.has(key) && canonicalStringify(seen.get(key)) !== canonicalStringify(entry)) {
+        add(
+          errors,
+          `$.ledger.${field}[${index}]`,
+          'ledger-conflict',
+          `Shared ledger contains conflicting values for ${key}.`,
+        );
+      }
+      seen.set(key, entry);
+    }
+  }
+}
+
+function validateAuthorSetContext(value, errors) {
+  if (!isObject(value.setContext) || !isObject(value.plannedArtifact)) {
+    return;
+  }
+  const planned = Array.isArray(value.setContext.portfolio)
+    ? value.setContext.portfolio.find(
+        ({ artifactId }) => artifactId === value.artifactId,
+      )
+    : undefined;
+  if (
+    !planned ||
+    value.plannedArtifact.artifactId !== value.artifactId ||
+    value.plannedArtifact.artifactType !== value.artifactType
+  ) {
+    add(
+      errors,
+      '$.plannedArtifact',
+      'set-artifact-mismatch',
+      'Author request identity must match one artifact in the shared set plan.',
+    );
+    return;
+  }
+  if (!deepEqual(planned, value.plannedArtifact)) {
+    add(
+      errors,
+      '$.plannedArtifact',
+      'set-plan-drift',
+      'Author request planned artifact must be identical to the shared set plan entry.',
+    );
   }
 }
 

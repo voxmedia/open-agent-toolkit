@@ -50,6 +50,50 @@ hard errors. Proposals beyond a profile's `maxCount` or the recipe's
 `expansion.limits.maxArtifacts` are rejected with a warning and the run
 continues.
 
+Before artifact authoring, a caller supplies one provider-neutral `planSet`
+callback. It receives the reconciled fact base and recipe policy and returns
+`explainer-kit.set-plan/v1`:
+
+```json
+{
+  "schemaVersion": "explainer-kit.set-plan/v1",
+  "planId": "project-recap-set",
+  "recipe": { "id": "project-recap", "version": "1" },
+  "sourceIds": ["plan"],
+  "ledger": {
+    "terminology": [],
+    "statuses": [],
+    "numbers": []
+  },
+  "portfolio": [
+    {
+      "artifactId": "project-recap",
+      "artifactType": "hub",
+      "profileId": "recap-hub",
+      "required": true,
+      "sourceIds": ["plan"],
+      "draft": "Lead with the validated outcome.",
+      "visualIntent": "Orient the reader in the first viewport."
+    }
+  ]
+}
+```
+
+The set plan owns the shared terminology/status/number ledger, source coverage,
+adaptive portfolio, per-artifact draft, and visual intent. Optional entries add
+a source-backed `justification`; undeclared sources, conflicting ledger values,
+duplicate artifact IDs, and unjustified optional entries are invalid. Each
+`author-request/v2` carries the complete immutable `setContext` plus the exact
+matching `plannedArtifact`.
+
+Visual review uses provider-neutral
+`explainer-kit.visual-review-request/v1` and
+`explainer-kit.visual-review-result/v1` envelopes. The request combines the
+shared plan with rendered artifact paths and viewport evidence. The result
+names the complete artifact set, artifact-scoped rubric findings, and exactly
+one `pass`, `correct`, or `fail` disposition. Provider, model, command,
+credential, and dispatch fields are not part of any core contract.
+
 ## Explicit source forms
 
 - `factBase.mode: supplied` points to a valid `FactBaseV1` JSON file. The core
@@ -78,10 +122,9 @@ The core executes:
 
 1. validate request and recipe
 2. reconcile or check the fact base
-3. apply bounded discovery
+3. apply bounded discovery and produce one validated set plan
 4. resolve one theme
-5. author each floor artifact against its brief, evaluate expansion proposals,
-   and author each accepted expansion artifact
+5. author every planned artifact against the same set context
 6. render typed artifacts through the narrative renderer or validate
    agent-composed HTML, per each artifact's declared authoring path
 7. run structural, guideline, and optional browser QA

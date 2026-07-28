@@ -20,6 +20,9 @@ const schemas = {
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
   'author-request.v2': 'explainer-kit.author-request/v2',
   'author-result.v2': 'explainer-kit.author-result/v2',
+  'set-plan.v1': 'explainer-kit.set-plan/v1',
+  'visual-review-request.v1': 'explainer-kit.visual-review-request/v1',
+  'visual-review-result.v1': 'explainer-kit.visual-review-result/v1',
 };
 
 async function loadSchema(name) {
@@ -148,6 +151,8 @@ test('author v2 contracts require authored content and provenance', async () => 
     'brief',
     'factBase',
     'theme',
+    'setContext',
+    'plannedArtifact',
   ]);
   assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
   assert.deepEqual(result.required, [
@@ -168,4 +173,30 @@ test('author v2 contracts require authored content and provenance', async () => 
     'self-asserted',
   ]);
   assert.equal(result.properties.provenance.additionalProperties, false);
+});
+
+test('set and visual review schemas carry closed shared context', async () => {
+  const plan = await loadSchema('set-plan.v1');
+  const reviewRequest = await loadSchema('visual-review-request.v1');
+  const reviewResult = await loadSchema('visual-review-result.v1');
+
+  assert.deepEqual(plan.required, [
+    'schemaVersion',
+    'planId',
+    'recipe',
+    'sourceIds',
+    'ledger',
+    'portfolio',
+  ]);
+  assert.equal(plan.properties.portfolio.minItems, 1);
+  assert.deepEqual(
+    plan.$defs.ledger.required,
+    ['terminology', 'statuses', 'numbers'],
+  );
+  assert.deepEqual(
+    reviewResult.properties.disposition.enum,
+    ['pass', 'correct', 'fail'],
+  );
+  assert.ok(reviewRequest.required.includes('renderedArtifacts'));
+  assert.ok(reviewResult.required.includes('artifactIds'));
 });

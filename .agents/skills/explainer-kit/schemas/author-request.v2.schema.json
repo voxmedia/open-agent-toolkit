@@ -11,7 +11,9 @@
     "authoring",
     "brief",
     "factBase",
-    "theme"
+    "theme",
+    "setContext",
+    "plannedArtifact"
   ],
   "properties": {
     "schemaVersion": { "const": "explainer-kit.author-request/v2" },
@@ -24,6 +26,8 @@
     "factBase": { "$ref": "explainer-kit.fact-base/v1" },
     "shell": { "type": "string", "minLength": 1 },
     "theme": { "$ref": "explainer-kit.theme/v1" },
+    "setContext": { "$ref": "explainer-kit.set-plan/v1" },
+    "plannedArtifact": { "$ref": "#/$defs/plannedArtifact" },
     "floor": {
       "type": "object",
       "additionalProperties": false,
@@ -34,6 +38,70 @@
           "items": { "type": "string", "minLength": 1 },
           "minItems": 1,
           "uniqueItems": true
+        }
+      }
+    }
+  },
+  "$defs": {
+    "plannedArtifact": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "artifactId",
+        "artifactType",
+        "profileId",
+        "required",
+        "sourceIds",
+        "draft",
+        "visualIntent"
+      ],
+      "properties": {
+        "artifactId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "artifactType": {
+          "enum": ["hub", "diagram", "explainer", "deck", "catalog"]
+        },
+        "profileId": {
+          "type": "string",
+          "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+        },
+        "required": { "type": "boolean" },
+        "sourceIds": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "draft": { "type": "string", "minLength": 1 },
+        "visualIntent": { "type": "string", "minLength": 1 },
+        "justification": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["kind", "sourceIds", "rationale"],
+          "properties": {
+            "kind": {
+              "enum": [
+                "status-change",
+                "rollout-complexity",
+                "source-backed-detail"
+              ]
+            },
+            "sourceIds": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "rationale": { "type": "string", "minLength": 1 }
+          }
         }
       }
     }

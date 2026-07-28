@@ -206,22 +206,118 @@ function publishReceipt() {
 function authorRequestV2() {
   return {
     schemaVersion: 'explainer-kit.author-request/v2',
-    artifactId: 'project-hub',
+    artifactId: 'project-recap',
     artifactType: 'hub',
     authoring: 'markdown',
     brief: '# Project recap author brief',
     factBase: factBase(),
     theme: theme(),
+    setContext: setPlan(),
+    plannedArtifact: setPlan().portfolio[0],
     floor: {
       requiredNarrative: ['context', 'architecture', 'validation'],
     },
   };
 }
 
+function setPlan() {
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['plan'],
+    ledger: {
+      terminology: [{ term: 'set planner', meaning: 'One planning callback.' }],
+      statuses: [{ subject: 'runtime', value: 'in progress' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recap-hub',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Lead with the validated project outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+      {
+        artifactId: 'system-visual',
+        artifactType: 'diagram',
+        profileId: 'architecture-system',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Show the core boundary and its adapter.',
+        visualIntent: 'Preserve system relationships.',
+      },
+      {
+        artifactId: 'walkthrough-deck',
+        artifactType: 'deck',
+        profileId: 'walkthrough-deck',
+        required: true,
+        sourceIds: ['plan'],
+        draft: 'Sequence the request, architecture, and outcome.',
+        visualIntent: 'Tell one paced project story.',
+      },
+      {
+        artifactId: 'runtime-deep-dive',
+        artifactType: 'explainer',
+        profileId: 'deep-dive',
+        required: false,
+        sourceIds: ['plan'],
+        draft: 'Explain the retained records in detail.',
+        visualIntent: 'Keep mechanics out of the hub.',
+        justification: {
+          kind: 'source-backed-detail',
+          sourceIds: ['plan'],
+          rationale: 'The retained-record mechanics need dedicated space.',
+        },
+      },
+    ],
+  };
+}
+
+function visualReviewRequest() {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-request/v1',
+    plan: setPlan(),
+    renderedArtifacts: setPlan().portfolio.map(({ artifactId }) => ({
+      artifactId,
+      renderedPath: `site/${artifactId}/index.html`,
+      evidence: [
+        {
+          viewport: 'desktop',
+          screenshotPath: `qa/${artifactId}-desktop.png`,
+          metricsPath: `qa/${artifactId}-desktop.json`,
+        },
+      ],
+    })),
+  };
+}
+
+function visualReviewResult() {
+  return {
+    schemaVersion: 'explainer-kit.visual-review-result/v1',
+    reviewId: 'visual-review-1',
+    reviewedAt: NOW,
+    disposition: 'correct',
+    artifactIds: setPlan().portfolio.map(({ artifactId }) => artifactId),
+    findings: [
+      {
+        artifactId: 'project-recap',
+        rubric: 'first-viewport',
+        severity: 'important',
+        evidence: 'The primary outcome begins below the fold.',
+        correction: 'Move the outcome summary into the lead panel.',
+      },
+    ],
+  };
+}
+
 function authorResultV2() {
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
-    artifactId: 'project-hub',
+    artifactId: 'project-recap',
     content: {
       markdown: '# Project recap\n\nA concise, evidence-backed recap.',
     },
@@ -287,6 +383,71 @@ test('validates author contract v2 by kind, kind+version, and schema id', () => 
       errors: [],
     });
   }
+});
+
+test('validates provider-neutral set planning and visual review envelopes', () => {
+  for (const [kind, fixture] of [
+    ['set-plan', setPlan()],
+    ['visual-review-request', visualReviewRequest()],
+    ['visual-review-result', visualReviewResult()],
+  ]) {
+    assert.deepEqual(validateContract(kind, fixture), {
+      valid: true,
+      errors: [],
+    });
+    assert.equal(JSON.stringify(fixture).includes('provider'), false);
+  }
+});
+
+test('rejects set drift, unjustified optional artifacts, and detached authors', () => {
+  const unjustified = setPlan();
+  delete unjustified.portfolio.at(-1).justification;
+  assert.ok(
+    validateContract('set-plan', unjustified).errors.some(
+      ({ code }) => code === 'optional-justification-required',
+    ),
+  );
+
+  const unknownSource = setPlan();
+  unknownSource.portfolio[0].sourceIds = ['unknown'];
+  assert.ok(
+    validateContract('set-plan', unknownSource).errors.some(
+      ({ code }) => code === 'unknown-source',
+    ),
+  );
+
+  const detached = authorRequestV2();
+  detached.plannedArtifact = structuredClone(detached.setContext.portfolio[1]);
+  assert.ok(
+    validateContract('author-request', detached).errors.some(
+      ({ code }) => code === 'set-artifact-mismatch',
+    ),
+  );
+
+  const drifted = authorRequestV2();
+  drifted.plannedArtifact = {
+    ...drifted.plannedArtifact,
+    draft: 'A different per-author draft.',
+  };
+  assert.ok(
+    validateContract('author-request', drifted).errors.some(
+      ({ code }) => code === 'set-plan-drift',
+    ),
+  );
+});
+
+test('rejects unknown review dispositions and artifact references', () => {
+  const disposition = visualReviewResult();
+  disposition.disposition = 'maybe';
+  assert.equal(validateContract('visual-review-result', disposition).valid, false);
+
+  const request = visualReviewRequest();
+  request.renderedArtifacts[0].artifactId = 'unknown-artifact';
+  assert.ok(
+    validateContract('visual-review-request', request).errors.some(
+      ({ code }) => code === 'unknown-artifact',
+    ),
+  );
 });
 
 test('accepts v2 expansion proposals while recipe policy remains external', () => {
