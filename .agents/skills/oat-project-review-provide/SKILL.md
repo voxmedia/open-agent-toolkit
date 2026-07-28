@@ -309,33 +309,59 @@ If review type is `code`, use the scope resolution below.
 
 **Step 3a: Detect Re-Review Context**
 
-Before resolving scope, check if this is a re-review of fixes from a prior review cycle:
+After parsing the requested scope, distinguish an explicit range override from a
+nominal project scope. An explicitly supplied `base_sha=<sha>` or
+`<sha1>..<sha2>` range takes priority and skips automatic narrowing. Nominal
+scope identifiers (`pNN`, `pNN-pMM`, `final`, and task IDs) identify the review
+scope but do not override re-review narrowing.
 
-1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review or `(p02-p03-review)` for a contiguous phase-range review).
-2. If `(review)` fix tasks exist **and** their status is `completed`:
-   - This is a re-review. Before prompting, check the workflow preference:
+For a code review without an explicit range override, resolve re-review
+provenance before normal scope resolution:
 
-     ```bash
-     AUTO_NARROW=$(oat config get workflow.autoNarrowReReviewScope 2>/dev/null || true)
-     ```
+1. Set `REVIEW_HEAD` to the full commit from
+   `git rev-parse HEAD^{commit}`. Resolve the current lineage:
+   - `manual` and `auto` invocations use lifecycle lineage.
+   - A `gate` invocation uses gate lineage qualified by its exact
+     `oat_gate_target`.
+2. Find the newest prior completed code review for the same project, exact
+   nominal scope, and lineage. A lifecycle review matches only another
+   lifecycle review. A gate review matches only a prior gate run with the same
+   exact gate target; it never narrows from a lifecycle review or from another
+   gate target.
+3. Resolve `PRIOR_REVIEWED_HEAD` from these provenance sources:
+   - First inspect the newest matching review artifact in
+     `"$PROJECT_PATH/reviews/"` and read its full `oat_review_head_sha`.
+   - Then inspect the newest matching append-ordered row in the tracked
+     `plan.md` Reviews table and read its `Reviewed Head`. Match row provenance
+     by `Scope`, `Type=code`, `Invocation`, and, for gates, `Gate Target`.
+   - When both matching sources exist, they must name the same reviewed head.
+     If they disagree, do not prefer either source.
+   - When the artifact is absent (for example, after receive/archive), use the
+     matching tracked row. When neither source yields a candidate, this is an
+     initial review or provenance is unavailable.
+4. Accept a candidate only when it is exactly 40 hexadecimal characters and
+   both guards pass:
 
-     - **If `AUTO_NARROW` is `true`:** Auto-narrow. Print `Re-review scope: narrowed to fix commits (from workflow.autoNarrowReReviewScope).` Gather only the commits for completed `(review)` fix tasks (see below). Skip the prompt.
-     - **If `AUTO_NARROW` is `false`:** Use full scope. Print `Re-review scope: full (from workflow.autoNarrowReReviewScope).` Skip the prompt and proceed with full scope resolution below.
-     - **If unset:** Fall through to the standard prompt.
+   ```bash
+   git cat-file -e "${PRIOR_REVIEWED_HEAD}^{commit}" &&
+     git merge-base --is-ancestor "$PRIOR_REVIEWED_HEAD" "$REVIEW_HEAD"
+   ```
 
-   - Standard prompt (when preference is unset):
+   If accepted, the narrowed range is exactly
+   `SCOPE_RANGE="$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD"`.
 
-     ```
-     Detected completed review fix tasks for this scope:
-     - {task IDs and descriptions}
+5. Fail open to normal full-scope resolution when this is an initial review,
+   neither provenance source yields a valid candidate, the sources disagree,
+   the commit does not exist, or the ancestry guard fails. State the specific
+   fallback reason; never infer narrowing from ambiguous or legacy lineage.
 
-     Scope to fix task commits only? (Y/n)
-     ```
-
-   - **If yes (default):** gather only the commits associated with those fix tasks using commit convention grep (e.g., `git log --oneline --grep="\(pNN-tNN\)" HEAD~50..HEAD` for each fix task ID). Set `SCOPE_RANGE` to cover only those commits.
-   - **If no:** proceed with full scope resolution below (re-review everything).
-
-3. If no `(review)` fix tasks exist, or they are not yet completed, proceed with normal scope resolution.
+After resolving a valid guarded range, apply
+`workflow.autoNarrowReReviewScope`: `true` accepts the narrowed range,
+`false` selects normal full scope, and unset asks whether to use the resolved
+range. The prompt must display the exact guarded
+`$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD` range rather than a commit-message-derived
+subset. If no valid range was resolved, continue with normal full-scope
+resolution without prompting.
 
 **Priority order for scope resolution:**
 
