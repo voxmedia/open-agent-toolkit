@@ -757,6 +757,45 @@ test('fails before composition on invalid set sources, ledger conflicts, or miss
   }
 });
 
+test('fails before composition when approved sources are omitted or left uncovered', async () => {
+  for (const coverageFailure of ['omitted', 'unassigned']) {
+    const fixture = await suppliedFixture('project-recap');
+    const factBase = suppliedFactBase();
+    factBase.sources.push({
+      id: 'implementation',
+      kind: 'file',
+      locator: 'implementation.md',
+      hash: HASH,
+      observedAt: NOW,
+    });
+    await writeFile(
+      fixture.factBasePath,
+      `${JSON.stringify(factBase, null, 2)}\n`,
+    );
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
+    const result = await runExplainerCore(fixture.request, {
+      planSet: async (plannerRequest) => {
+        const plan = plannedSet(plannerRequest);
+        if (coverageFailure === 'omitted') {
+          plan.sourceIds = ['project'];
+        }
+        for (const artifact of plan.portfolio) {
+          artifact.sourceIds = ['project'];
+        }
+        return plan;
+      },
+      author,
+      now: () => NOW,
+    });
+
+    assert.equal(result.outcome, 'failed', coverageFailure);
+    assert.equal(result.errors[0].code, 'E_SET_PLAN', coverageFailure);
+    assert.equal(author.mock.callCount(), 0, coverageFailure);
+  }
+});
+
 test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, and resume', async () => {
   const fixture = await suppliedFixture('project-recap');
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };

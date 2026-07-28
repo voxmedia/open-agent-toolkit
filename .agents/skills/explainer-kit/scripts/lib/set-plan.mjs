@@ -116,6 +116,31 @@ function validateAgainstInputs(plan, { recipe, sourceIds }) {
       );
     }
   }
+  const plannedSources = new Set(plan.sourceIds);
+  const omittedSources = sourceIds.filter(
+    (sourceId) => !plannedSources.has(sourceId),
+  );
+  if (
+    omittedSources.length > 0 ||
+    plannedSources.size !== availableSources.size
+  ) {
+    throw setPlanError(
+      `Set plan must declare every reconciled non-critic source; omitted ${omittedSources.join(', ') || 'none'}.`,
+    );
+  }
+  const coveredSources = new Set(
+    plan.portfolio.flatMap(({ sourceIds: artifactSourceIds }) =>
+      Array.isArray(artifactSourceIds) ? artifactSourceIds : [],
+    ),
+  );
+  const uncoveredSources = plan.sourceIds.filter(
+    (sourceId) => !coveredSources.has(sourceId),
+  );
+  if (uncoveredSources.length > 0) {
+    throw setPlanError(
+      `Every declared source must cover at least one portfolio artifact; uncovered ${uncoveredSources.join(', ')}.`,
+    );
+  }
 
   const plannedById = new Map(
     plan.portfolio.map((artifact) => [artifact.artifactId, artifact]),

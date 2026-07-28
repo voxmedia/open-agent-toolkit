@@ -13,6 +13,7 @@ import { join, relative, sep } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import { canonicalHash } from '../scripts/lib/contracts.mjs';
+import { loadRecipe } from '../scripts/lib/recipes.mjs';
 import {
   initializeRun,
   reopenBuildStages,
@@ -20,6 +21,7 @@ import {
   writeManifestAtomic,
   writeSetPlanRecords,
 } from '../scripts/lib/records.mjs';
+import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
 
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
@@ -371,6 +373,63 @@ test('retains immutable versioned set-plan request, result, ledger, portfolio, a
     }),
     /immutable|already exist/i,
   );
+});
+
+test('rejects omitted reconciled sources and declared sources without artifact coverage', async () => {
+  const recipe = loadRecipe('project-recap', '1');
+  const sourceIds = ['plan', 'implementation'];
+  const factBase = {
+    sources: sourceIds.map((id) => ({ id })),
+  };
+  const candidate = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: recipe.floor.map((artifact) => ({
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds,
+      draft: `Compose ${artifact.id}.`,
+      visualIntent: `Use the planned ${artifact.type} medium.`,
+    })),
+  };
+
+  for (const [label, mutate] of [
+    [
+      'omitted reconciled source',
+      (plan) => {
+        plan.sourceIds = ['plan'];
+        for (const artifact of plan.portfolio) {
+          artifact.sourceIds = ['plan'];
+        }
+      },
+    ],
+    [
+      'declared source without artifact coverage',
+      (plan) => {
+        for (const artifact of plan.portfolio) {
+          artifact.sourceIds = ['plan'];
+        }
+      },
+    ],
+  ]) {
+    const plan = structuredClone(candidate);
+    mutate(plan);
+    await assert.rejects(
+      planExplainerSet({
+        recipe,
+        factBase,
+        discovery: { rounds: 0, findings: [], reason: 'not-requested' },
+        planSet: async () => plan,
+      }),
+      (error) => error.code === 'E_SET_PLAN',
+      label,
+    );
+  }
 });
 
 test('cleans a temporary manifest after a failed atomic replacement', async () => {
