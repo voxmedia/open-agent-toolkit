@@ -8,6 +8,7 @@ import {
   recipeExpansion,
   recipeFloor,
   recipeRequiredNarrative,
+  selectRecipeAuthoring,
   shouldStopDiscovery,
   validateContentModel,
   validatePlannedPortfolio,
@@ -669,6 +670,39 @@ test('project recap declares all six accountability sections', () => {
   assert.deepEqual(
     recipeRequiredNarrative(recipe, artifact.id),
     RECAP_SECTIONS,
+  );
+});
+
+test('project recap exposes an explicit deterministic Markdown fallback', () => {
+  const recipe = loadRecipe('project-recap', '1');
+  assert.deepEqual(recipe.fallback, {
+    mode: 'deterministic-markdown',
+    selection: 'explicit',
+    authoring: 'markdown',
+    scope: 'portfolio',
+  });
+
+  assert.deepEqual(
+    recipeFloor(selectRecipeAuthoring(recipe)),
+    recipeFloor(recipe),
+    'default selection remains artistic',
+  );
+
+  const fallback = selectRecipeAuthoring(recipe, 'deterministic-markdown');
+  assert.ok(
+    recipeFloor(fallback).every(({ authoring }) => authoring === 'markdown'),
+  );
+  assert.ok(
+    fallback.expansion.profiles.every(
+      ({ authoring, shell }) => authoring === 'markdown' && shell === undefined,
+    ),
+  );
+
+  const openPolicy = structuredClone(recipe);
+  openPolicy.fallback.automatic = true;
+  assert.throws(
+    () => validateRecipe(openPolicy, 'open-fallback'),
+    /fallback has unknown or missing keys/,
   );
 });
 

@@ -485,6 +485,15 @@ function validateCrossRecord(kind, value, context, errors) {
         'Retaining raw art direction requires theme.artDirection.',
       );
     }
+
+    if (value.recapMode !== undefined && value.recipe?.id !== 'project-recap') {
+      add(
+        errors,
+        '$.recapMode',
+        'recap-mode-recipe',
+        'recapMode is allowed only for the project-recap recipe.',
+      );
+    }
   }
 
   if (kind === 'set-plan') {

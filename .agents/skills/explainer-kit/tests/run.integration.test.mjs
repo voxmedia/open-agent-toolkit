@@ -479,6 +479,97 @@ test('unattended lifecycle sources persist review provenance without prompting',
   ]);
 });
 
+test('project recap defaults to the persisted artistic authoring mode', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const requests = [];
+  const result = await runExplainer(fixture.request, {
+    author: async (authorRequest) => {
+      requests.push(authorRequest);
+      return authorResult(authorRequest);
+    },
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(requests.length, 3);
+  assert.ok(requests.every(({ authoring }) => authoring === 'html'));
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.deepEqual(
+    manifest.artifacts.map(({ contentPath }) => contentPath),
+    [
+      'source/content/project-recap.html',
+      'source/content/architecture.html',
+      'source/content/deck.html',
+    ],
+  );
+  const retainedRequest = JSON.parse(
+    await readFile(join(result.runRoot, 'run-request.json'), 'utf8'),
+  );
+  assert.equal(retainedRequest.recapMode, 'artistic');
+});
+
+test('explicit deterministic recap fallback retains the full portfolio as Markdown', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const requests = [];
+  const result = await runExplainer(
+    { ...fixture.request, recapMode: 'deterministic-markdown' },
+    {
+      author: async (authorRequest) => {
+        requests.push(authorRequest);
+        return authorResult(authorRequest);
+      },
+      now: () => NOW,
+    },
+  );
+
+  assert.equal(result.outcome, 'built-not-durable');
+  assert.deepEqual(
+    requests.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+  assert.ok(
+    requests.every(
+      ({ authoring, shell }) => authoring === 'markdown' && shell === undefined,
+    ),
+  );
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.deepEqual(
+    manifest.artifacts.map(({ contentPath }) => contentPath),
+    [
+      'source/content/project-recap.md',
+      'source/content/architecture.md',
+      'source/content/deck.md',
+    ],
+  );
+  assert.ok(
+    manifest.artifacts.every(
+      ({ contentPath }) => contentPath in manifest.immutableHashes,
+    ),
+  );
+  const retainedRequest = JSON.parse(
+    await readFile(join(result.runRoot, 'run-request.json'), 'utf8'),
+  );
+  assert.equal(retainedRequest.recapMode, 'deterministic-markdown');
+});
+
+test('artistic author failure never silently downgrades to Markdown', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const author = mock.fn(async () => {
+    throw new Error('artistic author failed');
+  });
+  const result = await runExplainer(fixture.request, {
+    author,
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(author.mock.callCount(), 1);
+  assert.match(result.errors[0].message, /artistic author failed/);
+  await assert.rejects(
+    access(join(result.runRoot, 'source/content/project-recap.md')),
+  );
+});
+
 test('completed unattended runs are not mistaken for unresolved approval resumes', async () => {
   const fixture = await suppliedFixture('project-recap');
   const initial = await runExplainer(fixture.request, { now: () => NOW });

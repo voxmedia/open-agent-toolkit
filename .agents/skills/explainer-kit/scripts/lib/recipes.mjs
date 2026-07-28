@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 
 const RECIPE_SCHEMA_V2 = 'explainer-kit.recipe/v2';
-const RECIPE_V2_ROOT_KEYS = [
+const RECIPE_V2_REQUIRED_ROOT_KEYS = [
   'discoveryLimits',
   'expansion',
   'floor',
@@ -10,6 +10,7 @@ const RECIPE_V2_ROOT_KEYS = [
   'sourceRoles',
   'version',
 ];
+const RECIPE_V2_ROOT_KEYS = [...RECIPE_V2_REQUIRED_ROOT_KEYS, 'fallback'];
 const SOURCE_ROLE_KEYS = [
   'accepts',
   'maxBindings',
@@ -41,6 +42,7 @@ const PROFILE_KEYS = [
 ];
 const EXPANSION_LIMIT_KEYS = ['maxArtifacts', 'maxPerType'];
 const DISCOVERY_LIMIT_KEYS = ['consecutiveNoNewFindingsRounds', 'maxRounds'];
+const FALLBACK_KEYS = ['authoring', 'mode', 'scope', 'selection'];
 const SOURCE_KINDS = new Set([
   'file',
   'directory',
@@ -83,6 +85,32 @@ export function loadRecipe(id, version) {
     throw error;
   }
   return structuredClone(recipe);
+}
+
+export function selectRecipeAuthoring(recipe, mode = 'artistic') {
+  const selected = structuredClone(recipe);
+  if (mode === 'artistic') {
+    return selected;
+  }
+  if (selected.fallback?.mode !== mode) {
+    const error = new Error(
+      `Recipe ${selected.id}@${selected.version} does not support recap mode ${mode}`,
+    );
+    error.code = 'E_RECIPE_UNSUPPORTED';
+    throw error;
+  }
+
+  selected.floor = selected.floor.map((artifact) => ({
+    ...artifact,
+    authoring: selected.fallback.authoring,
+  }));
+  selected.expansion.profiles = selected.expansion.profiles.map(
+    ({ shell: _shell, ...profile }) => ({
+      ...profile,
+      authoring: selected.fallback.authoring,
+    }),
+  );
+  return selected;
 }
 
 export function recipeFloor(recipe) {
@@ -380,7 +408,12 @@ export function shouldStopDiscovery(recipe, findingsByRound) {
 export function validateRecipe(recipe, file = 'recipe') {
   assertObject(recipe, `${file} recipe`);
   if (recipe.schemaVersion === RECIPE_SCHEMA_V2) {
-    assertExactKeys(recipe, RECIPE_V2_ROOT_KEYS, `${file} recipe`);
+    assertAllowedKeys(
+      recipe,
+      RECIPE_V2_ROOT_KEYS,
+      RECIPE_V2_REQUIRED_ROOT_KEYS,
+      `${file} recipe`,
+    );
     validateV2Shape(recipe, file);
   } else {
     assert(false, `${file} has unsupported schemaVersion`);
@@ -418,6 +451,22 @@ export function validateRecipe(recipe, file = 'recipe') {
     );
   }
   assertUnique(roleNames, `${file} source role names`);
+
+  if ('fallback' in recipe) {
+    assert(
+      recipe.id === 'project-recap',
+      `${file} fallback is allowed only for project-recap`,
+    );
+    assertObject(recipe.fallback, `${file} fallback`);
+    assertExactKeys(recipe.fallback, FALLBACK_KEYS, `${file} fallback`);
+    assert(
+      recipe.fallback.mode === 'deterministic-markdown' &&
+        recipe.fallback.selection === 'explicit' &&
+        recipe.fallback.authoring === 'markdown' &&
+        recipe.fallback.scope === 'portfolio',
+      `${file} has an unsupported fallback policy`,
+    );
+  }
 
   validateDiscoveryLimits(recipe.discoveryLimits, file);
   return recipe;

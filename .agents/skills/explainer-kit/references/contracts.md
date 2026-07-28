@@ -45,6 +45,15 @@ ambient or home-directory file is consulted. The callback must return an
 `content.html`, matching the artifact's declared authoring path, plus non-secret
 provenance. The executable callback is never persisted in `run-request.json`.
 
+Project recap requests have an explicit `recapMode`. Omitting it selects and
+persists `artistic`, which keeps the recipe's rich HTML floor. Selecting
+`deterministic-markdown` before the run applies the recipe-owned fallback to
+the complete planned portfolio, including optional expansions, while retaining
+the same adaptive hub, architecture, and deck identities. The resulting
+Markdown author records and `source/content/*.md` paths remain distinct in the
+manifest and immutable rebuild package. An artistic author failure fails the
+run; the core never silently retries or downgrades it as Markdown.
+
 Before artifact authoring, a caller supplies one provider-neutral `planSet`
 callback. It receives the reconciled fact base and recipe policy and returns
 `explainer-kit.set-plan/v1`:

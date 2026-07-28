@@ -26,6 +26,7 @@ import {
   recipeExpansion,
   recipeFloor,
   recipeRequiredNarrative,
+  selectRecipeAuthoring,
   shouldStopDiscovery,
   validateContentModel,
   validatePlannedPortfolio,
@@ -48,10 +49,14 @@ import { resolveTheme } from './lib/theme.mjs';
 const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
 
 export async function runExplainer(request, options = {}) {
-  assertValidRequest(request);
-  const recipe = loadRecipe(request.recipe.id, request.recipe.version);
-  const resumed = await loadResumableRun(request);
-  const run = resumed ?? (await initializeRun(request));
+  const normalizedRequest = normalizeRunRequest(request);
+  assertValidRequest(normalizedRequest);
+  const recipe = selectRecipeAuthoring(
+    loadRecipe(normalizedRequest.recipe.id, normalizedRequest.recipe.version),
+    normalizedRequest.recapMode,
+  );
+  const resumed = await loadResumableRun(normalizedRequest);
+  const run = resumed ?? (await initializeRun(normalizedRequest));
   const now = options.now ?? (() => new Date().toISOString());
   const state = {
     run,
@@ -394,6 +399,17 @@ function artisticRender(state, artifact) {
   };
 }
 
+function normalizeRunRequest(request) {
+  const normalized = structuredClone(request);
+  if (
+    normalized.recipe?.id === 'project-recap' &&
+    normalized.recapMode === undefined
+  ) {
+    normalized.recapMode = 'artistic';
+  }
+  return normalized;
+}
+
 async function loadResumableRun(request) {
   const normalized = structuredClone(request);
   normalized.theme = {
@@ -433,6 +449,7 @@ async function loadResumableRun(request) {
     persistedRequest.slug !== normalized.slug ||
     persistedRequest.recipe?.id !== normalized.recipe.id ||
     persistedRequest.recipe?.version !== normalized.recipe.version ||
+    persistedRequest.recapMode !== normalized.recapMode ||
     persistedRequest.mode !== normalized.mode ||
     canonicalHash(persistedRequest.factBase) !==
       canonicalHash(normalized.factBase)

@@ -436,6 +436,56 @@ test('unattended recap always composes the adaptive hub, architecture, and deck 
   );
 });
 
+test('explicit deterministic fallback composes the same portfolio from Markdown', async () => {
+  const { request } = await fixture();
+  request.recapMode = 'deterministic-markdown';
+  const author = richAuthor();
+  const result = await runExplainer(request, {
+    author,
+    browserProbe: cleanProbe(),
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  assert.deepEqual(
+    author.requests.map(({ artifactId, authoring }) => [artifactId, authoring]),
+    [
+      ['project-recap', 'markdown'],
+      ['architecture', 'markdown'],
+      ['deck', 'markdown'],
+    ],
+  );
+  const manifest = await readJson(result.manifestPath);
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, contentPath, renderedPath }) => ({
+      id,
+      contentPath,
+      renderedPath,
+    })),
+    [
+      {
+        id: 'project-recap',
+        contentPath: 'source/content/project-recap.md',
+        renderedPath: HUB_PATH,
+      },
+      {
+        id: 'architecture',
+        contentPath: 'source/content/architecture.md',
+        renderedPath: `site/diagrams/${SLUG}/architecture/index.html`,
+      },
+      {
+        id: 'deck',
+        contentPath: 'source/content/deck.md',
+        renderedPath: `site/decks/${SLUG}/deck/index.html`,
+      },
+    ],
+  );
+});
+
 test('a rich recap ships with an empty warning set', async () => {
   const { probe, request, result } = await richRun();
 

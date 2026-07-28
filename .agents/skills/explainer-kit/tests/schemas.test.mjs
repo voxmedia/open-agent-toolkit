@@ -81,6 +81,10 @@ test('run request persists render strategy and complete durability input', async
     'commit',
     'publish',
   ]);
+  assert.deepEqual(schema.properties.recapMode.enum, [
+    'artistic',
+    'deterministic-markdown',
+  ]);
   assert.equal(schema.$defs.sourceBinding.properties.role.minLength, 1);
   assert.equal(schema.$defs.sourceBinding.properties.sourceSetId.minLength, 1);
 });

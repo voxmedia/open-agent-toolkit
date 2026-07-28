@@ -80,6 +80,12 @@
       "maxArtifacts": 5
     }
   },
+  "fallback": {
+    "mode": "deterministic-markdown",
+    "selection": "explicit",
+    "authoring": "markdown",
+    "scope": "portfolio"
+  },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,
     "maxRounds": 8

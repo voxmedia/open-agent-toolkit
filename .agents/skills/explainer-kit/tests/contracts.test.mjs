@@ -870,6 +870,27 @@ test('enforces every run-request fact-base and durability invariant', () => {
   assert.equal(validateContract('run-request', retained).valid, true);
 });
 
+test('allows explicit recap modes only for project recaps', () => {
+  for (const recapMode of ['artistic', 'deterministic-markdown']) {
+    const request = runRequest();
+    request.recipe = { id: 'project-recap', version: '1' };
+    request.recapMode = recapMode;
+    assert.equal(
+      validateContract('run-request', request).valid,
+      true,
+      recapMode,
+    );
+  }
+
+  const unrelated = runRequest();
+  unrelated.recapMode = 'deterministic-markdown';
+  assert.ok(
+    validateContract('run-request', unrelated).errors.some(
+      ({ code }) => code === 'recap-mode-recipe',
+    ),
+  );
+});
+
 test('rejects raw secret fields', () => {
   const secret = {
     ...publishRequest(),
