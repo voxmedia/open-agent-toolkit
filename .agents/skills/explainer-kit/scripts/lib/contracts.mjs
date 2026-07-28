@@ -496,6 +496,7 @@ function validateCrossRecord(kind, value, context, errors) {
     value.schemaVersion === 'explainer-kit.author-request/v2'
   ) {
     validateAuthorSetContext(value, errors);
+    validateVisualAuthoringGuidance(value, errors);
   }
 
   if (kind === 'visual-review-request') {
@@ -901,6 +902,29 @@ function validateAuthorSetContext(value, errors) {
       '$.plannedArtifact',
       'set-plan-drift',
       'Author request planned artifact must be identical to the shared set plan entry.',
+    );
+  }
+}
+
+function validateVisualAuthoringGuidance(value, errors) {
+  if (typeof value.visualAuthoringGuidance !== 'string') {
+    return;
+  }
+  const guidance = value.visualAuthoringGuidance.toLowerCase();
+  const missing = [
+    'representation',
+    'hierarchy',
+    'responsive navigation',
+    'table',
+    'diagram',
+    'deck',
+  ].filter((topic) => !guidance.includes(topic));
+  if (missing.length > 0) {
+    add(
+      errors,
+      '$.visualAuthoringGuidance',
+      'malformed-authoring-guidance',
+      `Visual authoring guidance is missing bundled topics: ${missing.join(', ')}.`,
     );
   }
 }

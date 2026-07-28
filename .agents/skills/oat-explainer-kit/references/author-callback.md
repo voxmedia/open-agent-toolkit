@@ -15,6 +15,10 @@ core constructs that request from recipe-owned policy:
 
 - `brief` contains the prose loaded from the floor entry or expansion profile's
   `briefRef`; the author must treat the inlined brief as its editorial contract.
+- `visualAuthoringGuidance` contains the installed core's bundled
+  representation, hierarchy, responsive-navigation, table, diagram, and deck
+  rules. Treat it as the medium baseline; do not read ambient or home-directory
+  guidance.
 - `factBase` contains the reconciled evidence for the run. Ground claims in that
   fact base and do not replace it with ambient project context.
 - `authoring` selects the output path. Return Markdown for `markdown` and a
@@ -24,23 +28,21 @@ core constructs that request from recipe-owned policy:
   brief's license to elaborate.
 - A floor request may include `floor.requiredNarrative`, which identifies the
   narrative coverage checked later as non-blocking guidelines.
+- `setContext` is the complete immutable planner-owned portfolio and shared
+  ledger. `plannedArtifact` is the exact entry assigned to this callback;
+  preserve its identity, sources, draft, and visual intent.
 
 Return one matching `explainer-kit.author-result/v2`: preserve `artifactId`,
 set exactly one of `content.markdown` or `content.html`, and include
 `provenance`. Do not persist provider credentials or callback configuration in
 the result.
 
-## Expansion
+## Planner-owned expansion
 
-Only a floor result may propose expansion. Put each proposal in
-`proposedArtifacts` as `{id, profileId, rationale}`. Do not choose an artifact
-type, authoring mode, brief, or shell in the proposal; the referenced recipe
-profile, selected by `profileId`, owns those values.
-
-The core validates proposal IDs, profile membership, collisions, and finite
-caps. It rejects malformed proposals, records over-limit proposals as warnings,
-and issues a new author request for every accepted artifact. Handle each
-follow-up request independently and do not recursively propose more artifacts.
+The set planner finalizes the complete floor and expansion portfolio before any
+author runs. Authors must not return `proposedArtifacts` or otherwise add,
+remove, replace, or reorder portfolio entries. Handle only the supplied
+`plannedArtifact`; the core rejects author-driven expansion after planning.
 
 ## Lifecycle invocation
 

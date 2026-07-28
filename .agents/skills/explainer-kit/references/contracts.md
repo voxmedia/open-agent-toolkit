@@ -35,20 +35,15 @@ callback; a run without one fails `E_AUTHOR_REQUIRED`. An in-process caller
 supplies `options.author(request)`; a JSON-only CLI caller uses
 `--author-module author.mjs`. The core invokes it once per resolved artifact
 with an `explainer-kit.author-request/v2` payload containing the artifact
-identity and type, the artifact's authoring path, the inlined brief, the
-reconciled fact base, the resolved theme, the shell source for artistic
-artifacts, the required narrative sections for narrative floor artifacts, and
-bounded-discovery context. It must return an `explainer-kit.author-result/v2`
-carrying exactly one of `content.markdown` or `content.html`, matching the
-artifact's declared authoring path, plus non-secret provenance. A floor result
-may also carry `proposedArtifacts` of `{id, profileId, rationale}`; the
-referenced expansion profile supplies the type, authoring path, brief, and
-shell. The executable callback is never persisted in `run-request.json`.
-
-Unknown profile IDs and unsafe, duplicate, or floor-colliding artifact IDs are
-hard errors. Proposals beyond a profile's `maxCount` or the recipe's
-`expansion.limits.maxArtifacts` are rejected with a warning and the run
-continues.
+identity and type, the artifact's authoring path, the inlined brief, the bundled
+`visualAuthoringGuidance`, the reconciled fact base, the resolved theme, the
+shell source for artistic artifacts, the required narrative sections for
+narrative floor artifacts, and bounded-discovery context. The guidance is
+loaded only from the installed skill's `references/visual-authoring.md`; no
+ambient or home-directory file is consulted. The callback must return an
+`explainer-kit.author-result/v2` carrying exactly one of `content.markdown` or
+`content.html`, matching the artifact's declared authoring path, plus non-secret
+provenance. The executable callback is never persisted in `run-request.json`.
 
 Before artifact authoring, a caller supplies one provider-neutral `planSet`
 callback. It receives the reconciled fact base and recipe policy and returns
@@ -84,7 +79,8 @@ adaptive portfolio, per-artifact draft, and visual intent. Optional entries add
 a source-backed `justification`; undeclared sources, conflicting ledger values,
 duplicate artifact IDs, and unjustified optional entries are invalid. Each
 `author-request/v2` carries the complete immutable `setContext` plus the exact
-matching `plannedArtifact`.
+matching `plannedArtifact`. The planner finalizes floor and expansion entries
+before authoring; author results cannot add, remove, or replace artifacts.
 
 Visual review uses provider-neutral
 `explainer-kit.visual-review-request/v1` and

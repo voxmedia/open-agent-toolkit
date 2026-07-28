@@ -210,6 +210,8 @@ function authorRequestV2() {
     artifactType: 'hub',
     authoring: 'markdown',
     brief: '# Project recap author brief',
+    visualAuthoringGuidance:
+      'Representation, hierarchy, responsive navigation, table, diagram, and deck guidance.',
     factBase: factBase(),
     theme: theme(),
     setContext: setPlan(),
@@ -437,6 +439,21 @@ test('rejects set drift, unjustified optional artifacts, and detached authors', 
   assert.ok(
     validateContract('author-request', drifted).errors.some(
       ({ code }) => code === 'set-plan-drift',
+    ),
+  );
+});
+
+test('requires complete bundled visual guidance in author requests', () => {
+  const missing = authorRequestV2();
+  delete missing.visualAuthoringGuidance;
+  assert.equal(validateContract('author-request', missing).valid, false);
+
+  const malformed = authorRequestV2();
+  malformed.visualAuthoringGuidance =
+    'This incomplete guidance mentions only hierarchy.';
+  assert.ok(
+    validateContract('author-request', malformed).errors.some(
+      ({ code }) => code === 'malformed-authoring-guidance',
     ),
   );
 });

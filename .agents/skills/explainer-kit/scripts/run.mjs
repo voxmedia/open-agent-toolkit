@@ -1039,11 +1039,13 @@ function resolveAuthorProvenance(claimed, trust, artifactId) {
 }
 
 async function authorArtifact(state, artifact, author, trust) {
-  const brief = await readSkillFile(artifact.briefRef);
-  const shellContent =
+  const [brief, visualAuthoringGuidance, shellContent] = await Promise.all([
+    readSkillFile(artifact.briefRef),
+    readSkillFile('references/visual-authoring.md'),
     artifact.authoring === 'html'
-      ? await readSkillFile(`templates/${artifact.shell}.html`)
-      : undefined;
+      ? readSkillFile(`templates/${artifact.shell}.html`)
+      : undefined,
+  ]);
   const resolvedArtifact = {
     ...artifact,
     ...(shellContent && { shellContent }),
@@ -1058,6 +1060,7 @@ async function authorArtifact(state, artifact, author, trust) {
     artifactType: artifact.type,
     authoring: artifact.authoring,
     brief,
+    visualAuthoringGuidance,
     factBase: structuredClone(state.factBase),
     ...(shellContent && { shell: shellContent }),
     theme: structuredClone(state.theme),

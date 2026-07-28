@@ -149,12 +149,15 @@ test('author v2 contracts require authored content and provenance', async () => 
     'artifactType',
     'authoring',
     'brief',
+    'visualAuthoringGuidance',
     'factBase',
     'theme',
     'setContext',
     'plannedArtifact',
   ]);
   assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
+  assert.equal(request.properties.visualAuthoringGuidance.type, 'string');
+  assert.equal(request.properties.visualAuthoringGuidance.minLength, 1);
   assert.deepEqual(result.required, [
     'schemaVersion',
     'artifactId',

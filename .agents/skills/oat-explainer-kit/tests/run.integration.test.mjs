@@ -650,7 +650,10 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     true,
   );
   assert.equal(
-    authorCalls.every(({ hasBrief, hasShell }) => hasBrief && hasShell),
+    authorCalls.every(
+      ({ hasBrief, hasShell, hasVisualAuthoringGuidance }) =>
+        hasBrief && hasShell && hasVisualAuthoringGuidance,
+    ),
     true,
   );
   assert.ok(
@@ -848,6 +851,10 @@ export async function author(request) {
     plannedArtifact: structuredClone(request.plannedArtifact),
     hasBrief: typeof request.brief === 'string' && request.brief.length > 0,
     hasShell: typeof request.shell === 'string' && request.shell.length > 0,
+    hasVisualAuthoringGuidance:
+      typeof request.visualAuthoringGuidance === 'string' &&
+      ['representation', 'hierarchy', 'responsive navigation', 'table', 'diagram', 'deck']
+        .every((topic) => request.visualAuthoringGuidance.toLowerCase().includes(topic)),
   });
   const sections = (request.floor?.requiredNarrative ?? [])
     .map((id) => \`<section id="\${id}"><h2>\${id}</h2><p>Validated evidence.</p></section>\`)

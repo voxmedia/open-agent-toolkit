@@ -601,6 +601,16 @@ test('unattended author receives structured per-artifact context and retains val
       'explainer-kit.author-request/v2',
     );
     assert.match(authorRequest.brief, /Audience/i);
+    for (const topic of [
+      /representation/i,
+      /hierarchy/i,
+      /responsive navigation/i,
+      /table/i,
+      /diagram/i,
+      /deck/i,
+    ]) {
+      assert.match(authorRequest.visualAuthoringGuidance, topic);
+    }
     assert.equal(
       authorRequest.factBase.schemaVersion,
       'explainer-kit.fact-base/v1',
@@ -608,6 +618,13 @@ test('unattended author receives structured per-artifact context and retains val
     assert.equal(authorRequest.theme.schemaVersion, 'explainer-kit.theme/v1');
     assert.equal(typeof authorRequest.shell, 'string');
   }
+  assert.equal(
+    requests.every(
+      ({ visualAuthoringGuidance }) =>
+        visualAuthoringGuidance === requests[0].visualAuthoringGuidance,
+    ),
+    true,
+  );
   assert.deepEqual(requests[0].floor.requiredNarrative, [
     'original-request',
     'key-agent-decisions',
