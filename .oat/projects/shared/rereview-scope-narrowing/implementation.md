@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -24,13 +24,13 @@ oat_template_name: implementation
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----- | --------- |
 | p01   | completed   | 3     | 3/3       |
-| p02   | in_progress | 3     | 0/3       |
-| p03   | pending     | 2     | 0/2       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | in_progress | 2     | 0/2       |
 | p04   | pending     | 1     | 0/1       |
 | p05   | pending     | 1     | 0/1       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 3/13 tasks completed
+**Total:** 6/13 tasks completed
 
 ---
 
@@ -83,23 +83,79 @@ tests; lint, type-check, formatting, and root-owned re-review passed.
 
 ## Phase 2: Provenance contract
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-28
+**Completed:** 2026-07-28
+
+### Phase Summary
+
+- Added required reviewed-head and narrowed-range provenance to reviewer
+  artifacts.
+- Migrated the review ledger parser, public types, template, and enumerated
+  lifecycle writers to lineage-qualified provenance while preserving legacy
+  rows; the gate-identified implementation-writer gap is deferred below.
+- Made row- and artifact-sourced narrowing candidates share the same strict
+  lineage and full-SHA validation, with conservative full-scope fallback.
+- Phase review and the configured independent gate passed after one bounded
+  Important-finding fix round.
 
 ### Task p02-t01: Record the reviewed head on the review artifact
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8e5d7043245cf5258a7326ef352b1366564a7536`
+
+**Outcome:** Reviewer artifacts now carry the authoritative full reviewed head
+and disclose narrowed ranges without overstating inherited coverage.
 
 ### Task p02-t02: Migrate the review ledger to carry lineage-qualified provenance
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d56cff7d0b5205a5aa849a300499a1657c5b0ddc`
+
+**Outcome:** The control-plane parser, public review status, plan template, and
+review lifecycle writers now support reviewed head, invocation, and gate target
+columns while accepting legacy rows.
 
 ### Task p02-t03: Fail open when durable lineage cannot be established
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `33e4506ef7211d75faa30402ea6b1a11e278e475`
+
+**Outcome:** Durable ledger candidates must satisfy the same lineage predicate
+as artifacts; missing or ambiguous provenance falls back to full scope.
+
+**Review fix:** `0908e1cf87a50f6fd81f10ab30735ac88e5e9813` —
+rejected abbreviated, symbolic, and non-hex durable reviewed heads before Git
+guards can authorize narrowing.
+
+**Verification:** 76 control-plane tests and 3,404 CLI tests passed; lint,
+type-check, formatting, focused reviewer verification, and the independent
+phase gate passed.
+
+### Passing Gate Judgment Sweep
+
+**Date:** 2026-07-28
+**Review artifact:**
+`reviews/archived/p02-review-2026-07-28T214026Z.md`
+
+**Findings:** 0 Critical, 0 Important, 3 Medium, 0 Minor.
+
+All three Medium findings were deferred to the mandatory final-review
+resurfacing gate:
+
+- **M1 — `oat-project-implement` ledger writer contract:** Agree. The
+  implementation skill can disposition or archive review rows without the
+  provenance migration/preservation rules. Defer because correcting a
+  canonical skill requires a dedicated version bump, pinned assertion update,
+  and focused verification; absent provenance safely fails open to full scope.
+- **M2 — Header-relative provenance parsing:** Agree. Custom widened tables can
+  misassign lineage cells because the parser uses fixed positions. Defer because
+  canonical generated tables remain ordered and malformed provenance safely
+  fails open.
+- **M3 — Clean remote-receive migration rule:** Agree. The clean branch lacks
+  the explicit widen/pad/preserve contract present in the findings branch.
+  Defer because this is a bounded skill-contract gap with safe fail-open
+  behavior and should be resolved with its assertion coverage at final review.
 
 ---
 
@@ -203,6 +259,38 @@ tests; lint, type-check, formatting, and root-owned re-review passed.
 
 **Outstanding items:** none.
 
+### Run 2 — Phase p02
+
+**Date:** 2026-07-28
+**Outcome:** passed
+**Phase base:** `91ec5c933895edfaf2d15691d83afb7b3a9fadab`
+**Implementation head:** `33e4506ef7211d75faa30402ea6b1a11e278e475`
+**Final fix head:** `0908e1cf87a50f6fd81f10ab30735ac88e5e9813`
+**Fix iterations:** 1
+
+| Task    | Commit                                     | Result |
+| ------- | ------------------------------------------ | ------ |
+| p02-t01 | `8e5d7043245cf5258a7326ef352b1366564a7536` | passed |
+| p02-t02 | `d56cff7d0b5205a5aa849a300499a1657c5b0ddc` | passed |
+| p02-t03 | `33e4506ef7211d75faa30402ea6b1a11e278e475` | passed |
+
+**Root review:**
+`reviews/archived/p02-review-2026-07-28T211745Z.md`
+(blocked: 1 Important, 2 Medium)
+
+**Passing re-review:**
+`reviews/archived/p02-review-2026-07-28T212511Z.md`
+
+**Passing phase gate:**
+`reviews/archived/p02-review-2026-07-28T214026Z.md`
+(3 Medium deferred to final)
+
+**Gate diversity:** producer family OpenAI; reviewer family Claude via
+`cursor-fable-5-xhigh`.
+
+**Outstanding items:** M1, M2, and M3 are registered under Deferred Findings
+(Medium) for mandatory final disposition.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -217,7 +305,12 @@ tests; lint, type-check, formatting, and root-owned re-review passed.
 - [x] p01-t02: Narrow by default and remove the prompt — `d64633114`
 - [x] p01-t03: Classify the resolved range — `ea1aa64e2`
 - [x] p01 review fixes — `0832ac7ca`
-- [ ] p02-t01: Record the reviewed head on the review artifact
+- [x] p02-t01: Record the reviewed head on the review artifact — `8e5d70432`
+- [x] p02-t02: Migrate the review ledger — `d56cff7d0`
+- [x] p02-t03: Fail open without durable lineage — `33e4506ef`
+- [x] p02 review fix — `0908e1cf8`
+- [x] p02 lifecycle review and independent phase gate passed
+- [ ] p03-t01: Replace Step 3a narrowing with guarded prior-head ranges
 
 **Decisions:**
 
@@ -225,8 +318,18 @@ tests; lint, type-check, formatting, and root-owned re-review passed.
 - Auto-review at the final HiLL checkpoint: enabled.
 - Dispatch policy: managed `high` from project state.
 - Phase 1 required one bounded review-fix round and then passed re-review.
+- Phase 2 required one bounded Important-finding fix round; its independent gate
+  passed with three Medium findings deferred for mandatory final disposition.
 
 ---
+
+## Deferred Findings (Medium)
+
+| ID     | Source                                              | Finding                                                                                   | Deferral rationale                                                                                                                | Final trigger         |
+| ------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
+| p02-M1 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Add provenance migration/preservation rules to the `oat-project-implement` ledger writer. | Requires a canonical skill version bump, assertion update, and focused verification; missing provenance fails open to full scope. | Final review Step 8.5 |
+| p02-M2 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Parse known provenance columns by header name rather than fixed position.                 | Canonical tables retain the expected order; ambiguous provenance fails open.                                                      | Final review Step 8.5 |
+| p02-M3 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Apply the ledger widening/preservation contract to the clean remote-receive path.         | Bounded contract gap with safe fail-open behavior; resolve with assertion coverage.                                               | Final review Step 8.5 |
 
 ## Deviations from Plan / Design
 
@@ -236,14 +339,14 @@ tests; lint, type-check, formatting, and root-owned re-review passed.
 
 ## Test Results
 
-| Phase | Tests Run                                                  | Passed | Failed | Coverage                                                |
-| ----- | ---------------------------------------------------------- | ------ | ------ | ------------------------------------------------------- |
-| p01   | Focused + full CLI suite, lint, type-check, format, review | 3,395  | 0      | Lineage, preference, guard, classification, integration |
-| p02   | -                                                          | -      | -      | -                                                       |
-| p03   | -                                                          | -      | -      | -                                                       |
-| p04   | -                                                          | -      | -      | -                                                       |
-| p05   | -                                                          | -      | -      | -                                                       |
-| p06   | -                                                          | -      | -      | -                                                       |
+| Phase | Tests Run                                                              | Passed | Failed | Coverage                                                              |
+| ----- | ---------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------- |
+| p01   | Focused + full CLI suite, lint, type-check, format, review             | 3,395  | 0      | Lineage, preference, guard, classification, integration               |
+| p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open |
+| p03   | -                                                                      | -      | -      | -                                                                     |
+| p04   | -                                                                      | -      | -      | -                                                                     |
+| p05   | -                                                                      | -      | -      | -                                                                     |
+| p06   | -                                                                      | -      | -      | -                                                                     |
 
 ## Final Summary (for PR/docs)
 

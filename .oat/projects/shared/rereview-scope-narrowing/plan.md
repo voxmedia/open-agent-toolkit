@@ -631,7 +631,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target          |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
 | p01    | code     | fixes_completed | 2026-07-28 | reviews/archived/p01-review-2026-07-28T204348Z.md           | -                                        | -          | -                    |
-| p02    | code     | fixes_completed | 2026-07-28 | reviews/p02-review-2026-07-28T211745Z.md                    | -                                        | -          | -                    |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/archived/p02-review-2026-07-28T211745Z.md           | 33e4506ef7211d75faa30402ea6b1a11e278e475 | auto       | -                    |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
@@ -643,8 +643,8 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | plan   | artifact | received        | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md | -                                        | -          | -                    |
 | plan   | artifact | passed          | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T182554Z.md | -                                        | -          | -                    |
 | p01    | code     | passed          | 2026-07-28 | reviews/archived/p01-review-2026-07-28T205203Z.md           | -                                        | -          | -                    |
-| p02    | code     | passed          | 2026-07-28 | reviews/p02-review-2026-07-28T212511Z.md                    | -                                        | -          | -                    |
-| p02    | code     | received        | 2026-07-28 | reviews/p02-review-2026-07-28T214026Z.md                    | a53071f308e7f6db07c4f0bc0ddeef7ac6c17b9a | gate       | cursor-fable-5-xhigh |
+| p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T212511Z.md           | 0908e1cf87a50f6fd81f10ab30735ac88e5e9813 | auto       | -                    |
+| p02    | code     | passed          | 2026-07-28 | reviews/archived/p02-review-2026-07-28T214026Z.md           | a53071f308e7f6db07c4f0bc0ddeef7ac6c17b9a | gate       | cursor-fable-5-xhigh |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
