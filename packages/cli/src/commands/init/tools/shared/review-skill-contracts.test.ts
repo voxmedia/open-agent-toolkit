@@ -542,6 +542,42 @@ describe('review skill contracts', () => {
 
     for (const path of skillPaths) {
       const content = readRepoFile(path);
+      const diagnosticInit = content.indexOf('REVIEWS_ERROR_FILE=""');
+      const firstRedirect = content.indexOf('2>"$REVIEWS_ERROR_FILE"');
+      const finallySection = content.indexOf(
+        'Always release the ephemeral worktree in a `finally`',
+      );
+      const finalDiagnosticCleanup = content.indexOf(
+        'if [[ -n "${REVIEWS_ERROR_FILE:-}" ]]',
+        finallySection,
+      );
+
+      expect(
+        diagnosticInit,
+        `${path} diagnostic initialization exists`,
+      ).toBeGreaterThanOrEqual(0);
+      expect(
+        firstRedirect,
+        `${path} diagnostic redirect exists`,
+      ).toBeGreaterThan(diagnosticInit);
+      expect(
+        content.slice(diagnosticInit, firstRedirect),
+        `${path} guarded diagnostic creation precedes redirect`,
+      ).toContain('REVIEWS_ERROR_FILE=$(mktemp ');
+      expect(content, `${path} bounded diagnostic before cleanup`).toMatch(
+        /else\s+REVIEWS_DIAGNOSTIC=\$\(dd if="\$REVIEWS_ERROR_FILE" bs=500 count=1 2>\/dev\/null\)[\s\S]{0,160}rm -f -- "\$REVIEWS_ERROR_FILE"/,
+      );
+      expect(
+        content.match(/rm -f -- "\$REVIEWS_ERROR_FILE"/g)?.length ?? 0,
+        `${path} success, failure, and final cleanup`,
+      ).toBeGreaterThanOrEqual(3);
+      expect(
+        finalDiagnosticCleanup,
+        `${path} finally cleanup follows finally contract`,
+      ).toBeGreaterThan(finallySection);
+      expect(content, `${path} diagnostic creation failure policy`).toMatch(
+        /Do not run `gh api` when diagnostic-file creation fails[\s\S]{0,600}REVIEWS_DISCOVERY_OK=false/,
+      );
       expect(content, `${path} stable discovery reason`).toContain(
         '`prior-reviews-unavailable`',
       );
@@ -552,7 +588,7 @@ describe('review skill contracts', () => {
         /forced `--narrow`[\s\S]{0,180}hard error/i,
       );
       expect(content, `${path} diagnostic preservation`).toMatch(
-        /diagnostic detail[\s\S]{0,120}(?:stderr|parse error)/i,
+        /preserve at most 500 bytes from stderr[\s\S]{0,240}parse error/i,
       );
       expect(content, `${path} disabled enumeration skip`).toMatch(
         /`--no-narrow`[\s\S]{0,180}skips `gh api` review enumeration entirely/i,

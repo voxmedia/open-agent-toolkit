@@ -152,12 +152,24 @@ Resolve preference and per-invocation flags before candidate enumeration:
 Only when narrowing will be attempted, list prior PR reviews and parse each body's GitHub review marker block. Capture command status and stderr separately:
 
 ```bash
-if ! REVIEWS_JSON=$(gh api "/repos/{owner}/{repo}/pulls/$PR/reviews" 2>"$REVIEWS_ERROR_FILE"); then
-  # Candidate discovery failed; apply the policy below.
+REVIEWS_ERROR_FILE=""
+REVIEWS_DIAGNOSTIC=""
+REVIEWS_DISCOVERY_OK=false
+
+if ! REVIEWS_ERROR_FILE=$(mktemp "${TMPDIR:-/tmp}/oat-review-errors.XXXXXX"); then
+  REVIEWS_DIAGNOSTIC="diagnostic-file-unavailable: unable to create a temporary stderr file"
+elif REVIEWS_JSON=$(gh api "/repos/{owner}/{repo}/pulls/$PR/reviews" 2>"$REVIEWS_ERROR_FILE"); then
+  REVIEWS_DISCOVERY_OK=true
+  rm -f -- "$REVIEWS_ERROR_FILE"
+  REVIEWS_ERROR_FILE=""
+else
+  REVIEWS_DIAGNOSTIC=$(dd if="$REVIEWS_ERROR_FILE" bs=500 count=1 2>/dev/null)
+  rm -f -- "$REVIEWS_ERROR_FILE"
+  REVIEWS_ERROR_FILE=""
 fi
 ```
 
-Treat a nonzero `gh api` result or a response-level enumeration/parsing failure as discovery failure. Preserve a concise diagnostic detail from stderr or the parse error; do not treat individual irrelevant or lineage-ineligible marker blocks as response-level failure.
+Do not run `gh api` when diagnostic-file creation fails. Treat that failure, a nonzero `gh api` result, or a response-level enumeration/parsing failure as discovery failure. Before removing the diagnostic file, preserve at most 500 bytes from stderr. If response parsing later fails, set `REVIEWS_DISCOVERY_OK=false` and put at most 500 characters of the parse error in `REVIEWS_DIAGNOSTIC`. Apply the forced/automatic policy below whenever `REVIEWS_DISCOVERY_OK=false`. Do not treat individual irrelevant or lineage-ineligible marker blocks as response-level failure.
 
 - With forced `--narrow`, discovery failure is a hard error with reason `prior-reviews-unavailable`; report the diagnostic and stop instead of pretending to narrow.
 - On the automatic path, discovery failure fails open to full PR scope with stable reason `prior-reviews-unavailable` plus the diagnostic detail, then continues to review the full PR diff.
@@ -258,6 +270,9 @@ Posting failure handling (design.md → Error Handling → Posting failures): on
 Always release the ephemeral worktree in a `finally`, even when review or posting fails:
 
 ```bash
+if [[ -n "${REVIEWS_ERROR_FILE:-}" ]]; then
+  rm -f -- "$REVIEWS_ERROR_FILE"
+fi
 git -C "$REPO_ROOT" worktree remove --force "$EPHEMERAL_PATH" || git -C "$REPO_ROOT" worktree prune
 rm -rf "$EPHEMERAL_PATH"
 ```
