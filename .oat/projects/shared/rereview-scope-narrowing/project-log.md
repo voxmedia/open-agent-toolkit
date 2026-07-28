@@ -60,6 +60,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Phase passed after one bounded Medium-finding fix round; passing review: reviews/archived/p03-review-2026-07-28T221100Z.md
 
+### 2026-07-28 · structural · oat-project-implement · p04
+
+Phase passed after two bounded Important-finding fix rounds; passing review: reviews/archived/p04-review-2026-07-28T225031Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

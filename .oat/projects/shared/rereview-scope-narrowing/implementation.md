@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t01
+oat_current_task_id: p05-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -26,11 +26,11 @@ oat_template_name: implementation
 | p01   | completed   | 3     | 3/3       |
 | p02   | completed   | 3     | 3/3       |
 | p03   | completed   | 2     | 2/2       |
-| p04   | in_progress | 1     | 0/1       |
-| p05   | pending     | 1     | 0/1       |
+| p04   | completed   | 1     | 1/1       |
+| p05   | in_progress | 1     | 0/1       |
 | p06   | pending     | 3     | 0/3       |
 
-**Total:** 8/13 tasks completed
+**Total:** 9/13 tasks completed
 
 ---
 
@@ -208,13 +208,41 @@ formatting, diff hygiene, and narrowed root re-review passed.
 
 ## Phase 4: Remote rail alignment
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-28
+**Completed:** 2026-07-28
+
+### Phase Summary
+
+- Aligned project and ad-hoc remote rails on prompt-free default narrowing,
+  explicit flag precedence, guarded fail-open behavior, and reporting-only
+  range classification.
+- Preserved rail-specific GitHub marker provenance without adding local
+  lifecycle-ledger fallbacks.
+- Extended canonical marker helpers to retain lifecycle and exact-target gate
+  lineage while rejecting ambiguous legacy provenance.
+- Added explicit automatic fallback and forced-error behavior for remote review
+  discovery failures, including bounded temporary diagnostics.
+- Phase review passed after two bounded Important-finding fix rounds.
 
 ### Task p04-t01: Align both remote provide skills
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d`
+
+**Outcome:** Both remote rails now share preference, lineage, guard, fallback,
+and classification semantics while preserving their own marker sources.
+
+**Review fix 1:** `942458eb27065c3208774be2e7fe57b0b0fe0c34`
+made gate/legacy marker lineage round-trip through the parser, builder, and
+narrowing helper and defined candidate-enumeration failure policy.
+
+**Review fix 2:** `6fed0cf0bc8e225dcb137795b3aed4fdb871014b`
+initialized, bounded, and cleaned remote discovery diagnostics on every path.
+
+**Verification:** 241 focused parser, builder, narrowing, integration, contract,
+and version tests passed; CLI lint, type-check, formatting, direct shell probes,
+diff hygiene, and final narrowed re-review passed.
 
 ---
 
@@ -344,6 +372,32 @@ formatting, diff hygiene, and narrowed root re-review passed.
 
 **Outstanding items:** none.
 
+### Run 4 — Phase p04
+
+**Date:** 2026-07-28
+**Outcome:** passed
+**Phase base:** `ad6dcd0fa3ea399ed957ac96f7b40ea706b28b4e`
+**Implementation head:** `8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d`
+**Final fix head:** `6fed0cf0bc8e225dcb137795b3aed4fdb871014b`
+**Fix iterations:** 2
+
+| Task    | Commit                                     | Result |
+| ------- | ------------------------------------------ | ------ |
+| p04-t01 | `8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d` | passed |
+
+**Root review:**
+`reviews/archived/p04-review-2026-07-28T222436Z.md`
+(blocked: 2 Important)
+
+**First narrowed re-review:**
+`reviews/archived/p04-review-2026-07-28T223723Z.md`
+(blocked: 1 Important)
+
+**Passing re-review:**
+`reviews/archived/p04-review-2026-07-28T225031Z.md`
+
+**Outstanding items:** none.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -367,7 +421,10 @@ formatting, diff hygiene, and narrowed root re-review passed.
 - [x] p03-t02: Drop the prompt and report the resolved range — `1c478918f`
 - [x] p03 boundary cleanup — `f914b9ea1`
 - [x] p03 review fix — `28afd27b4`
-- [ ] p04-t01: Align both remote provide skills
+- [x] p04-t01: Align both remote provide skills — `8df5b27cf`
+- [x] p04 marker-lineage/discovery fix — `942458eb2`
+- [x] p04 diagnostic initialization fix — `6fed0cf0b`
+- [ ] p05-t01: Default the preference to narrow
 
 **Decisions:**
 
@@ -379,6 +436,8 @@ formatting, diff hygiene, and narrowed root re-review passed.
   passed with three Medium findings deferred for mandatory final disposition.
 - Phase 3 required one bounded Medium-finding fix round and then passed narrowed
   re-review.
+- Phase 4 required two bounded Important-finding fix rounds and then passed
+  final narrowed re-review.
 
 ---
 
@@ -403,7 +462,7 @@ formatting, diff hygiene, and narrowed root re-review passed.
 | p01   | Focused + full CLI suite, lint, type-check, format, review             | 3,395  | 0      | Lineage, preference, guard, classification, integration               |
 | p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open |
 | p03   | Focused semantic + skill-contract tests, format, diff, reviews         | 63     | 0      | Local precedence, lineage, guards, classification, Tier 3             |
-| p04   | -                                                                      | -      | -      | -                                                                     |
+| p04   | Focused parser/builder/narrowing/integration/contract suites + checks  | 241    | 0      | Remote provenance, gates, discovery fallback, diagnostics             |
 | p05   | -                                                                      | -      | -      | -                                                                     |
 | p06   | -                                                                      | -      | -      | -                                                                     |
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 28afd27b4959f4ef535f961b7348e5d0dfeb438b
+oat_current_task: p05-t01
+oat_last_commit: 6fed0cf0bc8e225dcb137795b3aed4fdb871014b
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T22:11:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T22:50:31Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 4 — Remote rail alignment (`p04-t01`)
+Phase 5 — Config default flip (`p05-t01`)
 
 ## Artifacts
 
@@ -100,7 +100,8 @@ Phase 4 — Remote rail alignment (`p04-t01`)
 - ✓ Phase 1 completed and reviewed
 - ✓ Phase 2 completed; lifecycle review and independent gate passed
 - ✓ Phase 3 completed and reviewed
-- ⧗ Phase 4 ready at `p04-t01`
+- ✓ Phase 4 completed and reviewed
+- ⧗ Phase 5 ready at `p05-t01`
 
 ## Blockers
 
@@ -108,4 +109,4 @@ None
 
 ## Next Milestone
 
-Implement Phase 4 remote rail alignment
+Implement Phase 5 config default flip
