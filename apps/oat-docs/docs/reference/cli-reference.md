@@ -99,7 +99,7 @@ The `workflow.*` namespace holds user-facing workflow preferences that let you a
 - `workflow.postImplementSequence` (legacy `wait` | `summary` | `pr` | `docs-pr`, or structured `{preApproval, postApproval}` arrays) — approval-aware post-implementation chaining
 - `workflow.reviewExecutionModel` (`subagent` | `inline` | `fresh-session`) — default final-review execution model
 - `workflow.autoReviewAtHillCheckpoints` (`boolean`) — auto-run the extra lifecycle review at HiLL checkpoints
-- `workflow.autoNarrowReReviewScope` (`boolean`) — auto-narrow re-review scope to fix-task commits
+- `workflow.autoNarrowReReviewScope` (`boolean`, default `true`) — automatically narrow re-reviews to the guarded range after the prior matching review's recorded head; set `false` to use the nominal full scope
 - `workflow.autoArtifactReview.plan` (`boolean`, default `true`) — auto-run the bounded `plan.md` artifact-review loop before implementation handoff
 - `workflow.autoArtifactReview.analysis` (`boolean`, default `true`) — auto-run the bounded accuracy-review loop for generated analysis artifacts before apply workflows consume them
 - `workflow.gateTimeouts.code` / `workflow.gateTimeouts.artifact` (integer milliseconds from 1,000–14,400,000) — review-type budget defaults below CLI and target overrides
