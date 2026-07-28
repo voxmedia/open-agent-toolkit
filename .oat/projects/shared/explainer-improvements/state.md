@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t08
-oat_last_commit: 86fc4b6acc737a995783210699cee055e7860a45
+oat_current_task: p03-t01
+oat_last_commit: 4c469ea8eda39971c742e29a6a33b84db41607b6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T12:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T14:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p02 review remediation attempt 1 of 3 pending
+Phase p02 review remediation attempt 1 of 3 implemented; re-review pending
 
 ## Artifacts
 
@@ -120,7 +120,11 @@ Phase p02 review remediation attempt 1 of 3 pending
 - ✓ Root-owned p02 review completed with five Important findings
 - ✓ Operator raised the phase/code review remediation limit to three retries
 - ✓ p02-t12 preflight file-boundary defect corrected before implementation
-- ⧗ p02-t08 through p02-t12 are review-remediation attempt 1/3
+- ✓ p02-t08 through p02-t12 implemented in five atomic commits
+- ✓ Root remediation verification passed the complete p02 union (138/138)
+  and `pnpm release:validate`
+- ⧗ Fresh root-owned p02 re-review pending over
+  `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
 
 ## Blockers
 
@@ -128,4 +132,5 @@ None
 
 ## Next Milestone
 
-Execute p02-t08 through p02-t12, then run a fresh root-owned p02 review.
+Run a fresh root-owned p02 review over the bounded remediation range, then
+either close Phase p02 or enter remediation attempt 2/3.

@@ -956,17 +956,17 @@ another review cycle.
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                            |
-| ------ | -------- | ----------- | ---------- | ----------------------------------- |
-| p01    | code     | passed      | 2026-07-28 | reviews/20260728-p01-code-review.md |
-| p02    | code     | fixes_added | 2026-07-28 | reviews/20260728-p02-code-review.md |
-| p03    | code     | pending     | -          | -                                   |
-| p04    | code     | pending     | -          | -                                   |
-| p05    | code     | pending     | -          | -                                   |
-| final  | code     | pending     | -          | -                                   |
-| spec   | artifact | pending     | -          | -                                   |
-| design | artifact | pending     | -          | -                                   |
-| plan   | artifact | passed      | 2026-07-28 | -                                   |
+| Scope  | Type     | Status          | Date       | Artifact                            |
+| ------ | -------- | --------------- | ---------- | ----------------------------------- |
+| p01    | code     | passed          | 2026-07-28 | reviews/20260728-p01-code-review.md |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review.md |
+| p03    | code     | pending         | -          | -                                   |
+| p04    | code     | pending         | -          | -                                   |
+| p05    | code     | pending         | -          | -                                   |
+| final  | code     | pending         | -          | -                                   |
+| spec   | artifact | pending         | -          | -                                   |
+| design | artifact | pending         | -          | -                                   |
+| plan   | artifact | passed          | 2026-07-28 | -                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.

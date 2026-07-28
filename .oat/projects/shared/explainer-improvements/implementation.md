@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t08
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | fixes_pending |    12 |      7/12 |
-| p03   | pending       |     4 |       0/4 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | review_pending |    12 |     12/12 |
+| p03   | pending        |     4 |       0/4 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 14/30 tasks completed
+**Total:** 19/30 tasks completed
 
 ---
 
@@ -88,7 +88,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -97,11 +97,11 @@ oat_generated: false
 - [x] p02-t05 — Bind set planning and composition through the OAT adapter (`8514de88`)
 - [x] p02-t06 — Align integration fixtures with adaptive recap sets (`379bca67`)
 - [x] p02-t07 — Align explainer family version contracts (`86fc4b6a`)
-- [ ] p02-t08 — Enforce complete reconciled source coverage
-- [ ] p02-t09 — Bind visual review to the complete rendered set
-- [ ] p02-t10 — Protect retained set-plan records across resume
-- [ ] p02-t11 — Deliver bundled authoring guidance to callbacks
-- [ ] p02-t12 — Add an explicit deterministic recap fallback
+- [x] p02-t08 — Enforce complete reconciled source coverage (`1ba70b50`)
+- [x] p02-t09 — Bind visual review to the complete rendered set (`5e97d1d3`)
+- [x] p02-t10 — Protect retained set-plan records across resume (`92254004`)
+- [x] p02-t11 — Deliver bundled authoring guidance to callbacks (`5f57e743`)
+- [x] p02-t12 — Add an explicit deterministic recap fallback (`4c469ea8`)
 
 ### Phase Implementation Summary
 
@@ -133,7 +133,11 @@ oat_generated: false
 - Verdict: `BLOCKED` — 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Blocking fixes: p02-t08 through p02-t12
 - Operator override permits up to three bounded phase/code review remediation
-  retries. p02-t08 through p02-t12 are attempt 1/3.
+  retries. Attempt 1/3 is implemented and pending fresh re-review.
+- Remediation range:
+  `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
+- Root verification: complete Phase p02 union 138/138 and release validation
+  passed with a clean worktree.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -229,7 +233,7 @@ oat_generated: false
 - Artifact: `reviews/20260728-p02-code-review.md`
 - Findings: 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Reconnaissance: `not-attempted`
-- Review-remediation attempt: 1/3 pending
+- Review-remediation attempt: 1/3 implemented; re-review pending
 - Attempt 1 preflight initially stopped before edits because p02-t12 named two
   nonexistent schema paths. Root corrected the boundary; no retry was consumed.
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
