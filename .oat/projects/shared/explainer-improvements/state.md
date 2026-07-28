@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t14
-oat_last_commit: b2e1904c82d09e5006c31512ff4e9a26e8563436
+oat_current_task: p03-t15
+oat_last_commit: 339810fe66f61706dc642d7727386ee3e2355943
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -98,7 +98,7 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 41 tasks currently tracked
+- ✓ Five phases / 42 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -155,6 +155,10 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ⧗ Root Phase p03 verification passed 202/210; five leaf failures show that
   partial `built-needs-review` evidence needs a distinct handoff coverage tier
 - ⧗ The correction is bounded as p03-t14 within remediation attempt 1/3
+- ✓ p03-t14 committed and the complete Phase p03 union passed 211/211
+- ✓ Repository check, lint, format, type-check, and build gates passed
+- ⧗ Full tests passed package tests but stopped at 128/129 smoke tests on a
+  stale adapter version assertion, bounded as p03-t15
 
 ## Blockers
 
@@ -162,5 +166,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t14 within remediation attempt 1/3, then rerun root verification
+Execute p03-t15 within remediation attempt 1/3, then resume root verification
 and a fresh narrowed Phase p03 review.

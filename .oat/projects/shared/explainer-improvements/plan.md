@@ -1141,6 +1141,24 @@ successful package.
 
 ---
 
+### Task p03-t15: Align the explainer smoke version assertion
+
+**Files:**
+
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+
+**Steps:**
+
+1. Update the adapter skill-document assertion from
+   `oat-explainer-kit@1.0.3` to the canonical p03-t10 version `1.0.4`.
+2. Run the complete explainer-kit wrapper compatibility smoke test.
+3. Commit as `test(p03-t15): align explainer smoke version`.
+
+**Acceptance:** The smoke contract expects the same canonical shipped adapter
+version as the CLI validation suite.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams

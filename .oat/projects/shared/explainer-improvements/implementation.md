@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t14
+oat_current_task_id: p03-t15
 oat_generated: false
 ---
 
@@ -21,11 +21,11 @@ oat_generated: false
 | ----- | ------------- | ----: | --------: |
 | p01   | complete      |     7 |       7/7 |
 | p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    14 |     13/14 |
+| p03   | fixes_pending |    15 |     14/15 |
 | p04   | pending       |     3 |       0/3 |
 | p05   | pending       |     4 |       0/4 |
 
-**Total:** 33/41 tasks completed
+**Total:** 34/42 tasks completed
 
 ---
 
@@ -169,7 +169,8 @@ oat_generated: false
 - [x] p03-t11 — Align core manifests with finalization and archive consumers (`b04b3cd9`)
 - [x] p03-t12 — Preserve interactive recap package compatibility (`e160acd1`)
 - [x] p03-t13 — Align the OAT explainer skill version assertion (`b2e1904c`)
-- [ ] p03-t14 — Preserve incomplete visual-review handoff manifests
+- [x] p03-t14 — Preserve incomplete visual-review handoff manifests (`339810fe`)
+- [ ] p03-t15 — Align the explainer smoke version assertion
 
 ### Phase Implementation Summary
 
@@ -216,6 +217,9 @@ oat_generated: false
   validation 113/113 but exposed five leaf regressions in the Phase p03 union:
   partial `built-needs-review` handoff evidence was incorrectly treated as a
   partial successful package. The correction is bounded as p03-t14.
+- p03-t14 restored the review handoff contract and the complete Phase p03 union
+  passed 211/211. Repository checks through build passed; the full test suite
+  then found one stale smoke assertion, bounded as p03-t15.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -450,6 +454,11 @@ oat_generated: false
 - p03-t14 boundary: allow partial evidence only for the terminal
   `built-needs-review` handoff while retaining strict successful-package
   coverage
+- p03-t14 commit: `339810fe`; root records/core tests passed 74/74 and the
+  complete Phase p03 union passed 211/211
+- Full-gate continuation: check, lint, format, type-check, and build passed;
+  `pnpm test` stopped at 128/129 smoke tests because the wrapper still expected
+  adapter version 1.0.3
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -482,6 +491,7 @@ oat_generated: false
 | p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other                  | Add an external resume token        | A coordinated edit can recompute every mutable projection and hash                                                 | p02 re-review artifact                 | p02-t13          |
 | p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral               | Add bounded p03-t12 and p03-t13     | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3                   | focused phase and CLI validation tests | p03-t12, p03-t13 |
 | p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                 | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers | core integration tests                 | p03-t14          |
+| p03-t14 verification  | plan p03-t14    | Canonical adapter 1.0.4 is aligned across validation    | Add bounded p03-t15                 | The smoke wrapper retained an independent 1.0.3 assertion                                                          | full repository test                   | p03-t15          |
 
 ## Test Results
 
@@ -495,7 +505,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 41 tasks and the final review._
+_Fill from implementation evidence after all 42 tasks and the final review._
 
 ## References
 
