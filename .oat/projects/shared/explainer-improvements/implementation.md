@@ -285,6 +285,18 @@ oat_generated: false
 - Boundary: exactly six authorized files; worktree clean
 - Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
+### Run 6 — Phase p02 remediation re-review 2
+
+- Request: `explainer-improvements-p02-review-r2-20260728T150700Z`
+- Launch intent: persisted
+- Review range: `e40c6a31e15460624bf4451aca73f449be45f3b7..995468f31f9ff39f16be910abe26693a214afd28`
+- Tracking baseline: `f607c1b431f57e4932c2395b4305da35778779ff`
+- Planned artifact: `reviews/20260728-p02-code-review-r2.md`
+- Scope: verify I3-R1 and detect regressions in the external resume-token
+  boundary
+- Review-remediation attempt: 2/3
+- Dispatch: scope=p02 action=re-review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
