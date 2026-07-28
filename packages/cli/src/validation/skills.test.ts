@@ -3680,7 +3680,7 @@ describe('validateOatSkills', () => {
     const expectedVersions = [
       ['oat-project-implement', '2.1.9'],
       ['oat-project-review-provide', '1.4.0'],
-      ['oat-project-review-provide-remote', '1.0.4'],
+      ['oat-project-review-provide-remote', '1.1.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
