@@ -407,18 +407,35 @@ Cursor rules:
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
   or infer capability from its spelling. The materialized mapping and resolver
   alone translate it to a native variant.
-- Classify the phase and choose a candidate before resolving. The effort
-  classification under Codex rules does not transfer: it is defined on an effort
-  axis Cursor does not expose, because Cursor carries effort inside the
-  candidate string and reports `effort_axis=not-applicable`. Classify the scope
-  by the same bands — trivial, narrow, or mechanical; normal multi-file; broad
-  architecture, security boundaries, or repeated substantive review failures —
-  then select the lowest configured candidate whose task-class row in
-  `subagent-orchestration/references/provider-cursor.md` covers that class.
-  Look the candidate up by its exact configured ID. That table is the sanctioned
-  basis for capability, which is what keeps this compatible with the opacity
-  rule above: you are reading a mapping keyed on the ID, not interpreting how
-  the ID is spelled.
+- Classify the phase by task class, then choose a candidate before resolving.
+  Do not reuse the Codex effort bands. They are defined on an effort axis Cursor
+  does not expose, since Cursor carries effort inside the candidate string and
+  reports `effort_axis=not-applicable`. Classify with the five task classes in
+  `subagent-orchestration/references/model-selection-principles.md`, which are
+  the same keys the Cursor table is indexed by, and take its stronger-class
+  tie-break when uncertain.
+- Read that class's row in
+  `subagent-orchestration/references/provider-cursor.md`. Each row names an
+  explicit candidate ID for its default route and states when the economy or
+  escalation route applies instead. Take the named ID for the route whose
+  conditions the phase meets. That table is the sanctioned basis for capability,
+  which is what keeps this compatible with the opacity rule above: you are
+  reading a row keyed on the ID, not interpreting how the ID is spelled.
+- Match the named ID against the configured ladder. For implementation and fix
+  work every candidate from the lowest tier through the project's named maximum
+  is eligible, not only members of the ceiling tier. Pass the named ID when it
+  is configured and eligible. When it is not, take another ID named in the same
+  row — the economy route for a bounded, testable scope, or the escalation route
+  when the phase meets its conditions — and record which substitution you made
+  and why.
+- Never rank candidates by ladder position. A tier may interleave families and
+  routes deliberately, so an earlier entry is not a weaker one: in a `high` tier
+  configured as `claude-opus-5-thinking-medium`, `gpt-5.6-sol-medium`,
+  `claude-opus-5-thinking-high`, `gpt-5.6-sol-high`, the first entry is the
+  escalation route for `default-implementation` and the second is its default.
+  Selecting the earliest configured member of a row would route routine work to
+  escalation. Position carries exactly one meaning, fixed elsewhere in this
+  reference: the final candidate in a tier is that tier's reviewer ceiling.
 - Always pass `--candidate-model`. Omitting it does not ask the resolver to
   choose; it selects the ceiling. With no preferred value to compare against,
   the resolver takes the capped branch and sets the selected value to the policy

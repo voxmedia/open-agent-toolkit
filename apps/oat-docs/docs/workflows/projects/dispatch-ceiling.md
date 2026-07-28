@@ -235,10 +235,10 @@ candidate in each tier:
   tiers.
 - **Cursor:** verified multi-family flat IDs across Composer, Claude (Sonnet,
   Opus, and Fable), GPT, and Grok. Two counts apply and they differ: the
-  bundled recommendation carries 16 Cursor candidates across the four tiers,
-  while the materialization catalogue carries 18 flat IDs. The extra entries
-  are approved mappings deliberately kept out of the recommendation but still
-  materializable. The catalogue maps each flat ladder ID to a separate
+  bundled recommendation carries 14 Cursor candidates across the four tiers,
+  while the materialization catalogue carries 18 flat IDs. The four extra
+  entries are approved mappings deliberately kept out of the recommendation but
+  still materializable. The catalogue maps each flat ladder ID to a separate
   bracket-form frontmatter model; OAT does not derive or normalize either
   value.
 
