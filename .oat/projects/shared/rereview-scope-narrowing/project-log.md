@@ -72,6 +72,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 The Phase 3 boundary cleanup reverted a generated prompt-inventory update that the full CLI suite requires. The stale five-entry mapping was restored in e9b6ffe0 after the focused inventory test reproduced the failure; generated autonomy evidence must be treated as a required consequence of prompt-path edits.
 
+### 2026-07-28 · structural · oat-project-implement · p06
+
+Phase passed after one bounded release-consistency fix; passing review: reviews/archived/p06-review-2026-07-28T233714Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p06-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -21,16 +21,16 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 3     | 3/3       |
-| p02   | completed   | 3     | 3/3       |
-| p03   | completed   | 2     | 2/2       |
-| p04   | completed   | 1     | 1/1       |
-| p05   | completed   | 1     | 1/1       |
-| p06   | in_progress | 3     | 0/3       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 3     | 3/3       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 2     | 2/2       |
+| p04   | completed | 1     | 1/1       |
+| p05   | completed | 1     | 1/1       |
+| p06   | completed | 3     | 3/3       |
 
-**Total:** 10/13 tasks completed
+**Total:** 13/13 tasks completed
 
 ---
 
@@ -296,23 +296,53 @@ independent phase gate passed.
 
 ## Phase 6: Documentation and release
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-28
+**Completed:** 2026-07-28
+
+### Phase Summary
+
+- Updated user documentation for default narrowing, lineage-owned provenance,
+  guards, fail-open behavior, explicit overrides, and reporting classification.
+- Verified semantic parity across the helper and all three provide rails
+  without requiring canonical-source edits.
+- Synced scoped reviewer provider variants and bumped all five public packages
+  in lockstep from 0.2.19 to 0.2.20.
+- Regenerated the bundled public-package version snapshot and passed the full
+  release definition of done from a clean committed state.
+- Phase review passed after one bounded release-consistency fix.
 
 ### Task p06-t01: Update documentation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ef56fdb6a8a7bdab6a49ff15e9ff4785159256ac`
+
+**Outcome:** Three targeted docs pages now describe the final prompt-free,
+enabled-by-default narrowing behavior and its conservative guard semantics.
 
 ### Task p06-t02: Verify cross-surface semantic parity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** no-op
+
+**Outcome:** The helper, local lifecycle rail, project remote rail, and ad-hoc
+remote rail agree on shared semantics while retaining rail-owned provenance.
 
 ### Task p06-t03: Refresh provider views, bump versions, validate release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `f95864d2ee8cbbf94eec311abeeb83547851ff37`
+
+**Outcome:** Scoped generated reviewer variants are refreshed and all five
+public packages are lockstep 0.2.20.
+
+**Review fix:** `87455b33c5b338ac717d10ebe5862924c538aeef`
+regenerated `packages/cli/assets/public-package-versions.json` so clean builds
+preserve the committed release surface.
+
+**Verification:** Docs build generated 66 static pages; workspace build, 3,675
+tests, lint, type-check, formatting, sync dry-run, and release validation for
+all five packages passed without tracked mutations.
 
 ---
 
@@ -460,6 +490,31 @@ independent phase gate passed.
 **Outstanding items:** m1 is registered under Deferred Findings for final
 disposition.
 
+### Run 6 — Phase p06
+
+**Date:** 2026-07-28
+**Outcome:** passed
+**Phase base:** `1c7623a0e1b47b093fece58320d99426567c4ec3`
+**Implementation head:** `f95864d2ee8cbbf94eec311abeeb83547851ff37`
+**Final fix head:** `87455b33c5b338ac717d10ebe5862924c538aeef`
+**Fix iterations:** 1
+
+| Task    | Commit                                     | Result |
+| ------- | ------------------------------------------ | ------ |
+| p06-t01 | `ef56fdb6a8a7bdab6a49ff15e9ff4785159256ac` | passed |
+| p06-t02 | no-op                                      | passed |
+| p06-t03 | `f95864d2ee8cbbf94eec311abeeb83547851ff37` | passed |
+
+**Root review:**
+`reviews/archived/p06-review-2026-07-28T232956Z.md`
+(blocked: 1 Important)
+
+**Passing re-review:**
+`reviews/archived/p06-review-2026-07-28T233714Z.md`
+
+**Outstanding items:** none for p06; project-level deferred findings remain for
+the final checkpoint.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -489,7 +544,11 @@ disposition.
 - [x] p05-t01: Default the preference to narrow — `7ca0c75bf`
 - [x] p05 autonomy inventory correction — `e9b6ffe0a`
 - [x] p05 lifecycle review and independent phase gate passed
-- [ ] p06-t01: Update documentation
+- [x] p06-t01: Update documentation — `ef56fdb6a`
+- [x] p06-t02: Verify cross-surface semantic parity — no-op
+- [x] p06-t03: Sync provider views and bump public packages — `f95864d2e`
+- [x] p06 bundled public-package version fix — `87455b33c`
+- [ ] final automatic review and HiLL disposition
 
 **Decisions:**
 
@@ -505,6 +564,8 @@ disposition.
   final narrowed re-review.
 - Phase 5 passed standard review and its independent gate; one pre-existing
   catalog wording Minor is deferred to final disposition.
+- Phase 6 required one bounded release-consistency fix and then passed narrowed
+  re-review with the full release gate set clean.
 
 ---
 
@@ -530,36 +591,50 @@ disposition.
 
 ## Test Results
 
-| Phase | Tests Run                                                              | Passed | Failed | Coverage                                                              |
-| ----- | ---------------------------------------------------------------------- | ------ | ------ | --------------------------------------------------------------------- |
-| p01   | Focused + full CLI suite, lint, type-check, format, review             | 3,395  | 0      | Lineage, preference, guard, classification, integration               |
-| p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open |
-| p03   | Focused semantic + skill-contract tests, format, diff, reviews         | 63     | 0      | Local precedence, lineage, guards, classification, Tier 3             |
-| p04   | Focused parser/builder/narrowing/integration/contract suites + checks  | 241    | 0      | Remote provenance, gates, discovery fallback, diagnostics             |
-| p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory    |
-| p06   | -                                                                      | -      | -      | -                                                                     |
+| Phase | Tests Run                                                              | Passed | Failed | Coverage                                                               |
+| ----- | ---------------------------------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------- |
+| p01   | Focused + full CLI suite, lint, type-check, format, review             | 3,395  | 0      | Lineage, preference, guard, classification, integration                |
+| p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open  |
+| p03   | Focused semantic + skill-contract tests, format, diff, reviews         | 63     | 0      | Local precedence, lineage, guards, classification, Tier 3              |
+| p04   | Focused parser/builder/narrowing/integration/contract suites + checks  | 241    | 0      | Remote provenance, gates, discovery fallback, diagnostics              |
+| p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory     |
+| p06   | Docs build + workspace build/test/lint/type-check/format/release       | 3,675  | 0      | Docs, parity, provider sync, lockstep versions, bundled release assets |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- Pending implementation.
+- Re-reviews narrow from lineage-qualified prior reviewed heads by default,
+  guarded by durable provenance, full-SHA validation, existence, and ancestry.
+- Local lifecycle, configured gate, project remote, and ad-hoc remote rails keep
+  independent provenance and fail open safely.
+- Public packages and bundled provider assets are released in lockstep at
+  0.2.20.
 
 **Behavioral changes (user-facing):**
 
-- Pending implementation.
+- Unset and true enable narrowing; false is the explicit opt-out.
+- The narrowing prompt is removed. Explicit base/SHA ranges override automatic
+  narrowing; nominal scope tokens remain eligible.
+- Resolution output reports the selected range, reason, and reporting-only
+  classification.
 
 **Key files / modules:**
 
-- Pending implementation.
+- `packages/cli/src/review-remote/`
+- `.agents/skills/oat-project-review-provide*/`
+- `.agents/skills/oat-review-provide-remote/`
+- `packages/control-plane/src/state/reviews.ts`
 
 **Verification performed:**
 
-- Plan artifact review passed before implementation.
+- Plan artifact review, six phase reviews, two configured cross-family gates,
+  full workspace validation, and publishable-package release validation passed.
 
 **Design deltas (if any):**
 
-- None recorded.
+- Generated autonomy prompt inventory maintenance was required by Phase 3 even
+  though the initial task boundary listed only the canonical skill.
 
 ## References
 

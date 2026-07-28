@@ -1,6 +1,6 @@
 ---
-oat_current_task: p06-t01
-oat_last_commit: e9b6ffe0afc37c99959431c59f1031edf0b0c3a8
+oat_current_task: null
+oat_last_commit: 87455b33c5b338ac717d10ebe5862924c538aeef
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -8,7 +8,7 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: [p06] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T23:11:40Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T23:37:14Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase 6 — Documentation and release (`p06-t01`)
+Final HiLL checkpoint — automatic final review pending
 
 ## Artifacts
 
@@ -102,7 +102,8 @@ Phase 6 — Documentation and release (`p06-t01`)
 - ✓ Phase 3 completed and reviewed
 - ✓ Phase 4 completed and reviewed
 - ✓ Phase 5 completed; lifecycle review and independent gate passed
-- ⧗ Phase 6 ready at `p06-t01`
+- ✓ Phase 6 completed and reviewed
+- ⧗ Automatic final review and deferred-finding disposition pending
 
 ## Blockers
 
@@ -110,4 +111,4 @@ None
 
 ## Next Milestone
 
-Implement Phase 6 documentation and release tasks
+Complete the automatic final review, then present the p06 HiLL checkpoint

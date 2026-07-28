@@ -635,7 +635,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p03    | code     | fixes_completed | 2026-07-28 | reviews/archived/p03-review-2026-07-28T220431Z.md           | f914b9ea1e8c24de7cf81dab6aec0f01e3e37d0f | auto       | -                    |
 | p04    | code     | fixes_completed | 2026-07-28 | reviews/archived/p04-review-2026-07-28T222436Z.md           | 8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230108Z.md           | e9b6ffe0afc37c99959431c59f1031edf0b0c3a8 | auto       | -                    |
-| p06    | code     | fixes_completed | 2026-07-28 | reviews/p06-review-2026-07-28T232956Z.md                    | f95864d2ee8cbbf94eec311abeeb83547851ff37 | auto       | -                    |
+| p06    | code     | fixes_completed | 2026-07-28 | reviews/archived/p06-review-2026-07-28T232956Z.md           | f95864d2ee8cbbf94eec311abeeb83547851ff37 | auto       | -                    |
 | final  | code     | pending         | -          | -                                                           | -                                        | -          | -                    |
 | plan   | artifact | passed          | 2026-07-27 | inline (structured)                                         | -                                        | -          | -                    |
 | spec   | artifact | n/a             | -          | -                                                           | -                                        | -          | -                    |
@@ -649,7 +649,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p04    | code     | fixes_completed | 2026-07-28 | reviews/archived/p04-review-2026-07-28T223723Z.md           | 942458eb27065c3208774be2e7fe57b0b0fe0c34 | auto       | -                    |
 | p04    | code     | passed          | 2026-07-28 | reviews/archived/p04-review-2026-07-28T225031Z.md           | 6fed0cf0bc8e225dcb137795b3aed4fdb871014b | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230930Z.md           | d1e3cd6fef90227c9e1ddaf2c7d5cdd938e548ff | gate       | cursor-fable-5-xhigh |
-| p06    | code     | passed          | 2026-07-28 | reviews/p06-review-2026-07-28T233714Z.md                    | 87455b33c5b338ac717d10ebe5862924c538aeef | auto       | -                    |
+| p06    | code     | passed          | 2026-07-28 | reviews/archived/p06-review-2026-07-28T233714Z.md           | 87455b33c5b338ac717d10ebe5862924c538aeef | auto       | -                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
