@@ -146,6 +146,92 @@ describe('gate child process activity coordination', () => {
     );
   });
 
+  it('starts the final observation grace when a slow child closes', async () => {
+    let observeCalls = 0;
+    let resolveFinal: ((status: GateActivityProbeStatus) => void) | undefined;
+    const periodicResult = new Promise<GateActivityProbeStatus>(() => {});
+    const finalResult = new Promise<GateActivityProbeStatus>((resolve) => {
+      resolveFinal = resolve;
+    });
+    let finalObservedAt = 0;
+    const activityProbe: GateActivityProbe = {
+      runtime: 'cursor',
+      probe: async () => null,
+      observe: vi.fn((observedAt = Date.now()) => {
+        observeCalls += 1;
+        if (observeCalls === 1) {
+          return periodicResult;
+        }
+        finalObservedAt = observedAt;
+        return finalResult;
+      }),
+    };
+    const originalEmit = ChildProcess.prototype.emit;
+    const emitSpy = vi
+      .spyOn(ChildProcess.prototype, 'emit')
+      .mockImplementation(function (
+        this: ChildProcess,
+        event: string | symbol,
+        ...args: unknown[]
+      ): boolean {
+        const emitted = Reflect.apply(originalEmit, this, [
+          event,
+          ...args,
+        ]) as boolean;
+        if (event === 'close') {
+          const evidence: GateActivityEvidence = {
+            source: 'transcript-dir',
+            runtime: 'cursor',
+            scope: 'project-dir',
+            observedPath: '/tmp/cursor-transcript',
+            lastChangeAt: finalObservedAt,
+            totalSizeBytes: 4,
+            changedSinceBaseline: true,
+            observedAt: finalObservedAt,
+          };
+          resolveFinal?.({
+            status: 'available',
+            runtime: 'cursor',
+            scope: 'project-dir',
+            attemptedPath: evidence.observedPath,
+            observedAt: finalObservedAt,
+            evidence,
+          });
+        }
+        return emitted;
+      });
+
+    try {
+      const result = await runChildProcess(
+        process.execPath,
+        [
+          '-e',
+          'process.on("SIGTERM", () => setTimeout(() => process.exit(0), 1100)); setInterval(() => {}, 1000)',
+        ],
+        {
+          activityProbe,
+          cwd: process.cwd(),
+          env: {},
+          livenessIntervalMs: 20,
+          onLiveness: () => {},
+          purpose: 'execute',
+          stdin: 'ignore',
+          stdio: 'ignore',
+          timeoutMs: 300,
+        },
+      );
+
+      expect(observeCalls).toBe(2);
+      expect(result).toMatchObject({
+        activityEvidence: { totalSizeBytes: 4 },
+        exitCode: 124,
+        timedOut: true,
+      });
+    } finally {
+      emitSpy.mockRestore();
+    }
+  });
+
   it.each(['absent', 'failed', 'stalled'] as const)(
     'retains the last valid periodic evidence when the final timeout probe is %s',
     async (finalProbeOutcome) => {

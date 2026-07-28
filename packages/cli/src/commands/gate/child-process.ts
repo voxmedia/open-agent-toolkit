@@ -64,7 +64,9 @@ export async function runChildProcess(
     let latestActivityEvidenceSequence = 0;
     let livenessProbePending = false;
     let pendingPeriodicObservation: Promise<void> | undefined;
-    let finalActivityObservation: Promise<void> | undefined;
+    let finalActivityObservation:
+      | Promise<GateActivityProbeStatus | undefined>
+      | undefined;
     const startedAt = Date.now();
     let lastActivityAt = startedAt;
     const child = spawn(command, args, {
@@ -199,9 +201,7 @@ export async function runChildProcess(
         child.kill('SIGKILL');
       }, FORCE_KILL_GRACE_MS);
       killTimeout.unref();
-      finalActivityObservation = settleWithinActivityGrace(
-        observeActivity(Date.now()),
-      );
+      finalActivityObservation = observeActivity(Date.now());
     }, options.timeoutMs);
     timeout.unref();
 
@@ -226,7 +226,15 @@ export async function runChildProcess(
       }
       void (async () => {
         if (finalActivityObservation) {
-          await finalActivityObservation;
+          const periodicObservation = pendingPeriodicObservation;
+          const finalThenFallback = finalActivityObservation.then(
+            async (activityProbeStatus) => {
+              if (!activityProbeStatus?.evidence && periodicObservation) {
+                await periodicObservation;
+              }
+            },
+          );
+          await settleWithinActivityGrace(finalThenFallback);
         } else if (pendingPeriodicObservation) {
           // Preserve evidence already in flight on a normal close. This can add
           // up to the bounded grace to an otherwise successful execution.
