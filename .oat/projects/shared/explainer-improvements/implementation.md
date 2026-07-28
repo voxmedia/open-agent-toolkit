@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t05
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----: | --------: |
-| p01   | complete    |     7 |       7/7 |
-| p02   | complete    |    13 |     13/13 |
-| p03   | in_progress |     4 |       0/4 |
-| p04   | pending     |     3 |       0/3 |
-| p05   | pending     |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | fixes_pending |     5 |       4/5 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 20/31 tasks completed
+**Total:** 24/32 tasks completed
 
 ---
 
@@ -154,12 +154,13 @@ oat_generated: false
 
 ## Phase 3: Independent browser critic and hard loop cap
 
-**Status:** in_progress
+**Status:** fixes_pending
 
-- [ ] p03-t01 — Retain browser screenshots and metrics at three viewports
-- [ ] p03-t02 — Add an independent whole-set visual critic
-- [ ] p03-t03 — Enforce exactly one correction pass and final review
-- [ ] p03-t04 — Block publication and durability on missing or failed review
+- [x] p03-t01 — Retain browser screenshots and metrics at three viewports (`5c10fdc3`)
+- [x] p03-t02 — Add an independent whole-set visual critic (`8f0a6708`)
+- [x] p03-t03 — Enforce exactly one correction pass and final review (`3343ea1a`)
+- [x] p03-t04 — Block publication and durability on missing or failed review (`9b9570d1`)
+- [ ] p03-t05 — Align phase-wide visual-review integration fixtures
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -328,6 +329,18 @@ oat_generated: false
 - Root disposition: verified the missing hard-coded outcome consumers,
   expanded p03-t04's boundary and verification commands, and retained the same
   clean launch base for redispatch
+- Redispatch outcome: `DONE_WITH_CONCERNS`
+- Phase implementation range:
+  `665affc67df562c9e67acf733f41ba27bfbf8dbe..9b9570d118719888a794ca3b5d8656ead501b2b2`
+- Commits: p03-t01 `5c10fdc3`, p03-t02 `8f0a6708`, p03-t03 `3343ea1a`,
+  p03-t04 `9b9570d1`
+- Verification passed: each task's RED/GREEN cycle, p03-t04 focused 160/160,
+  check, lint, format, type-check, 3,627 repository tests, build, release
+  validation, diff, and file boundaries
+- Verification concern: complete Phase p03 union passed 356/365. Nine stale
+  expectations are confined to three out-of-bound integration fixture files
+  and are now bounded as p03-t05; this is pre-review verification work and
+  consumes no review-remediation retry.
 - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -371,7 +384,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 31 tasks and the final review._
+_Fill from implementation evidence after all 32 tasks and the final review._
 
 ## References
 

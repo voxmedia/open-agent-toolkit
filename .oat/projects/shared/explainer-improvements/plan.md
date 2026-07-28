@@ -801,6 +801,40 @@ publish or attest durability.
 
 ---
 
+### Task p03-t05: Align phase-wide visual-review integration fixtures
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Preserve RED evidence from the nine deterministic phase-wide failures caused
+   by success-path fixtures that omit newly required planner, browser-evidence,
+   or visual-review seams, plus the stale author-guidance wording assertion.
+2. Update successful unattended recap fixtures to supply deterministic set
+   planning, complete three-viewport browser evidence, and a passing
+   provider-neutral whole-set visual review. Keep explicit missing/failed review
+   cases expecting `built-needs-review`.
+3. Align the completion documentation assertion with the current exact
+   provider-neutral author-seam contract without weakening its one-seam
+   requirement.
+4. Preserve the original e2e, richness, fact-critic, and adapter assertions;
+   fixture repair must not bypass the browser-plus-critic gate or change
+   production behavior.
+5. Run
+   `node --test .agents/skills/explainer-kit/tests/e2e-recap.test.mjs .agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`,
+   then rerun the complete Phase p03 union.
+6. Commit as `test(p03-t05): align visual review fixtures`.
+
+**Acceptance:** The phase-wide union is green because successful lifecycle
+fixtures exercise the required visual-review chain, while missing or failed
+review evidence still terminates as `built-needs-review`.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams
@@ -1043,11 +1077,11 @@ additional unrelated review cycles.
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
-- Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
+- Phase 3: 5 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 31 tasks**
+**Total: 32 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
