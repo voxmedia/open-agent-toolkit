@@ -1159,6 +1159,163 @@ version as the CLI validation suite.
 
 ---
 
+### Task p03-t16: Require fully decoded browser PNG evidence
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/png.mjs`
+- Create: `.agents/skills/explainer-kit/tests/fixtures/png.mjs`
+- Create: `.agents/skills/explainer-kit/tests/png.test.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/browser-runtime.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED decoder cases for the current 45-byte pseudo-PNG, bad signatures,
+   chunk boundaries and CRCs, missing or non-contiguous IDAT, malformed or
+   trailing zlib data, invalid inflated length/filter bytes, unsupported
+   browser-image profiles, invalid IEND, and input/output limits.
+2. Implement a dependency-free browser-screenshot PNG decoder with Node 22
+   `zlib` and `crc32`: require exact chunk structure and CRCs, one IHDR, a
+   contiguous IDAT sequence, exact zlib consumption, bounded decompressed
+   scanlines, filters 0-4, and non-interlaced 8-bit RGB/RGBA pixels.
+3. Replace every pseudo-PNG success double with deterministic, valid,
+   decodable PNG fixtures at the exact canonical viewport dimensions.
+4. Bind the decoded screenshot hash to the later visual-review snapshot before
+   critic invocation so mutation between validation and review fails closed.
+5. Add one actual `runExplainer` integration using
+   `createBrowserProbeSession()` and installed Chromium. Skip only for an
+   unavailable optional runtime outside CI; once available, any launch,
+   capture, decode, hash, or review failure is fatal.
+6. Run focused PNG, browser, QA, core, adapter, and recap integration tests.
+7. Commit as `fix(p03-t16): decode browser png evidence`.
+
+**Acceptance:** No structurally crafted or undecodable screenshot can satisfy
+the review gate, while deterministic fixtures and a real Chromium-generated
+recap pass with exact viewport and immutable byte/hash bindings.
+
+---
+
+### Task p03-t17: Share one canonical recap package-coverage contract
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs`
+- Create: `packages/cli/src/commands/project/archive/explainer-package-coverage.ts`
+- Create: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.test.ts`
+- Modify: `packages/cli/src/release/public-package-contract.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+
+**Steps:**
+
+1. Add RED truth-table tests proving partial review evidence is exempt only for
+   `built-needs-review`; failed, incomplete, and successful packages with any
+   retained partial chain require the complete canonical attempt.
+2. Extract one versioned, dependency-free path enumerator into the canonical
+   core and re-export it from `records.mjs`.
+3. Have the OAT finalizer dynamically load the contract from an explicit
+   compatible `coreRoot`; remove its local path-enumeration implementation.
+4. Have the CLI load the generated copy from its resolved bundled-assets root,
+   validate/cache the contract export, and remove archive-local coverage
+   enumeration. Keep mode derivation after byte/hash verification.
+5. Keep push on the same archive verification path rather than adding another
+   implementation.
+6. Add a cross-consumer smoke that runs the actual core successfully and passes
+   its untouched package through finalization, archive, and push, plus
+   failed/incomplete partial-chain negatives.
+7. Require the canonical module in packed CLI payload tests and document the
+   explicit `coreRoot` contract.
+8. Run focused core, finalizer, archive, push, smoke, and packed-package tests.
+9. Commit as `fix(p03-t17): share package coverage contract`.
+
+**Acceptance:** Core, finalizer, archive, and push consume one versioned path
+enumerator; untouched real core packages pass every consumer, and only
+`built-needs-review` may retain an intentionally partial review chain.
+
+---
+
+### Task p03-t18: Complete the review-gate failure matrix
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add integrated RED cases for one omitted screenshot, an evidence-copy
+   failure, and a disallowed viewport override.
+2. Require exact `built-needs-review` results, build-record/manifest outcomes,
+   retained available evidence and structured errors, zero durability/publish
+   calls, at most two reviews and one correction, and exact 320/768/1440
+   requests.
+3. Make the minimum bounded production corrections needed to preserve those
+   handoffs without broadening generic failure normalization.
+4. Run focused records and core integration tests.
+5. Commit as `test(p03-t18): complete review failure matrix`.
+
+**Acceptance:** Every originally promised review-chain error branch has an
+integrated fail-closed handoff assertion with bounded callback counts and no
+external side effects.
+
+---
+
+### Task p03-t19: Align explainer and public release versions
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Steps:**
+
+1. Bump `explainer-kit` to `2.0.3` and `oat-explainer-kit` to `1.0.5`; require
+   core `2.0.3` so the adapter rejects pre-decoder/pre-contract cores.
+2. Align CLI validation, wrapper smoke, and adapter compatibility fixtures with
+   the new versions.
+3. Bump all five lockstep public packages from `0.2.22` to `0.2.23`, update the
+   lockfile, and regenerate bundled public-package version metadata.
+4. Refresh provider-linked skill views with `oat sync --scope all`; do not
+   hand-edit generated views.
+5. Run skill validation, adapter compatibility, wrapper smoke, lockstep
+   version checks, full repository gates, and `pnpm release:validate`.
+6. Commit as `chore(p03-t19): align explainer release versions`.
+
+**Acceptance:** Installed adapters cannot accept the vulnerable prior core,
+all canonical/provider/public-package versions are synchronized, and packed
+release validation passes.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams

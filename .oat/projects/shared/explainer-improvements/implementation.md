@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t16
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | review_pending |    15 |     15/15 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | fixes_pending |    19 |     15/19 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 35/42 tasks completed
+**Total:** 35/46 tasks completed
 
 ---
 
@@ -171,6 +171,10 @@ oat_generated: false
 - [x] p03-t13 — Align the OAT explainer skill version assertion (`b2e1904c`)
 - [x] p03-t14 — Preserve incomplete visual-review handoff manifests (`339810fe`)
 - [x] p03-t15 — Align the explainer smoke version assertion (`681369ac`)
+- [ ] p03-t16 — Require fully decoded browser PNG evidence
+- [ ] p03-t17 — Share one canonical recap package-coverage contract
+- [ ] p03-t18 — Complete the review-gate failure matrix
+- [ ] p03-t19 — Align explainer and public release versions
 
 ### Phase Implementation Summary
 
@@ -223,6 +227,10 @@ oat_generated: false
 - p03-t15 aligned the independent smoke assertion. The complete repository
   suite, all 129 smoke tests, release validation for five packages, and all 65
   visual measurements passed with a clean worktree.
+- Fresh re-review attempt 1/3 resolved six original blocking findings but
+  remained blocked on undecodable pseudo-PNG acceptance and duplicated,
+  outcome-inconsistent package coverage. Remediation attempt 2/3 is bounded as
+  p03-t16 through p03-t19.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -478,7 +486,27 @@ oat_generated: false
 - Source artifact: `reviews/20260728-p03-code-review.md`
 - Planned artifact: `reviews/20260728-p03-code-review-r1.md`
 - Scope: original Phase p03 blocking findings and p03-t06 through p03-t15
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260728-p03-code-review-r1.md`
+- Findings: 1 Critical, 1 Important, 1 Medium, 0 Minor
+- Resolved: exact review-byte binding, observed cohesion, immutable successful
+  evidence, bounded exercised handoffs, first-class OAT providers, interactive
+  compatibility, and version 1.0.4 alignment
+- Blocking: real PNG decoding and one canonical cross-consumer package-coverage
+  contract; complete the remaining integrated error matrix in the same bounded
+  correction
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 11 — Phase p03 review remediation attempt 2
+
+- Request: `explainer-improvements-p03-fix-r2-20260728T231500Z`
+- Launch intent: pending root tracking commit
+- Tasks: p03-t16 through p03-t19, sequentially
+- Source artifact: `reviews/20260728-p03-code-review-r1.md`
+- Review-remediation attempt: 2/3
+- Context references: Node.js 22.17 `zlib.inflateSync` and bounded output
+  behavior verified through Context7; local runtime confirms `zlib.crc32`
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -511,6 +539,7 @@ oat_generated: false
 | p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral               | Add bounded p03-t12 and p03-t13     | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3                   | focused phase and CLI validation tests | p03-t12, p03-t13 |
 | p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                 | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers | core integration tests                 | p03-t14          |
 | p03-t14 verification  | plan p03-t14    | Canonical adapter 1.0.4 is aligned across validation    | Add bounded p03-t15                 | The smoke wrapper retained an independent 1.0.3 assertion                                                          | full repository test                   | p03-t15          |
+| p03 re-review R1      | p03 re-review   | Remediation closes all original blocking findings       | Add p03-t16 through p03-t19         | Pseudo-PNGs remain accepted and package coverage is duplicated/inconsistent outside success                        | p03 re-review artifact                 | p03-t16–p03-t19  |
 
 ## Test Results
 
@@ -524,7 +553,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 42 tasks and the final review._
+_Fill from implementation evidence after all 46 tasks and the final review._
 
 ## References
 
