@@ -595,8 +595,7 @@ and accurate planner-owned expansion rules entirely through validated inputs.
 
 **Files:**
 
-- Modify: `.agents/skills/explainer-kit/schemas/run-request.v1.schema.json`
-- Modify: `.agents/skills/explainer-kit/schemas/recipe.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/run-request.schema.json`
 - Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`

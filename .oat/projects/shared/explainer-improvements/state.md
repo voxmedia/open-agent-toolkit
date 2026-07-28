@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T12:41:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T12:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -119,6 +119,7 @@ Phase p02 review remediation attempt 1 of 3 pending
 - ✓ Root p02 focused and release verification passed
 - ✓ Root-owned p02 review completed with five Important findings
 - ✓ Operator raised the phase/code review remediation limit to three retries
+- ✓ p02-t12 preflight file-boundary defect corrected before implementation
 - ⧗ p02-t08 through p02-t12 are review-remediation attempt 1/3
 
 ## Blockers

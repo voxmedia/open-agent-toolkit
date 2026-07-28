@@ -230,6 +230,8 @@ oat_generated: false
 - Findings: 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Reconnaissance: `not-attempted`
 - Review-remediation attempt: 1/3 pending
+- Attempt 1 preflight initially stopped before edits because p02-t12 named two
+  nonexistent schema paths. Root corrected the boundary; no retry was consumed.
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -258,6 +260,7 @@ oat_generated: false
 | p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps              | p01 review artifact                 | p01-t05, p01-t06 |
 | p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`            | root focused test                   | p01-t07          |
 | p02 retry policy      | project state   | One review-remediation retry                       | Up to three bounded retries         | Operator override on 2026-07-28                         | user instruction and `state.md`     | p02-t08–p02-t12  |
+| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                  | Corrected one path; removed one     | Recipe validation has no standalone schema file         | repository file inventory           | p02-t12          |
 
 ## Test Results
 
