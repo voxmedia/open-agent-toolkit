@@ -833,7 +833,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.0');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -1928,7 +1928,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.22');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.0');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2082,9 +2082,9 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.10'],
-      ['.agents/agents/oat-reviewer.md', '1.1.9'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
+      ['.agents/agents/oat-reviewer.md', '1.2.0'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.0'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
@@ -2586,9 +2586,9 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.17'],
-      ['oat-project-review-provide', '1.3.22'],
-      ['oat-project-review-receive', '1.5.9'],
-      ['oat-project-review-receive-remote', '1.4.2'],
+      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-receive', '1.6.0'],
+      ['oat-project-review-receive-remote', '1.5.0'],
       ['oat-project-implement', '2.1.9'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
@@ -2670,7 +2670,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.9');
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -3663,7 +3663,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.3'],
       ['oat-project-quick-start', '2.3.4'],
       ['oat-project-import-plan', '1.4.8'],
-      ['oat-project-review-provide', '1.3.22'],
+      ['oat-project-review-provide', '1.4.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3679,7 +3679,7 @@ describe('validateOatSkills', () => {
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
       ['oat-project-implement', '2.1.9'],
-      ['oat-project-review-provide', '1.3.22'],
+      ['oat-project-review-provide', '1.4.0'],
       ['oat-project-review-provide-remote', '1.0.4'],
     ] as const;
 

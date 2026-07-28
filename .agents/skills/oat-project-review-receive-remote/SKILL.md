@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.4.2
+version: 1.5.0
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -115,6 +115,19 @@ Confirm resolved PR number with user.
 npx agent-reviews --json --unresolved --pr <N>
 ```
 
+Resolve provenance from the GitHub review event that produced the fetched
+feedback, not from the PR's current head. Parse its OAT marker block when
+present:
+
+- accept `oat_review_head_sha` only as a full 40-character hexadecimal SHA;
+- preserve `oat_review_invocation` as the invocation kind;
+- preserve `oat_gate_target` only for a gate invocation.
+
+If the source review is legacy, multiple source reviews disagree, or the
+lineage cannot be associated with this receive event, leave the corresponding
+ledger cells unknown (`-`). Never infer lineage from the reviewer identity or
+substitute the current PR head for the commit that was actually reviewed.
+
 If no unresolved comments:
 
 1. Create a UTC timestamp and event-distinct filename:
@@ -129,6 +142,8 @@ If no unresolved comments:
      Artifact `-`; otherwise append a distinct row.
    - Set Date and Artifact to this clean event. Advance only this event and
      never mutate another row by scope alone.
+   - Populate `Reviewed Head`, `Invocation`, and `Gate Target` only from the
+     validated source-review provenance above; use `-` when it is unknown.
 4. Commit `plan.md` and the clean review artifact atomically with
    `chore(oat): record clean remote review (pr-#<N>)`. Do not stop with
    uncommitted bookkeeping.
@@ -176,7 +191,8 @@ For each converted finding:
 ### Step 6: Update Project Artifacts
 
 Before changing the ledger, write an event-distinct review artifact containing
-the PR number, fetch timestamp, normalized findings, and dispositions:
+the PR number, fetch timestamp, normalized findings, dispositions, and any
+validated source-review head/invocation/gate-target provenance:
 `reviews/archived/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`. Remote receive
 fully dispositions the event as `passed` or `fixes_added`, so the artifact is
 consumed immediately and belongs in `reviews/archived/`, not top-level
@@ -198,11 +214,18 @@ Update `plan.md`:
   - status `passed` when no actionable findings remain
   - date set to today
   - artifact `reviews/archived/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`
+  - reviewed head set to the validated full source-review SHA, or `-`
+  - invocation set to the source-review invocation kind, or `-`
+  - gate target set only for a gate source review, or `-`
 - Claim an unbound `pending` placeholder only when its Scope + Type matches and
   its Artifact is `-`; otherwise append the event. Later mutations select it by
   Scope + Type + artifact filename, never by scope or `github-pr #<N>` alone.
 - Never move an event status backward or overwrite an earlier event from the
   same PR.
+- If the Reviews table has only the legacy five columns, add `Reviewed Head`,
+  `Invocation`, and `Gate Target` to its header and separator and pad all
+  existing rows with `-`. Otherwise mutate by header name and preserve every
+  unknown trailing cell. Never rewrite a widened row to five or eight cells.
 - Update `## Implementation Complete` totals.
 
 Update `implementation.md`:

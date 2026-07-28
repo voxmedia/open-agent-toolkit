@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.22
+version: 1.4.0
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -826,6 +826,8 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
+# Code-review only: full 40-character SHA from `git rev-parse <range-head>^{commit}`.
+oat_review_head_sha: { authoritative range head commit SHA }
 # Gate-only: copy the exact prompt-provided fields below.
 oat_gate_run_id: { gate run id }
 oat_gate_target: { configured target id }
@@ -955,11 +957,26 @@ Record this artifact as one append-ordered review event:
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
+- `Reviewed Head`: for code reviews, the full 40-character SHA from
+  `git rev-parse <authoritative-range-head>^{commit}`; `-` for non-code reviews.
+  Never record an abbreviation, symbolic ref, or range string.
+- `Invocation`: for code reviews, the artifact's `oat_review_invocation`
+  (`manual`, `auto`, or `gate`); `-` for non-code reviews.
+- `Gate Target`: for gate code reviews, the exact gate-context
+  `oat_gate_target`; `-` otherwise.
 
 For the first event with this Scope + Type, claim an unbound `pending`
 placeholder only when its Artifact is `-`. Otherwise append a new row for the
 new artifact. Never replace or regress a bound event merely because Scope +
 Type matches; distinct artifact filenames are distinct review events.
+
+Before writing, inspect the table header. A legacy five-column ledger is valid:
+widen its header and separator with `Reviewed Head`, `Invocation`, and
+`Gate Target`, and pad existing rows with `-` in those three cells. For an
+already widened ledger, mutate cells by header name rather than rebuilding the
+row. Preserve every existing row and every trailing cell, including columns
+this skill does not recognize; never rewrite a widened row back to five or
+eight columns.
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
 

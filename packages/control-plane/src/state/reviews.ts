@@ -6,6 +6,7 @@ import { parseFrontmatterRecord } from '../shared/utils/frontmatter';
 import type { ReviewStatus } from '../types';
 
 const REVIEWS_HEADING = '## Reviews';
+const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
 export function parseReviewTable(planContent: string): ReviewStatus[] {
   const reviewsSection = extractReviewsSection(planContent);
@@ -86,14 +87,43 @@ function parseTableRow(line: string): ReviewStatus | null {
     .slice(1, -1)
     .map((cell) => cell.trim());
 
-  if (cells.length !== 5) {
+  if (cells.length < 5) {
     return null;
   }
 
-  const [scope, type, status, date, artifact] = cells;
+  const [
+    scope,
+    type,
+    status,
+    date,
+    artifact,
+    reviewedHeadCell,
+    invocationCell,
+    gateTargetCell,
+  ] = cells;
   if (!scope || !type || !status || !date || !artifact) {
     return null;
   }
 
-  return { scope, type, status, date, artifact };
+  const reviewedHead =
+    reviewedHeadCell && FULL_COMMIT_SHA.test(reviewedHeadCell)
+      ? reviewedHeadCell
+      : undefined;
+  const invocation = optionalCell(invocationCell);
+  const gateTarget = optionalCell(gateTargetCell);
+
+  return {
+    scope,
+    type,
+    status,
+    date,
+    artifact,
+    ...(reviewedHead ? { reviewedHead } : {}),
+    ...(invocation ? { invocation } : {}),
+    ...(gateTarget ? { gateTarget } : {}),
+  };
+}
+
+function optionalCell(cell: string | undefined): string | undefined {
+  return cell && cell !== '-' ? cell : undefined;
 }
