@@ -94,15 +94,20 @@ before authoring; author results cannot add, remove, or replace artifacts.
 Visual review uses provider-neutral
 `explainer-kit.visual-review-request/v1` and
 `explainer-kit.visual-review-result/v1` envelopes. The request combines the
-shared plan with rendered artifact paths and viewport evidence. The result
-names the complete artifact set, artifact-scoped rubric findings, and exactly
-one `pass`, `correct`, or `fail` disposition. Application validation must pass
-the reviewed request as `visualReviewRequest` context when validating the
-result. Request artifacts must exactly equal the planned portfolio, result
-artifact IDs must exactly equal that reviewed set, and every finding must name
-one of those artifacts. `pass` permits no findings; `correct` and `fail`
-require at least one correction finding. Provider, model, command, credential,
-and dispatch fields are not part of any core contract.
+shared plan with rendered artifact paths and viewport evidence, binds every
+rendered file, screenshot, and metrics file by raw-byte SHA-256 hash, and
+derives a deterministic `requestId` and canonical `requestHash`. The critic
+receives a confined reader for those snapshotted paths and cannot read
+unlisted evidence. Core revalidates the bytes after the callback returns.
+The result must echo the exact request identity and hash, name the complete
+artifact set, include artifact-scoped rubric findings, and select exactly one
+`pass`, `correct`, or `fail` disposition. Application validation must pass the
+reviewed request as `visualReviewRequest` context when validating the result.
+Request artifacts must exactly equal the planned portfolio, result artifact IDs
+must exactly equal that reviewed set, and every finding must name one of those
+artifacts. `pass` permits no findings; `correct` and `fail` require at least one
+correction finding. Provider, model, command, credential, and dispatch fields
+are not part of any core contract.
 
 Unattended project recaps require retained browser evidence at every required
 viewport and a final visual-critic `pass`. A missing browser probe or visual

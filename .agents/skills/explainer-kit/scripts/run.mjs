@@ -499,6 +499,7 @@ async function reviewAndRetain(state, visualCritic, attempt) {
     rendered: state.rendered,
     evidence: state.browserEvidence,
     visualCritic,
+    runRoot: state.run.runRoot,
   });
   state.visualReviewPaths.push(
     ...(await writeVisualReviewAttempt(state.run, {

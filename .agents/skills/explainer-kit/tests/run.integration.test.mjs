@@ -977,16 +977,26 @@ test('invokes an independent critic once with the complete rendered recap set', 
     }
     return result;
   });
-  const visualCritic = mock.fn(async (reviewRequest) => ({
-    schemaVersion: 'explainer-kit.visual-review-result/v1',
-    reviewId: 'recap-review-1',
-    reviewedAt: NOW,
-    disposition: 'pass',
-    artifactIds: reviewRequest.renderedArtifacts.map(
-      ({ artifactId }) => artifactId,
-    ),
-    findings: [],
-  }));
+  const visualCritic = mock.fn(async (reviewRequest, evidenceInput) => {
+    const firstScreenshot =
+      reviewRequest.renderedArtifacts[0].evidence[0].screenshotPath;
+    assert.deepEqual(
+      await evidenceInput.read(firstScreenshot),
+      Buffer.from([1, 2, 3]),
+    );
+    return {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'recap-review-1',
+      requestId: reviewRequest.requestId,
+      requestHash: reviewRequest.requestHash,
+      reviewedAt: NOW,
+      disposition: 'pass',
+      artifactIds: reviewRequest.renderedArtifacts.map(
+        ({ artifactId }) => artifactId,
+      ),
+      findings: [],
+    };
+  });
 
   const result = await runExplainerCore(fixture.request, {
     author,
@@ -1073,6 +1083,8 @@ test('caps visual review at one correction and one final review', async (t) => {
         return {
           schemaVersion: 'explainer-kit.visual-review-result/v1',
           reviewId: `recap-review-${reviewIndex}`,
+          requestId: reviewRequest.requestId,
+          requestHash: reviewRequest.requestHash,
           reviewedAt: NOW,
           disposition,
           artifactIds: reviewRequest.renderedArtifacts.map(
@@ -1182,6 +1194,8 @@ test('fails closed before durability and publication when recap review is missin
           : mock.fn(async (reviewRequest) => ({
               schemaVersion: 'explainer-kit.visual-review-result/v1',
               reviewId: 'blocking-review',
+              requestId: reviewRequest.requestId,
+              requestHash: reviewRequest.requestHash,
               reviewedAt: NOW,
               disposition: scenario.visualDisposition,
               artifactIds: reviewRequest.renderedArtifacts.map(
@@ -1273,6 +1287,8 @@ test('fails closed before durability and publication when recap review is missin
         visualCritic: async (reviewRequest) => ({
           schemaVersion: 'explainer-kit.visual-review-result/v1',
           reviewId: 'passing-review',
+          requestId: reviewRequest.requestId,
+          requestHash: reviewRequest.requestHash,
           reviewedAt: NOW,
           disposition: 'pass',
           artifactIds: reviewRequest.renderedArtifacts.map(

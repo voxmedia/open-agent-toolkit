@@ -207,12 +207,21 @@ test('set and visual review schemas carry closed shared context', async () => {
     'correct',
     'fail',
   ]);
+  assert.ok(reviewRequest.required.includes('requestId'));
+  assert.ok(reviewRequest.required.includes('requestHash'));
   assert.ok(reviewRequest.required.includes('renderedArtifacts'));
   assert.equal(reviewRequest.properties.renderedArtifacts.uniqueItems, true);
+  assert.ok(
+    reviewRequest.$defs.renderedArtifact.required.includes('renderedHash'),
+  );
   assert.equal(
     reviewRequest.$defs.renderedArtifact.properties.evidence.uniqueItems,
     true,
   );
+  assert.ok(reviewRequest.$defs.evidence.required.includes('screenshotHash'));
+  assert.ok(reviewRequest.$defs.evidence.required.includes('metricsHash'));
+  assert.ok(reviewResult.required.includes('requestId'));
+  assert.ok(reviewResult.required.includes('requestHash'));
   assert.ok(reviewResult.required.includes('artifactIds'));
   assert.equal(reviewResult.properties.artifactIds.uniqueItems, true);
   assert.equal(reviewResult.properties.findings.uniqueItems, true);

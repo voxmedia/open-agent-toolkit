@@ -7,6 +7,8 @@
   "required": [
     "schemaVersion",
     "reviewId",
+    "requestId",
+    "requestHash",
     "reviewedAt",
     "disposition",
     "artifactIds",
@@ -17,6 +19,8 @@
       "const": "explainer-kit.visual-review-result/v1"
     },
     "reviewId": { "$ref": "#/$defs/safeId" },
+    "requestId": { "$ref": "#/$defs/safeId" },
+    "requestHash": { "$ref": "#/$defs/hash" },
     "reviewedAt": { "type": "string", "format": "date-time" },
     "disposition": { "enum": ["pass", "correct", "fail"] },
     "artifactIds": {
@@ -35,6 +39,10 @@
     "safeId": {
       "type": "string",
       "pattern": "^[a-z0-9]+(?:[._-][a-z0-9]+)*$"
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^sha256:[a-f0-9]{64}$"
     },
     "finding": {
       "type": "object",

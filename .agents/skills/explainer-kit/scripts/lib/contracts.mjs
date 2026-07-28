@@ -509,6 +509,29 @@ function validateCrossRecord(kind, value, context, errors) {
   }
 
   if (kind === 'visual-review-request') {
+    if (
+      typeof value.requestHash === 'string' &&
+      value.requestHash !== canonicalHash(visualReviewRequestPayload(value))
+    ) {
+      add(
+        errors,
+        '$.requestHash',
+        'request-hash-mismatch',
+        'Visual review request hash does not match its canonical evidence payload.',
+      );
+    }
+    if (
+      typeof value.requestHash === 'string' &&
+      typeof value.requestId === 'string' &&
+      value.requestId !== visualReviewRequestId(value.requestHash)
+    ) {
+      add(
+        errors,
+        '$.requestId',
+        'request-id-mismatch',
+        'Visual review request identity does not match its canonical request hash.',
+      );
+    }
     const plannedArtifactIds = Array.isArray(value.plan?.portfolio)
       ? value.plan.portfolio.map(({ artifactId }) => artifactId)
       : [];
@@ -570,6 +593,17 @@ function validateCrossRecord(kind, value, context, errors) {
         '$',
         'invalid-review-request',
         'Visual review result cannot bind to an invalid reviewed request.',
+      );
+    }
+    if (
+      value.requestId !== reviewRequest.requestId ||
+      value.requestHash !== reviewRequest.requestHash
+    ) {
+      add(
+        errors,
+        '$.requestHash',
+        'review-binding-mismatch',
+        'Visual review result must echo the exact reviewed request identity and hash.',
       );
     }
 
@@ -802,6 +836,16 @@ function validateCrossRecord(kind, value, context, errors) {
       }
     }
   }
+}
+
+export function visualReviewRequestPayload(request) {
+  const { requestId: _requestId, requestHash: _requestHash, ...payload } =
+    request;
+  return payload;
+}
+
+export function visualReviewRequestId(requestHash) {
+  return `visual-review-${String(requestHash).replace(/^sha256:/, '')}`;
 }
 
 function validateSetPlan(value, errors) {

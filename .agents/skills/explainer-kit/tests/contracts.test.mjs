@@ -4,7 +4,11 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
-import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import {
+  canonicalHash,
+  validateContract,
+  visualReviewRequestId,
+} from '../scripts/lib/contracts.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
 import { runValidationCli } from '../scripts/validate.mjs';
 
@@ -280,27 +284,39 @@ function setPlan() {
 }
 
 function visualReviewRequest() {
-  return {
+  const payload = {
     schemaVersion: 'explainer-kit.visual-review-request/v1',
     plan: setPlan(),
     renderedArtifacts: setPlan().portfolio.map(({ artifactId }) => ({
       artifactId,
       renderedPath: `site/${artifactId}/index.html`,
+      renderedHash: HASH_A,
       evidence: [
         {
           viewport: 'desktop',
           screenshotPath: `qa/${artifactId}-desktop.png`,
+          screenshotHash: HASH_A,
           metricsPath: `qa/${artifactId}-desktop.json`,
+          metricsHash: HASH_B,
         },
       ],
     })),
   };
+  const requestHash = canonicalHash(payload);
+  return {
+    ...payload,
+    requestId: visualReviewRequestId(requestHash),
+    requestHash,
+  };
 }
 
 function visualReviewResult() {
+  const request = visualReviewRequest();
   return {
     schemaVersion: 'explainer-kit.visual-review-result/v1',
     reviewId: 'visual-review-1',
+    requestId: request.requestId,
+    requestHash: request.requestHash,
     reviewedAt: NOW,
     disposition: 'correct',
     artifactIds: setPlan().portfolio.map(({ artifactId }) => artifactId),
@@ -557,6 +573,25 @@ test('binds visual reviews to the exact complete rendered set', () => {
     validateContract('visual-review-result', visualReviewResult()).valid,
     false,
     'a result without its reviewed request is detached',
+  );
+});
+
+test('rejects stale visual review identities and post-request byte bindings', () => {
+  const request = visualReviewRequest();
+  const stale = visualReviewResult();
+  stale.requestHash = HASH_A;
+  assert.ok(
+    validateContract('visual-review-result', stale, {
+      visualReviewRequest: request,
+    }).errors.some(({ code }) => code === 'review-binding-mismatch'),
+  );
+
+  const mutated = structuredClone(request);
+  mutated.renderedArtifacts[0].evidence[0].screenshotHash = HASH_B;
+  assert.ok(
+    validateContract('visual-review-request', mutated).errors.some(
+      ({ code }) => code === 'request-hash-mismatch',
+    ),
   );
 });
 
