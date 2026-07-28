@@ -8,6 +8,7 @@ import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findMissingPackedTextContents,
   findNonPublicWorkspaceDependencySpecs,
   findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
@@ -26,10 +27,11 @@ interface PackedFileEntry {
   path: string;
 }
 
-interface PackedArtifact {
+export interface PackedArtifact {
   filename: string;
   packageJson: Record<string, unknown>;
   files: PackedFileEntry[];
+  textFiles: Record<string, string>;
 }
 
 interface PackageValidationFailure {
@@ -153,16 +155,21 @@ async function validateLockstepVersionBumps(
   return errors.length > 0 ? { contract: null, errors } : null;
 }
 
-async function packPackage(
+export async function packPublicPackage(
   contract: PublicPackageContract,
+  packageDir = getPackageDir(contract),
 ): Promise<PackedArtifact> {
   const packDir = await mkdtemp(join(tmpdir(), 'oat-public-pack-'));
 
   try {
+    const isWorkspacePackage = packageDir === getPackageDir(contract);
+    const packArgs = isWorkspacePackage
+      ? ['--filter', contract.publicName, 'pack', '--pack-destination', packDir]
+      : ['pack', '--pack-destination', packDir];
     await runCommand(
       'pnpm',
-      ['--filter', contract.publicName, 'pack', '--pack-destination', packDir],
-      REPO_ROOT,
+      packArgs,
+      isWorkspacePackage ? REPO_ROOT : packageDir,
     );
 
     const packedFiles = (await readdir(packDir)).filter((file) =>
@@ -189,11 +196,26 @@ async function packPackage(
       .filter(Boolean)
       .map((line) => line.replace(/^package\//, ''))
       .filter((line) => line.length > 0);
+    const textFiles = Object.fromEntries(
+      await Promise.all(
+        contract.requiredPackedTextFiles
+          .filter((requirement) => packedPaths.includes(requirement.path))
+          .map(async (requirement) => [
+            requirement.path,
+            await runCommand(
+              'tar',
+              ['-xOf', tarballPath, `package/${requirement.path}`],
+              REPO_ROOT,
+            ),
+          ]),
+      ),
+    );
 
     return {
       filename: tarballName,
       packageJson: JSON.parse(packageJsonText) as Record<string, unknown>,
       files: packedPaths.map((path) => ({ path })),
+      textFiles,
     };
   } finally {
     await rm(packDir, { recursive: true, force: true });
@@ -269,7 +291,7 @@ async function validatePackage(
     getPackageDir(contract),
     contract,
   );
-  const packedArtifact = await packPackage(contract);
+  const packedArtifact = await packPublicPackage(contract);
   const packedPackageJson = packedArtifact.packageJson;
   const missingPackedMetadataFields = findMissingMetadataFields(
     packedPackageJson,
@@ -285,6 +307,10 @@ async function validatePackage(
     );
   const packedPaths = packedArtifact.files.map((file) => file.path);
   const missingPackedPaths = findMissingPackedPaths(packedPaths, contract);
+  const missingPackedTextContents = findMissingPackedTextContents(
+    packedArtifact.textFiles,
+    contract,
+  );
   const forbiddenPackedPaths = findForbiddenPackedPaths(packedPaths, contract);
   const errors: string[] = [];
 
@@ -312,6 +338,12 @@ async function validatePackage(
 
   if (missingPackedPaths.length > 0) {
     errors.push(`missing packed paths: ${missingPackedPaths.join(', ')}`);
+  }
+
+  if (missingPackedTextContents.length > 0) {
+    errors.push(
+      `missing packed notice content: ${missingPackedTextContents.join(', ')}`,
+    );
   }
 
   if (forbiddenPackedPaths.length > 0) {

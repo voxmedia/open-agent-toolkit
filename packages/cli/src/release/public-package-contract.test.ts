@@ -1,17 +1,21 @@
-import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { execFile } from 'node:child_process';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
 import { describe, expect, it } from 'vitest';
 
 import { isVersionPolicyIgnoredPath } from '../../../../tools/release/release-utils';
 import { findMissingBuildArtifacts } from '../../../../tools/release/validate-public-packages';
 import { findLockstepVersionBumpErrors } from '../../../../tools/release/validate-public-packages';
+import { packPublicPackage } from '../../../../tools/release/validate-public-packages';
 import {
   findForbiddenPackedPaths,
   findMissingMetadataFields,
   findMissingPackedPaths,
+  findMissingPackedTextContents,
   findNonPublicWorkspaceDependencySpecs,
   findWorkspaceProtocolDependencySpecs,
   getPublicPackageContracts,
@@ -38,6 +42,10 @@ const docsAppPackageJsonPath = fileURLToPath(
 const workspaceRootPackageJsonPath = fileURLToPath(
   new URL('../../../../package.json', import.meta.url),
 );
+const bundleAssetsScriptPath = fileURLToPath(
+  new URL('../../scripts/bundle-assets.sh', import.meta.url),
+);
+const execFileAsync = promisify(execFile);
 
 async function readJson(path: string): Promise<Record<string, unknown>> {
   return JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
@@ -87,8 +95,19 @@ describe('getPublicPackageContracts', () => {
           'assets/templates/repo-agents.md',
           'assets/templates/pjm-agents.md',
           'assets/templates/reference-agents.md',
+          'assets/NOTICES.md',
           'README.md',
         ]),
+        requiredPackedTextFiles: [
+          expect.objectContaining({
+            path: 'assets/NOTICES.md',
+            requiredContents: expect.arrayContaining([
+              expect.stringContaining('Copyright (c) 2025 Jesse Vincent'),
+              expect.stringContaining('Copyright (c) 2026 shadcn'),
+              expect.stringContaining('Copyright (c) 2025 Nico Bailon'),
+            ]),
+          }),
+        ],
         versionPolicyAdditionalRoots: expect.arrayContaining([
           '.agents/skills',
           '.agents/agents',
@@ -182,6 +201,7 @@ describe('getPublicPackageContracts', () => {
       'assets/templates/repo-agents.md',
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
+      'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
       'tsconfig.tsbuildinfo',
@@ -192,6 +212,64 @@ describe('getPublicPackageContracts', () => {
       'src/index.ts',
       'tsconfig.tsbuildinfo',
     ]);
+  });
+
+  it('requires complete third-party notices in the real packed CLI payload', async () => {
+    const cliContract = getPublicPackageContracts()[0];
+    const packageDir = await mkdtemp(join(tmpdir(), 'oat-cli-notice-pack-'));
+
+    try {
+      await mkdir(join(packageDir, 'dist'), { recursive: true });
+      await writeFile(join(packageDir, 'dist', 'index.js'), '', 'utf8');
+      await writeFile(
+        join(packageDir, 'README.md'),
+        '# CLI pack fixture\n',
+        'utf8',
+      );
+      await writeFile(
+        join(packageDir, 'package.json'),
+        `${JSON.stringify(
+          {
+            name: cliContract.publicName,
+            version: '0.0.0-notice-test',
+            files: ['dist', 'assets', 'README.md'],
+          },
+          null,
+          2,
+        )}\n`,
+        'utf8',
+      );
+      await execFileAsync('bash', [bundleAssetsScriptPath], {
+        env: {
+          ...process.env,
+          OAT_ASSETS_DIR: join(packageDir, 'assets'),
+        },
+      });
+
+      const packedArtifact = await packPublicPackage(cliContract, packageDir);
+      const packedPaths = packedArtifact.files.map((file) => file.path);
+
+      expect(findMissingPackedPaths(packedPaths, cliContract)).toEqual([]);
+      expect(
+        findMissingPackedTextContents(packedArtifact.textFiles, cliContract),
+      ).toEqual([]);
+    } finally {
+      await rm(packageDir, { recursive: true, force: true });
+    }
+  }, 20_000);
+
+  it('rejects notice payloads reduced to attribution summaries', () => {
+    const cliContract = getPublicPackageContracts()[0];
+
+    expect(
+      findMissingPackedTextContents(
+        {
+          'assets/NOTICES.md':
+            'Obra Superpowers, shadcn/improve, and visual-explainer are MIT licensed.',
+        },
+        cliContract,
+      ),
+    ).toHaveLength(3);
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {

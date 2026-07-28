@@ -6,9 +6,15 @@ export interface PublicPackageContract {
   role: 'cli' | 'docs-library' | 'support-library';
   requiredMetadataFields: string[];
   requiredPaths: string[];
+  requiredPackedTextFiles: PackedTextFileRequirement[];
   forbiddenPathPatterns: string[];
   versionPolicyAdditionalRoots: string[];
   versionPolicyIgnorePatterns: string[];
+}
+
+export interface PackedTextFileRequirement {
+  path: string;
+  requiredContents: string[];
 }
 
 const COMMON_METADATA_FIELDS = [
@@ -33,6 +39,24 @@ const PACKED_DEPENDENCY_FIELDS = [
   'peerDependencies',
 ] as const;
 
+const MIT_LICENSE_BODY = `Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.`;
+
 const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
   {
     workspaceDir: 'packages/cli',
@@ -47,7 +71,18 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       'assets/templates/repo-agents.md',
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
+      'assets/NOTICES.md',
       'README.md',
+    ],
+    requiredPackedTextFiles: [
+      {
+        path: 'assets/NOTICES.md',
+        requiredContents: [
+          `Copyright (c) 2025 Jesse Vincent\n\n${MIT_LICENSE_BODY}`,
+          `Copyright (c) 2026 shadcn\n\n${MIT_LICENSE_BODY}`,
+          `Copyright (c) 2025 Nico Bailon\n\n${MIT_LICENSE_BODY}`,
+        ],
+      },
     ],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [
@@ -65,6 +100,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     role: 'support-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
+    requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
@@ -75,6 +111,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
+    requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
@@ -85,6 +122,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
+    requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
@@ -95,6 +133,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
     role: 'docs-library',
     requiredMetadataFields: [...COMMON_METADATA_FIELDS, 'exports', 'types'],
     requiredPaths: ['dist/index.js', 'dist/index.d.ts', 'README.md'],
+    requiredPackedTextFiles: [],
     forbiddenPathPatterns: [...COMMON_FORBIDDEN_PATH_PATTERNS],
     versionPolicyAdditionalRoots: [],
     versionPolicyIgnorePatterns: [],
@@ -129,6 +168,12 @@ export function getPublicPackageContracts(): PublicPackageContract[] {
     ...contract,
     requiredMetadataFields: [...contract.requiredMetadataFields],
     requiredPaths: [...contract.requiredPaths],
+    requiredPackedTextFiles: contract.requiredPackedTextFiles.map(
+      (requirement) => ({
+        ...requirement,
+        requiredContents: [...requirement.requiredContents],
+      }),
+    ),
     forbiddenPathPatterns: [...contract.forbiddenPathPatterns],
     versionPolicyAdditionalRoots: [...contract.versionPolicyAdditionalRoots],
     versionPolicyIgnorePatterns: [...contract.versionPolicyIgnorePatterns],
@@ -162,6 +207,31 @@ export function findForbiddenPackedPaths(
       matchesGlob(packedPath, pattern),
     ),
   );
+}
+
+export function findMissingPackedTextContents(
+  packedTextFiles: Readonly<Record<string, string>>,
+  contract: PublicPackageContract,
+): string[] {
+  const missing: string[] = [];
+
+  for (const requirement of contract.requiredPackedTextFiles) {
+    const contents = packedTextFiles[requirement.path];
+    if (contents === undefined) {
+      missing.push(`${requirement.path} (missing file)`);
+      continue;
+    }
+
+    for (const requiredContent of requirement.requiredContents) {
+      if (!contents.includes(requiredContent)) {
+        missing.push(
+          `${requirement.path} (missing ${requiredContent.split('\n')[0]})`,
+        );
+      }
+    }
+  }
+
+  return missing;
 }
 
 export function findWorkspaceProtocolDependencySpecs(
