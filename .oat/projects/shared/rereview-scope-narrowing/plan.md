@@ -633,6 +633,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | spec   | artifact | n/a      | -          | -                                                           |
 | design | artifact | n/a      | -          | -                                                           |
 | plan   | artifact | received | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
+| plan   | artifact | received | 2026-07-28 | reviews/artifact-plan-review-2026-07-28T182554Z.md          |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
