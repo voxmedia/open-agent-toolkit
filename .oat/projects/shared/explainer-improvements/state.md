@@ -1,5 +1,5 @@
 ---
-oat_current_task: p02-t01
+oat_current_task: p01-t05
 oat_last_commit: d2a2af8c1291d46174a72c16cce925129e5252f6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T03:06:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T03:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 implementation complete - Root review pending
+Phase p01 review fixes pending
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Phase p01 implementation complete - Root review pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 19 stable tasks normalized
+- ✓ Five phases / 22 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -108,7 +108,8 @@ Phase p01 implementation complete - Root review pending
 - ✓ p01-t01 through p01-t03 implemented in three verified commits
 - ✓ Root focused verification passed
 - ✓ p01-t04 synchronized generated package-version metadata
-- ⧗ Root-owned p01 review pending
+- ✓ Root-owned p01 review completed with two Important findings
+- ⧗ p01-t05 and p01-t06 blocking fixes pending
 
 ## Blockers
 
@@ -116,4 +117,5 @@ None
 
 ## Next Milestone
 
-Run the root-owned p01 review against `5d964f22..d2a2af8c`
+Implement p01-t05 and p01-t06, re-run focused phase verification, and complete
+the bounded p01 review continuation.

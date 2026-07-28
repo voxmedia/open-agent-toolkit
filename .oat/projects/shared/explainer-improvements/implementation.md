@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t01
+oat_current_task_id: p01-t05
 oat_generated: false
 ---
 
@@ -17,26 +17,28 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | review_pending |     4 |       4/4 |
-| p02   | pending        |     5 |       0/5 |
-| p03   | pending        |     4 |       0/4 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | fixes_pending |     6 |       4/6 |
+| p02   | pending       |     5 |       0/5 |
+| p03   | pending       |     4 |       0/4 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 4/20 tasks completed
+**Total:** 4/22 tasks completed
 
 ---
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
 - [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
 - [x] p01-t03 — Establish the golden conformance fixture and rubric contract (`560a0c7c`)
 - [x] p01-t04 — Synchronize the generated public-package version asset (`d2a2af8c`)
+- [ ] p01-t05 — Validate packaged notice provenance
+- [ ] p01-t06 — Ground golden references in retained evidence
 
 ### Phase Implementation Summary
 
@@ -45,6 +47,7 @@ oat_generated: false
 - Complete upstream MIT texts now ship inside the CLI package and are enforced against real `pnpm pack` output.
 - The notice backlog item is archived; the visual umbrella links five bounded successor outcomes.
 - Three portable golden inputs, rubric records, and loader tests establish the conformance baseline.
+- Root review identified two blocking acceptance gaps now bounded as p01-t05 and p01-t06.
 
 **Verification:**
 
@@ -56,6 +59,19 @@ oat_generated: false
 **Concern:**
 
 - `pnpm install --lockfile-only` produced no lockfile diff because workspace package versions are represented as links. All five manifests are at `0.2.22`, and packed release validation passed.
+
+### Phase Review
+
+- Request: `explainer-improvements-p01-review-20260728T030636Z`
+- Artifact: `reviews/20260728-p01-code-review.md`
+- Verdict: `BLOCKED` — 0 Critical, 2 Important, 3 Medium, 0 Minor
+- Blocking fixes: p01-t05 (notice source/version provenance) and p01-t06
+  (source-grounded, hash-verified golden evidence)
+- Non-blocking follow-ups retained in the review artifact: absolute-path
+  portability coverage, curated backlog overview drift, and tracking task-count
+  drift. Portability coverage is included in p01-t06; tracking counts are
+  corrected in this root-owned update. The curated overview remains recorded
+  for later backlog maintenance.
 
 ## Phase 2: Set-level visual authoring runtime
 
@@ -142,10 +158,11 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                  | Source of Truth                     | Follow-up |
-| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------- | ----------------------------------- | --------- |
-| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began            | `1151a0d7` and `plan.md`            | p01-t01   |
-| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04   |
+| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                  | Source of Truth                     | Follow-up        |
+| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------- | ----------------------------------- | ---------------- |
+| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began            | `1151a0d7` and `plan.md`            | p01-t01          |
+| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04          |
+| p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps              | p01 review artifact                 | p01-t05, p01-t06 |
 
 ## Test Results
 
@@ -159,7 +176,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 19 tasks and the final review._
+_Fill from implementation evidence after all 22 tasks and the final review._
 
 ## References
 

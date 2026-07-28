@@ -187,6 +187,71 @@ version asset after the lockstep manifest bump.
 
 ---
 
+### Task p01-t05: Validate packaged notice provenance
+
+**Files:**
+
+- Modify: `NOTICES.md`
+- Modify: `packages/cli/src/release/public-package-contract.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+
+**Steps:**
+
+1. Add a RED packed-payload test requiring the canonical source URL and version
+   marker for each adapted upstream project in addition to its complete MIT
+   body.
+2. Replace the visual-explainer plugin label with the canonical
+   `https://github.com/nicobailon/visual-explainer` source URL while retaining
+   author and version provenance.
+3. Extend release notice validation so an omitted URL or version fails against
+   the real packed CLI artifact.
+4. Run
+   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts`
+   and `pnpm release:validate`; require both to exit 0.
+5. Commit as `fix(p01-t05): validate packaged notice provenance`.
+
+**Acceptance:** The archived notice acceptance contract is true for every
+adapted source and cannot regress while real package validation remains green.
+
+---
+
+### Task p01-t06: Ground golden references in retained evidence
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/fixtures/golden/simple/`
+- Modify: `.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/`
+- Modify: `.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+- Modify: `.agents/skills/explainer-kit/references/golden-conformance.md`
+
+**Steps:**
+
+1. Add RED tests proving label-only `reference-met` summaries, missing evidence
+   files, hash mismatches, unknown source IDs, invalid graph endpoints,
+   unsupported fixture claims, wrong adaptive minimum membership, and missing
+   producer metadata cannot pass.
+2. Retain representative personal-kit reference outputs and evidence, or
+   immutable content-addressed repository evidence, for hub, architecture, and
+   deck in every case. Descriptors must enumerate repository-relative files,
+   SHA-256 hashes, producer version, generation timestamp, and source IDs.
+3. Make rubric evidence pointers resolve to retained artifacts; validate claim
+   grounding, exact minimum-set membership, topology node/edge integrity, and
+   browser evidence metadata.
+4. Remove or source the unsupported simple-case threshold/recovery-task claim.
+   Reject POSIX, Windows drive, and UNC absolute machine paths while allowing
+   repository-relative paths and supported network URLs.
+5. Run
+   `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+   and require every negative mutation plus all three valid fixtures to pass.
+6. Commit as `fix(p01-t06): ground golden conformance evidence`.
+
+**Acceptance:** The benchmark oracle derives from retained, hash-verified,
+source-grounded evidence rather than self-attested labels or machine-local
+paths.
+
+---
+
 ## Phase 2: Set-level visual authoring runtime
 
 ### Task p02-t01: Bundle versioned visual authoring and review guidance
@@ -660,17 +725,17 @@ another review cycle.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact |
-| ------ | -------- | ------- | ---------- | -------- |
-| p01    | code     | pending | -          | -        |
-| p02    | code     | pending | -          | -        |
-| p03    | code     | pending | -          | -        |
-| p04    | code     | pending | -          | -        |
-| p05    | code     | pending | -          | -        |
-| final  | code     | pending | -          | -        |
-| spec   | artifact | pending | -          | -        |
-| design | artifact | pending | -          | -        |
-| plan   | artifact | passed  | 2026-07-28 | -        |
+| Scope  | Type     | Status      | Date       | Artifact                            |
+| ------ | -------- | ----------- | ---------- | ----------------------------------- |
+| p01    | code     | fixes_added | 2026-07-28 | reviews/20260728-p01-code-review.md |
+| p02    | code     | pending     | -          | -                                   |
+| p03    | code     | pending     | -          | -                                   |
+| p04    | code     | pending     | -          | -                                   |
+| p05    | code     | pending     | -          | -                                   |
+| final  | code     | pending     | -          | -                                   |
+| spec   | artifact | pending     | -          | -                                   |
+| design | artifact | pending     | -          | -                                   |
+| plan   | artifact | passed      | 2026-07-28 | -                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -687,13 +752,13 @@ review. Additional review cycles are not authorized.
 
 **Summary:**
 
-- Phase 1: 4 tasks — compliance, bounded outcomes, quality oracle, and generated version parity
+- Phase 1: 6 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 5 tasks — bundled guidance, contracts, set planner, adaptive set, adapter
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 20 tasks**
+**Total: 22 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
