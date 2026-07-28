@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p03-t06
 oat_last_commit: 73469c565d6c07cf62a45abcb4fc8454c495fe8e
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T17:22:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T18:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 implementation complete; review pending
+Phase p03 review remediation attempt 1 of 3 pending
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Phase p03 implementation complete; review pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 32 tasks currently tracked
+- ✓ Five phases / 38 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -139,7 +139,9 @@ Phase p03 implementation complete; review pending
 - ✓ p03-t05 aligned nine stale assertions in three phase-wide integration
   fixture files; no review-remediation retry was consumed
 - ✓ Complete p03 union passed 365/365 and root verification passed
-- ⧗ Root-owned Phase p03 code review pending
+- ✓ Root-owned Phase p03 code review completed with four Critical and three
+  Important findings
+- ⧗ p03-t06 through p03-t11 are bounded review-remediation attempt 1/3
 
 ## Blockers
 
@@ -147,5 +149,5 @@ None
 
 ## Next Milestone
 
-Run the root-owned Phase p03 code review. If it passes, continue directly to
-p04-t01.
+Execute p03-t06 through p03-t11 as remediation attempt 1/3, then rerun root
+verification and a fresh narrowed Phase p03 review.

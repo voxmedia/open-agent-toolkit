@@ -835,6 +835,230 @@ review evidence still terminates as `built-needs-review`.
 
 ---
 
+### Task p03-t06: Bind visual review to exact rendered evidence
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-result.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED tests proving a stale unconditional result with matching artifact IDs
+   is rejected after rendered, metrics, or screenshot bytes change.
+2. Give each review request a deterministic identity and canonical request hash
+   covering the plan, rendered artifact hashes, browser metrics hashes, and
+   screenshot hashes.
+3. Provide confined, provider-neutral evidence inputs that let the callback
+   inspect the exact supplied bytes without ambient path discovery.
+4. Require every result to echo the request identity/hash and validate the
+   complete binding before accepting any disposition or finding.
+5. Keep request/result objects closed and preserve exact complete-set
+   artifact-ID validation.
+6. Run the focused contract, schema, and core integration tests.
+7. Commit as `fix(p03-t06): bind visual review evidence`.
+
+**Acceptance:** No stale or content-detached visual-review result can authorize
+the rendered package.
+
+---
+
+### Task p03-t07: Require observed whole-set cohesion evidence
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/set-plan.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+
+**Steps:**
+
+1. Add RED coverage for structural-QA success combined with an empty shared
+   ledger, empty observations, or expected claims not observable in rendered
+   artifacts.
+2. Require a non-empty applicable terminology/status/numeric ledger for
+   unattended adaptive recaps.
+3. Derive per-artifact observed cohesion evidence from rendered content, retain
+   it in the request, and bind each observation to its artifact and content
+   hash.
+4. Fail closed when required ledger values are absent, contradictory, or not
+   observable; do not default missing cohesion groups to valid empty objects.
+5. Preserve explicit lower-tier behavior for recipes without an applicable
+   shared ledger.
+6. Run the focused schema, contract, QA, and integration tests.
+7. Commit as `fix(p03-t07): require observed cohesion`.
+
+**Acceptance:** An adaptive recap cannot pass whole-set review without
+non-empty rendered observations supporting its shared ledger.
+
+---
+
+### Task p03-t08: Authenticate and retain the complete review evidence chain
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/browser-runtime.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `tools/release/validate-explainer-visuals.mjs`
+
+**Steps:**
+
+1. Add RED tests for arbitrary text in `.png` files, invalid PNG signatures,
+   dimensions mismatching viewport metadata, deleted review evidence, and
+   post-review byte mutation.
+2. Validate PNG signatures and decoded IHDR dimensions against the retained
+   viewport. Retain browser-runtime identity and deterministic capture settings
+   without trusting a callback's assertion alone.
+3. Use the installed Chromium path in at least one integration fixture; make
+   deterministic doubles emit valid PNG bytes that the critic input actually
+   reads.
+4. Include original screenshots, metrics, per-attempt evidence, review
+   requests/results, cohesion observations, and revision records in manifest
+   immutable hashes whenever visual review is required.
+5. Make core contracts, durability/rebuild validation, and CLI archive
+   validation require and verify the complete known evidence chain while
+   preserving confined paths and bounded file sizes.
+6. Run focused browser, contract, QA, record, integration, rebuildability,
+   durability, archive, and visual release validation tests.
+7. Commit as `fix(p03-t08): retain authentic review evidence`.
+
+**Acceptance:** Only valid viewport-matched screenshots and an immutable
+browser-plus-review evidence chain can authorize durability or archive export.
+
+---
+
+### Task p03-t09: Normalize review-chain failures without exceeding the loop cap
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add table-driven RED cases for one missing screenshot, malformed metrics,
+   thrown or malformed initial/final critic results, a throwing correction
+   callback, evidence-copy failure, and noncanonical viewport overrides.
+2. Force unattended project recaps to the exact 320/768/1440 evidence tier and
+   classify every required-evidence or visual-review contract/runtime failure
+   as a review-gate outcome.
+3. Persist partial evidence and structured findings/errors in valid manifest
+   and build records with exact `built-needs-review` outcomes; invoke neither
+   durability nor publish callbacks.
+4. Prove callback counts remain bounded to two reviews and one correction on
+   every error branch, with retained first-attempt evidence where available.
+5. Keep unrelated validation, safety, authoring, and provenance failures as
+   generic `failed` outcomes.
+6. Run focused records, integration, and durability tests.
+7. Commit as `fix(p03-t09): normalize review gate failures`.
+
+**Acceptance:** Every incomplete or failed review-chain branch preserves a
+review handoff as `built-needs-review` without a second correction or third
+review.
+
+---
+
+### Task p03-t10: Expose first-class OAT browser and visual-review seams
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Create: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED adapter tests for direct and module-backed browser-session and
+   visual-critic providers, invalid exports, conflicting inputs, and reused
+   author/fact-critic/visual-critic identities.
+2. Add explicit validated callback/module entry points for browser evidence and
+   visual criticism rather than forwarding them through opaque `coreOptions`.
+3. Enforce mutual exclusion, provider-neutral request/result contracts,
+   distinct role identity, and fail-before-core behavior for missing required
+   unattended recap seams.
+4. Document the public callback/module contract, complete evidence handoff, and
+   `built-needs-review` failure semantics.
+5. Update lifecycle fixtures to use only the first-class adapter boundary.
+6. Run focused adapter and completion integration tests.
+7. Commit as `fix(p03-t10): expose visual review providers`.
+
+**Acceptance:** A normal OAT caller can construct the complete provider-neutral
+review chain without private core-option knowledge.
+
+---
+
+### Task p03-t11: Align core manifests with finalization and archive consumers
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.test.ts`
+
+**Steps:**
+
+1. Add a RED core-to-CLI compatibility test that supplies an actual successful
+   `runExplainer` manifest and complete retained package to recap export.
+2. Define one canonical required package-coverage contract: validate required
+   core, set-plan, browser, visual-review, revision, and rendered paths while
+   allowing valid required extras instead of demanding a reduced hand-built
+   exact set.
+3. Make finalization, archive export, and push verify the canonical coverage and
+   reject `built-needs-review` without converting it to success.
+4. Add the missing rebuild and push-path assertions for passing and blocked
+   evidence chains, preserving exact terminal outcomes.
+5. Run focused records, rebuildability, finalization, archive-utils, and
+   push-runner tests.
+6. Commit as `fix(p03-t11): align review package consumers`.
+
+**Acceptance:** A real passing core package can finalize and archive, while a
+review-incomplete or mutated evidence package cannot.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams
@@ -1050,7 +1274,7 @@ another review cycle.
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review.md    |
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review-r1.md |
 | p02    | code     | passed          | 2026-07-28 | reviews/20260728-p02-code-review-r2.md |
-| p03    | code     | pending         | -          | -                                      |
+| p03    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p03-code-review.md    |
 | p04    | code     | pending         | -          | -                                      |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
@@ -1077,11 +1301,11 @@ additional unrelated review cycles.
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
-- Phase 3: 5 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment
+- Phase 3: 11 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 32 tasks**
+**Total: 38 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

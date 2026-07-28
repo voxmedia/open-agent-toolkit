@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t06
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | review_pending |     5 |       5/5 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | fixes_pending |    11 |      5/11 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 25/32 tasks completed
+**Total:** 25/38 tasks completed
 
 ---
 
@@ -154,13 +154,19 @@ oat_generated: false
 
 ## Phase 3: Independent browser critic and hard loop cap
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p03-t01 — Retain browser screenshots and metrics at three viewports (`5c10fdc3`)
 - [x] p03-t02 — Add an independent whole-set visual critic (`8f0a6708`)
 - [x] p03-t03 — Enforce exactly one correction pass and final review (`3343ea1a`)
 - [x] p03-t04 — Block publication and durability on missing or failed review (`9b9570d1`)
 - [x] p03-t05 — Align phase-wide visual-review integration fixtures (`73469c56`)
+- [ ] p03-t06 — Bind visual review to exact rendered evidence
+- [ ] p03-t07 — Require observed whole-set cohesion evidence
+- [ ] p03-t08 — Authenticate and retain the complete review evidence chain
+- [ ] p03-t09 — Normalize review-chain failures without exceeding the loop cap
+- [ ] p03-t10 — Expose first-class OAT browser and visual-review seams
+- [ ] p03-t11 — Align core manifests with finalization and archive consumers
 
 ### Phase Implementation Summary
 
@@ -184,6 +190,19 @@ oat_generated: false
   and `pnpm release:validate` passed.
 - Root reran the 48-test aligned-fixture set and release validation with a
   clean worktree.
+
+### Phase Review
+
+- Request: `explainer-improvements-p03-review-20260728T172200Z`
+- Artifact: `reviews/20260728-p03-code-review.md`
+- Verdict: `BLOCKED` — 4 Critical, 3 Important, 1 Medium, 1 Minor
+- Direct probes showed that green tests did not bind review results to evidence
+  bytes, authenticate screenshots, retain review evidence immutably, or
+  preserve `built-needs-review` on every review-chain failure.
+- Blocking fixes: p03-t06 through p03-t11, remediation attempt 1/3.
+- The project does not accept opaque callback assertions, arbitrary screenshot
+  bytes, or unhashed review evidence; no acceptance change or root escalation
+  is authorized.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -382,6 +401,12 @@ oat_generated: false
 - Planned artifact: `reviews/20260728-p03-code-review.md`
 - Scope: Phase p03 acceptance, correction-loop cap, evidence completeness, and
   fail-closed lifecycle propagation
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260728-p03-code-review.md`
+- Findings: 4 Critical, 3 Important, 1 Medium, 1 Minor
+- Verification: Phase p03 365/365 and repository gates passed; direct lifecycle
+  probes exposed the blocking evidence-chain gaps
+- Review-remediation attempt: 1/3 pending as p03-t06 through p03-t11
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -425,7 +450,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 32 tasks and the final review._
+_Fill from implementation evidence after all 38 tasks and the final review._
 
 ## References
 
