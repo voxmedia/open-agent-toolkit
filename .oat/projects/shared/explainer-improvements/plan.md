@@ -757,11 +757,24 @@ can invoke a second correction or third review.
 
 **Files:**
 
+- Modify: `.agents/skills/explainer-kit/SKILL.md`
+- Modify: `.agents/skills/explainer-kit/schemas/build-record.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
 - Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
 - Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
 - Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
 - Modify: `packages/cli/src/commands/project/archive/push-runner.ts`
 - Modify: `packages/cli/src/commands/project/archive/push-runner.test.ts`
 
@@ -773,11 +786,13 @@ can invoke a second correction or third review.
    preserve artifacts and findings but issue no publish receipt or durability
    attestation.
 3. Propagate the terminal status through tracked-run finalization and archive
-   push behavior without converting it to success.
+   manifest validation, recap export, and archive push behavior without
+   converting it to success. Keep build-record and manifest outcome contracts
+   aligned and document the blocking handoff.
 4. Run `pnpm format:fix`,
-   `node --test .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`,
+   `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/explainer-kit/tests/rebuildability.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`,
    and
-   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/push-runner.test.ts`;
+   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/archive-utils.test.ts src/commands/project/archive/push-runner.test.ts`;
    require all commands to exit 0 with no failed tests.
 5. Commit as `fix(p03-t04): block unreviewed recap publication`.
 

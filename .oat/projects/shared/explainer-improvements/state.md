@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T15:21:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T15:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -132,6 +132,8 @@ Phase p03 implementation in progress
 - ✓ Fresh narrowed p02 re-review passed with no findings
 - ✓ Phase p02 closed after remediation attempt 2/3
 - ⧗ Phase p03 begins at p03-t01
+- ✓ Phase p03 preflight found and corrected p03-t04's incomplete status-contract
+  boundary before edits; no task or retry was consumed
 
 ## Blockers
 
@@ -139,5 +141,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t01 through p03-t04, then run root verification and the configured
-Phase p03 code review.
+Redispatch p03-t01 through p03-t04 from the unchanged clean base using the
+corrected p03-t04 boundary, then run root verification and Phase p03 review.

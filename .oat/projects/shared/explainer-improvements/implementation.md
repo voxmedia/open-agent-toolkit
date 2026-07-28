@@ -320,6 +320,14 @@ oat_generated: false
 - Retry limit: `3`
 - Context reference: Playwright 1.51 viewport and screenshot APIs verified
   through Context7
+- Initial outcome: `BLOCKED` before edits; no task or retry consumed
+- Preflight finding: p03-t04's original boundary omitted the build-record and
+  manifest outcome schemas, records outcome computation, their contract tests,
+  and the CLI recap-manifest validator required to carry
+  `built-needs-review`
+- Root disposition: verified the missing hard-coded outcome consumers,
+  expanded p03-t04's boundary and verification commands, and retained the same
+  clean launch base for redispatch
 - Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
