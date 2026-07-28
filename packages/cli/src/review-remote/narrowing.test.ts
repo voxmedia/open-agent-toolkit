@@ -28,11 +28,13 @@ function stubGit(opts: {
   exists?: boolean;
   ancestor?: boolean;
   fetch?: boolean;
+  files?: string[];
 }): GitInvoker {
   return {
     objectExists: async () => opts.exists ?? true,
     isAncestor: async () => opts.ancestor ?? true,
     fetchRef: async () => opts.fetch ?? true,
+    changedFiles: async () => opts.files ?? ['src/default.ts'],
   };
 }
 
@@ -315,6 +317,9 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
       fetchRef: async () => {
         throw new Error('guard must not run');
       },
+      changedFiles: async () => {
+        throw new Error('guard must not run');
+      },
     };
 
     const result = await pickNarrowingTarget({
@@ -363,6 +368,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
         fetched = true;
         return true;
       },
+      changedFiles: async () => ['src/default.ts'],
     };
     const result = await pickNarrowingTarget({
       ...base,
@@ -377,6 +383,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
       objectExists: async () => false,
       isAncestor: async () => true,
       fetchRef: async () => false,
+      changedFiles: async () => ['src/default.ts'],
     };
     const result = await pickNarrowingTarget({
       ...base,
@@ -388,4 +395,68 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
       expect(result.reason).toBe('stale-sha');
     }
   });
+});
+
+describe('pickNarrowingTarget — range classification', () => {
+  const base = {
+    reviews: [
+      review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: SHA_A,
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    ],
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    lineage: { kind: 'lifecycle' as const },
+    headSha: HEAD,
+  };
+
+  it.each([
+    {
+      name: 'a range with no commits',
+      files: [],
+      expected: 'empty',
+    },
+    {
+      name: "a range touching only the project's tracking directory",
+      files: [
+        '.oat/projects/shared/x/state.md',
+        '.oat/projects/shared/x/reviews/review.md',
+      ],
+      expected: 'bookkeeping-only',
+    },
+    {
+      name: 'a range touching a bundled template',
+      files: ['.oat/templates/plan.md'],
+      expected: 'substantive',
+    },
+    {
+      name: 'a range touching a durable repository reference',
+      files: ['.oat/repo/references/current.md'],
+      expected: 'substantive',
+    },
+    {
+      name: 'a range mixing project tracking and source files',
+      files: ['.oat/projects/shared/x/state.md', 'packages/cli/src/index.ts'],
+      expected: 'substantive',
+    },
+  ])(
+    'classifies $name and keeps it dispatchable',
+    async ({ files, expected }) => {
+      const result = await pickNarrowingTarget({
+        ...base,
+        git: stubGit({ files }),
+      });
+
+      expect(result).toMatchObject({
+        kind: 'narrow-range',
+        classification: expected,
+        priorSha: SHA_A,
+        headSha: HEAD,
+      });
+    },
+  );
 });

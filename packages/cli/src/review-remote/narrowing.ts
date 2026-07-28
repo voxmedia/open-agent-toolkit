@@ -45,6 +45,8 @@ export interface GitInvoker {
   isAncestor(sha: string, head: string): Promise<boolean>;
   /** `git fetch origin <sha>:<ref>` — fetch a single ref (diff-only mode). */
   fetchRef(sha: string): Promise<boolean>;
+  /** Files changed in `<priorSha>..<headSha>`. */
+  changedFiles(priorSha: string, headSha: string): Promise<string[]>;
 }
 
 export interface NarrowingInput {
@@ -71,11 +73,13 @@ export type FullScopeReason =
   | 'narrowing-disabled'
   | 'no-prior-review'
   | 'stale-sha';
+export type RangeClassification = 'empty' | 'bookkeeping-only' | 'substantive';
 
 export interface NarrowRangeResult {
   kind: 'narrow-range';
   priorSha: string;
   headSha: string;
+  classification: RangeClassification;
 }
 
 export interface FullScopeFallbackResult {
@@ -153,6 +157,25 @@ async function guardPasses(
   return input.git.isAncestor(priorSha, input.headSha);
 }
 
+async function classifyRange(
+  priorSha: string,
+  input: NarrowingInput,
+): Promise<RangeClassification> {
+  const files = await input.git.changedFiles(priorSha, input.headSha);
+  if (files.length === 0) {
+    return 'empty';
+  }
+
+  const projectPrefix =
+    input.project === null ? null : `${input.project.replace(/\/+$/, '')}/`;
+  // Path-only classification is sufficient while it is reporting-only. If it
+  // ever authorizes skipping work, strengthen it with lifecycle corroboration.
+  return projectPrefix !== null &&
+    files.every((file) => file.startsWith(projectPrefix))
+    ? 'bookkeeping-only'
+    : 'substantive';
+}
+
 /**
  * Pick the narrowing target for the current re-review pass.
  */
@@ -180,6 +203,7 @@ export async function pickNarrowingTarget(
       kind: 'narrow-range',
       priorSha: prior.headSha,
       headSha: input.headSha,
+      classification: await classifyRange(prior.headSha, input),
     };
   }
 

@@ -7,8 +7,8 @@
  * - Project resolution from a synthetic PR-diff file list
  *   (two-level `.oat/projects` scope/project `state.md` scan + ambiguity
  *   error).
- * - The re-review narrowing filter scoped to a `(project, scope)` tuple
- *   (rejects same-project/different-scope and different-project/same-scope).
+ * - The re-review narrowing filter scoped to project, scope, and lineage
+ *   (rejects tuple mismatches and legacy records without lineage).
  * - Round-trip of the posted-review body with project markers
  *   (`oat_project`, `oat_review_scope`) through builder → parser.
  *
@@ -43,6 +43,9 @@ const reachableGit: GitInvoker = {
   async fetchRef() {
     return true;
   },
+  async changedFiles() {
+    return ['src/app.ts'];
+  },
 };
 
 function priorReview(overrides: Partial<PriorReview> = {}): PriorReview {
@@ -51,6 +54,7 @@ function priorReview(overrides: Partial<PriorReview> = {}): PriorReview {
     scope: SCOPE,
     project: PROJECT,
     invocation: 'manual',
+    lineage: { kind: 'lifecycle' },
     submittedAt: '2026-05-29T10:00:00Z',
     ...overrides,
   };
@@ -91,13 +95,14 @@ describe('project-rail: project resolution from PR diff', () => {
   });
 });
 
-describe('project-rail: re-review narrowing scoped to (project, scope)', () => {
+describe('project-rail: re-review narrowing scoped to project, scope, and lineage', () => {
   it('narrows against a matching same-project/same-scope prior review', async () => {
     const result = await pickNarrowingTarget({
       reviews: [priorReview()],
       rail: 'project',
       project: PROJECT,
       scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD_SHA,
       git: reachableGit,
     });
@@ -114,6 +119,7 @@ describe('project-rail: re-review narrowing scoped to (project, scope)', () => {
       rail: 'project',
       project: PROJECT,
       scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD_SHA,
       git: reachableGit,
     });
@@ -129,6 +135,7 @@ describe('project-rail: re-review narrowing scoped to (project, scope)', () => {
       rail: 'project',
       project: PROJECT,
       scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD_SHA,
       git: reachableGit,
     });
@@ -147,10 +154,28 @@ describe('project-rail: re-review narrowing scoped to (project, scope)', () => {
       rail: 'project',
       project: PROJECT,
       scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD_SHA,
       git: reachableGit,
     });
     expect(result.kind).toBe('full-scope-fallback');
+  });
+
+  it('fails open for a legacy prior review without lineage', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [priorReview({ lineage: undefined })],
+      rail: 'project',
+      project: PROJECT,
+      scope: SCOPE,
+      lineage: { kind: 'lifecycle' },
+      headSha: HEAD_SHA,
+      git: reachableGit,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
   });
 });
 
