@@ -80,6 +80,8 @@ export interface NarrowRangeResult {
   priorSha: string;
   headSha: string;
   classification: RangeClassification;
+  /** Why classification conservatively fell back, when enumeration failed. */
+  classificationReason?: 'changed-files-unavailable';
 }
 
 export interface FullScopeFallbackResult {
@@ -160,20 +162,34 @@ async function guardPasses(
 async function classifyRange(
   priorSha: string,
   input: NarrowingInput,
-): Promise<RangeClassification> {
-  const files = await input.git.changedFiles(priorSha, input.headSha);
+): Promise<Pick<NarrowRangeResult, 'classification' | 'classificationReason'>> {
+  let files: string[];
+  try {
+    files = await input.git.changedFiles(priorSha, input.headSha);
+  } catch {
+    // Classification is reporting-only, so enumeration failure must not block
+    // dispatch. Treat unknown work as substantive and disclose the fallback.
+    return {
+      classification: 'substantive',
+      classificationReason: 'changed-files-unavailable',
+    };
+  }
+
   if (files.length === 0) {
-    return 'empty';
+    return { classification: 'empty' };
   }
 
   const projectPrefix =
     input.project === null ? null : `${input.project.replace(/\/+$/, '')}/`;
   // Path-only classification is sufficient while it is reporting-only. If it
   // ever authorizes skipping work, strengthen it with lifecycle corroboration.
-  return projectPrefix !== null &&
-    files.every((file) => file.startsWith(projectPrefix))
-    ? 'bookkeeping-only'
-    : 'substantive';
+  return {
+    classification:
+      projectPrefix !== null &&
+      files.every((file) => file.startsWith(projectPrefix))
+        ? 'bookkeeping-only'
+        : 'substantive',
+  };
 }
 
 /**
@@ -182,7 +198,7 @@ async function classifyRange(
 export async function pickNarrowingTarget(
   input: NarrowingInput,
 ): Promise<NarrowingResult> {
-  if (input.narrowingPreference === false) {
+  if (input.narrowingPreference === false && !input.forceNarrow) {
     return {
       kind: 'full-scope-fallback',
       reason: 'narrowing-disabled',
@@ -203,7 +219,7 @@ export async function pickNarrowingTarget(
       kind: 'narrow-range',
       priorSha: prior.headSha,
       headSha: input.headSha,
-      classification: await classifyRange(prior.headSha, input),
+      ...(await classifyRange(prior.headSha, input)),
     };
   }
 

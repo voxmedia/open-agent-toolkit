@@ -334,6 +334,36 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
     });
   });
 
+  it('force-narrows when the preference is false and the guard passes', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+      forceNarrow: true,
+      narrowingPreference: false,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+    });
+  });
+
+  it('hard-errors when force-narrow overrides false and the guard fails', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: stubGit({ exists: true, ancestor: false }),
+      forceNarrow: true,
+      narrowingPreference: false,
+    });
+
+    expect(result).toEqual({
+      kind: 'hard-error',
+      reason: 'stale-sha',
+      priorSha: SHA_A,
+    });
+  });
+
   it('preserves the guard failure reason in the full-scope fallback', async () => {
     const result = await pickNarrowingTarget({
       ...base,
@@ -459,4 +489,24 @@ describe('pickNarrowingTarget — range classification', () => {
       });
     },
   );
+
+  it('keeps the range dispatchable when changed-file classification fails', async () => {
+    const git = stubGit({});
+    git.changedFiles = async () => {
+      throw new Error('diff unavailable');
+    };
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      git,
+    });
+
+    expect(result).toEqual({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+      classification: 'substantive',
+      classificationReason: 'changed-files-unavailable',
+    });
+  });
 });
