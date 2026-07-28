@@ -102,8 +102,14 @@ describe('getPublicPackageContracts', () => {
           expect.objectContaining({
             path: 'assets/NOTICES.md',
             requiredContents: expect.arrayContaining([
+              '**Source:** https://github.com/obra/superpowers',
+              '**Version referenced:** 5.0.7',
               expect.stringContaining('Copyright (c) 2025 Jesse Vincent'),
+              '**Source:** https://github.com/shadcn/improve/tree/main/skills/improve',
+              '**Version referenced:** `main` (retrieved 2026-07-12)',
               expect.stringContaining('Copyright (c) 2026 shadcn'),
+              '**Source:** https://github.com/nicobailon/visual-explainer',
+              '**Version referenced:** 0.8.1',
               expect.stringContaining('Copyright (c) 2025 Nico Bailon'),
             ]),
           }),
@@ -214,7 +220,7 @@ describe('getPublicPackageContracts', () => {
     ]);
   });
 
-  it('requires complete third-party notices in the real packed CLI payload', async () => {
+  it('requires complete third-party notice provenance in the real packed CLI payload', async () => {
     const cliContract = getPublicPackageContracts()[0];
     const packageDir = await mkdtemp(join(tmpdir(), 'oat-cli-notice-pack-'));
 
@@ -269,7 +275,7 @@ describe('getPublicPackageContracts', () => {
         },
         cliContract,
       ),
-    ).toHaveLength(3);
+    ).toHaveLength(9);
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {

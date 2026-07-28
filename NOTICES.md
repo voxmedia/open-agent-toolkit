@@ -114,7 +114,7 @@ SOFTWARE.
 
 ## visual-explainer
 
-**Source:** `visual-explainer` plugin by nicobailon
+**Source:** https://github.com/nicobailon/visual-explainer
 **License:** MIT
 **Version referenced:** 0.8.1
 

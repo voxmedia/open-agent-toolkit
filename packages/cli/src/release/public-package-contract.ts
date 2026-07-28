@@ -78,8 +78,14 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       {
         path: 'assets/NOTICES.md',
         requiredContents: [
+          '**Source:** https://github.com/obra/superpowers',
+          '**Version referenced:** 5.0.7',
           `Copyright (c) 2025 Jesse Vincent\n\n${MIT_LICENSE_BODY}`,
+          '**Source:** https://github.com/shadcn/improve/tree/main/skills/improve',
+          '**Version referenced:** `main` (retrieved 2026-07-12)',
           `Copyright (c) 2026 shadcn\n\n${MIT_LICENSE_BODY}`,
+          '**Source:** https://github.com/nicobailon/visual-explainer',
+          '**Version referenced:** 0.8.1',
           `Copyright (c) 2025 Nico Bailon\n\n${MIT_LICENSE_BODY}`,
         ],
       },
