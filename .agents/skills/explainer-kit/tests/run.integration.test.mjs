@@ -329,10 +329,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
   );
   assert.match(rendered, /Corrected implementation status\./);
   // The rerun cleared the defect, so its warning must not survive the resume.
-  assert.equal(
-    resumed.warnings.includes('render-qa-document-overflow'),
-    false,
-  );
+  assert.equal(resumed.warnings.includes('render-qa-document-overflow'), false);
   assert.equal(
     manifest.warnings.includes('render-qa-document-overflow'),
     false,
@@ -477,6 +474,8 @@ test('unattended lifecycle sources persist review provenance without prompting',
   assert.deepEqual(approval.reviewedSource, reviewedSource);
   assert.deepEqual(approval.authorResultPaths, [
     'source/author/project-recap.json',
+    'source/author/architecture.json',
+    'source/author/deck.json',
   ]);
 });
 
@@ -507,6 +506,8 @@ test('completed unattended runs are not mistaken for unresolved approval resumes
   const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
   assert.deepEqual(manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
+    'source/author/architecture.json',
+    'source/author/deck.json',
   ]);
 });
 
@@ -549,10 +550,64 @@ test('unattended author receives structured per-artifact context and retains val
     'built-not-durable',
     JSON.stringify(result.errors),
   );
-  assert.equal(author.mock.callCount(), 1);
-  assert.equal(requests[0].schemaVersion, 'explainer-kit.author-request/v2');
-  assert.equal(requests[0].artifactId, 'project-recap');
-  assert.equal(requests[0].authoring, 'markdown');
+  assert.equal(author.mock.callCount(), 3);
+  assert.deepEqual(
+    requests.map(
+      ({ artifactId, artifactType, authoring, plannedArtifact }) => ({
+        artifactId,
+        artifactType,
+        authoring,
+        plannedArtifactId: plannedArtifact.artifactId,
+      }),
+    ),
+    [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        authoring: 'html',
+        plannedArtifactId: 'project-recap',
+      },
+      {
+        artifactId: 'architecture',
+        artifactType: 'diagram',
+        authoring: 'html',
+        plannedArtifactId: 'architecture',
+      },
+      {
+        artifactId: 'deck',
+        artifactType: 'deck',
+        authoring: 'html',
+        plannedArtifactId: 'deck',
+      },
+    ],
+  );
+  const setContexts = requests.map(({ setContext }) =>
+    structuredClone(setContext),
+  );
+  assert.equal(
+    setContexts.every(
+      (setContext) =>
+        JSON.stringify(setContext) === JSON.stringify(setContexts[0]),
+    ),
+    true,
+  );
+  const retainedPlan = JSON.parse(
+    await readFile(join(result.runRoot, 'source/set-plan/result.json'), 'utf8'),
+  );
+  assert.deepEqual(setContexts[0], retainedPlan);
+  for (const authorRequest of requests) {
+    assert.equal(
+      authorRequest.schemaVersion,
+      'explainer-kit.author-request/v2',
+    );
+    assert.match(authorRequest.brief, /Audience/i);
+    assert.equal(
+      authorRequest.factBase.schemaVersion,
+      'explainer-kit.fact-base/v1',
+    );
+    assert.equal(authorRequest.theme.schemaVersion, 'explainer-kit.theme/v1');
+    assert.equal(typeof authorRequest.shell, 'string');
+  }
   assert.deepEqual(requests[0].floor.requiredNarrative, [
     'original-request',
     'key-agent-decisions',
@@ -561,27 +616,24 @@ test('unattended author receives structured per-artifact context and retains val
     'validation-evidence',
     'outcome',
   ]);
-  assert.match(requests[0].brief, /Audience/i);
-  assert.equal(
-    requests[0].factBase.schemaVersion,
-    'explainer-kit.fact-base/v1',
-  );
-  assert.equal(requests[0].theme.schemaVersion, 'explainer-kit.theme/v1');
 
-  const authorPath = join(result.runRoot, 'source/author/project-recap.json');
-  const retained = JSON.parse(await readFile(authorPath, 'utf8'));
-  assert.equal(retained.provenance.authorId, 'fixture-author');
-  const markdown = await readFile(
-    join(result.runRoot, 'source/content/project-recap.md'),
-    'utf8',
-  );
-  assert.match(markdown, /audience-ready language/);
+  for (const artifactId of ['project-recap', 'architecture', 'deck']) {
+    const authorPath = join(result.runRoot, `source/author/${artifactId}.json`);
+    const retained = JSON.parse(await readFile(authorPath, 'utf8'));
+    assert.equal(retained.artifactId, artifactId);
+    assert.equal(retained.provenance.authorId, 'fixture-author');
+    await access(join(result.runRoot, `source/content/${artifactId}.html`));
+  }
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
   assert.equal('marking' in manifest, false);
   assert.deepEqual(manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
+    'source/author/architecture.json',
+    'source/author/deck.json',
   ]);
-  assert.ok(manifest.immutableHashes['source/author/project-recap.json']);
+  for (const path of manifest.source.authorResultPaths) {
+    assert.ok(manifest.immutableHashes[path], path);
+  }
 });
 
 test('plans one immutable set after facts and before every artifact author', async () => {
@@ -594,19 +646,11 @@ test('plans one immutable set after facts and before every artifact author', asy
     plannerRequests.push(plannerRequest);
     const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
     return plannedSet(plannerRequest, [
+      ...plannedSet(plannerRequest).portfolio,
       {
-        artifactId: 'project-recap',
-        artifactType: 'hub',
-        profileId: 'recipe-floor',
-        required: true,
-        sourceIds,
-        draft: 'Lead with the validated project outcome.',
-        visualIntent: 'Orient the reader in the first viewport.',
-      },
-      {
-        artifactId: 'system-map',
-        artifactType: 'diagram',
-        profileId: 'supporting-diagram',
+        artifactId: 'system-details',
+        artifactType: 'explainer',
+        profileId: 'deep-dive',
         required: false,
         sourceIds,
         draft: 'Show the core and adapter relationship.',
@@ -631,17 +675,30 @@ test('plans one immutable set after facts and before every artifact author', asy
     now: () => NOW,
   });
 
-  assert.equal(result.outcome, 'built-not-durable', JSON.stringify(result.errors));
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
   assert.equal(planSet.mock.callCount(), 1);
-  assert.deepEqual(events, ['plan', 'author:project-recap', 'author:system-map']);
-  assert.equal(plannerRequests[0].factBase.schemaVersion, 'explainer-kit.fact-base/v1');
+  assert.deepEqual(events, [
+    'plan',
+    'author:project-recap',
+    'author:architecture',
+    'author:deck',
+    'author:system-details',
+  ]);
+  assert.equal(
+    plannerRequests[0].factBase.schemaVersion,
+    'explainer-kit.fact-base/v1',
+  );
   assert.deepEqual(
     authorRequests.map(({ setContext }) => setContext),
-    [authorRequests[0].setContext, authorRequests[0].setContext],
+    Array.from({ length: 4 }, () => authorRequests[0].setContext),
   );
   assert.deepEqual(
     authorRequests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
-    ['project-recap', 'system-map'],
+    ['project-recap', 'architecture', 'deck', 'system-details'],
   );
   for (const path of [
     'source/set-plan/request.json',
@@ -681,7 +738,9 @@ test('fails before composition on invalid set sources, ledger conflicts, or miss
 
   for (const [label, mutate] of mutations) {
     const fixture = await suppliedFixture('project-recap');
-    const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
     const result = await runExplainerCore(fixture.request, {
       planSet: async (plannerRequest) => {
         const plan = plannedSet(plannerRequest);
@@ -704,7 +763,13 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
   const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
   const planSet = async (plannerRequest) => {
     const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
-    const optional = (artifactId, artifactType, profileId, rationale) => ({
+    const optional = (
+      artifactId,
+      artifactType,
+      profileId,
+      rationale,
+      kind = 'source-backed-detail',
+    ) => ({
       artifactId,
       artifactType,
       profileId,
@@ -713,13 +778,13 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
       draft: `Compose the planned ${artifactId}.`,
       visualIntent: `Give ${artifactId} a distinct visual purpose.`,
       justification: {
-        kind: 'source-backed-detail',
+        kind,
         sourceIds,
         rationale,
       },
     });
     return plannedSet(plannerRequest, [
-      plannedSet(plannerRequest).portfolio[0],
+      ...plannedSet(plannerRequest).portfolio,
       optional(
         'architecture-details',
         'explainer',
@@ -727,10 +792,10 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
         'Architecture details warrant a dedicated page.',
       ),
       optional(
-        'system-map',
-        'diagram',
-        'supporting-diagram',
-        'The system relationships need a standalone visual.',
+        'audit-details',
+        'explainer',
+        'deep-dive',
+        'The audit flow warrants a dedicated source-backed explanation.',
       ),
     ]);
   };
@@ -747,10 +812,10 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
     },
   });
   assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
-  assert.equal(author.mock.callCount(), 3);
+  assert.equal(author.mock.callCount(), 5);
   const approvalPath = join(rejected.runRoot, 'source/content-approval.json');
   const rejectedApproval = JSON.parse(await readFile(approvalPath, 'utf8'));
-  assert.equal(rejectedApproval.artifacts.length, 3);
+  assert.equal(rejectedApproval.artifacts.length, 5);
   assert.equal(
     rejectedApproval.artifacts.every(({ authorResultPath }) =>
       authorResultPath?.startsWith('source/author/'),
@@ -763,29 +828,34 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
       'site/explainers/project-recap-demo/architecture-details/index.html',
     ),
   );
+  await access(
+    join(
+      rejected.runRoot,
+      'site/explainers/project-recap-demo/audit-details/index.html',
+    ),
+  );
   const hubPath = join(
     rejected.runRoot,
     'site/initiatives/project-recap-demo/index.html',
   );
-  assert.match(
-    await readFile(hubPath, 'utf8'),
-    /architecture-details\/index\.html/,
-  );
 
-  const floorPath = join(rejected.runRoot, 'source/content/project-recap.md');
-  const diagramPath = join(rejected.runRoot, 'source/content/system-map.html');
+  const floorPath = join(rejected.runRoot, 'source/content/project-recap.html');
+  const diagramPath = join(
+    rejected.runRoot,
+    'source/content/architecture.html',
+  );
   await writeFile(
     floorPath,
     (await readFile(floorPath, 'utf8')).replace(
-      'audience-ready language',
-      'reviewed language',
+      'A concise authored artifact.',
+      'A reviewed project recap.',
     ),
   );
   await writeFile(
     diagramPath,
     (await readFile(diagramPath, 'utf8')).replace(
       'A concise authored artifact.',
-      'A reviewed authored artifact.',
+      'A reviewed architecture artifact.',
     ),
   );
 
@@ -804,7 +874,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
     'built-not-durable',
     JSON.stringify(resumed.errors),
   );
-  assert.equal(author.mock.callCount(), 3, 'resume must not re-invoke author');
+  assert.equal(author.mock.callCount(), 5, 'resume must not re-invoke author');
   const approved = JSON.parse(await readFile(approvalPath, 'utf8'));
   assert.deepEqual(approved.artifacts, rejectedApproval.artifacts);
   const manifest = JSON.parse(await readFile(resumed.manifestPath, 'utf8'));
@@ -812,6 +882,40 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
     manifest.source.authorResultPaths,
     rejectedApproval.artifacts.map(({ authorResultPath }) => authorResultPath),
   );
+  assert.deepEqual(
+    manifest.artifacts.map(({ id, renderedPath }) => ({ id, renderedPath })),
+    [
+      {
+        id: 'project-recap',
+        renderedPath: 'site/initiatives/project-recap-demo/index.html',
+      },
+      {
+        id: 'architecture',
+        renderedPath:
+          'site/diagrams/project-recap-demo/architecture/index.html',
+      },
+      {
+        id: 'deck',
+        renderedPath: 'site/decks/project-recap-demo/deck/index.html',
+      },
+      {
+        id: 'architecture-details',
+        renderedPath:
+          'site/explainers/project-recap-demo/architecture-details/index.html',
+      },
+      {
+        id: 'audit-details',
+        renderedPath:
+          'site/explainers/project-recap-demo/audit-details/index.html',
+      },
+    ],
+  );
+  for (const artifact of rejectedApproval.artifacts) {
+    const retained = JSON.parse(
+      await readFile(join(resumed.runRoot, artifact.authorResultPath), 'utf8'),
+    );
+    assert.equal(retained.artifactId, artifact.artifactId);
+  }
   for (const artifact of manifest.artifacts) {
     assert.equal(
       artifact.hash,
@@ -820,7 +924,17 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
         .digest('hex')}`,
     );
   }
-  assert.match(await readFile(hubPath, 'utf8'), /system-map\/index\.html/);
+  assert.match(await readFile(hubPath, 'utf8'), /A reviewed project recap\./);
+  assert.match(
+    await readFile(
+      join(
+        resumed.runRoot,
+        'site/diagrams/project-recap-demo/architecture/index.html',
+      ),
+      'utf8',
+    ),
+    /A reviewed architecture artifact\./,
+  );
 });
 
 test('authors cannot mutate the validated portfolio with expansion proposals', async () => {
@@ -842,7 +956,10 @@ test('authors cannot mutate the validated portfolio with expansion proposals', a
 
   assert.equal(result.outcome, 'failed');
   assert.equal(result.errors[0].code, 'E_AUTHOR_RESULT');
-  assert.match(result.errors[0].message, /cannot change the validated set plan/);
+  assert.match(
+    result.errors[0].message,
+    /cannot change the validated set plan/,
+  );
 });
 
 test('editorial and render QA findings warn in both modes while DOM safety throws E_QA', async () => {
@@ -865,38 +982,31 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
     assert.notEqual(result.outcome, 'failed', mode);
     assert.ok(result.warnings.includes('render-qa-skipped-no-probe'), mode);
     assert.ok(
+      result.warnings.includes('guideline-narrative-coverage-missing'),
+      mode,
+    );
+    assert.ok(
+      result.warnings.includes('guideline-structured-depth-missing'),
+      mode,
+    );
+    assert.equal(
       result.warnings.includes('guideline-architecture-diagram-missing'),
+      false,
       mode,
     );
     const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
     assert.ok(manifest.warnings.includes('render-qa-skipped-no-probe'), mode);
+    assert.deepEqual(
+      manifest.artifacts.map(({ id }) => id),
+      ['project-recap', 'architecture', 'deck'],
+    );
   }
 
   const unsafeFixture = await suppliedFixture('project-recap');
   const unsafe = await runExplainerCore(unsafeFixture.request, {
-    planSet: async (plannerRequest) => {
-      const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
-      return plannedSet(plannerRequest, [
-        plannedSet(plannerRequest).portfolio[0],
-        {
-          artifactId: 'unsafe-map',
-          artifactType: 'diagram',
-          profileId: 'supporting-diagram',
-          required: false,
-          sourceIds,
-          draft: 'Show the system relationship.',
-          visualIntent: 'Use a standalone system visual.',
-          justification: {
-            kind: 'source-backed-detail',
-            sourceIds,
-            rationale: 'A diagram clarifies the system.',
-          },
-        },
-      ]);
-    },
     author: async (authorRequest) => {
       const result = authorResult(authorRequest);
-      if (authorRequest.artifactId === 'unsafe-map') {
+      if (authorRequest.artifactId === 'architecture') {
         result.content.html = result.content.html.replace(
           '<script>',
           '<script>window.intrusion = true;</script><script>',
@@ -914,18 +1024,17 @@ test('authors must return the declared content path and source dumping fails QA'
   const invalidFixture = await suppliedFixture('project-recap');
   const invalid = await runExplainerCore(invalidFixture.request, {
     author: async (authorRequest) =>
-      authorResult(authorRequest, {
-        content: {
-          ...authorResult(authorRequest).content,
-          html: '<h1>Wrong path</h1>',
-        },
-      }),
+      authorRequest.artifactId === 'project-recap'
+        ? authorResult(authorRequest, {
+            content: { markdown: '# Wrong content path' },
+          })
+        : authorResult(authorRequest),
     now: () => NOW,
   });
   assert.equal(invalid.outcome, 'failed');
   assert.equal(invalid.errors[0].code, 'E_AUTHOR_RESULT');
   await assert.rejects(
-    access(join(invalid.runRoot, 'source/content/project-recap.md')),
+    access(join(invalid.runRoot, 'source/content/project-recap.html')),
   );
 
   const dumpFixture = await suppliedFixture('project-recap');
@@ -940,14 +1049,19 @@ test('authors must return the declared content path and source dumping fails QA'
   const dumped = await runExplainerCore(dumpFixture.request, {
     author: async (authorRequest) => {
       const result = authorResult(authorRequest);
-      result.content.markdown = `# Dumped recap\n\n## Original Request\n\n${dumpedProse}`;
+      if (authorRequest.artifactId === 'project-recap') {
+        result.content.html = result.content.html.replace(
+          'Authored artifact.',
+          Array.from({ length: 200 }, () => dumpedProse).join(' '),
+        );
+      }
       return result;
     },
     now: () => NOW,
   });
   assert.equal(dumped.outcome, 'failed');
   assert.equal(dumped.errors[0].code, 'E_QA');
-  await access(join(dumped.runRoot, 'source/content/project-recap.md'));
+  await access(join(dumped.runRoot, 'source/content/project-recap.html'));
 });
 
 test('author provenance is bound to trusted caller context, not self-asserted', async () => {
@@ -957,7 +1071,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   };
   const provenanceOf = async (result) =>
     JSON.parse(
-      await readFile(join(result.runRoot, 'source/author/project-recap.json'), 'utf8'),
+      await readFile(
+        join(result.runRoot, 'source/author/project-recap.json'),
+        'utf8',
+      ),
     ).provenance;
 
   // Matching context: identity and method survive, time comes from the clock.
@@ -970,7 +1087,11 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
     authorProvenance: trusted,
     now: () => NOW,
   });
-  assert.equal(bound.outcome, 'built-not-durable', JSON.stringify(bound.errors));
+  assert.equal(
+    bound.outcome,
+    'built-not-durable',
+    JSON.stringify(bound.errors),
+  );
   assert.deepEqual(await provenanceOf(bound), {
     ...trusted,
     generatedAt: NOW,
@@ -1032,7 +1153,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   });
   assert.equal(rejected.outcome, 'failed');
   assert.equal(rejected.errors[0].code, 'E_AUTHOR_PROVENANCE');
-  assert.match(rejected.errors[0].message, /must not assert a provenance trust/);
+  assert.match(
+    rejected.errors[0].message,
+    /must not assert a provenance trust/,
+  );
 
   // Without trusted context the retained record says so rather than implying
   // an authenticated identity.
@@ -1040,7 +1164,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   const selfAsserted = await runExplainerCore(untrusted.request, {
     author: async (authorRequest) =>
       authorResult(authorRequest, {
-        provenance: { authorId: 'anyone', generatedAt: '2019-01-01T00:00:00.000Z' },
+        provenance: {
+          authorId: 'anyone',
+          generatedAt: '2019-01-01T00:00:00.000Z',
+        },
       }),
     now: () => NOW,
   });
@@ -1076,12 +1203,31 @@ test('CLI resolves an explicit author module without persisting executable callb
   await writeFile(
     authorModulePath,
     `export default async function author(request) {
+      const sections = (request.floor?.requiredNarrative ?? [])
+        .map((id) => \`<section id="\${id}"><h2>\${id}</h2><p>Validated evidence.</p></section>\`)
+        .join('');
+      const replacements = {
+        THEME_CSS: '',
+        TITLE: \`CLI-authored \${request.artifactId}\`,
+        DESCRIPTION: 'A concise retained narrative.',
+        EYEBROW: 'Explainer Kit',
+        NAVIGATION: '',
+        CONTENT: sections,
+        FOOTER: 'Authored from validated evidence.',
+        DIAGRAM:
+          '<g id="as-built-architecture" class="node"><rect x="20" y="20" width="200" height="80"></rect><text x="40" y="65">Architecture</text></g>',
+        LEGEND: '<span>Architecture</span>',
+        SLIDES:
+          '<section id="outcome" class="slide"><div class="slide__content"><h1>Outcome</h1><p>Validated.</p></div></section>'
+      };
+      let html = request.shell;
+      for (const [token, value] of Object.entries(replacements)) {
+        html = html.replaceAll(\`{{\${token}}}\`, value);
+      }
       return {
         schemaVersion: 'explainer-kit.author-result/v2',
         artifactId: request.artifactId,
-        content: {
-          markdown: '# CLI-authored recap\\n\\n## Original Request\\n\\nA concise retained narrative.'
-        },
+        content: { html },
         provenance: {
           authorId: 'cli-fixture-author',
           generatedAt: '${NOW}',
@@ -1105,15 +1251,24 @@ test('CLI resolves an explicit author module without persisting executable callb
     'utf8',
   );
   assert.doesNotMatch(persistedRequest, /author-module|author\.mjs/);
-  assert.equal(
-    JSON.parse(
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.deepEqual(
+    manifest.source.authorResultPaths,
+    ['project-recap', 'architecture', 'deck'].map(
+      (artifactId) => `source/author/${artifactId}.json`,
+    ),
+  );
+  for (const artifactId of ['project-recap', 'architecture', 'deck']) {
+    const retained = JSON.parse(
       await readFile(
-        join(result.runRoot, 'source/author/project-recap.json'),
+        join(result.runRoot, `source/author/${artifactId}.json`),
         'utf8',
       ),
-    ).provenance.authorId,
-    'cli-fixture-author',
-  );
+    );
+    assert.equal(retained.artifactId, artifactId);
+    assert.equal(retained.provenance.authorId, 'cli-fixture-author');
+    await access(join(result.runRoot, `source/content/${artifactId}.html`));
+  }
 });
 
 test('runs both canonical recipes config-free from directories without .oat files', async () => {
