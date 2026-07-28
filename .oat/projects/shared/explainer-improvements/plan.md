@@ -1060,6 +1060,59 @@ review-incomplete or mutated evidence package cannot.
 
 ---
 
+### Task p03-t12: Preserve interactive recap package compatibility
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+
+**Steps:**
+
+1. Add RED compatibility cases proving that a successful interactive project
+   recap can omit browser and visual-review records across core manifest
+   writing, tracked-run finalization, and archive verification.
+2. Derive the visual-review coverage tier from the hash-verified
+   `run-request.json` mode rather than from the recipe and outcome alone.
+3. Require the set-plan package for every successful project recap, require the
+   complete first visual-review attempt for unattended recaps, and continue to
+   reject any partially recorded visual-review chain in either mode.
+4. Preserve the strict attempt-2 revision/evidence contract whenever second-pass
+   evidence is recorded.
+5. Rerun the complete Phase p03 union; require the two interactive regressions
+   to pass without weakening any unattended fail-closed case.
+6. Commit as `fix(p03-t12): preserve interactive recap coverage`.
+
+**Acceptance:** Interactive recaps remain compatible without unattended review
+evidence, while unattended and partially recorded evidence packages remain
+fail-closed in every consumer.
+
+---
+
+### Task p03-t13: Align the OAT explainer skill version assertion
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Steps:**
+
+1. Update the bundled-skill family assertion from `oat-explainer-kit@1.0.3` to
+   the canonical p03-t10 version `1.0.4`.
+2. Run the focused CLI skill-validation test and require the complete file to
+   pass.
+3. Commit as `test(p03-t13): align oat explainer skill version`.
+
+**Acceptance:** Repository validation expects the canonical shipped
+`oat-explainer-kit` version and no longer blocks the full Phase p03 gate.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams

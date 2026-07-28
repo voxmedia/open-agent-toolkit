@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t06
-oat_last_commit: 73469c565d6c07cf62a45abcb4fc8454c495fe8e
+oat_current_task: p03-t12
+oat_last_commit: b04b3cd9221db01464a32b2ff33b75471ba98580
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -98,7 +98,7 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 38 tasks currently tracked
+- ✓ Five phases / 40 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -144,6 +144,12 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ⧗ p03-t06 through p03-t11 are bounded review-remediation attempt 1/3
 - ✓ Remediation preflight added p03-t06's missing runtime caller boundary before
   edits; no retry was consumed
+- ✓ p03-t06 through p03-t11 implemented in six atomic commits
+- ✓ Focused p03-t11 verification passed 92/92; lint, format, and diff checks
+  passed
+- ⧗ Phase p03 union passed 206/208; two interactive-mode regressions are
+  bounded as p03-t12
+- ⧗ The stale `oat-explainer-kit@1.0.3` CLI assertion is bounded as p03-t13
 
 ## Blockers
 
@@ -151,5 +157,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t06 through p03-t11 as remediation attempt 1/3, then rerun root
+Execute p03-t12 and p03-t13 within remediation attempt 1/3, then rerun root
 verification and a fresh narrowed Phase p03 review.
