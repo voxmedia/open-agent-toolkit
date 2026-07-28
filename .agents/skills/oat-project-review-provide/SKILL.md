@@ -315,8 +315,9 @@ nominal project scope. An explicitly supplied `base_sha=<sha>` or
 scope identifiers (`pNN`, `pNN-pMM`, `final`, and task IDs) identify the review
 scope but do not override re-review narrowing.
 
-For a code review without an explicit range override, resolve re-review
-provenance before normal scope resolution:
+For every code review, detect re-review context before normal scope resolution.
+Unless an explicit range override was supplied, also resolve narrowing
+provenance:
 
 1. Set `REVIEW_HEAD` to the full commit from
    `git rev-parse HEAD^{commit}`. Resolve the current lineage:
@@ -324,16 +325,18 @@ provenance before normal scope resolution:
    - A `gate` invocation uses gate lineage qualified by its exact
      `oat_gate_target`.
 2. Find the newest prior completed code review for the same project, exact
-   nominal scope, and lineage. A lifecycle review matches only another
-   lifecycle review. A gate review matches only a prior gate run with the same
-   exact gate target; it never narrows from a lifecycle review or from another
-   gate target.
-3. Resolve `PRIOR_REVIEWED_HEAD` from these provenance sources:
-   - First inspect the newest matching review artifact in
-     `"$PROJECT_PATH/reviews/"` and read its full `oat_review_head_sha`.
-   - Then inspect the newest matching append-ordered row in the tracked
+   nominal scope, and lineage. If one exists, set `IS_RE_REVIEW=true`. A
+   lifecycle review matches only another lifecycle review. A gate review
+   matches only a prior gate run with the same exact gate target; it never
+   narrows from a lifecycle review or from another gate target.
+3. Unless an explicit range override was supplied, resolve
+   `PRIOR_REVIEWED_HEAD` from these provenance sources:
+   - First inspect the matching prior review artifact at its active path or
+     locally archived counterpart and read its full `oat_review_head_sha`.
+   - Then inspect the matching append-ordered event row in the tracked
      `plan.md` Reviews table and read its `Reviewed Head`. Match row provenance
-     by `Scope`, `Type=code`, `Invocation`, and, for gates, `Gate Target`.
+     by `Scope`, `Type=code`, `Invocation`, and, for gates, `Gate Target`;
+     legacy rows without lineage qualifiers are ineligible.
    - When both matching sources exist, they must name the same reviewed head.
      If they disagree, do not prefer either source.
    - When the artifact is absent (for example, after receive/archive), use the
@@ -348,7 +351,8 @@ provenance before normal scope resolution:
    ```
 
    If accepted, the narrowed range is exactly
-   `SCOPE_RANGE="$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD"`.
+   `SCOPE_RANGE="$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD"`. Mark the range resolved
+   and skip the normal scope-resolution rules below.
 
 5. Fail open to normal full-scope resolution when this is an initial review,
    neither provenance source yields a valid candidate, the sources disagree,
@@ -356,14 +360,13 @@ provenance before normal scope resolution:
    fallback reason; never infer narrowing from ambiguous or legacy lineage.
 
 After resolving a valid guarded range, apply
-`workflow.autoNarrowReReviewScope`: `true` accepts the narrowed range,
-`false` selects normal full scope, and unset asks whether to use the resolved
-range. The prompt must display the exact guarded
-`$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD` range rather than a commit-message-derived
-subset. If no valid range was resolved, continue with normal full-scope
-resolution without prompting.
+`workflow.autoNarrowReReviewScope`: unset and `true` accept the narrowed range
+automatically; `false` selects normal full scope automatically. If no valid
+range was resolved, continue with normal full-scope resolution automatically.
+The re-review path has no interactive narrowing decision.
 
-**Priority order for scope resolution:**
+**Priority order for scope resolution (only when Step 3a did not resolve a
+narrowed range):**
 
 1. **Explicit user input (preferred):**
    - `base_sha=<sha>` → review range is `<sha>..HEAD`
@@ -412,6 +415,31 @@ resolution without prompting.
    MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null)
    SCOPE_RANGE="$MERGE_BASE..HEAD"
    ```
+
+**Step 3b: Classify and Report Re-Review Resolution**
+
+After `SCOPE_RANGE` is final, classify it for reporting whenever
+`IS_RE_REVIEW=true`:
+
+- `empty`: `git diff --name-only "$SCOPE_RANGE"` returns no files.
+- `bookkeeping-only`: every changed path is inside the exact active project
+  prefix `"$PROJECT_RELATIVE/"`, where `PROJECT_RELATIVE` is the path from
+  `git rev-parse --show-toplevel` to `PROJECT_PATH`.
+- `substantive`: any changed path is outside that project prefix. If changed
+  files cannot be enumerated, conservatively use `substantive` and include
+  `changed-files-unavailable` in the reason.
+
+Classification is reporting-only; all three classifications still dispatch the
+review over the resolved range.
+
+Print exactly one re-review resolution line:
+
+```
+Re-review scope: range={SCOPE_RANGE}; classification={empty|bookkeeping-only|substantive}; reason={explicit base/range override | narrowing disabled | no usable prior reviewed head | provenance disagreement | prior commit missing | prior commit not an ancestor | narrowed from guarded prior reviewed head | changed-files-unavailable plus the applicable resolution reason}.
+```
+
+The reason must state why narrowing applied or why full scope was selected. Do
+not print a second narrowing-decision line elsewhere.
 
 ### Step 4: Get Files Changed
 
@@ -535,6 +563,17 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Commits (code review only):**
 {git log --oneline for SCOPE_RANGE}
+
+**Narrowed Review Provenance (code re-reviews only):**
+
+- Narrowing applied: {yes|no}
+- Prior review artifact: {artifact path from the matching event}
+- Prior reviewed head: {full PRIOR_REVIEWED_HEAD, or unavailable}
+- Resolved range: {SCOPE_RANGE}
+- When narrowing applied, the resulting review artifact must name the prior
+  review artifact and reviewed head it builds on. Treat requirements coverage
+  outside the narrowed range as inherited from that artifact, not re-verified
+  by this pass.
 
 **Deferred Findings Ledger (final scope only):**
 
@@ -792,7 +831,8 @@ When inline is allowed:
 
 - Run "reset protocol":
   1. Re-read required artifacts for current workflow mode from scratch
-  2. Read all files in FILES_CHANGED
+  2. Read all files in `FILES_CHANGED`. For a narrowed re-review, do not expand
+     this back to every file in the nominal full scope.
   3. Apply oat-reviewer checklist inline
   4. Write review artifact
 
