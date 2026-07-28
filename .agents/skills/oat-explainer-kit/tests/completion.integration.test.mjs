@@ -367,7 +367,10 @@ test('the documented author seam turns lifecycle evidence into a rich recap', as
       ['ingest-worker', 'Streams partitions and emits checkpoints.'],
       ['index-store', 'Holds the committed offsets for every partition.'],
     ],
-    checks: [['pnpm test', '284 passing'], ['pnpm lint', 'clean']],
+    checks: [
+      ['pnpm test', '284 passing'],
+      ['pnpm lint', 'clean'],
+    ],
   });
 
   assert.equal(
@@ -583,11 +586,19 @@ async function authorFromLifecycleEvidence(request) {
   });
   const checks = bulletsUnder(evidence.implementation, 'Checks').map((line) => {
     const separator = line.indexOf(': ');
-    return { command: line.slice(0, separator), observed: line.slice(separator + 2) };
+    return {
+      command: line.slice(0, separator),
+      observed: line.slice(separator + 2),
+    };
   });
 
   const sections = request.floor.requiredNarrative.map((id) => {
-    const body = [`## ${title(id)}`, '', intent.get(id) ?? `Derived from the ${id} evidence.`, ''];
+    const body = [
+      `## ${title(id)}`,
+      '',
+      intent.get(id) ?? `Derived from the ${id} evidence.`,
+      '',
+    ];
     if (id === 'original-request') {
       body.push(
         ...bulletsUnder(evidence.plan, 'Constraints').map(
@@ -630,7 +641,9 @@ async function authorFromLifecycleEvidence(request) {
       body.push(
         '| Check | Observed |',
         '| --- | --- |',
-        ...checks.map(({ command, observed }) => `| ${command} | ${observed} |`),
+        ...checks.map(
+          ({ command, observed }) => `| ${command} | ${observed} |`,
+        ),
         '',
       );
     }
@@ -663,12 +676,12 @@ async function authorFromLifecycleEvidence(request) {
 
 function briefIntent(brief) {
   return new Map(
-    [...brief.matchAll(/^- \*\*(.+?):\*\*\s*([\s\S]*?)(?=\n- \*\*|\n\n#|$)/gm)].map(
-      ([, label, text]) => [
-        label.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
-        text.replaceAll(/\s+/g, ' ').trim(),
-      ],
-    ),
+    [
+      ...brief.matchAll(/^- \*\*(.+?):\*\*\s*([\s\S]*?)(?=\n- \*\*|\n\n#|$)/gm),
+    ].map(([, label, text]) => [
+      label.toLowerCase().replaceAll(/[^a-z0-9]+/g, '-'),
+      text.replaceAll(/\s+/g, ' ').trim(),
+    ]),
   );
 }
 

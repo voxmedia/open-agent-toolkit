@@ -2,7 +2,7 @@ import { Command } from 'commander';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const { buildCommandContext, loggerCapture } = vi.hoisted(() => {
-  const loggerCapture = {
+  const capture = {
     error: [] as string[],
   };
 
@@ -20,13 +20,13 @@ const { buildCommandContext, loggerCapture } = vi.hoisted(() => {
         info: vi.fn(),
         warn: vi.fn(),
         error(message: string) {
-          loggerCapture.error.push(message);
+          capture.error.push(message);
         },
         success: vi.fn(),
         json: vi.fn(),
       },
     })),
-    loggerCapture,
+    loggerCapture: capture,
   };
 });
 

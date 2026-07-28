@@ -124,15 +124,15 @@ export const remarkLinks: Plugin<[], Root> = function remarkLinks() {
 
       // Split off any anchor fragment or query string
       const suffixIndex = url.search(/[#?]/);
-      const path = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
+      const urlPath = suffixIndex >= 0 ? url.slice(0, suffixIndex) : url;
       const fragment = suffixIndex >= 0 ? url.slice(suffixIndex) : '';
 
-      const cleaned = cleanMdPath(path);
+      const cleaned = cleanMdPath(urlPath);
 
       if (cleaned !== null) {
         const rewrittenPath =
           typeof file?.path === 'string'
-            ? (resolveRelativeDocsLink(file.path, path) ?? cleaned)
+            ? (resolveRelativeDocsLink(file.path, urlPath) ?? cleaned)
             : cleaned;
 
         const prefix =

@@ -577,7 +577,10 @@ test('a lead-only document still renders one overview section', async () => {
 
   const hub = await readFile(join(result.runRoot, HUB_PATH), 'utf8');
   assert.deepEqual(renderedSectionIds(hub), ['overview']);
-  assert.match(hub, /The whole story fits in one pass with no section headings\./);
+  assert.match(
+    hub,
+    /The whole story fits in one pass with no section headings\./,
+  );
 });
 
 function renderedSectionIds(html) {

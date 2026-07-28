@@ -111,8 +111,8 @@ function authorResult(authorRequest, overrides = {}) {
   };
 }
 
-async function runExplainer(request, options = {}) {
-  return runExplainerCore(request, {
+async function runExplainer(runRequest, options = {}) {
+  return runExplainerCore(runRequest, {
     ...(typeof options.author !== 'function'
       ? { author: async (authorRequest) => authorResult(authorRequest) }
       : {}),
@@ -299,10 +299,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
   );
   assert.match(rendered, /Corrected implementation status\./);
   // The rerun cleared the defect, so its warning must not survive the resume.
-  assert.equal(
-    resumed.warnings.includes('render-qa-document-overflow'),
-    false,
-  );
+  assert.equal(resumed.warnings.includes('render-qa-document-overflow'), false);
   assert.equal(
     manifest.warnings.includes('render-qa-document-overflow'),
     false,
@@ -792,7 +789,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   };
   const provenanceOf = async (result) =>
     JSON.parse(
-      await readFile(join(result.runRoot, 'source/author/project-recap.json'), 'utf8'),
+      await readFile(
+        join(result.runRoot, 'source/author/project-recap.json'),
+        'utf8',
+      ),
     ).provenance;
 
   // Matching context: identity and method survive, time comes from the clock.
@@ -805,7 +805,11 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
     authorProvenance: trusted,
     now: () => NOW,
   });
-  assert.equal(bound.outcome, 'built-not-durable', JSON.stringify(bound.errors));
+  assert.equal(
+    bound.outcome,
+    'built-not-durable',
+    JSON.stringify(bound.errors),
+  );
   assert.deepEqual(await provenanceOf(bound), {
     ...trusted,
     generatedAt: NOW,
@@ -867,7 +871,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   });
   assert.equal(rejected.outcome, 'failed');
   assert.equal(rejected.errors[0].code, 'E_AUTHOR_PROVENANCE');
-  assert.match(rejected.errors[0].message, /must not assert a provenance trust/);
+  assert.match(
+    rejected.errors[0].message,
+    /must not assert a provenance trust/,
+  );
 
   // Without trusted context the retained record says so rather than implying
   // an authenticated identity.
@@ -875,7 +882,10 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   const selfAsserted = await runExplainerCore(untrusted.request, {
     author: async (authorRequest) =>
       authorResult(authorRequest, {
-        provenance: { authorId: 'anyone', generatedAt: '2019-01-01T00:00:00.000Z' },
+        provenance: {
+          authorId: 'anyone',
+          generatedAt: '2019-01-01T00:00:00.000Z',
+        },
       }),
     now: () => NOW,
   });

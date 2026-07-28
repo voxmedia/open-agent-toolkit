@@ -580,7 +580,14 @@ function srcsetCandidates(value) {
 }
 
 function compactUrl(value) {
-  return value.replace(/[\u0000-\u0020\u007f]+/g, '').toLowerCase();
+  // Strip C0 controls, ASCII space, and DEL without a control-char regex
+  // (oxlint/eslint no-control-regex flags those literals even when intentional).
+  let compact = '';
+  for (const ch of value) {
+    const code = ch.codePointAt(0);
+    if (code > 0x20 && code !== 0x7f) compact += ch;
+  }
+  return compact.toLowerCase();
 }
 
 // Shared with the render QA structural check so both call sites enforce one

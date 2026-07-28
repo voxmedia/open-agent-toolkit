@@ -245,7 +245,7 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
 
     for (const briefRef of [
       floor[0].briefRef,
-      ...expansion.profiles.map(({ briefRef }) => briefRef),
+      ...expansion.profiles.map((profile) => profile.briefRef),
     ]) {
       briefRefs.add(briefRef);
       assert.ok(
