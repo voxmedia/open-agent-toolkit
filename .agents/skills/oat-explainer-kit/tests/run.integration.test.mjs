@@ -31,7 +31,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '2.0.0' } = {}) {
+async function createFixture({ coreVersion = '2.0.2' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');
@@ -75,9 +75,27 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
               loaded.push(await options.sourceLoader(source));
             }
           }
+          const setPlan =
+            typeof options.planSet === 'function'
+              ? await options.planSet({
+                  recipe: request.recipe,
+                  factBase: request.factBase,
+                })
+              : null;
+          const plannedArtifacts = setPlan?.portfolio ?? [
+            { artifactId: request.recipe.id },
+          ];
           const authored =
             typeof options.author === 'function'
-              ? await options.author({ artifact: { id: request.recipe.id } })
+              ? await Promise.all(
+                  plannedArtifacts.map((plannedArtifact) =>
+                    options.author({
+                      artifact: { id: plannedArtifact.artifactId },
+                      plannedArtifact,
+                      setContext: setPlan,
+                    }),
+                  ),
+                )
               : null;
           const runRoot = join(request.outputRoot, request.slug);
           const manifestPath = join(runRoot, 'manifest.json');
@@ -134,6 +152,27 @@ async function createFixture({ coreVersion = '2.0.0' } = {}) {
 
 async function fixtureAuthor({ artifact }) {
   return { source: 'fixture', artifactId: artifact.id };
+}
+
+async function fixturePlanSet({ recipe }) {
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'fixture-adaptive-recap',
+    recipe,
+    sourceIds: ['plan'],
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: ['project-recap', 'architecture', 'deck'].map(
+      (artifactId, index) => ({
+        artifactId,
+        artifactType: ['hub', 'diagram', 'deck'][index],
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds: ['plan'],
+        draft: `Compose ${artifactId}.`,
+        visualIntent: `Use the planned ${artifactId} medium.`,
+      }),
+    ),
+  };
 }
 
 function getConfig(key) {
@@ -240,6 +279,7 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     slug: 'demo-recap',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   });
   const canonicalProjectRoot = await realpath(fixture.projectRoot);
@@ -308,6 +348,7 @@ trap 'rmdir "$lock"' EXIT INT TERM
       recipe: 'project-recap',
       slug: 'cli-config-style',
       author: fixtureAuthor,
+      planSet: fixturePlanSet,
       mode: 'unattended',
     });
 
@@ -319,6 +360,7 @@ trap 'rmdir "$lock"' EXIT INT TERM
 
 test('passes direct and module authors through the adapter boundary', async () => {
   const directFixture = await createFixture();
+  const directRequests = [];
   const directResult = await runOatExplainer({
     adapterRoot: directFixture.adapterRoot,
     userSkillsRoot: directFixture.userSkillsRoot,
@@ -328,21 +370,35 @@ test('passes direct and module authors through the adapter boundary', async () =
     recipe: 'project-recap',
     slug: 'direct-author',
     getConfig,
-    author: async ({ artifact }) => ({
-      source: 'direct',
-      artifactId: artifact.id,
-    }),
+    author: async (request) => {
+      directRequests.push(request);
+      return {
+        source: 'direct',
+        artifactId: request.artifact.id,
+      };
+    },
+    planSet: fixturePlanSet,
     mode: 'interactive',
   });
-  assert.deepEqual(directResult.result.authored, {
-    source: 'direct',
-    artifactId: 'project-recap',
-  });
+  assert.deepEqual(
+    directResult.result.authored.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
   assert.equal(directResult.result.marking, 'human-approved');
   assert.equal(directResult.marking, 'human-approved');
+  assert.equal(directRequests.length, 3);
+  assert.equal(
+    directRequests.every(
+      ({ setContext }) =>
+        JSON.stringify(setContext) ===
+        JSON.stringify(directRequests[0].setContext),
+    ),
+    true,
+  );
 
   const moduleFixture = await createFixture();
   const authorModulePath = join(moduleFixture.root, 'author.mjs');
+  const planSetModulePath = join(moduleFixture.root, 'plan-set.mjs');
   await writeFile(
     authorModulePath,
     `export async function author({ artifact }) {
@@ -350,6 +406,7 @@ test('passes direct and module authors through the adapter boundary', async () =
 }
 `,
   );
+  await writeValidPlanSetModule(planSetModulePath);
   const moduleResult = await runOatExplainer({
     adapterRoot: moduleFixture.adapterRoot,
     userSkillsRoot: moduleFixture.userSkillsRoot,
@@ -360,12 +417,13 @@ test('passes direct and module authors through the adapter boundary', async () =
     slug: 'module-author',
     getConfig,
     authorModulePath,
+    planSetModulePath,
     mode: 'unattended',
   });
-  assert.deepEqual(moduleResult.result.authored, {
-    source: 'module',
-    artifactId: 'project-recap',
-  });
+  assert.deepEqual(
+    moduleResult.result.authored.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
 });
 
 test('rejects missing, invalid, and conflicting author module inputs at the adapter boundary', async () => {
@@ -382,6 +440,7 @@ test('rejects missing, invalid, and conflicting author module inputs at the adap
     slug: 'author-contract',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   };
 
@@ -434,6 +493,7 @@ test('rejects an omitted unattended author before invoking the core', async () =
       recipe: 'project-recap',
       slug: 'missing-author',
       getConfig,
+      planSet: fixturePlanSet,
       mode: 'unattended',
     }),
     /unattended.*exactly one.*author/i,
@@ -456,11 +516,57 @@ test('rejects an omitted author in both modes before invoking the core', async (
         recipe: 'project-recap',
         slug: `${mode}-no-author`,
         getConfig,
+        planSet: fixturePlanSet,
         mode,
       }),
       (error) => error.code === 'E_AUTHOR_REQUIRED',
     );
   }
+  await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
+    code: 'ENOENT',
+  });
+});
+
+test('requires exactly one adaptive set planner for unattended project recaps', async () => {
+  const fixture = await createFixture();
+  const invalidModulePath = join(fixture.root, 'invalid-plan-set.mjs');
+  await writeFile(invalidModulePath, 'export const planSet = "invalid";\n');
+  const context = {
+    adapterRoot: fixture.adapterRoot,
+    userSkillsRoot: fixture.userSkillsRoot,
+    repoRoot: fixture.repoRoot,
+    invocation: 'project',
+    activeProject: '.oat/projects/shared/demo',
+    recipe: 'project-recap',
+    slug: 'planner-contract',
+    getConfig,
+    author: fixtureAuthor,
+    mode: 'unattended',
+  };
+
+  await assert.rejects(
+    runOatExplainer(context),
+    (error) => error.code === 'E_SET_PLANNER_REQUIRED',
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      planSet: fixturePlanSet,
+      planSetModulePath: invalidModulePath,
+    }),
+    /only one.*set planner/i,
+  );
+  await assert.rejects(
+    runOatExplainer({ ...context, planSetModulePath: invalidModulePath }),
+    /set planner module must export a planSet function/i,
+  );
+  await assert.rejects(
+    runOatExplainer({
+      ...context,
+      coreOptions: { planSet: fixturePlanSet },
+    }),
+    /coreOptions\.planSet is not supported/i,
+  );
   await assert.rejects(readFile(fixture.coreInvocationMarker, 'utf8'), {
     code: 'ENOENT',
   });
@@ -479,8 +585,10 @@ test('completion recap intents always select unattended explainer mode', () => {
 test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
   const fixture = await createFixture();
   const authorModulePath = join(fixture.root, 'lifecycle-author.mjs');
+  const planSetModulePath = join(fixture.root, 'lifecycle-plan-set.mjs');
   const criticModulePath = join(fixture.root, 'lifecycle-critic.mjs');
   await writeValidAuthorModule(authorModulePath);
+  await writeValidPlanSetModule(planSetModulePath);
   await writeFile(
     criticModulePath,
     `
@@ -508,11 +616,13 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     recipe: 'project-recap',
     slug: 'actual-core-recap',
     authorModulePath,
+    planSetModulePath,
     criticModulePath,
     getConfig,
     mode: 'unattended',
   });
   const criticModule = await import(pathToFileURL(criticModulePath).href);
+  const authorModule = await import(pathToFileURL(authorModulePath).href);
   const factBase = JSON.parse(
     await readFile(
       join(adapterResult.result.runRoot, 'source', 'fact-base.json'),
@@ -526,11 +636,30 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     'explainer-kit.manifest/v1',
   );
   assert.equal(criticModule.getCalls().length, 1);
+  const authorCalls = authorModule.getCalls();
+  assert.deepEqual(
+    authorCalls.map(({ artifactId }) => artifactId),
+    ['project-recap', 'architecture', 'deck'],
+  );
+  assert.equal(
+    authorCalls.every(
+      ({ setContext }) =>
+        JSON.stringify(setContext) ===
+        JSON.stringify(authorCalls[0].setContext),
+    ),
+    true,
+  );
+  assert.equal(
+    authorCalls.every(({ hasBrief, hasShell }) => hasBrief && hasShell),
+    true,
+  );
   assert.ok(
     factBase.sources.some(({ id }) => id === 'critic:lifecycle-test-critic'),
   );
   assert.deepEqual(adapterResult.manifest.source.authorResultPaths, [
     'source/author/project-recap.json',
+    'source/author/architecture.json',
+    'source/author/deck.json',
   ]);
 });
 
@@ -559,6 +688,7 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     slug: 'critic-contract',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   };
 
@@ -607,6 +737,7 @@ test('passes a supplied fact base through the normalized adapter request', async
     suppliedFactBasePath: factBasePath,
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   });
   const canonicalFactBasePath = await realpath(factBasePath);
@@ -631,6 +762,7 @@ test('propagates failed core results when no manifest was produced', async () =>
     slug: 'core-failure',
     getConfig,
     author: fixtureAuthor,
+    planSet: fixturePlanSet,
     mode: 'unattended',
   });
 
@@ -641,10 +773,11 @@ test('propagates failed core results when no manifest was produced', async () =>
   ]);
 });
 
-test('fails closed for missing and 1.x installed cores', async () => {
+test('fails closed for missing cores and cores without adaptive set capability', async () => {
   for (const [coreVersion, pattern] of [
     [null, /install utility --scope user/i],
     ['1.9.9', /update --pack utility --scope user/i],
+    ['2.0.1', /adaptive set planning/i],
   ]) {
     const fixture = await createFixture({ coreVersion });
     await assert.rejects(
@@ -706,21 +839,87 @@ test('does not inspect ambient private configuration', async () => {
 async function writeValidAuthorModule(path) {
   await writeFile(
     path,
-    `export async function author(request) {
+    `const calls = [];
+
+export async function author(request) {
+  calls.push({
+    artifactId: request.artifactId,
+    setContext: structuredClone(request.setContext),
+    plannedArtifact: structuredClone(request.plannedArtifact),
+    hasBrief: typeof request.brief === 'string' && request.brief.length > 0,
+    hasShell: typeof request.shell === 'string' && request.shell.length > 0,
+  });
+  const sections = (request.floor?.requiredNarrative ?? [])
+    .map((id) => \`<section id="\${id}"><h2>\${id}</h2><p>Validated evidence.</p></section>\`)
+    .join('');
+  const replacements = {
+    THEME_CSS: '',
+    TITLE: 'Lifecycle-authored recap',
+    DESCRIPTION: 'A provider-neutral adaptive recap.',
+    EYEBROW: 'Project recap',
+    NAVIGATION: '',
+    CONTENT: sections,
+    FOOTER: 'Generated from approved OAT artifacts.',
+    DIAGRAM:
+      '<g id="as-built-architecture" class="node"><rect x="20" y="20" width="240" height="80"></rect><text x="40" y="65">Architecture</text></g>',
+    LEGEND: '<span>Architecture</span>',
+    SLIDES:
+      '<section id="outcome" class="slide"><div class="slide__content"><h1>Outcome</h1><p>Validated.</p></div></section>',
+  };
+  let html = request.shell;
+  for (const [token, value] of Object.entries(replacements)) {
+    html = html.replaceAll(\`{{\${token}}}\`, value);
+  }
   return {
     schemaVersion: 'explainer-kit.author-result/v2',
     artifactId: request.artifactId,
-    content: {
-      markdown: '# Lifecycle-authored recap\\n\\n' +
-        request.floor.requiredNarrative.map((id, index) =>
-          \`## \${id.replaceAll('-', ' ')}\\n\\nSection \${index + 1} explains validated evidence and its project impact.\`
-        ).join('\\n\\n'),
-    },
+    content: { html },
     provenance: {
       authorId: 'adapter-lifecycle-author',
       generatedAt: '2026-07-20T12:00:00.000Z',
       method: 'provider-neutral-module',
     },
+  };
+}
+
+export function getCalls() {
+  return calls;
+}
+`,
+  );
+}
+
+async function writeValidPlanSetModule(path) {
+  await writeFile(
+    path,
+    `export async function planSet({ recipe, factBase }) {
+  const sourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  const floor = recipe.floor ?? [
+    { id: 'project-recap', type: 'hub' },
+    { id: 'architecture', type: 'diagram' },
+    { id: 'deck', type: 'deck' },
+  ];
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'adapter-lifecycle-recap',
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: {
+      terminology: [],
+      statuses: [{ subject: 'implementation', value: 'validated' }],
+      numbers: [{ subject: 'required artifacts', value: 3, unit: 'artifacts' }],
+    },
+    portfolio: floor.map((artifact) => ({
+      artifactId: artifact.id,
+      artifactType: artifact.type,
+      profileId: 'recipe-floor',
+      required: true,
+      sourceIds,
+      draft: \`Compose the planned \${artifact.id} artifact.\`,
+      visualIntent: \`Use the selected \${artifact.type} medium.\`,
+    })),
   };
 }
 `,

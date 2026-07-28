@@ -12,7 +12,7 @@ import {
 } from './resolve-config.mjs';
 import { resolveExplainerOutputRoot } from './resolve-paths.mjs';
 
-const MINIMUM_CORE_VERSION = '2.0.0';
+export const MINIMUM_CORE_VERSION = '2.0.2';
 const ADAPTER_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
 export async function runOatExplainer({
@@ -32,6 +32,8 @@ export async function runOatExplainer({
   defaultMode,
   renderStrategy,
   retainRawArtDirection = false,
+  planSet,
+  planSetModulePath,
   author,
   authorModulePath,
   critic,
@@ -51,6 +53,14 @@ export async function runOatExplainer({
       compatibility.code === 'missing'
         ? 'E_CORE_MISSING'
         : 'E_CORE_INCOMPATIBLE';
+    error.compatibility = compatibility;
+    throw error;
+  }
+  if (!supportsAdaptiveSetPlanning(compatibility.installedVersion)) {
+    const error = new Error(
+      `Installed explainer-kit ${compatibility.installedVersion} does not provide adaptive set planning. Run \`oat tools update --pack utility --scope user\`.`,
+    );
+    error.code = 'E_CORE_INCOMPATIBLE';
     error.compatibility = compatibility;
     throw error;
   }
@@ -115,6 +125,12 @@ export async function runOatExplainer({
     authorModulePath,
     coreOptions,
   });
+  const lifecycleSetPlanner = await resolveLifecycleSetPlanner({
+    planSet,
+    planSetModulePath,
+    coreOptions,
+    required: recipe === 'project-recap' && mode === 'unattended',
+  });
   const lifecycleCritic = await resolveLifecycleCritic({
     critic,
     criticModulePath,
@@ -122,6 +138,7 @@ export async function runOatExplainer({
   });
   const result = await core.runExplainer(request, {
     ...coreOptions,
+    ...(lifecycleSetPlanner && { planSet: lifecycleSetPlanner }),
     ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
@@ -143,6 +160,74 @@ export async function runOatExplainer({
     marking: result.marking ?? null,
     outputRoot,
   };
+}
+
+export function supportsAdaptiveSetPlanning(version) {
+  if (typeof version !== 'string') return false;
+  const match = version.match(/^(\d+)\.(\d+)\.(\d+)(?:-|$)/);
+  if (!match) return false;
+  const [major, minor, patch] = match.slice(1).map(Number);
+  return (
+    major === 2 &&
+    (minor > 0 ||
+      (minor === 0 && patch >= Number(MINIMUM_CORE_VERSION.split('.')[2])))
+  );
+}
+
+async function resolveLifecycleSetPlanner({
+  planSet,
+  planSetModulePath,
+  coreOptions,
+  required,
+}) {
+  if (coreOptions?.planSet !== undefined) {
+    throw new TypeError(
+      'coreOptions.planSet is not supported at the OAT adapter boundary; supply planSet directly.',
+    );
+  }
+  if (planSet !== undefined && typeof planSet !== 'function') {
+    throw new TypeError('planSet must be a function when supplied.');
+  }
+  if (planSet !== undefined && planSetModulePath !== undefined) {
+    throw new Error(
+      'Supply only one provider-neutral set planner callback or set planner module entry point.',
+    );
+  }
+  if (planSet === undefined && planSetModulePath === undefined) {
+    if (!required) return null;
+    const error = new Error(
+      'Unattended OAT project recaps require exactly one provider-neutral set planner callback or set planner module entry point.',
+    );
+    error.code = 'E_SET_PLANNER_REQUIRED';
+    throw error;
+  }
+  if (planSetModulePath === undefined) {
+    return planSet;
+  }
+  if (
+    typeof planSetModulePath !== 'string' ||
+    planSetModulePath.trim().length === 0
+  ) {
+    throw new TypeError('planSetModulePath must be a non-empty path.');
+  }
+
+  let plannerModule;
+  try {
+    plannerModule = await import(
+      pathToFileURL(resolve(planSetModulePath.trim())).href
+    );
+  } catch (cause) {
+    throw new Error(
+      `Unable to load provider-neutral set planner module at ${planSetModulePath}.`,
+      { cause },
+    );
+  }
+  if (typeof plannerModule.planSet !== 'function') {
+    throw new TypeError(
+      'Provider-neutral set planner module must export a planSet function.',
+    );
+  }
+  return plannerModule.planSet;
 }
 
 async function resolveLifecycleAuthor({

@@ -9,6 +9,10 @@ import {
   CORE_UPDATE_COMMAND,
   checkCoreCompatibility,
 } from '../scripts/check-core.mjs';
+import {
+  MINIMUM_CORE_VERSION,
+  supportsAdaptiveSetPlanning,
+} from '../scripts/run.mjs';
 
 const tempDirs = [];
 
@@ -55,6 +59,23 @@ test('accepts a compatible installed canonical core', async () => {
       guidance: null,
     },
   );
+});
+
+test('adapter requires the core release that supports adaptive set planning', async () => {
+  assert.equal(MINIMUM_CORE_VERSION, '2.0.2');
+  for (const [version, ok] of [
+    ['2.0.1', false],
+    ['2.0.2', true],
+  ]) {
+    const { adapterRoot, skillsRoot } = await createInstalledLayout(version);
+    const result = await checkCoreCompatibility({
+      adapterRoot,
+      userSkillsRoot: skillsRoot,
+      minimumVersion: MINIMUM_CORE_VERSION,
+    });
+    assert.equal(result.ok, true, version);
+    assert.equal(supportsAdaptiveSetPlanning(version), ok, version);
+  }
 });
 
 test('resolves a user-scoped core independently from a project-scoped adapter', async () => {
