@@ -252,6 +252,28 @@ paths.
 
 ---
 
+### Task p01-t07: Align the explainer skill version contract
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Steps:**
+
+1. Preserve the RED root-verification evidence showing the version contract
+   expected explainer-kit `2.0.0` after p01-t06 correctly bumped it to `2.0.1`.
+2. Update the exact explainer-kit version expectation to `2.0.1`; do not alter
+   any other skill-family version.
+3. Run
+   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+   and `pnpm test`; require both to exit 0.
+4. Commit as `test(p01-t07): align explainer skill version`.
+
+**Acceptance:** The repository-wide skill validation suite agrees with the
+required canonical explainer-kit version bump and the full test suite passes.
+
+---
+
 ## Phase 2: Set-level visual authoring runtime
 
 ### Task p02-t01: Bundle versioned visual authoring and review guidance
@@ -752,13 +774,13 @@ review. Additional review cycles are not authorized.
 
 **Summary:**
 
-- Phase 1: 6 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
+- Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 5 tasks — bundled guidance, contracts, set planner, adaptive set, adapter
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 22 tasks**
+**Total: 23 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

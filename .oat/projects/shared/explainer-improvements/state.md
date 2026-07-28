@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t05
-oat_last_commit: d2a2af8c1291d46174a72c16cce925129e5252f6
+oat_current_task: p01-t07
+oat_last_commit: 4b3d7dc71b70ed665b8853e8a0141317ecc3c482
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T03:28:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T03:57:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 review fixes pending
+Phase p01 root verification correction in progress
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Phase p01 review fixes pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 22 tasks currently tracked
+- ✓ Five phases / 23 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -109,7 +109,8 @@ Phase p01 review fixes pending
 - ✓ Root focused verification passed
 - ✓ p01-t04 synchronized generated package-version metadata
 - ✓ Root-owned p01 review completed with two Important findings
-- ⧗ p01-t05 and p01-t06 blocking fixes pending
+- ✓ p01-t05 and p01-t06 resolved the two Important findings
+- ⧗ p01-t07 aligns the required skill bump with its validation contract
 
 ## Blockers
 
@@ -117,5 +118,5 @@ None
 
 ## Next Milestone
 
-Implement p01-t05 and p01-t06, re-run focused phase verification, and complete
-the bounded p01 review continuation.
+Implement p01-t07, re-run focused phase verification, and complete the bounded
+p01 review continuation.

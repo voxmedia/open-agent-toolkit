@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t05
+oat_current_task_id: p01-t07
 oat_generated: false
 ---
 
@@ -17,28 +17,29 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | fixes_pending |     6 |       4/6 |
-| p02   | pending       |     5 |       0/5 |
-| p03   | pending       |     4 |       0/4 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----: | --------: |
+| p01   | in_progress |     7 |       6/7 |
+| p02   | pending     |     5 |       0/5 |
+| p03   | pending     |     4 |       0/4 |
+| p04   | pending     |     3 |       0/3 |
+| p05   | pending     |     4 |       0/4 |
 
-**Total:** 4/22 tasks completed
+**Total:** 6/23 tasks completed
 
 ---
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** fixes_pending
+**Status:** in_progress
 
 - [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
 - [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
 - [x] p01-t03 — Establish the golden conformance fixture and rubric contract (`560a0c7c`)
 - [x] p01-t04 — Synchronize the generated public-package version asset (`d2a2af8c`)
-- [ ] p01-t05 — Validate packaged notice provenance
-- [ ] p01-t06 — Ground golden references in retained evidence
+- [x] p01-t05 — Validate packaged notice provenance (`9ecf893f`)
+- [x] p01-t06 — Ground golden references in retained evidence (`4b3d7dc7`)
+- [ ] p01-t07 — Align the explainer skill version contract
 
 ### Phase Implementation Summary
 
@@ -72,6 +73,9 @@ oat_generated: false
   drift. Portability coverage is included in p01-t06; tracking counts are
   corrected in this root-owned update. The curated overview remains recorded
   for later backlog maintenance.
+- Review fixes I1 and I2 are implemented. Root verification found one
+  deterministic version-expectation failure, now bounded as p01-t07 before
+  review continuation.
 
 ## Phase 2: Set-level visual authoring runtime
 
@@ -138,6 +142,11 @@ oat_generated: false
 - Continuation base/head: `871a4e11553a6a6bcbda5ca6726811561f0a5662..d2a2af8c1291d46174a72c16cce925129e5252f6`
 - Continuation outcome: `DONE`; one declared file; root verification passed at `2026-07-28T03:06:36Z`
 - Continuation Dispatch: scope=p01-t04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Review-fix continuation: p01-t05 and p01-t06, mode `review-fix`, same accepted handle
+- Review-fix base/head: `39b506c35688d41a3ce03e4461f2b3142eee0893..4b3d7dc71b70ed665b8853e8a0141317ecc3c482`
+- Review-fix outcome: `DONE_WITH_CONCERNS`; I1 and I2 fixed; retry usage 1/1
+- Review-fix concern: full test suite found one stale explainer-kit version expectation outside the authorized p01-t06 file boundary
+- Review-fix Dispatch: scope=p01 action=review-fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -163,6 +172,7 @@ oat_generated: false
 | import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began            | `1151a0d7` and `plan.md`            | p01-t01          |
 | p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04          |
 | p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps              | p01 review artifact                 | p01-t05, p01-t06 |
+| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`            | root focused test                   | p01-t07          |
 
 ## Test Results
 
@@ -176,7 +186,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 22 tasks and the final review._
+_Fill from implementation evidence after all 23 tasks and the final review._
 
 ## References
 
