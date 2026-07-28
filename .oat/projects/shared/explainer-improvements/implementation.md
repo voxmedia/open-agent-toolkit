@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t12
+oat_current_task_id: p03-t14
 oat_generated: false
 ---
 
@@ -21,11 +21,11 @@ oat_generated: false
 | ----- | ------------- | ----: | --------: |
 | p01   | complete      |     7 |       7/7 |
 | p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    13 |     11/13 |
+| p03   | fixes_pending |    14 |     13/14 |
 | p04   | pending       |     3 |       0/3 |
 | p05   | pending       |     4 |       0/4 |
 
-**Total:** 31/40 tasks completed
+**Total:** 33/41 tasks completed
 
 ---
 
@@ -167,8 +167,9 @@ oat_generated: false
 - [x] p03-t09 — Normalize review-chain failures without exceeding the loop cap (`ff245f23`)
 - [x] p03-t10 — Expose first-class OAT browser and visual-review seams (`51601ddf`)
 - [x] p03-t11 — Align core manifests with finalization and archive consumers (`b04b3cd9`)
-- [ ] p03-t12 — Preserve interactive recap package compatibility
-- [ ] p03-t13 — Align the OAT explainer skill version assertion
+- [x] p03-t12 — Preserve interactive recap package compatibility (`e160acd1`)
+- [x] p03-t13 — Align the OAT explainer skill version assertion (`b2e1904c`)
+- [ ] p03-t14 — Preserve incomplete visual-review handoff manifests
 
 ### Phase Implementation Summary
 
@@ -211,6 +212,10 @@ oat_generated: false
 - Root bounded the pre-re-review verification fixes as p03-t12 and p03-t13:
   conditional interactive coverage plus the stale shipped-skill version
   assertion. These remain part of remediation attempt 1/3.
+- p03-t12 and p03-t13 are committed. Root verification passed CLI skill
+  validation 113/113 but exposed five leaf regressions in the Phase p03 union:
+  partial `built-needs-review` handoff evidence was incorrectly treated as a
+  partial successful package. The correction is bounded as p03-t14.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -439,6 +444,12 @@ oat_generated: false
   `git diff --check` passed; Phase p03 union stopped at 206/208
 - Follow-up boundary: p03-t12 and p03-t13 are root-authorized deterministic
   pre-re-review fixes within remediation attempt 1/3
+- Follow-up commits: `e160acd1` (p03-t12) and `b2e1904c` (p03-t13)
+- Root takeover verification: CLI skill validation passed 113/113; Phase p03
+  union passed 202/210 with five leaf failures and three aggregate failures
+- p03-t14 boundary: allow partial evidence only for the terminal
+  `built-needs-review` handoff while retaining strict successful-package
+  coverage
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -460,16 +471,17 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                                                           | Source of Truth                        | Follow-up        |
-| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------------- |
-| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began                                                     | `1151a0d7` and `plan.md`               | p01-t01          |
-| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta                                          | package manifests and bundle script    | p01-t04          |
-| p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps                                                       | p01 review artifact                    | p01-t05, p01-t06 |
-| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`                                                     | root focused test                      | p01-t07          |
-| p02 retry policy      | project state   | One review-remediation retry                       | Up to three bounded retries         | Operator override on 2026-07-28                                                                  | user instruction and `state.md`        | p02-t08–p02-t12  |
-| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                  | Corrected one path; removed one     | Recipe validation has no standalone schema file                                                  | repository file inventory              | p02-t12          |
-| p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other             | Add an external resume token        | A coordinated edit can recompute every mutable projection and hash                               | p02 re-review artifact                 | p02-t13          |
-| p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral          | Add bounded p03-t12 and p03-t13     | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3 | focused phase and CLI validation tests | p03-t12, p03-t13 |
+| Task / Review         | Source Artifact | Planned / Documented                                    | Actual / Accepted                   | Reason                                                                                                             | Source of Truth                        | Follow-up        |
+| --------------------- | --------------- | ------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------------- |
+| import                | imported plan   | Fix notices before PR #179 merges                       | Fix notices immediately after merge | PR #179 was already merged when import began                                                                       | `1151a0d7` and `plan.md`               | p01-t01          |
+| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata      | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta                                                            | package manifests and bundle script    | p01-t04          |
+| p01 code review       | p01 review      | Phase passes after four tasks                           | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps                                                                         | p01 review artifact                    | p01-t05, p01-t06 |
+| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green         | Added bounded p01-t07               | Version-contract test still expected `2.0.0`                                                                       | root focused test                      | p01-t07          |
+| p02 retry policy      | project state   | One review-remediation retry                            | Up to three bounded retries         | Operator override on 2026-07-28                                                                                    | user instruction and `state.md`        | p02-t08–p02-t12  |
+| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                       | Corrected one path; removed one     | Recipe validation has no standalone schema file                                                                    | repository file inventory              | p02-t12          |
+| p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other                  | Add an external resume token        | A coordinated edit can recompute every mutable projection and hash                                                 | p02 re-review artifact                 | p02-t13          |
+| p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral               | Add bounded p03-t12 and p03-t13     | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3                   | focused phase and CLI validation tests | p03-t12, p03-t13 |
+| p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                 | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers | core integration tests                 | p03-t14          |
 
 ## Test Results
 
@@ -483,7 +495,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 40 tasks and the final review._
+_Fill from implementation evidence after all 41 tasks and the final review._
 
 ## References
 

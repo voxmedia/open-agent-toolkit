@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t12
-oat_last_commit: b04b3cd9221db01464a32b2ff33b75471ba98580
+oat_current_task: p03-t14
+oat_last_commit: b2e1904c82d09e5006c31512ff4e9a26e8563436
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -98,7 +98,7 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 40 tasks currently tracked
+- ✓ Five phases / 41 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -150,6 +150,11 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ⧗ Phase p03 union passed 206/208; two interactive-mode regressions are
   bounded as p03-t12
 - ⧗ The stale `oat-explainer-kit@1.0.3` CLI assertion is bounded as p03-t13
+- ✓ p03-t12 and p03-t13 implemented in two atomic commits
+- ✓ CLI skill validation passed 113/113 after p03-t13
+- ⧗ Root Phase p03 verification passed 202/210; five leaf failures show that
+  partial `built-needs-review` evidence needs a distinct handoff coverage tier
+- ⧗ The correction is bounded as p03-t14 within remediation attempt 1/3
 
 ## Blockers
 
@@ -157,5 +162,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t12 and p03-t13 within remediation attempt 1/3, then rerun root
-verification and a fresh narrowed Phase p03 review.
+Execute p03-t14 within remediation attempt 1/3, then rerun root verification
+and a fresh narrowed Phase p03 review.

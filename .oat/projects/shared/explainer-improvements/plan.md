@@ -1113,6 +1113,34 @@ fail-closed in every consumer.
 
 ---
 
+### Task p03-t14: Preserve incomplete visual-review handoff manifests
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED manifest-coverage case for an unattended `built-needs-review`
+   package that retains a deliberately partial first or second review attempt.
+2. Restrict complete visual-review coverage enforcement to successful
+   `built-not-durable` and `built-durable` recap packages.
+3. Preserve partial evidence and structured review errors in
+   `built-needs-review` handoff manifests; finalization and archive consumers
+   continue to reject that terminal outcome before treating it as success.
+4. Keep successful unattended packages and successful packages in either mode
+   with any partially recorded review chain fail-closed.
+5. Rerun records and core integration tests, then the complete Phase p03 union.
+6. Commit as `fix(p03-t14): preserve review handoff manifests`.
+
+**Acceptance:** Review-gate failures remain valid, inspectable
+`built-needs-review` handoffs without weakening immutable coverage for any
+successful package.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams
