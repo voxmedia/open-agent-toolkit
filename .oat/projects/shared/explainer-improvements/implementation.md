@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t15
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    15 |     14/15 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | review_pending |    15 |     15/15 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 34/42 tasks completed
+**Total:** 35/42 tasks completed
 
 ---
 
@@ -170,7 +170,7 @@ oat_generated: false
 - [x] p03-t12 — Preserve interactive recap package compatibility (`e160acd1`)
 - [x] p03-t13 — Align the OAT explainer skill version assertion (`b2e1904c`)
 - [x] p03-t14 — Preserve incomplete visual-review handoff manifests (`339810fe`)
-- [ ] p03-t15 — Align the explainer smoke version assertion
+- [x] p03-t15 — Align the explainer smoke version assertion (`681369ac`)
 
 ### Phase Implementation Summary
 
@@ -220,6 +220,9 @@ oat_generated: false
 - p03-t14 restored the review handoff contract and the complete Phase p03 union
   passed 211/211. Repository checks through build passed; the full test suite
   then found one stale smoke assertion, bounded as p03-t15.
+- p03-t15 aligned the independent smoke assertion. The complete repository
+  suite, all 129 smoke tests, release validation for five packages, and all 65
+  visual measurements passed with a clean worktree.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -459,7 +462,23 @@ oat_generated: false
 - Full-gate continuation: check, lint, format, type-check, and build passed;
   `pnpm test` stopped at 128/129 smoke tests because the wrapper still expected
   adapter version 1.0.3
+- p03-t15 commit: `681369ac`; focused wrapper smoke passed 2/2
+- Final root verification: Phase p03 211/211, all repository tests and 129/129
+  smoke tests passed, and `pnpm release:validate` passed five public packages
+  plus 65 visual measurements
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 10 — Phase p03 remediation re-review
+
+- Request: `explainer-improvements-p03-review-r1-20260728T225000Z`
+- Launch intent: persisted
+- Review-remediation attempt: 1/3
+- Base: `4184b97c76de0fc1d3012ab91793b90e633839de`
+- Reviewed head: `681369ac9cab9004494468b61b914f82bee2fc23`
+- Source artifact: `reviews/20260728-p03-code-review.md`
+- Planned artifact: `reviews/20260728-p03-code-review-r1.md`
+- Scope: original Phase p03 blocking findings and p03-t06 through p03-t15
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -495,13 +514,13 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run                                                       | Passed | Failed | Coverage                |
-| ----- | --------------------------------------------------------------- | -----: | -----: | ----------------------- |
-| p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed |
-| p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed |
-| p03   | focused union, full suite, release validation                   |    365 |      0 | Phase acceptance passed |
-| p04   | -                                                               |      - |      - | -                       |
-| p05   | -                                                               |      - |      - | -                       |
+| Phase | Tests Run                                                       | Passed | Failed | Coverage                        |
+| ----- | --------------------------------------------------------------- | -----: | -----: | ------------------------------- |
+| p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed         |
+| p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed         |
+| p03   | focused union, full suite, smoke, release validation            |    211 |      0 | Remediation verification passed |
+| p04   | -                                                               |      - |      - | -                               |
+| p05   | -                                                               |      - |      - | -                               |
 
 ## Final Summary (for PR/docs)
 

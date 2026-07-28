@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t15
-oat_last_commit: 339810fe66f61706dc642d7727386ee3e2355943
+oat_current_task: p04-t01
+oat_last_commit: 681369ac9cab9004494468b61b914f82bee2fc23
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 review remediation attempt 1 of 3 pending
+Phase p03 remediation re-review attempt 1 of 3 pending
 
 ## Artifacts
 
@@ -159,6 +159,12 @@ Phase p03 review remediation attempt 1 of 3 pending
 - ✓ Repository check, lint, format, type-check, and build gates passed
 - ⧗ Full tests passed package tests but stopped at 128/129 smoke tests on a
   stale adapter version assertion, bounded as p03-t15
+- ✓ p03-t15 committed and the focused wrapper smoke passed 2/2
+- ✓ Complete Phase p03 union passed 211/211
+- ✓ Repository check, lint, format, type-check, build, and full test gates
+  passed, including 129/129 smoke tests
+- ✓ Release validation passed five public packages and 65 visual measurements
+- ⧗ Fresh narrowed Phase p03 re-review is ready to launch
 
 ## Blockers
 
@@ -166,5 +172,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t15 within remediation attempt 1/3, then resume root verification
-and a fresh narrowed Phase p03 review.
+Run the fresh narrowed Phase p03 re-review. If it passes, close Phase p03 and
+continue directly to p04-t01.
