@@ -733,8 +733,8 @@ describe('validateOatSkills', () => {
 
   it('tracks the current explainer skill family versions', async () => {
     for (const [skillName, expectedVersion] of [
-      ['explainer-kit', '2.0.1'],
-      ['oat-explainer-kit', '1.0.2'],
+      ['explainer-kit', '2.0.2'],
+      ['oat-explainer-kit', '1.0.3'],
     ]) {
       const content = await readRepoFile(
         `.agents/skills/${skillName}/SKILL.md`,
