@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p05-t01
+oat_current_task_id: p06-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -27,10 +27,10 @@ oat_template_name: implementation
 | p02   | completed   | 3     | 3/3       |
 | p03   | completed   | 2     | 2/2       |
 | p04   | completed   | 1     | 1/1       |
-| p05   | in_progress | 1     | 0/1       |
-| p06   | pending     | 3     | 0/3       |
+| p05   | completed   | 1     | 1/1       |
+| p06   | in_progress | 3     | 0/3       |
 
-**Total:** 9/13 tasks completed
+**Total:** 10/13 tasks completed
 
 ---
 
@@ -248,13 +248,49 @@ diff hygiene, and final narrowed re-review passed.
 
 ## Phase 5: Config default flip
 
-**Status:** pending
-**Started:** -
+**Status:** completed
+**Started:** 2026-07-28
+**Completed:** 2026-07-28
+
+### Phase Summary
+
+- Changed the resolved default for `workflow.autoNarrowReReviewScope` to
+  enabled while preserving explicit false and true at every config layer.
+- Updated config metadata to describe enabled-by-default behavior and the false
+  opt-out without unset-prompt language.
+- Restored the required generated autonomy prompt inventory after full-suite
+  verification exposed stale mappings from Phase 3 prompt removal.
+- Standard review and the configured independent cross-family gate passed.
 
 ### Task p05-t01: Default the preference to narrow
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `7ca0c75bf83ad4764fb236ce0a044d35e3a9ec10`
+
+**Outcome:** Unconfigured resolution now returns true from the default source;
+explicit layered values and unrelated defaults retain their prior behavior.
+
+**Consistency correction:** `e9b6ffe0afc37c99959431c59f1031edf0b0c3a8`
+removed five stale prompt-site mappings from the generated autonomy inventory,
+as required by the Phase 3 prompt removal.
+
+**Verification:** 191 focused config/inventory tests and all 3,429 CLI tests
+passed; lint, type-check, formatting, diff hygiene, standard review, and the
+independent phase gate passed.
+
+### Passing Gate Judgment Sweep
+
+**Date:** 2026-07-28
+**Review artifact:**
+`reviews/archived/p05-review-2026-07-28T230930Z.md`
+
+**Findings:** 0 Critical, 0 Important, 0 Medium, 1 Minor.
+
+- **m1 — Catalog env-precedence wording:** Deferred to final disposition. The
+  edited entry repeats a pre-existing inaccurate `env >` prefix shared by five
+  sibling catalog entries, while this key has no environment override. Fixing
+  only this entry would increase inconsistency; a catalog-wide sweep is the
+  correct follow-up and runtime resolution is unaffected.
 
 ---
 
@@ -398,6 +434,32 @@ diff hygiene, and final narrowed re-review passed.
 
 **Outstanding items:** none.
 
+### Run 5 — Phase p05
+
+**Date:** 2026-07-28
+**Outcome:** passed
+**Phase base:** `e517d3b35681034da905ced73e12a7408c110d61`
+**Implementation head:** `e9b6ffe0afc37c99959431c59f1031edf0b0c3a8`
+**Final reviewed head:** `d1e3cd6fef90227c9e1ddaf2c7d5cdd938e548ff`
+**Fix iterations:** 0
+
+| Task    | Commit                                     | Result |
+| ------- | ------------------------------------------ | ------ |
+| p05-t01 | `7ca0c75bf83ad4764fb236ce0a044d35e3a9ec10` | passed |
+
+**Root review:**
+`reviews/archived/p05-review-2026-07-28T230108Z.md`
+
+**Passing phase gate:**
+`reviews/archived/p05-review-2026-07-28T230930Z.md`
+(1 Minor deferred to final)
+
+**Gate diversity:** producer family OpenAI; reviewer family Claude via
+`cursor-fable-5-xhigh`.
+
+**Outstanding items:** m1 is registered under Deferred Findings for final
+disposition.
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -424,7 +486,10 @@ diff hygiene, and final narrowed re-review passed.
 - [x] p04-t01: Align both remote provide skills — `8df5b27cf`
 - [x] p04 marker-lineage/discovery fix — `942458eb2`
 - [x] p04 diagnostic initialization fix — `6fed0cf0b`
-- [ ] p05-t01: Default the preference to narrow
+- [x] p05-t01: Default the preference to narrow — `7ca0c75bf`
+- [x] p05 autonomy inventory correction — `e9b6ffe0a`
+- [x] p05 lifecycle review and independent phase gate passed
+- [ ] p06-t01: Update documentation
 
 **Decisions:**
 
@@ -438,6 +503,8 @@ diff hygiene, and final narrowed re-review passed.
   re-review.
 - Phase 4 required two bounded Important-finding fix rounds and then passed
   final narrowed re-review.
+- Phase 5 passed standard review and its independent gate; one pre-existing
+  catalog wording Minor is deferred to final disposition.
 
 ---
 
@@ -449,11 +516,17 @@ diff hygiene, and final narrowed re-review passed.
 | p02-M2 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Parse known provenance columns by header name rather than fixed position.                 | Canonical tables retain the expected order; ambiguous provenance fails open.                                                      | Final review Step 8.5 |
 | p02-M3 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Apply the ledger widening/preservation contract to the clean remote-receive path.         | Bounded contract gap with safe fail-open behavior; resolve with assertion coverage.                                               | Final review Step 8.5 |
 
+## Deferred Findings
+
+| ID     | Severity | Source                                              | Finding                                                                                  | Deferral rationale                                                                                          | Final trigger           |
+| ------ | -------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------- |
+| p05-m1 | Minor    | `reviews/archived/p05-review-2026-07-28T230930Z.md` | Config catalog claims an env precedence layer unavailable to this key and five siblings. | Runtime behavior is correct; a catalog-wide wording sweep avoids making the shared pattern less consistent. | Final minor disposition |
+
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review                   | Source Artifact                                               | Planned / Documented                                | Actual / Accepted                                                    | Reason                                                                                          | Source of Truth                             | Follow-up              |
+| ------------------------------- | ------------------------------------------------------------- | --------------------------------------------------- | -------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- | ------------------------------------------- | ---------------------- |
+| p03 boundary cleanup correction | `packages/cli/src/validation/autonomy-gate-inventory.test.ts` | Net Phase 3 diff limited to the declared skill file | Generated autonomy inventory also removes five stale prompt mappings | Full CLI verification proved the generated evidence is a required consequence of prompt removal | Canonical skill plus passing inventory test | Restored in `e9b6ffe0` |
 
 ## Test Results
 
@@ -463,7 +536,7 @@ diff hygiene, and final narrowed re-review passed.
 | p02   | Focused + full package suites, lint, type-check, format, reviews, gate | 3,480  | 0      | Provenance artifacts, ledger compatibility, durable-lineage fail-open |
 | p03   | Focused semantic + skill-contract tests, format, diff, reviews         | 63     | 0      | Local precedence, lineage, guards, classification, Tier 3             |
 | p04   | Focused parser/builder/narrowing/integration/contract suites + checks  | 241    | 0      | Remote provenance, gates, discovery fallback, diagnostics             |
-| p05   | -                                                                      | -      | -      | -                                                                     |
+| p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory    |
 | p06   | -                                                                      | -      | -      | -                                                                     |
 
 ## Final Summary (for PR/docs)

@@ -68,6 +68,10 @@ Phase passed after two bounded Important-finding fix rounds; passing review: rev
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:0,minor:1 exit=0 status=ok artifact=.oat/projects/shared/rereview-scope-narrowing/reviews/p05-review-2026-07-28T230930Z.md
 
+### 2026-07-28 · project · friction · Phase 3 autonomy inventory boundary
+
+The Phase 3 boundary cleanup reverted a generated prompt-inventory update that the full CLI suite requires. The stale five-entry mapping was restored in e9b6ffe0 after the focused inventory test reproduced the failure; generated autonomy evidence must be treated as a required consequence of prompt-path edits.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
