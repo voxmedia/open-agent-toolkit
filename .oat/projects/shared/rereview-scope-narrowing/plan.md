@@ -231,33 +231,106 @@ git commit -m "feat(p02-t01): record reviewed head and narrowing provenance on r
 
 ---
 
-### Task p02-t02: Carry the reviewed head on the tracked plan review row
+### Task p02-t02: Migrate the review ledger to carry lineage-qualified provenance
 
 **Files:**
 
+- Modify: `packages/control-plane/src/state/reviews.ts`
+- Modify: `packages/control-plane/src/state/reviews.test.ts`
+- Modify: `packages/control-plane/src/types.ts`
+- Modify: `packages/control-plane/README.md`
 - Modify: `.oat/templates/plan.md`
 - Modify: `.agents/skills/oat-project-review-receive/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-receive-remote/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 
-**Step 1: Change**
+**Step 1: Write test (RED)**
 
-Add a reviewed-head column to the plan Reviews table in the template. Update the review-receive contract so that when it records a review outcome it also writes the reviewed head into that row.
+The parser is the blocking constraint and must move first. `parseTableRow` currently returns `null` unless the row has exactly five cells, and additionally rejects any empty cell, so widening the table without changing the parser would make **every** row unparseable and silently present an empty review ledger to `oat project status` and everything routing off it.
 
-Preserve the existing rule that review rows are never deleted; adding a column must not invalidate previously written rows, which will simply carry an empty value.
+Add tests covering:
 
-Bump `oat-project-review-receive` frontmatter `version: 1.5.9` → `1.6.0`.
+- an existing five-column row still parses unchanged, with the new fields absent
+- a widened row parses, exposing the reviewed head and the lineage qualifier
+- a widened row with empty new cells parses, treating the new fields as absent rather than malformed
+- a reviewed head that is not a full 40-character SHA is rejected as absent rather than accepted
+- row count and ordering are unchanged for a mixed table containing both shapes
 
-**Step 2: Verify**
+Run: `pnpm --filter @open-agent-toolkit/control-plane exec vitest run src/state/reviews.test.ts`
+Expected: New tests fail (RED); existing tests pass.
 
-Confirm an existing plan with the old five-column table still parses under the documented preservation rule and that a missing reviewed head reads as absent rather than malformed.
+**Step 2: Implement (GREEN)**
 
-Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-receive/SKILL.md'`
-Expected: No formatting diff
+Widen the parser to accept both shapes rather than a fixed cell count, and make the new cells optional. Extend the public `ReviewStatus` type with the new optional fields and update `README.md`, since this is a published package's public surface.
 
-**Step 3: Commit**
+Persist **lineage**, not just the reviewed head. A bare head cannot distinguish a lifecycle review from a gate review, nor one gate target from another. Because the durable row exists precisely for the case where the artifact has been archived, a head-only row would let a re-review inherit a lifecycle or different-target baseline and quietly break the independence guarantee in Decision 9 — defeating the guarantee in exactly the situation the row was added to protect. Record the invocation kind and, for gate reviews, the gate target alongside the head.
+
+Then widen the template table and update every canonical ledger writer — local receive, remote receive, and provide — to populate or preserve the new cells rather than rewriting rows back to five columns.
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane test && pnpm --filter @open-agent-toolkit/cli test`
+Expected: All tests pass (GREEN).
+
+**Step 3: Refactor**
+
+Keep the preservation rule intact: rows are never deleted, and a writer that does not understand a cell must leave it alone rather than blank it.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/control-plane lint && pnpm --filter @open-agent-toolkit/control-plane type-check && pnpm format`
+Expected: No errors, no formatting diff
+
+Bump `oat-project-review-receive` `1.5.9` → `1.6.0`, `oat-project-review-receive-remote` `1.4.2` → `1.5.0`, and `oat-project-review-provide` `1.3.22` → `1.4.0`. Where a skill is also edited in a later phase, the branch still carries exactly one bump per skill.
+
+**Step 5: Commit**
 
 ```bash
-git add .oat/templates/plan.md .agents/skills/oat-project-review-receive/SKILL.md
-git commit -m "feat(p02-t02): persist reviewed head on the tracked plan review row"
+git add packages/control-plane/ .oat/templates/plan.md .agents/skills/
+git commit -m "feat(p02-t02): migrate review ledger to lineage-qualified provenance"
+```
+
+---
+
+### Task p02-t03: Fail open when durable lineage cannot be established
+
+**Files:**
+
+- Modify: `packages/cli/src/review-remote/narrowing.ts`
+- Modify: `packages/cli/src/review-remote/narrowing.test.ts`
+
+**Step 1: Write test (RED)**
+
+With the artifact archived or absent, and only the tracked row available:
+
+- a lifecycle row is not eligible for a gate invocation, and falls back to full scope
+- a gate row from a different target is not eligible, and falls back to full scope
+- a gate row from the same target is eligible and narrows
+- a gate row is not eligible for a lifecycle invocation
+- a legacy row carrying a head but no lineage qualifier falls back to full scope rather than being assumed to match
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: New tests fail (RED).
+
+**Step 2: Implement (GREEN)**
+
+Apply the p01-t01 lineage predicate to row-sourced prior reviews on the same terms as artifact-sourced ones. Unknown lineage is not a match.
+
+Run: `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/narrowing.test.ts`
+Expected: All tests pass (GREEN).
+
+**Step 3: Refactor**
+
+Ensure artifact-sourced and row-sourced candidates run through one predicate, so the two paths cannot drift.
+
+**Step 4: Verify**
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm --filter @open-agent-toolkit/cli lint && pnpm --filter @open-agent-toolkit/cli type-check`
+Expected: No errors
+
+**Step 5: Commit**
+
+```bash
+git add packages/cli/src/review-remote/
+git commit -m "feat(p02-t03): fail open when durable lineage cannot be established"
 ```
 
 ---
@@ -309,7 +382,7 @@ git commit -m "fix(p03-t01): narrow local re-reviews from guarded prior reviewed
 
 Remove the interactive confirm from the re-review path. Print one resolution line stating the resolved range, its classification (empty, bookkeeping-only, or substantive), and the reason narrowing applied or did not.
 
-Note in the same step that explicit scope tokens remain the per-invocation full-scope escape hatch, so no capability is lost with the prompt.
+State the escape hatch precisely, because a loose reading disables the feature. Only an explicitly supplied base commit (`base_sha=<sha>`) or an explicit `<sha1>..<sha2>` range overrides automatic narrowing. Nominal scope identifiers — `pNN`, `pNN-pMM`, `final`, and task IDs — do **not** override it and remain eligible for narrowing. Every ordinary re-review supplies a nominal identifier, so treating those as an override would bypass narrowing on every invocation and defeat the change entirely. With that distinction stated, no capability is lost by removing the prompt.
 
 Add the narrowed-artifact disclosure requirement from p02-t01 to the reviewer payload this skill builds, so a narrowed review is told to name the prior artifact it builds on.
 
@@ -342,13 +415,21 @@ git commit -m "feat(p03-t02): drop the local re-review prompt and report the res
 
 **Step 1: Change**
 
-Change the documented preference handling so unset narrows without prompting and only `false` forces full scope. Keep the existing per-invocation narrowing flags. Add the range classification to the reported narrowing decision. Add the lineage restriction to the prior-review filter.
+Change the documented preference handling so unset narrows without prompting and only `false` forces full scope. Keep the existing per-invocation narrowing flags. Add the range classification to the reported narrowing decision. Add the lineage restriction to each rail's prior-review filter.
+
+Preserve the rails' actual provenance ownership rather than forcing local lifecycle storage onto them:
+
+- the project remote rail resolves prior reviewed heads from target-qualified GitHub review marker blocks for the same project and scope
+- the ad-hoc remote rail resolves them from ad-hoc GitHub review marker blocks and has no project-plan fallback
+- neither remote rail writes or reads the local lifecycle Reviews table merely to satisfy parity with the local rail
+
+The shared helper semantics begin after a rail has supplied a candidate prior review. Candidate discovery remains rail-specific.
 
 Bump frontmatter versions: `oat-project-review-provide-remote` `1.0.4` → `1.1.0`, `oat-review-provide-remote` `1.0.3` → `1.1.0`.
 
 **Step 2: Verify**
 
-Diff the narrowing prose in both skills against `narrowing.ts` and against the local rail's new Step 3a. All three must describe the same guard, the same resolution order, and the same classification vocabulary.
+Diff the narrowing prose in both skills against `narrowing.ts` and against the local rail's new Step 3a. All three must describe the same lineage match, existence/ancestry guard, fallback reasons, classification vocabulary, and preference behavior. Do **not** require the same provenance resolution order: local lifecycle reviews use artifacts plus the tracked plan row, project/ad-hoc remote reviews use their own GitHub marker blocks, and configured gates use target-qualified gate-owned state.
 
 Run: `pnpm exec oxfmt --check '.agents/skills/oat-project-review-provide-remote/SKILL.md' '.agents/skills/oat-review-provide-remote/SKILL.md'`
 Expected: No formatting diff
@@ -440,7 +521,55 @@ git commit -m "docs(p06-t01): document default re-review narrowing and guard sem
 
 ---
 
-### Task p06-t02: Refresh provider views, bump versions, validate release
+### Task p06-t02: Verify cross-surface semantic parity
+
+**Files:**
+
+- Read-only across: `packages/cli/src/review-remote/narrowing.ts`, `.agents/skills/oat-project-review-provide/SKILL.md`, `.agents/skills/oat-project-review-provide-remote/SKILL.md`, `.agents/skills/oat-review-provide-remote/SKILL.md`
+- Modify: only whichever canonical/source surface is found to disagree
+
+**Step 1: Change**
+
+No planned edit. This task exists because the repository documents that the helper modules and skill prose mirror each other with no test enforcing agreement, and this change edits all four surfaces. Each earlier task checked itself against the module in isolation; this task checks the finished canonical surfaces together before generated provider views or release validation are produced.
+
+**Step 2: Verify**
+
+Confirm all four surfaces agree on the shared narrowing semantics, and correct only the canonical/source files that disagree:
+
+- lineage matching, including that a configured gate narrows only from its own prior run on the same target and scope
+- existence and ancestry guards
+- explicit force-narrow turns guard failure into a hard error; the default path fails open to full scope with a reason
+- classification vocabulary (`empty`, `bookkeeping-only`, `substantive`) and the rule that classification never gates, skips, or shortens a review
+- unset and `true` both narrow, and only `false` forces full scope
+- nominal task/phase/final scope identifiers remain eligible for narrowing, while `base_sha=<sha>` and an explicit SHA range override it
+
+Verify provenance **by rail**, not as one shared resolution order:
+
+- local lifecycle rail: review artifact, then lineage-qualified tracked Reviews row, then full scope
+- project remote rail: same-project/same-scope GitHub review marker blocks
+- ad-hoc remote rail: ad-hoc GitHub review marker blocks with no project key
+- configured gate rail: target-qualified gate-owned state/artifacts
+
+No rail may inherit another rail's coverage merely because a reviewed head exists.
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm format`
+Expected: No errors, no formatting diff
+
+**Step 3: Commit**
+
+Create a commit only if reconciliation changed a source surface. Stage exactly the files changed by this task, not the entire `.agents/` tree.
+
+```bash
+git add packages/cli/src/review-remote/narrowing.ts packages/cli/src/review-remote/narrowing.test.ts
+git add .agents/skills/oat-project-review-provide/SKILL.md
+git add .agents/skills/oat-project-review-provide-remote/SKILL.md
+git add .agents/skills/oat-review-provide-remote/SKILL.md
+git diff --cached --quiet || git commit -m "chore(p06-t02): reconcile narrowing semantics across module and rails"
+```
+
+---
+
+### Task p06-t03: Refresh provider views, bump versions, validate release
 
 **Files:**
 
@@ -449,62 +578,40 @@ git commit -m "docs(p06-t01): document default re-review narrowing and guard sem
 - Modify: `packages/docs-config/package.json`
 - Modify: `packages/docs-theme/package.json`
 - Modify: `packages/docs-transforms/package.json`
-- Modify: generated provider skill views under `.claude/`, `.cursor/`, `.codex/`
+- Modify: `pnpm-lock.yaml`
+- Modify: generated provider views corresponding to the canonical reviewer agent and review skills changed by this plan
 
 **Step 1: Change**
 
-Refresh provider-linked views from the canonical sources, then bump all five public packages together from `0.2.19` to the next version. Both the CLI source changes and the bundled asset changes under `.agents/` and `.oat/templates/` independently require this lockstep bump.
+After p06-t02 has reconciled all canonical surfaces, refresh provider-linked views and bump all five public packages together from their then-current version to the next version. Both the CLI source changes and bundled asset changes under `.agents/` and `.oat/templates/` independently require the lockstep bump.
 
 Run: `oat sync --scope all`
 
 **Step 2: Verify**
 
-Confirm each changed canonical skill and the reviewer agent carry exactly one frontmatter version increment across the final branch diff, and that provider views match their canonical sources.
+Confirm each changed canonical skill and reviewer agent carries exactly one frontmatter version increment across the final branch diff, and that every generated provider view matches its canonical source. Because this is the last task, no later task may edit canonical assets or shipped source without repeating sync and release validation.
 
 Run: `pnpm build && pnpm test && pnpm lint && pnpm type-check && pnpm format && pnpm release:validate`
 Expected: All pass. This is the definition of done for publishable package changes.
 
 **Step 3: Commit**
 
-Stage named paths rather than everything, so an unrelated working-tree change cannot ride into the release commit.
+Stage the five lockstep manifests explicitly. Then inspect `git diff --name-only` and stage only the lockfile and generated provider-view paths produced for the changed canonical assets; do not stage whole provider directories.
 
 ```bash
-git add packages/*/package.json .claude/ .cursor/ .codex/ pnpm-lock.yaml
-git commit -m "chore(p06-t02): sync provider views and bump public packages"
-```
-
----
-
-### Task p06-t03: Verify cross-surface parity
-
-**Files:**
-
-- Read-only across: `packages/cli/src/review-remote/narrowing.ts`, `.agents/skills/oat-project-review-provide/SKILL.md`, `.agents/skills/oat-project-review-provide-remote/SKILL.md`, `.agents/skills/oat-review-provide-remote/SKILL.md`
-- Modify: only whichever surface is found to disagree
-
-**Step 1: Change**
-
-No planned edit. This task exists because the repository documents that the helper modules and the skill prose mirror each other with no test enforcing agreement, and this change edits all four surfaces. Each earlier task checked itself against the module in isolation; nothing has yet checked them against each other after every edit landed.
-
-**Step 2: Verify**
-
-Confirm all four surfaces describe the same behavior on each of these points, and correct any that disagree:
-
-- the provenance resolution order (artifact, then tracked plan row, then full scope)
-- the lineage restriction, including that a gate narrows only from its own prior run on the same target
-- the existence and ancestry guard, and that explicit force-narrow turns guard failure into a hard error while the default path falls back to full scope
-- the fail-open conditions, including disagreement between provenance sources
-- the classification vocabulary (`empty`, `bookkeeping-only`, `substantive`) and that classification never gates or shortens a review
-- that unset and `true` both narrow, and only `false` forces full scope
-
-Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm format`
-Expected: No errors, no formatting diff
-
-**Step 3: Commit**
-
-```bash
-git add packages/cli/src/review-remote/ .agents/
-git commit -m "chore(p06-t03): reconcile narrowing semantics across module and rails"
+git add packages/cli/package.json
+git add packages/control-plane/package.json
+git add packages/docs-config/package.json
+git add packages/docs-theme/package.json
+git add packages/docs-transforms/package.json
+git add pnpm-lock.yaml
+git add .claude/agents/oat-reviewer.md .cursor/agents/oat-reviewer.md
+git add .claude/skills/oat-project-review-provide/SKILL.md .cursor/skills/oat-project-review-provide/SKILL.md
+git add .claude/skills/oat-project-review-provide-remote/SKILL.md .cursor/skills/oat-project-review-provide-remote/SKILL.md
+git add .claude/skills/oat-project-review-receive/SKILL.md .cursor/skills/oat-project-review-receive/SKILL.md
+git add .claude/skills/oat-project-review-receive-remote/SKILL.md .cursor/skills/oat-project-review-receive-remote/SKILL.md
+git add .claude/skills/oat-review-provide-remote/SKILL.md .cursor/skills/oat-review-provide-remote/SKILL.md
+git commit -m "chore(p06-t03): sync provider views and bump public packages"
 ```
 
 ---
@@ -513,19 +620,19 @@ git commit -m "chore(p06-t03): reconcile narrowing semantics across module and r
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope  | Type     | Status   | Date       | Artifact                                           |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                  |
-| p02    | code     | pending  | -          | -                                                  |
-| p03    | code     | pending  | -          | -                                                  |
-| p04    | code     | pending  | -          | -                                                  |
-| p05    | code     | pending  | -          | -                                                  |
-| p06    | code     | pending  | -          | -                                                  |
-| final  | code     | pending  | -          | -                                                  |
-| plan   | artifact | passed   | 2026-07-27 | inline (structured)                                |
-| spec   | artifact | n/a      | -          | -                                                  |
-| design | artifact | n/a      | -          | -                                                  |
-| plan   | artifact | received | 2026-07-28 | reviews/artifact-plan-review-2026-07-28T004222Z.md |
+| Scope  | Type     | Status   | Date       | Artifact                                                    |
+| ------ | -------- | -------- | ---------- | ----------------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                           |
+| p02    | code     | pending  | -          | -                                                           |
+| p03    | code     | pending  | -          | -                                                           |
+| p04    | code     | pending  | -          | -                                                           |
+| p05    | code     | pending  | -          | -                                                           |
+| p06    | code     | pending  | -          | -                                                           |
+| final  | code     | pending  | -          | -                                                           |
+| plan   | artifact | passed   | 2026-07-27 | inline (structured)                                         |
+| spec   | artifact | n/a      | -          | -                                                           |
+| design | artifact | n/a      | -          | -                                                           |
+| plan   | artifact | received | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
@@ -545,13 +652,13 @@ git commit -m "chore(p06-t03): reconcile narrowing semantics across module and r
 **Summary:**
 
 - Phase 1: 3 tasks - canonical range resolution (lineage, default narrowing, classification)
-- Phase 2: 2 tasks - durable reviewed-head provenance and narrowed-artifact disclosure
+- Phase 2: 3 tasks - durable lineage-qualified provenance, ledger migration, and narrowed-artifact disclosure
 - Phase 3: 2 tasks - local rail rewritten onto guarded prior-head ranges
 - Phase 4: 1 task - remote rails aligned
 - Phase 5: 1 task - config default flipped to narrow
 - Phase 6: 3 tasks - documentation, provider sync and lockstep version bump, cross-surface parity verification
 
-**Total: 12 tasks**
+**Total: 13 tasks**
 
 Ready for code review and merge.
 
