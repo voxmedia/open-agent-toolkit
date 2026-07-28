@@ -52,11 +52,15 @@ describe('archive utils', () => {
     projectPath: string,
     {
       distinctCanonicalHashes = false,
+      includeReviewEvidence,
+      mode = 'unattended',
       outcome = 'built-not-durable',
       recipeId = 'project-recap',
       runName = 'selected-run',
     }: {
       distinctCanonicalHashes?: boolean;
+      includeReviewEvidence?: boolean;
+      mode?: 'interactive' | 'unattended';
       outcome?:
         | 'built-not-durable'
         | 'built-needs-review'
@@ -74,7 +78,7 @@ describe('archive utils', () => {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
     const files: Record<string, string> = {
-      'run-request.json': '{"mode":"unattended"}\n',
+      'run-request.json': `${JSON.stringify({ mode })}\n`,
       'source/fact-base.json': '{"claims":[]}\n',
       'source/fact-base.md': '# Facts\n',
       'source/content-approval.json': '{"status":"approved"}\n',
@@ -90,11 +94,16 @@ describe('archive utils', () => {
         'source/set-plan/ledger.json',
         'source/set-plan/portfolio.json',
         'source/set-plan/drafts.json',
-        'qa/visual-review/attempt-1/request.json',
-        'qa/visual-review/attempt-1/result.json',
       ]) {
         files[path] = '{}\n';
       }
+    }
+    const retainReviewEvidence =
+      includeReviewEvidence ??
+      (mode === 'unattended' && outcome === 'built-not-durable');
+    if (retainReviewEvidence) {
+      files['qa/visual-review/attempt-1/request.json'] = '{}\n';
+      files['qa/visual-review/attempt-1/result.json'] = '{}\n';
       for (const viewport of ['mobile', 'tablet', 'desktop']) {
         files[`qa/browser/recap/${viewport}.png`] = `png-${viewport}\n`;
         files[`qa/browser/recap/${viewport}.json`] = '{}\n';
@@ -445,6 +454,100 @@ describe('archive utils', () => {
       recap.immutableCount,
     );
     await expect(access(projectPath)).rejects.toThrow();
+  });
+
+  it('archives a successful interactive recap without visual-review evidence', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      mode: 'interactive',
+    });
+
+    const result = await archiveProjectOnCompletion(
+      {
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      },
+      { timestamp: () => '2026-04-01T12:34:56Z' },
+    );
+
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
+    await expect(access(projectPath)).rejects.toThrow();
+  });
+
+  it('rejects partial interactive review evidence and an unverified mode change', async () => {
+    const repoRoot = await createRepoRoot();
+    const partialProject = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'partial',
+    );
+    await mkdir(partialProject, { recursive: true });
+    const partial = await createRecapPackage(partialProject, {
+      mode: 'interactive',
+    });
+    const partialPath = 'qa/browser/recap/mobile.png';
+    const partialContents = 'partial\n';
+    await mkdir(dirname(join(partial.runRoot, partialPath)), {
+      recursive: true,
+    });
+    await writeFile(join(partial.runRoot, partialPath), partialContents);
+    const partialManifest = JSON.parse(
+      await readFile(partial.manifestPath, 'utf8'),
+    ) as { immutableHashes: Record<string, string> };
+    partialManifest.immutableHashes[partialPath] =
+      `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
+    await writeFile(
+      partial.manifestPath,
+      `${JSON.stringify(partialManifest)}\n`,
+    );
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath: partialProject,
+        projectName: 'partial',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: partial.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(
+      /incomplete visual-review evidence chain|screenshot evidence.*missing.*metrics/i,
+    );
+
+    const mutatedProject = join(
+      repoRoot,
+      '.oat',
+      'projects',
+      'shared',
+      'mutated',
+    );
+    await mkdir(mutatedProject, { recursive: true });
+    const mutated = await createRecapPackage(mutatedProject);
+    await writeFile(
+      join(mutated.runRoot, 'run-request.json'),
+      '{"mode":"interactive"}\n',
+    );
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath: mutatedProject,
+        projectName: 'mutated',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: mutated.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
   });
 
   it('preserves existing behavior when no recap run is selected', async () => {

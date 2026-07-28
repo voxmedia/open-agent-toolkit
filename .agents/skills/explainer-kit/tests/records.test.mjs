@@ -236,7 +236,7 @@ test('retains structured partial evidence for a failed visual review attempt', a
   );
 });
 
-test('defines canonical successful recap coverage while allowing immutable extras', () => {
+test('defines mode-aware successful recap coverage while allowing immutable extras', () => {
   const recap = {
     recipe: { id: 'project-recap' },
     outcome: 'built-not-durable',
@@ -258,7 +258,9 @@ test('defines canonical successful recap coverage while allowing immutable extra
     },
   };
 
-  const required = requiredImmutablePackagePaths(recap);
+  const required = requiredImmutablePackagePaths(recap, {
+    runMode: 'unattended',
+  });
   for (const path of [
     'source/set-plan/request.json',
     'source/set-plan/result.json',
@@ -276,6 +278,40 @@ test('defines canonical successful recap coverage while allowing immutable extra
     assert.ok(required.includes(path), path);
   }
   assert.equal(required.includes('qa/custom-observation.json'), false);
+
+  const interactive = requiredImmutablePackagePaths(recap, {
+    runMode: 'interactive',
+  });
+  assert.ok(interactive.includes('source/set-plan/request.json'));
+  assert.equal(
+    interactive.some(
+      (path) =>
+        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+    ),
+    false,
+  );
+
+  recap.immutableHashes['qa/browser/project-recap/mobile.png'] = HASH;
+  const partialInteractive = requiredImmutablePackagePaths(recap, {
+    runMode: 'interactive',
+  });
+  assert.ok(
+    partialInteractive.includes('qa/visual-review/attempt-1/result.json'),
+  );
+  assert.ok(
+    partialInteractive.includes('qa/browser/project-recap/desktop.json'),
+  );
+
+  recap.immutableHashes['qa/visual-review/attempt-2/result.json'] = HASH;
+  const correctedInteractive = requiredImmutablePackagePaths(recap, {
+    runMode: 'interactive',
+  });
+  assert.ok(correctedInteractive.includes('qa/visual-review/revision.json'));
+  assert.ok(
+    correctedInteractive.includes(
+      'qa/visual-review/attempt-2/evidence/project-recap/tablet.png',
+    ),
+  );
 });
 
 test('computes built-needs-review from a terminal recap review gate', async () => {

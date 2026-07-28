@@ -388,13 +388,17 @@ export async function writeManifestAtomic(run, manifest) {
   }
 
   const buildRecord = JSON.parse(await readFile(run.buildRecordPath, 'utf8'));
-  assertImmutablePackageCoverage(manifest);
+  const runMode =
+    manifest.recipe?.id === 'project-recap'
+      ? await verifiedRunRequestMode(run, manifest)
+      : undefined;
+  assertImmutablePackageCoverage(manifest, { runMode });
   assertValidContract('manifest', manifest, { buildRecord });
   await writeJsonAtomic(run.runRoot, 'manifest.json', manifest);
   return run.manifestPath;
 }
 
-export function requiredImmutablePackagePaths(manifest) {
+export function requiredImmutablePackagePaths(manifest, { runMode } = {}) {
   if (!isObject(manifest)) {
     throw new TypeError(
       'Manifest package coverage requires a manifest object.',
@@ -420,27 +424,38 @@ export function requiredImmutablePackagePaths(manifest) {
   const successfulRecap =
     manifest.recipe?.id === 'project-recap' &&
     ['built-not-durable', 'built-durable'].includes(manifest.outcome);
-  if (!successfulRecap) return [...required];
-
-  for (const path of RECAP_SET_PLAN_PATHS) required.add(path);
-  addVisualReviewAttemptPaths(required, manifest, 1);
   const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
+  const retainsReviewEvidence = [...recorded].some(
+    (path) =>
+      path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+  );
+  if (successfulRecap) {
+    for (const path of RECAP_SET_PLAN_PATHS) required.add(path);
+  }
   if (
-    recorded.has(VISUAL_REVISION_PATH) ||
-    [...recorded].some((path) => path.startsWith('qa/visual-review/attempt-2/'))
+    manifest.recipe?.id === 'project-recap' &&
+    ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence)
   ) {
+    addVisualReviewAttemptPaths(required, manifest, 1);
+  }
+  const retainsSecondAttempt =
+    recorded.has(VISUAL_REVISION_PATH) ||
+    [...recorded].some((path) =>
+      path.startsWith('qa/visual-review/attempt-2/'),
+    );
+  if (manifest.recipe?.id === 'project-recap' && retainsSecondAttempt) {
     required.add(VISUAL_REVISION_PATH);
     addVisualReviewAttemptPaths(required, manifest, 2);
   }
   return [...required];
 }
 
-function assertImmutablePackageCoverage(manifest) {
+function assertImmutablePackageCoverage(manifest, options) {
   const recorded = manifest.immutableHashes;
   if (!isObject(recorded)) {
     throw new Error('Manifest does not identify immutable package hashes.');
   }
-  const missing = requiredImmutablePackagePaths(manifest).filter(
+  const missing = requiredImmutablePackagePaths(manifest, options).filter(
     (path) => typeof recorded[path] !== 'string',
   );
   if (missing.length > 0) {
@@ -448,6 +463,36 @@ function assertImmutablePackageCoverage(manifest) {
       `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
     );
   }
+}
+
+async function verifiedRunRequestMode(run, manifest) {
+  const expectedHash = manifest.immutableHashes?.['run-request.json'];
+  if (!/^sha256:[a-f0-9]{64}$/.test(expectedHash)) {
+    throw new Error(
+      'Manifest must identify a valid immutable run-request.json hash before package coverage is evaluated.',
+    );
+  }
+  const bytes = await readFile(run.requestPath);
+  const actualHash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+  if (actualHash !== expectedHash) {
+    throw new Error(
+      'Immutable package hash mismatch for run-request.json before package coverage is evaluated.',
+    );
+  }
+  let request;
+  try {
+    request = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error(
+      'Hash-verified run-request.json must contain valid JSON before package coverage is evaluated.',
+    );
+  }
+  if (!['interactive', 'unattended'].includes(request?.mode)) {
+    throw new Error(
+      'Hash-verified run-request.json must declare interactive or unattended mode.',
+    );
+  }
+  return request.mode;
 }
 
 function addVisualReviewAttemptPaths(required, manifest, attempt) {

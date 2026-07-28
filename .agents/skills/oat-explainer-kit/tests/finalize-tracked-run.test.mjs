@@ -247,6 +247,64 @@ test('refuses to finalize a recap whose visual review gate is unresolved', async
   );
 });
 
+test('finalizes a successful interactive recap without visual-review evidence', async () => {
+  const fixture = await createRun({ mode: 'interactive' });
+
+  const plan = await planTrackedRunFinalization(request(fixture, 'dedicated'), {
+    repoRoot: fixture.repoRoot,
+    project: 'demo',
+  });
+
+  assert.equal(plan.status, 'ready');
+  assert.equal(
+    fixture.immutablePaths.some(
+      (path) =>
+        path.includes('/qa/browser/') || path.includes('/qa/visual-review/'),
+    ),
+    false,
+  );
+});
+
+test('rejects partial interactive review evidence and an unverified mode change', async () => {
+  const partial = await createRun({
+    mode: 'interactive',
+    includeReviewEvidence: false,
+  });
+  const partialManifest = JSON.parse(
+    await readFile(partial.manifestPath, 'utf8'),
+  );
+  const partialPath = 'qa/browser/recap/mobile.png';
+  await mkdir(dirname(join(partial.runRoot, partialPath)), { recursive: true });
+  await writeFile(join(partial.runRoot, partialPath), 'partial\n');
+  partialManifest.immutableHashes[partialPath] = await fileHash(
+    join(partial.runRoot, partialPath),
+  );
+  await writeFile(
+    partial.manifestPath,
+    `${JSON.stringify(partialManifest, null, 2)}\n`,
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(partial, 'dedicated'), {
+      repoRoot: partial.repoRoot,
+      project: 'demo',
+    }),
+    /canonical package.*visual-review|canonical package.*browser/i,
+  );
+
+  const mutated = await createRun();
+  await writeFile(
+    join(mutated.runRoot, 'run-request.json'),
+    '{"mode":"interactive"}\n',
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(mutated, 'dedicated'), {
+      repoRoot: mutated.repoRoot,
+      project: 'demo',
+    }),
+    /hash mismatch.*run-request\.json/i,
+  );
+});
+
 test('rejects incomplete or mutated review evidence before planning commits', async () => {
   const incomplete = await createRun();
   const incompleteManifest = JSON.parse(
@@ -303,12 +361,17 @@ function request(fixture, commitMode) {
   };
 }
 
-async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
+async function createRun({
+  outcome = 'built-not-durable',
+  evidence,
+  mode = 'unattended',
+  includeReviewEvidence = mode === 'unattended',
+} = {}) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-finalizer-'));
   tempDirs.push(repoRoot);
   const runRoot = join(repoRoot, '.oat/projects/shared/demo/explainers/recap');
   const files = [
-    ['run-request.json', '{}\n'],
+    ['run-request.json', `${JSON.stringify({ mode })}\n`],
     ['source/content-approval.json', '{}\n'],
     ['source/fact-base.json', '{}\n'],
     ['source/fact-base.md', '# Facts\n'],
@@ -321,19 +384,23 @@ async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
     ['source/set-plan/drafts.json', '{}\n'],
     ['theme.resolved.json', '{}\n'],
     ['site/index.html', '<h1>Recap</h1>\n'],
-    ['qa/visual-review/attempt-1/request.json', '{}\n'],
-    ['qa/visual-review/attempt-1/result.json', '{}\n'],
   ];
-  for (const viewport of ['mobile', 'tablet', 'desktop']) {
+  if (includeReviewEvidence) {
     files.push(
-      [`qa/browser/recap/${viewport}.png`, `png-${viewport}\n`],
-      [`qa/browser/recap/${viewport}.json`, '{}\n'],
-      [
-        `qa/visual-review/attempt-1/evidence/recap/${viewport}.png`,
-        `png-${viewport}\n`,
-      ],
-      [`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`, '{}\n'],
+      ['qa/visual-review/attempt-1/request.json', '{}\n'],
+      ['qa/visual-review/attempt-1/result.json', '{}\n'],
     );
+    for (const viewport of ['mobile', 'tablet', 'desktop']) {
+      files.push(
+        [`qa/browser/recap/${viewport}.png`, `png-${viewport}\n`],
+        [`qa/browser/recap/${viewport}.json`, '{}\n'],
+        [
+          `qa/visual-review/attempt-1/evidence/recap/${viewport}.png`,
+          `png-${viewport}\n`,
+        ],
+        [`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`, '{}\n'],
+      );
+    }
   }
   for (const [path, content] of files) {
     await mkdir(dirname(join(runRoot, path)), { recursive: true });

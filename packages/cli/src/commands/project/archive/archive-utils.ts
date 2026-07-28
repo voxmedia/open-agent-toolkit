@@ -677,16 +677,6 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     for (const path of RECAP_SET_PLAN_PATHS) {
       expectedImmutablePaths.add(path);
     }
-    addRequiredReviewAttemptPaths(expectedImmutablePaths, value, 1);
-    if (
-      recordedImmutablePaths.includes('qa/visual-review/revision.json') ||
-      recordedImmutablePaths.some((path) =>
-        path.startsWith('qa/visual-review/attempt-2/'),
-      )
-    ) {
-      expectedImmutablePaths.add('qa/visual-review/revision.json');
-      addRequiredReviewAttemptPaths(expectedImmutablePaths, value, 2);
-    }
   }
   const missingExpectedPaths = [...expectedImmutablePaths].filter(
     (relativePath) => !(relativePath in value.immutableHashes),
@@ -760,6 +750,39 @@ function addRequiredReviewAttemptPaths(
       required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
       required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
     }
+  }
+}
+
+function assertModeAwareReviewCoverage(
+  manifest: ProjectRecapManifest,
+  runMode: 'interactive' | 'unattended',
+): void {
+  const recorded = Object.keys(manifest.immutableHashes);
+  const successfulRecap = ['built-not-durable', 'built-durable'].includes(
+    manifest.outcome,
+  );
+  const retainsReviewEvidence = recorded.some(
+    (relativePath) =>
+      relativePath.startsWith('qa/browser/') ||
+      relativePath.startsWith('qa/visual-review/'),
+  );
+  const required = new Set<string>();
+  if ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence) {
+    addRequiredReviewAttemptPaths(required, manifest, 1);
+  }
+  const retainsSecondAttempt =
+    recorded.includes('qa/visual-review/revision.json') ||
+    recorded.some((relativePath) =>
+      relativePath.startsWith('qa/visual-review/attempt-2/'),
+    );
+  if (retainsSecondAttempt) {
+    required.add('qa/visual-review/revision.json');
+    addRequiredReviewAttemptPaths(required, manifest, 2);
+  }
+  if ([...required].some((path) => !(path in manifest.immutableHashes))) {
+    throw new CliError(
+      'Selected project recap manifest has an incomplete visual-review evidence chain.',
+    );
   }
 }
 
@@ -1093,6 +1116,30 @@ async function verifyProjectRecapImmutableHashes(
   return entries.length;
 }
 
+async function readVerifiedRunMode(
+  runRoot: string,
+): Promise<'interactive' | 'unattended'> {
+  let request: unknown;
+  try {
+    request = JSON.parse(
+      await readFile(join(runRoot, 'run-request.json'), 'utf8'),
+    );
+  } catch {
+    throw new CliError(
+      'Hash-verified project recap run-request.json must contain valid JSON.',
+    );
+  }
+  if (
+    !isRecord(request) ||
+    (request.mode !== 'interactive' && request.mode !== 'unattended')
+  ) {
+    throw new CliError(
+      'Hash-verified project recap run-request.json must declare interactive or unattended mode.',
+    );
+  }
+  return request.mode;
+}
+
 async function loadVerifiedProjectRecap(
   projectPath: string,
   projectRecapRun: string,
@@ -1125,6 +1172,8 @@ async function loadVerifiedProjectRecap(
     sourceRunRoot,
     manifest,
   );
+  const runMode = await readVerifiedRunMode(sourceRunRoot);
+  assertModeAwareReviewCoverage(manifest, runMode);
   return {
     sourceRunRoot,
     manifestContents,

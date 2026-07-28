@@ -263,15 +263,7 @@ async function immutablePackagePaths(manifest, runRoot) {
   if (paths.length === 0) {
     throw new Error('Manifest does not identify a complete immutable package.');
   }
-  const required = requiredPackagePaths(manifest);
-  const missing = required.filter(
-    (path) => !(path in manifest.immutableHashes),
-  );
-  if (missing.length > 0) {
-    throw new Error(
-      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
-    );
-  }
+  const verifiedBytes = new Map();
   for (const path of paths) {
     const expected = manifest.immutableHashes[path];
     if (!/^sha256:[a-f0-9]{64}$/.test(expected)) {
@@ -282,11 +274,27 @@ async function immutablePackagePaths(manifest, runRoot) {
     if (actual !== expected) {
       throw new Error(`Immutable package hash mismatch for ${path}.`);
     }
+    verifiedBytes.set(path, bytes);
+  }
+  const successfulRecap =
+    manifest.recipe?.id === 'project-recap' &&
+    ['built-not-durable', 'built-durable'].includes(manifest.outcome);
+  const runMode = successfulRecap
+    ? verifiedRunMode(verifiedBytes.get('run-request.json'))
+    : undefined;
+  const required = requiredPackagePaths(manifest, runMode);
+  const missing = required.filter(
+    (path) => !(path in manifest.immutableHashes),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
+    );
   }
   return paths;
 }
 
-function requiredPackagePaths(manifest) {
+function requiredPackagePaths(manifest, runMode) {
   const required = new Set([
     'run-request.json',
     'source/content-approval.json',
@@ -303,10 +311,10 @@ function requiredPackagePaths(manifest) {
     ]),
   ]);
   required.delete(undefined);
-  if (
+  const successfulRecap =
     manifest.recipe?.id === 'project-recap' &&
-    ['built-not-durable', 'built-durable'].includes(manifest.outcome)
-  ) {
+    ['built-not-durable', 'built-durable'].includes(manifest.outcome);
+  if (successfulRecap) {
     for (const path of [
       'source/set-plan/request.json',
       'source/set-plan/result.json',
@@ -316,19 +324,50 @@ function requiredPackagePaths(manifest) {
     ]) {
       required.add(path);
     }
+  }
+  const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
+  const retainsReviewEvidence = [...recorded].some(
+    (path) =>
+      path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+  );
+  if (
+    manifest.recipe?.id === 'project-recap' &&
+    ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence)
+  ) {
     addReviewAttemptPaths(required, manifest, 1);
-    const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
-    if (
-      recorded.has('qa/visual-review/revision.json') ||
-      [...recorded].some((path) =>
-        path.startsWith('qa/visual-review/attempt-2/'),
-      )
-    ) {
-      required.add('qa/visual-review/revision.json');
-      addReviewAttemptPaths(required, manifest, 2);
-    }
+  }
+  const retainsSecondAttempt =
+    recorded.has('qa/visual-review/revision.json') ||
+    [...recorded].some((path) =>
+      path.startsWith('qa/visual-review/attempt-2/'),
+    );
+  if (manifest.recipe?.id === 'project-recap' && retainsSecondAttempt) {
+    required.add('qa/visual-review/revision.json');
+    addReviewAttemptPaths(required, manifest, 2);
   }
   return [...required];
+}
+
+function verifiedRunMode(bytes) {
+  if (!Buffer.isBuffer(bytes)) {
+    throw new Error(
+      'Manifest must include hash-verified run-request.json before package coverage is evaluated.',
+    );
+  }
+  let request;
+  try {
+    request = JSON.parse(bytes.toString('utf8'));
+  } catch {
+    throw new Error(
+      'Hash-verified run-request.json must contain valid JSON before package coverage is evaluated.',
+    );
+  }
+  if (!['interactive', 'unattended'].includes(request?.mode)) {
+    throw new Error(
+      'Hash-verified run-request.json must declare interactive or unattended mode.',
+    );
+  }
+  return request.mode;
 }
 
 function addReviewAttemptPaths(required, manifest, attempt) {
