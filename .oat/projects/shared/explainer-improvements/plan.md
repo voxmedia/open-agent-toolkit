@@ -165,6 +165,28 @@ are committed before runtime changes begin; pixel identity is not required.
 
 ---
 
+### Task p01-t04: Synchronize the generated public-package version asset
+
+**Files:**
+
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Steps:**
+
+1. Add a RED assertion comparing every key in the generated asset with its
+   source public-package manifest; require it to fail against the stale asset.
+2. Run `bash packages/cli/scripts/bundle-assets.sh` to regenerate the asset from
+   the source manifests.
+3. Re-run the assertion and require exact `0.2.22` parity for every asset key.
+4. Run `pnpm --filter @open-agent-toolkit/cli build` and require exit 0 with no
+   subsequent asset diff.
+5. Commit as `fix(p01-t04): sync bundled public package versions`.
+
+**Acceptance:** A clean CLI build no longer dirties the tracked public-package
+version asset after the lockstep manifest bump.
+
+---
+
 ## Phase 2: Set-level visual authoring runtime
 
 ### Task p02-t01: Bundle versioned visual authoring and review guidance
@@ -665,13 +687,13 @@ review. Additional review cycles are not authorized.
 
 **Summary:**
 
-- Phase 1: 3 tasks — compliance, bounded outcomes, and quality oracle
+- Phase 1: 4 tasks — compliance, bounded outcomes, quality oracle, and generated version parity
 - Phase 2: 5 tasks — bundled guidance, contracts, set planner, adaptive set, adapter
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 19 tasks**
+**Total: 20 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

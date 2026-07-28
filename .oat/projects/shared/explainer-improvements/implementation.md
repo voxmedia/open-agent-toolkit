@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t04
 oat_generated: false
 ---
 
@@ -19,13 +19,13 @@ oat_generated: false
 
 | Phase | Status      | Tasks | Completed |
 | ----- | ----------- | ----: | --------: |
-| p01   | in_progress |     3 |       0/3 |
+| p01   | in_progress |     4 |       3/4 |
 | p02   | pending     |     5 |       0/5 |
 | p03   | pending     |     4 |       0/4 |
 | p04   | pending     |     3 |       0/3 |
 | p05   | pending     |     4 |       0/4 |
 
-**Total:** 0/19 tasks completed
+**Total:** 3/20 tasks completed
 
 ---
 
@@ -33,9 +33,29 @@ oat_generated: false
 
 **Status:** in_progress
 
-- [ ] p01-t01 — Ship complete MIT notices in affected package payloads
-- [ ] p01-t02 — Replace the visual XL backlog item with ordered outcomes
-- [ ] p01-t03 — Establish the golden conformance fixture and rubric contract
+- [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
+- [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
+- [x] p01-t03 — Establish the golden conformance fixture and rubric contract (`560a0c7c`)
+- [ ] p01-t04 — Synchronize the generated public-package version asset
+
+### Phase Implementation Summary
+
+**Outcome:**
+
+- Complete upstream MIT texts now ship inside the CLI package and are enforced against real `pnpm pack` output.
+- The notice backlog item is archived; the visual umbrella links five bounded successor outcomes.
+- Three portable golden inputs, rubric records, and loader tests establish the conformance baseline.
+
+**Verification:**
+
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts` — 17/17 passed.
+- `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs` — 3/3 passed.
+- `pnpm run cli:source -- backlog regenerate-index && git diff --exit-code` — deterministic and clean.
+- `pnpm release:validate` — all five public package tarballs and 65 visual measurements passed.
+
+**Concern:**
+
+- `pnpm install --lockfile-only` produced no lockfile diff because workspace package versions are represented as links. All five manifests are at `0.2.22`, and packed release validation passed.
 
 ## Phase 2: Set-level visual authoring runtime
 
@@ -79,7 +99,26 @@ oat_generated: false
 
 <!-- orchestration-runs-start -->
 
-_No implementation runs yet._
+### Run 1 — Phase p01 implementation
+
+- Request: `explainer-improvements-p01-20260728T015427Z`
+- Launch acceptance: accepted
+- Outcome: `DONE_WITH_CONCERNS`
+- Phase base: `5d964f2205315149fa31e8f3813f36504f52a750`
+- Phase head: `560a0c7c204ffb9cdaae48170b6eae7b551db5e1`
+- Commit range: `5d964f2205315149fa31e8f3813f36504f52a750..560a0c7c204ffb9cdaae48170b6eae7b551db5e1`
+- Route: native Cursor materialized role, background
+- Target: `oat-phase-implementer-gpt-5-6-sol-high`
+- Selection source/reason: `policy-resolved` / `native-catalog`
+- Model axis: `selected:gpt-5.6-sol-high`
+- Effort axis: `not-applicable`
+- Policy/ceiling: `high` / `gpt-5.6-sol-high`
+- Candidates: `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`
+- Retry limit: `1`
+- Optional nested dispatches: none
+- Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+- Root verification: passed at `2026-07-28T02:55:52Z`
+- Continuation: pending bounded generated-asset correction `p01-t04`
 
 <!-- orchestration-runs-end -->
 
@@ -100,9 +139,10 @@ _No implementation runs yet._
 
 ## Deviations from Plan / Design
 
-| Task / Review | Source Artifact | Planned / Documented              | Actual / Accepted                   | Reason                                       | Source of Truth          | Follow-up |
-| ------------- | --------------- | --------------------------------- | ----------------------------------- | -------------------------------------------- | ------------------------ | --------- |
-| import        | imported plan   | Fix notices before PR #179 merges | Fix notices immediately after merge | PR #179 was already merged when import began | `1151a0d7` and `plan.md` | p01-t01   |
+| Task / Review         | Source Artifact | Planned / Documented                               | Actual / Accepted                   | Reason                                                  | Source of Truth                     | Follow-up |
+| --------------------- | --------------- | -------------------------------------------------- | ----------------------------------- | ------------------------------------------------------- | ----------------------------------- | --------- |
+| import                | imported plan   | Fix notices before PR #179 merges                  | Fix notices immediately after merge | PR #179 was already merged when import began            | `1151a0d7` and `plan.md`            | p01-t01   |
+| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04   |
 
 ## Test Results
 
