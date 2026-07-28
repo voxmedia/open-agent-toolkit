@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p01-t01
 oat_last_commit: null
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -8,11 +8,11 @@ oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
-oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
+oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 1
 oat_dispatch_policy:
   mode: managed
@@ -70,19 +70,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T01:54:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements
 
-**Status:** Plan Complete
+**Status:** Implementation In Progress
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-28
 
 ## Current Phase
 
-Plan import complete - Ready for implementation preflight
+Phase p01 - Compliance and bounded quality baseline
 
 ## Artifacts
 
@@ -103,6 +103,9 @@ Plan import complete - Ready for implementation preflight
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
 - ✓ Mechanical plan validation passed after final checklist correction
+- ✓ Tier 1 Managed High dispatch selected
+- ✓ Final-phase HiLL checkpoint and automatic checkpoint review configured
+- ⧗ p01-t01 ready for phase implementation
 
 ## Blockers
 
@@ -110,4 +113,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-implement` and confirm HiLL checkpoints during implementation preflight
+Execute Phase p01 from task `p01-t01`

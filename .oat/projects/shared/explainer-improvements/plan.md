@@ -7,6 +7,8 @@ oat_last_updated: 2026-07-28
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_parallel_groups: []
+oat_plan_hill_phases: ['p05']
+oat_auto_review_at_hill_checkpoints: true
 oat_import_reference: references/imported-plan.md
 oat_import_source_path: /Users/thomas.stang/.cursor/plans/golden-visual-quality-33154d65.plan.md
 oat_import_provider: cursor
@@ -49,11 +51,11 @@ recursive or open-ended review loop is allowed.
 - [x] Preserved the external source verbatim in `references/imported-plan.md`
 - [x] Corrected stale merge ordering without changing the source artifact
 - [x] Evaluated phase parallelism; retained sequential execution because contracts overlap
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
+- [x] Confirmed HiLL checkpoints from `workflow.hillCheckpointDefault: final`
+- [x] Set `oat_plan_hill_phases` in frontmatter
 
-HiLL selection is intentionally deferred to `oat-project-implement`; unchecked
-items represent pending implementation preflight, not failed plan import.
+HiLL selection was resolved during implementation preflight from the configured
+final-phase workflow preference.
 
 ---
 

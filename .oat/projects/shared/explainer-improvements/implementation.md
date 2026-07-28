@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status  | Tasks | Completed |
-| ----- | ------- | ----: | --------: |
-| p01   | pending |     3 |       0/3 |
-| p02   | pending |     5 |       0/5 |
-| p03   | pending |     4 |       0/4 |
-| p04   | pending |     3 |       0/3 |
-| p05   | pending |     4 |       0/4 |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----: | --------: |
+| p01   | in_progress |     3 |       0/3 |
+| p02   | pending     |     5 |       0/5 |
+| p03   | pending     |     4 |       0/4 |
+| p04   | pending     |     3 |       0/3 |
+| p05   | pending     |     4 |       0/4 |
 
 **Total:** 0/19 tasks completed
 
@@ -31,7 +31,7 @@ oat_generated: false
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** pending
+**Status:** in_progress
 
 - [ ] p01-t01 — Ship complete MIT notices in affected package payloads
 - [ ] p01-t02 — Replace the visual XL backlog item with ordered outcomes
@@ -95,6 +95,8 @@ _No implementation runs yet._
 - Selected Managed High dispatch and a one-remediation orchestration cap.
 - Declined the optional cross-runtime phase gate to honor the bounded-review contract.
 - Completed the bounded plan review, resolved all four Important findings and the accepted Medium safeguard, and mechanically verified the final checklist correction.
+- Started Tier 1 implementation with Managed High Cursor dispatch.
+- Configured `p05` as the sole HiLL checkpoint with automatic checkpoint review enabled.
 
 ## Deviations from Plan / Design
 
