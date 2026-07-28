@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t04
-oat_last_commit: 560a0c7c204ffb9cdaae48170b6eae7b551db5e1
+oat_current_task: p02-t01
+oat_last_commit: d2a2af8c1291d46174a72c16cce925129e5252f6
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T02:55:52Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T03:06:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p01 - Bounded generated-asset correction
+Phase p01 implementation complete - Root review pending
 
 ## Artifacts
 
@@ -107,7 +107,8 @@ Phase p01 - Bounded generated-asset correction
 - ✓ Final-phase HiLL checkpoint and automatic checkpoint review configured
 - ✓ p01-t01 through p01-t03 implemented in three verified commits
 - ✓ Root focused verification passed
-- ⧗ p01-t04 added after clean-build verification exposed stale generated metadata
+- ✓ p01-t04 synchronized generated package-version metadata
+- ⧗ Root-owned p01 review pending
 
 ## Blockers
 
@@ -115,4 +116,4 @@ None
 
 ## Next Milestone
 
-Resume the accepted p01 implementer for bounded task `p01-t04`
+Run the root-owned p01 review against `5d964f22..d2a2af8c`

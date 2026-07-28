@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t04
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -17,26 +17,26 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----: | --------: |
-| p01   | in_progress |     4 |       3/4 |
-| p02   | pending     |     5 |       0/5 |
-| p03   | pending     |     4 |       0/4 |
-| p04   | pending     |     3 |       0/3 |
-| p05   | pending     |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | review_pending |     4 |       4/4 |
+| p02   | pending        |     5 |       0/5 |
+| p03   | pending        |     4 |       0/4 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 3/20 tasks completed
+**Total:** 4/20 tasks completed
 
 ---
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** in_progress
+**Status:** review_pending
 
 - [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
 - [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
 - [x] p01-t03 — Establish the golden conformance fixture and rubric contract (`560a0c7c`)
-- [ ] p01-t04 — Synchronize the generated public-package version asset
+- [x] p01-t04 — Synchronize the generated public-package version asset (`d2a2af8c`)
 
 ### Phase Implementation Summary
 
@@ -118,7 +118,10 @@ oat_generated: false
 - Optional nested dispatches: none
 - Dispatch: scope=p01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Root verification: passed at `2026-07-28T02:55:52Z`
-- Continuation: pending bounded generated-asset correction `p01-t04`
+- Continuation event: `p01-t04`, mode `fix`, same accepted handle
+- Continuation base/head: `871a4e11553a6a6bcbda5ca6726811561f0a5662..d2a2af8c1291d46174a72c16cce925129e5252f6`
+- Continuation outcome: `DONE`; one declared file; root verification passed at `2026-07-28T03:06:36Z`
+- Continuation Dispatch: scope=p01-t04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
