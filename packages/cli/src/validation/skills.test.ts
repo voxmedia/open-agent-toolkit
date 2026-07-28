@@ -2529,6 +2529,57 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('requires Cursor implementer dispatch to select a classified candidate', async () => {
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+    const cursorRules = dispatch.slice(
+      dispatch.indexOf('Cursor rules:'),
+      dispatch.indexOf('Payload-first invariant'),
+    );
+    expect(cursorRules).not.toHaveLength(0);
+
+    // Selection defers to the canonical mechanics contract instead of
+    // restating it from the provider guidance table. Merging the two is what
+    // produced a rule keyed on a taxonomy the Cursor table is not indexed by.
+    expect(cursorRules).toMatch(
+      /Task-Class Resolution contract in\s+`oat-dispatch-subagents\/references\/provider-cursor\.md`/,
+    );
+    expect(cursorRules).toMatch(/do not restate it here/i);
+
+    // A phase classified below the ceiling must have somewhere to land.
+    expect(cursorRules).toMatch(
+      /lowest tier through the project's named maximum/,
+    );
+
+    // Omitting the flag resolves cleanly and returns the cap, so the contract
+    // has to name both the requirement and the signature it leaves behind.
+    expect(cursorRules).toMatch(/`--candidate-model` is required/);
+    expect(cursorRules).toMatch(
+      /`selectionMode=capped` with the selected model equal to the cap/,
+    );
+    expect(cursorRules).toMatch(/ceiling is a maximum, not a target/);
+  });
+
+  it('logs a provider-neutral task class alongside the selected candidate', async () => {
+    const dispatch = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',
+    );
+
+    expect(dispatch).toContain(
+      'Classified task class: {mechanical-recon | intelligent-recon | default-implementation | hard-reasoning | consequential | not-classified}',
+    );
+    // The log must reuse the generic record vocabulary rather than defining a
+    // second one.
+    expect(dispatch).toMatch(
+      /`task_class` field in\s+`oat-dispatch-subagents\/references\/record-schema\.md`/,
+    );
+    expect(dispatch).toMatch(/Do not introduce a second vocabulary here/i);
+    expect(dispatch).toMatch(
+      /`not-classified`[\s\S]{0,300}`Selection mode: capped`/,
+    );
+  });
+
   it('keeps preferred and exact-candidate resolver selection mutually exclusive', async () => {
     const dispatch = await readRawRepoFile(
       '.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md',

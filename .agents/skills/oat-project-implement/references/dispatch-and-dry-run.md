@@ -187,17 +187,20 @@ Print before phase work:
 ```text
 OAT Dispatch Tier: balanced (codex, managed capped — pinned-variant)
 Resolved cap: high
-Classified scope: medium (normal multi-file implementation)
-Selected: medium (below the cap; the classification did not reach it)
+Classified task class: default-implementation
+Preferred effort: medium
+Selected effort: medium
 Source: project state
 Provider default effort: medium
 Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception.
 ```
 
-The classified scope and the resolved cap are separate lines because they answer
-separate questions: what the work needs, and what the policy permits. A stamp
-whose selected value silently equals its cap, with no classification line to
-justify it, is reporting that the first question went unasked.
+The classification and the resolved cap are separate lines because they answer
+separate questions: what the work needs, and what the policy permits. Here the
+class resolved to `default-implementation` at `medium` effort while the cap
+permitted `high`, so the selection sits below the ceiling. A stamp reporting
+`not-classified` against a selected value equal to its cap is recording that the
+first question went unasked.
 
 If no policy resolves and the session is interactive, present the dispatch
 policy prompt once before starting work. Print the unresolved-policy heading,
@@ -492,6 +495,7 @@ Requested controls: {model=<value|none>, effort=<value|none>, target=<value|unkn
 Configured defaults: {provider default effort/model | unknown | not-applicable}
 Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}
 Preferred effort: {low | medium | high | xhigh | max | provider-default | not-applicable}
+Classified task class: {mechanical-recon | intelligent-recon | default-implementation | hard-reasoning | consequential | not-classified}
 OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
 Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | max | provider-default | not-applicable}
@@ -505,6 +509,20 @@ Dispatch target: {host-specific subagent/role/tool target}
 Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>
 Rationale: {short rationale grounded in phase scope and any policy cap/uncapped/default behavior}
 ```
+
+`Classified task class` carries the same value as the generic record's
+`task_class` field in
+`oat-dispatch-subagents/references/record-schema.md`, which is provider-neutral
+across all five classes. Do not introduce a second vocabulary here. Where a
+provider also classifies on an effort axis, that classification stays in
+`Preferred effort`; Cursor reports `effort_axis=not-applicable` and carries the
+class alone.
+
+A managed-capped implementer or fix dispatch must carry a class.
+`not-classified` is reserved for routes that make no selection, and on a
+managed-capped route it pairs with `Selection mode: capped` to mark the defect
+described under Cursor rules. That pairing is what distinguishes a justified cap
+selection from a silent one.
 
 For an explicit inherit/default fallback (for example a base `oat-reviewer`
 under inherit policy), the log reads `Route: none; level=none`,

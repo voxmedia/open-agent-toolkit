@@ -53,8 +53,8 @@ to be clean; each append is committed by the bookkeeping that owns it.
   never mirror that record. Do not write the project log at acceptance; append
   it with the phase-outcome entry after the child's report returns.
 - Implementing a phase in the root rather than dispatching an implementer is a
-  deviation, never a silent default: record it in the same dispatch record with
-  the phase ID, the reason, and the model the root was running.
+  deviation, never a silent default. No child is accepted, so record the phase
+  ID, reason, and root model under a `Root-inline phase` heading of its own.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`

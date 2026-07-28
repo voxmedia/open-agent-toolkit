@@ -83,8 +83,9 @@ drops `claude-opus-5-thinking-max` and `claude-fable-5-thinking-xhigh` from
 `frontier`. Dropping the Opus max rung follows the non-monotonic top-end Opus
 evidence recorded in `subagent-orchestration/references/evidence-and-refresh.md`,
 which treats max as a route requiring justification rather than a strictly
-better rung; both models remain in the pin catalog and stay available to a
-hand-edited ladder. An adopter still on the prior version keeps their existing
+better rung. The Fable xhigh rung is dropped on economics instead: its quality
+gain over the high rung does not justify its cost. Both models remain in the pin
+catalog and stay available to a hand-edited ladder. An adopter still on the prior version keeps their existing
 Cursor tiers untouched until they take one of the actions above.
 
 The terminal entries in that version are chosen, not incidental. Because the
