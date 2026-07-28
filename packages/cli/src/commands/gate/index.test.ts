@@ -34,6 +34,7 @@ import type {
   GateActivityProbeStatus,
 } from './activity-probes';
 import { currentGateCliRoot, type GateRouteReceipt } from './branch-local-cli';
+import { extractStructuredRefusal } from './child-process';
 import { createGateCommand, selectExecTarget } from './index';
 import { parseReviewGateVerdict as parseReviewGateVerdictFromDisk } from './review-verdict';
 
@@ -102,11 +103,12 @@ type ProcessRunner = (
     timeoutMs: number;
   },
 ) => Promise<{
+  activityEvidence?: GateActivityEvidence;
   exitCode: number;
   timedOut?: boolean;
   stdoutBytes: number;
   stderrBytes: number;
-  capturedOutput?: string;
+  refusal?: string;
 }>;
 
 type ProcessCallInput = ProcessCall & {
@@ -332,13 +334,14 @@ function createProcessRunner(
       });
     }
 
+    const executeRefusal = options.executeOutput
+      ? extractStructuredRefusal(options.executeOutput)
+      : undefined;
     return {
       exitCode: options.executeTimedOut ? 124 : (options.executeExitCode ?? 0),
       stderrBytes: options.executeStderrBytes ?? 0,
       stdoutBytes: options.executeStdoutBytes ?? 0,
-      ...(options.executeOutput
-        ? { capturedOutput: options.executeOutput }
-        : {}),
+      ...(executeRefusal ? { refusal: executeRefusal } : {}),
       ...(options.executeTimedOut ? { timedOut: true } : {}),
       ...(options.executeActivityEvidence
         ? { activityEvidence: options.executeActivityEvidence }
@@ -6633,6 +6636,109 @@ describe('oat gate', () => {
     expect(failureCapture.jsonPayloads[0]).not.toHaveProperty(
       'receiveEligible',
     );
+  });
+
+  it('summarizes advancing project transcript activity in human timeout output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const observedAt = Date.now();
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'cursor',
+      scope: 'project-dir',
+      observedPath: join(home, '.cursor', 'projects', 'fixture'),
+      lastChangeAt: observedAt - 250,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt,
+    };
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: createProcessRunner({
+        executeTimedOut: true,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+      globalArgs: [],
+    });
+
+    expect(capture.error).toEqual([
+      expect.stringContaining('timed out'),
+      expect.stringMatching(
+        /^Activity evidence: cursor project transcript metadata changed since baseline; observed \d+ms ago; latest transcript change was 250ms before observation\.$/u,
+      ),
+    ]);
+    expect(process.exitCode).toBe(124);
+  });
+
+  it('labels ambient Codex evidence as non-attributable in human failure output', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const observedAt = Date.now();
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'codex',
+      scope: 'ambient-runtime',
+      observedPath: join(home, '.codex', 'sessions', '2026', '07', '15'),
+      lastChangeAt: observedAt - 500,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt,
+    };
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: createProcessRunner({
+        executeExitCode: 7,
+        executeActivityEvidence: evidence,
+      }).runProcess,
+      globalArgs: [],
+    });
+
+    expect(capture.error.join('\n')).toContain(
+      'Activity evidence: codex ambient transcript metadata changed since baseline',
+    );
+    expect(capture.error.join('\n')).toContain(
+      'This activity is not attributable to this gate child.',
+    );
+    expect(process.exitCode).toBe(7);
+  });
+
+  it('does not print activity diagnostics for a structured refusal', async () => {
+    const { root, home } = await setup();
+    const projectPath = await writeProject(root);
+    await writeActiveProject(root, projectPath);
+    const observedAt = Date.now();
+    const evidence: GateActivityEvidence = {
+      source: 'transcript-dir',
+      runtime: 'cursor',
+      scope: 'project-dir',
+      observedPath: join(home, '.cursor', 'projects', 'fixture'),
+      lastChangeAt: observedAt,
+      totalSizeBytes: 512,
+      changedSinceBaseline: true,
+      observedAt,
+    };
+
+    const capture = await runReviewGate({
+      root,
+      home,
+      runProcess: createProcessRunner({
+        executeExitCode: 1,
+        executeOutput: 'OAT_GATE_REFUSAL: unavailable headless route\n',
+        executeActivityEvidence: evidence,
+      }).runProcess,
+      globalArgs: [],
+    });
+
+    expect(capture.error).toEqual([
+      'Review did not complete: reviewer refused the headless route (unavailable headless route).',
+    ]);
+    expect(process.exitCode).toBe(1);
   });
 
   it('labels ambient Codex activity as non-attributable in human liveness output', async () => {

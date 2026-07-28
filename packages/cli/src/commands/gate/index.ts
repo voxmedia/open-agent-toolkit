@@ -1,4 +1,4 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import { createHash, randomUUID } from 'node:crypto';
 import { mkdir, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -72,8 +72,6 @@ import YAML from 'yaml';
 import {
   createGateActivityProbe,
   type GateActivityEvidence,
-  type GateActivityProbe,
-  type GateActivityProbeStatus,
 } from './activity-probes';
 import {
   createBranchLocalGateCli,
@@ -82,6 +80,11 @@ import {
   removeBranchLocalGateCli,
   type BranchLocalGateCli,
 } from './branch-local-cli';
+import {
+  runChildProcess,
+  type ProcessRunOptions,
+  type ProcessRunResult,
+} from './child-process';
 import {
   parseReviewGateVerdict,
   severityDisplayName,
@@ -175,39 +178,6 @@ interface ReviewGateOptions extends CrossProviderExecOptions {
   reviewScope?: string;
   reviewType?: string;
   exitNonzeroOn?: string;
-}
-
-interface ProcessRunOptions {
-  activityProbe?: GateActivityProbe;
-  cwd: string;
-  env: NodeJS.ProcessEnv;
-  livenessIntervalMs?: number;
-  onLiveness?: (snapshot: GateLivenessSnapshot) => void;
-  purpose: 'host-detection' | 'availability' | 'execute';
-  stdin: 'ignore' | 'inherit';
-  stdio: 'ignore' | 'inherit' | 'pipe';
-  stdoutDestination?: 'stdout' | 'stderr';
-  timeoutMs: number;
-}
-
-interface ProcessRunResult {
-  activityEvidence?: GateActivityEvidence;
-  activityProbeStatus?: GateActivityProbeStatus;
-  capturedOutput?: string;
-  exitCode: number;
-  refusal?: string;
-  stderrBytes: number;
-  stdoutBytes: number;
-  timedOut?: boolean;
-}
-
-interface GateLivenessSnapshot {
-  elapsedMs: number;
-  hardBudgetMs: number;
-  idleMs: number;
-  processAlive: boolean;
-  activityProbeStatus?: GateActivityProbeStatus;
-  lastActivityEvidence?: GateActivityEvidence;
 }
 
 type GateTimeoutSource =
@@ -437,6 +407,7 @@ const REVIEW_GATE_CONTEXT_NOTE = [
 const GATE_CHECK_TIMEOUT_MS = 5_000;
 const GATE_EXEC_TIMEOUT_MS = 15 * 60 * 1_000;
 const GATE_LIVENESS_INTERVAL_MS = 30_000;
+const AMBIENT_ACTIVITY_ATTRIBUTION = 'not attributable to this gate child';
 
 async function writeGateRunMarker(
   path: string,
@@ -643,159 +614,6 @@ function corroborateGateInvocation(
       invocation: actual ?? null,
     },
   };
-}
-
-async function runChildProcess(
-  command: string,
-  args: string[],
-  options: ProcessRunOptions,
-): Promise<ProcessRunResult> {
-  return new Promise((resolve, reject) => {
-    let timedOut = false;
-    let killTimeout: NodeJS.Timeout | null = null;
-    let stderrBytes = 0;
-    let stdoutBytes = 0;
-    let refusal: string | undefined;
-    let stdoutLineBuffer = '';
-    let stderrLineBuffer = '';
-    let latestActivityEvidence: GateActivityEvidence | undefined;
-    let latestActivityProbeStatus: GateActivityProbeStatus | undefined;
-    let livenessProbePending = false;
-    const startedAt = Date.now();
-    let lastActivityAt = startedAt;
-    const child = spawn(command, args, {
-      cwd: options.cwd,
-      env: options.env,
-      stdio:
-        options.stdio === 'pipe'
-          ? [options.stdin, 'pipe', 'pipe']
-          : options.stdio,
-    });
-    const recordActivity = (): void => {
-      lastActivityAt = Date.now();
-    };
-    const scanChunk = (buffer: string, chunk: Buffer): string => {
-      const combined = buffer + chunk.toString('utf8');
-      const lines = combined.split('\n');
-      const remainder = lines.pop() ?? '';
-      if (!refusal) {
-        for (const line of lines) {
-          refusal = extractStructuredRefusal(line.replace(/\r$/, ''));
-          if (refusal) {
-            break;
-          }
-        }
-      }
-      return remainder;
-    };
-    child.stdout?.on('data', (chunk: Buffer) => {
-      stdoutBytes += chunk.byteLength;
-      stdoutLineBuffer = scanChunk(stdoutLineBuffer, chunk);
-      recordActivity();
-      const destination =
-        options.stdoutDestination === 'stderr'
-          ? process.stderr
-          : process.stdout;
-      destination.write(chunk);
-    });
-    child.stderr?.on('data', (chunk: Buffer) => {
-      stderrBytes += chunk.byteLength;
-      stderrLineBuffer = scanChunk(stderrLineBuffer, chunk);
-      recordActivity();
-      process.stderr.write(chunk);
-    });
-    const processAlive = (): boolean => {
-      if (child.pid === undefined) return false;
-      try {
-        process.kill(child.pid, 0);
-        return true;
-      } catch {
-        return false;
-      }
-    };
-    const livenessInterval =
-      options.onLiveness && options.livenessIntervalMs
-        ? setInterval(() => {
-            if (livenessProbePending) return;
-            livenessProbePending = true;
-            const now = Date.now();
-            void (async () => {
-              const activityProbeStatus =
-                await options.activityProbe?.observe(now);
-              const evidence = activityProbeStatus?.evidence;
-              if (activityProbeStatus) {
-                latestActivityProbeStatus = activityProbeStatus;
-              }
-              if (evidence) latestActivityEvidence = evidence;
-              options.onLiveness?.({
-                elapsedMs: now - startedAt,
-                hardBudgetMs: options.timeoutMs,
-                idleMs: now - lastActivityAt,
-                processAlive: processAlive(),
-                ...(latestActivityProbeStatus
-                  ? { activityProbeStatus: latestActivityProbeStatus }
-                  : {}),
-                ...(latestActivityEvidence
-                  ? { lastActivityEvidence: latestActivityEvidence }
-                  : {}),
-              });
-            })().finally(() => {
-              livenessProbePending = false;
-            });
-          }, options.livenessIntervalMs)
-        : null;
-    livenessInterval?.unref();
-    const timeout = setTimeout(() => {
-      timedOut = true;
-      child.kill('SIGTERM');
-      killTimeout = setTimeout(() => {
-        child.kill('SIGKILL');
-      }, 5_000);
-      killTimeout.unref();
-    }, options.timeoutMs);
-    timeout.unref();
-
-    child.on('error', (error) => {
-      clearTimeout(timeout);
-      if (livenessInterval) {
-        clearInterval(livenessInterval);
-      }
-      if (killTimeout) {
-        clearTimeout(killTimeout);
-      }
-      reject(error);
-    });
-    child.on('close', (code) => {
-      clearTimeout(timeout);
-      if (livenessInterval) {
-        clearInterval(livenessInterval);
-      }
-      if (killTimeout) {
-        clearTimeout(killTimeout);
-      }
-      refusal ??=
-        extractStructuredRefusal(stdoutLineBuffer.replace(/\r$/, '')) ??
-        extractStructuredRefusal(stderrLineBuffer.replace(/\r$/, ''));
-      resolve({
-        ...(latestActivityEvidence
-          ? { activityEvidence: latestActivityEvidence }
-          : {}),
-        ...(latestActivityProbeStatus
-          ? { activityProbeStatus: latestActivityProbeStatus }
-          : {}),
-        exitCode: timedOut ? 124 : (code ?? 1),
-        ...(refusal ? { refusal } : {}),
-        stderrBytes,
-        stdoutBytes,
-        ...(timedOut ? { timedOut: true } : {}),
-      });
-    });
-  });
-}
-
-function extractStructuredRefusal(output: string): string | undefined {
-  const match = output.match(/^OAT_GATE_REFUSAL: (.*)$/m);
-  return match?.[1]?.replace(/\r$/, '');
 }
 
 function isGateWriteLayer(value: string): value is GateWriteLayer {
@@ -2029,7 +1847,7 @@ async function executeTarget(
           } else {
             const activityDescription = lastActivityEvidence
               ? lastActivityEvidence.scope === 'ambient-runtime'
-                ? 'ambient runtime activity (not attributable to this gate child)'
+                ? `ambient runtime activity (${AMBIENT_ACTIVITY_ATTRIBUTION})`
                 : 'project-directory activity'
               : `${activityProbeStatus?.status ?? 'unavailable'} (${activityProbeStatus?.attemptedPath ?? 'no path'})`;
             context.logger.info(
@@ -2737,6 +2555,37 @@ function writeReviewGateExecutionFailure(
   }
 
   context.logger.error(message);
+  if (payload.activityEvidence && !payload.refusal) {
+    context.logger.error(
+      formatGateActivityEvidenceDiagnostic(payload.activityEvidence),
+    );
+  }
+}
+
+function formatGateActivityEvidenceDiagnostic(
+  evidence: GateActivityEvidence,
+  now = Date.now(),
+): string {
+  const transcriptScope =
+    evidence.scope === 'ambient-runtime'
+      ? `${evidence.runtime} ambient transcript`
+      : `${evidence.runtime} project transcript`;
+  const baselineState = evidence.changedSinceBaseline
+    ? 'changed since baseline'
+    : 'did not change since baseline';
+  const observedAgoMs = Math.max(0, now - evidence.observedAt);
+  const lastChangeTiming =
+    evidence.lastChangeAt === null
+      ? 'latest transcript change time unavailable'
+      : `latest transcript change was ${Math.max(
+          0,
+          evidence.observedAt - evidence.lastChangeAt,
+        )}ms before observation`;
+  const attributionWarning =
+    evidence.scope === 'ambient-runtime'
+      ? ` This activity is ${AMBIENT_ACTIVITY_ATTRIBUTION}.`
+      : '';
+  return `Activity evidence: ${transcriptScope} metadata ${baselineState}; observed ${observedAgoMs}ms ago; ${lastChangeTiming}.${attributionWarning}`;
 }
 
 function writeReviewGateUnexpectedFailure(
@@ -3425,9 +3274,7 @@ async function runReviewGate(
       })}\n`,
     );
     const childExitCode = childResult.exitCode;
-    const refusal =
-      childResult.refusal ??
-      extractStructuredRefusal(childResult.capturedOutput ?? '');
+    const refusal = childResult.refusal;
     const writeRefusalFailure = (): boolean => {
       if (!refusal) {
         return false;
