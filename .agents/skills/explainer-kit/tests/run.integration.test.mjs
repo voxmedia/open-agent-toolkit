@@ -162,6 +162,42 @@ function layoutProbe({ pageOverflowX }) {
   });
 }
 
+async function retainingBrowserProbe(probeRequest) {
+  if (probeRequest.screenshotPath) {
+    await mkdir(dirname(probeRequest.screenshotPath), { recursive: true });
+    await writeFile(probeRequest.screenshotPath, Buffer.from([1, 2, 3]));
+  }
+  const result = {
+    pageOverflowX: false,
+    clippedX: [],
+    viewportClipped: [],
+    unreadableHeadings: [],
+    animationsDisabled: true,
+    reducedMotion: true,
+    keyboard: {
+      tab: true,
+      ...(probeRequest.artifact.type === 'deck' &&
+        probeRequest.scenario === 'default' && {
+          ArrowLeft: true,
+          ArrowRight: true,
+          ArrowUp: true,
+          ArrowDown: true,
+        }),
+    },
+  };
+  if (probeRequest.artifact.type === 'deck') {
+    result.deckLayout =
+      probeRequest.scenario === 'default'
+        ? { flow: 'horizontal', overflowX: 'auto', scrollSnap: true }
+        : {
+            flow: 'vertical',
+            overflowX: probeRequest.scenario === 'print' ? 'visible' : 'auto',
+            scrollSnap: false,
+          };
+  }
+  return result;
+}
+
 function humanize(value) {
   return value
     .split('-')
@@ -989,6 +1025,128 @@ test('invokes an independent critic once with the complete rendered recap set', 
   assert.equal(rejected.outcome, 'failed');
   assert.equal(rejected.errors[0].code, 'E_VISUAL_REVIEW');
   assert.equal(sharedCallback.mock.callCount(), 3);
+});
+
+test('caps visual review at one correction and one final review', async (t) => {
+  const cases = [
+    {
+      name: 'passes on the first review',
+      dispositions: ['pass'],
+      expectedAuthors: 3,
+      expectedReviews: 1,
+      expectedFinal: 'pass',
+    },
+    {
+      name: 'passes after one correction',
+      dispositions: ['correct', 'pass'],
+      expectedAuthors: 4,
+      expectedReviews: 2,
+      expectedFinal: 'pass',
+    },
+    {
+      name: 'fails after the final review',
+      dispositions: ['correct', 'fail'],
+      expectedAuthors: 4,
+      expectedReviews: 2,
+      expectedFinal: 'fail',
+    },
+  ];
+
+  for (const scenario of cases) {
+    await t.test(scenario.name, async () => {
+      const fixture = await suppliedFixture('project-recap');
+      const correctionContexts = [];
+      const author = mock.fn(async (authorRequest, correction) => {
+        if (correction) correctionContexts.push(correction);
+        const result = authorResult(authorRequest);
+        if (correction && authorRequest.authoring === 'html') {
+          result.content.html = result.content.html.replace(
+            'Authored artifact.',
+            'Corrected first viewport.',
+          );
+        }
+        return result;
+      });
+      let reviewIndex = 0;
+      const visualCritic = mock.fn(async (reviewRequest) => {
+        const disposition = scenario.dispositions[reviewIndex++];
+        return {
+          schemaVersion: 'explainer-kit.visual-review-result/v1',
+          reviewId: `recap-review-${reviewIndex}`,
+          reviewedAt: NOW,
+          disposition,
+          artifactIds: reviewRequest.renderedArtifacts.map(
+            ({ artifactId }) => artifactId,
+          ),
+          findings:
+            disposition === 'pass'
+              ? []
+              : [
+                  {
+                    artifactId: 'project-recap',
+                    rubric: 'first-viewport',
+                    severity: 'important',
+                    evidence: 'The project outcome is below the fold.',
+                    correction: 'Move the outcome into the lead panel.',
+                  },
+                ],
+        };
+      });
+
+      const result = await runExplainerCore(fixture.request, {
+        author,
+        planSet: async (plannerRequest) => plannedSet(plannerRequest),
+        browserProbe: retainingBrowserProbe,
+        visualCritic,
+        now: () => NOW,
+      });
+
+      assert.equal(
+        result.outcome,
+        'built-not-durable',
+        JSON.stringify(result.errors),
+      );
+      assert.equal(author.mock.callCount(), scenario.expectedAuthors);
+      assert.equal(visualCritic.mock.callCount(), scenario.expectedReviews);
+      assert.equal(result.visualReview.disposition, scenario.expectedFinal);
+      await access(
+        join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
+      );
+      await access(
+        join(result.runRoot, 'qa/visual-review/attempt-1/result.json'),
+      );
+      if (scenario.expectedReviews === 1) {
+        await assert.rejects(
+          access(join(result.runRoot, 'qa/visual-review/revision.json')),
+          { code: 'ENOENT' },
+        );
+      } else {
+        await access(
+          join(result.runRoot, 'qa/visual-review/attempt-2/request.json'),
+        );
+        await access(
+          join(result.runRoot, 'qa/visual-review/attempt-2/result.json'),
+        );
+        const revision = JSON.parse(
+          await readFile(
+            join(result.runRoot, 'qa/visual-review/revision.json'),
+            'utf8',
+          ),
+        );
+        assert.deepEqual(revision.artifactIds, ['project-recap']);
+        assert.equal(correctionContexts.length, 1);
+        assert.equal(correctionContexts[0].attempt, 1);
+        assert.equal(correctionContexts[0].findings.length, 1);
+        assert.match(
+          await readFile(
+            join(result.runRoot, 'source/content/project-recap.html'),
+            'utf8',
+          ),
+          /Corrected first viewport/,
+        );
+      }
+    });
+  }
 });
 
 test('fails before composition on invalid set sources, ledger conflicts, or missing drafts', async () => {

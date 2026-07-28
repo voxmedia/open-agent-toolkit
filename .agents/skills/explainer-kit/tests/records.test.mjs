@@ -23,6 +23,7 @@ import {
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
+  writeVisualRevision,
 } from '../scripts/lib/records.mjs';
 import { planExplainerSet } from '../scripts/lib/set-plan.mjs';
 
@@ -164,6 +165,38 @@ test('initializes all stages as pending with an incomplete outcome', async () =>
       'durability',
       'publish',
     ].map((id) => ({ id, status: 'pending' })),
+  );
+});
+
+test('retains one bounded visual revision record for corrected artifacts', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const paths = await writeVisualRevision(run, {
+    artifactIds: ['project-recap'],
+    changes: [
+      {
+        artifactId: 'project-recap',
+        contentPath: 'source/content/project-recap.html',
+        authorResultPath: 'source/author/project-recap.json',
+        previousHash: HASH,
+        revisedHash: `sha256:${'b'.repeat(64)}`,
+      },
+    ],
+  });
+
+  assert.deepEqual(paths, ['qa/visual-review/revision.json']);
+  const retained = JSON.parse(
+    await readFile(join(run.runRoot, paths[0]), 'utf8'),
+  );
+  assert.equal(retained.schemaVersion, 'explainer-kit.visual-revision/v1');
+  assert.equal(retained.attempt, 1);
+  assert.deepEqual(retained.artifactIds, ['project-recap']);
+  await assert.rejects(
+    writeVisualRevision(run, {
+      artifactIds: ['project-recap'],
+      changes: retained.changes,
+    }),
+    /already exists|one visual revision/i,
   );
 });
 

@@ -41,6 +41,8 @@ import {
   verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
+  writeVisualReviewAttempt,
+  writeVisualRevision,
 } from './lib/records.mjs';
 import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveRootConfinedPath } from './lib/safe-paths.mjs';
@@ -93,6 +95,7 @@ export async function runExplainer(request, options = {}) {
     approval: null,
     browserEvidence: [],
     visualReview: null,
+    visualReviewPaths: [],
     resumeToken: null,
     resumedApprovalStatus: null,
   };
@@ -185,7 +188,7 @@ export async function runExplainer(request, options = {}) {
         );
       }
       await executeRenderStage(state, options);
-      await executeQaStage(state, options);
+      await executeQaStage(state, options, now);
     }
 
     state.approval = await resolveContentApproval(
@@ -280,11 +283,11 @@ async function executeRenderStage(state, options) {
   });
 }
 
-async function executeQaStage(state, options) {
+async function executeQaStage(state, options, now) {
   await executeStage(state.run, 'qa', options, async () => {
     const htmlSafetyErrors = [];
     const qaWarnings = [];
-    return auditRenderedArtifacts(state, options, {
+    return auditRenderedArtifacts(state, options, now, {
       browserProbe: resolveBrowserProbe(options),
       htmlSafetyErrors,
       qaWarnings,
@@ -310,6 +313,7 @@ function resolveBrowserProbe(options) {
 async function auditRenderedArtifacts(
   state,
   options,
+  now,
   { browserProbe, htmlSafetyErrors, qaWarnings },
 ) {
   for (const artifact of state.resolvedArtifacts.filter(
@@ -377,12 +381,48 @@ async function auditRenderedArtifacts(
   state.browserEvidence = report.browser?.evidence ?? [];
   const visualCritic = resolveVisualCritic(options);
   if (visualCritic) {
-    state.visualReview = await runVisualReview({
-      plan: state.setPlan,
-      rendered: state.rendered,
-      evidence: state.browserEvidence,
-      visualCritic,
-    });
+    await reviewAndRetain(state, visualCritic, 1);
+    if (state.visualReview.result.disposition === 'correct') {
+      await applyVisualCorrection(state, options, now);
+      const correctedArtifacts = state.rendered.map((artifact) => ({
+        id: artifact.artifactId,
+        type: artifact.type,
+        html: artifact.html,
+      }));
+      const finalReport = await auditArtifactSet({
+        artifacts: correctedArtifacts,
+        setPlan: state.setPlan,
+        ...(options.denylist && { denylist: options.denylist }),
+        ...(browserProbe && { browserProbe }),
+        ...(options.widths && { widths: options.widths }),
+        ...(browserProbe && requiresRecapVisualReview(state) && {
+          evidenceRoot: state.run.runRoot,
+          requireBrowserEvidence: true,
+        }),
+      });
+      const finalHardIssues = finalReport.issues.filter((issue) =>
+        isHardQaIssue(issue.code),
+      );
+      if (finalHardIssues.length > 0) {
+        throw codedError(
+          'E_QA',
+          finalHardIssues
+            .map(({ code, message }) => `${code}: ${message}`)
+            .join('; '),
+        );
+      }
+      const finalWarnings = finalReport.issues.filter(
+        (issue) => !isHardQaIssue(issue.code),
+      );
+      qaWarnings.push(
+        ...renderQaWarningIds(finalWarnings),
+        ...finalWarnings
+          .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
+          .map(({ code }) => `qa-${code}`),
+      );
+      state.browserEvidence = finalReport.browser?.evidence ?? [];
+      await reviewAndRetain(state, visualCritic, 2);
+    }
   }
   state.warnings.push(...qaWarnings);
   const warnings = [
@@ -390,7 +430,10 @@ async function auditRenderedArtifacts(
     ...new Set(qaWarnings),
   ];
   return {
-    outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+    outputPaths: [
+      ...state.rendered.map(({ renderedPath }) => renderedPath),
+      ...state.visualReviewPaths,
+    ],
     warnings,
     status: warnings.length > 0 ? 'warned' : 'passed',
   };
@@ -420,6 +463,136 @@ function requiresRecapVisualReview(state) {
   return (
     state.recipe.id === 'project-recap' &&
     state.run.request.mode === 'unattended'
+  );
+}
+
+async function reviewAndRetain(state, visualCritic, attempt) {
+  state.visualReview = await runVisualReview({
+    plan: state.setPlan,
+    rendered: state.rendered,
+    evidence: state.browserEvidence,
+    visualCritic,
+  });
+  state.visualReviewPaths.push(
+    ...(await writeVisualReviewAttempt(state.run, {
+      attempt,
+      review: state.visualReview,
+    })),
+  );
+}
+
+async function applyVisualCorrection(state, options, now) {
+  const findings = state.visualReview.result.findings;
+  const artifactIds = [...new Set(findings.map(({ artifactId }) => artifactId))];
+  const correctionAuthor = options.correctArtifact ?? options.author;
+  if (typeof correctionAuthor !== 'function') {
+    throw codedError(
+      'E_VISUAL_CORRECTION',
+      'A correct disposition requires an artifact correction callback.',
+    );
+  }
+  const trust = authorTrustContext(options, now);
+  const changes = [];
+  for (const artifactId of artifactIds) {
+    const artifactIndex = state.resolvedArtifacts.findIndex(
+      ({ id }) => id === artifactId,
+    );
+    if (artifactIndex < 0) {
+      throw codedError(
+        'E_VISUAL_CORRECTION',
+        `Visual correction references unknown artifact ${artifactId}.`,
+      );
+    }
+    const artifact = state.resolvedArtifacts[artifactIndex];
+    const previousContent = state.authoredContent.get(artifactId);
+    const item = await authorArtifact(
+      state,
+      artifact,
+      correctionAuthor,
+      trust,
+      {
+        attempt: 1,
+        findings: structuredClone(
+          findings.filter((finding) => finding.artifactId === artifactId),
+        ),
+        previousContentPath: state.contentPaths.get(artifactId),
+      },
+    );
+    if ((item.result.proposedArtifacts ?? []).length > 0) {
+      throw codedError(
+        'E_VISUAL_CORRECTION',
+        'Visual correction cannot change the validated artifact portfolio.',
+      );
+    }
+    if (item.artifact.authoring === 'html') {
+      const safety = validateHtmlSafety({
+        html: item.content,
+        shell: item.artifact.shellContent,
+        shellName: item.artifact.shell ?? item.artifact.template,
+      });
+      if (!safety.valid) {
+        throw codedError(
+          'E_QA',
+          `Corrected artifact ${artifactId} failed DOM safety validation.`,
+        );
+      }
+    }
+    await writeJsonAtomic(state.run.runRoot, item.resultPath, item.result);
+    await writeTextAtomic(state.run.runRoot, item.contentPath, item.content);
+    state.resolvedArtifacts[artifactIndex] = item.artifact;
+    state.authoredContent.set(artifactId, item.content);
+    state.contentPaths.set(artifactId, item.contentPath);
+    if (item.artifact.authoring === 'markdown') {
+      const links = expansionLinks(state.resolvedArtifacts);
+      const model = assertValidContentModel(
+        state.recipe,
+        markdownContentModel(
+          item.artifact,
+          state.run.slug,
+          item.content,
+          item.artifact.origin === 'floor' ? links : [],
+        ),
+        item.artifact,
+      );
+      const modelIndex = state.contentModels.findIndex(
+        ({ artifactId: id }) => id === artifactId,
+      );
+      state.contentModels[modelIndex] = model;
+    }
+    const rendered =
+      item.artifact.authoring === 'markdown'
+        ? await renderArtifact({
+            recipeArtifact: renderDescriptor(item.artifact),
+            content: state.contentModels.find(
+              ({ artifactId: id }) => id === artifactId,
+            ),
+            theme: state.theme,
+            renderStrategy: state.renderStrategy,
+            ...(state.run.request.publicBaseUrl && {
+              publicBaseUrl: state.run.request.publicBaseUrl,
+            }),
+          })
+        : artisticRender(state, item.artifact);
+    await writeTextAtomic(
+      state.run.runRoot,
+      rendered.renderedPath,
+      rendered.html,
+    );
+    const renderedIndex = state.rendered.findIndex(
+      ({ artifactId: id }) => id === artifactId,
+    );
+    state.rendered[renderedIndex] = rendered;
+    state.artifacts[renderedIndex] = artifactRecord(state, rendered);
+    changes.push({
+      artifactId,
+      contentPath: item.contentPath,
+      authorResultPath: item.resultPath,
+      previousHash: hashBytes(previousContent),
+      revisedHash: hashBytes(item.content),
+    });
+  }
+  state.visualReviewPaths.push(
+    ...(await writeVisualRevision(state.run, { artifactIds, changes })),
   );
 }
 
@@ -1107,7 +1280,13 @@ function resolveAuthorProvenance(claimed, trust, artifactId) {
   };
 }
 
-async function authorArtifact(state, artifact, author, trust) {
+async function authorArtifact(
+  state,
+  artifact,
+  author,
+  trust,
+  correctionContext,
+) {
   const [brief, visualAuthoringGuidance, shellContent] = await Promise.all([
     readSkillFile(artifact.briefRef),
     readSkillFile('references/visual-authoring.md'),
@@ -1151,7 +1330,13 @@ async function authorArtifact(state, artifact, author, trust) {
     );
   }
 
-  const result = await author(structuredClone(authorRequest));
+  const result =
+    correctionContext === undefined
+      ? await author(structuredClone(authorRequest))
+      : await author(
+          structuredClone(authorRequest),
+          structuredClone(correctionContext),
+        );
   const resultValidation = validateContract('author-result/v2', result);
   if (!resultValidation.valid) {
     throw codedError(

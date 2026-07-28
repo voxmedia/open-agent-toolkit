@@ -3,7 +3,12 @@ import { access, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { canonicalHash, validateContract } from './contracts.mjs';
-import { createConfinedRunRoot, writeJsonAtomic } from './fs-safe.mjs';
+import {
+  createConfinedRunRoot,
+  writeFileAtomic,
+  writeJsonAtomic,
+} from './fs-safe.mjs';
+import { resolveRootConfinedPath } from './safe-paths.mjs';
 
 const STAGE_IDS = [
   'validate',
@@ -28,6 +33,7 @@ export const SET_PLAN_RECORD_PATHS = Object.freeze([
   'source/set-plan/portfolio.json',
   'source/set-plan/drafts.json',
 ]);
+export const VISUAL_REVISION_PATH = 'qa/visual-review/revision.json';
 const SET_PLAN_RESUME_TOKEN_PREFIX = 'ekrt1:';
 const SET_PLAN_RESUME_TOKEN_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
 
@@ -165,6 +171,96 @@ export async function updateBuildRecord(run, stage) {
   assertValidContract('build-record', record);
   await writeJsonAtomic(run.runRoot, 'build-record.json', record);
   return record;
+}
+
+export async function writeVisualReviewAttempt(
+  run,
+  { attempt, review } = {},
+) {
+  assertRun(run);
+  if (![1, 2].includes(attempt) || !isObject(review)) {
+    throw new TypeError('Visual review records require attempt 1 or 2.');
+  }
+  const requestValidation = validateContract(
+    'visual-review-request',
+    review.request,
+  );
+  const resultValidation = validateContract(
+    'visual-review-result',
+    review.result,
+    { visualReviewRequest: review.request },
+  );
+  if (!requestValidation.valid || !resultValidation.valid) {
+    throw new Error('Visual review records must contain valid bound contracts.');
+  }
+
+  const directory = `qa/visual-review/attempt-${attempt}`;
+  const retainedRequest = structuredClone(review.request);
+  const paths = [];
+  for (const artifact of retainedRequest.renderedArtifacts) {
+    for (const evidence of artifact.evidence) {
+      const screenshotPath = `${directory}/evidence/${artifact.artifactId}/${evidence.viewport}.png`;
+      const metricsPath = `${directory}/evidence/${artifact.artifactId}/${evidence.viewport}.json`;
+      await copyConfinedEvidence(run.runRoot, evidence.screenshotPath, screenshotPath);
+      await copyConfinedEvidence(run.runRoot, evidence.metricsPath, metricsPath);
+      evidence.screenshotPath = screenshotPath;
+      evidence.metricsPath = metricsPath;
+      paths.push(screenshotPath, metricsPath);
+    }
+  }
+  const requestPath = `${directory}/request.json`;
+  const resultPath = `${directory}/result.json`;
+  await writeJsonAtomic(run.runRoot, requestPath, retainedRequest);
+  await writeJsonAtomic(run.runRoot, resultPath, review.result);
+  return [...paths, requestPath, resultPath];
+}
+
+export async function writeVisualRevision(
+  run,
+  { artifactIds, changes } = {},
+) {
+  assertRun(run);
+  if (
+    !Array.isArray(artifactIds) ||
+    artifactIds.length === 0 ||
+    new Set(artifactIds).size !== artifactIds.length ||
+    !Array.isArray(changes) ||
+    changes.length !== artifactIds.length ||
+    changes.some(
+      (change) =>
+        !isObject(change) ||
+        !artifactIds.includes(change.artifactId) ||
+        typeof change.contentPath !== 'string' ||
+        typeof change.authorResultPath !== 'string' ||
+        !/^sha256:[a-f0-9]{64}$/.test(change.previousHash) ||
+        !/^sha256:[a-f0-9]{64}$/.test(change.revisedHash),
+    )
+  ) {
+    throw new TypeError(
+      'One visual revision requires unique corrected artifacts and hash-bound changes.',
+    );
+  }
+  try {
+    await access(join(run.runRoot, VISUAL_REVISION_PATH));
+    throw new Error('Only one visual revision may be retained per run.');
+  } catch (error) {
+    if (error?.code !== 'ENOENT') throw error;
+  }
+  await writeJsonAtomic(run.runRoot, VISUAL_REVISION_PATH, {
+    schemaVersion: 'explainer-kit.visual-revision/v1',
+    attempt: 1,
+    artifactIds: [...artifactIds],
+    changes: structuredClone(changes),
+  });
+  return [VISUAL_REVISION_PATH];
+}
+
+async function copyConfinedEvidence(runRoot, sourcePath, targetPath) {
+  const confined = await resolveRootConfinedPath(runRoot, sourcePath);
+  if (!confined.valid) {
+    throw new Error(`Visual review evidence is not run-root confined: ${sourcePath}`);
+  }
+  await writeFileAtomic(runRoot, targetPath, await readFile(confined.absolutePath));
 }
 
 export async function reopenBuildStages(run, { ids, reason }) {
