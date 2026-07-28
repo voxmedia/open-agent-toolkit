@@ -257,13 +257,15 @@ paths.
 **Files:**
 
 - Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/explainer-kit/wrapper-compatibility.test.mjs`
 
 **Steps:**
 
 1. Preserve the RED root-verification evidence showing the version contract
    expected explainer-kit `2.0.0` after p01-t06 correctly bumped it to `2.0.1`.
-2. Update the exact explainer-kit version expectation to `2.0.1`; do not alter
-   any other skill-family version.
+2. Update the exact explainer-kit version expectations in repository validation
+   and wrapper compatibility smoke coverage to `2.0.1`; do not alter any other
+   skill-family version.
 3. Run
    `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
    and `pnpm test`; require both to exit 0.
