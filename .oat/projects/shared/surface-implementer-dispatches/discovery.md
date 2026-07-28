@@ -17,111 +17,137 @@ Discovery is for requirements and decisions, not implementation details.
 
 ## Initial Request
 
-{Copy of user's initial request}
-
-## Clarifying Questions
-
-### Question 1: {Topic}
-
-**Q:** {Question}
-**A:** {User's answer}
-**Decision:** {What this means for the project}
+Implement `BL-260727-surface-implementer-dispatches`: make skipped candidate
+selection visible and auditable for managed-capped implementation and fix
+dispatches. Include the agreed small companion disclosure that a configured
+terminal Frontier reviewer may require model access and retention-policy
+eligibility; do not create a separate backlog item.
 
 ## Solution Space
 
-_Include this section only when the request is exploratory or multiple viable approaches exist. For well-understood requests with an obvious approach, omit or replace with a single sentence stating the chosen direction._
-
-{Divergent exploration of the problem space before converging on an approach. Capture genuinely distinct strategies, not minor variations. Include 2-3 approaches as needed.}
-
-### Approach 1: {Strategy Name} _(Recommended)_
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Approach 2: {Strategy Name}
-
-**Description:** {What this approach involves}
-**When this is the right choice:** {Conditions under which this approach is best}
-**Tradeoffs:** {What you give up by choosing this}
-
-### Chosen Direction
-
-**Approach:** {Which approach was selected}
-**Rationale:** {Why this approach over the alternatives}
-**User validated:** {Yes/No — explicit buy-in before proceeding}
+The chosen direction is additive enforcement and provenance rather than
+automatic classification. The CLI can mechanically detect a skipped
+exact-candidate selection, but it cannot judge whether the root classified the
+phase correctly. The project will therefore warn and emit structured evidence
+for the deterministic violation while preserving the root as the task-class
+decider.
 
 ## Options Considered
 
-{Specific implementation options within the chosen approach. More granular than Solution Space — captures decisions about libraries, patterns, data formats, etc.}
-
-### Option A: {Option Name}
-
-**Description:** {What this option involves}
-
-**Pros:**
-
-- {Benefit 1}
-- {Benefit 2}
-
-**Cons:**
-
-- {Drawback 1}
-- {Drawback 2}
-
-**Chosen:** {A/B/Neither}
-
-**Summary:** {1-2 sentence summary of the chosen option and why}
+- **Hard block versus warning:** use a coded warning for the current
+  compatibility boundary, preserving `status: resolved` and exit code `0`.
+  A later fail-closed transition can be considered after callers migrate.
+- **Reuse `--preferred` versus separate classification inputs:** keep
+  classification separate from candidate selection and the ceiling. Legacy
+  `--preferred` remains a selection control and is not overloaded as provenance.
+- **Single adoption disclosure versus resolved-target disclosure:** surface the
+  recommendation during adoption/choice and surface the actual resolved target
+  at runtime. Existing explicit cells may survive recommendation adoption, so a
+  version stamp alone is not authoritative.
 
 ## Key Decisions
 
-1. **{Decision Category}:** {Decision made and why}
-2. **{Decision Category}:** {Decision made and why}
+1. **Enforcement scope:** detect skipped selection for every managed named-cap
+   implementer/fix route, not Cursor alone. Exclude reviewers, inherit,
+   uncapped, unresolved, and policy-only preflight.
+2. **Diagnostic behavior:** emit a stable coded diagnostic in JSON and a
+   human-facing warning. Do not rely on logger-only warnings because JSON mode
+   suppresses them.
+3. **Classification provenance:** accept provider-neutral task class and
+   provider-specific preferred effort as separate nullable inputs, then carry
+   them into Dispatch Report output beside the selected candidate and ceiling.
+4. **Judgment boundary:** require a recorded classification but do not claim
+   that the CLI can validate whether the classification was correct.
+5. **Fable disclosure:** keep the configured ladder unchanged. Disclose the
+   terminal reviewer target and require users to confirm access and applicable
+   retention-policy eligibility. Match the resolved target at runtime rather
+   than inferring from recommendation version.
 
 ## Constraints
 
-- {Constraint 1}
-- {Constraint 2}
+- Preserve existing resolver status and exit semantics for this release.
+- Preserve policy-only preflight, reviewer, uncapped, inherit, and legacy
+  compatibility behavior without false skipped-selection warnings.
+- Keep classification distinct from policy ceiling, requested candidate, and
+  selected candidate.
+- Keep the compatibility `Dispatch:` stamp grammar unchanged.
+- Make report-schema evolution additive and backward compatible, or explicitly
+  version it if the V1 contract does not permit new nullable fields.
+- Cursor candidate strings remain opaque.
+- Canonical skills receive one PR-scoped version bump; provider-linked views
+  remain sync-managed.
+- Shipped CLI/assets/docs changes require the five public packages to move in
+  lockstep and pass release validation.
 
 ## Success Criteria
 
-- {Criterion 1}
-- {Criterion 2}
+- A real managed-capped implementation/fix resolution with no exact candidate
+  emits a coded skipped-selection diagnostic in human and JSON output.
+- Exact candidates at or below the cap remain successful and report
+  `selectionMode=candidate`.
+- Recorded task class/preferred effort survives into Dispatch Report output
+  alongside the selected target.
+- Policy preflight and non-applicable routes do not emit the warning.
+- Tests cover skipped, deliberate-at-cap, below-cap, above-cap, preflight, and
+  report serialization behavior.
+- Adoption/choice output explains the configured Frontier reviewer target, and
+  runtime preflight/reviewer resolution discloses the actual Fable target when
+  present.
+- Documentation explains the distinction between model access and applicable
+  retention-policy eligibility without asserting that the CLI can determine
+  organizational policy.
+- Relevant CLI, docs, skill, build, and release validation commands pass.
 
 ## Out of Scope
 
-- {Thing we explicitly decided not to do}
-- {Thing we explicitly decided not to include in this phase}
+- Automatically judging whether a task class is correct.
+- Automatically checking organizational retention policy.
+- Reordering or replacing the Frontier ladder.
+- Turning the warning into a hard error in this release.
+- Work tracked by `BL-260726-validate-cursor-pin-effort` or
+  `BL-260708-verify-cursor-gpt-5-6-subagent`.
 
 ## Deferred Ideas
 
-{Ideas that came up during discovery but are intentionally out of scope for now}
-
-- {Idea 1} - {Why deferred}
-- {Idea 2} - {Why deferred}
+- Fail closed on skipped managed-capped candidate selection after a compatibility
+  migration period.
+- Analyze repeated at-cap classifications as an operational cost signal.
 
 ## Open Questions
 
-{Questions that need resolution before or during specification (and later design)}
-
-- **{Question Category}:** {Question that needs answering}
-- **{Question Category}:** {Question that needs answering}
+- **Report schema:** does Dispatch Report V1 permit additive nullable
+  classification/diagnostic fields, or should this introduce V2?
+- **Disclosure representation:** should resolver disclosures reuse a generic
+  diagnostic shape or use a separate advisory/disclosure collection?
 
 ## Assumptions
 
-{Assumptions we're making that need validation}
-
-- {Assumption 1}
-- {Assumption 2}
+- The existing exact-candidate branch remains the required runtime path for
+  managed-capped implementation and fix dispatches.
+- `selectionMode=capped` is mechanically invalid only when full runtime report
+  context identifies an actual managed-capped implementation/fix dispatch.
+- Availability probing cannot establish organizational retention eligibility.
 
 ## Risks
 
-{Potential risks identified during discovery}
-
-- **{Risk Name}:** {Description}
-  - **Likelihood:** Low / Medium / High
-  - **Impact:** Low / Medium / High
-  - **Mitigation Ideas:** {How to address}
+- **False-positive diagnostics:** legacy preferred paths and policy-only
+  preflight can also resolve without an exact candidate.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** gate the warning on managed named-cap policy, runtime
+    implementation/fix context, and exact selection state.
+- **Schema drift:** report producers outside dispatch-ceiling may omit or
+  misorder new fields.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** centralize types/builders and add ordered
+    serialization, formatter, gate, and integration tests.
+- **Stale disclosure:** recommendation version may not match preserved explicit
+  ladder cells.
+  - **Likelihood:** Medium
+  - **Impact:** Medium
+  - **Mitigation Ideas:** derive runtime disclosure from the effective resolved
+    target.
 
 ## Next Steps
 

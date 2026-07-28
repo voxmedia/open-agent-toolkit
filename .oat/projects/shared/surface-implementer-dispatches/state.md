@@ -2,7 +2,9 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues: [
+    { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
+  ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -69,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T19:31:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -95,7 +97,8 @@ Discovery - Gathering requirements for a quick workflow before planning
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Existing backlog scope and prior review decisions collected
+- ⧗ Resolving lightweight design depth
 
 ## Blockers
 
@@ -103,4 +106,4 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Confirm design depth, then generate an executable implementation plan
