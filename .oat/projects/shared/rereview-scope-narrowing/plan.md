@@ -5,7 +5,8 @@ oat_blockers: []
 oat_last_updated: 2026-07-28
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p02', 'p05'] # pause AFTER the provenance contract and after the default flip
+oat_plan_hill_phases: ['p06'] # pause only after the final phase
+oat_auto_review_at_hill_checkpoints: true
 oat_plan_parallel_groups: [] # sequential; see Parallelism
 oat_phase_review_gate:
   enabled: true

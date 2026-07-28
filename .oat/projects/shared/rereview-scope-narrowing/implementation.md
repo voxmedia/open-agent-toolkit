@@ -2,106 +2,139 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-26
+oat_last_updated: 2026-07-28
 oat_current_task_id: p01-t01
 oat_generated: false
+oat_template: false
+oat_template_name: implementation
 ---
 
 # Implementation: rereview-scope-narrowing
 
-**Started:** 2026-07-26
-**Last Updated:** 2026-07-26
+**Started:** 2026-07-28
+**Last Updated:** 2026-07-28
 
 > This document is used to resume interrupted implementation sessions.
 >
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> `oat_current_task_id` points to the next plan task to execute. Reviews are
+> tracked in `plan.md`, not as plan tasks.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | in_progress | 3     | 0/3       |
+| p02   | pending     | 3     | 0/3       |
+| p03   | pending     | 2     | 0/2       |
+| p04   | pending     | 1     | 0/1       |
+| p05   | pending     | 1     | 0/1       |
+| p06   | pending     | 3     | 0/3       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/13 tasks completed
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Range resolution core
 
 **Status:** in_progress
-**Started:** 2026-07-26
+**Started:** 2026-07-28
 
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t01: Match prior reviews by lineage
 
 **Status:** pending
 **Commit:** -
 
-**Notes:**
+### Task p01-t02: Narrow by default and remove the prompt
 
-- {Notes will be added during implementation}
+**Status:** pending
+**Commit:** -
+
+### Task p01-t03: Classify the resolved range
+
+**Status:** pending
+**Commit:** -
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Provenance contract
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Record the reviewed head on the review artifact
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t02: Migrate the review ledger to carry lineage-qualified provenance
+
+**Status:** pending
+**Commit:** -
+
+### Task p02-t03: Fail open when durable lineage cannot be established
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Local rail rewrite
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Replace Step 3a narrowing with guarded prior-head ranges
+
+**Status:** pending
+**Commit:** -
+
+### Task p03-t02: Drop the prompt and print a classified resolution line
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 4: Remote rail alignment
+
+**Status:** pending
+**Started:** -
+
+### Task p04-t01: Align both remote provide skills
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 5: Config default flip
+
+**Status:** pending
+**Started:** -
+
+### Task p05-t01: Default the preference to narrow
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 6: Documentation and release
+
+**Status:** pending
+**Started:** -
+
+### Task p06-t01: Update documentation
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t02: Verify cross-surface semantic parity
+
+**Status:** pending
+**Commit:** -
+
+### Task p06-t03: Refresh provider views, bump versions, validate release
 
 **Status:** pending
 **Commit:** -
@@ -110,15 +143,9 @@ oat_generated: false
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation phase has completed yet._
 
 <!-- orchestration-runs-end -->
 
@@ -126,46 +153,21 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-07-28
 
-### 2026-07-26
+**Session Start:** 20:24 UTC
 
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
+- [ ] p01-t01: Match prior reviews by lineage
 
 **Decisions:**
 
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-26
-
-**Session Start:** {time}
-
-{Continue log...}
+- HiLL checkpoint: final phase only (`p06`).
+- Auto-review at the final HiLL checkpoint: enabled.
+- Dispatch policy: managed `high` from project state.
 
 ---
 
 ## Deviations from Plan / Design
-
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
 | Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
 | ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
@@ -173,38 +175,38 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| p01   | -         | -      | -      | -        |
+| p02   | -         | -      | -      | -        |
+| p03   | -         | -      | -      | -        |
+| p04   | -         | -      | -      | -        |
+| p05   | -         | -      | -      | -        |
+| p06   | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Pending implementation.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Pending implementation.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- Pending implementation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Plan artifact review passed before implementation.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- None recorded.
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Discovery: `discovery.md`
