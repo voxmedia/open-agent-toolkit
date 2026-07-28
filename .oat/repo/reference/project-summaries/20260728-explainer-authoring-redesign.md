@@ -2,11 +2,11 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-26
+oat_last_updated: 2026-07-27
 oat_generated: true
-oat_summary_last_task: prev1-t10
-oat_summary_revision_count: 1
-oat_summary_includes_revisions: ['rev1']
+oat_summary_last_task: prev2-t06
+oat_summary_revision_count: 2
+oat_summary_includes_revisions: ['rev1', 'rev2']
 ---
 
 # Summary: explainer-authoring-redesign
@@ -27,8 +27,9 @@ expectations out of schemas and into prose.
 ## What Was Implemented
 
 Eight phases, 20 planned tasks plus three correctives, then a 10-task revision
-phase, a final scope reduction, and four post-closeout rendering fixes. Shipped
-as PR #179: 77 commits, 109 files, +14,379/−1,544 as of `ba84368f`.
+phase, a final scope reduction, four post-closeout rendering fixes, and a
+six-task phase closing the remote PR review. Shipped as PR #179: 92 commits,
+155 files, +26,790/−1,547 as of `28196ec7`.
 
 - **Two authoring paths.** A narrative path promotes Markdown from provenance to
   actual renderer input, so tables, GFM-alert callouts, fenced timelines, and
@@ -52,7 +53,7 @@ as PR #179: 77 commits, 109 files, +14,379/−1,544 as of `ba84368f`.
   example, verified non-vacuous — breaking the table renderer fails 6 of 8
   assertions.
 
-Final gates: core 224, adapter 59, release 44 (1 env-gated skip), smoke 129,
+Final gates: core 231, adapter 59, release 44 (1 env-gated skip), smoke 129,
 plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
 
 ## Key Decisions
@@ -121,6 +122,17 @@ plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
   emits that markup. This is the concrete case for the project's decision that
   the generating agent reviews output in a browser: the suite was green and
   `release:validate` passed at every one of those points.
+- **A review triage published a false disproof.** Triaging the remote review,
+  the root orchestrator searched only `scripts/lib/*.mjs`, concluded nothing read
+  `profile.shell`, and re-scoped Bugbot's finding as a dead key to remove — a
+  conclusion recorded in `plan.md`, the review artifact, and a PR comment. The
+  consuming code was in `scripts/run.mjs`. The implementer found it, refused to
+  delete a load-bearing key, and blocked instead of complying. The block was
+  correct: root reproduced `templates/undefined.html`, corrected all three
+  artifacts, posted a retraction on the PR comment carrying the false claim, and
+  re-dispatched with the finding restored as reported. Worth preserving because
+  the failure was a scoped search treated as exhaustive, and the recovery
+  depended on a subagent contradicting its own instructions.
 
 ## Tradeoffs Made
 
@@ -164,9 +176,29 @@ plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.
   360-wide viewBox stacked past its 540 height, clipping every section-rail node
   into a solid black bar. Both were revert-verified; the `.section-number` guard
   was generalized to assert every structure the renderer emits, and a new test
-  asserts the section rail stays inside the shell viewport. Core and adapter now
-  stand at 224 and 59 — the 221 and 59 above plus the section-number guard, a
-  wrapped-list-item Markdown test, and the viewport-fit test.
+  asserts the section rail stays inside the shell viewport. Core and adapter
+  stood at 224 and 59 at that point — the 221 and 59 above plus the
+  section-number guard, a wrapped-list-item Markdown test, and the viewport-fit
+  test.
+- **Phase rev2** — six fix tasks closing the remote Bugbot review of PR #179
+  (4 Medium, 2 Minor), each independently reproduced at the root before being
+  converted into a task. Two were shell regressions this PR had introduced and
+  were ordered first because they degraded every rendered deep-dive: snippet code
+  blocks drew a frame nested inside the `.snippet` panel's own frame
+  (`93d395da`), and `.diagram-card .node` set `stroke` on the `<g>` wrapping both
+  `<rect>` and `<text>`, so SVG stroke inheritance rendered every section-rail
+  label as outlined glyphs (`e695e889`). Both were browser-confirmed rather than
+  accepted on assertions alone. The rest were contract and plumbing gaps:
+  legacy approval records paired an `html` floor artifact with a hardcoded
+  Markdown content path (`f496268d`); `addExpansionWarnings` filtered out
+  `type-limit`, leaving `expansionTypeLimit` dead so declared `maxPerType`
+  overruns never reached the manifest (`0e27108e`); `probeRenderedPage` silently
+  dropped the `disableAnimations` and `injectedCss` fields its caller sent, which
+  left the `animations-enabled` check unable to verify what it reported
+  (`82114224`); and `if ('shell' in profile)` validated `shell` only when the key
+  was present, so an `authoring: html` profile without it loaded as valid and
+  failed later reading `templates/undefined.html` (`6ff2172b`). Every task was
+  revert-verified. Core and adapter close at 231 and 59.
 
 ## Follow-up Items
 
