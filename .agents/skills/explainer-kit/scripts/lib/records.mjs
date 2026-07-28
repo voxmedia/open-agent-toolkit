@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { readFile, readdir, rm } from 'node:fs/promises';
+import { access, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { validateContract } from './contracts.mjs';
@@ -232,6 +232,66 @@ export async function writeManifestAtomic(run, manifest) {
   assertValidContract('manifest', manifest, { buildRecord });
   await writeJsonAtomic(run.runRoot, 'manifest.json', manifest);
   return run.manifestPath;
+}
+
+export async function writeSetPlanRecords(run, { request, plan }) {
+  assertRun(run);
+  if (
+    !isObject(request) ||
+    request.schemaVersion !== 'explainer-kit.set-plan-request/v1'
+  ) {
+    throw new TypeError('Set-plan request must use the v1 record contract.');
+  }
+  assertValidContract('set-plan', plan);
+
+  const records = [
+    ['source/set-plan/request.json', request],
+    ['source/set-plan/result.json', plan],
+    [
+      'source/set-plan/ledger.json',
+      {
+        schemaVersion: 'explainer-kit.set-plan-ledger/v1',
+        planId: plan.planId,
+        ...plan.ledger,
+      },
+    ],
+    [
+      'source/set-plan/portfolio.json',
+      {
+        schemaVersion: 'explainer-kit.set-plan-portfolio/v1',
+        planId: plan.planId,
+        artifacts: plan.portfolio,
+      },
+    ],
+    [
+      'source/set-plan/drafts.json',
+      {
+        schemaVersion: 'explainer-kit.set-plan-drafts/v1',
+        drafts: plan.portfolio.map(
+          ({ artifactId, draft, visualIntent, justification }) => ({
+            artifactId,
+            draft,
+            visualIntent,
+            ...(justification && { justification }),
+          }),
+        ),
+      },
+    ],
+  ];
+  for (const [relativePath] of records) {
+    try {
+      await access(join(run.runRoot, relativePath));
+      throw new Error(
+        `Immutable set-plan record ${relativePath} already exists.`,
+      );
+    } catch (error) {
+      if (error?.code !== 'ENOENT') throw error;
+    }
+  }
+  for (const [relativePath, value] of records) {
+    await writeJsonAtomic(run.runRoot, relativePath, value);
+  }
+  return records.map(([relativePath]) => relativePath);
 }
 
 function normalizeRequestSlug(slug) {

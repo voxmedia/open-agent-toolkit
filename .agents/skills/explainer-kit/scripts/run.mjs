@@ -19,7 +19,6 @@ import {
   renderWarningIds,
 } from './lib/qa.mjs';
 import {
-  evaluateExpansionProposals,
   loadRecipe,
   recipeExpansion,
   recipeFloor,
@@ -33,8 +32,10 @@ import {
   reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
+  writeSetPlanRecords,
 } from './lib/records.mjs';
 import { artifactPath, renderArtifact } from './lib/render.mjs';
+import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 
 // Stages a rejected draft reruns once its content is corrected.
@@ -52,6 +53,8 @@ export async function runExplainer(request, options = {}) {
     factBase: null,
     factBaseHash: null,
     inputHashes: {},
+    setPlan: null,
+    setPlanPaths: [],
     contentModels: [],
     contentPaths: new Map(),
     authorResultPaths: [],
@@ -114,9 +117,18 @@ export async function runExplainer(request, options = {}) {
       await prepareTheme(state);
       await executeStage(run, 'content', options, async () => {
         state.discovery = await runDiscovery(recipe, state.factBase, options);
+        const planned = await planExplainerSet({
+          recipe,
+          factBase: state.factBase,
+          discovery: state.discovery,
+          planSet: options.planSet,
+        });
+        state.setPlan = planned.plan;
+        state.setPlanPaths = await writeSetPlanRecords(run, planned);
         await createAuthoredContent(state, options, now);
         return {
           outputPaths: [
+            ...state.setPlanPaths,
             ...state.contentPaths.values(),
             ...state.authorResultPaths,
           ],
@@ -429,13 +441,22 @@ async function loadResumableRun(request) {
 }
 
 async function hydrateResumableState(state) {
-  const [factBase, approval, theme, record] = await Promise.all([
+  const [factBase, approval, theme, record, setPlan] = await Promise.all([
     readJson(join(state.run.runRoot, 'source/fact-base.json')),
     readJson(join(state.run.runRoot, 'source/content-approval.json')),
     readJson(join(state.run.runRoot, 'theme.resolved.json')),
     readJson(state.run.buildRecordPath),
+    readJson(join(state.run.runRoot, 'source/set-plan/result.json')),
   ]);
   state.factBase = factBase;
+  state.setPlan = setPlan;
+  state.setPlanPaths = [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ];
   state.theme = theme;
   state.themeWarnings = [];
   state.resumedApprovalStatus = approval.status;
@@ -826,64 +847,33 @@ async function createAuthoredContent(state, options, now) {
     );
   }
   const trust = authorTrustContext(options, now);
-
-  const floor = await Promise.all(
-    recipeFloor(state.recipe).map((artifact) =>
-      authorArtifact(
-        state,
-        {
-          ...artifact,
-          origin: 'floor',
-          shell: artifact.authoring === 'html' ? artifact.template : undefined,
-        },
-        author,
-        trust,
-      ),
-    ),
-  );
-  const proposals = floor.flatMap(
-    ({ result }) => result.proposedArtifacts ?? [],
-  );
-  state.expansion = evaluateExpansionProposals(state.recipe, proposals);
-  if (!state.expansion.valid) {
-    throw codedError(
-      'E_AUTHOR_RESULT',
-      `Invalid expansion proposals: ${state.expansion.errors.join('; ')}`,
-    );
-  }
-
-  const expansions = [];
-  for (const accepted of state.expansion.accepted) {
-    const profile = accepted.profile;
-    const item = await authorArtifact(
-      state,
-      {
-        id: accepted.id,
-        type: profile.type,
-        authoring: profile.authoring,
-        briefRef: profile.briefRef,
-        shell: profile.shell,
-        template:
-          profile.authoring === 'markdown'
-            ? templateForType(profile.type)
-            : profile.shell,
-        required: false,
-        origin: 'expansion',
-        profileId: profile.profileId,
-      },
-      author,
-      trust,
-    );
+  const artifacts = plannedArtifacts(state.recipe, state.setPlan);
+  state.expansion = {
+    valid: true,
+    accepted: artifacts
+      .filter(({ origin }) => origin === 'expansion')
+      .map((artifact) => ({
+        id: artifact.id,
+        profileId: artifact.profileId,
+        rationale: artifact.plannedArtifact.justification.rationale,
+        status: 'accepted',
+        profile: expansionProfile(state.recipe, artifact.profileId),
+      })),
+    rejected: [],
+    warnings: [],
+    errors: [],
+  };
+  const authored = [];
+  for (const artifact of artifacts) {
+    const item = await authorArtifact(state, artifact, author, trust);
     if ((item.result.proposedArtifacts ?? []).length > 0) {
       throw codedError(
         'E_AUTHOR_RESULT',
-        `Expansion artifact ${accepted.id} cannot propose nested artifacts.`,
+        `Artifact ${artifact.id} cannot change the validated set plan.`,
       );
     }
-    expansions.push(item);
+    authored.push(item);
   }
-
-  const authored = [...floor, ...expansions];
   state.resolvedArtifacts = authored.map(({ artifact }) => artifact);
   const links = expansionLinks(state.resolvedArtifacts);
   for (const item of authored) {
@@ -1006,6 +996,8 @@ async function authorArtifact(state, artifact, author, trust) {
     factBase: structuredClone(state.factBase),
     ...(shellContent && { shell: shellContent }),
     theme: structuredClone(state.theme),
+    setContext: structuredClone(state.setPlan),
+    plannedArtifact: structuredClone(artifact.plannedArtifact),
     ...(artifact.origin === 'floor' &&
       requiredNarrative.length > 0 && {
         floor: { requiredNarrative },

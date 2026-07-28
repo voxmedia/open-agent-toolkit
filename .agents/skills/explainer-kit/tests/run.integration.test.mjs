@@ -65,6 +65,36 @@ function suppliedFactBase() {
   };
 }
 
+function plannedSet({ recipe, factBase }, portfolio = null) {
+  const sourceIds = factBase.sources
+    .map(({ id }) => id)
+    .filter((id) => !id.startsWith('critic:'));
+  return {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: `${recipe.id}-set`,
+    recipe: { id: recipe.id, version: recipe.version },
+    sourceIds,
+    ledger: {
+      terminology: [
+        { term: 'config-blind core', meaning: 'The provider-neutral runtime.' },
+      ],
+      statuses: [{ subject: 'implementation', value: 'validated' }],
+      numbers: [{ subject: 'source sets', value: 1, unit: 'set' }],
+    },
+    portfolio:
+      portfolio ??
+      recipe.floor.map((artifact) => ({
+        artifactId: artifact.id,
+        artifactType: artifact.type,
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds,
+        draft: `Compose the planned ${artifact.id} narrative.`,
+        visualIntent: 'Lead with the validated outcome.',
+      })),
+  };
+}
+
 function authorResult(authorRequest, overrides = {}) {
   const requiredNarrative = authorRequest.floor?.requiredNarrative ?? [
     'overview',
@@ -554,30 +584,160 @@ test('unattended author receives structured per-artifact context and retains val
   assert.ok(manifest.immutableHashes['source/author/project-recap.json']);
 });
 
+test('plans one immutable set after facts and before every artifact author', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const events = [];
+  const plannerRequests = [];
+  const authorRequests = [];
+  const planSet = mock.fn(async (plannerRequest) => {
+    events.push('plan');
+    plannerRequests.push(plannerRequest);
+    const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
+    return plannedSet(plannerRequest, [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds,
+        draft: 'Lead with the validated project outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+      {
+        artifactId: 'system-map',
+        artifactType: 'diagram',
+        profileId: 'supporting-diagram',
+        required: false,
+        sourceIds,
+        draft: 'Show the core and adapter relationship.',
+        visualIntent: 'Preserve system boundaries and direction.',
+        justification: {
+          kind: 'source-backed-detail',
+          sourceIds,
+          rationale: 'The architecture claim benefits from a dedicated map.',
+        },
+      },
+    ]);
+  });
+  const author = mock.fn(async (authorRequest) => {
+    events.push(`author:${authorRequest.artifactId}`);
+    authorRequests.push(authorRequest);
+    return authorResult(authorRequest);
+  });
+
+  const result = await runExplainerCore(fixture.request, {
+    planSet,
+    author,
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'built-not-durable', JSON.stringify(result.errors));
+  assert.equal(planSet.mock.callCount(), 1);
+  assert.deepEqual(events, ['plan', 'author:project-recap', 'author:system-map']);
+  assert.equal(plannerRequests[0].factBase.schemaVersion, 'explainer-kit.fact-base/v1');
+  assert.deepEqual(
+    authorRequests.map(({ setContext }) => setContext),
+    [authorRequests[0].setContext, authorRequests[0].setContext],
+  );
+  assert.deepEqual(
+    authorRequests.map(({ plannedArtifact }) => plannedArtifact.artifactId),
+    ['project-recap', 'system-map'],
+  );
+  for (const path of [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ]) {
+    await access(join(result.runRoot, path));
+  }
+});
+
+test('fails before composition on invalid set sources, ledger conflicts, or missing drafts', async () => {
+  const mutations = [
+    [
+      'unknown source',
+      (plan) => {
+        plan.portfolio[0].sourceIds = ['unknown'];
+      },
+    ],
+    [
+      'ledger conflict',
+      (plan) => {
+        plan.ledger.statuses.push({
+          subject: 'implementation',
+          value: 'blocked',
+        });
+      },
+    ],
+    [
+      'missing draft',
+      (plan) => {
+        delete plan.portfolio[0].draft;
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    const fixture = await suppliedFixture('project-recap');
+    const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+    const result = await runExplainerCore(fixture.request, {
+      planSet: async (plannerRequest) => {
+        const plan = plannedSet(plannerRequest);
+        mutate(plan);
+        return plan;
+      },
+      author,
+      now: () => NOW,
+    });
+
+    assert.equal(result.outcome, 'failed', label);
+    assert.equal(result.errors[0].code, 'E_SET_PLAN', label);
+    assert.equal(author.mock.callCount(), 0, label);
+  }
+});
+
 test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, and resume', async () => {
   const fixture = await suppliedFixture('project-recap');
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };
-  const author = mock.fn(async (authorRequest) =>
-    authorResult(authorRequest, {
-      ...(authorRequest.artifactId === 'project-recap' && {
-        proposedArtifacts: [
-          {
-            id: 'architecture-details',
-            profileId: 'deep-dive',
-            rationale: 'Architecture details warrant a dedicated page.',
-          },
-          {
-            id: 'system-map',
-            profileId: 'supporting-diagram',
-            rationale: 'The system relationships need a standalone visual.',
-          },
-        ],
-      }),
-    }),
-  );
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const planSet = async (plannerRequest) => {
+    const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
+    const optional = (artifactId, artifactType, profileId, rationale) => ({
+      artifactId,
+      artifactType,
+      profileId,
+      required: false,
+      sourceIds,
+      draft: `Compose the planned ${artifactId}.`,
+      visualIntent: `Give ${artifactId} a distinct visual purpose.`,
+      justification: {
+        kind: 'source-backed-detail',
+        sourceIds,
+        rationale,
+      },
+    });
+    return plannedSet(plannerRequest, [
+      plannedSet(plannerRequest).portfolio[0],
+      optional(
+        'architecture-details',
+        'explainer',
+        'deep-dive',
+        'Architecture details warrant a dedicated page.',
+      ),
+      optional(
+        'system-map',
+        'diagram',
+        'supporting-diagram',
+        'The system relationships need a standalone visual.',
+      ),
+    ]);
+  };
 
   const rejected = await runExplainerCore(interactiveRequest, {
     author,
+    planSet,
     now: () => NOW,
     reviewedSource: {
       decision: 'reject',
@@ -631,6 +791,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
 
   const resumed = await runExplainerCore(interactiveRequest, {
     author,
+    planSet,
     now: () => '2026-07-17T20:05:00Z',
     reviewedSource: {
       decision: 'approve',
@@ -662,7 +823,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
   assert.match(await readFile(hubPath, 'utf8'), /system-map\/index\.html/);
 });
 
-test('over-limit expansion proposals are rejected as warnings', async () => {
+test('authors cannot mutate the validated portfolio with expansion proposals', async () => {
   const fixture = await suppliedFixture('project-recap');
   const proposals = Array.from({ length: 5 }, (_, index) => ({
     id: `diagram-${index + 1}`,
@@ -679,15 +840,9 @@ test('over-limit expansion proposals are rejected as warnings', async () => {
     now: () => NOW,
   });
 
-  assert.equal(
-    result.outcome,
-    'built-not-durable',
-    JSON.stringify(result.errors),
-  );
-  assert.ok(result.warnings.includes('expansion-profile-limit-exceeded'));
-  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
-  assert.equal(manifest.artifacts.length, 5);
-  assert.ok(manifest.warnings.includes('expansion-profile-limit-exceeded'));
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_AUTHOR_RESULT');
+  assert.match(result.errors[0].message, /cannot change the validated set plan/);
 });
 
 test('editorial and render QA findings warn in both modes while DOM safety throws E_QA', async () => {
@@ -719,18 +874,28 @@ test('editorial and render QA findings warn in both modes while DOM safety throw
 
   const unsafeFixture = await suppliedFixture('project-recap');
   const unsafe = await runExplainerCore(unsafeFixture.request, {
+    planSet: async (plannerRequest) => {
+      const sourceIds = plannerRequest.factBase.sources.map(({ id }) => id);
+      return plannedSet(plannerRequest, [
+        plannedSet(plannerRequest).portfolio[0],
+        {
+          artifactId: 'unsafe-map',
+          artifactType: 'diagram',
+          profileId: 'supporting-diagram',
+          required: false,
+          sourceIds,
+          draft: 'Show the system relationship.',
+          visualIntent: 'Use a standalone system visual.',
+          justification: {
+            kind: 'source-backed-detail',
+            sourceIds,
+            rationale: 'A diagram clarifies the system.',
+          },
+        },
+      ]);
+    },
     author: async (authorRequest) => {
-      const result = authorResult(authorRequest, {
-        ...(authorRequest.artifactId === 'project-recap' && {
-          proposedArtifacts: [
-            {
-              id: 'unsafe-map',
-              profileId: 'supporting-diagram',
-              rationale: 'A diagram clarifies the system.',
-            },
-          ],
-        }),
-      });
+      const result = authorResult(authorRequest);
       if (authorRequest.artifactId === 'unsafe-map') {
         result.content.html = result.content.html.replace(
           '<script>',

@@ -18,6 +18,7 @@ import {
   reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
+  writeSetPlanRecords,
 } from '../scripts/lib/records.mjs';
 
 const HASH = `sha256:${'a'.repeat(64)}`;
@@ -307,6 +308,68 @@ test('writes manifests atomically without leaving temporary siblings', async () 
   assert.deepEqual(
     (await readdir(run.runRoot)).filter((name) => name.includes('.tmp-')),
     [],
+  );
+});
+
+test('retains immutable versioned set-plan request, result, ledger, portfolio, and drafts', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const planRequest = {
+    schemaVersion: 'explainer-kit.set-plan-request/v1',
+    recipe: { id: 'project-recap', version: '1' },
+    factBaseHash: HASH,
+    sourceIds: ['project'],
+  };
+  const plan = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['project'],
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds: ['project'],
+        draft: 'Lead with the validated outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+    ],
+  };
+
+  const paths = await writeSetPlanRecords(run, { request: planRequest, plan });
+
+  assert.deepEqual(paths, [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ]);
+  assert.deepEqual(
+    JSON.parse(
+      await readFile(join(run.runRoot, 'source/set-plan/drafts.json'), 'utf8'),
+    ),
+    {
+      schemaVersion: 'explainer-kit.set-plan-drafts/v1',
+      drafts: [
+        {
+          artifactId: 'project-recap',
+          draft: 'Lead with the validated outcome.',
+          visualIntent: 'Orient the reader in the first viewport.',
+        },
+      ],
+    },
+  );
+
+  await assert.rejects(
+    writeSetPlanRecords(run, {
+      request: planRequest,
+      plan: { ...plan, planId: 'changed-plan' },
+    }),
+    /immutable|already exist/i,
   );
 });
 
