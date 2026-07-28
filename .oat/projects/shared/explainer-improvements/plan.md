@@ -1,187 +1,661 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_plan_source: imported
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
 oat_last_updated: 2026-07-28
 oat_phase: plan
-oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_phase_status: complete
+oat_plan_parallel_groups: []
+oat_import_reference: references/imported-plan.md
+oat_import_source_path: /Users/thomas.stang/.cursor/plans/golden-visual-quality-33154d65.plan.md
+oat_import_provider: cursor
 oat_generated: false
+oat_template: false
 ---
 
 # Implementation Plan: explainer-improvements
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute with `oat-project-implement`. The five phases are sequential because
+> later runtime, critic, and conformance work consumes contracts and evidence
+> established by earlier phases.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Restore unattended golden-quality project recaps by making set-level
+visual planning, skilled composition, real-browser evidence, independent visual
+criticism, and a hard one-correction limit part of the shipped runtime.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** Preserve the merged fact-base, recipe, safety, approval, and
+durability foundations. Add versioned set-plan and visual-review contracts
+around the existing core, route every recap artifact from one shared plan, run
+the complete adaptive set through browser capture and an independent critic,
+and publish only a passing set. The OAT adapter supplies provider callbacks and
+lifecycle state without leaking OAT concerns into the generic core.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Node.js 22 ESM, JSON Schema, Playwright/Chromium, `node:test`,
+TypeScript 6, pnpm/Turborepo, S3 static publishing.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Scope correction:** PR #179 merged as `1151a0d7` before this import. Phase 1
+therefore treats its missing notice payload as an immediate post-merge
+compliance repair. It does not reopen the merged mechanical architecture.
+
+**Loop cap:** The project permits one artifact-review remediation cycle and the
+runtime permits one visual correction pass followed by one final review. No
+recursive or open-ended review loop is allowed.
+
+**Commit convention:** `{type}({task-id}): {description}`.
 
 ## Planning Checklist
 
+- [x] Preserved the external source verbatim in `references/imported-plan.md`
+- [x] Corrected stale merge ordering without changing the source artifact
+- [x] Evaluated phase parallelism; retained sequential execution because contracts overlap
 - [ ] Confirmed HiLL checkpoints with user
 - [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+
+HiLL selection is intentionally deferred to `oat-project-implement`; unchecked
+items represent pending implementation preflight, not failed plan import.
 
 ---
 
-## Parallelism
+## Phase 1: Compliance and bounded quality baseline
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
-
----
-
-## Dispatch Profile
-
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Ship complete MIT notices in affected package payloads
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `NOTICES.md`
+- Modify: `packages/cli/scripts/bundle-assets.sh`
+- Modify: `packages/cli/src/release/public-package-contract.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+- Modify: `tools/release/validate-public-packages.ts`
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `pnpm-lock.yaml`
 
-**Step 1: Write test (RED)**
+**Steps:**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+1. Add the complete upstream MIT copyright and permission text for every
+   adapted source currently summarized in `NOTICES.md`, retaining source URL
+   and version provenance.
+2. Add a failing package-contract test proving every public package that ships
+   adapted content contains the notice in its packed tarball; verify against
+   `pnpm pack` output, not the working tree.
+3. Bundle the notice into the CLI package and extend release validation to
+   inspect the packed content and required text.
+4. Bump all five public packages in lockstep and update `pnpm-lock.yaml` before
+   release validation because bundled assets are shipped CLI functionality.
+5. Run `pnpm format:fix`, then
+   `pnpm --filter @open-agent-toolkit/cli test -- public-package-contract.test.ts`
+   and `pnpm release:validate`.
+6. Commit as `fix(p01-t01): ship complete third-party notices`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
-
-**Step 2: Implement (GREEN)**
-
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
-
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
+**Acceptance:** The packed CLI includes the complete required license texts;
+release validation fails if the notice is absent or reduced to attribution
+summaries.
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Replace the visual XL backlog item with ordered outcomes
 
 **Files:**
 
-- {File list}
+- Modify: `.oat/repo/pjm/backlog/items/BL-260727-close-the-explainer-kit-visual.md`
+- Archive: `.oat/repo/pjm/backlog/items/BL-260727-ship-mit-notices-inside.md` to `.oat/repo/pjm/backlog/archived/BL-260727-ship-mit-notices-inside.md`
+- Create: `.oat/repo/pjm/backlog/items/BL-260728-unattended-visual-author-critic.md`
+- Create: `.oat/repo/pjm/backlog/items/BL-260728-cohesive-adaptive-recap-set.md`
+- Create: `.oat/repo/pjm/backlog/items/BL-260728-non-linear-diagram-routing.md`
+- Create: `.oat/repo/pjm/backlog/items/BL-260728-durable-backlinks-catalog.md`
+- Create: `.oat/repo/pjm/backlog/items/BL-260728-additional-visual-workflows.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Regenerate: `.oat/repo/pjm/backlog/index.md`
 
-**Step 1: Write test (RED)**
+**Steps:**
 
-{Test code}
+1. After p01-t01 passes, run
+   `pnpm run cli:source -- backlog archive BL-260727-ship-mit-notices-inside --summary "Complete MIT notices now ship in affected package payloads and are enforced by release validation."`
+   and require exit 0 with the archived item, completed ledger, and index updated.
+2. Retain the XL visual item as the umbrella and create the five exact successor
+   IDs listed above: P0 author/critic, P0 adaptive recap, P1 non-linear routing,
+   P1 durable backlink/catalog, and P2 additional workflows.
+3. Correct the diagram criteria: the inline renderer may reject and reroute
+   unsupported topology; it must never silently flatten topology.
+4. Run `pnpm run cli:source -- backlog regenerate-index` and require exit 0
+   with all five successor IDs linked from the umbrella, then run
+   `pnpm format:fix`.
+5. Commit as `docs(p01-t02): split explainer visual outcomes`.
 
-**Step 2: Implement (GREEN)**
-
-{Implementation code or signatures}
-
-**Step 3: Refactor**
-
-{Optional cleanup}
-
-**Step 4: Verify**
-
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+**Acceptance:** Each successor has explicit dependencies, acceptance evidence,
+and a disposition in or out of this project's critical path.
 
 ---
 
-## Phase 2: {Phase Name}
+### Task p01-t03: Establish the golden conformance fixture and rubric contract
 
-### Task p02-t01: {Task Name}
+**Files:**
 
-{Continue TDD pattern...}
+- Create: `.agents/skills/explainer-kit/tests/fixtures/golden/simple/`
+- Create: `.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/`
+- Create: `.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/`
+- Create: `.agents/skills/explainer-kit/references/golden-conformance.md`
+- Create: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+
+**Steps:**
+
+1. Import stable source inputs for a simple project, a branched/cyclic
+   architecture, and the archived explainer-authoring-redesign recap.
+2. Define a machine-readable rubric covering adaptive minimum set, first
+   viewport, hierarchy, representation choice, legibility, cohesion, source
+   coverage, interactions, topology preservation, catalog parity, and bounded
+   correction.
+3. Record personal-kit comparison outputs as checked-in reference evidence;
+   tests must not depend on the operator's home-directory plugin at runtime.
+4. Add RED tests that load all three fixture descriptors and reject missing
+   rubric fields or machine-local paths.
+5. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`;
+   commit as `test(p01-t03): define golden recap benchmarks`.
+
+**Acceptance:** Three portable benchmark inputs and one explicit quality oracle
+are committed before runtime changes begin; pixel identity is not required.
+
+---
+
+## Phase 2: Set-level visual authoring runtime
+
+### Task p02-t01: Bundle versioned visual authoring and review guidance
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/references/visual-authoring.md`
+- Create: `.agents/skills/explainer-kit/references/visual-review.md`
+- Modify: `.agents/skills/explainer-kit/SKILL.md`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+
+**Steps:**
+
+1. Adapt the MIT-licensed representation-selection, hierarchy, diagram, deck,
+   table, responsive-navigation, and visual-review guidance needed by an
+   unattended provider.
+2. Separate medium-specific authoring rules from the critic rubric and link
+   both from the core skill; optional installed visual-explainer capability may
+   enhance but cannot be required.
+3. Add tests proving bundled installs contain both references and no
+   home-directory dependency.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/rebuildability.test.mjs`.
+5. Commit as `feat(p02-t01): bundle visual authoring guidance`.
+
+**Acceptance:** A clean OAT install has sufficient visual guidance to author
+and assess every project-recap medium without external plugins.
+
+---
+
+### Task p02-t02: Define provider-neutral set-plan and visual-review contracts
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/schemas/set-plan.v1.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json`
+- Create: `.agents/skills/explainer-kit/schemas/visual-review-result.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+
+**Steps:**
+
+1. Write RED contract tests for a set plan containing one shared
+   terminology/status/number ledger, source coverage, adaptive portfolio,
+   per-artifact draft, visual intent, and optional-artifact justification.
+2. Define visual-review request/result envelopes that carry rendered evidence,
+   shared ledger, rubric findings, artifact IDs, and pass/correct/fail
+   disposition without provider-specific fields.
+3. Extend author requests compatibly so every artifact receives immutable set
+   context and its own planned draft/intent.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/contracts.test.mjs .agents/skills/explainer-kit/tests/schemas.test.mjs`.
+5. Commit as `feat(p02-t02): define explainer set contracts`.
+
+**Acceptance:** Schema validation rejects ledger drift, unjustified optional
+artifacts, unknown review dispositions, and author requests detached from set
+context.
+
+---
+
+### Task p02-t03: Add one set-planning stage and immutable retained records
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED integration tests proving the planner runs once after fact-base
+   reconciliation and before any artifact author.
+2. Inject a provider-neutral `planSet` seam and validate its result; persist
+   request, result, ledger, portfolio, and drafts as immutable versioned
+   records.
+3. Pass identical set context to every artifact author and fail closed on
+   unknown sources, conflicting ledger values, or missing required drafts.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/records.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs`.
+5. Commit as `feat(p02-t03): plan explainer sets before composition`.
+
+**Acceptance:** One validated plan governs the whole artifact set and rebuild
+records are sufficient to reproduce every author request.
+
+---
+
+### Task p02-t04: Make project recap an adaptive three-artifact visual set
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Steps:**
+
+1. Add RED tests requiring a visual hub, architecture/system visual, and deck
+   for every unattended project recap.
+2. Permit status, rollout, and deep-dive artifacts only when the set planner
+   supplies an allowed, source-backed justification.
+3. Route the flagship hub through the artistic house-style composer from its
+   planned draft; retain deterministic Markdown as an explicit fallback, not
+   the golden path.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/recipes.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`.
+5. Commit as `feat(p02-t04): require adaptive visual recap sets`.
+
+**Acceptance:** Unattended recap output always contains the cohesive adaptive
+minimum three, while redundant optional artifacts are rejected.
+
+---
+
+### Task p02-t05: Bind set planning and composition through the OAT adapter
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/SKILL.md`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/check-core.test.mjs`
+
+**Steps:**
+
+1. Add adapter tests for cardinality and capability checks covering `planSet`
+   plus per-artifact author callbacks.
+2. Resolve provider execution outside the generic core and bind callbacks with
+   the exact shared set context and bundled medium guidance.
+3. Fail before composition when unattended recap capability is absent; do not
+   silently downgrade to floor artifacts.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs .agents/skills/oat-explainer-kit/tests/check-core.test.mjs`.
+5. Commit as `feat(p02-t05): bind adaptive recap authors`.
+
+**Acceptance:** Direct core callers and OAT callers share contracts and output
+semantics while provider resolution remains adapter-owned.
+
+---
+
+## Phase 3: Independent browser critic and hard loop cap
+
+### Task p03-t01: Retain browser screenshots and metrics at three viewports
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/render-qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/browser-runtime.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `tools/release/validate-explainer-visuals.mjs`
+
+**Steps:**
+
+1. Add RED tests for desktop, tablet, and mobile screenshot evidence paired
+   with existing layout, accessibility, focus, interaction, and overflow
+   metrics.
+2. Store deterministic evidence metadata and bounded screenshot files under
+   the run's QA records; keep binary data out of JSON.
+3. Make missing or partial viewport evidence invalid for unattended project
+   recaps while preserving explicit lower-tier behavior for other recipes.
+4. Run `pnpm format:fix`,
+   `node --test .agents/skills/explainer-kit/tests/browser-runtime.test.mjs .agents/skills/explainer-kit/tests/qa.test.mjs`,
+   and `pnpm release:validate:visual`.
+5. Commit as `feat(p03-t01): retain recap browser evidence`.
+
+**Acceptance:** Every artifact in the adaptive set has reviewable screenshots
+and metrics at all three required widths.
+
+---
+
+### Task p03-t02: Add an independent whole-set visual critic
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED tests proving the visual critic is a distinct callback from the
+   fact critic and artifact author and receives the complete rendered set.
+2. Review first-viewport clarity, hierarchy, representation choice,
+   legibility, polish, medium fit, ledger cohesion, redundancy, source links,
+   topology, and interactions against actual browser evidence.
+3. Replace the current empty-object cohesion path with evidence derived from
+   rendered artifacts plus the shared ledger.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/qa.test.mjs .agents/skills/explainer-kit/tests/run.integration.test.mjs`.
+5. Commit as `feat(p03-t02): add independent visual critic`.
+
+**Acceptance:** A synthetic layout that passes structural QA but violates the
+rubric fails the critic with artifact-scoped actionable findings.
+
+---
+
+### Task p03-t03: Enforce exactly one correction pass and final review
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+
+**Steps:**
+
+1. Add tests for pass-on-first-review, pass-after-one-correction, and
+   fail-after-final-review branches.
+2. Correct only failing artifacts, preserving approved content and unchanged
+   artifacts; persist both review attempts and the single revision.
+3. Make the state machine non-recursive: initial review → at most one
+   correction → final review → terminal result.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/run.integration.test.mjs .agents/skills/explainer-kit/tests/records.test.mjs`.
+5. Commit as `feat(p03-t03): cap visual correction at one pass`.
+
+**Acceptance:** Callback counters and retained records prove no execution path
+can invoke a second correction or third review.
+
+---
+
+### Task p03-t04: Block publication and durability on missing or failed review
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/durability.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/durability.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.ts`
+- Modify: `packages/cli/src/commands/project/archive/push-runner.test.ts`
+
+**Steps:**
+
+1. Add RED lifecycle tests for absent browser probe, absent visual critic,
+   terminal critic failure, and passing review.
+2. Return `built-needs-review` for every incomplete or failed unattended recap;
+   preserve artifacts and findings but issue no publish receipt or durability
+   attestation.
+3. Propagate the terminal status through tracked-run finalization and archive
+   push behavior without converting it to success.
+4. Run `pnpm format:fix`,
+   `node --test .agents/skills/explainer-kit/tests/durability.test.mjs .agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`,
+   and
+   `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/project/archive/push-runner.test.ts`;
+   require all commands to exit 0 with no failed tests.
+5. Commit as `fix(p03-t04): block unreviewed recap publication`.
+
+**Acceptance:** Only a complete passing browser-plus-critic evidence chain can
+publish or attest durability.
+
+---
+
+## Phase 4: Topology, backlinks, and catalog integrity
+
+### Task p04-t01: Detect and reroute non-linear diagrams
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Steps:**
+
+1. Add RED fixtures for branch, fan-in, and cycle topology and a negative test
+   for silent linear flattening.
+2. Detect unsupported topology before inline rendering and route that artifact
+   to the artistic composer with the original graph semantics.
+3. Keep the inline renderer for supported linear flows; do not implement a
+   general graph-layout engine.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/diagram.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`.
+5. Commit as `fix(p04-t01): reroute non-linear diagrams`.
+
+**Acceptance:** Branches, fan-ins, and cycles are either preserved by artistic
+composition or rejected; none are silently serialized.
+
+---
+
+### Task p04-t02: Emit commit-pinned source backlinks
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/fact-base.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/fact-base.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/fact-base.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+
+**Steps:**
+
+1. Add tests for repository identity, commit SHA, path, line range, URL
+   encoding, and archive-safe absolute links.
+2. Have the adapter resolve the reviewed commit and let the core derive pinned
+   GitHub blob URLs from manifest/fact-base provenance.
+3. Render backlinks from claims and artifact source sections without relying
+   on moving branches or local paths.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/fact-base.test.mjs .agents/skills/explainer-kit/tests/render.test.mjs .agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`;
+   require exit 0 with no failed tests.
+5. Commit as `feat(p04-t02): add commit-pinned recap backlinks`.
+
+**Acceptance:** Every source-backed claim can resolve to immutable reviewed
+source after project archival.
+
+---
+
+### Task p04-t03: Generate and publish a manifest-derived initiative catalog
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/catalog.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
+- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Steps:**
+
+1. Add RED tests for `initiatives/<slug>/catalog.json`, exact manifest
+   artifact parity, absolute artifact URLs, source backlinks, and stale entry
+   rejection.
+2. Generate the catalog from the finalized manifest only; never maintain a
+   second hand-authored inventory.
+3. Upload catalog and artifacts atomically enough that no successful receipt
+   references missing objects.
+4. Run `pnpm format:fix` and
+   `node --test .agents/skills/explainer-kit/tests/s3-static.test.mjs .agents/skills/explainer-kit/tests/e2e-recap.test.mjs`.
+5. Commit as `feat(p04-t03): publish initiative artifact catalog`.
+
+**Acceptance:** Catalog contents equal the finalized manifest and all emitted
+URLs resolve in local connector tests.
+
+---
+
+## Phase 5: Golden conformance and release closure
+
+### Task p05-t01: Pass the simple-project golden benchmark
+
+**Files:**
+
+- Generate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/simple/`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+
+**Steps:**
+
+1. Run the rebuilt unattended path against the simple fixture with real
+   Chromium and the independent critic.
+2. Have the rebuilt runtime generate representative HTML, screenshots, metrics,
+   review result, and rubric evaluation with volatile values normalized.
+   Never hand-edit generated outputs to satisfy the oracle.
+3. Compare with the checked-in personal-kit oracle. The permitted “one
+   correction” is the p03-t03 runtime author-correction transition. If a
+   Critical/Important implementation defect remains, leave the benchmark red
+   and append one bounded fix task to the owning runtime phase before
+   regenerating evidence.
+4. Run `pnpm format:fix` and
+   `node --test --test-name-pattern='simple' .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`;
+   require exit 0 with the simple case passing and the other named cases skipped.
+5. Commit as `test(p05-t01): pass simple recap benchmark`.
+
+**Acceptance:** The adaptive minimum set passes on first review or one
+correction and is understandable from its first viewport.
+
+---
+
+### Task p05-t02: Pass the non-linear architecture golden benchmark
+
+**Files:**
+
+- Generate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+
+**Steps:**
+
+1. Run the branched/cyclic fixture end to end with real Chromium.
+2. Prove topology preservation, artistic routing, full adaptive set,
+   interaction integrity, catalog parity, and source-link resolution.
+3. Treat one correction only as the p03-t03 runtime author-correction
+   transition; never hand-edit generated outputs. If a Critical/Important
+   implementation defect remains, leave the benchmark red and append one
+   bounded fix task to the owning runtime phase before regenerating evidence.
+4. Run `pnpm format:fix` and
+   `node --test --test-name-pattern='non-linear' .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`;
+   require exit 0 with the non-linear case passing and the other named cases skipped.
+5. Commit as `test(p05-t02): pass non-linear recap benchmark`.
+
+**Acceptance:** No branch, fan-in, or cycle is flattened and the critic passes
+within the runtime loop cap.
+
+---
+
+### Task p05-t03: Pass the archived project golden benchmark
+
+**Files:**
+
+- Generate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+
+**Steps:**
+
+1. Rebuild from archived explainer-authoring-redesign evidence with no active
+   project dependency.
+2. Verify first-viewport clarity, set cohesion, source backlinks, archive-safe
+   catalog links, screenshot evidence, and bounded review history.
+3. Treat one correction only as the p03-t03 runtime author-correction
+   transition; never hand-edit generated outputs. If a Critical/Important
+   implementation defect remains, leave the benchmark red and append one
+   bounded fix task to the owning runtime phase before regenerating evidence.
+4. Run `pnpm format:fix` and
+   `node --test --test-name-pattern='explainer-authoring-redesign' .agents/skills/explainer-kit/tests/golden-conformance.test.mjs`;
+   require exit 0 with the archived case passing and the other named cases skipped.
+5. Commit as `test(p05-t03): pass archived recap benchmark`.
+
+**Acceptance:** The complete archived set passes the oracle without local,
+branch-moving, or unpublished-link dependencies.
+
+---
+
+### Task p05-t04: Close versions, documentation, and release validation
+
+**Files:**
+
+- Modify: every changed canonical skill's `SKILL.md` version once
+- Modify: affected docs under `apps/oat-docs/docs/`
+- Regenerate: `apps/oat-docs/index.md`
+- Archive: `.oat/repo/pjm/backlog/items/BL-260728-unattended-visual-author-critic.md`
+- Archive: `.oat/repo/pjm/backlog/items/BL-260728-cohesive-adaptive-recap-set.md`
+- Archive: `.oat/repo/pjm/backlog/items/BL-260728-non-linear-diagram-routing.md`
+- Archive: `.oat/repo/pjm/backlog/items/BL-260728-durable-backlinks-catalog.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Regenerate: `.oat/repo/pjm/backlog/index.md`
+
+**Steps:**
+
+1. Document set planning, adaptive-three semantics, critic independence,
+   screenshot evidence, correction cap, `built-needs-review`, non-linear
+   routing, pinned backlinks, and catalog output.
+2. Bump each changed canonical skill version once; public-package versions were
+   already bumped atomically in p01-t01.
+3. Archive the four shipped successor backlog items with
+   `pnpm run cli:source -- backlog archive <id> --summary "<verified outcome>"`
+   for each exact ID listed in Files. Require all four commands to exit 0 and
+   leave only `BL-260728-additional-visual-workflows` open under the original
+   umbrella.
+4. Regenerate the docs index and run `pnpm format:fix`.
+5. Run `pnpm check`, `pnpm lint`, `pnpm format`, `pnpm type-check`,
+   `pnpm test`, `pnpm build`, `pnpm build:docs`, and mandatory
+   `pnpm release:validate`; require every command to exit 0.
+6. Commit as `chore(p05-t04): close explainer quality release`.
+
+**Acceptance:** All three golden cases and normal repository/release gates pass;
+lower-severity visual enhancements are explicitly backlogged, not routed into
+another review cycle.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+| Scope  | Type     | Status  | Date       | Artifact |
+| ------ | -------- | ------- | ---------- | -------- |
+| p01    | code     | pending | -          | -        |
+| p02    | code     | pending | -          | -        |
+| p03    | code     | pending | -          | -        |
+| p04    | code     | pending | -          | -        |
+| p05    | code     | pending | -          | -        |
+| final  | code     | pending | -          | -        |
+| spec   | artifact | pending | -          | -        |
+| design | artifact | pending | -          | -        |
+| plan   | artifact | passed  | 2026-07-28 | -        |
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
+**Status values:** `pending` → `received` → `fixes_added` →
+`fixes_completed` → `passed`.
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+The imported plan review is the single pre-implementation design/plan review
+authorized by the source. It used one remediation pass; the final exact
+checklist correction was root-verified mechanically without another model
+review. The normal final code review is the single bounded post-benchmark
+review. Additional review cycles are not authorized.
 
 ---
 
@@ -189,18 +663,30 @@ git commit -m "feat(p01-t02): {description}"
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 3 tasks — compliance, bounded outcomes, and quality oracle
+- Phase 2: 5 tasks — bundled guidance, contracts, set planner, adaptive set, adapter
+- Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
+- Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
+- Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: {N} tasks**
+**Total: 19 tasks**
 
-Ready for code review and merge.
+Implementation is not complete. This section records the completion target and
+must be updated with evidence when all tasks and reviews pass.
 
 ---
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
-- Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Imported source: `references/imported-plan.md`
+- Original source path:
+  `/Users/thomas.stang/.cursor/plans/golden-visual-quality-33154d65.plan.md`
+- Merged foundation: `1151a0d7` / PR #179
+- Golden workflow oracle:
+  `/Users/thomas.stang/.agents/skills/personal-explainer-kit/SKILL.md`
+- Archived foundation summary:
+  `.oat/repo/reference/project-summaries/20260728-explainer-authoring-redesign.md`
+- Licensing backlog:
+  `.oat/repo/pjm/backlog/items/BL-260727-ship-mit-notices-inside.md`
+- Visual umbrella backlog:
+  `.oat/repo/pjm/backlog/items/BL-260727-close-the-explainer-kit-visual.md`

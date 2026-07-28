@@ -12,113 +12,74 @@ oat_generated: false
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-28
 
-> This document is used to resume interrupted implementation sessions.
->
-> Conventions:
->
-> - `oat_current_task_id` always points at the **next plan task to do** (not the last completed task).
-> - When all plan tasks are complete, set `oat_current_task_id: null`.
-> - Reviews are **not** plan tasks. Track review status in `plan.md` under `## Reviews` (e.g., `| final | code | passed | ... |`).
-> - Keep phase/task statuses consistent with the Progress Overview table so restarts resume correctly.
-> - Before running the `oat-project-pr-final` skill, ensure `## Final Summary (for PR/docs)` is filled with what was actually implemented.
+> Resume from `oat_current_task_id`, which always points to the next plan task.
+> Reviews are tracked in `plan.md`, not as implementation tasks.
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase | Status  | Tasks | Completed |
+| ----- | ------- | ----: | --------: |
+| p01   | pending |     3 |       0/3 |
+| p02   | pending |     5 |       0/5 |
+| p03   | pending |     4 |       0/4 |
+| p04   | pending |     3 |       0/3 |
+| p05   | pending |     4 |       0/4 |
 
-**Total:** 0/{N} tasks completed
-
----
-
-## Phase 1: {Phase Name}
-
-**Status:** in_progress
-**Started:** 2026-07-28
-
-### Phase Summary (fill when phase is complete)
-
-**Outcome (what changed):**
-
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
-
-**Key files touched:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {trade-offs or deviations discovered during implementation}
-
-### Task p01-t01: {Task Name}
-
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
-
-**Outcome (required when completed):**
-
-- {what materially changed (not “did task”, but “system now does X”)}
-
-**Files changed:**
-
-- `{path}` - {why}
-
-**Verification:**
-
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
-
-**Notes / Decisions:**
-
-- {gotchas, trade-offs, design deltas, important context for future sessions}
-
-**Issues Encountered:**
-
-- {Issue and resolution}
+**Total:** 0/19 tasks completed
 
 ---
 
-### Task p01-t02: {Task Name}
+## Phase 1: Compliance and bounded quality baseline
 
 **Status:** pending
-**Commit:** -
 
-**Notes:**
+- [ ] p01-t01 — Ship complete MIT notices in affected package payloads
+- [ ] p01-t02 — Replace the visual XL backlog item with ordered outcomes
+- [ ] p01-t03 — Establish the golden conformance fixture and rubric contract
 
-- {Notes will be added during implementation}
-
----
-
-## Phase 2: {Phase Name}
+## Phase 2: Set-level visual authoring runtime
 
 **Status:** pending
-**Started:** -
 
-### Task p02-t01: {Task Name}
+- [ ] p02-t01 — Bundle versioned visual authoring and review guidance
+- [ ] p02-t02 — Define provider-neutral set-plan and visual-review contracts
+- [ ] p02-t03 — Add one set-planning stage and immutable retained records
+- [ ] p02-t04 — Make project recap an adaptive three-artifact visual set
+- [ ] p02-t05 — Bind set planning and composition through the OAT adapter
+
+## Phase 3: Independent browser critic and hard loop cap
 
 **Status:** pending
-**Commit:** -
+
+- [ ] p03-t01 — Retain browser screenshots and metrics at three viewports
+- [ ] p03-t02 — Add an independent whole-set visual critic
+- [ ] p03-t03 — Enforce exactly one correction pass and final review
+- [ ] p03-t04 — Block publication and durability on missing or failed review
+
+## Phase 4: Topology, backlinks, and catalog integrity
+
+**Status:** pending
+
+- [ ] p04-t01 — Detect and reroute non-linear diagrams
+- [ ] p04-t02 — Emit commit-pinned source backlinks
+- [ ] p04-t03 — Generate and publish a manifest-derived initiative catalog
+
+## Phase 5: Golden conformance and release closure
+
+**Status:** pending
+
+- [ ] p05-t01 — Pass the simple-project golden benchmark
+- [ ] p05-t02 — Pass the non-linear architecture golden benchmark
+- [ ] p05-t03 — Pass the archived project golden benchmark
+- [ ] p05-t04 — Close versions, documentation, and release validation
 
 ---
 
 ## Orchestration Runs
 
-_Each run from `oat-project-implement` appends an entry below with:_
-_- Run header (number, timestamp, branch, tier, policy, phase counts)_
-_- Phase Outcomes table_
-_- Parallel Groups list_
-_- Outstanding Items_
-
 <!-- orchestration-runs-start -->
 
-_Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
+_No implementation runs yet._
 
 <!-- orchestration-runs-end -->
 
@@ -126,85 +87,36 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 
 ## Implementation Log
 
-Chronological log of implementation progress.
+### 2026-07-28 — Plan import
 
-### 2026-07-28
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-28
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+- Preserved the Cursor provider plan in `references/imported-plan.md`.
+- Normalized five sequential phases and 19 atomic tasks.
+- Corrected the stale pre-merge notice ordering after PR #179 merged.
+- Selected Managed High dispatch and a one-remediation orchestration cap.
+- Declined the optional cross-runtime phase gate to honor the bounded-review contract.
+- Completed the bounded plan review, resolved all four Important findings and the accepted Medium safeguard, and mechanically verified the final checklist correction.
 
 ## Deviations from Plan / Design
 
-Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
-
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented              | Actual / Accepted                   | Reason                                       | Source of Truth          | Follow-up |
+| ------------- | --------------- | --------------------------------- | ----------------------------------- | -------------------------------------------- | ------------------------ | --------- |
+| import        | imported plan   | Fix notices before PR #179 merges | Fix notices immediately after merge | PR #179 was already merged when import began | `1151a0d7` and `plan.md` | p01-t01   |
 
 ## Test Results
 
-Track test execution during implementation.
-
 | Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
-| 2     | -         | -      | -      | -        |
+| ----- | --------- | -----: | -----: | -------- |
+| p01   | -         |      - |      - | -        |
+| p02   | -         |      - |      - | -        |
+| p03   | -         |      - |      - | -        |
+| p04   | -         |      - |      - | -        |
+| p05   | -         |      - |      - | -        |
 
 ## Final Summary (for PR/docs)
 
-**What shipped:**
-
-- {capability 1}
-- {capability 2}
-
-**Behavioral changes (user-facing):**
-
-- {bullet}
-
-**Key files / modules:**
-
-- `{path}` - {purpose}
-
-**Verification performed:**
-
-- {tests/lint/typecheck/build/manual steps}
-
-**Design deltas (if any):**
-
-- {what changed vs design.md and why}
+_Fill from implementation evidence after all 19 tasks and the final review._
 
 ## References
 
 - Plan: `plan.md`
-- Design: `design.md`
-- Spec: `spec.md`
+- Imported source: `references/imported-plan.md`

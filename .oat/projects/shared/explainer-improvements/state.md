@@ -12,14 +12,15 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-# oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
-# oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
-#   mode: managed # managed | inherit
-#   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
-#   providers: # present for capped managed policies; omitted for uncapped/inherit
-#     codex: high # low|medium|high|xhigh
-#     claude: sonnet # haiku|sonnet|opus|fable
+oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_orchestration_retry_limit: 1
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  providers:
+    codex: high
+    claude: opus
+  source: project-state
 #   matrix: # optional sparse project override; full dispatch matrix lives in layered config
 #     cursor:
 #       high:
@@ -28,7 +29,7 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
 oat_workflow_mode: import # spec-driven | quick | import
-oat_workflow_origin: native # native | imported
+oat_workflow_origin: imported # native | imported
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
 #   status: pending # pending | allowed | blocked | stale
 #   resolution: configured # configured | no_gate
@@ -75,27 +76,33 @@ oat_generated: false
 
 # Project State: explainer-improvements
 
-**Status:** Plan Import
+**Status:** Plan Complete
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-28
 
 ## Current Phase
 
-Plan import - Waiting to normalize an external plan into OAT format
+Plan import complete - Ready for implementation preflight
 
 ## Artifacts
 
 - **Discovery:** N/A (import mode)
 - **Spec:** N/A (import mode)
 - **Design:** N/A (import mode)
-- **Plan:** `plan.md` (scaffolded template — awaiting imported content)
-- **Implementation:** `implementation.md` (scaffolded template — awaiting imported plan)
+- **Imported Source:** `references/imported-plan.md` (verbatim)
+- **Plan:** `plan.md` (normalized, reviewed, complete)
+- **Implementation:** `implementation.md` (initialized at `p01-t01`)
 
 ## Progress
 
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting external plan import
+- ✓ External provider plan preserved verbatim
+- ✓ Five phases / 19 stable tasks normalized
+- ✓ Managed High dispatch policy selected
+- ✓ Additional phase-gate review declined
+- ✓ Bounded automated plan review completed with one remediation pass
+- ✓ Mechanical plan validation passed after final checklist correction
 
 ## Blockers
 
@@ -103,4 +110,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-import-plan` to normalize the external plan
+Run `oat-project-implement` and confirm HiLL checkpoints during implementation preflight
