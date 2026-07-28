@@ -11,7 +11,7 @@ labels:
   - recipes
 assignee: null
 created: 2026-07-27T04:19:56.434Z
-updated: 2026-07-27T18:14:57.000Z
+updated: 2026-07-28T02:30:13.000Z
 associated_issues: []
 external_plans: []
 ---
@@ -24,14 +24,29 @@ Third, source-document backlinks were lost. Upstream resolved a project's lifecy
 
 Fourth, the per-initiative `catalog.json` is gone. Upstream emitted a machine-readable index of every artifact in a set, with title, type, and URL. The kit produces a `manifest.json` for publish bookkeeping, but nothing consumable as a site-level catalog.
 
+## Ordered Successor Outcomes
+
+This XL item remains the umbrella for five independently verifiable outcomes:
+
+1. P0 — [Unattended visual author and critic](BL-260728-unattended-visual-author-critic.md)
+   is in the current project's critical path.
+2. P0 — [Cohesive adaptive recap set](BL-260728-cohesive-adaptive-recap-set.md)
+   is in the current project's critical path.
+3. P1 — [Non-linear diagram routing](BL-260728-non-linear-diagram-routing.md)
+   is in the current project's critical path.
+4. P1 — [Durable backlinks catalog](BL-260728-durable-backlinks-catalog.md)
+   is in the current project's critical path.
+5. P2 — [Additional visual workflows](BL-260728-additional-visual-workflows.md)
+   is explicitly outside the current project's critical path.
+
 ## Acceptance Criteria
 
-- The inline fenced-diagram renderer either lays out non-linear graphs
-  faithfully or refuses to misrepresent them, emitting a warning that names the
-  unsupported construct. Silent flattening of a declared branch into a chain is
-  the specific behavior to eliminate.
-- A regression fixture declares a branch, a fan-in, and a cycle, and asserts the
-  rendered output preserves each — the current renderer must fail it.
+- The inline fenced-diagram renderer detects unsupported non-linear topology
+  before layout and may reject or reroute it to the artistic composer. It must
+  never silently flatten a declared branch, fan-in, or cycle into a chain.
+- Regression fixtures declare a branch, a fan-in, and a cycle and assert each
+  is preserved by the selected artistic route or rejected explicitly; they do
+  not require the inline renderer itself to preserve unsupported topology.
 - A recorded decision states whether bundled recipes expand toward the upstream
   workflows OAT does not reach (diff review, plan review, fact-check,
   dashboards, richer compositions), or whether those stay author-opted, with
