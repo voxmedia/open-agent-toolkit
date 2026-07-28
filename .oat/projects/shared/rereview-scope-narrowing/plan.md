@@ -7,6 +7,11 @@ oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_hill_phases: ['p02', 'p05'] # pause AFTER the provenance contract and after the default flip
 oat_plan_parallel_groups: [] # sequential; see Parallelism
+oat_phase_review_gate:
+  enabled: true
+  phases: ['p02', 'p05']
+  review_type: code
+  exit_nonzero_on: important
 oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
@@ -203,6 +208,8 @@ Makes the reviewed commit durable and defines what a narrowed artifact must disc
 **Step 1: Change**
 
 Add the reviewed head commit to the review artifact frontmatter template as a required field for code reviews, and add the narrowed-review disclosure fields: the resolved range, and the prior artifact path plus prior reviewed head when the review narrowed.
+
+Specify how the value is obtained, not just that it exists. The reviewer resolves the **full 40-character** SHA of the head of its authoritative review range and records that. An abbreviated SHA, a symbolic ref, or a range string is invalid: the guard added in p01 performs object-existence and ancestry checks against this value, so anything else silently prevents narrowing from ever applying. Mirror the remote rail, which already captures a full 40-character head SHA for the same purpose.
 
 Add a rule to the artifact template section: a narrowed review must not restate requirements-coverage claims it did not itself verify. It either references the prior artifact's coverage or marks inherited rows as inherited.
 
@@ -459,9 +466,45 @@ Expected: All pass. This is the definition of done for publishable package chang
 
 **Step 3: Commit**
 
+Stage named paths rather than everything, so an unrelated working-tree change cannot ride into the release commit.
+
 ```bash
-git add -A
+git add packages/*/package.json .claude/ .cursor/ .codex/ pnpm-lock.yaml
 git commit -m "chore(p06-t02): sync provider views and bump public packages"
+```
+
+---
+
+### Task p06-t03: Verify cross-surface parity
+
+**Files:**
+
+- Read-only across: `packages/cli/src/review-remote/narrowing.ts`, `.agents/skills/oat-project-review-provide/SKILL.md`, `.agents/skills/oat-project-review-provide-remote/SKILL.md`, `.agents/skills/oat-review-provide-remote/SKILL.md`
+- Modify: only whichever surface is found to disagree
+
+**Step 1: Change**
+
+No planned edit. This task exists because the repository documents that the helper modules and the skill prose mirror each other with no test enforcing agreement, and this change edits all four surfaces. Each earlier task checked itself against the module in isolation; nothing has yet checked them against each other after every edit landed.
+
+**Step 2: Verify**
+
+Confirm all four surfaces describe the same behavior on each of these points, and correct any that disagree:
+
+- the provenance resolution order (artifact, then tracked plan row, then full scope)
+- the lineage restriction, including that a gate narrows only from its own prior run on the same target
+- the existence and ancestry guard, and that explicit force-narrow turns guard failure into a hard error while the default path falls back to full scope
+- the fail-open conditions, including disagreement between provenance sources
+- the classification vocabulary (`empty`, `bookkeeping-only`, `substantive`) and that classification never gates or shortens a review
+- that unset and `true` both narrow, and only `false` forces full scope
+
+Run: `pnpm --filter @open-agent-toolkit/cli test && pnpm format`
+Expected: No errors, no formatting diff
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/review-remote/ .agents/
+git commit -m "chore(p06-t03): reconcile narrowing semantics across module and rails"
 ```
 
 ---
@@ -470,16 +513,21 @@ git commit -m "chore(p06-t02): sync provider views and bump public packages"
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
 
-| Scope | Type     | Status  | Date | Artifact |
-| ----- | -------- | ------- | ---- | -------- |
-| p01   | code     | pending | -    | -        |
-| p02   | code     | pending | -    | -        |
-| p03   | code     | pending | -    | -        |
-| p04   | code     | pending | -    | -        |
-| p05   | code     | pending | -    | -        |
-| p06   | code     | pending | -    | -        |
-| final | code     | pending | -    | -        |
-| plan  | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                           |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                  |
+| p02    | code     | pending  | -          | -                                                  |
+| p03    | code     | pending  | -          | -                                                  |
+| p04    | code     | pending  | -          | -                                                  |
+| p05    | code     | pending  | -          | -                                                  |
+| p06    | code     | pending  | -          | -                                                  |
+| final  | code     | pending  | -          | -                                                  |
+| plan   | artifact | passed   | 2026-07-27 | inline (structured)                                |
+| spec   | artifact | n/a      | -          | -                                                  |
+| design | artifact | n/a      | -          | -                                                  |
+| plan   | artifact | received | 2026-07-28 | reviews/artifact-plan-review-2026-07-28T004222Z.md |
+
+`spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
 **Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
 
@@ -501,9 +549,9 @@ git commit -m "chore(p06-t02): sync provider views and bump public packages"
 - Phase 3: 2 tasks - local rail rewritten onto guarded prior-head ranges
 - Phase 4: 1 task - remote rails aligned
 - Phase 5: 1 task - config default flipped to narrow
-- Phase 6: 2 tasks - documentation, provider sync, lockstep version bump, release validation
+- Phase 6: 3 tasks - documentation, provider sync and lockstep version bump, cross-surface parity verification
 
-**Total: 11 tasks**
+**Total: 12 tasks**
 
 Ready for code review and merge.
 
