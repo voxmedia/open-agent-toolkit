@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t07
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -17,21 +17,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----: | --------: |
-| p01   | in_progress |     7 |       6/7 |
-| p02   | pending     |     5 |       0/5 |
-| p03   | pending     |     4 |       0/4 |
-| p04   | pending     |     3 |       0/3 |
-| p05   | pending     |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | review_pending |     7 |       7/7 |
+| p02   | pending        |     5 |       0/5 |
+| p03   | pending        |     4 |       0/4 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 6/23 tasks completed
+**Total:** 7/23 tasks completed
 
 ---
 
 ## Phase 1: Compliance and bounded quality baseline
 
-**Status:** in_progress
+**Status:** review_pending
 
 - [x] p01-t01 — Ship complete MIT notices in affected package payloads (`a5c0ddd5`)
 - [x] p01-t02 — Replace the visual XL backlog item with ordered outcomes (`43003762`)
@@ -39,7 +39,7 @@ oat_generated: false
 - [x] p01-t04 — Synchronize the generated public-package version asset (`d2a2af8c`)
 - [x] p01-t05 — Validate packaged notice provenance (`9ecf893f`)
 - [x] p01-t06 — Ground golden references in retained evidence (`4b3d7dc7`)
-- [ ] p01-t07 — Align the explainer skill version contract
+- [x] p01-t07 — Align the explainer skill version contract (`16d314f6`)
 
 ### Phase Implementation Summary
 
@@ -53,9 +53,12 @@ oat_generated: false
 **Verification:**
 
 - `pnpm --filter @open-agent-toolkit/cli exec vitest run src/release/public-package-contract.test.ts` — 17/17 passed.
-- `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs` — 3/3 passed.
+- `node --test .agents/skills/explainer-kit/tests/golden-conformance.test.mjs` — 17/17 passed.
 - `pnpm run cli:source -- backlog regenerate-index && git diff --exit-code` — deterministic and clean.
 - `pnpm release:validate` — all five public package tarballs and 65 visual measurements passed.
+- `pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts` — 113/113 passed.
+- `node --test tools/smoke/explainer-kit/wrapper-compatibility.test.mjs` — 2/2 passed.
+- `pnpm test` — 3,384/3,384 package tests and 129/129 smoke tests passed.
 
 **Concern:**
 
@@ -76,6 +79,8 @@ oat_generated: false
 - Review fixes I1 and I2 are implemented. Root verification found one
   deterministic version-expectation failure, now bounded as p01-t07 before
   review continuation.
+- p01-t07 aligned both repository and smoke version contracts; full phase
+  acceptance verification passed with a clean worktree.
 
 ## Phase 2: Set-level visual authoring runtime
 
@@ -176,13 +181,13 @@ oat_generated: false
 
 ## Test Results
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | -----: | -----: | -------- |
-| p01   | -         |      - |      - | -        |
-| p02   | -         |      - |      - | -        |
-| p03   | -         |      - |      - | -        |
-| p04   | -         |      - |      - | -        |
-| p05   | -         |      - |      - | -        |
+| Phase | Tests Run                                                       | Passed | Failed | Coverage                |
+| ----- | --------------------------------------------------------------- | -----: | -----: | ----------------------- |
+| p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed |
+| p02   | -                                                               |      - |      - | -                       |
+| p03   | -                                                               |      - |      - | -                       |
+| p04   | -                                                               |      - |      - | -                       |
+| p05   | -                                                               |      - |      - | -                       |
 
 ## Final Summary (for PR/docs)
 
