@@ -46,6 +46,7 @@ interface HarnessOptions {
 
 function createHarness(options: HarnessOptions = {}): {
   archiveProjectOnCompletion: ReturnType<typeof vi.fn>;
+  verifySelectedProjectRecapForArchive: ReturnType<typeof vi.fn>;
   capture: LoggerCapture;
   command: Command;
   context: CommandContext;
@@ -105,6 +106,7 @@ function createHarness(options: HarnessOptions = {}): {
     logger: capture.logger,
   };
   const archiveProjectOnCompletion = vi.fn(async () => archiveResult);
+  const verifySelectedProjectRecapForArchive = vi.fn(async () => undefined);
   const dependencies: ProjectArchivePushCommandDependencies = {
     buildCommandContext: (globalOptions: GlobalOptions): CommandContext => ({
       ...context,
@@ -119,6 +121,7 @@ function createHarness(options: HarnessOptions = {}): {
     resolveProjectsRoot: vi.fn(async () => projectsRoot),
     resolvePrimaryRepoRoot: vi.fn(async () => cwd),
     resolveArchiveProjectTarget: vi.fn(async () => archiveTarget),
+    verifySelectedProjectRecapForArchive,
     archiveProjectOnCompletion,
     processEnv,
     timestamp: () => options.timestamp ?? '2026-04-01T12:34:56Z',
@@ -131,6 +134,7 @@ function createHarness(options: HarnessOptions = {}): {
     command,
     context,
     dependencies,
+    verifySelectedProjectRecapForArchive,
   };
 }
 
@@ -238,8 +242,12 @@ describe('oat project archive push', () => {
   });
 
   it('forwards only the selected project recap run to archival', async () => {
-    const { archiveProjectOnCompletion, context, dependencies } =
-      createHarness();
+    const {
+      archiveProjectOnCompletion,
+      context,
+      dependencies,
+      verifySelectedProjectRecapForArchive,
+    } = createHarness();
 
     await runArchivePushCommand(
       dependencies,
@@ -253,7 +261,39 @@ describe('oat project archive push', () => {
         projectRecapRun: 'explainers/project-recap/run-20260401',
       }),
     );
+    expect(verifySelectedProjectRecapForArchive).toHaveBeenCalledWith(
+      '/tmp/workspace/open-agent-toolkit/.oat/projects/shared/demo-project',
+      'explainers/project-recap/run-20260401',
+    );
     expect(process.exitCode).toBe(0);
+  });
+
+  it('rejects a blocked recap before archive mutation, including dry-run', async () => {
+    for (const dryRun of [false, true]) {
+      const { archiveProjectOnCompletion, capture, context, dependencies } =
+        createHarness();
+      dependencies.verifySelectedProjectRecapForArchive = vi.fn(async () => {
+        throw new Error(
+          'Selected project recap is built-needs-review and requires a passing visual review before archival.',
+        );
+      });
+
+      await runArchivePushCommand(
+        dependencies,
+        undefined,
+        {
+          dryRun,
+          projectRecapRun: 'explainers/project-recap/blocked',
+        },
+        context,
+      );
+
+      expect(archiveProjectOnCompletion).not.toHaveBeenCalled();
+      expect(capture.error.at(-1)).toMatch(
+        /built-needs-review.*visual review/i,
+      );
+      expect(process.exitCode).toBe(1);
+    }
   });
 
   it('skips S3 push when archive.s3SyncOnComplete is false', async () => {

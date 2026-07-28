@@ -8,6 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { verifyRebuildability } from '../scripts/lib/durability.mjs';
+import { requiredImmutablePackagePaths } from '../scripts/lib/records.mjs';
 
 const tempDirs = [];
 const skillRoot = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -127,7 +128,7 @@ test('bundles self-contained visual authoring and review guidance', async () => 
   assert.match(review, /pass|correct|fail/i);
 });
 
-test('requires every retained set-plan record in recap immutable coverage', () => {
+test('requires complete retained set-plan and visual-review recap coverage', () => {
   const hash = `sha256:${'a'.repeat(64)}`;
   const setPlanPaths = [
     'source/set-plan/request.json',
@@ -135,6 +136,16 @@ test('requires every retained set-plan record in recap immutable coverage', () =
     'source/set-plan/ledger.json',
     'source/set-plan/portfolio.json',
     'source/set-plan/drafts.json',
+  ];
+  const reviewPaths = [
+    'qa/visual-review/attempt-1/request.json',
+    'qa/visual-review/attempt-1/result.json',
+    ...['mobile', 'tablet', 'desktop'].flatMap((viewport) => [
+      `qa/browser/project-recap/${viewport}.png`,
+      `qa/browser/project-recap/${viewport}.json`,
+      `qa/visual-review/attempt-1/evidence/project-recap/${viewport}.png`,
+      `qa/visual-review/attempt-1/evidence/project-recap/${viewport}.json`,
+    ]),
   ];
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
@@ -146,21 +157,37 @@ test('requires every retained set-plan record in recap immutable coverage', () =
       factBasePath: 'source/fact-base.json',
       factBaseHash: hash,
       inputHashes: {},
+      authorResultPaths: ['source/author/project-recap.json'],
     },
     theme: {
       path: 'theme.resolved.json',
       hash,
       derived: false,
     },
-    artifacts: [],
+    artifacts: [
+      {
+        id: 'project-recap',
+        type: 'explainer',
+        contentPath: 'source/content/project-recap.md',
+        renderedPath: 'site/index.html',
+        mediaType: 'text/html',
+        status: 'built',
+        hash,
+        rebuildable: false,
+      },
+    ],
     immutableHashes: Object.fromEntries(
       [
         'run-request.json',
         'source/content-approval.json',
         'source/fact-base.json',
         'source/fact-base.md',
+        'source/author/project-recap.json',
+        'source/content/project-recap.md',
         'theme.resolved.json',
+        'site/index.html',
         ...setPlanPaths,
+        ...reviewPaths,
       ].map((path) => [path, hash]),
     ),
     outcome: 'built-not-durable',
@@ -181,6 +208,14 @@ test('requires every retained set-plan record in recap immutable coverage', () =
     validateContract('manifest', manifest).errors.some(
       ({ code }) => code === 'immutable-package-incomplete',
     ),
+  );
+  manifest.immutableHashes[setPlanPaths.at(-1)] = hash;
+  delete manifest.immutableHashes[reviewPaths.at(-1)];
+  assert.deepEqual(
+    requiredImmutablePackagePaths(manifest).filter(
+      (path) => !(path in manifest.immutableHashes),
+    ),
+    [reviewPaths.at(-1)],
   );
 });
 

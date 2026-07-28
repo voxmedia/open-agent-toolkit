@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
 import { relative, resolve, sep } from 'node:path';
 
@@ -27,8 +28,8 @@ export async function planTrackedRunFinalization(request, context = {}) {
     );
   }
 
-  const immutablePaths = immutablePackagePaths(manifest).map((path) =>
-    toRepoPath(repoRoot, resolveRunPath(runRoot, path)),
+  const immutablePaths = (await immutablePackagePaths(manifest, runRoot)).map(
+    (path) => toRepoPath(repoRoot, resolveRunPath(runRoot, path)),
   );
   const mutablePaths = [
     toRepoPath(repoRoot, manifestPath),
@@ -250,7 +251,7 @@ function commitCommands(paths, subject) {
   ];
 }
 
-function immutablePackagePaths(manifest) {
+async function immutablePackagePaths(manifest, runRoot) {
   if (
     !manifest.immutableHashes ||
     typeof manifest.immutableHashes !== 'object' ||
@@ -262,7 +263,87 @@ function immutablePackagePaths(manifest) {
   if (paths.length === 0) {
     throw new Error('Manifest does not identify a complete immutable package.');
   }
+  const required = requiredPackagePaths(manifest);
+  const missing = required.filter(
+    (path) => !(path in manifest.immutableHashes),
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
+    );
+  }
+  for (const path of paths) {
+    const expected = manifest.immutableHashes[path];
+    if (!/^sha256:[a-f0-9]{64}$/.test(expected)) {
+      throw new Error(`Manifest has an invalid immutable hash for ${path}.`);
+    }
+    const bytes = await readFile(resolveRunPath(runRoot, path));
+    const actual = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+    if (actual !== expected) {
+      throw new Error(`Immutable package hash mismatch for ${path}.`);
+    }
+  }
   return paths;
+}
+
+function requiredPackagePaths(manifest) {
+  const required = new Set([
+    'run-request.json',
+    'source/content-approval.json',
+    manifest.source?.factBasePath,
+    'source/fact-base.md',
+    ...(manifest.source?.authorResultPaths ?? []),
+    manifest.theme?.path,
+    ...(manifest.artifacts ?? []).flatMap((artifact) => [
+      artifact.contentPath,
+      ...(artifact.status === 'built' &&
+      typeof artifact.renderedPath === 'string'
+        ? [artifact.renderedPath]
+        : []),
+    ]),
+  ]);
+  required.delete(undefined);
+  if (
+    manifest.recipe?.id === 'project-recap' &&
+    ['built-not-durable', 'built-durable'].includes(manifest.outcome)
+  ) {
+    for (const path of [
+      'source/set-plan/request.json',
+      'source/set-plan/result.json',
+      'source/set-plan/ledger.json',
+      'source/set-plan/portfolio.json',
+      'source/set-plan/drafts.json',
+    ]) {
+      required.add(path);
+    }
+    addReviewAttemptPaths(required, manifest, 1);
+    const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
+    if (
+      recorded.has('qa/visual-review/revision.json') ||
+      [...recorded].some((path) =>
+        path.startsWith('qa/visual-review/attempt-2/'),
+      )
+    ) {
+      required.add('qa/visual-review/revision.json');
+      addReviewAttemptPaths(required, manifest, 2);
+    }
+  }
+  return [...required];
+}
+
+function addReviewAttemptPaths(required, manifest, attempt) {
+  const root = `qa/visual-review/attempt-${attempt}`;
+  required.add(`${root}/request.json`);
+  required.add(`${root}/result.json`);
+  for (const artifact of manifest.artifacts ?? []) {
+    if (artifact.status !== 'built') continue;
+    for (const viewport of ['mobile', 'tablet', 'desktop']) {
+      required.add(`qa/browser/${artifact.id}/${viewport}.png`);
+      required.add(`qa/browser/${artifact.id}/${viewport}.json`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
+    }
+  }
 }
 
 function resolveRunPath(runRoot, path) {

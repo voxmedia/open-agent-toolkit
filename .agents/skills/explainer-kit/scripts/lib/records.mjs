@@ -34,6 +34,8 @@ export const SET_PLAN_RECORD_PATHS = Object.freeze([
   'source/set-plan/drafts.json',
 ]);
 export const VISUAL_REVISION_PATH = 'qa/visual-review/revision.json';
+const RECAP_SET_PLAN_PATHS = Object.freeze([...SET_PLAN_RECORD_PATHS]);
+const REVIEW_VIEWPORTS = Object.freeze(['mobile', 'tablet', 'desktop']);
 const SET_PLAN_RESUME_TOKEN_PREFIX = 'ekrt1:';
 const SET_PLAN_RESUME_TOKEN_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
 
@@ -386,9 +388,81 @@ export async function writeManifestAtomic(run, manifest) {
   }
 
   const buildRecord = JSON.parse(await readFile(run.buildRecordPath, 'utf8'));
+  assertImmutablePackageCoverage(manifest);
   assertValidContract('manifest', manifest, { buildRecord });
   await writeJsonAtomic(run.runRoot, 'manifest.json', manifest);
   return run.manifestPath;
+}
+
+export function requiredImmutablePackagePaths(manifest) {
+  if (!isObject(manifest)) {
+    throw new TypeError(
+      'Manifest package coverage requires a manifest object.',
+    );
+  }
+  const required = new Set([
+    'run-request.json',
+    'source/content-approval.json',
+    manifest.source?.factBasePath,
+    'source/fact-base.md',
+    ...(manifest.source?.authorResultPaths ?? []),
+    manifest.theme?.path,
+    ...(manifest.artifacts ?? []).flatMap((artifact) => [
+      artifact.contentPath,
+      ...(artifact.status === 'built' &&
+      typeof artifact.renderedPath === 'string'
+        ? [artifact.renderedPath]
+        : []),
+    ]),
+  ]);
+  required.delete(undefined);
+
+  const successfulRecap =
+    manifest.recipe?.id === 'project-recap' &&
+    ['built-not-durable', 'built-durable'].includes(manifest.outcome);
+  if (!successfulRecap) return [...required];
+
+  for (const path of RECAP_SET_PLAN_PATHS) required.add(path);
+  addVisualReviewAttemptPaths(required, manifest, 1);
+  const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
+  if (
+    recorded.has(VISUAL_REVISION_PATH) ||
+    [...recorded].some((path) => path.startsWith('qa/visual-review/attempt-2/'))
+  ) {
+    required.add(VISUAL_REVISION_PATH);
+    addVisualReviewAttemptPaths(required, manifest, 2);
+  }
+  return [...required];
+}
+
+function assertImmutablePackageCoverage(manifest) {
+  const recorded = manifest.immutableHashes;
+  if (!isObject(recorded)) {
+    throw new Error('Manifest does not identify immutable package hashes.');
+  }
+  const missing = requiredImmutablePackagePaths(manifest).filter(
+    (path) => typeof recorded[path] !== 'string',
+  );
+  if (missing.length > 0) {
+    throw new Error(
+      `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
+    );
+  }
+}
+
+function addVisualReviewAttemptPaths(required, manifest, attempt) {
+  const root = `qa/visual-review/attempt-${attempt}`;
+  required.add(`${root}/request.json`);
+  required.add(`${root}/result.json`);
+  for (const artifact of manifest.artifacts ?? []) {
+    if (artifact.status !== 'built') continue;
+    for (const viewport of REVIEW_VIEWPORTS) {
+      required.add(`qa/browser/${artifact.id}/${viewport}.png`);
+      required.add(`qa/browser/${artifact.id}/${viewport}.json`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
+    }
+  }
 }
 
 export async function writeSetPlanRecords(run, { request, plan }) {

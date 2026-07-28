@@ -69,10 +69,11 @@ describe('archive utils', () => {
     relativeRunPath: string;
     runRoot: string;
     manifestPath: string;
+    immutableCount: number;
   }> {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
-    const files = {
+    const files: Record<string, string> = {
       'run-request.json': '{"mode":"unattended"}\n',
       'source/fact-base.json': '{"claims":[]}\n',
       'source/fact-base.md': '# Facts\n',
@@ -82,6 +83,27 @@ describe('archive utils', () => {
       'theme.resolved.json': '{"name":"neutral"}\n',
       'site/index.html': `<h1>${runName}</h1>\n`,
     };
+    if (outcome === 'built-not-durable') {
+      for (const path of [
+        'source/set-plan/request.json',
+        'source/set-plan/result.json',
+        'source/set-plan/ledger.json',
+        'source/set-plan/portfolio.json',
+        'source/set-plan/drafts.json',
+        'qa/visual-review/attempt-1/request.json',
+        'qa/visual-review/attempt-1/result.json',
+      ]) {
+        files[path] = '{}\n';
+      }
+      for (const viewport of ['mobile', 'tablet', 'desktop']) {
+        files[`qa/browser/recap/${viewport}.png`] = `png-${viewport}\n`;
+        files[`qa/browser/recap/${viewport}.json`] = '{}\n';
+        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.png`] =
+          `png-${viewport}\n`;
+        files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`] =
+          '{}\n';
+      }
+    }
 
     for (const [relativePath, contents] of Object.entries(files)) {
       const target = join(runRoot, relativePath);
@@ -143,7 +165,12 @@ describe('archive utils', () => {
     );
     await writeFile(join(runRoot, 'build-record.json'), '{}\n', 'utf8');
 
-    return { relativeRunPath, runRoot, manifestPath };
+    return {
+      relativeRunPath,
+      runRoot,
+      manifestPath,
+      immutableCount: Object.keys(immutableHashes).length,
+    };
   }
 
   it('builds a repo-scoped remote archive URI', () => {
@@ -377,7 +404,7 @@ describe('archive utils', () => {
         exportRoot,
         manifest: {
           relativePath: 'manifest.json',
-          verifiedArtifactCount: 8,
+          verifiedArtifactCount: selected.immutableCount,
         },
       });
       await expect(
@@ -414,7 +441,9 @@ describe('archive utils', () => {
       { timestamp: () => '2026-04-01T12:34:56Z' },
     );
 
-    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(8);
+    expect(result.projectRecapExport?.manifest.verifiedArtifactCount).toBe(
+      recap.immutableCount,
+    );
     await expect(access(projectPath)).rejects.toThrow();
   });
 
@@ -533,15 +562,10 @@ describe('archive utils', () => {
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
     await mkdir(projectPath, { recursive: true });
     const recap = await createRecapPackage(projectPath);
-    const requestPath = 'qa/visual-review/attempt-1/request.json';
-    const request = '{}\n';
-    await mkdir(dirname(join(recap.runRoot, requestPath)), { recursive: true });
-    await writeFile(join(recap.runRoot, requestPath), request);
     const manifest = JSON.parse(await readFile(recap.manifestPath, 'utf8')) as {
       immutableHashes: Record<string, string>;
     };
-    manifest.immutableHashes[requestPath] =
-      `sha256:${createHash('sha256').update(request).digest('hex')}`;
+    delete manifest.immutableHashes['qa/visual-review/attempt-1/result.json'];
     await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
 
     await expect(

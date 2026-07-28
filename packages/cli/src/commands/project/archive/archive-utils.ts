@@ -157,6 +157,14 @@ export interface ArchiveProjectOnCompletionResult {
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
+const RECAP_SET_PLAN_PATHS = [
+  'source/set-plan/request.json',
+  'source/set-plan/result.json',
+  'source/set-plan/ledger.json',
+  'source/set-plan/portfolio.json',
+  'source/set-plan/drafts.json',
+] as const;
+const REVIEW_VIEWPORTS = ['mobile', 'tablet', 'desktop'] as const;
 
 /**
  * Directories excluded from S3 archive sync. These contain process artifacts
@@ -605,6 +613,7 @@ interface ProjectRecapManifest {
     hash: string;
   };
   artifacts: Array<{
+    id: string;
     contentPath: string;
     renderedPath?: string;
     status: 'built' | 'failed' | 'skipped';
@@ -662,10 +671,39 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     ]),
   ]);
   if (
+    value.recipe.id === 'project-recap' &&
+    ['built-not-durable', 'built-durable'].includes(value.outcome)
+  ) {
+    for (const path of RECAP_SET_PLAN_PATHS) {
+      expectedImmutablePaths.add(path);
+    }
+    addRequiredReviewAttemptPaths(expectedImmutablePaths, value, 1);
+    if (
+      recordedImmutablePaths.includes('qa/visual-review/revision.json') ||
+      recordedImmutablePaths.some((path) =>
+        path.startsWith('qa/visual-review/attempt-2/'),
+      )
+    ) {
+      expectedImmutablePaths.add('qa/visual-review/revision.json');
+      addRequiredReviewAttemptPaths(expectedImmutablePaths, value, 2);
+    }
+  }
+  const missingExpectedPaths = [...expectedImmutablePaths].filter(
+    (relativePath) => !(relativePath in value.immutableHashes),
+  );
+  if (
+    missingExpectedPaths.some(
+      (path) =>
+        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+    )
+  ) {
+    throw new CliError(
+      'Selected project recap manifest has an incomplete visual-review evidence chain.',
+    );
+  }
+  if (
     expectedImmutablePaths.size === 0 ||
-    [...expectedImmutablePaths].some(
-      (relativePath) => !(relativePath in value.immutableHashes),
-    ) ||
+    missingExpectedPaths.length > 0 ||
     value.artifacts.some(
       (artifact) =>
         artifact.status === 'built' &&
@@ -704,6 +742,25 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
   }
 
   return value;
+}
+
+function addRequiredReviewAttemptPaths(
+  required: Set<string>,
+  manifest: ProjectRecapManifest,
+  attempt: 1 | 2,
+): void {
+  const root = `qa/visual-review/attempt-${attempt}`;
+  required.add(`${root}/request.json`);
+  required.add(`${root}/result.json`);
+  for (const artifact of manifest.artifacts) {
+    if (artifact.status !== 'built') continue;
+    for (const viewport of REVIEW_VIEWPORTS) {
+      required.add(`qa/browser/${artifact.id}/${viewport}.png`);
+      required.add(`qa/browser/${artifact.id}/${viewport}.json`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
+      required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
+    }
+  }
 }
 
 function isProjectRecapManifestV1(
@@ -1036,6 +1093,53 @@ async function verifyProjectRecapImmutableHashes(
   return entries.length;
 }
 
+async function loadVerifiedProjectRecap(
+  projectPath: string,
+  projectRecapRun: string,
+): Promise<{
+  sourceRunRoot: string;
+  manifestContents: string;
+  manifest: ProjectRecapManifest;
+  verifiedArtifactCount: number;
+}> {
+  const sourceRunRoot = await resolveSelectedProjectRecapRun(
+    projectPath,
+    projectRecapRun,
+  );
+  const manifestContents = await readFile(
+    join(sourceRunRoot, 'manifest.json'),
+    'utf8',
+  );
+  const manifest = parseProjectRecapManifest(manifestContents);
+  if (manifest.recipe.id !== 'project-recap') {
+    throw new CliError(
+      'Selected project recap manifest recipe must be exactly `project-recap`.',
+    );
+  }
+  if (manifest.outcome === 'built-needs-review') {
+    throw new CliError(
+      'Selected project recap is built-needs-review and requires a passing visual review before archival.',
+    );
+  }
+  const verifiedArtifactCount = await verifyProjectRecapImmutableHashes(
+    sourceRunRoot,
+    manifest,
+  );
+  return {
+    sourceRunRoot,
+    manifestContents,
+    manifest,
+    verifiedArtifactCount,
+  };
+}
+
+export async function verifySelectedProjectRecapForArchive(
+  projectPath: string,
+  projectRecapRun: string,
+): Promise<void> {
+  await loadVerifiedProjectRecap(projectPath, projectRecapRun);
+}
+
 async function exportSelectedProjectRecap(
   options: ArchiveProjectOnCompletionOptions,
   snapshotName: string,
@@ -1046,25 +1150,15 @@ async function exportSelectedProjectRecap(
     return null;
   }
 
-  const sourceRunRoot = await resolveSelectedProjectRecapRun(
+  const verified = await loadVerifiedProjectRecap(
     options.projectPath,
     selectedRun,
   );
-  const sourceManifestContents = await readFile(
-    join(sourceRunRoot, 'manifest.json'),
-    'utf8',
-  );
-  const sourceManifest = parseProjectRecapManifest(sourceManifestContents);
-  if (sourceManifest.recipe.id !== 'project-recap') {
-    throw new CliError(
-      'Selected project recap manifest recipe must be exactly `project-recap`.',
-    );
-  }
-  if (sourceManifest.outcome === 'built-needs-review') {
-    throw new CliError(
-      'Selected project recap is built-needs-review and requires a passing visual review before archival.',
-    );
-  }
+  const {
+    sourceRunRoot,
+    manifestContents: sourceManifestContents,
+    manifest: sourceManifest,
+  } = verified;
 
   const exportRoot = join(
     options.repoRoot,

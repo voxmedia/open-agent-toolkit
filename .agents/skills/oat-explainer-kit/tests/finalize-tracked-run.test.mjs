@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import {
@@ -60,17 +61,11 @@ test('plans a dedicated immutable artifact commit followed by evidence and one p
 test('plans evidence for every manifest immutable hash path', async () => {
   const fixture = await createRun();
   const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
-  manifest.immutableHashes = Object.fromEntries(
-    [
-      'run-request.json',
-      'source/fact-base.json',
-      'source/fact-base.md',
-      'source/content-approval.json',
-      'source/author/recap.json',
-      'source/content/recap.md',
-      'theme.resolved.json',
-      'site/index.html',
-    ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
+  const extraPath = 'qa/custom-observation.json';
+  await mkdir(join(fixture.runRoot, 'qa'), { recursive: true });
+  await writeFile(join(fixture.runRoot, extraPath), '{"observed":true}\n');
+  manifest.immutableHashes[extraPath] = await fileHash(
+    join(fixture.runRoot, extraPath),
   );
   await writeFile(
     fixture.manifestPath,
@@ -252,6 +247,40 @@ test('refuses to finalize a recap whose visual review gate is unresolved', async
   );
 });
 
+test('rejects incomplete or mutated review evidence before planning commits', async () => {
+  const incomplete = await createRun();
+  const incompleteManifest = JSON.parse(
+    await readFile(incomplete.manifestPath, 'utf8'),
+  );
+  delete incompleteManifest.immutableHashes[
+    'qa/visual-review/attempt-1/evidence/recap/tablet.json'
+  ];
+  await writeFile(
+    incomplete.manifestPath,
+    `${JSON.stringify(incompleteManifest, null, 2)}\n`,
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(incomplete, 'dedicated'), {
+      repoRoot: incomplete.repoRoot,
+      project: 'demo',
+    }),
+    /canonical package.*tablet\.json/i,
+  );
+
+  const mutated = await createRun();
+  await writeFile(
+    join(mutated.runRoot, 'qa/browser/recap/mobile.png'),
+    'mutated\n',
+  );
+  await assert.rejects(
+    planTrackedRunFinalization(request(mutated, 'dedicated'), {
+      repoRoot: mutated.repoRoot,
+      project: 'demo',
+    }),
+    /hash mismatch.*mobile\.png/i,
+  );
+});
+
 function successfulObservation(fixture) {
   return {
     artifactCommit: { sha: SHA, paths: fixture.immutablePaths },
@@ -278,34 +307,56 @@ async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
   const repoRoot = await mkdtemp(join(tmpdir(), 'oat-finalizer-'));
   tempDirs.push(repoRoot);
   const runRoot = join(repoRoot, '.oat/projects/shared/demo/explainers/recap');
-  await mkdir(join(runRoot, 'source/content'), { recursive: true });
-  await mkdir(join(runRoot, 'site'), { recursive: true });
-  for (const [path, content] of [
+  const files = [
+    ['run-request.json', '{}\n'],
+    ['source/content-approval.json', '{}\n'],
     ['source/fact-base.json', '{}\n'],
     ['source/fact-base.md', '# Facts\n'],
+    ['source/author/recap.json', '{}\n'],
     ['source/content/recap.md', '# Recap\n'],
+    ['source/set-plan/request.json', '{}\n'],
+    ['source/set-plan/result.json', '{}\n'],
+    ['source/set-plan/ledger.json', '{}\n'],
+    ['source/set-plan/portfolio.json', '{}\n'],
+    ['source/set-plan/drafts.json', '{}\n'],
     ['theme.resolved.json', '{}\n'],
     ['site/index.html', '<h1>Recap</h1>\n'],
-  ]) {
+    ['qa/visual-review/attempt-1/request.json', '{}\n'],
+    ['qa/visual-review/attempt-1/result.json', '{}\n'],
+  ];
+  for (const viewport of ['mobile', 'tablet', 'desktop']) {
+    files.push(
+      [`qa/browser/recap/${viewport}.png`, `png-${viewport}\n`],
+      [`qa/browser/recap/${viewport}.json`, '{}\n'],
+      [
+        `qa/visual-review/attempt-1/evidence/recap/${viewport}.png`,
+        `png-${viewport}\n`,
+      ],
+      [`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`, '{}\n'],
+    );
+  }
+  for (const [path, content] of files) {
+    await mkdir(dirname(join(runRoot, path)), { recursive: true });
     await writeFile(join(runRoot, path), content);
   }
+  const immutableHashes = Object.fromEntries(
+    await Promise.all(
+      files.map(async ([path]) => [path, await fileHash(join(runRoot, path))]),
+    ),
+  );
 
   const manifest = {
     schemaVersion: 'explainer-kit.manifest/v1',
     recipe: { id: 'project-recap', version: '1' },
-    source: { factBasePath: 'source/fact-base.json' },
+    source: {
+      factBasePath: 'source/fact-base.json',
+      authorResultPaths: ['source/author/recap.json'],
+    },
     theme: { path: 'theme.resolved.json' },
-    immutableHashes: Object.fromEntries(
-      [
-        'source/fact-base.json',
-        'source/fact-base.md',
-        'source/content/recap.md',
-        'theme.resolved.json',
-        'site/index.html',
-      ].map((path) => [path, `sha256:${'a'.repeat(64)}`]),
-    ),
+    immutableHashes,
     artifacts: [
       {
+        id: 'recap',
         contentPath: 'source/content/recap.md',
         renderedPath: 'site/index.html',
         status: 'built',
@@ -320,17 +371,20 @@ async function createRun({ outcome = 'built-not-durable', evidence } = {}) {
   await writeFile(join(runRoot, 'build-record.json'), '{}\n');
 
   const prefix = '.oat/projects/shared/demo/explainers/recap';
+  const immutablePaths = Object.keys(immutableHashes).map(
+    (path) => `${prefix}/${path}`,
+  );
   return {
     repoRoot,
     runRoot,
     manifestPath,
-    immutablePaths: [
-      `${prefix}/source/fact-base.json`,
-      `${prefix}/source/fact-base.md`,
-      `${prefix}/source/content/recap.md`,
-      `${prefix}/theme.resolved.json`,
-      `${prefix}/site/index.html`,
-    ],
+    immutablePaths,
     mutablePaths: [`${prefix}/manifest.json`, `${prefix}/build-record.json`],
   };
+}
+
+async function fileHash(path) {
+  return `sha256:${createHash('sha256')
+    .update(await readFile(path))
+    .digest('hex')}`;
 }

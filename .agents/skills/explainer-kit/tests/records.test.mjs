@@ -18,6 +18,7 @@ import {
   createSetPlanResumeToken,
   initializeRun,
   readSetPlanRecords,
+  requiredImmutablePackagePaths,
   reopenBuildStages,
   updateBuildRecord,
   verifySetPlanResumeToken,
@@ -233,6 +234,48 @@ test('retains structured partial evidence for a failed visual review attempt', a
       ],
     },
   );
+});
+
+test('defines canonical successful recap coverage while allowing immutable extras', () => {
+  const recap = {
+    recipe: { id: 'project-recap' },
+    outcome: 'built-not-durable',
+    source: {
+      factBasePath: 'source/fact-base.json',
+      authorResultPaths: ['source/author/project-recap.json'],
+    },
+    theme: { path: 'theme.resolved.json' },
+    artifacts: [
+      {
+        id: 'project-recap',
+        status: 'built',
+        contentPath: 'source/content/project-recap.html',
+        renderedPath: 'site/project-recap.html',
+      },
+    ],
+    immutableHashes: {
+      'qa/custom-observation.json': HASH,
+    },
+  };
+
+  const required = requiredImmutablePackagePaths(recap);
+  for (const path of [
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+    'qa/browser/project-recap/mobile.png',
+    'qa/browser/project-recap/tablet.json',
+    'qa/browser/project-recap/desktop.png',
+    'qa/visual-review/attempt-1/request.json',
+    'qa/visual-review/attempt-1/result.json',
+    'qa/visual-review/attempt-1/evidence/project-recap/mobile.png',
+    'qa/visual-review/attempt-1/evidence/project-recap/desktop.json',
+  ]) {
+    assert.ok(required.includes(path), path);
+  }
+  assert.equal(required.includes('qa/custom-observation.json'), false);
 });
 
 test('computes built-needs-review from a terminal recap review gate', async () => {
