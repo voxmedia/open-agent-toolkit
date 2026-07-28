@@ -471,6 +471,163 @@ p02 versions.
 
 ---
 
+### Task p02-t08: Enforce complete reconciled source coverage
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/set-plan.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED tests for a set plan that omits one reconciled non-critic source and
+   for a declared source that no portfolio artifact covers.
+2. Require the plan-level source set to equal the complete reconciled
+   non-critic source set, without duplicates or omissions.
+3. Require every declared source to be assigned to at least one portfolio
+   artifact while retaining existing unknown-source and required-draft checks.
+4. Run the focused record and core integration tests.
+5. Commit as `fix(p02-t08): enforce complete source coverage`.
+
+**Acceptance:** A validated set plan cannot silently omit approved evidence at
+either the plan or artifact-coverage level.
+
+---
+
+### Task p02-t09: Bind visual review to the complete rendered set
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-result.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+
+**Steps:**
+
+1. Add RED tests for omitted, extra, and duplicate rendered artifacts; partial
+   result artifact IDs; findings detached from the reviewed request; and a
+   passing disposition that carries correction findings.
+2. Require request rendered-artifact IDs to equal the exact planned portfolio.
+3. Bind each result to its request so result artifact IDs equal the reviewed
+   set and every finding references an artifact from that set.
+4. Make pass/correct/fail disposition semantics internally consistent and keep
+   all contracts provider-neutral and closed.
+5. Run the focused contract and schema tests.
+6. Commit as `fix(p02-t09): bind visual review to full set`.
+
+**Acceptance:** No schema-valid or runtime-valid review can pass a partial or
+detached adaptive set.
+
+---
+
+### Task p02-t10: Protect retained set-plan records across resume
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+
+**Steps:**
+
+1. Add RED tamper tests for set-plan request, result, ledger, portfolio, drafts,
+   artifact identity, retained author/content paths, and cross-record
+   projection drift.
+2. Include all five set-plan records in immutable hash coverage and manifest
+   completeness validation.
+3. On resume, validate every retained record, require canonical projections and
+   hashes to agree, and bind approval, content, and author identities to the
+   validated portfolio through confined paths.
+4. Prove a valid resume invokes neither planner nor authors and a tampered
+   resume fails before reading or composing untrusted content.
+5. Run the focused record, core integration, and rebuildability tests.
+6. Commit as `fix(p02-t10): protect retained set plans`.
+
+**Acceptance:** The durable rebuild package includes the complete set plan, and
+post-pause mutation cannot alter resumed composition.
+
+---
+
+### Task p02-t11: Deliver bundled authoring guidance to callbacks
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/author-callback.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED core and adapter tests proving every author callback receives the
+   relevant bundled visual-authoring rules in a closed provider-neutral
+   request.
+2. Add an explicit author-request guidance field and populate it from
+   `references/visual-authoring.md` without ambient or home-directory reads.
+3. Update the callback contract for planner-owned portfolios, immutable set
+   context, planned artifact identity, and prohibition of author-driven
+   expansion after planning.
+4. Reject missing or malformed guidance while preserving brief, shell, theme,
+   provenance, and author-result contracts.
+5. Run the focused contract, schema, core integration, and adapter integration
+   tests.
+6. Commit as `fix(p02-t11): deliver visual authoring guidance`.
+
+**Acceptance:** Provider-neutral callbacks receive the bundled medium guidance
+and accurate planner-owned expansion rules entirely through validated inputs.
+
+---
+
+### Task p02-t12: Add an explicit deterministic recap fallback
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/run-request.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/recipe.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/recipes/project-recap.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/recipes.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+
+**Steps:**
+
+1. Add RED tests for explicit deterministic fallback selection, default
+   artistic selection, and prohibition of automatic downgrade after artistic
+   author failure.
+2. Define a closed, bounded project-recap fallback policy and explicit request
+   selection that retains the required adaptive portfolio while choosing the
+   deterministic Markdown path.
+3. Keep unattended golden runs artistic by default; never reinterpret failure
+   as fallback success or silently reduce required artifact cardinality.
+4. Retain distinct paths, identities, manifests, and rebuild records for the
+   selected mode.
+5. Run the focused contract, schema, recipe, core integration, and recap e2e
+   tests.
+6. Commit as `feat(p02-t12): add explicit recap fallback`.
+
+**Acceptance:** Operators can deliberately select deterministic Markdown while
+default unattended recaps remain artistic and never auto-downgrade.
+
+---
+
 ## Phase 3: Independent browser critic and hard loop cap
 
 ### Task p03-t01: Retain browser screenshots and metrics at three viewports
@@ -799,17 +956,17 @@ another review cycle.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact                            |
-| ------ | -------- | ------- | ---------- | ----------------------------------- |
-| p01    | code     | passed  | 2026-07-28 | reviews/20260728-p01-code-review.md |
-| p02    | code     | pending | -          | -                                   |
-| p03    | code     | pending | -          | -                                   |
-| p04    | code     | pending | -          | -                                   |
-| p05    | code     | pending | -          | -                                   |
-| final  | code     | pending | -          | -                                   |
-| spec   | artifact | pending | -          | -                                   |
-| design | artifact | pending | -          | -                                   |
-| plan   | artifact | passed  | 2026-07-28 | -                                   |
+| Scope  | Type     | Status      | Date       | Artifact                            |
+| ------ | -------- | ----------- | ---------- | ----------------------------------- |
+| p01    | code     | passed      | 2026-07-28 | reviews/20260728-p01-code-review.md |
+| p02    | code     | fixes_added | 2026-07-28 | reviews/20260728-p02-code-review.md |
+| p03    | code     | pending     | -          | -                                   |
+| p04    | code     | pending     | -          | -                                   |
+| p05    | code     | pending     | -          | -                                   |
+| final  | code     | pending     | -          | -                                   |
+| spec   | artifact | pending     | -          | -                                   |
+| design | artifact | pending     | -          | -                                   |
+| plan   | artifact | passed      | 2026-07-28 | -                                   |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.
@@ -827,12 +984,12 @@ review. Additional review cycles are not authorized.
 **Summary:**
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
-- Phase 2: 7 tasks — bundled guidance, contracts, set planner, adaptive set, adapter, and verification fixes
+- Phase 2: 12 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 4 tasks — browser evidence, independent critic, loop cap, lifecycle gate
 - Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 25 tasks**
+**Total: 30 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

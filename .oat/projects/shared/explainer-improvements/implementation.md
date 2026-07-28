@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase p02 review remediation requires operator authorization because implementation retry usage is 1/1.
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t01
+oat_current_task_id: p02-t08
 oat_generated: false
 ---
 
@@ -17,15 +18,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | review_pending |     7 |       7/7 |
-| p03   | pending        |     4 |       0/4 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | blocked  |    12 |      7/12 |
+| p03   | pending  |     4 |       0/4 |
+| p04   | pending  |     3 |       0/3 |
+| p05   | pending  |     4 |       0/4 |
 
-**Total:** 14/25 tasks completed
+**Total:** 14/30 tasks completed
 
 ---
 
@@ -88,7 +89,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** review_pending
+**Status:** blocked
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -97,6 +98,11 @@ oat_generated: false
 - [x] p02-t05 — Bind set planning and composition through the OAT adapter (`8514de88`)
 - [x] p02-t06 — Align integration fixtures with adaptive recap sets (`379bca67`)
 - [x] p02-t07 — Align explainer family version contracts (`86fc4b6a`)
+- [ ] p02-t08 — Enforce complete reconciled source coverage
+- [ ] p02-t09 — Bind visual review to the complete rendered set
+- [ ] p02-t10 — Protect retained set-plan records across resume
+- [ ] p02-t11 — Deliver bundled authoring guidance to callbacks
+- [ ] p02-t12 — Add an explicit deterministic recap fallback
 
 ### Phase Implementation Summary
 
@@ -120,6 +126,15 @@ oat_generated: false
 - `pnpm release:validate` passed five public packages and 65 visual
   measurements.
 - Root reran the 125-test union and release validation with a clean worktree.
+
+### Phase Review
+
+- Request: `explainer-improvements-p02-review-20260728T053500Z`
+- Artifact: `reviews/20260728-p02-code-review.md`
+- Verdict: `BLOCKED` — 0 Critical, 5 Important, 0 Medium, 0 Minor
+- Blocking fixes: p02-t08 through p02-t12
+- Review remediation is not dispatched because the accepted implementation
+  handle already consumed retry usage 1/1 on p02-t06 and p02-t07.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -205,6 +220,17 @@ oat_generated: false
 - Fix continuation outcome: `DONE`; retry usage 1/1; focused and phase-wide verification passed
 - Fix continuation Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
+### Run 3 — Phase p02 review
+
+- Request: `explainer-improvements-p02-review-20260728T053500Z`
+- Outcome: `BLOCKED`
+- Review range: `b54863f19d5db6df47b1538e791adadaf76f0306..86fc4b6acc737a995783210699cee055e7860a45`
+- Tracking baseline: `a732eac3ddf410709643344809f33e281ed0bbc2`
+- Artifact: `reviews/20260728-p02-code-review.md`
+- Findings: 0 Critical, 5 Important, 0 Medium, 0 Minor
+- Reconnaissance: `not-attempted`
+- Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -243,7 +269,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 25 tasks and the final review._
+_Fill from implementation evidence after all 30 tasks and the final review._
 
 ## References
 
