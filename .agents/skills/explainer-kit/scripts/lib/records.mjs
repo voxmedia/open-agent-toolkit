@@ -432,10 +432,7 @@ export function requiredImmutablePackagePaths(manifest, { runMode } = {}) {
   if (successfulRecap) {
     for (const path of RECAP_SET_PLAN_PATHS) required.add(path);
   }
-  if (
-    manifest.recipe?.id === 'project-recap' &&
-    ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence)
-  ) {
+  if (successfulRecap && (runMode === 'unattended' || retainsReviewEvidence)) {
     addVisualReviewAttemptPaths(required, manifest, 1);
   }
   const retainsSecondAttempt =
@@ -443,7 +440,7 @@ export function requiredImmutablePackagePaths(manifest, { runMode } = {}) {
     [...recorded].some((path) =>
       path.startsWith('qa/visual-review/attempt-2/'),
     );
-  if (manifest.recipe?.id === 'project-recap' && retainsSecondAttempt) {
+  if (successfulRecap && retainsSecondAttempt) {
     required.add(VISUAL_REVISION_PATH);
     addVisualReviewAttemptPaths(required, manifest, 2);
   }

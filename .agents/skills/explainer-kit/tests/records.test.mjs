@@ -314,6 +314,39 @@ test('defines mode-aware successful recap coverage while allowing immutable extr
   );
 });
 
+test('allows partial visual-review evidence in built-needs-review handoffs', () => {
+  const required = requiredImmutablePackagePaths(
+    {
+      recipe: { id: 'project-recap' },
+      outcome: 'built-needs-review',
+      source: { factBasePath: 'source/fact-base.json' },
+      theme: { path: 'theme.resolved.json' },
+      artifacts: [
+        {
+          id: 'project-recap',
+          status: 'built',
+          contentPath: 'source/content/project-recap.html',
+          renderedPath: 'site/project-recap.html',
+        },
+      ],
+      immutableHashes: {
+        'qa/browser/project-recap/mobile.png': HASH,
+        'qa/visual-review/revision.json': HASH,
+        'qa/visual-review/attempt-2/error.json': HASH,
+      },
+    },
+    { runMode: 'unattended' },
+  );
+
+  assert.equal(
+    required.some(
+      (path) =>
+        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+    ),
+    false,
+  );
+});
+
 test('computes built-needs-review from a terminal recap review gate', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(
