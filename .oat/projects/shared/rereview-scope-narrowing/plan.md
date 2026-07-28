@@ -631,7 +631,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | Scope  | Type     | Status          | Date       | Artifact                                                    |
 | ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- |
 | p01    | code     | fixes_completed | 2026-07-28 | reviews/archived/p01-review-2026-07-28T204348Z.md           |
-| p02    | code     | received        | 2026-07-28 | reviews/p02-review-2026-07-28T211745Z.md                    |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/p02-review-2026-07-28T211745Z.md                    |
 | p03    | code     | pending         | -          | -                                                           |
 | p04    | code     | pending         | -          | -                                                           |
 | p05    | code     | pending         | -          | -                                                           |
@@ -643,6 +643,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | plan   | artifact | received        | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
 | plan   | artifact | passed          | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T182554Z.md |
 | p01    | code     | passed          | 2026-07-28 | reviews/archived/p01-review-2026-07-28T205203Z.md           |
+| p02    | code     | passed          | 2026-07-28 | reviews/p02-review-2026-07-28T212511Z.md                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
