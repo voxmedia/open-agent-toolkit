@@ -27,6 +27,11 @@ export async function recordDurability(request, options = {}) {
   const buildRecord = await readJson(buildRecordPath);
   assertValid('build-record', buildRecord);
   assertValid('manifest', manifest, { buildRecord });
+  if (manifest.outcome === 'built-needs-review') {
+    throw new Error(
+      'built-needs-review requires a passing visual review before durability attestation.',
+    );
+  }
   if (
     manifest.outcome !== 'built-not-durable' &&
     manifest.outcome !== 'built-durable'

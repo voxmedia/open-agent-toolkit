@@ -102,6 +102,7 @@ test('manifest and build record share outcomes and evidence contracts', async ()
   const outcomes = [
     'built-durable',
     'built-not-durable',
+    'built-needs-review',
     'failed',
     'incomplete',
   ];

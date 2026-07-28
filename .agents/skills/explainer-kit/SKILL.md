@@ -148,8 +148,12 @@ medium-specific authoring rules.
 
 Render QA is opt-in. It runs only against an injected `browserProbe`, and the
 core never launches a browser of its own — reviewing the rendered output in a
-browser is the generating agent's job. Without a probe the stage records
-`render-qa-skipped-no-probe` and the run continues.
+browser is the generating agent's job. Unattended project recaps require both
+complete browser evidence and an independent visual-critic `pass`. A missing
+probe or critic, a terminal critic failure, or an unresolved correction records
+`built-needs-review`: built artifacts and review evidence remain available, but
+durability and publishing callbacks are not invoked. Other runs without a probe
+record `render-qa-skipped-no-probe` and continue.
 
 See `references/contracts.md` for source formats, callback modules, retained
 intermediates, and result semantics.
@@ -158,6 +162,8 @@ Durability and publishing run only when the request selects them and the caller
 supplies the matching callback. The core does not create commits, discover
 destinations, or publish automatically. A successful build remains
 `built-not-durable` until caller-supplied evidence is verified.
+`built-needs-review` is terminal but cannot receive durability evidence or be
+published.
 
 ## Progress Indicators
 

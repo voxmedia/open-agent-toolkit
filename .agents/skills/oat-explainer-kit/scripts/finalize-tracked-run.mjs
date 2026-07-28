@@ -21,6 +21,11 @@ export async function planTrackedRunFinalization(request, context = {}) {
       'Finalization requires an explainer-kit.manifest/v1 record.',
     );
   }
+  if (manifest.outcome === 'built-needs-review') {
+    throw new Error(
+      'built-needs-review requires a passing visual review before finalization.',
+    );
+  }
 
   const immutablePaths = immutablePackagePaths(manifest).map((path) =>
     toRepoPath(repoRoot, resolveRunPath(runRoot, path)),

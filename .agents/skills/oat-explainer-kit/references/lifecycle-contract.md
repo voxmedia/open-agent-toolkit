@@ -94,6 +94,11 @@ tracked project explainer and recap runs. The request contains `runRoot`,
 repository root, project name, and, for `completion-bookkeeping`, the existing
 full artifact commit SHA.
 
+A core `built-needs-review` outcome is a terminal review gate, not a
+non-durable success. The planner rejects it before producing artifact,
+attestation, evidence-commit, or push commands. The recap must instead be
+reviewed and rebuilt to a passing visual-review outcome.
+
 The returned stages must run in order:
 
 1. In `dedicated` mode, commit exactly the manifest-declared immutable package
@@ -151,6 +156,9 @@ export remains committed, the mutable records retain the warning and
 `built-not-durable` outcome, and the evidence-record commit and push still
 complete. A later attestation may recover durability without repeating the
 archive.
+
+This recovery path applies only to `built-not-durable`.
+`built-needs-review` cannot be exported, attested, finalized, or pushed.
 
 Post-archive summary and PR recap links target `projectRecapExport.exportRoot`
 under `.oat/repo/reference/project-recaps/` on the current head branch. The

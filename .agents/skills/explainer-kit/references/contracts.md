@@ -104,6 +104,13 @@ one of those artifacts. `pass` permits no findings; `correct` and `fail`
 require at least one correction finding. Provider, model, command, credential,
 and dispatch fields are not part of any core contract.
 
+Unattended project recaps require retained browser evidence at every required
+viewport and a final visual-critic `pass`. A missing browser probe or visual
+critic, a terminal `fail`, or a second `correct` after the one allowed
+correction pass closes the QA gate with `built-needs-review`. That terminal
+outcome preserves rendered artifacts and all available review evidence while
+skipping durability and publish callbacks.
+
 ## Explicit source forms
 
 - `factBase.mode: supplied` points to a valid `FactBaseV1` JSON file. The core
@@ -137,10 +144,12 @@ The core executes:
 5. author every planned artifact against the same set context
 6. render typed artifacts through the narrative renderer or validate
    agent-composed HTML, per each artifact's declared authoring path
-7. run structural, guideline, and optional browser QA
-8. resolve content approval — the interactive gate pauses here, after render and
+7. run structural and guideline QA, plus required browser and independent
+   visual review for unattended project recaps
+8. close any unresolved recap review gate before external persistence
+9. resolve content approval — the interactive gate pauses here, after render and
    QA and before anything is published or persisted externally
-9. write the manifest and build record
+10. write the manifest and build record
 
 An incomplete interactive result includes
 `approval.resumeToken: "ekrt1:<64 lowercase hex characters>"`. The token is an
@@ -176,6 +185,10 @@ empty rounds and always stops at the recipe's `maxRounds`.
 
 Durability and publishing are never implicit.
 
+`built-needs-review` is not durability-eligible. The core skips both callbacks
+for that outcome, and downstream finalizers, exporters, and archive pushers
+must reject it rather than converting it to success.
+
 - `durability.strategy: none` invokes neither seam.
 - `durability.strategy: commit` invokes the explicit `durability` callback.
   Caller-created commit evidence is subsequently verified with
@@ -204,6 +217,8 @@ marking rides in the result and the approval record only; `manifest/v1` stays
 frozen and carries no marking field. Input validation and unsupported
 recipes reject before output mutation. Failures after initialization return a
 `failed` result with paths to the retained record and intermediates.
+`built-needs-review` is a distinct terminal review-gate result, not a synonym
+for `built-not-durable`.
 
 V1 readers reject unknown schema majors and unknown contract fields. Relative
 record paths are run-root confined, hashes use `sha256:<hex>`, and command

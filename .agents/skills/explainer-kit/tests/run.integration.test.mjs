@@ -578,7 +578,7 @@ test('unattended lifecycle sources persist review provenance without prompting',
     reviewedSource,
   });
 
-  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(result.outcome, 'built-needs-review');
   assert.equal(result.marking, 'auto-drafted');
   assert.equal(result.approval.marking, 'auto-drafted');
   assert.equal(prompt.mock.callCount(), 0);
@@ -609,7 +609,7 @@ test('project recap defaults to the persisted artistic authoring mode', async ()
     now: () => NOW,
   });
 
-  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(result.outcome, 'built-needs-review');
   assert.equal(requests.length, 3);
   assert.ok(requests.every(({ authoring }) => authoring === 'html'));
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
@@ -641,7 +641,7 @@ test('explicit deterministic recap fallback retains the full portfolio as Markdo
     },
   );
 
-  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(result.outcome, 'built-needs-review');
   assert.deepEqual(
     requests.map(({ artifactId }) => artifactId),
     ['project-recap', 'architecture', 'deck'],
@@ -709,7 +709,7 @@ test('completed unattended runs are not mistaken for unresolved approval resumes
 
   assert.equal(
     resumed.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(resumed.errors),
   );
   assert.notEqual(resumed.runId, initial.runId);
@@ -757,7 +757,7 @@ test('unattended author receives structured per-artifact context and retains val
 
   assert.equal(
     result.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(result.errors),
   );
   assert.equal(author.mock.callCount(), 3);
@@ -904,7 +904,7 @@ test('plans one immutable set after facts and before every artifact author', asy
 
   assert.equal(
     result.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(result.errors),
   );
   assert.equal(planSet.mock.callCount(), 1);
@@ -1103,7 +1103,9 @@ test('caps visual review at one correction and one final review', async (t) => {
 
       assert.equal(
         result.outcome,
-        'built-not-durable',
+        scenario.expectedFinal === 'pass'
+          ? 'built-not-durable'
+          : 'built-needs-review',
         JSON.stringify(result.errors),
       );
       assert.equal(author.mock.callCount(), scenario.expectedAuthors);
@@ -1147,6 +1149,145 @@ test('caps visual review at one correction and one final review', async (t) => {
       }
     });
   }
+});
+
+test('fails closed before durability and publication when recap review is missing or fails', async (t) => {
+  for (const scenario of [
+    {
+      name: 'missing browser probe',
+      browserProbe: undefined,
+      visualDisposition: 'pass',
+      strategy: 'commit',
+    },
+    {
+      name: 'missing visual critic',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: null,
+      strategy: 'publish',
+    },
+    {
+      name: 'terminal critic failure',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'fail',
+      strategy: 'publish',
+    },
+  ]) {
+    await t.test(scenario.name, async () => {
+      const fixture = await suppliedFixture('project-recap');
+      const durability = mock.fn(async () => {});
+      const publish = mock.fn(async () => {});
+      const visualCritic =
+        scenario.visualDisposition === null
+          ? undefined
+          : mock.fn(async (reviewRequest) => ({
+              schemaVersion: 'explainer-kit.visual-review-result/v1',
+              reviewId: 'blocking-review',
+              reviewedAt: NOW,
+              disposition: scenario.visualDisposition,
+              artifactIds: reviewRequest.renderedArtifacts.map(
+                ({ artifactId }) => artifactId,
+              ),
+              findings:
+                scenario.visualDisposition === 'pass'
+                  ? []
+                  : [
+                      {
+                        artifactId: 'project-recap',
+                        rubric: 'first-viewport',
+                        severity: 'important',
+                        evidence: 'The outcome remains below the fold.',
+                        correction: 'Move the outcome into the lead panel.',
+                      },
+                    ],
+            }));
+      const reviewedRequest = {
+        ...fixture.request,
+        durability:
+          scenario.strategy === 'commit'
+            ? { strategy: 'commit' }
+            : {
+                strategy: 'publish',
+                publish: {
+                  schemaVersion: 'explainer-kit.publish-request/v1',
+                  provider: 's3-static',
+                  s3Uri: 's3://example-bucket/explainers',
+                  publicBaseUrl: 'https://docs.example.com/explainers',
+                  awsRegion: 'us-east-1',
+                  siteRoot: join(
+                    fixture.outputRoot,
+                    'project-recap-demo/site',
+                  ),
+                  manifestPath: join(
+                    fixture.outputRoot,
+                    'project-recap-demo/manifest.json',
+                  ),
+                },
+              },
+      };
+
+      const result = await runExplainerCore(reviewedRequest, {
+        author: async (authorRequest) => authorResult(authorRequest),
+        planSet: async (plannerRequest) => plannedSet(plannerRequest),
+        ...(scenario.browserProbe && {
+          browserProbe: scenario.browserProbe,
+        }),
+        ...(visualCritic && { visualCritic }),
+        durability,
+        publish,
+        now: () => NOW,
+      });
+
+      assert.equal(
+        result.outcome,
+        'built-needs-review',
+        JSON.stringify({
+          errors: result.errors,
+          warnings: result.warnings,
+          request: reviewedRequest,
+        }),
+      );
+      assert.equal(durability.mock.callCount(), 0);
+      assert.equal(publish.mock.callCount(), 0);
+      const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+      const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
+      assert.equal(manifest.outcome, 'built-needs-review');
+      assert.equal(record.outcome, 'built-needs-review');
+      assert.ok(manifest.artifacts.every(({ status }) => status === 'built'));
+      assert.ok(
+        manifest.warnings.some((warning) =>
+          warning.startsWith('visual-review-required:'),
+        ),
+      );
+    });
+  }
+
+  await t.test('passing browser and critic evidence remains eligible', async () => {
+    const fixture = await suppliedFixture('project-recap');
+    const durability = mock.fn(async () => {});
+    const result = await runExplainerCore(
+      { ...fixture.request, durability: { strategy: 'commit' } },
+      {
+        author: async (authorRequest) => authorResult(authorRequest),
+        planSet: async (plannerRequest) => plannedSet(plannerRequest),
+        browserProbe: retainingBrowserProbe,
+        visualCritic: async (reviewRequest) => ({
+          schemaVersion: 'explainer-kit.visual-review-result/v1',
+          reviewId: 'passing-review',
+          reviewedAt: NOW,
+          disposition: 'pass',
+          artifactIds: reviewRequest.renderedArtifacts.map(
+            ({ artifactId }) => artifactId,
+          ),
+          findings: [],
+        }),
+        durability,
+        now: () => NOW,
+      },
+    );
+
+    assert.equal(result.outcome, 'built-not-durable');
+    assert.equal(durability.mock.callCount(), 1);
+  });
 });
 
 test('fails before composition on invalid set sources, ledger conflicts, or missing drafts', async () => {
@@ -1772,7 +1913,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   });
   assert.equal(
     bound.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(bound.errors),
   );
   assert.deepEqual(await provenanceOf(bound), {
@@ -1815,7 +1956,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   });
   assert.equal(
     stamped.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(stamped.errors),
   );
   assert.deepEqual(await provenanceOf(stamped), {
@@ -1856,7 +1997,7 @@ test('author provenance is bound to trusted caller context, not self-asserted', 
   });
   assert.equal(
     selfAsserted.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(selfAsserted.errors),
   );
   assert.deepEqual(await provenanceOf(selfAsserted), {
@@ -1928,7 +2069,7 @@ test('CLI resolves an explicit author module without persisting executable callb
 
   assert.equal(exitCode, 0, logs.join('\n'));
   const result = JSON.parse(logs.at(-1));
-  assert.equal(result.outcome, 'built-not-durable');
+  assert.equal(result.outcome, 'built-needs-review');
   const persistedRequest = await readFile(
     join(result.runRoot, 'run-request.json'),
     'utf8',
@@ -1967,7 +2108,12 @@ test('runs both canonical recipes config-free from directories without .oat file
       now: () => NOW,
     });
 
-    assert.equal(result.outcome, 'built-not-durable');
+    assert.equal(
+      result.outcome,
+      recipe === 'project-recap'
+        ? 'built-needs-review'
+        : 'built-not-durable',
+    );
     assert.equal(critic.mock.callCount(), 0);
     const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
     const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
@@ -2246,7 +2392,7 @@ test('enforces project-recap source-set cardinality while allowing multiple docu
       }),
     },
   );
-  assert.equal(allowed.outcome, 'built-not-durable');
+  assert.equal(allowed.outcome, 'built-needs-review');
 });
 
 test('confines atomic package writes from symlinked site, content, nested ancestors, and targets', async () => {

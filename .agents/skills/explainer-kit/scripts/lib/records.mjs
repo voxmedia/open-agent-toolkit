@@ -161,7 +161,13 @@ export async function updateBuildRecord(run, stage) {
   ) {
     record.outcome = record.stages.some(({ status }) => status === 'failed')
       ? 'failed'
-      : 'built-not-durable';
+      : record.stages.some(({ warnings }) =>
+            warnings.some((warning) =>
+              warning.startsWith('visual-review-required:'),
+            ),
+          )
+        ? 'built-needs-review'
+        : 'built-not-durable';
     record.completedAt = timestamp;
   } else {
     record.outcome = 'incomplete';

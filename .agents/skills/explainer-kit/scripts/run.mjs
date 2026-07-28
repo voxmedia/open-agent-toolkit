@@ -96,6 +96,7 @@ export async function runExplainer(request, options = {}) {
     browserEvidence: [],
     visualReview: null,
     visualReviewPaths: [],
+    reviewGateBlocked: false,
     resumeToken: null,
     resumedApprovalStatus: null,
   };
@@ -202,6 +203,13 @@ export async function runExplainer(request, options = {}) {
       if (run.request.mode === 'interactive') {
         state.resumeToken = await createSetPlanResumeToken(run);
       }
+      return resultFor(state);
+    }
+
+    if (state.reviewGateBlocked) {
+      await updateBuildRecord(run, { id: 'durability', status: 'skipped' });
+      await updateBuildRecord(run, { id: 'publish', status: 'skipped' });
+      await persistManifest(state, now());
       return resultFor(state);
     }
 
@@ -380,7 +388,12 @@ async function auditRenderedArtifacts(
   }
   state.browserEvidence = report.browser?.evidence ?? [];
   const visualCritic = resolveVisualCritic(options);
-  if (visualCritic) {
+  const reviewRequired = requiresRecapVisualReview(state);
+  if (reviewRequired && !browserProbe) {
+    qaWarnings.push('visual-review-required:browser-probe-missing');
+  } else if (reviewRequired && !visualCritic) {
+    qaWarnings.push('visual-review-required:visual-critic-missing');
+  } else if (visualCritic) {
     await reviewAndRetain(state, visualCritic, 1);
     if (state.visualReview.result.disposition === 'correct') {
       await applyVisualCorrection(state, options, now);
@@ -424,6 +437,20 @@ async function auditRenderedArtifacts(
       await reviewAndRetain(state, visualCritic, 2);
     }
   }
+  if (
+    reviewRequired &&
+    state.visualReview &&
+    state.visualReview.result.disposition !== 'pass'
+  ) {
+    qaWarnings.push(
+      state.visualReview.result.disposition === 'fail'
+        ? 'visual-review-required:critic-failed'
+        : 'visual-review-required:correction-unresolved',
+    );
+  }
+  state.reviewGateBlocked = qaWarnings.some((warning) =>
+    warning.startsWith('visual-review-required:'),
+  );
   state.warnings.push(...qaWarnings);
   const warnings = [
     ...(state.reopenedWarnings.qa ?? []),
@@ -1705,7 +1732,9 @@ function resultFor(state, error) {
       ? 'failed'
       : state.approval?.canResume === false
         ? 'incomplete'
-        : 'built-not-durable',
+        : state.reviewGateBlocked
+          ? 'built-needs-review'
+          : 'built-not-durable',
     ...(state.approval?.record?.marking && {
       marking: state.approval.record.marking,
     }),

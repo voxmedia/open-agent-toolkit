@@ -360,6 +360,20 @@ test('accepts valid v1 fixtures for every contract kind', () => {
   }
 });
 
+test('accepts built-needs-review as a matched non-durable terminal outcome', () => {
+  const record = buildRecord();
+  record.outcome = 'built-needs-review';
+  const value = manifest();
+  value.outcome = 'built-needs-review';
+  value.buildRecord.hash = canonicalHash(record);
+
+  assert.equal(validateContract('build-record', record).valid, true);
+  assert.equal(
+    validateContract('manifest', value, { buildRecord: record }).valid,
+    true,
+  );
+});
+
 test('validates author contract v2 by kind, kind+version, and schema id', () => {
   const request = authorRequestV2();
   const result = authorResultV2();

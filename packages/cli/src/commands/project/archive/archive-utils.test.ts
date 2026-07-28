@@ -57,7 +57,11 @@ describe('archive utils', () => {
       runName = 'selected-run',
     }: {
       distinctCanonicalHashes?: boolean;
-      outcome?: 'built-not-durable' | 'failed' | 'incomplete';
+      outcome?:
+        | 'built-not-durable'
+        | 'built-needs-review'
+        | 'failed'
+        | 'incomplete';
       recipeId?: string;
       runName?: string;
     } = {},
@@ -498,6 +502,28 @@ describe('archive utils', () => {
         s3SyncOnComplete: false,
       }),
     ).rejects.toThrow(/recipe.*project-recap/i);
+
+    await expect(access(projectPath)).resolves.toBeUndefined();
+  });
+
+  it('refuses to export a recap whose visual review gate is unresolved', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      outcome: 'built-needs-review',
+    });
+
+    await expect(
+      archiveProjectOnCompletion({
+        repoRoot,
+        projectPath,
+        projectName: 'demo',
+        projectsRoot: '.oat/projects/shared',
+        projectRecapRun: recap.relativeRunPath,
+        s3SyncOnComplete: false,
+      }),
+    ).rejects.toThrow(/built-needs-review.*visual review.*before archival/i);
 
     await expect(access(projectPath)).resolves.toBeUndefined();
   });

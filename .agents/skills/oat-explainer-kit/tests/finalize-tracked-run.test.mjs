@@ -240,6 +240,18 @@ test('terminates idempotently when the same commit evidence is already durable',
   assert.deepEqual(plan.commands, []);
 });
 
+test('refuses to finalize a recap whose visual review gate is unresolved', async () => {
+  const fixture = await createRun({ outcome: 'built-needs-review' });
+
+  await assert.rejects(
+    planTrackedRunFinalization(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /built-needs-review.*visual review.*before finalization/i,
+  );
+});
+
 function successfulObservation(fixture) {
   return {
     artifactCommit: { sha: SHA, paths: fixture.immutablePaths },

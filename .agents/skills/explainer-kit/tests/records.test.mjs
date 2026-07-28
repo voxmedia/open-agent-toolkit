@@ -200,6 +200,43 @@ test('retains one bounded visual revision record for corrected artifacts', async
   );
 });
 
+test('computes built-needs-review from a terminal recap review gate', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(
+    request(outputRoot, {
+      recipe: { id: 'project-recap', version: '1' },
+      mode: 'unattended',
+    }),
+  );
+  let record;
+  for (const id of [
+    'validate',
+    'fact-base',
+    'content',
+    'theme',
+    'render',
+    'qa',
+    'durability',
+    'publish',
+  ]) {
+    if (['durability', 'publish'].includes(id)) {
+      record = await updateBuildRecord(run, { id, status: 'skipped' });
+    } else {
+      await updateBuildRecord(run, { id, status: 'running' });
+      record = await updateBuildRecord(run, {
+        id,
+        status: id === 'qa' ? 'warned' : 'passed',
+        warnings:
+          id === 'qa'
+            ? ['visual-review-required:browser-probe-missing']
+            : [],
+      });
+    }
+  }
+
+  assert.equal(record.outcome, 'built-needs-review');
+});
+
 test('removes a stale manifest before reinitializing a reused slug', async () => {
   const outputRoot = await temporaryDirectory();
   const firstRun = await initializeRun(request(outputRoot));

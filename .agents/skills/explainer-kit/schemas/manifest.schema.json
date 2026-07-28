@@ -69,7 +69,13 @@
     },
     "immutableHashes": { "$ref": "#/$defs/hashMap" },
     "outcome": {
-      "enum": ["built-durable", "built-not-durable", "failed", "incomplete"]
+      "enum": [
+        "built-durable",
+        "built-not-durable",
+        "built-needs-review",
+        "failed",
+        "incomplete"
+      ]
     },
     "buildRecord": {
       "type": "object",

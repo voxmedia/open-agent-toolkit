@@ -611,6 +611,12 @@ interface ProjectRecapManifest {
     hash?: string;
   }>;
   immutableHashes: Record<string, string>;
+  outcome:
+    | 'built-durable'
+    | 'built-not-durable'
+    | 'built-needs-review'
+    | 'failed'
+    | 'incomplete';
 }
 
 function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
@@ -735,9 +741,13 @@ function isProjectRecapManifestV1(
     new Set(value.artifacts.map((artifact) => JSON.stringify(artifact)))
       .size !== value.artifacts.length ||
     !isHashMap(value.immutableHashes) ||
-    !['built-durable', 'built-not-durable', 'failed', 'incomplete'].includes(
-      String(value.outcome),
-    ) ||
+    ![
+      'built-durable',
+      'built-not-durable',
+      'built-needs-review',
+      'failed',
+      'incomplete',
+    ].includes(String(value.outcome)) ||
     !isPathHashRecord(value.buildRecord, 'build-record.json') ||
     (value.publishReceipt !== undefined &&
       !isPathHashRecord(value.publishReceipt, 'publish-receipt.json')) ||
@@ -1024,6 +1034,11 @@ async function exportSelectedProjectRecap(
   if (sourceManifest.recipe.id !== 'project-recap') {
     throw new CliError(
       'Selected project recap manifest recipe must be exactly `project-recap`.',
+    );
+  }
+  if (sourceManifest.outcome === 'built-needs-review') {
+    throw new CliError(
+      'Selected project recap is built-needs-review and requires a passing visual review before archival.',
     );
   }
 
