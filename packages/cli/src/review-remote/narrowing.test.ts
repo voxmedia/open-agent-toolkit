@@ -18,6 +18,7 @@ function review(
     headSha: SHA_A,
     scope: 'ad-hoc',
     invocation: 'manual',
+    lineage: { kind: 'lifecycle' },
     ...overrides,
   };
 }
@@ -44,6 +45,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -68,6 +70,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -105,6 +108,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'project',
       project: '.oat/projects/shared/x',
       scope: 'p02',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -124,6 +128,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -131,6 +136,98 @@ describe('pickNarrowingTarget — matching', () => {
     if (result.kind === 'narrow-range') {
       expect(result.priorSha).toBe(SHA_B);
     }
+  });
+
+  it('matches a gate review from the same gate target and scope', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'codex-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result.kind).toBe('narrow-range');
+  });
+
+  it('rejects a gate review from a different gate target', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'claude-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('rejects a lifecycle review for a gate invocation', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('rejects a gate review for a lifecycle invocation', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'codex-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'lifecycle' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
   });
 });
 
@@ -140,6 +237,7 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
     rail: 'ad-hoc' as const,
     project: null,
     scope: 'ad-hoc',
+    lineage: { kind: 'lifecycle' as const },
     headSha: HEAD,
   };
 
@@ -217,6 +315,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
     rail: 'ad-hoc' as const,
     project: null,
     scope: 'ad-hoc',
+    lineage: { kind: 'lifecycle' as const },
     headSha: HEAD,
   };
 

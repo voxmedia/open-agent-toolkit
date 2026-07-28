@@ -14,6 +14,10 @@ import type { ReviewInvocation } from './marker-parser';
 
 export type ReviewRail = 'ad-hoc' | 'project';
 
+export type ReviewLineage =
+  | { kind: 'lifecycle' }
+  | { kind: 'gate'; target: string };
+
 /** A prior provide-remote review, distilled from its parsed marker block. */
 export interface PriorReview {
   /** Full 40-char SHA recorded by the prior review. */
@@ -23,6 +27,8 @@ export interface PriorReview {
   /** Project path — present only for project-rail reviews. */
   project?: string;
   invocation: ReviewInvocation;
+  /** Review lineage; absent on legacy records, which are not eligible. */
+  lineage?: ReviewLineage;
   /** ISO-8601 review submission timestamp, used for descending sort. */
   submittedAt: string;
 }
@@ -48,6 +54,8 @@ export interface NarrowingInput {
   project: string | null;
   /** Current scope token, or `ad-hoc`. */
   scope: string;
+  /** Current review lineage, including the target for gate invocations. */
+  lineage: ReviewLineage;
   /** Current PR HEAD SHA. */
   headSha: string;
   git: GitInvoker;
@@ -88,17 +96,27 @@ export type NarrowingResult =
   | FullScopeFallbackResult
   | HardErrorResult;
 
-/** Does a prior review match the current `(rail, project, scope)` tuple? */
+/** Does a prior review match the current rail, project, scope, and lineage? */
 function matchesTuple(review: PriorReview, input: NarrowingInput): boolean {
+  const sameLineage =
+    review.lineage !== undefined &&
+    review.lineage.kind === input.lineage.kind &&
+    (input.lineage.kind === 'lifecycle' ||
+      (review.lineage.kind === 'gate' &&
+        review.lineage.target === input.lineage.target));
+
   if (input.rail === 'ad-hoc') {
     // Ad-hoc: scope sentinel must match AND there must be no project key.
-    return review.scope === 'ad-hoc' && review.project === undefined;
+    return (
+      review.scope === 'ad-hoc' && review.project === undefined && sameLineage
+    );
   }
   // Project rail: same project AND same scope.
   return (
     review.project !== undefined &&
     review.project === input.project &&
-    review.scope === input.scope
+    review.scope === input.scope &&
+    sameLineage
   );
 }
 
