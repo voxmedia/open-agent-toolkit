@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
-oat_ready_for: null
+oat_status: complete
+oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-27
+oat_last_updated: 2026-07-28
 oat_phase: plan
-oat_phase_status: in_progress
+oat_phase_status: complete
 oat_plan_hill_phases: ['p02', 'p05'] # pause AFTER the provenance contract and after the default flip
 oat_plan_parallel_groups: [] # sequential; see Parallelism
 oat_phase_review_gate:
@@ -16,7 +16,7 @@ oat_plan_source: quick
 oat_import_reference: null
 oat_import_source_path: null
 oat_import_provider: null
-oat_template: true
+oat_template: false
 oat_generated: false
 ---
 
@@ -284,7 +284,12 @@ Bump `oat-project-review-receive` `1.5.9` → `1.6.0`, `oat-project-review-recei
 **Step 5: Commit**
 
 ```bash
-git add packages/control-plane/ .oat/templates/plan.md .agents/skills/
+git add packages/control-plane/src/state/reviews.ts packages/control-plane/src/state/reviews.test.ts
+git add packages/control-plane/src/types.ts packages/control-plane/README.md
+git add .oat/templates/plan.md
+git add .agents/skills/oat-project-review-receive/SKILL.md
+git add .agents/skills/oat-project-review-receive-remote/SKILL.md
+git add .agents/skills/oat-project-review-provide/SKILL.md
 git commit -m "feat(p02-t02): migrate review ledger to lineage-qualified provenance"
 ```
 
@@ -611,6 +616,8 @@ git add .claude/skills/oat-project-review-provide-remote/SKILL.md .cursor/skills
 git add .claude/skills/oat-project-review-receive/SKILL.md .cursor/skills/oat-project-review-receive/SKILL.md
 git add .claude/skills/oat-project-review-receive-remote/SKILL.md .cursor/skills/oat-project-review-receive-remote/SKILL.md
 git add .claude/skills/oat-review-provide-remote/SKILL.md .cursor/skills/oat-review-provide-remote/SKILL.md
+git add .cursor/agents/oat-reviewer-*.md
+git add .codex/agents/oat-reviewer*.toml
 git commit -m "chore(p06-t03): sync provider views and bump public packages"
 ```
 
@@ -633,7 +640,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | spec   | artifact | n/a      | -          | -                                                           |
 | design | artifact | n/a      | -          | -                                                           |
 | plan   | artifact | received | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T004222Z.md |
-| plan   | artifact | received | 2026-07-28 | reviews/artifact-plan-review-2026-07-28T182554Z.md          |
+| plan   | artifact | passed   | 2026-07-28 | reviews/archived/artifact-plan-review-2026-07-28T182554Z.md |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
@@ -657,7 +664,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 - Phase 3: 2 tasks - local rail rewritten onto guarded prior-head ranges
 - Phase 4: 1 task - remote rails aligned
 - Phase 5: 1 task - config default flipped to narrow
-- Phase 6: 3 tasks - documentation, provider sync and lockstep version bump, cross-surface parity verification
+- Phase 6: 3 tasks - documentation, cross-surface parity verification, provider sync and lockstep version bump
 
 **Total: 13 tasks**
 
