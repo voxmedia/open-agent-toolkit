@@ -15,10 +15,12 @@ import { afterEach, test } from 'node:test';
 import { canonicalHash } from '../scripts/lib/contracts.mjs';
 import { loadRecipe } from '../scripts/lib/recipes.mjs';
 import {
+  createSetPlanResumeToken,
   initializeRun,
   readSetPlanRecords,
   reopenBuildStages,
   updateBuildRecord,
+  verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
 } from '../scripts/lib/records.mjs';
@@ -486,6 +488,63 @@ test('rejects tampering in every retained set-plan record', async () => {
       label,
     );
   }
+});
+
+test('derives a deterministic versioned resume token from exact set-plan bytes', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const factBase = { sources: [{ id: 'project' }] };
+  const planRequest = {
+    schemaVersion: 'explainer-kit.set-plan-request/v1',
+    recipe: { id: 'project-recap', version: '1' },
+    factBaseHash: canonicalHash(factBase),
+    sourceIds: ['project'],
+    discovery: { rounds: 0, findings: [], reason: 'not-requested' },
+  };
+  const plan = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['project'],
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds: ['project'],
+        draft: 'Lead with the validated outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+    ],
+  };
+  await writeSetPlanRecords(run, { request: planRequest, plan });
+
+  const token = await createSetPlanResumeToken(run);
+  assert.match(token, /^ekrt1:[a-f0-9]{64}$/);
+  assert.equal(await createSetPlanResumeToken(run), token);
+  await verifySetPlanResumeToken(run, token);
+
+  for (const candidate of [
+    undefined,
+    'ekrt1:not-a-digest',
+    `${token.slice(0, -1)}${token.endsWith('0') ? '1' : '0'}`,
+  ]) {
+    await assert.rejects(
+      verifySetPlanResumeToken(run, candidate),
+      (error) => error.code === 'E_APPROVAL_RESUME',
+    );
+  }
+
+  const resultPath = join(run.runRoot, 'source/set-plan/result.json');
+  const result = JSON.parse(await readFile(resultPath, 'utf8'));
+  await writeFile(resultPath, JSON.stringify(result));
+  assert.notEqual(await createSetPlanResumeToken(run), token);
+  await assert.rejects(
+    verifySetPlanResumeToken(run, token),
+    (error) => error.code === 'E_APPROVAL_RESUME',
+  );
 });
 
 test('rejects omitted reconciled sources and declared sources without artifact coverage', async () => {

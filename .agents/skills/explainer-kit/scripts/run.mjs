@@ -33,10 +33,12 @@ import {
   validateSourceBindings,
 } from './lib/recipes.mjs';
 import {
+  createSetPlanResumeToken,
   initializeRun,
   readSetPlanRecords,
   reopenBuildStages,
   updateBuildRecord,
+  verifySetPlanResumeToken,
   writeManifestAtomic,
   writeSetPlanRecords,
 } from './lib/records.mjs';
@@ -88,11 +90,13 @@ export async function runExplainer(request, options = {}) {
     reopenedWarnings: {},
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
+    resumeToken: null,
     resumedApprovalStatus: null,
   };
 
   try {
     if (resumed) {
+      await verifySetPlanResumeToken(run, options.reviewedSource?.resumeToken);
       await hydrateResumableState(state);
     } else {
       validateRecipeSources(recipe, run.request.factBase);
@@ -189,6 +193,9 @@ export async function runExplainer(request, options = {}) {
       approvalArtifacts(state),
     );
     if (!state.approval.canResume) {
+      if (run.request.mode === 'interactive') {
+        state.resumeToken = await createSetPlanResumeToken(run);
+      }
       return resultFor(state);
     }
 
@@ -1481,6 +1488,7 @@ function resultFor(state, error) {
         ...(state.approval.record.marking && {
           marking: state.approval.record.marking,
         }),
+        ...(state.resumeToken && { resumeToken: state.resumeToken }),
       },
     }),
     ...(error && {

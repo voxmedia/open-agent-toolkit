@@ -169,6 +169,13 @@ test('requires every retained set-plan record in recap immutable coverage', () =
   };
 
   assert.equal(validateContract('manifest', manifest).valid, true);
+  assert.equal(
+    Object.keys(manifest.immutableHashes).some((path) =>
+      path.includes('resume-token'),
+    ),
+    false,
+    'the external resume token must not become a persisted trust anchor',
+  );
   delete manifest.immutableHashes[setPlanPaths.at(-1)];
   assert.ok(
     validateContract('manifest', manifest).errors.some(

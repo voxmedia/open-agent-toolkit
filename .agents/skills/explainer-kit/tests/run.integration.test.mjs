@@ -14,7 +14,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
 
-import { validateContract } from '../scripts/lib/contracts.mjs';
+import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import {
   runExplainer as runExplainerCore,
   runExplainerCli,
@@ -229,6 +229,7 @@ test('interactive runs pause after rendered QA and do no external work before ap
 
   assert.equal(result.outcome, 'incomplete');
   assert.equal(result.approval.status, 'pending');
+  assert.match(result.approval.resumeToken, /^ekrt1:[a-f0-9]{64}$/);
   assert.equal(publish.mock.callCount(), 0);
   assert.equal(durability.mock.callCount(), 0);
   await access(join(result.runRoot, 'source/content/project-explainer.md'));
@@ -243,6 +244,22 @@ test('interactive runs pause after rendered QA and do no external work before ap
       `${id} completed before approval`,
     );
   }
+  for (const relativePath of [
+    'run-request.json',
+    'build-record.json',
+    'source/content-approval.json',
+    'source/set-plan/request.json',
+    'source/set-plan/result.json',
+    'source/set-plan/ledger.json',
+    'source/set-plan/portfolio.json',
+    'source/set-plan/drafts.json',
+  ]) {
+    assert.doesNotMatch(
+      await readFile(join(result.runRoot, relativePath), 'utf8'),
+      new RegExp(result.approval.resumeToken),
+      `${relativePath} must not persist the external trust anchor`,
+    );
+  }
 
   const approvedDurability = mock.fn(async () => {});
   const resumed = await runExplainer(interactiveRequest, {
@@ -252,6 +269,7 @@ test('interactive runs pause after rendered QA and do no external work before ap
       decision: 'approve',
       reviewedAt: '2026-07-17T20:05:00Z',
       reviewer: 'operator',
+      resumeToken: result.approval.resumeToken,
     },
   });
   assert.equal(resumed.runId, result.runId);
@@ -263,6 +281,67 @@ test('interactive runs pause after rendered QA and do no external work before ap
   assert.equal(resumed.marking, 'human-approved');
   assert.equal(resumed.approval.marking, 'human-approved');
   assert.equal(approvedDurability.mock.callCount(), 1);
+  assert.doesNotMatch(
+    await readFile(
+      join(resumed.runRoot, 'source/content-approval.json'),
+      'utf8',
+    ),
+    new RegExp(result.approval.resumeToken),
+    'the echoed token must not be persisted with the approval decision',
+  );
+});
+
+test('interactive resume requires an exact closed-format external token before callbacks', async () => {
+  for (const [label, candidate] of [
+    ['missing', () => undefined],
+    ['malformed', () => 'ekrt1:not-a-digest'],
+    [
+      'mismatched',
+      (token) => `${token.slice(0, -1)}${token.endsWith('0') ? '1' : '0'}`,
+    ],
+  ]) {
+    const fixture = await suppliedFixture('project-recap');
+    const interactiveRequest = {
+      ...fixture.request,
+      mode: 'interactive',
+      durability: { strategy: 'commit' },
+    };
+    const planSet = mock.fn(async (plannerRequest) =>
+      plannedSet(plannerRequest),
+    );
+    const author = mock.fn(async (authorRequest) =>
+      authorResult(authorRequest),
+    );
+    const durability = mock.fn(async () => {});
+    const publish = mock.fn(async () => {});
+    const paused = await runExplainerCore(interactiveRequest, {
+      planSet,
+      author,
+      now: () => NOW,
+    });
+    const resumeToken = candidate(paused.approval.resumeToken);
+
+    const resumed = await runExplainerCore(interactiveRequest, {
+      planSet,
+      author,
+      durability,
+      publish,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        ...(resumeToken && { resumeToken }),
+      },
+    });
+
+    assert.equal(resumed.outcome, 'failed', label);
+    assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME', label);
+    assert.equal(planSet.mock.callCount(), 1, label);
+    assert.equal(author.mock.callCount(), 3, label);
+    assert.equal(durability.mock.callCount(), 0, label);
+    assert.equal(publish.mock.callCount(), 0, label);
+  }
 });
 
 test('rejection persists corrections and explicit approval resumes the same run', async () => {
@@ -281,6 +360,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
   });
   assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
   assert.equal(rejected.approval.status, 'rejected');
+  assert.match(rejected.approval.resumeToken, /^ekrt1:[a-f0-9]{64}$/);
   assert.ok(rejected.warnings.includes('render-qa-document-overflow'));
   const contentPath = join(
     rejected.runRoot,
@@ -306,6 +386,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
         kind: 'human-review',
         locator: 'source/content/project-explainer.md',
       },
+      resumeToken: rejected.approval.resumeToken,
     },
   });
 
@@ -390,6 +471,7 @@ test('a rejected correction that fails QA remains local and updates the build re
       decision: 'approve',
       reviewedAt: '2026-07-17T20:05:00Z',
       reviewer: 'operator',
+      resumeToken: rejected.approval.resumeToken,
     },
   });
 
@@ -404,7 +486,7 @@ test('a rejected correction that fails QA remains local and updates the build re
 test('resume rejects a changed fact-base binding', async () => {
   const fixture = await suppliedFixture();
   const interactiveRequest = { ...fixture.request, mode: 'interactive' };
-  await runExplainer(interactiveRequest, {
+  const rejected = await runExplainer(interactiveRequest, {
     now: () => NOW,
     reviewedSource: {
       decision: 'reject',
@@ -434,6 +516,7 @@ test('resume rejects a changed fact-base binding', async () => {
           decision: 'approve',
           reviewedAt: '2026-07-17T20:05:00Z',
           reviewer: 'operator',
+          resumeToken: rejected.approval.resumeToken,
         },
       },
     ),
@@ -1014,6 +1097,7 @@ test('mixed expansion set keeps D1 paths and D8 identity across reject, edit, an
       decision: 'approve',
       reviewedAt: '2026-07-17T20:05:00Z',
       reviewer: 'operator',
+      resumeToken: rejected.approval.resumeToken,
     },
   });
   assert.equal(
@@ -1196,6 +1280,7 @@ test('resume rejects retained set-plan, identity, and path tampering before call
         decision: 'approve',
         reviewedAt: '2026-07-17T20:05:00Z',
         reviewer: 'operator',
+        resumeToken: rejected.approval.resumeToken,
       },
     });
 
@@ -1204,6 +1289,88 @@ test('resume rejects retained set-plan, identity, and path tampering before call
     assert.equal(planSet.mock.callCount(), 1, label);
     assert.equal(author.mock.callCount(), 3, label);
   }
+});
+
+test('external resume token rejects coordinated retained set-plan tampering before callbacks', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const planSet = mock.fn(async (plannerRequest) => plannedSet(plannerRequest));
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const durability = mock.fn(async () => {});
+  const publish = mock.fn(async () => {});
+  const rejected = await runExplainerCore(interactiveRequest, {
+    planSet,
+    author,
+    now: () => NOW,
+    reviewedSource: {
+      decision: 'reject',
+      reviewedAt: NOW,
+      reviewer: 'operator',
+      corrections: ['Review the retained draft.'],
+    },
+  });
+  assert.equal(rejected.outcome, 'incomplete');
+  assert.equal(planSet.mock.callCount(), 1);
+  assert.equal(author.mock.callCount(), 3);
+
+  const paths = {
+    request: 'source/set-plan/request.json',
+    result: 'source/set-plan/result.json',
+    portfolio: 'source/set-plan/portfolio.json',
+    drafts: 'source/set-plan/drafts.json',
+  };
+  const records = Object.fromEntries(
+    await Promise.all(
+      Object.entries(paths).map(async ([key, path]) => [
+        key,
+        JSON.parse(await readFile(join(rejected.runRoot, path), 'utf8')),
+      ]),
+    ),
+  );
+  records.result.portfolio[0].draft = 'Coordinated tampered draft.';
+  records.request.planHash = canonicalHash(records.result);
+  records.portfolio.artifacts = records.result.portfolio;
+  records.drafts.drafts = records.result.portfolio.map(
+    ({ artifactId, draft, visualIntent, justification }) => ({
+      artifactId,
+      draft,
+      visualIntent,
+      ...(justification && { justification }),
+    }),
+  );
+  await Promise.all(
+    Object.entries(paths).map(([key, path]) =>
+      writeFile(
+        join(rejected.runRoot, path),
+        `${JSON.stringify(records[key], null, 2)}\n`,
+      ),
+    ),
+  );
+
+  const resumed = await runExplainerCore(interactiveRequest, {
+    planSet,
+    author,
+    durability,
+    publish,
+    now: () => '2026-07-17T20:05:00Z',
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+      resumeToken: rejected.approval.resumeToken,
+    },
+  });
+
+  assert.equal(resumed.outcome, 'failed');
+  assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME');
+  assert.equal(planSet.mock.callCount(), 1);
+  assert.equal(author.mock.callCount(), 3);
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
 });
 
 test('authors cannot mutate the validated portfolio with expansion proposals', async () => {

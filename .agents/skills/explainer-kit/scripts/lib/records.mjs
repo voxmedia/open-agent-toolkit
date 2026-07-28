@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { access, readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -28,6 +28,8 @@ export const SET_PLAN_RECORD_PATHS = Object.freeze([
   'source/set-plan/portfolio.json',
   'source/set-plan/drafts.json',
 ]);
+const SET_PLAN_RESUME_TOKEN_PREFIX = 'ekrt1:';
+const SET_PLAN_RESUME_TOKEN_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
 
 export async function initializeRun(request) {
   if (!isObject(request)) {
@@ -303,6 +305,50 @@ export async function writeSetPlanRecords(run, { request, plan }) {
     await writeJsonAtomic(run.runRoot, relativePath, value);
   }
   return records.map(([relativePath]) => relativePath);
+}
+
+export async function createSetPlanResumeToken(run) {
+  assertRun(run);
+  const tokenHash = createHash('sha256');
+  tokenHash.update('explainer-kit.set-plan-resume/v1\0');
+  tokenHash.update(run.runId);
+  tokenHash.update('\0');
+  try {
+    for (const relativePath of SET_PLAN_RECORD_PATHS) {
+      const bytes = await readFile(join(run.runRoot, relativePath));
+      const byteHash = createHash('sha256').update(bytes).digest();
+      tokenHash.update(relativePath);
+      tokenHash.update('\0');
+      tokenHash.update(byteHash);
+    }
+  } catch (error) {
+    throw resumeRecordError(
+      `Unable to hash the complete retained set plan: ${error.message}`,
+    );
+  }
+  return `${SET_PLAN_RESUME_TOKEN_PREFIX}${tokenHash.digest('hex')}`;
+}
+
+export async function verifySetPlanResumeToken(run, resumeToken) {
+  assertRun(run);
+  if (
+    typeof resumeToken !== 'string' ||
+    !SET_PLAN_RESUME_TOKEN_PATTERN.test(resumeToken)
+  ) {
+    throw resumeRecordError(
+      'Interactive approval resume requires a valid external resume token.',
+    );
+  }
+  const expected = Buffer.from(await createSetPlanResumeToken(run), 'ascii');
+  const supplied = Buffer.from(resumeToken, 'ascii');
+  if (
+    supplied.byteLength !== expected.byteLength ||
+    !timingSafeEqual(supplied, expected)
+  ) {
+    throw resumeRecordError(
+      'Interactive approval resume token does not match the retained set plan.',
+    );
+  }
 }
 
 export async function readSetPlanRecords(run, { factBase, recipe }) {

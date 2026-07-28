@@ -142,6 +142,18 @@ The core executes:
    QA and before anything is published or persisted externally
 9. write the manifest and build record
 
+An incomplete interactive result includes
+`approval.resumeToken: "ekrt1:<64 lowercase hex characters>"`. The token is an
+opaque v1 digest over the run identity and raw-byte SHA-256 hashes of the five
+retained `source/set-plan/*.json` records. The external caller must retain it
+outside the run root and echo it unchanged as `reviewedSource.resumeToken` with
+the later approval decision. Resume validates the fixed-length token and
+compares it to the current retained bytes before loading set-plan, author, or
+content state. Missing, malformed, or mismatched tokens fail
+`E_APPROVAL_RESUME` before planner, author, durability, or publish callbacks.
+The token is never written into the run request, content approval, build
+record, set-plan projections, manifest, or immutable-hash inventory.
+
 The run package retains the privacy-safe `run-request.json`,
 `source/content-approval.json`, `source/fact-base.json`,
 `source/fact-base.md`, authored content under `source/content/*.md` and
