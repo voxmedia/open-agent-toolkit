@@ -1,6 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
+import { mkdir } from 'node:fs/promises';
 import { createServer } from 'node:http';
+import { dirname } from 'node:path';
 
 // Locations a headless Chromium may already exist at on a developer or CI
 // machine. The core never installs a browser; it only uses one that is there.
@@ -23,6 +25,7 @@ const PROBE_REQUEST_FIELDS = new Set([
   'media',
   'reducedMotion',
   'scenario',
+  'screenshotPath',
   'themeToggle',
   'viewport',
   'wideContent',
@@ -222,6 +225,13 @@ export async function probeRenderedPage(browser, url, request) {
     const themeToggle = request.themeToggle
       ? await probeThemeToggle(page, request.themeToggle)
       : layout.themeToggle;
+    if (request.screenshotPath) {
+      await mkdir(dirname(request.screenshotPath), { recursive: true });
+      await page.screenshot({
+        path: request.screenshotPath,
+        fullPage: true,
+      });
+    }
     return {
       ...layout,
       keyboard,
@@ -255,6 +265,13 @@ function assertProbeRequestFields(request) {
     typeof request.injectedCss !== 'string'
   ) {
     throw new TypeError('Browser probe injectedCss must be a string.');
+  }
+  if (
+    request.screenshotPath !== undefined &&
+    (typeof request.screenshotPath !== 'string' ||
+      request.screenshotPath.length === 0)
+  ) {
+    throw new TypeError('Browser probe screenshotPath must be a path string.');
   }
 }
 

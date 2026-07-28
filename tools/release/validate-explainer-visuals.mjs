@@ -26,6 +26,7 @@ export {
 export async function runExplainerVisualValidation({
   matrix = selectReleaseVisualMatrix(),
   launchBrowser = launchInstalledChromium,
+  evidenceRoot,
 } = {}) {
   const browser = await launchBrowser();
   const pages = new Map();
@@ -68,6 +69,7 @@ export async function runExplainerVisualValidation({
           pages.delete(route);
         }
       },
+      ...(evidenceRoot && { evidenceRoot }),
     });
     return {
       schemaVersion: 'explainer-kit.visual-validation/v1',
@@ -78,6 +80,7 @@ export async function runExplainerVisualValidation({
       },
       matrixCases: report.cases,
       measurements,
+      ...(report.evidence && { evidence: report.evidence }),
       issues: report.issues,
     };
   } finally {
@@ -91,8 +94,17 @@ export async function runExplainerVisualValidationCli(
 ) {
   let output;
   try {
-    output = parseArguments(argv).output;
-    const result = await runExplainerVisualValidation(options);
+    output = resolve(parseArguments(argv).output);
+    const evidenceRoot = resolve(
+      dirname(output),
+      'explainer-visual-evidence',
+    );
+    await rm(evidenceRoot, { recursive: true, force: true });
+    await mkdir(evidenceRoot, { recursive: true });
+    const result = await runExplainerVisualValidation({
+      ...options,
+      evidenceRoot,
+    });
     await writeJsonAtomic(resolve(output), result);
     process.stdout.write(
       `${JSON.stringify({

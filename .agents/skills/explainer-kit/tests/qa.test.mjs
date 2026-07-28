@@ -442,6 +442,122 @@ test('runs browser probe contract at representative widths with reduced motion',
   assert.deepEqual(report, { valid: true, issues: [], probes: calls.length });
 });
 
+test('retains bounded screenshot and metrics evidence at all recap viewports', async (t) => {
+  const evidenceRoot = await mkdtemp(join(tmpdir(), 'explainer-qa-evidence-'));
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+  const report = await runBrowserProbes({
+    artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+    evidenceRoot,
+    requireEvidence: true,
+    probe: async (request) => {
+      await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
+        recursive: true,
+      });
+      await writeFile(request.screenshotPath, Buffer.from([1, 2, 3]));
+      return {
+        pageOverflowX: false,
+        clippedX: [],
+        viewportClipped: [],
+        unreadableHeadings: [],
+        animationsDisabled: true,
+        reducedMotion: true,
+        keyboard: { tab: true },
+      };
+    },
+  });
+
+  assert.deepEqual(
+    report.evidence.map(
+      ({ artifactId, viewport, width, screenshotPath, metricsPath }) => ({
+        artifactId,
+        viewport,
+        width,
+        screenshotPath,
+        metricsPath,
+      }),
+    ),
+    [
+      {
+        artifactId: 'project-recap',
+        viewport: 'mobile',
+        width: 320,
+        screenshotPath: 'qa/browser/project-recap/mobile.png',
+        metricsPath: 'qa/browser/project-recap/mobile.json',
+      },
+      {
+        artifactId: 'project-recap',
+        viewport: 'tablet',
+        width: 768,
+        screenshotPath: 'qa/browser/project-recap/tablet.png',
+        metricsPath: 'qa/browser/project-recap/tablet.json',
+      },
+      {
+        artifactId: 'project-recap',
+        viewport: 'desktop',
+        width: 1440,
+        screenshotPath: 'qa/browser/project-recap/desktop.png',
+        metricsPath: 'qa/browser/project-recap/desktop.json',
+      },
+    ],
+  );
+  for (const evidence of report.evidence) {
+    const metrics = JSON.parse(
+      await readFile(join(evidenceRoot, evidence.metricsPath), 'utf8'),
+    );
+    assert.equal(metrics.schemaVersion, 'explainer-kit.browser-evidence/v1');
+    assert.equal(metrics.artifactId, 'project-recap');
+    assert.equal(metrics.viewport, evidence.viewport);
+    assert.equal('screenshotBytes' in metrics, false);
+  }
+});
+
+test('rejects partial required recap browser evidence while lower tiers remain explicit', async (t) => {
+  const evidenceRoot = await mkdtemp(join(tmpdir(), 'explainer-qa-partial-'));
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+  const artifact = { id: 'project-recap', type: 'hub', html: fixture() };
+  const probe = async (request) => {
+    if (request.viewport.width !== 768) {
+      await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
+        recursive: true,
+      });
+      await writeFile(request.screenshotPath, Buffer.from([1]));
+    }
+    return {
+      pageOverflowX: false,
+      clippedX: [],
+      reducedMotion: true,
+      keyboard: { tab: true },
+    };
+  };
+
+  const required = await runBrowserProbes({
+    artifacts: [artifact],
+    evidenceRoot,
+    requireEvidence: true,
+    probe,
+  });
+  assert.equal(required.valid, false);
+  assert.ok(
+    required.issues.some(
+      ({ code, width }) =>
+        code === 'browser-evidence-missing' && width === 768,
+    ),
+  );
+
+  const lowerTier = await runBrowserProbes({
+    artifacts: [artifact],
+    widths: [320],
+    probe: async () => ({
+      pageOverflowX: false,
+      clippedX: [],
+      reducedMotion: true,
+      keyboard: { tab: true },
+    }),
+  });
+  assert.equal(lowerTier.valid, true);
+  assert.equal('evidence' in lowerTier, false);
+});
+
 test('browser probes reject page and inner-container x-axis clipping', async () => {
   const report = await runBrowserProbes({
     artifacts: [{ id: 'page', type: 'hub', html: fixture() }],

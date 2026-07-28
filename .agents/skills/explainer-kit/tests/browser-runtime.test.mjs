@@ -1,4 +1,7 @@
 import assert from 'node:assert/strict';
+import { mkdtemp, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { test } from 'node:test';
 
 import {
@@ -88,4 +91,49 @@ test('probe rejects unrecognized request fields', async () => {
     ),
     /unsupported.*unsupportedControl/i,
   );
+});
+
+test('probe writes deterministic full-page screenshot evidence', async (t) => {
+  const root = await mkdtemp(join(tmpdir(), 'explainer-browser-evidence-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const screenshotPath = join(root, 'qa/browser/hub/mobile.png');
+  const screenshots = [];
+  const page = {
+    async route() {},
+    async goto() {},
+    async evaluate(evaluate) {
+      if (typeof evaluate === 'function') {
+        return true;
+      }
+      return {
+        pageOverflowX: false,
+        clippedX: [],
+        reducedMotion: true,
+        keyboard: { tab: true },
+      };
+    },
+    async bringToFront() {},
+    mouse: { async click() {} },
+    keyboard: { async press() {} },
+    async screenshot(options) {
+      screenshots.push(options);
+    },
+    async close() {},
+  };
+
+  await probeRenderedPage(
+    { async newPage() { return page; } },
+    'https://example.invalid/probe',
+    {
+      artifact: { id: 'hub', type: 'hub', html: animatedFixture },
+      scenario: 'default',
+      viewport: { width: 320, height: 640 },
+      reducedMotion: 'reduce',
+      evaluate: 'metrics',
+      keyboard: { tab: true },
+      screenshotPath,
+    },
+  );
+
+  assert.deepEqual(screenshots, [{ path: screenshotPath, fullPage: true }]);
 });

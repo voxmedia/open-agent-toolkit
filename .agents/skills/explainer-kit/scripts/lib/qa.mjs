@@ -1,3 +1,7 @@
+import { stat } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { writeJsonAtomic } from './fs-safe.mjs';
 import { findUnpinnedResourceRefs } from './html-safety.mjs';
 import { recipeFloor, recipeRequiredNarrative } from './recipes.mjs';
 
@@ -21,6 +25,7 @@ const INLINE_ASSET_VIOLATION_PATTERN =
   /<link\b|@import\b|url\(\s*["']?(?!data:|#)/i;
 const TOKEN_PATTERN = /{{\s*[A-Z][A-Z0-9_]*\s*}}/g;
 const ARROW_KEYS = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'];
+const MAX_SCREENSHOT_BYTES = 20 * 1024 * 1024;
 const INLINE_DIAGRAM_PATTERN =
   /<svg\b(?=[^>]*(?:\bclass\s*=\s*["'][^"']*\bdiagram\b|\baria-label\s*=\s*["'][^"']*(?:architecture|diagram)))[^>]*>/i;
 const STRUCTURED_BLOCK_PATTERNS = [
@@ -467,6 +472,8 @@ export async function runBrowserProbes({
   artifacts,
   probe,
   widths = REPRESENTATIVE_WIDTHS,
+  evidenceRoot,
+  requireEvidence = false,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Browser QA requires at least one artifact.');
@@ -483,10 +490,21 @@ export async function runBrowserProbes({
   }
 
   const issues = [];
+  const evidence = [];
   let probes = 0;
   for (const artifact of artifacts) {
+    const evidenceId = browserEvidenceId(artifact.id);
     for (const width of widths) {
       for (const scenario of browserScenarios(artifact)) {
+        const viewport = viewportName(width);
+        const screenshotPath =
+          evidenceRoot && scenario === 'default'
+            ? `qa/browser/${evidenceId}/${viewport}.png`
+            : undefined;
+        const metricsPath =
+          evidenceRoot && scenario === 'default'
+            ? `qa/browser/${evidenceId}/${viewport}.json`
+            : undefined;
         const request = {
           artifact,
           scenario,
@@ -500,6 +518,9 @@ export async function runBrowserProbes({
             artifact.type === 'deck' && scenario === 'default'
               ? { tab: true, arrows: [...ARROW_KEYS] }
               : { tab: true },
+          ...(screenshotPath && {
+            screenshotPath: join(evidenceRoot, screenshotPath),
+          }),
           ...(scenario === 'no-js' && { javascriptEnabled: false }),
           ...(scenario === 'print' && { media: 'print' }),
           ...(artifact.type === 'deck' &&
@@ -525,6 +546,26 @@ export async function runBrowserProbes({
         validateProbeResult(result, artifact.id, width, request);
 
         const context = { artifactId: artifact.id, width, scenario };
+        if (screenshotPath && metricsPath) {
+          const retained = await retainBrowserEvidence({
+            evidenceRoot,
+            artifactId: artifact.id,
+            viewport,
+            viewportSize: request.viewport,
+            screenshotPath,
+            metricsPath,
+            result,
+          });
+          if (retained.valid) {
+            evidence.push(retained.evidence);
+          } else if (requireEvidence) {
+            issues.push({
+              ...context,
+              code: 'browser-evidence-missing',
+              message: retained.message,
+            });
+          }
+        }
         if (result.pageOverflowX) {
           issues.push({
             ...context,
@@ -625,7 +666,12 @@ export async function runBrowserProbes({
     }
   }
 
-  return { valid: issues.length === 0, issues, probes };
+  return {
+    valid: issues.length === 0,
+    issues,
+    probes,
+    ...(evidenceRoot && { evidence }),
+  };
 }
 
 export async function auditArtifactSet({
@@ -633,6 +679,8 @@ export async function auditArtifactSet({
   denylist = [],
   browserProbe,
   widths,
+  evidenceRoot,
+  requireBrowserEvidence = false,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Render QA requires at least one artifact.');
@@ -648,6 +696,8 @@ export async function auditArtifactSet({
         artifacts,
         probe: browserProbe,
         ...(widths && { widths }),
+        ...(evidenceRoot && { evidenceRoot }),
+        ...(requireBrowserEvidence && { requireEvidence: true }),
       })
     : null;
   const issues = [
@@ -663,6 +713,76 @@ export async function auditArtifactSet({
     cohesion,
     browser,
   };
+}
+
+async function retainBrowserEvidence({
+  evidenceRoot,
+  artifactId,
+  viewport,
+  viewportSize,
+  screenshotPath,
+  metricsPath,
+  result,
+}) {
+  let screenshot;
+  try {
+    screenshot = await stat(join(evidenceRoot, screenshotPath));
+  } catch {
+    return {
+      valid: false,
+      message: `Browser screenshot evidence is missing for ${artifactId} at ${viewportSize.width}px.`,
+    };
+  }
+  if (
+    !screenshot.isFile() ||
+    screenshot.size === 0 ||
+    screenshot.size > MAX_SCREENSHOT_BYTES
+  ) {
+    return {
+      valid: false,
+      message: `Browser screenshot evidence for ${artifactId} at ${viewportSize.width}px is empty or exceeds ${MAX_SCREENSHOT_BYTES} bytes.`,
+    };
+  }
+  await writeJsonAtomic(evidenceRoot, metricsPath, {
+    schemaVersion: 'explainer-kit.browser-evidence/v1',
+    artifactId,
+    viewport,
+    viewportSize,
+    scenario: 'default',
+    screenshotPath,
+    metrics: structuredClone(result),
+  });
+  return {
+    valid: true,
+    evidence: {
+      artifactId,
+      viewport,
+      width: viewportSize.width,
+      height: viewportSize.height,
+      screenshotPath,
+      metricsPath,
+    },
+  };
+}
+
+function browserEvidenceId(value) {
+  if (
+    typeof value !== 'string' ||
+    !/^[a-z0-9]+(?:[._-][a-z0-9]+)*$/.test(value)
+  ) {
+    throw new TypeError('Browser evidence requires a safe artifact id.');
+  }
+  return value;
+}
+
+function viewportName(width) {
+  return (
+    {
+      320: 'mobile',
+      768: 'tablet',
+      1440: 'desktop',
+    }[width] ?? `viewport-${width}`
+  );
 }
 
 function checkHeadings(html, add) {
