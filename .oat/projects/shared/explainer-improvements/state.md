@@ -171,6 +171,8 @@ Phase p03 review remediation attempt 2 of 3 pending
 - ⧗ p03-t16 through p03-t19 bound real PNG decoding, canonical package
   coverage, the remaining error matrix, and release/version alignment as
   remediation attempt 2/3
+- ✓ Attempt-2 preflight found and corrected p03-t16's missing adapter
+  completion-fixture boundary before edits; no retry was consumed
 
 ## Blockers
 

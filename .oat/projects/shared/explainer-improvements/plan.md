@@ -1173,6 +1173,7 @@ version as the CLI validation suite.
 - Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
 - Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
 **Steps:**
