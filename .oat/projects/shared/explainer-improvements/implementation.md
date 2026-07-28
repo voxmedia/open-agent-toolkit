@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase p02 review remediation requires operator authorization because implementation retry usage is 1/1.
+oat_blockers: []
 oat_last_updated: 2026-07-28
 oat_current_task_id: p02-t08
 oat_generated: false
@@ -18,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----: | --------: |
-| p01   | complete |     7 |       7/7 |
-| p02   | blocked  |    12 |      7/12 |
-| p03   | pending  |     4 |       0/4 |
-| p04   | pending  |     3 |       0/3 |
-| p05   | pending  |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | fixes_pending |    12 |      7/12 |
+| p03   | pending       |     4 |       0/4 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
 **Total:** 14/30 tasks completed
 
@@ -89,7 +88,7 @@ oat_generated: false
 
 ## Phase 2: Set-level visual authoring runtime
 
-**Status:** blocked
+**Status:** fixes_pending
 
 - [x] p02-t01 — Bundle versioned visual authoring and review guidance (`13b1ae44`)
 - [x] p02-t02 — Define provider-neutral set-plan and visual-review contracts (`1bbc1ac7`)
@@ -133,8 +132,8 @@ oat_generated: false
 - Artifact: `reviews/20260728-p02-code-review.md`
 - Verdict: `BLOCKED` — 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Blocking fixes: p02-t08 through p02-t12
-- Review remediation is not dispatched because the accepted implementation
-  handle already consumed retry usage 1/1 on p02-t06 and p02-t07.
+- Operator override permits up to three bounded phase/code review remediation
+  retries. p02-t08 through p02-t12 are attempt 1/3.
 
 ## Phase 3: Independent browser critic and hard loop cap
 
@@ -208,16 +207,17 @@ oat_generated: false
 - Model axis: `selected:gpt-5.6-sol-high`
 - Effort axis: `not-applicable`
 - Policy/ceiling: `high` / `gpt-5.6-sol-high`
-- Retry limit: `1`
+- Retry limit: `3` (operator override on 2026-07-28)
 - Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 - Outcome: `DONE_WITH_CONCERNS`
 - Phase head: `8514de880088ffd3e16512c7e1756f33d9d9cddc`
 - Commit range: `b54863f19d5db6df47b1538e791adadaf76f0306..8514de880088ffd3e16512c7e1756f33d9d9cddc`
 - Verification: check, lint, format, type-check, build, release validation, and diff check passed
 - Concern: eight adaptive recap integration assumptions and two explainer-family version contracts remain stale
-- Bounded fixes: p02-t06 and p02-t07; retry usage 0/1
+- Bounded verification fixes: p02-t06 and p02-t07; review-remediation usage 0/3
 - Fix continuation base/head: `ac953a8ad22bc12c2df8aaf6c1a7aa18af0dba13..86fc4b6acc737a995783210699cee055e7860a45`
-- Fix continuation outcome: `DONE`; retry usage 1/1; focused and phase-wide verification passed
+- Fix continuation outcome: `DONE`; classified as pre-review verification, not
+  a review-remediation retry; focused and phase-wide verification passed
 - Fix continuation Dispatch: scope=p02 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 ### Run 3 — Phase p02 review
@@ -229,6 +229,7 @@ oat_generated: false
 - Artifact: `reviews/20260728-p02-code-review.md`
 - Findings: 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Reconnaissance: `not-attempted`
+- Review-remediation attempt: 1/3 pending
 - Dispatch: scope=p02 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -256,6 +257,7 @@ oat_generated: false
 | p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta | package manifests and bundle script | p01-t04          |
 | p01 code review       | p01 review      | Phase passes after four tasks                      | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps              | p01 review artifact                 | p01-t05, p01-t06 |
 | p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green    | Added bounded p01-t07               | Version-contract test still expected `2.0.0`            | root focused test                   | p01-t07          |
+| p02 retry policy      | project state   | One review-remediation retry                       | Up to three bounded retries         | Operator override on 2026-07-28                         | user instruction and `state.md`     | p02-t08–p02-t12  |
 
 ## Test Results
 

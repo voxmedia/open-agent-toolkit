@@ -1,8 +1,7 @@
 ---
 oat_current_task: p02-t08
 oat_last_commit: 86fc4b6acc737a995783210699cee055e7860a45
-oat_blockers:
-  - Phase p02 review remediation requires operator authorization because implementation retry usage is 1/1.
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -14,7 +13,7 @@ oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
-oat_orchestration_retry_limit: 1
+oat_orchestration_retry_limit: 3
 oat_dispatch_policy:
   mode: managed
   policy: high
@@ -71,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T05:51:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-28T12:41:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -83,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p02 blocked by review findings and exhausted retry
+Phase p02 review remediation attempt 1 of 3 pending
 
 ## Artifacts
 
@@ -119,14 +118,13 @@ Phase p02 blocked by review findings and exhausted retry
 - ✓ p02-t06 and p02-t07 resolved deterministic verification regressions
 - ✓ Root p02 focused and release verification passed
 - ✓ Root-owned p02 review completed with five Important findings
-- ⧗ p02-t08 through p02-t12 require an operator-authorized retry exception
+- ✓ Operator raised the phase/code review remediation limit to three retries
+- ⧗ p02-t08 through p02-t12 are review-remediation attempt 1/3
 
 ## Blockers
 
-Phase p02 consumed retry usage 1/1 before review. The five blocking review tasks
-cannot be dispatched automatically without an explicit exception.
+None
 
 ## Next Milestone
 
-Choose whether to authorize one additional bounded Phase p02 remediation
-continuation or leave the project blocked at p02-t08.
+Execute p02-t08 through p02-t12, then run a fresh root-owned p02 review.

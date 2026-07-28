@@ -40,9 +40,10 @@ TypeScript 6, pnpm/Turborepo, S3 static publishing.
 therefore treats its missing notice payload as an immediate post-merge
 compliance repair. It does not reopen the merged mechanical architecture.
 
-**Loop cap:** The project permits one artifact-review remediation cycle and the
-runtime permits one visual correction pass followed by one final review. No
-recursive or open-ended review loop is allowed.
+**Loop cap:** By operator override on 2026-07-28, phase/code review remediation
+permits up to three bounded block-fix-review retries. The runtime still permits
+one visual correction pass followed by one final review. No recursive or
+open-ended review loop is allowed.
 
 **Commit convention:** `{type}({task-id}): {description}`.
 
@@ -975,7 +976,9 @@ The imported plan review is the single pre-implementation design/plan review
 authorized by the source. It used one remediation pass; the final exact
 checklist correction was root-verified mechanically without another model
 review. The normal final code review is the single bounded post-benchmark
-review. Additional review cycles are not authorized.
+review. The 2026-07-28 operator override permits up to three bounded
+block-fix-review retries for phase/code reviews; it does not authorize
+additional unrelated review cycles.
 
 ---
 
