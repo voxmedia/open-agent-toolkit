@@ -648,6 +648,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p03    | code     | passed          | 2026-07-28 | reviews/archived/p03-review-2026-07-28T221100Z.md           | 28afd27b4959f4ef535f961b7348e5d0dfeb438b | auto       | -                    |
 | p04    | code     | fixes_completed | 2026-07-28 | reviews/archived/p04-review-2026-07-28T223723Z.md           | 942458eb27065c3208774be2e7fe57b0b0fe0c34 | auto       | -                    |
 | p04    | code     | passed          | 2026-07-28 | reviews/archived/p04-review-2026-07-28T225031Z.md           | 6fed0cf0bc8e225dcb137795b3aed4fdb871014b | auto       | -                    |
+| p05    | code     | received        | 2026-07-28 | reviews/p05-review-2026-07-28T230930Z.md                    | d1e3cd6fef90227c9e1ddaf2c7d5cdd938e548ff | gate       | cursor-fable-5-xhigh |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
