@@ -17,6 +17,10 @@ import {
   type DispatchMatrixNormalizationIssue,
 } from '@config/dispatch-matrix';
 import {
+  formatDispatchNotices,
+  terminalReviewerNoticesForMatrix,
+} from '@config/dispatch-notices';
+import {
   dispatchPolicyModeDescription,
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
@@ -60,6 +64,7 @@ import {
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import type { DispatchNotice } from '@providers/identity/dispatch-report';
 import {
   createDispatchValidationPassContext,
   validateDispatchMatrixRefs,
@@ -2177,6 +2182,7 @@ interface AdoptDispatchMatrixResult {
   key: string;
   value: string;
   source: Exclude<ConfigSurface, 'auto'>;
+  notices: DispatchNotice[];
 }
 
 async function loadDispatchMatrixRecommendation(
@@ -2291,17 +2297,21 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
+    const workflow = applyDispatchMatrixRecommendation(
+      userConfig.workflow,
+      recommendation,
+    );
     await dependencies.writeUserConfig(userConfigDir, {
       ...userConfig,
-      workflow: applyDispatchMatrixRecommendation(
-        userConfig.workflow,
-        recommendation,
-      ),
+      workflow,
     });
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
+      notices: terminalReviewerNoticesForMatrix(
+        workflow.dispatchCeiling?.providers,
+      ),
     };
   }
 
@@ -2313,17 +2323,21 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
+    const workflow = applyDispatchMatrixRecommendation(
+      localConfig.workflow,
+      recommendation,
+    );
     await dependencies.writeOatLocalConfig(repoRoot, {
       ...localConfig,
-      workflow: applyDispatchMatrixRecommendation(
-        localConfig.workflow,
-        recommendation,
-      ),
+      workflow,
     });
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
+      notices: terminalReviewerNoticesForMatrix(
+        workflow.dispatchCeiling?.providers,
+      ),
     };
   }
 
@@ -2334,17 +2348,21 @@ async function adoptDispatchMatrixRecommendation(
     dependencies,
     context.logger.warn,
   );
+  const workflow = applyDispatchMatrixRecommendation(
+    sharedConfig.workflow,
+    recommendation,
+  );
   await dependencies.writeOatConfig(repoRoot, {
     ...sharedConfig,
-    workflow: applyDispatchMatrixRecommendation(
-      sharedConfig.workflow,
-      recommendation,
-    ),
+    workflow,
   });
   return {
     key: 'workflow.dispatchCeiling.providers',
     value: recommendation.version,
     source,
+    notices: terminalReviewerNoticesForMatrix(
+      workflow.dispatchCeiling?.providers,
+    ),
   };
 }
 
@@ -2539,6 +2557,9 @@ async function runAdopt(
       context.logger.info(
         `Adopted dispatch matrix recommendation ${result.value} to ${result.source} config.`,
       );
+      if (result.notices.length > 0) {
+        context.logger.info(formatDispatchNotices(result.notices));
+      }
     }
     process.exitCode = 0;
   } catch (error) {

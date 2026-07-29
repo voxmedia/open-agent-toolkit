@@ -1942,7 +1942,90 @@ describe('oat config', () => {
         detailed: true,
       });
       expect(capture.info[0]).toContain('2026-07-07.1');
+      expect(capture.info.join('\n')).toContain(
+        '[advisory] terminal-reviewer-eligibility',
+      );
+      expect(capture.info.join('\n')).toContain('fable');
       expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('returns structured effective post-adoption terminal reviewer notices in JSON', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                claude: { frontier: { candidates: ['fable'] } },
+              },
+            }),
+        },
+      });
+
+      await runCommand(
+        command,
+        ['adopt', 'dispatch-matrix', '--shared'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('fable'),
+          },
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: {
+                claude: {
+                  frontier: { candidates: ['opus'] },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                claude: {
+                  frontier: { candidates: ['fable'] },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(capture.info.join('\n')).not.toContain(
+        'terminal-reviewer-eligibility',
+      );
+      expect(capture.info.join('\n')).not.toContain('fable');
       expect(process.exitCode).toBe(0);
     });
 

@@ -318,6 +318,10 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.info.join('\n')).toContain('6. Inherit Host Defaults');
     expect(capture.info.join('\n')).toContain('7. Leave Unresolved');
     expect(capture.info.join('\n')).toContain('planning/preflight deferral');
+    expect(capture.info.join('\n')).toContain(
+      '[advisory] terminal-reviewer-eligibility',
+    );
+    expect(capture.info.join('\n')).toContain('bundled recommendation');
     expect(process.exitCode).toBe(0);
   });
 
@@ -334,6 +338,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           value: 'frontier',
           kind: 'managed-capped',
           runtimePolicy: true,
+          notices: [
+            expect.objectContaining({
+              code: 'terminal-reviewer-eligibility',
+              level: 'advisory',
+            }),
+          ],
         }),
         expect.objectContaining({
           value: 'leave-unresolved',
@@ -1581,8 +1591,61 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('notices');
     expect(process.exitCode).toBe(0);
   });
+
+  it('renders the effective Fable terminal reviewer notice in human output', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--role', 'reviewer']);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('[advisory] terminal-reviewer-eligibility');
+    expect(output).toMatch(/fable.*model access.*retention policy/i);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    ['claude', 'high', 'opus'],
+    ['cursor', 'frontier', 'custom-frontier-reviewer'],
+  ] as const)(
+    'does not disclose Fable for a %s %s policy with effective target %s',
+    async (provider, policy, target) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy },
+          dispatchCeiling: {
+            providers: {
+              [provider]: {
+                [policy]: { candidates: [target] },
+              },
+            },
+          },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        provider,
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'resolved' });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('notices');
+      expect(process.exitCode).toBe(0);
+    },
+  );
 
   it.each([
     ['low', 'low', false],
@@ -4050,6 +4113,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       'claude',
       '--role',
       'reviewer',
+      '--report-scope',
+      'p02-review',
+      '--report-action',
+      'review',
       '--json',
     ]);
 
@@ -4072,6 +4139,22 @@ describe('oat project dispatch-ceiling resolve', () => {
             selectedValue: 'fable',
           },
         },
+      },
+      notices: [
+        {
+          code: 'terminal-reviewer-eligibility',
+          level: 'advisory',
+          message: expect.stringContaining('fable'),
+        },
+      ],
+      dispatchReport: {
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('fable'),
+          },
+        ],
       },
     });
     expect(process.exitCode).toBe(0);

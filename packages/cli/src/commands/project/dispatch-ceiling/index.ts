@@ -14,6 +14,10 @@ import {
 } from '@config/dispatch-ceiling-preset';
 import { normalizeDispatchMatrix } from '@config/dispatch-matrix';
 import {
+  formatDispatchNotices,
+  terminalReviewerNoticeForTarget,
+} from '@config/dispatch-notices';
+import {
   getDispatchPolicyChoices,
   managedDispatchPolicyValueList,
   renderDispatchPolicyChoicesMarkdown,
@@ -150,6 +154,7 @@ interface DispatchCeilingResolution {
   source: DispatchCeilingSource | null;
   preset: string | null;
   unresolved: boolean;
+  notices?: DispatchNotice[];
   projectPath: string | null;
   providerDefaultEffort: string;
   matrix: ProjectDispatchMatrix | null;
@@ -2224,6 +2229,16 @@ async function resolveDispatchCeiling(
   const providers: Record<string, ProviderResolution> = {
     [provider]: providerResolution,
   };
+  const terminalReviewerNotice =
+    role === 'reviewer' || options.preflight === true
+      ? terminalReviewerNoticeForTarget(
+          providerResolution.target?.model ??
+            (provider === 'claude'
+              ? providerResolution.selection.selectedValue
+              : null),
+        )
+      : null;
+  const notices = terminalReviewerNotice ? [terminalReviewerNotice] : [];
 
   if (resolvedValue) {
     const requiresManagedCodexDepth =
@@ -2255,6 +2270,7 @@ async function resolveDispatchCeiling(
           source: resolvedValue.source,
           preset: resolvedValue.preset,
           unresolved: true,
+          ...(notices.length > 0 ? { notices } : {}),
           projectPath,
           providerDefaultEffort,
           matrix: resolvedValue.matrix,
@@ -2306,6 +2322,7 @@ async function resolveDispatchCeiling(
         source: resolvedValue.source,
         preset: resolvedValue.preset,
         unresolved: true,
+        ...(notices.length > 0 ? { notices } : {}),
         projectPath,
         providerDefaultEffort,
         matrix:
@@ -2328,6 +2345,7 @@ async function resolveDispatchCeiling(
       source: resolvedValue.source,
       preset: resolvedValue.preset,
       unresolved: false,
+      ...(notices.length > 0 ? { notices } : {}),
       projectPath,
       providerDefaultEffort,
       matrix:
@@ -2360,6 +2378,7 @@ async function resolveDispatchCeiling(
     source: policyResolution?.source ?? null,
     preset: policyResolution?.preset ?? null,
     unresolved: true,
+    ...(notices.length > 0 ? { notices } : {}),
     projectPath,
     providerDefaultEffort,
     matrix: reportedMatrix,
@@ -2695,6 +2714,9 @@ function writeHumanResolution(
       );
     }
   }
+  if (resolution.notices && resolution.notices.length > 0) {
+    context.logger.info(formatDispatchNotices(resolution.notices));
+  }
 }
 
 function reportRole(action: DispatchAction): DispatchRole {
@@ -2790,7 +2812,7 @@ function buildResolutionReport(
     ) &&
     action !== 'review' &&
     options.preflight !== true;
-  const notices: DispatchNotice[] = [];
+  const notices: DispatchNotice[] = [...(resolution.notices ?? [])];
   if (
     namedManagedImplementation &&
     providerResolution.selection.requestedCandidate === null &&
