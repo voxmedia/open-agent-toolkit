@@ -24,12 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | pending | 2     | 0/2       |
+| Phase 2 | pending | 2     | 0/2       |
+| Phase 3 | pending | 2     | 0/2       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/6 tasks completed
 
 ### Review Received: design
 
@@ -64,6 +65,32 @@ oat_generated: false
 **New tasks added:** None — artifact reviews update lifecycle artifacts directly.
 
 **Next:** Re-review the design artifact or continue quick-start plan review.
+
+### Review Received: plan exit gate
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-07-29T034646Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**Disposition:**
+
+- M1: `resolve_in_artifact` — finalize `plan.md` with
+  `oat_template: false` and `oat_template_name: plan`.
+- m1: `resolve_in_artifact` — annotate the artifact-less structured
+  quick-start review row with its provenance.
+
+**New tasks added:** None — artifact reviews update lifecycle artifacts directly.
+
+**Gate outcome:** Passed at the `important` threshold with corroborated handoff.
+
+**Next:** Start implementation at `p01-t01`.
 
 ---
 
