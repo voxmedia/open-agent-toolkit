@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | review_pending |    21 |     21/21 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | complete |    13 |     13/13 |
+| p03   | complete |    21 |     21/21 |
+| p04   | pending  |     3 |       0/3 |
+| p05   | pending  |     4 |       0/4 |
 
 **Total:** 41/48 tasks completed
 
@@ -154,7 +154,7 @@ oat_generated: false
 
 ## Phase 3: Independent browser critic and hard loop cap
 
-**Status:** fixes_pending
+**Status:** complete
 
 - [x] p03-t01 — Retain browser screenshots and metrics at three viewports (`5c10fdc3`)
 - [x] p03-t02 — Add an independent whole-set visual critic (`8f0a6708`)
@@ -245,6 +245,8 @@ oat_generated: false
 - p03-t21 binds geometry, image profile, and reconstructed pixels across QA and
   pre-critic decoding. The demonstrated reshape regression and all repository,
   smoke, package, and release gates pass.
+- Final remediation re-review attempt 3/3 passed with zero findings. Phase p03
+  is closed and execution continues at p04-t01.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -587,7 +589,21 @@ oat_generated: false
 - Planned artifact: `reviews/20260728-p03-code-review-r3.md`
 - Scope: C1-R2 and p03-t21 with regression checks for previously resolved Phase
   p03 findings
+- Outcome: `PASS`
+- Artifact: `reviews/20260728-p03-code-review-r3.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Independent probe: a valid `320x640` to `640x320` identical-pixel reshape
+  failed with `E_VISUAL_REVIEW` before critic invocation
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 15 — Phase p04 implementation
+
+- Request: `explainer-improvements-p04-20260729T020000Z`
+- Launch intent: pending root tracking commit
+- Tasks: p04-t01 through p04-t03, sequentially
+- Scope: topology preservation, commit-pinned source backlinks, and
+  manifest-derived initiative catalog
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 final remediation re-review pending
+Phase p04 implementation in progress
 
 ## Artifacts
 
@@ -191,7 +191,9 @@ Phase p03 final remediation re-review pending
 - ✓ Focused 90/90, Phase p03 230/230, CLI 192/192, and smoke 7/7 tests passed
 - ✓ Repository and release gates passed, including five public packages and 65
   visual measurements
-- ⧗ Final narrowed Phase p03 re-review is ready to launch
+- ✓ Final narrowed Phase p03 re-review passed with zero findings
+- ✓ Phase p03 closed after remediation attempt 3/3
+- ⧗ Phase p04 begins at p04-t01
 
 ## Blockers
 
@@ -199,5 +201,4 @@ None
 
 ## Next Milestone
 
-Run the final narrowed Phase p03 re-review. If it passes, close Phase p03 and
-continue directly to p04-t01.
+Execute p04-t01 through p04-t03, then run Phase p04 verification and review.
