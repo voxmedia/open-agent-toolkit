@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----: | --------: |
-| p01   | complete |     7 |       7/7 |
-| p02   | complete |    13 |     13/13 |
-| p03   | complete |    21 |     21/21 |
-| p04   | complete |    14 |     14/14 |
-| p05   | pending  |     4 |       0/4 |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----: | --------: |
+| p01   | complete    |     7 |       7/7 |
+| p02   | complete    |    13 |     13/13 |
+| p03   | complete    |    21 |     21/21 |
+| p04   | complete    |    14 |     14/14 |
+| p05   | in_progress |     4 |       0/4 |
 
 **Total:** 55/59 tasks completed
 
@@ -911,6 +911,16 @@ oat_generated: false
 - Verification: 309 focused tests passed; adversarial legacy-token rejection,
   authenticated changed-CWD resume, and every prior Phase p04 finding passed
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 30 — Phase p05 implementation
+
+- Request: `explainer-improvements-p05-20260729T151500Z`
+- Launch intent: persisted
+- HiLL checkpoint: operator approved Phase p05 execution
+- Tasks: p05-t01 through p05-t04, sequentially
+- Scope: simple, non-linear, and archived-project golden conformance plus
+  release closure
+- Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

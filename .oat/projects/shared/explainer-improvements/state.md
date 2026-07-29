@@ -1,5 +1,5 @@
 ---
-oat_current_task: p05-hill-checkpoint
+oat_current_task: p05-t01
 oat_last_commit: 9d7d650172fe40e5ddd8590ac2ea3078cc700ed4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -9,7 +9,7 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
 oat_phase_status: in_progress # Status: in_progress | complete | pr_open
@@ -264,7 +264,8 @@ Phase p04 implementation in progress
 - ✓ Legacy downgrade regressions, focused resume tests, complete p03/p04 union,
   repository tests, and release validation passed
 - ✓ Explicitly authorized Phase p04 closure review passed with zero findings
-- ⧗ Phase p05 HiLL checkpoint reached; user approval is required before p05-t01
+- ✓ Phase p05 HiLL checkpoint approved by the operator
+- ⧗ Phase p05 begins at p05-t01
 
 ## Blockers
 
@@ -272,5 +273,4 @@ None.
 
 ## Next Milestone
 
-Obtain user approval at the Phase p05 HiLL checkpoint, then execute the three
-golden benchmarks and release closure tasks.
+Execute p05-t01 through p05-t04, then run the final project review.
