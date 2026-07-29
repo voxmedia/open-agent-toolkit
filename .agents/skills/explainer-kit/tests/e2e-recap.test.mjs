@@ -223,6 +223,29 @@ function artisticHtml(request, { title, description, nodes, legend }) {
     .replaceAll('{{LEGEND}}', legend);
 }
 
+function graphObservationMarkup(graph) {
+  return `<svg data-direction="${graph.direction}">${graph.nodes
+    .map(
+      ({ id, label, shape, explicit }) =>
+        `<g data-node="${attribute(id)}" data-node-label="${attribute(label)}" data-node-shape="${shape}" data-node-explicit="${String(explicit)}"></g>`,
+    )
+    .join('')}${graph.edges
+    .map(
+      ({ from, to, kind, label }) =>
+        `<g data-from="${attribute(from)}" data-to="${attribute(to)}" data-edge-kind="${kind}" data-edge-label="${attribute(label)}"></g>`,
+    )
+    .join('')}</svg>`;
+}
+
+function attribute(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
 function systemMapHtml(request) {
   return artisticHtml(request, {
     title: `Atlas Index ${request.artifactId.replaceAll('-', ' ')}`,
@@ -504,20 +527,29 @@ running --> queued`,
           return baseAuthor(authorRequest);
         }
         const graph = authorRequest.graphSemantics[0];
-        const nodes = graph.nodes.map(({ id }) => id);
-        const edges = graph.edges.map(({ from, to }) => [from, to]);
-        if (mutation === 'drop') edges.pop();
-        if (mutation === 'add') nodes.push('shadow');
-        if (mutation === 'duplicate') nodes.push(nodes[0]);
-        if (mutation === 'rewire') edges[0] = [edges[0][1], edges[0][0]];
+        const observed = structuredClone(graph);
+        if (mutation === 'drop') observed.edges.pop();
+        if (mutation === 'add') {
+          observed.nodes.push({
+            id: 'shadow',
+            label: 'shadow',
+            shape: 'rectangle',
+            explicit: false,
+          });
+        }
+        if (mutation === 'duplicate') {
+          observed.nodes.push(structuredClone(observed.nodes[0]));
+        }
+        if (mutation === 'rewire') {
+          [observed.edges[0].from, observed.edges[0].to] = [
+            observed.edges[0].to,
+            observed.edges[0].from,
+          ];
+        }
         const html = artisticHtml(authorRequest, {
           title: `${topology} architecture`,
           description: 'A planner-owned graph.',
-          nodes: `<svg data-direction="${graph.direction}">${nodes
-            .map((id) => `<g data-node="${id}"></g>`)
-            .join('')}${edges
-            .map(([from, to]) => `<g data-from="${from}" data-to="${to}"></g>`)
-            .join('')}</svg>`,
+          nodes: graphObservationMarkup(observed),
           legend: '<span>Planner-owned graph</span>',
         });
         return authorResult(authorRequest, html);
@@ -527,8 +559,9 @@ running --> queued`,
         author,
         planSet: async (plannerRequest) => {
           const plan = await planSet(plannerRequest);
-          plan.portfolio.find(({ artifactId }) => artifactId === 'architecture').draft =
-            `\`\`\`diagram\n${diagram}\n\`\`\``;
+          plan.portfolio.find(
+            ({ artifactId }) => artifactId === 'architecture',
+          ).draft = `\`\`\`diagram\n${diagram}\n\`\`\``;
           return plan;
         },
         browserProbe: cleanProbe(),
@@ -541,6 +574,76 @@ running --> queued`,
       assert.equal(critic.calls, 0);
     });
   }
+}
+
+for (const semanticField of [
+  'node label',
+  'node shape',
+  'node explicitness',
+  'edge kind',
+  'edge label',
+]) {
+  test(`rejects artistic output that changes planner-owned ${semanticField} before visual review`, async () => {
+    const { request } = await fixture();
+    const critic = async (visualRequest) => {
+      critic.calls += 1;
+      return passingVisualCritic(visualRequest);
+    };
+    critic.calls = 0;
+    const baseAuthor = richAuthor();
+    const author = async (authorRequest) => {
+      if (authorRequest.artifactId !== 'architecture') {
+        return baseAuthor(authorRequest);
+      }
+      const observed = structuredClone(authorRequest.graphSemantics[0]);
+      if (semanticField === 'node label') observed.nodes[0].label += ' drift';
+      if (semanticField === 'node shape') {
+        observed.nodes[0].shape =
+          observed.nodes[0].shape === 'diamond' ? 'rectangle' : 'diamond';
+      }
+      if (semanticField === 'node explicitness') {
+        observed.nodes[0].explicit = !observed.nodes[0].explicit;
+      }
+      if (semanticField === 'edge kind') {
+        observed.edges[0].kind =
+          observed.edges[0].kind === 'arrow' ? 'line' : 'arrow';
+      }
+      if (semanticField === 'edge label') {
+        observed.edges[0].label += ' drift';
+      }
+      return authorResult(
+        authorRequest,
+        artisticHtml(authorRequest, {
+          title: 'Semantic drift',
+          description: 'IDs and endpoints remain unchanged.',
+          nodes: graphObservationMarkup(observed),
+          legend: '<span>Planner-owned graph</span>',
+        }),
+      );
+    };
+    const planSet = adaptivePlanSet();
+    const result = await runExplainer(request, {
+      author,
+      planSet: async (plannerRequest) => {
+        const plan = await planSet(plannerRequest);
+        plan.portfolio.find(
+          ({ artifactId }) => artifactId === 'architecture',
+        ).draft = `\`\`\`diagram
+graph TD
+router{Route?} -->|enrich| enrich[Enrich]
+router --> audit
+\`\`\``;
+        return plan;
+      },
+      browserProbe: cleanProbe(),
+      visualCritic: critic,
+      now: () => NOW,
+    });
+
+    assert.equal(result.outcome, 'failed');
+    assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+    assert.equal(critic.calls, 0);
+  });
 }
 
 test('explicit deterministic fallback composes the same portfolio from Markdown', async () => {
@@ -652,10 +755,7 @@ test('writes a manifest-derived initiative catalog with absolute artifact and so
 
   const manifest = await readJson(result.manifestPath);
   const catalog = await readJson(
-    join(
-      result.runRoot,
-      `site/initiatives/${SLUG}/catalog.json`,
-    ),
+    join(result.runRoot, `site/initiatives/${SLUG}/catalog.json`),
   );
   assert.deepEqual(
     catalog.artifacts.map(({ id, type, hash }) => ({ id, type, hash })),
@@ -1056,10 +1156,7 @@ router --> audit
   assert.deepEqual(authoredIds, ['project-recap', 'architecture']);
   await assert.rejects(
     access(
-      join(
-        result.runRoot,
-        `site/diagrams/${SLUG}/architecture/index.html`,
-      ),
+      join(result.runRoot, `site/diagrams/${SLUG}/architecture/index.html`),
     ),
     { code: 'ENOENT' },
   );
@@ -1075,11 +1172,11 @@ test('preserves branch semantics through the artistic architecture composer', as
             title: 'Atlas Index branching architecture',
             description: 'The router preserves both downstream branches.',
             nodes: [
-              '<g data-node="router" class="node"><rect x="60" y="40" width="240" height="72" rx="8"></rect><text x="84" y="82">Router</text></g>',
-              '<g data-node="enrich" class="node"><rect x="20" y="220" width="140" height="72" rx="8"></rect><text x="44" y="262">Enrich</text></g>',
-              '<g data-node="audit" class="node"><rect x="200" y="220" width="140" height="72" rx="8"></rect><text x="224" y="262">Audit</text></g>',
-              '<path class="edge" data-from="router" data-to="enrich" d="M 140 112 L 90 220"></path>',
-              '<path class="edge" data-from="router" data-to="audit" d="M 220 112 L 270 220"></path>',
+              '<g data-node="router" data-node-label="router" data-node-shape="rectangle" data-node-explicit="false" class="node"><rect x="60" y="40" width="240" height="72" rx="8"></rect><text x="84" y="82">Router</text></g>',
+              '<g data-node="enrich" data-node-label="enrich" data-node-shape="rectangle" data-node-explicit="false" class="node"><rect x="20" y="220" width="140" height="72" rx="8"></rect><text x="44" y="262">Enrich</text></g>',
+              '<g data-node="audit" data-node-label="audit" data-node-shape="rectangle" data-node-explicit="false" class="node"><rect x="200" y="220" width="140" height="72" rx="8"></rect><text x="224" y="262">Audit</text></g>',
+              '<path class="edge" data-from="router" data-to="enrich" data-edge-kind="arrow" data-edge-label="" d="M 140 112 L 90 220"></path>',
+              '<path class="edge" data-from="router" data-to="audit" data-edge-kind="arrow" data-edge-label="" d="M 220 112 L 270 220"></path>',
             ].join(''),
             legend: '<span>Router</span><span>Enrich</span><span>Audit</span>',
           }),

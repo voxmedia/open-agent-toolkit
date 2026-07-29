@@ -988,7 +988,7 @@ source --> rejected
       const base = authorResult(request);
       base.content.html = base.content.html.replace(
         '<rect data-node="overview" class="node active" width="80" height="40"></rect>',
-        '<svg data-direction="TD"><g data-node="source"></g><g data-node="accepted"></g><g data-node="rejected"></g><g data-from="source" data-to="accepted"></g><g data-from="source" data-to="rejected"></g></svg>',
+        '<svg data-direction="TD"><g data-node="source" data-node-label="source" data-node-shape="rectangle" data-node-explicit="false"></g><g data-node="accepted" data-node-label="accepted" data-node-shape="rectangle" data-node-explicit="false"></g><g data-node="rejected" data-node-label="rejected" data-node-shape="rectangle" data-node-explicit="false"></g><g data-from="source" data-to="accepted" data-edge-kind="arrow" data-edge-label=""></g><g data-from="source" data-to="rejected" data-edge-kind="arrow" data-edge-label=""></g></svg>',
       );
       request.graphSemantics[0].nodes.pop();
       return base;

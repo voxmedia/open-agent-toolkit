@@ -158,25 +158,34 @@ middle --> finish`;
 test('binds artistic HTML to exact planner-owned graph node and edge multisets', () => {
   const planned = graphSemanticsForArtisticAuthor([
     parseDiagram(`graph TD
-source --> accepted
-source --> rejected`),
+source[Source] -->|approve| accepted{Accepted}
+source --- rejected(Rejected)`),
   ]);
   const exact =
-    '<svg data-direction="TD"><g data-node="source"></g><g data-node="accepted"></g><g data-node="rejected"></g><g data-from="source" data-to="accepted"></g><g data-from="source" data-to="rejected"></g></svg>';
+    '<svg data-direction="TD"><g data-node="source" data-node-label="Source" data-node-shape="rectangle" data-node-explicit="true"></g><g data-node="accepted" data-node-label="Accepted" data-node-shape="diamond" data-node-explicit="true"></g><g data-node="rejected" data-node-label="Rejected" data-node-shape="rounded" data-node-explicit="true"></g><g data-from="source" data-to="accepted" data-edge-kind="arrow" data-edge-label="approve"></g><g data-from="source" data-to="rejected" data-edge-kind="line" data-edge-label=""></g></svg>';
 
   assert.doesNotThrow(() => assertAuthoredGraphSemantics(exact, planned));
   for (const [name, mutation] of [
     [
       'missing edge',
-      exact.replace('<g data-from="source" data-to="rejected"></g>', ''),
+      exact.replace(
+        '<g data-from="source" data-to="rejected" data-edge-kind="line" data-edge-label=""></g>',
+        '',
+      ),
     ],
     [
       'extra node',
-      exact.replace('</svg>', '<g data-node="shadow"></g></svg>'),
+      exact.replace(
+        '</svg>',
+        '<g data-node="shadow" data-node-label="shadow" data-node-shape="rectangle" data-node-explicit="false"></g></svg>',
+      ),
     ],
     [
       'duplicate node',
-      exact.replace('</svg>', '<g data-node="source"></g></svg>'),
+      exact.replace(
+        '</svg>',
+        '<g data-node="source" data-node-label="Source" data-node-shape="rectangle" data-node-explicit="true"></g></svg>',
+      ),
     ],
     [
       'rewired edge',
@@ -192,7 +201,46 @@ source --> rejected`),
         'data-from="source"',
       ),
     ],
-    ['wrong direction', exact.replace('data-direction="TD"', 'data-direction="LR"')],
+    [
+      'drifting node label',
+      exact.replace('data-node-label="Accepted"', 'data-node-label="Declined"'),
+    ],
+    [
+      'drifting node shape',
+      exact.replace('data-node-shape="diamond"', 'data-node-shape="rectangle"'),
+    ],
+    [
+      'drifting node explicitness',
+      exact.replace('data-node-explicit="true"', 'data-node-explicit="false"'),
+    ],
+    [
+      'drifting edge kind',
+      exact.replace('data-edge-kind="arrow"', 'data-edge-kind="line"'),
+    ],
+    [
+      'drifting edge label',
+      exact.replace('data-edge-label="approve"', 'data-edge-label="reject"'),
+    ],
+    ['missing semantic field', exact.replace(' data-node-shape="diamond"', '')],
+    [
+      'duplicate semantic field',
+      exact.replace(
+        'data-node-shape="diamond"',
+        'data-node-shape="diamond" data-node-shape="diamond"',
+      ),
+    ],
+    [
+      'noncanonical label encoding',
+      exact.replace('data-node-label="Source"', 'data-node-label="&#83;ource"'),
+    ],
+    [
+      'endpoint-only observations',
+      '<svg data-direction="TD"><g data-node="source"></g><g data-node="accepted"></g><g data-node="rejected"></g><g data-from="source" data-to="accepted"></g><g data-from="source" data-to="rejected"></g></svg>',
+    ],
+    [
+      'wrong direction',
+      exact.replace('data-direction="TD"', 'data-direction="LR"'),
+    ],
   ]) {
     assert.throws(
       () => assertAuthoredGraphSemantics(mutation, planned),

@@ -50,6 +50,12 @@ shorter synonym that changes meaning. Keep source-backed uncertainty visible as
 - Make direction explicit and include a legend only when the encoding needs it.
 - Preserve graph semantics. Never serialize branches, fan-in, or cycles into a
   false linear sequence.
+- For each non-linear `graphSemantics` input, emit one element with the exact
+  `data-direction`. Emit every node exactly once with `data-node`,
+  `data-node-label`, `data-node-shape`, and `data-node-explicit`; emit every
+  edge exactly once with `data-from`, `data-to`, `data-edge-kind`, and
+  `data-edge-label`. Use the frozen tuple values verbatim with canonical HTML
+  attribute escaping, including `data-edge-label=""` for an unlabeled edge.
 - Give the canvas an accessible name and description. Keep labels readable at
   the required viewport widths and provide bounded pan or zoom for large maps.
 - Use the same component names and status vocabulary as the hub and deck.

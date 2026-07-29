@@ -92,10 +92,14 @@ matching `plannedArtifact`. The planner finalizes floor and expansion entries
 before authoring; author results cannot add, remove, or replace artifacts.
 When a planner draft contains a supported non-linear graph, the request also
 carries its closed `graphSemantics` (direction, nodes, edges, and topology).
-Artistic HTML must expose one exact `data-direction`, one `data-node` per
-planned node, and one paired `data-from`/`data-to` observation per planned
-edge. Missing, extra, duplicate, rewired, or ambiguous observations fail with
-`E_DIAGRAM_TOPOLOGY` before browser or visual-critic review.
+Artistic HTML must expose one exact `data-direction`. Each planned node requires
+one observation carrying `data-node`, `data-node-label`, `data-node-shape`, and
+`data-node-explicit`; each planned edge requires one observation carrying
+`data-from`, `data-to`, `data-edge-kind`, and `data-edge-label`. Values must
+match the complete frozen planner tuples exactly, including canonical HTML
+attribute escaping and explicit empty edge labels. Missing, extra, duplicate,
+malformed, noncanonical, rewired, or semantically drifting observations fail
+with `E_DIAGRAM_TOPOLOGY` before browser or visual-critic review.
 
 Visual review uses provider-neutral
 `explainer-kit.visual-review-request/v1` and

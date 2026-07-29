@@ -173,7 +173,10 @@ export function renderDiagram(source, { theme } = {}) {
 }
 
 export function graphSemanticsForArtisticAuthor(diagrams) {
-  if (!Array.isArray(diagrams) || diagrams.some(({ valid }) => valid !== true)) {
+  if (
+    !Array.isArray(diagrams) ||
+    diagrams.some(({ valid }) => valid !== true)
+  ) {
     throw topologyError(
       'Planner-owned artistic diagrams must use the supported graph grammar.',
     );
@@ -217,32 +220,44 @@ export function assertAuthoredGraphSemantics(html, graphSemantics) {
   }
 
   const nodeTags = tags.filter((tag) => tag.includes('data-node'));
-  const observedNodes = nodeTags.flatMap((tag) => {
-    const values = attributeValues(tag, 'data-node');
-    if (values.length !== 1 || !new RegExp(`^${ID_PATTERN}$`).test(values[0])) {
-      throw topologyError('Authored graph contains an ambiguous node observation.');
-    }
-    return values;
+  const observedNodes = nodeTags.map((tag) => {
+    const id = canonicalAttribute(tag, 'data-node', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const label = canonicalAttribute(tag, 'data-node-label');
+    const shape = canonicalAttribute(tag, 'data-node-shape', {
+      allowed: ['rectangle', 'rounded', 'diamond'],
+    });
+    const explicit = canonicalAttribute(tag, 'data-node-explicit', {
+      allowed: ['true', 'false'],
+    });
+    return canonicalTuple([id, label, shape, explicit]);
   });
-  const edgeTags = tags.filter(
-    (tag) => tag.includes('data-from') || tag.includes('data-to'),
+  const edgeTags = tags.filter((tag) =>
+    ['data-from', 'data-to', 'data-edge-kind', 'data-edge-label'].some((name) =>
+      tag.includes(name),
+    ),
   );
   const observedEdges = edgeTags.map((tag) => {
-    const from = attributeValues(tag, 'data-from');
-    const to = attributeValues(tag, 'data-to');
-    if (
-      from.length !== 1 ||
-      to.length !== 1 ||
-      !new RegExp(`^${ID_PATTERN}$`).test(from[0]) ||
-      !new RegExp(`^${ID_PATTERN}$`).test(to[0])
-    ) {
-      throw topologyError('Authored graph contains an ambiguous edge observation.');
-    }
-    return `${from[0]}\0${to[0]}`;
+    const from = canonicalAttribute(tag, 'data-from', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const to = canonicalAttribute(tag, 'data-to', {
+      pattern: new RegExp(`^${ID_PATTERN}$`),
+    });
+    const kind = canonicalAttribute(tag, 'data-edge-kind', {
+      allowed: ['arrow', 'line'],
+    });
+    const label = canonicalAttribute(tag, 'data-edge-label');
+    return canonicalTuple([from, to, kind, label]);
   });
 
-  const expectedNodes = planned.nodes.map(({ id }) => id);
-  const expectedEdges = planned.edges.map(({ from, to }) => `${from}\0${to}`);
+  const expectedNodes = planned.nodes.map(({ id, label, shape, explicit }) =>
+    canonicalTuple([id, escapeAttribute(label), shape, String(explicit)]),
+  );
+  const expectedEdges = planned.edges.map(({ from, to, kind, label }) =>
+    canonicalTuple([from, to, kind, escapeAttribute(label)]),
+  );
   if (
     !sameMultiset(observedNodes, expectedNodes) ||
     !sameMultiset(observedEdges, expectedEdges)
@@ -273,9 +288,7 @@ function analyzeTopology(nodes, edges) {
     ...(!connected ? ['disconnected'] : []),
   ];
   const order =
-    features.length === 0
-      ? linearOrder(nodeIds, incoming, outgoing)
-      : [];
+    features.length === 0 ? linearOrder(nodeIds, incoming, outgoing) : [];
   if (features.length === 0 && order.length !== nodeIds.length) {
     features.push('non-linear');
   }
@@ -353,7 +366,10 @@ function linearOrder(nodeIds, incoming, outgoing) {
 }
 
 function edgesFor(outgoing) {
-  return [...outgoing.values()].reduce((total, targets) => total + targets.length, 0);
+  return [...outgoing.values()].reduce(
+    (total, targets) => total + targets.length,
+    0,
+  );
 }
 
 function parseNode(value) {
@@ -388,7 +404,7 @@ function renderNode(node, position, { nodeWidth, nodeHeight }) {
   } else {
     shape = `<rect class="diagram-node-shape" x="${position.x}" y="${position.y}" width="${nodeWidth}" height="${nodeHeight}"${node.shape === 'rounded' ? ' rx="24"' : ''}></rect>`;
   }
-  return `<g class="diagram-node" data-node="${escapeAttribute(node.id)}">${shape}<text class="diagram-node-label" x="${centerX}" y="${centerY}">${escapeHtml(node.label)}</text></g>`;
+  return `<g class="diagram-node" data-node="${escapeAttribute(node.id)}" data-node-label="${escapeAttribute(node.label)}" data-node-shape="${node.shape}" data-node-explicit="${String(node.explicit)}">${shape}<text class="diagram-node-label" x="${centerX}" y="${centerY}">${escapeHtml(node.label)}</text></g>`;
 }
 
 function renderEdge(
@@ -407,7 +423,7 @@ function renderEdge(
   const label = edge.label
     ? `<text class="diagram-edge-label" x="${(start.x + end.x) / 2}" y="${(start.y + end.y) / 2 - 8}">${escapeHtml(edge.label)}</text>`
     : '';
-  return `<g class="diagram-connection" data-from="${escapeAttribute(edge.from)}" data-to="${escapeAttribute(edge.to)}"><path class="diagram-edge" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"${edge.kind === 'arrow' ? ` marker-end="url(#${markerId})"` : ''}></path>${label}</g>`;
+  return `<g class="diagram-connection" data-from="${escapeAttribute(edge.from)}" data-to="${escapeAttribute(edge.to)}" data-edge-kind="${edge.kind}" data-edge-label="${escapeAttribute(edge.label)}"><path class="diagram-edge" d="M ${start.x} ${start.y} L ${end.x} ${end.y}"${edge.kind === 'arrow' ? ` marker-end="url(#${markerId})"` : ''}></path>${label}</g>`;
 }
 
 function degraded(message) {
@@ -443,10 +459,30 @@ function attributeValues(tag, name) {
   ].map((match) => match[2]);
 }
 
+function canonicalAttribute(tag, name, { pattern, allowed } = {}) {
+  const values = attributeValues(tag, name);
+  if (
+    values.length !== 1 ||
+    (pattern && !pattern.test(values[0])) ||
+    (allowed && !allowed.includes(values[0]))
+  ) {
+    throw topologyError(
+      `Authored graph contains a malformed or ambiguous ${name} observation.`,
+    );
+  }
+  return values[0];
+}
+
+function canonicalTuple(values) {
+  return JSON.stringify(values);
+}
+
 function sameMultiset(actual, expected) {
   return (
     actual.length === expected.length &&
-    [...actual].sort().every((value, index) => value === [...expected].sort()[index])
+    [...actual]
+      .sort()
+      .every((value, index) => value === [...expected].sort()[index])
   );
 }
 
