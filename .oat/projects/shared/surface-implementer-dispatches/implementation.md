@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t01
+oat_current_task_id: p01-t02
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | pending | 2     | 0/2       |
-| Phase 2 | pending | 2     | 0/2       |
-| Phase 3 | pending | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | in_progress | 2     | 1/2       |
+| Phase 2 | pending     | 2     | 0/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 0/6 tasks completed
+**Total:** 1/6 tasks completed
 
 ### Review Received: design
 
@@ -120,35 +120,42 @@ oat_generated: false
 
 ### Task p01-t01: Extend Dispatch Report V1 with classification and notices
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `fdd075bec64d8dadd79c99f9ba158a0d9331af18`
 
 **Outcome (required when completed):**
 
-- {what materially changed (not “did task”, but “system now does X”)}
+- Dispatch Report V1 now records caller classification, legacy preferred
+  selection, and ordered structured notices while defaulting legacy producers
+  safely.
 
 **Files changed:**
 
-- `{path}` - {why}
+- `packages/cli/src/providers/identity/dispatch-report.ts` - extended the
+  additive report contract, serializer, and human formatter.
+- `packages/cli/src/providers/identity/dispatch-report.test.ts` - covered
+  defaults, ordering, formatting, and compatibility-stamp stability.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: focused dispatch-report/gate Vitest suite and CLI type-check.
+- Result: pass (138 tests; type-check clean).
 
 **Notes / Decisions:**
 
-- {gotchas, trade-offs, design deltas, important context for future sessions}
+- `formatDispatchStamp()` remains unchanged; the report-to-stamp projection
+  ignores the additive report fields.
 
 **Issues Encountered:**
 
-- {Issue and resolution}
+- New contract assertions failed before implementation, then passed after the
+  additive fields and defaults were implemented.
 
 ---
 
 ### Task p01-t02: Add classification inputs and managed-cap warnings
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
 
 **Notes:**

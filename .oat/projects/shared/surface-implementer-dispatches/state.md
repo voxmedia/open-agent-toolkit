@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t01
-oat_last_commit: null
+oat_current_task: p01-t02
+oat_last_commit: fdd075bec64d8dadd79c99f9ba158a0d9331af18
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 (`p01-t01`)
+Implementation - Phase 1 (`p01-t02`)
 
 ## Artifacts
 
@@ -95,7 +95,8 @@ Implementation - Phase 1 (`p01-t01`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (initialized at `p01-t01`)
+- **Implementation:** `implementation.md` (1/6 tasks complete; current
+  `p01-t02`)
 
 ## Progress
 
@@ -114,7 +115,9 @@ Implementation - Phase 1 (`p01-t01`)
 - ✓ Independent quick-start exit gate passed and was received
 - ✓ Implementation tracker initialized at `p01-t01`
 - ✓ Final HiLL checkpoint configured at Phase 3 with auto-review enabled
-- → Phase 1 implementation started at `p01-t01`
+- ✓ `p01-t01` extended Dispatch Report V1 with additive classification,
+  preferred-selection, and notice fields
+- → Phase 1 implementation continues at `p01-t02`
 
 ## Blockers
 
@@ -122,4 +125,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 starting at `p01-t01`
+Complete Phase 1 at `p01-t02`
