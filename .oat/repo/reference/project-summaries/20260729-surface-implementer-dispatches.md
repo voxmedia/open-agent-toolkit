@@ -195,3 +195,15 @@ Configured exit gate received and allowed; M1 deferred with a durable follow-up 
 ### 2026-07-29 · structural · oat-explainer-kit · project-recap
 
 Non-blocking recap outcome: failed before intent/core invocation because the adapter is not installed at the canonical user-scoped path; no run path or summary update; recovery is oat tools install utility --scope user.
+
+### 2026-07-29 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T173359Z.md
+
+### 2026-07-29 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:1,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T180703Z.md
+
+### 2026-07-29 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md
