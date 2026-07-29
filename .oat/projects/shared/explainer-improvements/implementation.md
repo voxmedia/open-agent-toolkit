@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t10
+oat_current_task_id: p04-review
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |    11 |      9/11 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |    11 |     11/11 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 50/56 tasks completed
+**Total:** 52/56 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -261,8 +261,8 @@ oat_generated: false
 - [x] p04-t07 — Validate catalog URLs against the publish root (`b4042d1c`)
 - [x] p04-t08 — Restore completion provenance regression coverage (`8d3f4aeb`)
 - [x] p04-t09 — Preserve the resolved output root across resume (`0158516b`)
-- [ ] p04-t10 — Verify complete artistic graph semantics
-- [ ] p04-t11 — Confine resumed runs to the configured output root
+- [x] p04-t10 — Verify complete artistic graph semantics (`995c38a9`)
+- [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -751,7 +751,30 @@ oat_generated: false
 - Review-remediation attempt: 2/3
 - Scope: complete artistic graph tuple validation and resume-time canonical-root
   confinement
+- Outcome: `DONE`
+- Task commits: `995c38a9` (p04-t10) and `f2d3ecc7` (p04-t11)
+- Verification: p04-t10 passed 105/105; p04-t11 passed focused 3/3 and
+  integration 60/60; exact semantic-drift and external-symlink probes failed
+  closed with `E_DIAGRAM_TOPOLOGY` and `E_APPROVAL_RESUME`
+- Final gates: p03/p04 union 427/427, CLI contracts 77/77, explainer smoke 8/8,
+  check, lint, format, type-check, full test, build, and release validation
+  including 65 visual measurements passed
+- Final HEAD: `f2d3ecc775fd9f85cfe8568afab8212da12305b3`
+- Worktree: clean; tracking and review artifacts untouched
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 23 — Phase p04 remediation re-review attempt 2
+
+- Request: `explainer-improvements-p04-review-r2-20260729T070000Z`
+- Launch intent: persisted
+- Base: `0158516be8f7dd844466295a2982a18bfebfee42`
+- Reviewed head: `f2d3ecc775fd9f85cfe8568afab8212da12305b3`
+- Source artifact: `reviews/20260729-p04-code-review-r1.md`
+- Planned artifact: `reviews/20260729-p04-code-review-r2.md`
+- Review-remediation attempt: 2/3
+- Scope: C1-R1, I4-R1, p04-t10, p04-t11, and regressions for all previously
+  resolved Phase p04 findings
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
