@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { readFile, realpath } from 'node:fs/promises';
-import { dirname, join, resolve } from 'node:path';
+import { lstat, readFile, realpath } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { catalogFromManifest, initiativeCatalogPath } from './lib/catalog.mjs';
@@ -755,7 +755,37 @@ async function loadResumableRun(request) {
     ...(normalized.theme ?? {}),
     renderStrategy: normalized.theme?.renderStrategy ?? 'default-only',
   };
-  const runRoot = join(resolve(normalized.outputRoot), normalized.slug);
+  let canonicalOutputRoot;
+  try {
+    canonicalOutputRoot = await realpath(resolve(normalized.outputRoot));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+  const runRoot = join(canonicalOutputRoot, normalized.slug);
+  let runRootStats;
+  try {
+    runRootStats = await lstat(runRoot);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+  if (runRootStats.isSymbolicLink() || !runRootStats.isDirectory()) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'The resumable run root must be a real directory, not a symbolic link.',
+    );
+  }
+  const canonicalRunRoot = await realpath(runRoot);
+  if (
+    canonicalRunRoot !== runRoot ||
+    !isStrictDescendant(canonicalOutputRoot, canonicalRunRoot)
+  ) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'The resumable run root escapes the configured output root.',
+    );
+  }
   let approval;
   let record;
   let persistedRequest;
@@ -799,7 +829,6 @@ async function loadResumableRun(request) {
     );
   }
 
-  const canonicalRunRoot = await realpath(runRoot);
   return {
     runId: record.runId,
     slug: normalized.slug,
@@ -810,6 +839,16 @@ async function loadResumableRun(request) {
     manifestPath: join(canonicalRunRoot, 'manifest.json'),
     request: normalized,
   };
+}
+
+function isStrictDescendant(root, candidate) {
+  const pathFromRoot = relative(root, candidate);
+  return (
+    pathFromRoot.length > 0 &&
+    pathFromRoot !== '..' &&
+    !pathFromRoot.startsWith(`..${sep}`) &&
+    !isAbsolute(pathFromRoot)
+  );
 }
 
 async function hydrateResumableState(state) {

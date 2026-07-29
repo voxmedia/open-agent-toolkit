@@ -6,6 +6,7 @@ import {
   mkdtemp,
   readFile,
   readdir,
+  rename,
   rm,
   symlink,
   writeFile,
@@ -429,6 +430,42 @@ test('interactive resume preserves the discovered absolute run root for a persis
   } finally {
     process.chdir(originalCwd);
   }
+});
+
+test('interactive resume rejects a run-root symlink that relocates a package outside its output root', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+  const relocatedRunRoot = join(
+    dirname(dirname(paused.runRoot)),
+    'relocated-project-explainer-run',
+  );
+  await rename(paused.runRoot, relocatedRunRoot);
+  await symlink(relocatedRunRoot, paused.runRoot);
+  const durability = mock.fn(async () => {});
+
+  await assert.rejects(
+    runExplainer(interactiveRequest, {
+      now: () => '2026-07-17T20:05:00Z',
+      durability,
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: paused.approval.resumeToken,
+      },
+    }),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(
+    (await readFile(join(relocatedRunRoot, 'run-request.json'), 'utf8')) !== '',
+    true,
+  );
 });
 
 test('interactive resume requires an exact closed-format external token before callbacks', async () => {
