@@ -478,6 +478,36 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
   and CLI check passed
 - **Status:** fixes complete; awaiting fresh root-owned Phase 2 re-review
 
+#### Dispatch Acceptance — p02 reviewer round 2
+
+- **Request:** `review-p02-r2-20260729T121857Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Range:** `f617a05416a2ebf96496a328b76b80777d295b07` →
+  `c9b2ce70aa5bccc6a6123f0008d0cbc5b873c50e`
+- **Outcome:** accepted once; artifact validated; `BLOCKED`
+- **Reconnaissance:** not attempted; no review-orchestration evidence required
+- **Prior findings:** layered adoption partially resolved; bare Cursor runtime
+  disclosure resolved
+- **Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
+- **Artifact:**
+  `reviews/code-p02-review-2026-07-29T121857Z.md`
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+```
+
+#### Continuation Event — p02 fix iteration 2
+
+- **Original request:** `impl-p02-20260729T044336Z`
+- **Review request:** `review-p02-r2-20260729T121857Z`
+- **Bounded finding:** layered adoption drops a higher-precedence bare-provider
+  Fable target
+- **Route:** resume the original accepted Phase 2 implementer at the same exact
+  target
+- **Status:** fixes pending
+
 <!-- orchestration-runs-end -->
 
 ---

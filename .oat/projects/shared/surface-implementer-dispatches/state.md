@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T12:16:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:24:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -126,7 +126,8 @@ Implementation - Phase 3 (`p03-t01`)
 - ✓ Phase 2 implementation completed
 - ! Phase 2 review found two Important effective-target disclosure gaps
 - ✓ Phase 2 fix iteration 1 resolved both Important findings
-- → Phase 2 fixes await fresh root-owned re-review before `p03-t01`
+- ! Phase 2 re-review left one Important bare-provider adoption gap
+- → Phase 2 fix iteration 2 is pending before `p03-t01`
 
 ## Blockers
 
@@ -134,4 +135,4 @@ None
 
 ## Next Milestone
 
-Run fresh root-owned Phase 2 re-review, then execute `p03-t01`
+Resolve Phase 2 review round 2, then execute `p03-t01`
