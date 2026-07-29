@@ -905,6 +905,10 @@ oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
 # Code-review only: full 40-character SHA from `git rev-parse <range-head>^{commit}`.
 oat_review_head_sha: { authoritative range head commit SHA }
+# Narrowed code-review only: copy the complete resolved provenance chain.
+oat_review_range: { prior reviewed head }..{ authoritative range head }
+oat_prior_review_artifact: { prior artifact path }
+oat_prior_review_head_sha: { prior artifact's full reviewed head commit SHA }
 # Gate-only: copy the exact prompt-provided fields below.
 oat_gate_run_id: { gate run id }
 oat_gate_target: { configured target id }

@@ -261,6 +261,26 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('preserves narrowed-review provenance in the inline artifact template', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const template =
+      content.match(
+        /\*\*Review artifact template:\*\*[\s\S]*?```markdown\n([\s\S]*?)\n```/,
+      )?.[1] ?? '';
+
+    for (const field of [
+      'oat_review_range',
+      'oat_prior_review_artifact',
+      'oat_prior_review_head_sha',
+    ]) {
+      expect(template, `${field} in inline artifact template`).toContain(
+        `${field}:`,
+      );
+    }
+  });
+
   it('pins headless routing and pre-plan inheritance in review-provide', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-review-provide/SKILL.md',
