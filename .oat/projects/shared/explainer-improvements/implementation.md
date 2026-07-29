@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase p04 retry cap exhausted with I4-R3 unresolved; operator disposition required.
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-review
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,13 +18,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | review_pending |    12 |     12/12 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | complete |    13 |     13/13 |
+| p03   | complete |    21 |     21/21 |
+| p04   | blocked  |    12 |     12/12 |
+| p05   | pending  |     4 |       0/4 |
 
 **Total:** 53/57 tasks completed
 
@@ -250,7 +251,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** review_pending
+**Status:** blocked
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -815,6 +816,17 @@ oat_generated: false
 - Review-remediation attempt: 3/3
 - Scope: I4-R2, p04-t12, and regression checks for every previously resolved
   Phase p04 finding
+- Outcome: `BLOCKED`; retry cap exhausted
+- Artifact: `reviews/20260729-p04-code-review-r3.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Resolved: exact configured-root retarget attack; all earlier Phase p04
+  findings remain resolved and all repository/release gates pass
+- Blocking I4-R3: coordinated retarget plus mutable
+  `run-request.json.outputRoot` rewrite preserves the valid external `ekrt1`
+  token because that token authenticates set-plan records but not the original
+  canonical root or retained request bytes
+- Required disposition: explicit operator authorization is needed before any
+  fourth remediation attempt or additional task/review can be scheduled
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

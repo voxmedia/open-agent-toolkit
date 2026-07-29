@@ -1,7 +1,8 @@
 ---
-oat_current_task: p04-review
+oat_current_task: null
 oat_last_commit: 3b7b43b24e6d14813963bdc97e17d6b6175a00ef
-oat_blockers: []
+oat_blockers:
+  - Phase p04 retry cap exhausted with I4-R3 unresolved; operator disposition required.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -70,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T07:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T07:40:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -241,13 +242,18 @@ Phase p04 implementation in progress
 - ✓ Exact configured-root retarget attack now fails with `E_APPROVAL_RESUME`
   before retained content or durability adoption
 - ✓ Complete p03/p04 union passed 429/429 and all repository/release gates passed
-- ⧗ Final Phase p04 remediation re-review attempt 3/3 is pending
+- ✓ Final Phase p04 remediation re-review attempt 3/3 completed
+- ⧗ Re-review found I4-R3: coordinated root retarget plus retained
+  `run-request.json.outputRoot` mutation bypasses the unauthenticated canonical
+  root comparison while preserving the valid external resume token
+- ⚠ Phase p04 retry cap is exhausted; no further remediation is authorized
 
 ## Blockers
 
-None
+Phase p04 retry cap exhausted with I4-R3 unresolved. Explicit operator
+disposition is required before any additional remediation task or review.
 
 ## Next Milestone
 
-Run the final Phase p04 remediation re-review; if it passes, stop at the p05
-HiLL checkpoint for explicit approval.
+Obtain explicit operator disposition: authorize an additional bounded remediation
+attempt, accept the residual risk, or stop the project blocked.
