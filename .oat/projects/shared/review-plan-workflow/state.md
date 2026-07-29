@@ -2,7 +2,9 @@
 oat_current_task: null
 oat_last_commit: null
 oat_blockers: []
-associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
+associated_issues:
+  - type: backlog
+    ref: BL-260729-implement-reviewplan-first
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
 oat_siblings: [] # optional child-only sibling slugs
@@ -69,19 +71,21 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T14:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-plan-workflow
 
-**Status:** Discovery
+**Status:** Discovery — revalidation pending
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-29
 
 ## Current Phase
 
-Discovery - Gathering requirements for a quick workflow before planning
+Discovery — populated from the originating incident, source proposal, current
+contracts, and prerequisite projects; awaiting fresh-thread revalidation before
+design-depth selection or planning.
 
 ## Artifacts
 
@@ -90,12 +94,17 @@ Discovery - Gathering requirements for a quick workflow before planning
 - **Design:** N/A (quick mode unless lightweight design is needed)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
+- **References:** original slow-review proposal and current-state handoff
 
 ## Progress
 
 - ✓ Discovery started
 - ✓ Execution artifacts scaffolded
-- ⧗ Awaiting user input
+- ✓ Backlog item linked
+- ✓ Original feedback preserved under project references
+- ✓ Current-state and fresh-thread handoff captured
+- ✓ Discovery populated from incident evidence and repository contracts
+- ⧗ Awaiting fresh-thread discovery revalidation
 
 ## Blockers
 
@@ -103,4 +112,5 @@ None
 
 ## Next Milestone
 
-Complete discovery and generate a quick implementation plan
+Revalidate discovery in the fresh worktree, then choose straight-to-plan,
+lightweight design, or promotion to spec-driven workflow.
