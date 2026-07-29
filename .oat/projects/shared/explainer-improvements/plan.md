@@ -1660,6 +1660,69 @@ directory changed between pause and resume.
 
 ---
 
+### Task p04-t10: Verify complete artistic graph semantics
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/references/visual-authoring.md`
+- Modify: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add RED pre-critic regressions that preserve node IDs and edge endpoints
+   while changing each planner-owned semantic field: node label, shape, and
+   explicitness plus edge kind and label.
+2. Define canonical, unambiguous HTML observations for the complete node and
+   edge tuples and document them in author guidance and the callback contract.
+3. Parse and compare complete node and edge multisets, including every semantic
+   field. Reject missing, extra, duplicate, malformed, noncanonical, or drifting
+   observations with `E_DIAGRAM_TOPOLOGY`.
+4. Preserve frozen planner-owned graph input, direction validation, existing
+   ID/endpoint drift checks, and the supported linear inline path.
+5. Run focused diagram, core integration, and recap e2e tests plus the complete
+   p03/p04 union.
+6. Commit as `fix(p04-t10): verify complete graph semantics`.
+
+**Acceptance:** Artistic HTML cannot alter labels, shapes, explicitness, edge
+direction/kind, or edge labels while preserving IDs/endpoints; the complete
+planner-owned graph tuple either matches exactly before review or fails closed.
+
+---
+
+### Task p04-t11: Confine resumed runs to the configured output root
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED resume regression that moves a valid package outside the configured
+   output root, replaces its original run directory with a symlink, and proves
+   the valid external token cannot authorize the relocated package.
+2. Canonicalize the configured output root before resumable-run discovery,
+   reject a symbolic-link run root, and require the discovered canonical run
+   root to remain strictly confined beneath that output root before reading or
+   adopting retained package paths.
+3. Return `E_APPROVAL_RESUME` for symlink, escape, or canonical-root mismatch
+   without weakening approval-token, request-identity, or retained-hash checks.
+4. Preserve p04-t09 changed-working-directory behavior for a legitimate package
+   at the original canonical location.
+5. Run focused resume tests, the complete core integration file, expanded p03
+   and p04 unions, and all repository/release gates.
+6. Commit as `fix(p04-t11): confine resumed run roots`.
+
+**Acceptance:** Resume never follows a run-root symlink or adopts a package
+outside the canonical configured output root, while legitimate changed-CWD
+resume still targets the exact original package.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1791,7 +1854,8 @@ another review cycle.
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review-r1.md |
 | p02    | code     | passed          | 2026-07-28 | reviews/20260728-p02-code-review-r2.md |
 | p03    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p03-code-review.md    |
-| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260728-p04-code-review.md    |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260728-p04-code-review.md    |
+| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |
@@ -1818,10 +1882,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 9 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
+- Phase 4: 11 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 54 tasks**
+**Total: 56 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

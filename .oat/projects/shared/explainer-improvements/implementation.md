@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-review
+oat_current_task_id: p04-t10
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | review_pending |     9 |       9/9 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | fixes_pending |    11 |      9/11 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 50/54 tasks completed
+**Total:** 50/56 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -261,6 +261,8 @@ oat_generated: false
 - [x] p04-t07 — Validate catalog URLs against the publish root (`b4042d1c`)
 - [x] p04-t08 — Restore completion provenance regression coverage (`8d3f4aeb`)
 - [x] p04-t09 — Preserve the resolved output root across resume (`0158516b`)
+- [ ] p04-t10 — Verify complete artistic graph semantics
+- [ ] p04-t11 — Confine resumed runs to the configured output root
 
 ## Phase 5: Golden conformance and release closure
 
@@ -729,7 +731,27 @@ oat_generated: false
 - Review-remediation attempt: 1/3
 - Scope: C1, C2, I1-I3, p04-t05 through p04-t09, and regression checks for
   previously accepted Phase p04 behavior
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260729-p04-code-review-r1.md`
+- Findings: 1 Critical, 1 Important, 0 Medium, 0 Minor
+- Resolved: canonical backlink normalization, reviewed Git blob binding, exact
+  catalog-root validation, completion provenance fixtures, and normal
+  changed-working-directory resume
+- Blocking: artistic validation compares IDs/endpoints but omits node
+  label/shape/explicitness and edge kind/label; resumable discovery follows a
+  run-root symlink outside the configured output root
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 22 — Phase p04 review remediation attempt 2
+
+- Request: `explainer-improvements-p04-fix-r2-20260729T063000Z`
+- Launch intent: persisted
+- Tasks: p04-t10 and p04-t11, sequentially
+- Source artifact: `reviews/20260729-p04-code-review-r1.md`
+- Review-remediation attempt: 2/3
+- Scope: complete artistic graph tuple validation and resume-time canonical-root
+  confinement
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -767,6 +789,7 @@ oat_generated: false
 | p04 preflight         | plan p04        | Declared files contain all task ownership boundaries          | Expand p04-t01 through p04-t03 files | Render routing, reviewed source binding, manifest construction, and receipt validation have owners outside the original lists | repository preflight at `65b95624`     | p04-t01–p04-t03  |
 | p04 verification      | plan p04-t02/03 | New provenance and manifest fields pass all consumers         | Add bounded p04-t04                  | Strict CLI archive parsing omitted canonical backlinks and the packaged fixture had no reviewed Git identity                  | full repository smoke tests            | p04-t04          |
 | p04 code review       | p04 review      | Routing, backlinks, catalog, and consumers satisfy acceptance | Add p04-t05 through p04-t08          | Review found two Critical semantic/URL bypasses and three Important provenance, catalog, and regression gaps                  | p04 review artifact                    | p04-t05–p04-t08  |
+| p04 re-review R1      | p04 re-review   | Remediation closes all original blocking findings             | Add p04-t10 and p04-t11              | Graph validation omits semantic fields and resume follows a run-root symlink outside the configured output root               | p04 re-review artifact                 | p04-t10–p04-t11  |
 
 ## Test Results
 
@@ -780,7 +803,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 53 tasks and the final review._
+_Fill from implementation evidence after all 56 tasks and the final review._
 
 ## References
 

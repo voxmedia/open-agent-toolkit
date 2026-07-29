@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-review
+oat_current_task: p04-t10
 oat_last_commit: 0158516be8f7dd844466295a2982a18bfebfee42
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T05:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T06:30:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ Phase p04 implementation in progress
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 53 tasks currently tracked
+- ✓ Five phases / 56 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -224,7 +224,10 @@ Phase p04 implementation in progress
   smoke 8/8
 - ✓ Repository and release gates passed, including five public packages and 65
   visual measurements
-- ⧗ Fresh Phase p04 remediation re-review attempt 1/3 is pending
+- ✓ Fresh Phase p04 remediation re-review attempt 1/3 resolved C2 and I1-I3
+- ⧗ Re-review remains blocked on complete artistic graph semantics and
+  resume-time output-root confinement
+- ⧗ p04-t10 and p04-t11 are bounded as review-remediation attempt 2/3
 
 ## Blockers
 
@@ -232,5 +235,5 @@ None
 
 ## Next Milestone
 
-Run a fresh Phase p04 remediation re-review; if it passes, continue to the p05
-HiLL checkpoint.
+Execute p04-t10 and p04-t11, rerun all Phase p04 and repository/release gates,
+then run remediation re-review attempt 2/3.
