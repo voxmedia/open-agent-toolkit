@@ -256,6 +256,35 @@ _- Outstanding Items_
 
 _Orchestration runs from `oat-project-implement` are appended here, most-recent-first within the file but append-only at the bottom of the log._
 
+### Run 1 — 2026-07-29
+
+<a id="run-1"></a>
+
+**Branch:** `surface-implementer-dispatches`
+**Provider / tier:** Cursor / Tier 1
+**Dispatch policy:** managed High
+**Schedule:** sequential (`p01` → `p02` → `p03`)
+
+#### Dispatch Acceptance — p01 implementer
+
+- **Request:** `impl-p01-20260729T042426Z`
+- **Accepted target:** `oat-phase-implementer-gpt-5-6-sol-medium`
+- **Task classification:** `default-implementation` (caller-owned bootstrap
+  provenance)
+- **Selection reason:** first sufficient High-tier candidate under the managed
+  High ceiling
+- **Candidates:** `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`
+- **Base / result:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5` →
+  `c18933689be4c19da60f7f7f44edd260e63f4786`
+- **Outcome:** accepted once; `DONE`; report and four-commit task/bookkeeping
+  sequence validated; no optional children
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p01 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
+```
+
 <!-- orchestration-runs-end -->
 
 ---
