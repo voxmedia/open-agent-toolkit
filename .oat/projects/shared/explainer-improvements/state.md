@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase_status: pr_open # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 4
 oat_dispatch_policy:
   mode: managed
@@ -66,23 +66,23 @@ oat_workflow_origin: imported # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T22:37:30Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T22:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements
 
-**Status:** Implementation In Progress
+**Status:** PR Ready
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-29
 
 ## Current Phase
 
-Phase p04 implementation in progress
+Implementation — PR open; completion may run before or after merge.
 
 ## Artifacts
 
@@ -283,6 +283,8 @@ Phase p04 implementation in progress
 - ✓ All 62 tasks and the single authorized final fix pass are complete
 - ✓ Focused suites, full workspace tests, build, lint, format, docs, release
   payload validation, 65 visual measurements, and `git diff --check` pass
+- ✓ Final PR description generated
+- ⧗ Opening PR for human review
 
 ## Blockers
 
@@ -290,5 +292,4 @@ None.
 
 ## Next Milestone
 
-Implementation is complete. Optional lifecycle follow-ups are project summary,
-documentation reconciliation, and final PR creation when requested.
+PR artifact is ready; GitHub PR creation is in progress.
