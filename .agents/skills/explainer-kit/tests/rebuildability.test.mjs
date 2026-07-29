@@ -100,7 +100,7 @@ test('bundles self-contained visual authoring and review guidance', async () => 
     readFile(join(skillRoot, 'references/visual-review.md'), 'utf8'),
   ]);
 
-  assert.match(skill, /^version: 2\.0\.2$/m);
+  assert.match(skill, /^version: 2\.0\.3$/m);
   assert.match(skill, /references\/visual-authoring\.md/);
   assert.match(skill, /references\/visual-review\.md/);
   for (const [name, guidance] of [
@@ -212,7 +212,7 @@ test('requires complete retained set-plan and visual-review recap coverage', () 
   manifest.immutableHashes[setPlanPaths.at(-1)] = hash;
   delete manifest.immutableHashes[reviewPaths.at(-1)];
   assert.deepEqual(
-    requiredImmutablePackagePaths(manifest).filter(
+    requiredImmutablePackagePaths(manifest, { runMode: 'unattended' }).filter(
       (path) => !(path in manifest.immutableHashes),
     ),
     [reviewPaths.at(-1)],
