@@ -1186,6 +1186,22 @@ deferral durably and addresses the Minor artifact hygiene item directly.
 **Outcome:** Final lifecycle re-review passed; continue to the configured
 implementation exit gate refresh.
 
+### Configured Exit Gate: Revision 1 refresh
+
+- **Generation:** initialized at `2026-07-29T17:24:08Z` from reviewed head
+  `ff92b31655fbbd5e1a99c40adf33340f60076173`
+- **Implementation fingerprint:**
+  `sha256:effective-delta-v1:70615f27d49aa8d8106da1f2f9d8dfee3d6d4a5b7c2123e9e18e3560850aa11a`
+- **Launch intent:**
+  `implement-exit-20260729T172535Z-b6d15e49-7c42-40ee-8171-bf28b6fd3f48`
+  persisted before launch
+- **Accepted run:** `9b943667-6d07-4c54-bec1-aa61d0d423a2` through
+  `cursor-fable-5-xhigh`
+- **Result:** `ok`; 0 Critical, 0 Important, 1 Medium, 1 Minor; receive eligible
+- **Artifact:** `reviews/final-review-2026-07-29T173359Z.md`
+- **Disposition:** gate passed at the Important threshold; receive required
+  before the generation becomes allowed
+
 ## Implementation Log
 
 Run-level chronology is recorded in `## Orchestration Runs` and
