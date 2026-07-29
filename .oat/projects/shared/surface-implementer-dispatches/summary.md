@@ -4,9 +4,9 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
 oat_generated: true
-oat_summary_last_task: p03-t02
-oat_summary_revision_count: 0
-oat_summary_includes_revisions: []
+oat_summary_last_task: prev1-t02
+oat_summary_revision_count: 1
+oat_summary_includes_revisions: [p-rev1]
 ---
 
 # Summary: surface-implementer-dispatches
@@ -41,6 +41,10 @@ eligibility.
 - Bumped the five lockstep public packages and bundled inventory to `0.2.26`,
   repaired the bounded PJM doctor failures, refreshed the autonomy inventory,
   and archived `BL-260727-surface-implementer-dispatches`.
+- Merged current `origin/main` after the PR opened, preserving both projects'
+  PJM records and executable skill contracts across four conflict resolutions.
+  The merged `0.2.25` baseline required the lockstep release refresh to
+  `0.2.26`.
 
 ## Key Decisions
 
@@ -84,6 +88,9 @@ eligibility.
 - Closeout stopped twice as repository-wide checks revealed work not represented
   in the original task boundary. Each stop restored a clean worktree, obtained an
   explicit bounded plan decision, and resumed at the same implementation target.
+- Post-PR integration required reconciling aggregate PJM indexes and the shared
+  skill-validation suite. The resolution retained both projects' independent
+  records and tests, then the full CI/docs/release sequence passed.
 
 ## Tradeoffs Made
 
@@ -102,6 +109,16 @@ eligibility.
 - Terminal-reviewer notices are advisories. Recommendation metadata is not a
   substitute for the effective target, and Fable catalogue presence does not
   prove access or retention-policy eligibility.
+
+## Revision History
+
+### Revision 1 — Main integration and release refresh
+
+Merged `origin/main`, reconciled four overlapping aggregate/contract files, and
+bumped all five public packages plus bundled inventory from the merged `0.2.25`
+baseline to `0.2.26`. The refreshed final review confirmed integration and
+release correctness while routing stale summary lineage and archived-review
+whitespace into bounded follow-up tasks.
 
 ## Follow-up Items
 
@@ -171,3 +188,7 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 ### 2026-07-29 · structural · oat-project-review-receive · final-gate
 
 Configured exit gate received and allowed; M1 deferred with a durable follow-up trigger, m1 corrected, artifact archived at reviews/archived/final-review-2026-07-29T152853Z.md.
+
+### 2026-07-29 · structural · oat-explainer-kit · project-recap
+
+Non-blocking recap outcome: failed before intent/core invocation because the adapter is not installed at the canonical user-scoped path; no run path or summary update; recovery is oat tools install utility --scope user.
