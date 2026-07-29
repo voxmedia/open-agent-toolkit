@@ -444,6 +444,36 @@ Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-high proven
 Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
 ```
 
+#### Dispatch Acceptance — p02 reviewer round 1
+
+- **Request:** `review-p02-r1-20260729T120024Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Selection reason:** exact matrix-pinned review target at the configured High
+  ceiling
+- **Range:** `f617a05416a2ebf96496a328b76b80777d295b07` →
+  `aeccb96fe90ece1df1916102d5d803e4599a02c4`
+- **Outcome:** accepted once; artifact validated; `BLOCKED`
+- **Reconnaissance:** not attempted; no review-orchestration evidence required
+- **Findings:** 0 Critical, 2 Important, 0 Medium, 0 Minor
+- **Artifact:**
+  `reviews/code-p02-review-2026-07-29T120024Z.md`
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+```
+
+#### Continuation Event — p02 fix iteration 1
+
+- **Original request:** `impl-p02-20260729T044336Z`
+- **Review request:** `review-p02-r1-20260729T120024Z`
+- **Bounded findings:** layered effective post-adoption notice resolution; bare
+  Cursor Fable runtime-target extraction
+- **Route:** resume the original accepted Phase 2 implementer at the same exact
+  target
+- **Status:** fixes pending
+
 <!-- orchestration-runs-end -->
 
 ---

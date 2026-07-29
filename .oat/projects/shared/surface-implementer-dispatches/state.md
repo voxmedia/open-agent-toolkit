@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T11:57:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:07:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -124,7 +124,8 @@ Implementation - Phase 3 (`p03-t01`)
   effective adoption, and runtime resolution
 - ✓ `p02-t02` updated implementation guidance, contract tests, and user docs
 - ✓ Phase 2 implementation completed
-- → `p03-t01` bumps lockstep public package versions
+- ! Phase 2 review found two Important effective-target disclosure gaps
+- → Phase 2 fix iteration 1 is pending before `p03-t01`
 
 ## Blockers
 
@@ -132,4 +133,4 @@ None
 
 ## Next Milestone
 
-Execute `p03-t01` to bump lockstep public package versions
+Resolve Phase 2 review findings, then execute `p03-t01`
