@@ -865,6 +865,51 @@ describe('archive utils', () => {
         },
       ],
     },
+    {
+      name: 'a literal dot segment that normalizes to a moving ref',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/../main/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an encoded dot segment that normalizes to a moving ref',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/%2e%2e/main/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an empty path segment',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs//plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'a decoded slash path segment',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%2Fplan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'noncanonical encoding of an unreserved character',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%70lan.md#L1`,
+        },
+      ],
+    },
   ])('rejects source backlinks with $name', async ({ backlinks }) => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

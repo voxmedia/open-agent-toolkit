@@ -142,6 +142,15 @@ skipping durability and publish callbacks.
   documents. The core validates these bindings before loading facts, then
   reconciles the loaded claims and invokes the critic exactly once.
 
+Reviewed GitHub provenance is one indivisible tuple: `repository`, full
+lowercase 40-character `revision`, repository-relative `path`, inclusive
+`lineRange`, and its exact canonical `url`. Every declared source or citation
+backlink must include the complete tuple. The URL authority is
+`scripts/lib/source-backlinks.mjs`; it rejects moving refs, dot or empty path
+segments, decoded separators, noncanonical percent encoding, credentials,
+queries, and tuple/URL mismatches. Adapters must bind facts and hashes to the
+exact reviewed Git blob bytes, not mutable working-tree content.
+
 An unattended request asserts that its explicit source artifacts are already
 approved. It does not prompt, and it fails before narrative serialization when
 the author is absent, returns an invalid result, or copies excessive verbatim

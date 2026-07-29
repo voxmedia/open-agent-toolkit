@@ -1,5 +1,6 @@
 import assert from 'node:assert/strict';
 import { execFile as execFileCallback } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import {
   mkdir,
   mkdtemp,
@@ -14,13 +15,13 @@ import { afterEach, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
+import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 import {
   bindProjectSources,
   resolveReviewedRepository,
 } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
-import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 
 const tempDirs = [];
 
@@ -154,12 +155,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
   await execFile('git', ['init', '--quiet'], { cwd: repoRoot });
   await execFile(
     'git',
-    [
-      'remote',
-      'add',
-      'origin',
-      'git@github.com:acme/project-recaps.git',
-    ],
+    ['remote', 'add', 'origin', 'git@github.com:acme/project-recaps.git'],
     { cwd: repoRoot },
   );
   await execFile('git', ['add', '.'], { cwd: repoRoot });
@@ -366,6 +362,9 @@ test('binds approved OAT artifacts to one project source role', async () => {
     lineRange: { start: 1, end: 3 },
   });
   const loaded = await bound.sourceLoader(bound.factBase.sources[3]);
+  const implementationBytes = await readFile(
+    join(canonicalProjectRoot, 'implementation.md'),
+  );
   assert.deepEqual(loaded.claims, [
     {
       id: 'implementation',
@@ -374,6 +373,40 @@ test('binds approved OAT artifacts to one project source role', async () => {
       lineRange: { start: 1, end: 3 },
     },
   ]);
+  assert.equal(
+    loaded.sourceHash,
+    `sha256:${createHash('sha256').update(implementationBytes).digest('hex')}`,
+  );
+});
+
+test('rejects dirty and untracked OAT artifacts at the reviewed Git boundary', async () => {
+  const dirty = await createFixture();
+  await writeFile(
+    join(dirty.projectRoot, 'plan.md'),
+    '# Plan\n\nUncommitted replacement.\n',
+  );
+  await assert.rejects(
+    bindProjectSources({
+      projectRoot: dirty.projectRoot,
+      repoRoot: dirty.repoRoot,
+      recipe: 'project-recap',
+    }),
+    /working tree|reviewed git blob|mismatch/i,
+  );
+
+  const untracked = await createFixture();
+  const relativePlan = '.oat/projects/shared/demo/plan.md';
+  await execFile('git', ['rm', '--cached', '--quiet', relativePlan], {
+    cwd: untracked.repoRoot,
+  });
+  await assert.rejects(
+    bindProjectSources({
+      projectRoot: untracked.projectRoot,
+      repoRoot: untracked.repoRoot,
+      recipe: 'project-recap',
+    }),
+    /tracked|reviewed git blob/i,
+  );
 });
 
 test('binds plan/design/spec for project explainers', async () => {

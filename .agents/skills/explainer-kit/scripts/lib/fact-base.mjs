@@ -1,4 +1,8 @@
 import { canonicalHash, validateContract } from './contracts.mjs';
+import {
+  canonicalGithubBlobBacklink,
+  validateCanonicalGithubBlobTuple,
+} from './source-backlinks.mjs';
 
 const FACT_BASE_VERSION = 'explainer-kit.fact-base/v1';
 const DEFAULT_MAX_AGE_MS = 24 * 60 * 60 * 1000;
@@ -523,32 +527,31 @@ function normalizeFactBaseBacklinks(factBase) {
       .map((source) => [source.id, source]),
   );
   for (const claim of [...factBase.claims, ...factBase.unresolvedClaims]) {
-    if (!claim || typeof claim !== 'object' || !Array.isArray(claim.citations)) {
+    if (
+      !claim ||
+      typeof claim !== 'object' ||
+      !Array.isArray(claim.citations)
+    ) {
       continue;
     }
     claim.citations = claim.citations.map((citation) => {
       if (!citation || typeof citation !== 'object') return citation;
       const source = sourceById.get(citation.sourceId);
-      return source
-        ? citationForSource(source, {
-            locator: citation.locator,
-            lineRange: citation.lineRange,
-          })
-        : citation;
+      return source ? citationForSource(source, citation) : citation;
     });
   }
   return factBase;
 }
 
 function normalizeSourceBacklink(source) {
-  const declaresBacklink =
-    source.repository !== undefined ||
-    source.path !== undefined ||
-    source.lineRange !== undefined ||
-    source.url !== undefined;
+  const declaresBacklink = declaresBacklinkTuple(source);
   if (!declaresBacklink) return source;
-  assertBacklinkProvenance(source);
-  const url = githubBlobUrl(source, source.lineRange);
+  const url = canonicalGithubBlobBacklink(source);
+  if (source.url !== undefined && source.url !== url) {
+    throw new Error(
+      'GitHub backlink provenance URL does not match its canonical tuple.',
+    );
+  }
   return {
     ...source,
     kind: 'github',
@@ -557,16 +560,61 @@ function normalizeSourceBacklink(source) {
   };
 }
 
-function citationForSource(source, { locator, lineRange } = {}) {
-  if (source.url === undefined) {
+function citationForSource(source, citation = {}) {
+  if (source.url === undefined && !declaresBacklinkTuple(citation)) {
     return {
       sourceId: source.id,
-      locator: locator ?? source.locator,
+      locator: citation.locator ?? source.locator,
     };
   }
-  const range = lineRange ?? source.lineRange;
-  assertLineRange(range);
-  const url = githubBlobUrl(source, range);
+  if (source.url === undefined) {
+    if (!validateCanonicalGithubBlobTuple(citation)) {
+      throw new Error(
+        'GitHub citation backlink requires one complete canonical provenance tuple.',
+      );
+    }
+    return {
+      sourceId: source.id,
+      locator: citation.url,
+      repository: citation.repository,
+      revision: citation.revision,
+      path: citation.path,
+      lineRange: structuredClone(citation.lineRange),
+      url: citation.url,
+    };
+  }
+  if (
+    declaresBacklinkTuple(citation) &&
+    ['repository', 'revision', 'path', 'url'].some(
+      (field) => citation[field] !== undefined,
+    )
+  ) {
+    const supplied = {
+      repository: citation.repository,
+      revision: citation.revision,
+      path: citation.path,
+      lineRange: citation.lineRange,
+      url: citation.url,
+    };
+    if (
+      !validateCanonicalGithubBlobTuple(supplied) ||
+      supplied.repository !== source.repository ||
+      supplied.revision !== source.revision ||
+      supplied.path !== source.path
+    ) {
+      throw new Error(
+        'GitHub citation backlink does not match its canonical source tuple.',
+      );
+    }
+  }
+  const range = citation.lineRange ?? source.lineRange;
+  const tuple = {
+    repository: source.repository,
+    revision: source.revision,
+    path: source.path,
+    lineRange: range,
+  };
+  const url = canonicalGithubBlobBacklink(tuple);
   return {
     sourceId: source.id,
     locator: url,
@@ -578,62 +626,14 @@ function citationForSource(source, { locator, lineRange } = {}) {
   };
 }
 
-function assertBacklinkProvenance(source) {
-  if (
-    typeof source.repository !== 'string' ||
-    !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(source.repository)
-  ) {
-    throw new Error(
-      'GitHub backlink provenance requires an owner/repository identity.',
-    );
-  }
-  if (
-    typeof source.revision !== 'string' ||
-    !/^[a-f0-9]{40}$/.test(source.revision)
-  ) {
-    throw new Error(
-      'GitHub backlink provenance requires a full reviewed commit SHA.',
-    );
-  }
-  if (
-    typeof source.path !== 'string' ||
-    source.path.length === 0 ||
-    source.path.startsWith('/') ||
-    source.path.includes('\\') ||
-    /(?:^|\/)\.\.(?:\/|$)/.test(source.path) ||
-    /^[A-Za-z]:/.test(source.path)
-  ) {
-    throw new Error(
-      'GitHub backlink provenance requires a repository-relative path.',
-    );
-  }
-  assertLineRange(source.lineRange);
-}
-
-function assertLineRange(range) {
-  if (
-    !range ||
-    !Number.isInteger(range.start) ||
-    !Number.isInteger(range.end) ||
-    range.start < 1 ||
-    range.end < range.start
-  ) {
-    throw new Error(
-      'GitHub backlink provenance requires a valid inclusive line range.',
-    );
-  }
-}
-
-function githubBlobUrl(source, range) {
-  const encodedPath = source.path
-    .split('/')
-    .map((segment) => encodeURIComponent(segment))
-    .join('/');
-  const fragment =
-    range.start === range.end
-      ? `#L${range.start}`
-      : `#L${range.start}-L${range.end}`;
-  return `https://github.com/${source.repository}/blob/${source.revision}/${encodedPath}${fragment}`;
+function declaresBacklinkTuple(value) {
+  return (
+    value &&
+    typeof value === 'object' &&
+    ['repository', 'revision', 'path', 'lineRange', 'url'].some(
+      (field) => value[field] !== undefined,
+    )
+  );
 }
 
 function validSections(sections) {

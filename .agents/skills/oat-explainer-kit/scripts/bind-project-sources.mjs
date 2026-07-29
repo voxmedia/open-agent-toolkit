@@ -1,4 +1,5 @@
 import { execFile as execFileCallback } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { access, readFile, realpath } from 'node:fs/promises';
 import { basename, join, relative, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
@@ -69,9 +70,9 @@ export async function bindProjectSources({
       `No approved OAT lifecycle artifacts were found for ${recipe}.`,
     );
   }
-  const sourceProvenance =
+  const reviewedSources =
     repository && repoRoot
-      ? await provenanceForSources(sources, repoRoot, repository)
+      ? await bindReviewedSources(sources, repoRoot, repository)
       : undefined;
 
   return {
@@ -85,8 +86,12 @@ export async function bindProjectSources({
       locator: repository?.repositoryUrl ?? canonicalProjectRoot,
       ...(repository && repository),
     },
-    ...(sourceProvenance && { sourceProvenance }),
-    sourceLoader: loadOatArtifact,
+    ...(reviewedSources && {
+      sourceProvenance: reviewedSources.provenance,
+    }),
+    sourceLoader: reviewedSources
+      ? (source) => loadReviewedOatArtifact(source, reviewedSources.documents)
+      : loadOatArtifact,
   };
 }
 
@@ -115,7 +120,23 @@ export async function resolveReviewedRepository(
 }
 
 async function loadOatArtifact(source) {
-  const text = (await readFile(source.locator, 'utf8')).trim();
+  return oatArtifactDocument(
+    source,
+    (await readFile(source.locator, 'utf8')).trim(),
+  );
+}
+
+function loadReviewedOatArtifact(source, documents) {
+  const document = documents.get(source.id);
+  if (!document) {
+    throw new Error(
+      `No reviewed Git blob was bound for OAT source ${source.id}.`,
+    );
+  }
+  return structuredClone(document);
+}
+
+function oatArtifactDocument(source, text, sourceHash) {
   return {
     claims: [
       {
@@ -125,39 +146,85 @@ async function loadOatArtifact(source) {
         lineRange: lineRangeFor(text),
       },
     ],
+    ...(sourceHash && { sourceHash }),
   };
 }
 
-async function provenanceForSources(sources, repoRoot, repository) {
+async function bindReviewedSources(sources, repoRoot, repository) {
   const canonicalRepoRoot = await realpath(repoRoot);
-  return Object.fromEntries(
-    await Promise.all(
-      sources.map(async (source) => {
-        const repositoryPath = relative(canonicalRepoRoot, source.locator)
-          .split(sep)
-          .join('/');
-        if (
-          !repositoryPath ||
-          repositoryPath.startsWith('../') ||
-          repositoryPath === '..'
-        ) {
-          throw new Error(
-            `OAT source ${source.id} is outside the reviewed repository.`,
-          );
-        }
-        const text = (await readFile(source.locator, 'utf8')).trim();
-        return [
-          source.id,
+  const entries = await Promise.all(
+    sources.map(async (source) => {
+      const repositoryPath = relative(canonicalRepoRoot, source.locator)
+        .split(sep)
+        .join('/');
+      if (
+        !repositoryPath ||
+        repositoryPath.startsWith('../') ||
+        repositoryPath === '..'
+      ) {
+        throw new Error(
+          `OAT source ${source.id} is outside the reviewed repository.`,
+        );
+      }
+      try {
+        await execFile(
+          'git',
+          ['ls-files', '--error-unmatch', '--', repositoryPath],
+          { cwd: canonicalRepoRoot },
+        );
+      } catch {
+        throw new Error(
+          `OAT source ${source.id} is not tracked in the reviewed repository.`,
+        );
+      }
+      let reviewedBytes;
+      try {
+        ({ stdout: reviewedBytes } = await execFile(
+          'git',
+          ['show', `${repository.revision}:${repositoryPath}`],
           {
-            repository: repository.repository,
-            revision: repository.revision,
-            path: repositoryPath,
-            lineRange: lineRangeFor(text),
+            cwd: canonicalRepoRoot,
+            encoding: null,
+            maxBuffer: 16 * 1024 * 1024,
           },
-        ];
-      }),
-    ),
+        ));
+      } catch {
+        throw new Error(
+          `OAT source ${source.id} is absent from reviewed revision ${repository.revision}.`,
+        );
+      }
+      const workingBytes = await readFile(source.locator);
+      const canonicalReviewedBytes = Buffer.from(reviewedBytes);
+      if (!workingBytes.equals(canonicalReviewedBytes)) {
+        throw new Error(
+          `OAT source ${source.id} working tree bytes mismatch reviewed Git blob at revision ${repository.revision}.`,
+        );
+      }
+      const text = canonicalReviewedBytes.toString('utf8').trim();
+      return {
+        id: source.id,
+        provenance: {
+          repository: repository.repository,
+          revision: repository.revision,
+          path: repositoryPath,
+          lineRange: lineRangeFor(text),
+        },
+        document: oatArtifactDocument(
+          source,
+          text,
+          `sha256:${createHash('sha256')
+            .update(canonicalReviewedBytes)
+            .digest('hex')}`,
+        ),
+      };
+    }),
   );
+  return {
+    provenance: Object.fromEntries(
+      entries.map((entry) => [entry.id, entry.provenance]),
+    ),
+    documents: new Map(entries.map((entry) => [entry.id, entry.document])),
+  };
 }
 
 function lineRangeFor(text) {

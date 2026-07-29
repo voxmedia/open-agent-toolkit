@@ -5,14 +5,14 @@ import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
 import {
+  catalogFromManifest,
+  validateInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
+import {
   canonicalHash,
   validateContract,
   visualReviewRequestId,
 } from '../scripts/lib/contracts.mjs';
-import {
-  catalogFromManifest,
-  validateInitiativeCatalog,
-} from '../scripts/lib/catalog.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
 import { runValidationCli } from '../scripts/validate.mjs';
 
@@ -259,8 +259,7 @@ test('requires publish receipts to cover the exact manifest and generated catalo
   receipt.artifacts.push({
     relativePath: 'site/initiatives/demo-project/catalog.json',
     hash: canonicalHash(catalog),
-    s3Uri:
-      's3://example/explainers/initiatives/demo-project/catalog.json',
+    s3Uri: 's3://example/explainers/initiatives/demo-project/catalog.json',
     publicUrl:
       'https://example.com/explainers/initiatives/demo-project/catalog.json',
     httpStatus: 200,
@@ -782,10 +781,9 @@ test('rejects empty or content-detached recap cohesion observations', () => {
     (request) => {
       request.renderedArtifacts.forEach(
         (artifact) =>
-          (artifact.cohesionObservations =
-            artifact.cohesionObservations.filter(
-              ({ group }) => group !== 'statuses',
-            )),
+          (artifact.cohesionObservations = artifact.cohesionObservations.filter(
+            ({ group }) => group !== 'statuses',
+          )),
       );
     },
   ]) {
@@ -799,7 +797,10 @@ test('rejects empty or content-detached recap cohesion observations', () => {
       ),
     );
     request.requestId = visualReviewRequestId(request.requestHash);
-    assert.equal(validateContract('visual-review-request', request).valid, false);
+    assert.equal(
+      validateContract('visual-review-request', request).valid,
+      false,
+    );
   }
 });
 
@@ -893,6 +894,24 @@ test('rejects unsafe paths, invalid render strategies, and duplicate paths', () 
       (error) => error.code === 'duplicate-artifact-path',
     ),
   );
+});
+
+test('manifest validation rejects normalized or noncanonical source backlinks', () => {
+  for (const url of [
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/../main/plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/%2e%2e/main/plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs//plan.md#L1`,
+    `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/%70lan.md#L1`,
+  ]) {
+    const value = manifest();
+    value.source.backlinks = [{ sourceId: 'plan', url }];
+    assert.ok(
+      validateContract('manifest', value).errors.some(
+        ({ code }) => code === 'source-backlink',
+      ),
+      url,
+    );
+  }
 });
 
 test('requires complete immutable request, approval, and author provenance coverage', () => {

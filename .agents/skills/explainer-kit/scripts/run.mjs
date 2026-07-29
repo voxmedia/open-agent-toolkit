@@ -5,14 +5,11 @@ import { readFile } from 'node:fs/promises';
 import { join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { catalogFromManifest, initiativeCatalogPath } from './lib/catalog.mjs';
 import {
   readContentApproval,
   resolveContentApproval,
 } from './lib/content-approval.mjs';
-import {
-  catalogFromManifest,
-  initiativeCatalogPath,
-} from './lib/catalog.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import {
   assertAuthoredGraphSemantics,
@@ -959,7 +956,7 @@ async function hydrateRenderedState(state) {
             content: state.contentModels.find(
               ({ artifactId }) => artifactId === artifact.id,
             ),
-          factBase: state.factBase,
+            factBase: state.factBase,
             theme: state.theme,
             renderStrategy: state.renderStrategy,
             ...(state.run.request.publicBaseUrl && {
@@ -1089,7 +1086,7 @@ async function buildFactBase(binding, options, now) {
         source: {
           ...source,
           ...(options.sourceProvenance?.[source.id] ?? {}),
-          hash: hashBytes(serialized),
+          hash: raw.sourceHash ?? hashBytes(serialized),
           observedAt: raw.observedAt ?? now(),
         },
         claims: raw.claims,
@@ -1311,10 +1308,7 @@ function manifestSourceBacklinks(factBase) {
             left.sourceId.localeCompare(right.sourceId) ||
             left.url.localeCompare(right.url),
         )
-        .map((backlink) => [
-          `${backlink.sourceId}\0${backlink.url}`,
-          backlink,
-        ]),
+        .map((backlink) => [`${backlink.sourceId}\0${backlink.url}`, backlink]),
     ).values(),
   ];
 }
@@ -1477,8 +1471,7 @@ async function authorArtifact(
       ? recipeRequiredNarrative(state.recipe, artifact.id)
       : [];
   const plannedDiagrams = diagramAnalyses(artifact.plannedArtifact.draft);
-  const graphSemantics =
-    graphSemanticsForArtisticAuthor(plannedDiagrams);
+  const graphSemantics = graphSemanticsForArtisticAuthor(plannedDiagrams);
   if (
     graphSemantics.length > 0 &&
     resolveDiagramRenderingRoute(state.recipe, artifact, plannedDiagrams) !==

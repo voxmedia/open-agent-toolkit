@@ -3,6 +3,10 @@ import { mock, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { processFactBase } from '../scripts/lib/fact-base.mjs';
+import {
+  canonicalGithubBlobBacklink,
+  parseCanonicalGithubBlobUrl,
+} from '../scripts/lib/source-backlinks.mjs';
 
 const HASH_A = `sha256:${'a'.repeat(64)}`;
 const HASH_B = `sha256:${'b'.repeat(64)}`;
@@ -214,6 +218,61 @@ test('rejects moving revisions and local-path backlink provenance', async () => 
       ),
       /repository|commit|relative|line range|provenance/i,
     );
+  }
+});
+
+test('rejects noncanonical backlink paths, partial tuples, and tuple URL drift', async () => {
+  const canonical = {
+    repository: 'acme/project-recaps',
+    revision: COMMIT_SHA,
+    path: 'docs/phase 4/plan.md',
+    lineRange: { start: 12, end: 19 },
+  };
+  const url = canonicalGithubBlobBacklink(canonical);
+  assert.deepEqual(parseCanonicalGithubBlobUrl(url), {
+    ...canonical,
+    url,
+  });
+
+  for (const mutatedUrl of [
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/../main/plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/%2e%2e/main/plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs//plan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/%2Fplan.md#L1`,
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/%70lan.md#L1`,
+    'https://github.com/acme/project-recaps/blob/main/docs/plan.md#L1',
+    `https://github.com/acme/project-recaps/blob/${COMMIT_SHA}/docs/plan.md#L19-L12`,
+  ]) {
+    assert.throws(
+      () => parseCanonicalGithubBlobUrl(mutatedUrl),
+      /canonical|commit|path|line/i,
+      mutatedUrl,
+    );
+  }
+
+  for (const mutate of [
+    (citation) => delete citation.revision,
+    (citation) => {
+      citation.url = citation.url.replace('/plan.md', '/other.md');
+    },
+  ]) {
+    const factBase = suppliedFactBase();
+    factBase.claims[0].citations[0] = {
+      sourceId: 'plan',
+      locator: url,
+      ...canonical,
+      url,
+    };
+    mutate(factBase.claims[0].citations[0]);
+    await assert.rejects(
+      processFactBase({
+        mode: 'supplied',
+        freshnessPolicy: 'live-wins',
+        factBase,
+      }),
+      /backlink|provenance|canonical|tuple/i,
+    );
+    assert.equal(validateContract('fact-base', factBase).valid, false);
   }
 });
 

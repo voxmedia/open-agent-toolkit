@@ -76,19 +76,19 @@
         "locator": { "type": "string", "minLength": 1 },
         "role": { "type": "string", "minLength": 1 },
         "sourceSetId": { "type": "string", "minLength": 1 },
-        "revision": { "type": "string", "minLength": 1 },
+        "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
         "repository": {
           "type": "string",
           "pattern": "^[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+$"
         },
         "path": {
           "type": "string",
-          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+          "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*\\\\).+$"
         },
         "lineRange": { "$ref": "#/$defs/lineRange" },
         "url": {
           "type": "string",
-          "pattern": "^https://github\\.com/[^/]+/[^/]+/blob/[a-f0-9]{40}/.+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
         },
         "hash": { "$ref": "#/$defs/hash" },
         "observedAt": { "type": "string", "format": "date-time" },
@@ -113,12 +113,12 @@
         "revision": { "type": "string", "pattern": "^[a-f0-9]{40}$" },
         "path": {
           "type": "string",
-          "pattern": "^(?!/)(?!.*(?:^|/)\\.\\.(?:/|$)).+$"
+          "pattern": "^(?!/)(?!.*//)(?!.*(?:^|/)(?:\\.|\\.\\.)(?:/|$))(?!.*\\\\).+$"
         },
         "lineRange": { "$ref": "#/$defs/lineRange" },
         "url": {
           "type": "string",
-          "pattern": "^https://github\\.com/[^/]+/[^/]+/blob/[a-f0-9]{40}/.+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
         }
       }
     },

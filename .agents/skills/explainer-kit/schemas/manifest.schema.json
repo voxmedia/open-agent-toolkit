@@ -129,7 +129,7 @@
         "sourceId": { "type": "string", "minLength": 1 },
         "url": {
           "type": "string",
-          "pattern": "^https://github\\.com/[^/]+/[^/]+/blob/[a-f0-9]{40}/.+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
+          "pattern": "^https://github\\.com/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/blob/[a-f0-9]{40}/[^\\s?#]+#L[1-9][0-9]*(?:-L[1-9][0-9]*)?$"
         }
       }
     },

@@ -19,6 +19,33 @@ const CORE_ROOT = join(REPO_ROOT, '.agents', 'skills', 'explainer-kit');
 const CLI_DIST_ROOT = join(REPO_ROOT, 'packages', 'cli', 'dist');
 const NOW = '2026-07-28T20:00:00.000Z';
 
+test('core and CLI consume the same bundled canonical backlink contract', async () => {
+  const core = await import(
+    pathToFileURL(join(CORE_ROOT, 'scripts', 'lib', 'source-backlinks.mjs'))
+      .href
+  );
+  const cli = await importDist(
+    'commands/project/archive/explainer-source-backlinks.js',
+  );
+  const bundled = await cli.loadExplainerSourceBacklinks();
+  const tuple = {
+    repository: 'acme/project-recaps',
+    revision: '0123456789abcdef0123456789abcdef01234567',
+    path: 'docs/phase 4/plan.md',
+    lineRange: { start: 12, end: 19 },
+  };
+  const url = core.canonicalGithubBlobBacklink(tuple);
+
+  assert.equal(
+    bundled.SOURCE_BACKLINK_CONTRACT_VERSION,
+    core.SOURCE_BACKLINK_CONTRACT_VERSION,
+  );
+  assert.deepEqual(bundled.parseCanonicalGithubBlobUrl(url), {
+    ...tuple,
+    url,
+  });
+});
+
 test('one untouched core package passes finalizer, archive, and push coverage', async (t) => {
   const repoRoot = await mkdtemp(join(tmpdir(), 'explainer-coverage-smoke-'));
   t.after(() => rm(repoRoot, { recursive: true, force: true }));

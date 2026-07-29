@@ -96,6 +96,7 @@ describe('getPublicPackageContracts', () => {
           'assets/templates/pjm-agents.md',
           'assets/templates/reference-agents.md',
           'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+          'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
           'assets/NOTICES.md',
           'README.md',
         ]),
@@ -119,6 +120,13 @@ describe('getPublicPackageContracts', () => {
             requiredContents: [
               'explainer-kit.package-coverage/v1',
               'export function requiredImmutablePackagePaths',
+            ],
+          },
+          {
+            path: 'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
+            requiredContents: [
+              'explainer-kit.source-backlinks/v1',
+              'export function parseCanonicalGithubBlobUrl',
             ],
           },
         ],
@@ -216,6 +224,7 @@ describe('getPublicPackageContracts', () => {
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
       'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+      'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
       'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
@@ -284,7 +293,7 @@ describe('getPublicPackageContracts', () => {
         },
         cliContract,
       ),
-    ).toHaveLength(10);
+    ).toHaveLength(11);
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {

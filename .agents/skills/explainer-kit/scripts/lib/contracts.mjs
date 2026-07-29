@@ -2,6 +2,10 @@ import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 
 import { validatePortablePath } from './safe-paths.mjs';
+import {
+  parseCanonicalGithubBlobUrl,
+  validateCanonicalGithubBlobTuple,
+} from './source-backlinks.mjs';
 
 const SCHEMA_FILES = {
   'run-request': 'run-request.schema.json',
@@ -78,7 +82,53 @@ export function validateContract(kind, value, context = {}) {
   validateSchema(schema, value, '$', schema, errors);
   validateContractPaths(kind, value, errors);
   validateCrossRecord(kind, value, context, errors);
+  validateSourceBacklinks(kind, value, errors);
   return { valid: errors.length === 0, errors };
+}
+
+function validateSourceBacklinks(kind, value, errors) {
+  if (kind === 'fact-base' || kind === 'explainer-kit.fact-base/v1') {
+    const tuples = [
+      ...(value.sources ?? []),
+      ...(value.claims ?? []).flatMap((claim) => claim.citations ?? []),
+      ...(value.unresolvedClaims ?? []).flatMap(
+        (claim) => claim.citations ?? [],
+      ),
+    ];
+    tuples.forEach((tuple, index) => {
+      const declaresBacklink = [
+        'repository',
+        'revision',
+        'path',
+        'lineRange',
+        'url',
+      ].some((field) => tuple[field] !== undefined);
+      if (declaresBacklink && !validateCanonicalGithubBlobTuple(tuple)) {
+        add(
+          errors,
+          `$.sourceBacklinks[${index}]`,
+          'source-backlink',
+          'Must declare one complete canonical GitHub blob backlink tuple.',
+        );
+      }
+    });
+    return;
+  }
+  if (kind !== 'manifest' && kind !== 'explainer-kit.manifest/v1') return;
+  (value.source?.backlinks ?? []).forEach((entry, index) => {
+    try {
+      parseCanonicalGithubBlobUrl(entry.url);
+    } catch (error) {
+      add(
+        errors,
+        `$.source.backlinks[${index}].url`,
+        'source-backlink',
+        error instanceof Error
+          ? error.message
+          : 'Must be a canonical GitHub blob backlink.',
+      );
+    }
+  });
 }
 
 function resolveContractSchema(kind, value) {
@@ -604,7 +654,8 @@ function validateCrossRecord(kind, value, context, errors) {
         );
         if (
           expected === undefined ||
-          normalizeComparable(expected) !== normalizeComparable(observation.value)
+          normalizeComparable(expected) !==
+            normalizeComparable(observation.value)
         ) {
           add(
             errors,
@@ -974,8 +1025,11 @@ function validateCrossRecord(kind, value, context, errors) {
 }
 
 export function visualReviewRequestPayload(request) {
-  const { requestId: _requestId, requestHash: _requestHash, ...payload } =
-    request;
+  const {
+    requestId: _requestId,
+    requestHash: _requestHash,
+    ...payload
+  } = request;
   return payload;
 }
 
@@ -1157,7 +1211,9 @@ function validateAuthorGraphSemantics(value, errors) {
     if (
       new Set(nodeIds).size !== nodeIds.length ||
       new Set(edgeIds).size !== edgeIds.length ||
-      edges.some(({ from, to }) => !nodeIds.includes(from) || !nodeIds.includes(to))
+      edges.some(
+        ({ from, to }) => !nodeIds.includes(from) || !nodeIds.includes(to),
+      )
     ) {
       add(
         errors,

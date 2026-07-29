@@ -30,6 +30,10 @@ import {
 } from '@fs/io';
 
 import { loadExplainerPackageCoverage } from './explainer-package-coverage';
+import {
+  type ExplainerSourceBacklinks,
+  loadExplainerSourceBacklinks,
+} from './explainer-source-backlinks';
 
 const execFileAsync = promisify(execFileCallback);
 
@@ -627,7 +631,9 @@ interface ProjectRecapManifest {
     | 'incomplete';
 }
 
-function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
+async function parseProjectRecapManifest(
+  contents: string,
+): Promise<ProjectRecapManifest> {
   let value: unknown;
   try {
     value = JSON.parse(contents);
@@ -635,7 +641,8 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     throw new CliError('Selected project recap has an invalid manifest.json.');
   }
 
-  if (!isProjectRecapManifestV1(value)) {
+  const sourceBacklinks = await loadExplainerSourceBacklinks();
+  if (!isProjectRecapManifestV1(value, sourceBacklinks)) {
     throw new CliError(
       'Selected project recap manifest does not match the explainer-kit manifest contract.',
     );
@@ -646,6 +653,7 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
 
 function isProjectRecapManifestV1(
   value: unknown,
+  sourceBacklinks: ExplainerSourceBacklinks,
 ): value is ProjectRecapManifest &
   Record<string, unknown> & {
     source: ProjectRecapManifest['source'] & Record<string, unknown>;
@@ -692,7 +700,7 @@ function isProjectRecapManifestV1(
     (value.source.authorResultPaths !== undefined &&
       !isUniqueSafePathArray(value.source.authorResultPaths)) ||
     (value.source.backlinks !== undefined &&
-      !isCanonicalSourceBacklinks(value.source.backlinks)) ||
+      !isCanonicalSourceBacklinks(value.source.backlinks, sourceBacklinks)) ||
     (value.source.sourceRevision !== undefined &&
       !isNonEmptyString(value.source.sourceRevision)) ||
     !isRecord(value.theme) ||
@@ -830,6 +838,7 @@ function isHashMap(value: unknown): value is Record<string, string> {
 
 function isCanonicalSourceBacklinks(
   value: unknown,
+  sourceBacklinks: ExplainerSourceBacklinks,
 ): value is NonNullable<ProjectRecapManifest['source']['backlinks']> {
   if (!Array.isArray(value)) {
     return false;
@@ -844,13 +853,9 @@ function isCanonicalSourceBacklinks(
     ) {
       return false;
     }
-    const match = backlink.url.match(
-      /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\/[^\s?#]+#L([1-9][0-9]*)(?:-L([1-9][0-9]*))?$/,
-    );
-    if (
-      !match ||
-      (match[2] !== undefined && Number(match[2]) < Number(match[1]))
-    ) {
+    try {
+      sourceBacklinks.parseCanonicalGithubBlobUrl(backlink.url);
+    } catch {
       return false;
     }
     const identity = `${backlink.sourceId}\0${backlink.url}`;
@@ -1051,7 +1056,7 @@ async function loadVerifiedProjectRecap(
     join(sourceRunRoot, 'manifest.json'),
     'utf8',
   );
-  const manifest = parseProjectRecapManifest(manifestContents);
+  const manifest = await parseProjectRecapManifest(manifestContents);
   if (manifest.recipe.id !== 'project-recap') {
     throw new CliError(
       'Selected project recap manifest recipe must be exactly `project-recap`.',

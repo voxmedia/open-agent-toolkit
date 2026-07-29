@@ -72,6 +72,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
       'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+      'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
       'assets/NOTICES.md',
       'README.md',
     ],
@@ -95,6 +96,13 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
         requiredContents: [
           'explainer-kit.package-coverage/v1',
           'export function requiredImmutablePackagePaths',
+        ],
+      },
+      {
+        path: 'assets/skills/explainer-kit/scripts/lib/source-backlinks.mjs',
+        requiredContents: [
+          'explainer-kit.source-backlinks/v1',
+          'export function parseCanonicalGithubBlobUrl',
         ],
       },
     ],
