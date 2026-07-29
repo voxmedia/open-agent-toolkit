@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import {
   mkdir,
   mkdtemp,
@@ -20,6 +21,7 @@ import {
   readSetPlanRecords,
   requiredImmutablePackagePaths,
   reopenBuildStages,
+  SET_PLAN_RECORD_PATHS,
   updateBuildRecord,
   verifySetPlanResumeToken,
   writeManifestAtomic,
@@ -42,6 +44,21 @@ async function temporaryDirectory(prefix = 'explainer-records-') {
   const directory = await mkdtemp(join(tmpdir(), prefix));
   tempDirs.push(directory);
   return directory;
+}
+
+async function legacySetPlanResumeToken(run) {
+  const tokenHash = createHash('sha256');
+  tokenHash.update('explainer-kit.set-plan-resume/v1\0');
+  tokenHash.update(run.runId);
+  tokenHash.update('\0');
+  for (const relativePath of SET_PLAN_RECORD_PATHS) {
+    const bytes = await readFile(join(run.runRoot, relativePath));
+    const byteHash = createHash('sha256').update(bytes).digest();
+    tokenHash.update(relativePath);
+    tokenHash.update('\0');
+    tokenHash.update(byteHash);
+  }
+  return `ekrt1:${tokenHash.digest('hex')}`;
 }
 
 function request(outputRoot, overrides = {}) {
@@ -366,8 +383,7 @@ test('requires complete review attempts for every non-handoff package retaining 
   const reviewPaths = (manifest, runMode = 'unattended') =>
     requiredImmutablePackagePaths(manifest, { runMode }).filter(
       (path) =>
-        path.startsWith('qa/browser/') ||
-        path.startsWith('qa/visual-review/'),
+        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
     );
 
   for (const outcome of ['failed', 'incomplete']) {
@@ -388,13 +404,9 @@ test('requires complete review attempts for every non-handoff package retaining 
     }),
     { runMode: 'unattended' },
   );
-  assert.ok(
-    secondAttempt.includes('qa/visual-review/attempt-1/request.json'),
-  );
+  assert.ok(secondAttempt.includes('qa/visual-review/attempt-1/request.json'));
   assert.ok(secondAttempt.includes('qa/visual-review/revision.json'));
-  assert.ok(
-    secondAttempt.includes('qa/visual-review/attempt-2/result.json'),
-  );
+  assert.ok(secondAttempt.includes('qa/visual-review/attempt-2/result.json'));
 });
 
 test('computes built-needs-review from a terminal recap review gate', async () => {
@@ -755,7 +767,7 @@ test('rejects tampering in every retained set-plan record', async () => {
   }
 });
 
-test('derives a deterministic versioned resume token from exact set-plan bytes', async () => {
+test('derives a deterministic v2 resume token from the request and exact set-plan bytes', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
   const factBase = { sources: [{ id: 'project' }] };
@@ -787,13 +799,13 @@ test('derives a deterministic versioned resume token from exact set-plan bytes',
   await writeSetPlanRecords(run, { request: planRequest, plan });
 
   const token = await createSetPlanResumeToken(run);
-  assert.match(token, /^ekrt1:[a-f0-9]{64}$/);
+  assert.match(token, /^ekrt2:[a-f0-9]{64}$/);
   assert.equal(await createSetPlanResumeToken(run), token);
   await verifySetPlanResumeToken(run, token);
 
   for (const candidate of [
     undefined,
-    'ekrt1:not-a-digest',
+    'ekrt2:not-a-digest',
     `${token.slice(0, -1)}${token.endsWith('0') ? '1' : '0'}`,
   ]) {
     await assert.rejects(
@@ -801,6 +813,19 @@ test('derives a deterministic versioned resume token from exact set-plan bytes',
       (error) => error.code === 'E_APPROVAL_RESUME',
     );
   }
+
+  const requestPath = join(run.runRoot, 'run-request.json');
+  const requestBytes = await readFile(requestPath);
+  await writeFile(
+    requestPath,
+    JSON.stringify(JSON.parse(requestBytes.toString('utf8'))),
+  );
+  assert.notEqual(await createSetPlanResumeToken(run), token);
+  await assert.rejects(
+    verifySetPlanResumeToken(run, token),
+    (error) => error.code === 'E_APPROVAL_RESUME',
+  );
+  await writeFile(requestPath, requestBytes);
 
   const resultPath = join(run.runRoot, 'source/set-plan/result.json');
   const result = JSON.parse(await readFile(resultPath, 'utf8'));
@@ -810,6 +835,50 @@ test('derives a deterministic versioned resume token from exact set-plan bytes',
     verifySetPlanResumeToken(run, token),
     (error) => error.code === 'E_APPROVAL_RESUME',
   );
+});
+
+test('accepts legacy v1 resume tokens only for retained relative output roots', async () => {
+  const outputRoot = await temporaryDirectory();
+  const run = await initializeRun(request(outputRoot));
+  const factBase = { sources: [{ id: 'project' }] };
+  const planRequest = {
+    schemaVersion: 'explainer-kit.set-plan-request/v1',
+    recipe: { id: 'project-recap', version: '1' },
+    factBaseHash: canonicalHash(factBase),
+    sourceIds: ['project'],
+    discovery: { rounds: 0, findings: [], reason: 'not-requested' },
+  };
+  const plan = {
+    schemaVersion: 'explainer-kit.set-plan/v1',
+    planId: 'project-recap-set',
+    recipe: { id: 'project-recap', version: '1' },
+    sourceIds: ['project'],
+    ledger: { terminology: [], statuses: [], numbers: [] },
+    portfolio: [
+      {
+        artifactId: 'project-recap',
+        artifactType: 'hub',
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds: ['project'],
+        draft: 'Lead with the validated outcome.',
+        visualIntent: 'Orient the reader in the first viewport.',
+      },
+    ],
+  };
+  await writeSetPlanRecords(run, { request: planRequest, plan });
+  const legacyToken = await legacySetPlanResumeToken(run);
+
+  await assert.rejects(
+    verifySetPlanResumeToken(run, legacyToken),
+    (error) => error.code === 'E_APPROVAL_RESUME',
+  );
+
+  const requestPath = join(run.runRoot, 'run-request.json');
+  const retainedRequest = JSON.parse(await readFile(requestPath, 'utf8'));
+  retainedRequest.outputRoot = 'legacy-relative-output';
+  await writeFile(requestPath, `${JSON.stringify(retainedRequest, null, 2)}\n`);
+  await verifySetPlanResumeToken(run, legacyToken);
 });
 
 test('rejects omitted reconciled sources and declared sources without artifact coverage', async () => {

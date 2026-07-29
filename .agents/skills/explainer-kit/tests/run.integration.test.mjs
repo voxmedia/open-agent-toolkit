@@ -5,6 +5,7 @@ import {
   mkdir,
   mkdtemp,
   readFile,
+  realpath,
   readdir,
   rename,
   rm,
@@ -18,6 +19,7 @@ import { afterEach, mock, test } from 'node:test';
 import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
+import { SET_PLAN_RECORD_PATHS } from '../scripts/lib/records.mjs';
 import {
   runExplainer as runExplainerCore,
   runExplainerCli,
@@ -39,6 +41,21 @@ async function temporaryDirectory() {
   const directory = await mkdtemp(join(tmpdir(), 'explainer-run-'));
   tempDirs.push(directory);
   return directory;
+}
+
+async function legacyResumeToken(runRoot, runId) {
+  const tokenHash = createHash('sha256');
+  tokenHash.update('explainer-kit.set-plan-resume/v1\0');
+  tokenHash.update(runId);
+  tokenHash.update('\0');
+  for (const relativePath of SET_PLAN_RECORD_PATHS) {
+    const bytes = await readFile(join(runRoot, relativePath));
+    const byteHash = createHash('sha256').update(bytes).digest();
+    tokenHash.update(relativePath);
+    tokenHash.update('\0');
+    tokenHash.update(byteHash);
+  }
+  return `ekrt1:${tokenHash.digest('hex')}`;
 }
 
 function suppliedFactBase() {
@@ -308,7 +325,7 @@ test('interactive runs pause after rendered QA and do no external work before ap
 
   assert.equal(result.outcome, 'incomplete');
   assert.equal(result.approval.status, 'pending');
-  assert.match(result.approval.resumeToken, /^ekrt1:[a-f0-9]{64}$/);
+  assert.match(result.approval.resumeToken, /^ekrt2:[a-f0-9]{64}$/);
   assert.equal(publish.mock.callCount(), 0);
   assert.equal(durability.mock.callCount(), 0);
   await access(join(result.runRoot, 'source/content/project-explainer.md'));
@@ -389,6 +406,7 @@ test('interactive resume preserves the discovered absolute run root for a persis
     process.chdir(initialCwd);
     const canonicalInitialCwd = process.cwd();
     const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+    const resumeToken = await legacyResumeToken(paused.runRoot, paused.runId);
     const expectedRunRoot = join(
       canonicalInitialCwd,
       relativeOutputRoot,
@@ -417,7 +435,7 @@ test('interactive resume preserves the discovered absolute run root for a persis
           decision: 'approve',
           reviewedAt: '2026-07-17T20:05:00Z',
           reviewer: 'operator',
-          resumeToken: paused.approval.resumeToken,
+          resumeToken,
         },
       },
     );
@@ -510,6 +528,66 @@ test('interactive resume rejects a configured-output symlink retargeted to a rel
   );
 });
 
+test('interactive resume rejects coordinated configured-root retarget and retained-root rewriting', async () => {
+  const fixture = await suppliedFixture();
+  const originalOutputRoot = join(fixture.cwd, 'original-output');
+  const relocatedOutputRoot = join(fixture.cwd, 'relocated-output');
+  const configuredOutputRoot = join(fixture.cwd, 'configured-output');
+  await mkdir(originalOutputRoot);
+  await symlink(originalOutputRoot, configuredOutputRoot);
+  const interactiveRequest = {
+    ...fixture.request,
+    outputRoot: configuredOutputRoot,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const planSet = mock.fn(async (plannerRequest) => plannedSet(plannerRequest));
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const durability = mock.fn(async () => {});
+  const paused = await runExplainer(interactiveRequest, {
+    planSet,
+    author,
+    now: () => NOW,
+  });
+  const planCallsBeforeResume = planSet.mock.callCount();
+  const authorCallsBeforeResume = author.mock.callCount();
+  await rename(originalOutputRoot, relocatedOutputRoot);
+  await rm(configuredOutputRoot);
+  await symlink(relocatedOutputRoot, configuredOutputRoot);
+  const retainedRequestPath = join(
+    relocatedOutputRoot,
+    interactiveRequest.slug,
+    'run-request.json',
+  );
+  const retainedRequest = JSON.parse(
+    await readFile(retainedRequestPath, 'utf8'),
+  );
+  retainedRequest.outputRoot = await realpath(configuredOutputRoot);
+  await writeFile(
+    retainedRequestPath,
+    `${JSON.stringify(retainedRequest, null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    runExplainer(interactiveRequest, {
+      planSet,
+      author,
+      durability,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: paused.approval.resumeToken,
+      },
+    }),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+  assert.equal(planSet.mock.callCount(), planCallsBeforeResume);
+  assert.equal(author.mock.callCount(), authorCallsBeforeResume);
+  assert.equal(durability.mock.callCount(), 0);
+});
+
 test('interactive resume rejects a run-root symlink that relocates a package outside its output root', async () => {
   const fixture = await suppliedFixture();
   const interactiveRequest = {
@@ -549,7 +627,8 @@ test('interactive resume rejects a run-root symlink that relocates a package out
 test('interactive resume requires an exact closed-format external token before callbacks', async () => {
   for (const [label, candidate] of [
     ['missing', () => undefined],
-    ['malformed', () => 'ekrt1:not-a-digest'],
+    ['malformed-v2', () => 'ekrt2:not-a-digest'],
+    ['malformed-v1', () => 'ekrt1:not-a-digest'],
     [
       'mismatched',
       (token) => `${token.slice(0, -1)}${token.endsWith('0') ? '1' : '0'}`,
@@ -576,22 +655,24 @@ test('interactive resume requires an exact closed-format external token before c
     });
     const resumeToken = candidate(paused.approval.resumeToken);
 
-    const resumed = await runExplainerCore(interactiveRequest, {
-      planSet,
-      author,
-      durability,
-      publish,
-      now: () => '2026-07-17T20:05:00Z',
-      reviewedSource: {
-        decision: 'approve',
-        reviewedAt: '2026-07-17T20:05:00Z',
-        reviewer: 'operator',
-        ...(resumeToken && { resumeToken }),
-      },
-    });
+    await assert.rejects(
+      runExplainerCore(interactiveRequest, {
+        planSet,
+        author,
+        durability,
+        publish,
+        now: () => '2026-07-17T20:05:00Z',
+        reviewedSource: {
+          decision: 'approve',
+          reviewedAt: '2026-07-17T20:05:00Z',
+          reviewer: 'operator',
+          ...(resumeToken && { resumeToken }),
+        },
+      }),
+      (error) => error.code === 'E_APPROVAL_RESUME',
+      label,
+    );
 
-    assert.equal(resumed.outcome, 'failed', label);
-    assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME', label);
     assert.equal(planSet.mock.callCount(), 1, label);
     assert.equal(author.mock.callCount(), 3, label);
     assert.equal(durability.mock.callCount(), 0, label);
@@ -615,7 +696,7 @@ test('rejection persists corrections and explicit approval resumes the same run'
   });
   assert.equal(rejected.outcome, 'incomplete', JSON.stringify(rejected.errors));
   assert.equal(rejected.approval.status, 'rejected');
-  assert.match(rejected.approval.resumeToken, /^ekrt1:[a-f0-9]{64}$/);
+  assert.match(rejected.approval.resumeToken, /^ekrt2:[a-f0-9]{64}$/);
   assert.ok(rejected.warnings.includes('render-qa-document-overflow'));
   const contentPath = join(
     rejected.runRoot,
@@ -2252,20 +2333,24 @@ test('resume rejects retained set-plan, identity, and path tampering before call
     mutate(record);
     await writeFile(path, `${JSON.stringify(record, null, 2)}\n`);
 
-    const resumed = await runExplainerCore(interactiveRequest, {
-      planSet,
-      author,
-      now: () => '2026-07-17T20:05:00Z',
-      reviewedSource: {
-        decision: 'approve',
-        reviewedAt: '2026-07-17T20:05:00Z',
-        reviewer: 'operator',
-        resumeToken: rejected.approval.resumeToken,
-      },
-    });
-
-    assert.equal(resumed.outcome, 'failed', label);
-    assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME', label);
+    let errorCode;
+    try {
+      const resumed = await runExplainerCore(interactiveRequest, {
+        planSet,
+        author,
+        now: () => '2026-07-17T20:05:00Z',
+        reviewedSource: {
+          decision: 'approve',
+          reviewedAt: '2026-07-17T20:05:00Z',
+          reviewer: 'operator',
+          resumeToken: rejected.approval.resumeToken,
+        },
+      });
+      errorCode = resumed.errors?.[0]?.code;
+    } catch (error) {
+      errorCode = error.code;
+    }
+    assert.equal(errorCode, 'E_APPROVAL_RESUME', label);
     assert.equal(planSet.mock.callCount(), 1, label);
     assert.equal(author.mock.callCount(), 3, label);
   }
@@ -2331,22 +2416,22 @@ test('external resume token rejects coordinated retained set-plan tampering befo
     ),
   );
 
-  const resumed = await runExplainerCore(interactiveRequest, {
-    planSet,
-    author,
-    durability,
-    publish,
-    now: () => '2026-07-17T20:05:00Z',
-    reviewedSource: {
-      decision: 'approve',
-      reviewedAt: '2026-07-17T20:05:00Z',
-      reviewer: 'operator',
-      resumeToken: rejected.approval.resumeToken,
-    },
-  });
-
-  assert.equal(resumed.outcome, 'failed');
-  assert.equal(resumed.errors[0].code, 'E_APPROVAL_RESUME');
+  await assert.rejects(
+    runExplainerCore(interactiveRequest, {
+      planSet,
+      author,
+      durability,
+      publish,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: rejected.approval.resumeToken,
+      },
+    }),
+    (error) => error.code === 'E_APPROVAL_RESUME',
+  );
   assert.equal(planSet.mock.callCount(), 1);
   assert.equal(author.mock.callCount(), 3);
   assert.equal(durability.mock.callCount(), 0);

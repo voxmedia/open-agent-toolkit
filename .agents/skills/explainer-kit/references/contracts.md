@@ -180,16 +180,23 @@ The core executes:
 10. write the manifest and build record
 
 An incomplete interactive result includes
-`approval.resumeToken: "ekrt1:<64 lowercase hex characters>"`. The token is an
-opaque v1 digest over the run identity and raw-byte SHA-256 hashes of the five
-retained `source/set-plan/*.json` records. The external caller must retain it
-outside the run root and echo it unchanged as `reviewedSource.resumeToken` with
-the later approval decision. Resume validates the fixed-length token and
-compares it to the current retained bytes before loading set-plan, author, or
-content state. Missing, malformed, or mismatched tokens fail
-`E_APPROVAL_RESUME` before planner, author, durability, or publish callbacks.
-The token is never written into the run request, content approval, build
-record, set-plan projections, manifest, or immutable-hash inventory.
+`approval.resumeToken: "ekrt2:<64 lowercase hex characters>"`. The token is an
+opaque v2 digest over the run ID, original canonical absolute output root, the
+raw-byte SHA-256 hash of `run-request.json`, and raw-byte SHA-256 hashes of the
+five retained `source/set-plan/*.json` records. It is generated from trusted
+in-memory run identity before the interactive pause. The external caller must
+retain it outside the run root and echo it unchanged as
+`reviewedSource.resumeToken` with the later approval decision.
+
+Resume validates the fixed-length token with a timing-safe comparison before
+parsing retained request fields or hydrating set-plan, author, or content
+state. Missing, malformed, mismatched, relocated-root, or byte-drifted tokens
+fail `E_APPROVAL_RESUME` before planner, author, durability, or publish
+callbacks. Legacy `ekrt1:<64 lowercase hex characters>` tokens are accepted
+only when the retained request has a relative output root; they cannot
+authorize current absolute-root packages. Neither token version is written
+into the run request, content approval, build record, set-plan projections,
+manifest, or immutable-hash inventory.
 
 The run package retains the privacy-safe `run-request.json`,
 `source/content-approval.json`, `source/fact-base.json`,

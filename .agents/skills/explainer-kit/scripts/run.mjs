@@ -69,7 +69,10 @@ export async function runExplainer(request, options = {}) {
     loadRecipe(normalizedRequest.recipe.id, normalizedRequest.recipe.version),
     normalizedRequest.recapMode,
   );
-  const resumed = await loadResumableRun(normalizedRequest);
+  const resumed = await loadResumableRun(
+    normalizedRequest,
+    options.reviewedSource?.resumeToken,
+  );
   const run = resumed ?? (await initializeRun(normalizedRequest));
   const now = options.now ?? (() => new Date().toISOString());
   const state = {
@@ -113,7 +116,6 @@ export async function runExplainer(request, options = {}) {
 
   try {
     if (resumed) {
-      await verifySetPlanResumeToken(run, options.reviewedSource?.resumeToken);
       await hydrateResumableState(state);
     } else {
       validateRecipeSources(recipe, run.request.factBase);
@@ -749,7 +751,7 @@ function normalizeRunRequest(request) {
   return normalized;
 }
 
-async function loadResumableRun(request) {
+async function loadResumableRun(request, resumeToken) {
   const normalized = structuredClone(request);
   normalized.theme = {
     ...(normalized.theme ?? {}),
@@ -786,9 +788,51 @@ async function loadResumableRun(request) {
       'The resumable run root escapes the configured output root.',
     );
   }
+  let approval;
+  let record;
+  try {
+    [approval, record] = await Promise.all([
+      readJson(join(runRoot, 'source/content-approval.json')),
+      readJson(join(runRoot, 'build-record.json')),
+    ]);
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+  if (typeof record.runId !== 'string') {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'The resumable run has no valid retained run identity.',
+    );
+  }
+  const approvalUnresolved = ['pending', 'rejected'].includes(approval.status);
+  const completedBeforeApproval = ['content', 'theme', 'render', 'qa'].every(
+    (id) =>
+      ['passed', 'warned', 'skipped'].includes(
+        record.stages?.find((stage) => stage.id === id)?.status,
+      ),
+  );
+  if (
+    !approvalUnresolved ||
+    !completedBeforeApproval ||
+    approval.runId !== record.runId
+  ) {
+    return null;
+  }
+  const resumableRun = {
+    runId: record.runId,
+    slug: normalized.slug,
+    outputRoot: canonicalOutputRoot,
+    runRoot: canonicalRunRoot,
+    requestPath: join(canonicalRunRoot, 'run-request.json'),
+    buildRecordPath: join(canonicalRunRoot, 'build-record.json'),
+    manifestPath: join(canonicalRunRoot, 'manifest.json'),
+  };
+  await verifySetPlanResumeToken(resumableRun, resumeToken);
+
   let persistedRequest;
   try {
-    persistedRequest = await readJson(join(runRoot, 'run-request.json'));
+    persistedRequest = await readJson(resumableRun.requestPath);
   } catch (error) {
     if (error?.code === 'ENOENT') return null;
     throw error;
@@ -804,32 +848,6 @@ async function loadResumableRun(request) {
     );
   }
 
-  let approval;
-  let record;
-  try {
-    [approval, record] = await Promise.all([
-      readJson(join(runRoot, 'source/content-approval.json')),
-      readJson(join(runRoot, 'build-record.json')),
-    ]);
-  } catch (error) {
-    if (error?.code === 'ENOENT') return null;
-    throw error;
-  }
-
-  const approvalUnresolved = ['pending', 'rejected'].includes(approval.status);
-  const completedBeforeApproval = ['content', 'theme', 'render', 'qa'].every(
-    (id) =>
-      ['passed', 'warned', 'skipped'].includes(
-        record.stages?.find((stage) => stage.id === id)?.status,
-      ),
-  );
-  if (
-    !approvalUnresolved ||
-    !completedBeforeApproval ||
-    approval.runId !== record.runId
-  ) {
-    return null;
-  }
   if (
     persistedRequest.slug !== normalized.slug ||
     persistedRequest.recipe?.id !== normalized.recipe.id ||
@@ -846,13 +864,7 @@ async function loadResumableRun(request) {
   }
 
   return {
-    runId: record.runId,
-    slug: normalized.slug,
-    outputRoot: dirname(canonicalRunRoot),
-    runRoot: canonicalRunRoot,
-    requestPath: join(canonicalRunRoot, 'run-request.json'),
-    buildRecordPath: join(canonicalRunRoot, 'build-record.json'),
-    manifestPath: join(canonicalRunRoot, 'manifest.json'),
+    ...resumableRun,
     request: normalized,
   };
 }

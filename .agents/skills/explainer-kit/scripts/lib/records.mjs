@@ -1,6 +1,6 @@
 import { createHash, randomUUID, timingSafeEqual } from 'node:crypto';
 import { access, readFile, readdir, rm } from 'node:fs/promises';
-import { join } from 'node:path';
+import { isAbsolute, join } from 'node:path';
 
 import { canonicalHash, validateContract } from './contracts.mjs';
 import {
@@ -38,8 +38,10 @@ const ALLOWED_TRANSITIONS = {
   pending: new Set(['running', 'failed', 'skipped']),
   running: new Set(['running', 'passed', 'warned', 'failed']),
 };
-const SET_PLAN_RESUME_TOKEN_PREFIX = 'ekrt1:';
-const SET_PLAN_RESUME_TOKEN_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
+const RESUME_TOKEN_V1_PREFIX = 'ekrt1:';
+const RESUME_TOKEN_V1_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
+const RESUME_TOKEN_V2_PREFIX = 'ekrt2:';
+const RESUME_TOKEN_V2_PATTERN = /^ekrt2:[a-f0-9]{64}$/;
 
 export async function initializeRun(request) {
   if (!isObject(request)) {
@@ -511,37 +513,86 @@ export async function writeSetPlanRecords(run, { request, plan }) {
 
 export async function createSetPlanResumeToken(run) {
   assertRun(run);
+  if (typeof run.outputRoot !== 'string' || !isAbsolute(run.outputRoot)) {
+    throw new TypeError(
+      'Authenticated resume tokens require a canonical absolute output root.',
+    );
+  }
+  const digest = await hashResumeToken(run, {
+    domain: 'explainer-kit.set-plan-resume/v2\0',
+    bindCanonicalRoot: true,
+    bindRequest: true,
+  });
+  return `${RESUME_TOKEN_V2_PREFIX}${digest}`;
+}
+
+async function createLegacySetPlanResumeToken(run) {
+  const digest = await hashResumeToken(run, {
+    domain: 'explainer-kit.set-plan-resume/v1\0',
+    bindCanonicalRoot: false,
+    bindRequest: false,
+  });
+  return `${RESUME_TOKEN_V1_PREFIX}${digest}`;
+}
+
+async function hashResumeToken(
+  run,
+  { domain, bindCanonicalRoot, bindRequest },
+) {
   const tokenHash = createHash('sha256');
-  tokenHash.update('explainer-kit.set-plan-resume/v1\0');
+  tokenHash.update(domain);
   tokenHash.update(run.runId);
   tokenHash.update('\0');
+  if (bindCanonicalRoot) {
+    tokenHash.update(run.outputRoot);
+    tokenHash.update('\0');
+  }
   try {
+    if (bindRequest) {
+      const requestBytes = await readFile(
+        run.requestPath ?? join(run.runRoot, 'run-request.json'),
+      );
+      updateResumeTokenFileHash(tokenHash, 'run-request.json', requestBytes);
+    }
     for (const relativePath of SET_PLAN_RECORD_PATHS) {
       const bytes = await readFile(join(run.runRoot, relativePath));
-      const byteHash = createHash('sha256').update(bytes).digest();
-      tokenHash.update(relativePath);
-      tokenHash.update('\0');
-      tokenHash.update(byteHash);
+      updateResumeTokenFileHash(tokenHash, relativePath, bytes);
     }
   } catch (error) {
     throw resumeRecordError(
-      `Unable to hash the complete retained set plan: ${error.message}`,
+      `Unable to hash the complete retained resume identity: ${error.message}`,
     );
   }
-  return `${SET_PLAN_RESUME_TOKEN_PREFIX}${tokenHash.digest('hex')}`;
+  return tokenHash.digest('hex');
+}
+
+function updateResumeTokenFileHash(tokenHash, relativePath, bytes) {
+  const byteHash = createHash('sha256').update(bytes).digest();
+  tokenHash.update(relativePath);
+  tokenHash.update('\0');
+  tokenHash.update(byteHash);
 }
 
 export async function verifySetPlanResumeToken(run, resumeToken) {
   assertRun(run);
-  if (
-    typeof resumeToken !== 'string' ||
-    !SET_PLAN_RESUME_TOKEN_PATTERN.test(resumeToken)
-  ) {
+  if (typeof resumeToken !== 'string') {
     throw resumeRecordError(
       'Interactive approval resume requires a valid external resume token.',
     );
   }
-  const expected = Buffer.from(await createSetPlanResumeToken(run), 'ascii');
+  let expectedToken;
+  let legacy = false;
+  if (RESUME_TOKEN_V2_PATTERN.test(resumeToken)) {
+    expectedToken = await createSetPlanResumeToken(run);
+  } else if (RESUME_TOKEN_V1_PATTERN.test(resumeToken)) {
+    legacy = true;
+    expectedToken = await createLegacySetPlanResumeToken(run);
+  } else {
+    throw resumeRecordError(
+      'Interactive approval resume requires a valid external resume token.',
+    );
+  }
+  const expected = Buffer.from(expectedToken, 'ascii');
   const supplied = Buffer.from(resumeToken, 'ascii');
   if (
     supplied.byteLength !== expected.byteLength ||
@@ -550,6 +601,29 @@ export async function verifySetPlanResumeToken(run, resumeToken) {
     throw resumeRecordError(
       'Interactive approval resume token does not match the retained set plan.',
     );
+  }
+  if (legacy) {
+    let retainedRequest;
+    try {
+      retainedRequest = JSON.parse(
+        await readFile(
+          run.requestPath ?? join(run.runRoot, 'run-request.json'),
+          'utf8',
+        ),
+      );
+    } catch (error) {
+      throw resumeRecordError(
+        `Unable to read the legacy retained request: ${error.message}`,
+      );
+    }
+    if (
+      typeof retainedRequest.outputRoot !== 'string' ||
+      isAbsolute(retainedRequest.outputRoot)
+    ) {
+      throw resumeRecordError(
+        'Legacy resume tokens authorize only retained relative output roots.',
+      );
+    }
   }
 }
 
