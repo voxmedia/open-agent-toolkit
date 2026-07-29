@@ -16,7 +16,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
 
-import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
+import {
+  createBrowserProbeSession,
+  createFixtureBrowserProbeSession,
+} from '../scripts/lib/browser-runtime.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import { SET_PLAN_RECORD_PATHS } from '../scripts/lib/records.mjs';
@@ -231,6 +234,10 @@ async function retainingBrowserProbe(probeRequest) {
           };
   }
   return result;
+}
+
+function fixtureBrowserSession(probe = retainingBrowserProbe) {
+  return createFixtureBrowserProbeSession({ probe });
 }
 
 async function malformedBrowserProbe(probeRequest) {
@@ -1604,14 +1611,14 @@ test('invokes an independent critic once with the complete rendered recap set', 
   const result = await runExplainerCore(fixture.request, {
     author,
     planSet: async (plannerRequest) => plannedSet(plannerRequest),
-    browserProbe,
+    browserSession: fixtureBrowserSession(browserProbe),
     visualCritic,
     now: () => NOW,
   });
 
   assert.equal(
     result.outcome,
-    'built-not-durable',
+    'built-needs-review',
     JSON.stringify(result.errors),
   );
   assert.notEqual(visualCritic, author);
@@ -1629,6 +1636,9 @@ test('invokes an independent critic once with the complete rendered recap set', 
     ),
   );
   assert.equal(result.visualReview.disposition, 'pass');
+  assert.ok(
+    result.warnings.includes('visual-review-required:fixture-browser-session'),
+  );
   const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
   const immutablePaths = Object.keys(manifest.immutableHashes);
   assert.ok(
@@ -1659,7 +1669,7 @@ test('invokes an independent critic once with the complete rendered recap set', 
   const rejected = await runExplainerCore(rejectedFixture.request, {
     author: sharedCallback,
     planSet: async (plannerRequest) => plannedSet(plannerRequest),
-    browserProbe,
+    browserSession: fixtureBrowserSession(browserProbe),
     visualCritic: sharedCallback,
     now: () => NOW,
   });
@@ -1671,6 +1681,65 @@ test('invokes an independent critic once with the complete rendered recap set', 
     ),
   );
   assert.equal(sharedCallback.mock.callCount(), 3);
+});
+
+test('rejects caller-forged Chromium identity before an unattended recap runs', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  await assert.rejects(
+    runExplainerCore(fixture.request, {
+      author: async (authorRequest) => authorResult(authorRequest),
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      browserSession: {
+        available: true,
+        runtime: {
+          kind: 'launched',
+          name: 'chromium',
+          version: 'forged-by-caller',
+        },
+        captureIdentity: `sha256:${'0'.repeat(64)}`,
+        probe: retainingBrowserProbe,
+        close: async () => {},
+      },
+      visualCritic: async () => {
+        throw new Error('forged browser identity must fail before review');
+      },
+      now: () => NOW,
+    }),
+    { code: 'E_BROWSER_PROBE' },
+  );
+});
+
+test('rejects a branded deterministic fixture session in unattended recap production', async () => {
+  const { createFixtureBrowserProbeSession } =
+    await import('../scripts/lib/browser-runtime.mjs');
+  assert.equal(typeof createFixtureBrowserProbeSession, 'function');
+  const fixture = await suppliedFixture('project-recap');
+  const browserSession = createFixtureBrowserProbeSession({
+    probe: retainingBrowserProbe,
+  });
+
+  const result = await runExplainerCore(fixture.request, {
+    author: async (authorRequest) => authorResult(authorRequest),
+    planSet: async (plannerRequest) => plannedSet(plannerRequest),
+    browserSession,
+    visualCritic: async (reviewRequest) => ({
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'fixture-session-review',
+      requestId: reviewRequest.requestId,
+      requestHash: reviewRequest.requestHash,
+      reviewedAt: NOW,
+      disposition: 'pass',
+      artifactIds: reviewRequest.renderedArtifacts.map(
+        ({ artifactId }) => artifactId,
+      ),
+      findings: [],
+    }),
+    now: () => NOW,
+  });
+  assert.equal(result.outcome, 'built-needs-review');
+  assert.ok(
+    result.warnings.includes('visual-review-required:fixture-browser-session'),
+  );
 });
 
 test('rejects a decoded geometry reshape after browser QA before critic invocation', async () => {
@@ -1710,7 +1779,7 @@ test('rejects a decoded geometry reshape after browser QA before critic invocati
   const result = await runExplainerCore(fixture.request, {
     author: async (authorRequest) => authorResult(authorRequest),
     planSet: async (plannerRequest) => plannedSet(plannerRequest),
-    browserProbe,
+    browserSession: fixtureBrowserSession(browserProbe),
     visualCritic,
     now: () => NOW,
   });
@@ -1783,7 +1852,7 @@ test('runs a complete recap review with installed Chromium PNG evidence', async 
     const result = await runExplainerCore(fixture.request, {
       author: async (authorRequest) => authorResult(authorRequest),
       planSet: async (plannerRequest) => plannedSet(plannerRequest),
-      browserProbe: session.probe,
+      browserSession: session,
       visualCritic,
       now: () => NOW,
     });
@@ -1794,6 +1863,22 @@ test('runs a complete recap review with installed Chromium PNG evidence', async 
       JSON.stringify(result.warnings),
     );
     assert.equal(visualCritic.mock.callCount(), 1);
+    const metrics = JSON.parse(
+      await readFile(
+        join(result.runRoot, 'qa/browser/project-recap/mobile.json'),
+        'utf8',
+      ),
+    );
+    const visualRequest = JSON.parse(
+      await readFile(
+        join(result.runRoot, 'qa/visual-review/attempt-1/request.json'),
+        'utf8',
+      ),
+    );
+    assert.deepEqual(metrics.runtime, session.runtime);
+    assert.equal(metrics.captureIdentity, session.captureIdentity);
+    assert.deepEqual(visualRequest.browserRuntime, session.runtime);
+    assert.equal(visualRequest.captureIdentity, session.captureIdentity);
   } finally {
     await session.close();
   }
@@ -1890,16 +1975,14 @@ test('caps visual review at one correction and one final review', async (t) => {
       const result = await runExplainerCore(fixture.request, {
         author,
         planSet: async (plannerRequest) => plannedSet(plannerRequest),
-        browserProbe: retainingBrowserProbe,
+        browserSession: fixtureBrowserSession(),
         visualCritic,
         now: () => NOW,
       });
 
       assert.equal(
         result.outcome,
-        scenario.expectedFinal === 'pass'
-          ? 'built-not-durable'
-          : 'built-needs-review',
+        'built-needs-review',
         JSON.stringify(result.errors),
       );
       assert.equal(author.mock.callCount(), scenario.expectedAuthors);
@@ -2059,6 +2142,9 @@ test('fails closed before durability and publication when recap review is missin
             return scenario.browserProbe(request);
           })
         : undefined;
+      const browserSession = browserProbe
+        ? fixtureBrowserSession(browserProbe)
+        : undefined;
       const correctArtifact = scenario.correctArtifact
         ? mock.fn(scenario.correctArtifact)
         : undefined;
@@ -2131,7 +2217,7 @@ test('fails closed before durability and publication when recap review is missin
       const result = await runExplainerCore(reviewedRequest, {
         author: async (authorRequest) => authorResult(authorRequest),
         planSet: async (plannerRequest) => plannedSet(plannerRequest),
-        ...(browserProbe && { browserProbe }),
+        ...(browserSession && { browserSession }),
         ...(visualCritic && { visualCritic }),
         ...(correctArtifact && { correctArtifact }),
         ...(scenario.widths && { widths: scenario.widths }),
@@ -2191,34 +2277,45 @@ test('fails closed before durability and publication when recap review is missin
 
   await t.test(
     'passing browser and critic evidence remains eligible',
-    async () => {
+    async (subtest) => {
+      const browserSession = await createBrowserProbeSession();
+      if (!browserSession.available) {
+        subtest.skip(
+          `optional headless runtime unavailable: ${browserSession.reason}`,
+        );
+        return;
+      }
       const fixture = await suppliedFixture('project-recap');
       const durability = mock.fn(async () => {});
-      const result = await runExplainerCore(
-        { ...fixture.request, durability: { strategy: 'commit' } },
-        {
-          author: async (authorRequest) => authorResult(authorRequest),
-          planSet: async (plannerRequest) => plannedSet(plannerRequest),
-          browserProbe: retainingBrowserProbe,
-          visualCritic: async (reviewRequest) => ({
-            schemaVersion: 'explainer-kit.visual-review-result/v1',
-            reviewId: 'passing-review',
-            requestId: reviewRequest.requestId,
-            requestHash: reviewRequest.requestHash,
-            reviewedAt: NOW,
-            disposition: 'pass',
-            artifactIds: reviewRequest.renderedArtifacts.map(
-              ({ artifactId }) => artifactId,
-            ),
-            findings: [],
-          }),
-          durability,
-          now: () => NOW,
-        },
-      );
+      try {
+        const result = await runExplainerCore(
+          { ...fixture.request, durability: { strategy: 'commit' } },
+          {
+            author: async (authorRequest) => authorResult(authorRequest),
+            planSet: async (plannerRequest) => plannedSet(plannerRequest),
+            browserSession,
+            visualCritic: async (reviewRequest) => ({
+              schemaVersion: 'explainer-kit.visual-review-result/v1',
+              reviewId: 'passing-review',
+              requestId: reviewRequest.requestId,
+              requestHash: reviewRequest.requestHash,
+              reviewedAt: NOW,
+              disposition: 'pass',
+              artifactIds: reviewRequest.renderedArtifacts.map(
+                ({ artifactId }) => artifactId,
+              ),
+              findings: [],
+            }),
+            durability,
+            now: () => NOW,
+          },
+        );
 
-      assert.equal(result.outcome, 'built-not-durable');
-      assert.equal(durability.mock.callCount(), 1);
+        assert.equal(result.outcome, 'built-not-durable');
+        assert.equal(durability.mock.callCount(), 1);
+      } finally {
+        await browserSession.close();
+      }
     },
   );
 });

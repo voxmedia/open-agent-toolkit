@@ -5,8 +5,8 @@ import { dirname, join, resolve } from 'node:path';
 import { test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
+import { createBrowserProbeSession } from '../../../.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs';
 import { runExplainer } from '../../../.agents/skills/explainer-kit/scripts/run.mjs';
-import { png } from '../../../.agents/skills/explainer-kit/tests/fixtures/png.mjs';
 import { planTrackedRunFinalization } from '../../../.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs';
 
 const REPO_ROOT = resolve(
@@ -61,10 +61,17 @@ test('one untouched core package passes finalizer, archive, and push coverage', 
   await mkdir(projectPath, { recursive: true });
   await writeFile(factBasePath, `${JSON.stringify(factBase(), null, 2)}\n`);
 
+  const browserSession = await createBrowserProbeSession();
+  assert.equal(
+    browserSession.available,
+    true,
+    `installed Chromium unavailable: ${browserSession.reason}`,
+  );
+  t.after(() => browserSession.close());
   const result = await runExplainer(runRequest(outputRoot, factBasePath), {
     author,
     planSet,
-    browserProbe,
+    browserSession,
     visualCritic,
     now: () => NOW,
   });
@@ -291,44 +298,6 @@ async function author(request) {
       generatedAt: NOW,
       method: 'test-callback',
     },
-  };
-}
-
-async function browserProbe(request) {
-  if (request.screenshotPath) {
-    await mkdir(dirname(request.screenshotPath), { recursive: true });
-    await writeFile(
-      request.screenshotPath,
-      png(request.viewport.width, request.viewport.height),
-    );
-  }
-  return {
-    pageOverflowX: false,
-    clippedX: [],
-    viewportClipped: [],
-    unreadableHeadings: [],
-    animationsDisabled: true,
-    reducedMotion: true,
-    keyboard: {
-      tab: true,
-      ...(request.artifact.type === 'deck' &&
-        request.scenario === 'default' && {
-          ArrowLeft: true,
-          ArrowRight: true,
-          ArrowUp: true,
-          ArrowDown: true,
-        }),
-    },
-    ...(request.artifact.type === 'deck' && {
-      deckLayout:
-        request.scenario === 'default'
-          ? { flow: 'horizontal', overflowX: 'auto', scrollSnap: true }
-          : {
-              flow: 'vertical',
-              overflowX: request.scenario === 'print' ? 'visible' : 'auto',
-              scrollSnap: false,
-            },
-    }),
   };
 }
 

@@ -1096,7 +1096,17 @@ async function loadVerifiedProjectRecap(
   }
   if (missingCoverage.length > 0) {
     throw new CliError(
-      `Selected project recap manifest immutable hashes do not cover the complete v1 package: ${missingCoverage.join(', ')}.`,
+      `Selected project recap manifest immutable hashes do not cover the complete v2 package: ${missingCoverage.join(', ')}.`,
+    );
+  }
+  try {
+    await packageCoverage.validateImmutablePackageEvidence(manifest, {
+      runMode,
+      read: (path) => readFile(join(sourceRunRoot, path)),
+    });
+  } catch (error) {
+    throw new CliError(
+      `Selected project recap browser evidence contract is invalid: ${error instanceof Error ? error.message : String(error)}`,
     );
   }
   if (

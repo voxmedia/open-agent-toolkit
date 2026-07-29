@@ -15,6 +15,7 @@ import { afterEach, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { promisify } from 'node:util';
 
+import { createBrowserProbeSession } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
 import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 import {
   bindProjectSources,
@@ -73,6 +74,18 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
       `
         import { mkdir, writeFile } from 'node:fs/promises';
         import { join } from 'node:path';
+
+        export function assertBrowserProbeSession(session) {
+          if (
+            !session ||
+            typeof session.probe !== 'function' ||
+            session.runtime?.kind !== 'launched' ||
+            session.runtime?.name !== 'chromium'
+          ) {
+            throw new TypeError('Fixture core requires a launched Chromium session.');
+          }
+          return session;
+        }
 
         export async function runExplainer(request, options) {
           await writeFile(${JSON.stringify(coreInvocationMarker)}, 'invoked\\n', {
@@ -144,7 +157,9 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
             sourceProvenance: options.sourceProvenance,
             authored,
             providerSeams: {
-              browserProbe: typeof options.browserProbe === 'function',
+              browserSession:
+                options.browserSession?.runtime?.kind === 'launched' &&
+                typeof options.browserSession?.probe === 'function',
               visualCritic: typeof options.visualCritic === 'function',
             },
           };
@@ -266,8 +281,28 @@ async function passingVisualCritic(request) {
   };
 }
 
+function launchedSession(probe = completeBrowserProbe) {
+  return Object.freeze({
+    available: true,
+    runtime: Object.freeze({
+      kind: 'launched',
+      name: 'chromium',
+      version: 'fixture-core-chromium',
+    }),
+    capture: Object.freeze({
+      format: 'png',
+      fullPage: false,
+      reducedMotion: 'reduce',
+      animationsDisabled: true,
+    }),
+    captureIdentity: `sha256:${'a'.repeat(64)}`,
+    probe,
+    close: async () => {},
+  });
+}
+
 const REQUIRED_REVIEW_PROVIDERS = {
-  browserProbe: completeBrowserProbe,
+  browserSession: launchedSession(),
   visualCritic: passingVisualCritic,
 };
 
@@ -631,21 +666,29 @@ test('passes first-class direct and module browser and visual-review providers',
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
-    browserProbe: completeBrowserProbe,
+    browserSession: launchedSession(),
     visualCritic: passingVisualCritic,
     mode: 'unattended',
   });
   assert.deepEqual(direct.result.providerSeams, {
-    browserProbe: true,
+    browserSession: true,
     visualCritic: true,
   });
 
   const moduleFixture = await createFixture();
-  const browserProbeModulePath = join(moduleFixture.root, 'browser-probe.mjs');
+  const browserSessionModulePath = join(
+    moduleFixture.root,
+    'browser-session.mjs',
+  );
   const visualCriticModulePath = join(moduleFixture.root, 'visual-critic.mjs');
   await writeFile(
-    browserProbeModulePath,
-    'export async function browserProbe() { return {}; }\n',
+    browserSessionModulePath,
+    `export const browserSession = {
+  available: true,
+  runtime: { kind: 'launched', name: 'chromium', version: 'module-fixture' },
+  probe: async () => ({}),
+};
+`,
   );
   await writeFile(
     visualCriticModulePath,
@@ -662,12 +705,12 @@ test('passes first-class direct and module browser and visual-review providers',
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
-    browserProbeModulePath,
+    browserSessionModulePath,
     visualCriticModulePath,
     mode: 'unattended',
   });
   assert.deepEqual(fromModules.result.providerSeams, {
-    browserProbe: true,
+    browserSession: true,
     visualCritic: true,
   });
 });
@@ -703,21 +746,21 @@ test('rejects missing, invalid, conflicting, and reused review providers before 
     (error) => error.code === 'E_BROWSER_PROBE_REQUIRED',
   );
   await assert.rejects(
-    runOatExplainer({ ...context, browserProbe: completeBrowserProbe }),
+    runOatExplainer({ ...context, browserSession: launchedSession() }),
     (error) => error.code === 'E_VISUAL_CRITIC_REQUIRED',
   );
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbeModulePath: invalidBrowserModule,
+      browserSessionModulePath: invalidBrowserModule,
       visualCritic: passingVisualCritic,
     }),
-    /browser probe module must export a browserProbe function/i,
+    (error) => error.code === 'E_BROWSER_PROBE_REQUIRED',
   );
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbe: completeBrowserProbe,
+      browserSession: launchedSession(),
       visualCriticModulePath: invalidVisualModule,
     }),
     /visual critic module must export a visualCritic function/i,
@@ -725,16 +768,16 @@ test('rejects missing, invalid, conflicting, and reused review providers before 
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbe: completeBrowserProbe,
-      browserProbeModulePath: invalidBrowserModule,
+      browserSession: launchedSession(),
+      browserSessionModulePath: invalidBrowserModule,
       visualCritic: passingVisualCritic,
     }),
-    /only one.*browser probe/i,
+    /only one.*browser session/i,
   );
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbe: completeBrowserProbe,
+      browserSession: launchedSession(),
       visualCritic: passingVisualCritic,
       visualCriticModulePath: invalidVisualModule,
     }),
@@ -743,7 +786,7 @@ test('rejects missing, invalid, conflicting, and reused review providers before 
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbe: completeBrowserProbe,
+      browserSession: launchedSession(),
       visualCritic: passingVisualCritic,
       coreOptions: { browserProbe: completeBrowserProbe },
     }),
@@ -752,7 +795,7 @@ test('rejects missing, invalid, conflicting, and reused review providers before 
   await assert.rejects(
     runOatExplainer({
       ...context,
-      browserProbe: completeBrowserProbe,
+      browserSession: launchedSession(),
       visualCritic: passingVisualCritic,
       coreOptions: { visualCritic: passingVisualCritic },
     }),
@@ -934,8 +977,14 @@ test('completion recap intents always select unattended explainer mode', () => {
   );
 });
 
-test('loads a validated provider-neutral critic module and runs the actual bundled core', async () => {
+test('loads a validated provider-neutral critic module and runs the actual bundled core', async (t) => {
   const fixture = await createFixture();
+  const browserSession = await createBrowserProbeSession();
+  if (!browserSession.available) {
+    t.skip(`installed Chromium unavailable: ${browserSession.reason}`);
+    return;
+  }
+  t.after(() => browserSession.close());
   const authorModulePath = join(fixture.root, 'lifecycle-author.mjs');
   const planSetModulePath = join(fixture.root, 'lifecycle-plan-set.mjs');
   const criticModulePath = join(fixture.root, 'lifecycle-critic.mjs');
@@ -970,7 +1019,8 @@ test('loads a validated provider-neutral critic module and runs the actual bundl
     authorModulePath,
     planSetModulePath,
     criticModulePath,
-    ...REQUIRED_REVIEW_PROVIDERS,
+    browserSession,
+    visualCritic: passingVisualCritic,
     getConfig,
     mode: 'unattended',
   });
@@ -1045,7 +1095,6 @@ test('rejects invalid critic module and callback contracts at the adapter bounda
     getConfig,
     author: fixtureAuthor,
     planSet: fixturePlanSet,
-    ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   };
 

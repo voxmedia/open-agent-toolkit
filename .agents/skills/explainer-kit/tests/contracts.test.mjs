@@ -414,6 +414,12 @@ function setPlan() {
 function visualReviewRequest() {
   const payload = {
     schemaVersion: 'explainer-kit.visual-review-request/v1',
+    browserRuntime: {
+      kind: 'launched',
+      name: 'chromium',
+      version: '123.0.6312.0',
+    },
+    captureIdentity: HASH_A,
     plan: setPlan(),
     renderedArtifacts: setPlan().portfolio.map(({ artifactId }) => ({
       artifactId,
@@ -449,6 +455,7 @@ function visualReviewRequest() {
           screenshotHash: HASH_A,
           metricsPath: `qa/${artifactId}-desktop.json`,
           metricsHash: HASH_B,
+          captureIdentity: HASH_A,
         },
       ],
     })),
@@ -809,6 +816,24 @@ test('rejects stale visual review identities and post-request byte bindings', ()
   assert.ok(
     validateContract('visual-review-request', mutated).errors.some(
       ({ code }) => code === 'request-hash-mismatch',
+    ),
+  );
+});
+
+test('rejects cross-record browser runtime identity mismatches', () => {
+  const request = visualReviewRequest();
+  request.renderedArtifacts[0].evidence[0].captureIdentity = HASH_B;
+  const payload = {
+    ...request,
+  };
+  delete payload.requestId;
+  delete payload.requestHash;
+  request.requestHash = canonicalHash(payload);
+  request.requestId = visualReviewRequestId(request.requestHash);
+
+  assert.ok(
+    validateContract('visual-review-request', request).errors.some(
+      ({ code }) => code === 'browser-runtime-mismatch',
     ),
   );
 });

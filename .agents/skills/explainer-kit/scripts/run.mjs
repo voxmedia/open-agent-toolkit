@@ -5,6 +5,7 @@ import { lstat, readFile, realpath } from 'node:fs/promises';
 import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
+import { assertBrowserProbeSession } from './lib/browser-runtime.mjs';
 import { catalogFromManifest, initiativeCatalogPath } from './lib/catalog.mjs';
 import {
   readContentApproval,
@@ -60,6 +61,12 @@ import { plannedArtifacts, planExplainerSet } from './lib/set-plan.mjs';
 import { resolveTheme } from './lib/theme.mjs';
 import { runVisualReview } from './lib/visual-review.mjs';
 
+export {
+  assertBrowserProbeSession,
+  createBrowserProbeSession,
+  createFixtureBrowserProbeSession,
+} from './lib/browser-runtime.mjs';
+
 // Stages a rejected draft reruns once its content is corrected.
 const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
 
@@ -69,6 +76,11 @@ export async function runExplainer(request, options = {}) {
   const recipe = selectRecipeAuthoring(
     loadRecipe(normalizedRequest.recipe.id, normalizedRequest.recipe.version),
     normalizedRequest.recapMode,
+  );
+  const browserProvider = resolveBrowserProvider(
+    normalizedRequest,
+    recipe,
+    options,
   );
   const resumed = await loadResumableRun(
     normalizedRequest,
@@ -106,6 +118,7 @@ export async function runExplainer(request, options = {}) {
     reopenedWarnings: {},
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
+    browserProvider,
     browserEvidence: [],
     visualReview: null,
     visualReviewPaths: [],
@@ -317,7 +330,7 @@ async function executeQaStage(state, options, now) {
     const qaWarnings = [];
     try {
       return await auditRenderedArtifacts(state, options, now, {
-        browserProbe: resolveBrowserProbe(options),
+        browserProvider: state.browserProvider,
         htmlSafetyErrors,
         qaWarnings,
       });
@@ -349,26 +362,64 @@ async function executeQaStage(state, options, now) {
 }
 
 /**
- * Render QA drives a caller-supplied probe only. The core never launches a
- * headless runtime itself; agents review rendered output in their own browser.
+ * Render QA drives a caller-supplied session only. The core never launches a
+ * headless runtime itself. Production recap evidence requires a session whose
+ * identity was derived and branded by createBrowserProbeSession().
  */
-function resolveBrowserProbe(options) {
+function resolveBrowserProvider(request, recipe, options) {
+  if (
+    options.browserSession !== undefined &&
+    options.browserProbe !== undefined
+  ) {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      'Supply either options.browserSession or the legacy non-retaining options.browserProbe callback, not both.',
+    );
+  }
+  const productionRecap =
+    recipe.id === 'project-recap' && request.mode === 'unattended';
+  if (options.browserSession !== undefined) {
+    try {
+      return {
+        session: assertBrowserProbeSession(options.browserSession, {
+          allowFixture: true,
+        }),
+        probe: null,
+        productionRecap,
+      };
+    } catch (error) {
+      throw codedError(
+        'E_BROWSER_PROBE',
+        error?.message ?? 'Browser session validation failed.',
+      );
+    }
+  }
   if (options.browserProbe === undefined) return null;
+  if (productionRecap) {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      'Unattended project recaps require a trusted launched-Chromium browserSession; bare callbacks and caller-asserted runtime metadata are not accepted.',
+    );
+  }
   if (typeof options.browserProbe !== 'function') {
     throw codedError(
       'E_BROWSER_PROBE',
       'options.browserProbe must be a function when supplied.',
     );
   }
-  return async (...args) => {
-    try {
-      return await options.browserProbe(...args);
-    } catch (error) {
-      throw codedError(
-        'E_VISUAL_REVIEW',
-        `Browser evidence callback failed: ${error?.message ?? String(error)}`,
-      );
-    }
+  return {
+    session: null,
+    probe: async (...args) => {
+      try {
+        return await options.browserProbe(...args);
+      } catch (error) {
+        throw codedError(
+          'E_VISUAL_REVIEW',
+          `Browser evidence callback failed: ${error?.message ?? String(error)}`,
+        );
+      }
+    },
+    productionRecap,
   };
 }
 
@@ -376,7 +427,7 @@ async function auditRenderedArtifacts(
   state,
   options,
   now,
-  { browserProbe, htmlSafetyErrors, qaWarnings },
+  { browserProvider, htmlSafetyErrors, qaWarnings },
 ) {
   for (const artifact of state.resolvedArtifacts.filter(
     ({ authoring }) => authoring === 'html',
@@ -404,10 +455,13 @@ async function auditRenderedArtifacts(
     artifacts: probeArtifacts,
     setPlan: state.setPlan,
     ...(options.denylist && { denylist: options.denylist }),
-    ...(browserProbe && { browserProbe }),
+    ...(browserProvider?.session && {
+      browserSession: browserProvider.session,
+    }),
+    ...(browserProvider?.probe && { browserProbe: browserProvider.probe }),
     ...(options.widths &&
       !requiresRecapVisualReview(state) && { widths: options.widths }),
-    ...(browserProbe &&
+    ...(browserProvider &&
       requiresRecapVisualReview(state) && {
         evidenceRoot: state.run.runRoot,
         requireBrowserEvidence: true,
@@ -425,7 +479,7 @@ async function auditRenderedArtifacts(
       .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
       .map(({ code }) => `qa-${code}`),
   );
-  if (!browserProbe) {
+  if (!browserProvider) {
     qaWarnings.push(RENDER_QA_WARNING_IDS.skippedNoProbe);
   }
   const guidelines = checkGuidelines({
@@ -445,7 +499,9 @@ async function auditRenderedArtifacts(
   state.browserEvidence = report.browser?.evidence ?? [];
   const visualCritic = resolveVisualCritic(options);
   const reviewRequired = requiresRecapVisualReview(state);
-  if (reviewRequired && !browserProbe) {
+  const fixtureBrowserSession =
+    browserProvider?.session?.runtime.kind === 'fixture';
+  if (reviewRequired && !browserProvider) {
     qaWarnings.push('visual-review-required:browser-probe-missing');
   } else if (reviewRequired && !visualCritic) {
     qaWarnings.push('visual-review-required:visual-critic-missing');
@@ -462,10 +518,13 @@ async function auditRenderedArtifacts(
         artifacts: correctedArtifacts,
         setPlan: state.setPlan,
         ...(options.denylist && { denylist: options.denylist }),
-        ...(browserProbe && { browserProbe }),
+        ...(browserProvider?.session && {
+          browserSession: browserProvider.session,
+        }),
+        ...(browserProvider?.probe && { browserProbe: browserProvider.probe }),
         ...(options.widths &&
           !requiresRecapVisualReview(state) && { widths: options.widths }),
-        ...(browserProbe &&
+        ...(browserProvider &&
           requiresRecapVisualReview(state) && {
             evidenceRoot: state.run.runRoot,
             requireBrowserEvidence: true,
@@ -494,6 +553,9 @@ async function auditRenderedArtifacts(
       state.browserEvidence = finalReport.browser?.evidence ?? [];
       await reviewAndRetain(state, visualCritic, 2);
     }
+  }
+  if (reviewRequired && fixtureBrowserSession) {
+    qaWarnings.push('visual-review-required:fixture-browser-session');
   }
   if (
     reviewRequired &&

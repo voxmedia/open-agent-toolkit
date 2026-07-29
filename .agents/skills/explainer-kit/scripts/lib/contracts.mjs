@@ -608,6 +608,19 @@ function validateCrossRecord(kind, value, context, errors) {
       ? value.renderedArtifacts
       : []
     ).entries()) {
+      for (const [evidenceIndex, evidence] of (Array.isArray(artifact?.evidence)
+        ? artifact.evidence
+        : []
+      ).entries()) {
+        if (evidence?.captureIdentity !== value.captureIdentity) {
+          add(
+            errors,
+            `$.renderedArtifacts[${index}].evidence[${evidenceIndex}].captureIdentity`,
+            'browser-runtime-mismatch',
+            'Every visual-review evidence record must bind the request browser capture identity.',
+          );
+        }
+      }
       if (!plannedIds.has(artifact?.artifactId)) {
         add(
           errors,

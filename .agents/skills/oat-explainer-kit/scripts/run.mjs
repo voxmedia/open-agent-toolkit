@@ -38,6 +38,8 @@ export async function runOatExplainer({
   authorModulePath,
   critic,
   criticModulePath,
+  browserSession,
+  browserSessionModulePath,
   browserProbe,
   browserProbeModulePath,
   visualCritic,
@@ -143,7 +145,10 @@ export async function runOatExplainer({
   });
   const reviewProvidersRequired =
     recipe === 'project-recap' && mode === 'unattended';
-  const lifecycleBrowserProbe = await resolveLifecycleBrowserProbe({
+  const lifecycleBrowserSession = await resolveLifecycleBrowserSession({
+    core,
+    browserSession,
+    browserSessionModulePath,
     browserProbe,
     browserProbeModulePath,
     coreOptions,
@@ -158,7 +163,7 @@ export async function runOatExplainer({
   assertDistinctProviderRoles({
     author: lifecycleAuthor,
     factCritic: lifecycleCritic,
-    browserProbe: lifecycleBrowserProbe,
+    browserProbe: lifecycleBrowserSession?.probe,
     visualCritic: lifecycleVisualCritic,
   });
   const result = await core.runExplainer(request, {
@@ -166,7 +171,9 @@ export async function runOatExplainer({
     ...(lifecycleSetPlanner && { planSet: lifecycleSetPlanner }),
     ...(lifecycleAuthor && { author: lifecycleAuthor }),
     ...(lifecycleCritic && { critic: lifecycleCritic }),
-    ...(lifecycleBrowserProbe && { browserProbe: lifecycleBrowserProbe }),
+    ...(lifecycleBrowserSession && {
+      browserSession: lifecycleBrowserSession,
+    }),
     ...(lifecycleVisualCritic && { visualCritic: lifecycleVisualCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
     ...(bound.sourceProvenance && {
@@ -391,7 +398,10 @@ async function resolveLifecycleCritic({
   return markProviderIdentity(wrapped, callback);
 }
 
-async function resolveLifecycleBrowserProbe({
+async function resolveLifecycleBrowserSession({
+  core,
+  browserSession,
+  browserSessionModulePath,
   browserProbe,
   browserProbeModulePath,
   coreOptions,
@@ -399,43 +409,72 @@ async function resolveLifecycleBrowserProbe({
 }) {
   if (coreOptions?.browserProbe !== undefined) {
     throw new TypeError(
-      'coreOptions.browserProbe is not supported at the OAT adapter boundary; supply browserProbe directly.',
+      'coreOptions.browserProbe is not supported at the OAT adapter boundary; supply browserSession directly.',
     );
   }
-  const callback = await resolveProviderCallback({
-    callback: browserProbe,
-    modulePath: browserProbeModulePath,
-    exportName: 'browserProbe',
-    label: 'browser probe',
-  });
-  if (!callback) {
+  if (browserProbe !== undefined || browserProbeModulePath !== undefined) {
+    throw new TypeError(
+      'Bare browserProbe callbacks are not supported at the OAT adapter boundary; supply a branded browserSession created by createBrowserProbeSession().',
+    );
+  }
+  if (coreOptions?.browserSession !== undefined) {
+    throw new TypeError(
+      'coreOptions.browserSession is not supported at the OAT adapter boundary; supply browserSession directly.',
+    );
+  }
+  if (browserSession !== undefined && browserSessionModulePath !== undefined) {
+    throw new Error(
+      'Supply only one browser session descriptor or browser session module entry point.',
+    );
+  }
+  let resolvedSession = browserSession;
+  if (browserSessionModulePath !== undefined) {
+    if (
+      typeof browserSessionModulePath !== 'string' ||
+      browserSessionModulePath.trim().length === 0
+    ) {
+      throw new TypeError('browserSessionModulePath must be a non-empty path.');
+    }
+    let sessionModule;
+    try {
+      sessionModule = await import(
+        pathToFileURL(resolve(browserSessionModulePath.trim())).href
+      );
+    } catch (cause) {
+      throw new Error(
+        `Unable to load browser session module at ${browserSessionModulePath}.`,
+        { cause },
+      );
+    }
+    resolvedSession = sessionModule.browserSession;
+  }
+  if (!resolvedSession) {
     if (!required) return null;
     const error = new Error(
-      'Unattended OAT project recaps require exactly one provider-neutral browser probe callback or browser probe module entry point.',
+      'Unattended OAT project recaps require exactly one branded launched-Chromium browser session descriptor or browser session module entry point.',
     );
     error.code = 'E_BROWSER_PROBE_REQUIRED';
     throw error;
   }
-  const wrapped = async (request) => {
-    const result = await callback(request);
-    if (
-      !result ||
-      typeof result !== 'object' ||
-      typeof result.pageOverflowX !== 'boolean' ||
-      !Array.isArray(result.clippedX) ||
-      !Array.isArray(result.viewportClipped) ||
-      !Array.isArray(result.unreadableHeadings) ||
-      typeof result.reducedMotion !== 'boolean' ||
-      !result.keyboard ||
-      typeof result.keyboard !== 'object'
-    ) {
-      throw new Error(
-        'Provider-neutral browser probe result does not match the browser evidence result contract.',
-      );
-    }
-    return result;
-  };
-  return markProviderIdentity(wrapped, callback);
+  if (typeof core.assertBrowserProbeSession !== 'function') {
+    const error = new Error(
+      'Compatible explainer-kit does not export browser session validation.',
+    );
+    error.code = 'E_CORE_INCOMPATIBLE';
+    throw error;
+  }
+  try {
+    return core.assertBrowserProbeSession(resolvedSession, {
+      allowFixture: !required,
+    });
+  } catch (cause) {
+    const error = new Error(
+      `Browser session validation failed: ${cause?.message ?? String(cause)}`,
+      { cause },
+    );
+    error.code = 'E_BROWSER_PROBE_REQUIRED';
+    throw error;
+  }
 }
 
 async function resolveLifecycleVisualCritic({

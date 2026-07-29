@@ -6,6 +6,7 @@ import { dirname, join } from 'node:path';
 import { mock, test } from 'node:test';
 
 import {
+  createFixtureBrowserProbeSession,
   RUNTIME_UNAVAILABLE_REASONS,
   resolveHeadlessRuntime,
 } from '../scripts/lib/browser-runtime.mjs';
@@ -446,6 +447,28 @@ test('runs browser probe contract at representative widths with reduced motion',
   assert.deepEqual(report, { valid: true, issues: [], probes: calls.length });
 });
 
+test('refuses retained browser evidence without a trusted session identity', async (t) => {
+  const evidenceRoot = await mkdtemp(
+    join(tmpdir(), 'explainer-qa-untrusted-evidence-'),
+  );
+  t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
+
+  await assert.rejects(
+    runBrowserProbes({
+      artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
+      evidenceRoot,
+      requireEvidence: true,
+      probe: async () => ({
+        pageOverflowX: false,
+        clippedX: [],
+        reducedMotion: true,
+        keyboard: { tab: true },
+      }),
+    }),
+    /trusted browser session.*retained evidence/i,
+  );
+});
+
 test('retains bounded screenshot and metrics evidence at all recap viewports', async (t) => {
   const evidenceRoot = await mkdtemp(join(tmpdir(), 'explainer-qa-evidence-'));
   t.after(() => rm(evidenceRoot, { recursive: true, force: true }));
@@ -453,24 +476,26 @@ test('retains bounded screenshot and metrics evidence at all recap viewports', a
     artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
     evidenceRoot,
     requireEvidence: true,
-    probe: async (request) => {
-      await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
-        recursive: true,
-      });
-      await writeFile(
-        request.screenshotPath,
-        png(request.viewport.width, request.viewport.height),
-      );
-      return {
-        pageOverflowX: false,
-        clippedX: [],
-        viewportClipped: [],
-        unreadableHeadings: [],
-        animationsDisabled: true,
-        reducedMotion: true,
-        keyboard: { tab: true },
-      };
-    },
+    browserSession: createFixtureBrowserProbeSession({
+      probe: async (request) => {
+        await mkdir(join(evidenceRoot, 'qa/browser/project-recap'), {
+          recursive: true,
+        });
+        await writeFile(
+          request.screenshotPath,
+          png(request.viewport.width, request.viewport.height),
+        );
+        return {
+          pageOverflowX: false,
+          clippedX: [],
+          viewportClipped: [],
+          unreadableHeadings: [],
+          animationsDisabled: true,
+          reducedMotion: true,
+          keyboard: { tab: true },
+        };
+      },
+    }),
   });
 
   assert.deepEqual(
@@ -511,11 +536,22 @@ test('retains bounded screenshot and metrics evidence at all recap viewports', a
     const metrics = JSON.parse(
       await readFile(join(evidenceRoot, evidence.metricsPath), 'utf8'),
     );
-    assert.equal(metrics.schemaVersion, 'explainer-kit.browser-evidence/v1');
+    assert.equal(metrics.schemaVersion, 'explainer-kit.browser-evidence/v2');
     assert.equal(metrics.artifactId, 'project-recap');
     assert.equal(metrics.viewport, evidence.viewport);
+    assert.deepEqual(metrics.runtime, {
+      kind: 'fixture',
+      name: 'chromium',
+      version: 'deterministic-fixture',
+    });
+    assert.equal(metrics.captureIdentity, evidence.captureIdentity);
+    assert.match(metrics.captureIdentity, /^sha256:[a-f0-9]{64}$/);
     assert.equal('screenshotBytes' in metrics, false);
   }
+  assert.equal(
+    new Set(report.evidence.map(({ captureIdentity }) => captureIdentity)).size,
+    1,
+  );
 });
 
 test('rejects partial required recap browser evidence while lower tiers remain explicit', async (t) => {
@@ -544,7 +580,7 @@ test('rejects partial required recap browser evidence while lower tiers remain e
     artifacts: [artifact],
     evidenceRoot,
     requireEvidence: true,
-    probe,
+    browserSession: createFixtureBrowserProbeSession({ probe }),
   });
   assert.equal(required.valid, false);
   assert.ok(
@@ -580,19 +616,21 @@ test('rejects non-PNG and viewport-mismatched screenshot evidence', async (t) =>
       artifacts: [{ id: 'project-recap', type: 'hub', html: fixture() }],
       evidenceRoot,
       requireEvidence: true,
-      probe: async (request) => {
-        await mkdir(dirname(request.screenshotPath), { recursive: true });
-        await writeFile(request.screenshotPath, screenshot(request.viewport));
-        return {
-          pageOverflowX: false,
-          clippedX: [],
-          viewportClipped: [],
-          unreadableHeadings: [],
-          animationsDisabled: true,
-          reducedMotion: true,
-          keyboard: { tab: true },
-        };
-      },
+      browserSession: createFixtureBrowserProbeSession({
+        probe: async (request) => {
+          await mkdir(dirname(request.screenshotPath), { recursive: true });
+          await writeFile(request.screenshotPath, screenshot(request.viewport));
+          return {
+            pageOverflowX: false,
+            clippedX: [],
+            viewportClipped: [],
+            unreadableHeadings: [],
+            animationsDisabled: true,
+            reducedMotion: true,
+            keyboard: { tab: true },
+          };
+        },
+      }),
     });
     assert.equal(report.valid, false, label);
     assert.equal(report.evidence.length, 0, label);
@@ -1002,6 +1040,9 @@ test('independent visual review binds the full rendered set and actionable rubri
     tablet: [768, 1024],
     desktop: [1440, 900],
   };
+  const browserSession = createFixtureBrowserProbeSession({
+    probe: async () => ({}),
+  });
   const evidence = rendered.flatMap(({ artifactId }) =>
     ['mobile', 'tablet', 'desktop'].map((viewport) => {
       const bytes = png(...viewportSizes[viewport]);
@@ -1011,6 +1052,8 @@ test('independent visual review binds the full rendered set and actionable rubri
         screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
         decodedScreenshotHash: decodeBrowserPng(bytes).decodedHash,
         metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
+        runtime: browserSession.runtime,
+        captureIdentity: browserSession.captureIdentity,
       };
     }),
   );

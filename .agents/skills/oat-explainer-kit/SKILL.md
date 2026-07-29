@@ -91,18 +91,21 @@ executable inputs before passing them to `core.runExplainer`; callbacks and
 module paths never enter the persisted run request.
 
 Also read `references/visual-review-callback.md`. Unattended `project-recap`
-runs require exactly one browser-evidence provider and one whole-set visual
-critic. In-process callers supply `browserProbe` and `visualCritic`; JSON/CLI
-callers supply `browserProbeModulePath` and `visualCriticModulePath`, naming
-modules with matching function exports. These are first-class adapter inputs;
-do not place either provider in `coreOptions`.
+runs require exactly one trusted launched-Chromium browser session and one
+whole-set visual critic. In-process callers supply a branded `browserSession`
+created by the compatible core and `visualCritic`; JSON/CLI callers supply
+`browserSessionModulePath` and `visualCriticModulePath`, naming modules with
+matching exports. Bare browser callbacks and caller-authored runtime metadata
+are rejected. These are first-class adapter inputs; do not place either
+provider in `coreOptions`.
 
 The adapter resolves all executable providers before core invocation, enforces
 direct-versus-module mutual exclusion, and requires distinct identities for
-authoring, fact criticism, browser evidence, and visual criticism. A missing
-required provider fails before the core runs. A runtime browser or visual-review
-failure is retained by the core as `built-needs-review`, never as a successful
-durability or publication outcome.
+authoring, fact criticism, browser evidence, and visual criticism. A missing,
+forged, or deterministic fixture session fails production validation before the
+core runs. A runtime browser or visual-review failure is retained by the core
+as `built-needs-review`, never as a successful durability or publication
+outcome.
 
 Unattended project runs pass `approved-oat-artifacts` provenance to the core's
 content-approval seam and never prompt. Automated completion and

@@ -675,8 +675,7 @@ function hubHtml(request, input, sourceUrl) {
     EYEBROW: 'Golden project recap',
     NAVIGATION: request.floor.requiredNarrative
       .map(
-        (id) =>
-          `<a href="#${id}">${escapeHtml(id.replaceAll('-', ' '))}</a>`,
+        (id) => `<a href="#${id}">${escapeHtml(id.replaceAll('-', ' '))}</a>`,
       )
       .join(''),
     CONTENT: `${cohesionMarkup()}${sections}`,
@@ -704,7 +703,10 @@ function graphForAuthor(request, input) {
 }
 
 function graphMarkup(graph) {
-  const columns = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(graph.nodes.length))));
+  const columns = Math.min(
+    4,
+    Math.max(2, Math.ceil(Math.sqrt(graph.nodes.length))),
+  );
   const positions = new Map(
     graph.nodes.map((node, index) => [
       node.id,
@@ -854,9 +856,7 @@ function benchmarkVisualCritic(input) {
     }
     for (const [from, to] of input.topology.edges) {
       assert.ok(
-        architectureHtml.includes(
-          `data-from="${from}" data-to="${to}"`,
-        ),
+        architectureHtml.includes(`data-from="${from}" data-to="${to}"`),
       );
     }
     calls.push({
@@ -938,12 +938,7 @@ async function retainRuntimeOutput({
         await copyRuntimeFile(
           result.runRoot,
           `qa/browser/${artifact.id}/${viewport}.${extension}`,
-          join(
-            outputRoot,
-            'evidence',
-            artifact.id,
-            `${viewport}.${extension}`,
-          ),
+          join(outputRoot, 'evidence', artifact.id, `${viewport}.${extension}`),
         );
       }
     }
@@ -951,9 +946,7 @@ async function retainRuntimeOutput({
   const catalogPath = `site/initiatives/${input.id}/catalog.json`;
   const [catalog, reviewResult] = await Promise.all([
     readJson(join(result.runRoot, catalogPath)),
-    readJson(
-      join(result.runRoot, 'qa/visual-review/attempt-1/result.json'),
-    ),
+    readJson(join(result.runRoot, 'qa/visual-review/attempt-1/result.json')),
   ]);
   const normalizedManifest = {
     schemaVersion: manifest.schemaVersion,
@@ -1018,6 +1011,7 @@ async function validateRetainedRuntimeOutput(caseRoot, input) {
     readJson(join(outputRoot, 'rubric-evaluation.json')),
   ]);
   assert.equal(summary.caseId, input.id);
+  assert.equal(summary.browser.kind, 'launched');
   assert.equal(summary.browser.name, 'chromium');
   assert.ok(summary.browser.version);
   assert.equal(summary.visualCritic.independentFromAuthor, true);
@@ -1065,6 +1059,9 @@ async function validateRetainedRuntimeOutput(caseRoot, input) {
       const metrics = await readJson(
         join(outputRoot, 'evidence', artifactId, `${viewport}.json`),
       );
+      assert.equal(metrics.schemaVersion, 'explainer-kit.browser-evidence/v2');
+      assert.deepEqual(metrics.runtime, summary.browser);
+      assert.match(metrics.captureIdentity, /^sha256:[a-f0-9]{64}$/);
       assert.equal(metrics.metrics.pageOverflowX, false);
     }
   }
@@ -1108,7 +1105,7 @@ async function runGoldenBenchmark(caseId) {
       {
         author,
         planSet: benchmarkPlanSet(fixture.input),
-        browserProbe: session.probe,
+        browserSession: session,
         visualCritic,
         now: () => benchmarkGeneratedAt,
       },

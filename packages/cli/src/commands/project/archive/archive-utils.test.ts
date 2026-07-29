@@ -80,7 +80,7 @@ describe('archive utils', () => {
   }> {
     const relativeRunPath = join('explainers', 'project-recap', runName);
     const runRoot = join(projectPath, relativeRunPath);
-    const files: Record<string, string> = {
+    const files: Record<string, string | Buffer> = {
       'run-request.json': `${JSON.stringify({ mode })}\n`,
       'source/fact-base.json': '{"claims":[]}\n',
       'source/fact-base.md': '# Facts\n',
@@ -105,28 +105,145 @@ describe('archive utils', () => {
       includeReviewEvidence ??
       (mode === 'unattended' && outcome === 'built-not-durable');
     if (retainReviewEvidence) {
-      files['qa/visual-review/attempt-1/request.json'] = '{}\n';
-      files['qa/visual-review/attempt-1/result.json'] = '{}\n';
+      const runtime = {
+        kind: 'launched',
+        name: 'chromium',
+        version: '123.0.6312.0',
+      };
+      const capture = {
+        format: 'png',
+        fullPage: false,
+        reducedMotion: 'reduce',
+        animationsDisabled: true,
+      };
+      const captureIdentity = canonicalHash({ runtime, capture });
+      const renderedHash = hashContent(files['site/index.html']);
+      const plan = {
+        schemaVersion: 'explainer-kit.set-plan/v1',
+        planId: 'recap-plan',
+        recipe: { id: 'project-recap', version: '1' },
+        sourceIds: ['plan'],
+        ledger: {
+          terminology: [{ term: 'recap', meaning: 'The project recap.' }],
+          statuses: [{ subject: 'review', value: 'passed' }],
+          numbers: [{ subject: 'artifacts', value: 1, unit: 'artifact' }],
+        },
+        portfolio: [
+          {
+            artifactId: 'recap',
+            artifactType: 'hub',
+            profileId: 'recap-hub',
+            required: true,
+            sourceIds: ['plan'],
+            draft: 'Summarize the completed project.',
+            visualIntent: 'Lead with the reviewed outcome.',
+          },
+        ],
+      };
+      const evidence = [];
       for (const viewport of ['mobile', 'tablet', 'desktop']) {
-        files[`qa/browser/recap/${viewport}.png`] = `png-${viewport}\n`;
-        files[`qa/browser/recap/${viewport}.json`] = '{}\n';
+        const screenshot = Buffer.from([
+          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
+        ]);
+        const metrics = `${JSON.stringify({
+          schemaVersion: 'explainer-kit.browser-evidence/v2',
+          artifactId: 'recap',
+          viewport,
+          scenario: 'default',
+          runtime,
+          capture,
+          captureIdentity,
+          metrics: {
+            pageOverflowX: false,
+            clippedX: [],
+            viewportClipped: [],
+            unreadableHeadings: [],
+          },
+        })}\n`;
+        const screenshotPath = `qa/browser/recap/${viewport}.png`;
+        const metricsPath = `qa/browser/recap/${viewport}.json`;
+        files[screenshotPath] = screenshot;
+        files[metricsPath] = metrics;
         files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.png`] =
-          `png-${viewport}\n`;
+          screenshot;
         files[`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`] =
-          '{}\n';
+          metrics;
+        evidence.push({
+          viewport,
+          screenshotPath,
+          screenshotHash: hashContent(screenshot),
+          metricsPath,
+          metricsHash: hashContent(metrics),
+          captureIdentity,
+        });
       }
+      const requestPayload = {
+        schemaVersion: 'explainer-kit.visual-review-request/v1',
+        browserRuntime: runtime,
+        captureIdentity,
+        plan,
+        renderedArtifacts: [
+          {
+            artifactId: 'recap',
+            renderedPath: 'site/index.html',
+            renderedHash,
+            cohesionObservations: [
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'terminology',
+                claim: 'recap',
+                value: 'recap',
+              },
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'statuses',
+                claim: 'review',
+                value: 'passed',
+              },
+              {
+                artifactId: 'recap',
+                contentHash: renderedHash,
+                group: 'numericClaims',
+                claim: 'artifacts',
+                value: 1,
+              },
+            ],
+            evidence,
+          },
+        ],
+      };
+      const requestHash = canonicalHash(requestPayload);
+      const reviewRequest = {
+        ...requestPayload,
+        requestId: `visual-review-${requestHash.replace(/^sha256:/, '')}`,
+        requestHash,
+      };
+      files['qa/visual-review/attempt-1/request.json'] =
+        `${JSON.stringify(reviewRequest)}\n`;
+      files['qa/visual-review/attempt-1/result.json'] = `${JSON.stringify({
+        schemaVersion: 'explainer-kit.visual-review-result/v1',
+        reviewId: 'archive-review',
+        requestId: reviewRequest.requestId,
+        requestHash,
+        reviewedAt: '2026-04-01T12:34:56.000Z',
+        disposition: 'pass',
+        artifactIds: ['recap'],
+        findings: [],
+      })}\n`;
     }
 
     for (const [relativePath, contents] of Object.entries(files)) {
       const target = join(runRoot, relativePath);
       await mkdir(dirname(target), { recursive: true });
-      await writeFile(target, contents, 'utf8');
+      await writeFile(target, contents);
     }
 
     const immutableHashes = Object.fromEntries(
       Object.entries(files).map(([relativePath, contents]) => [
         relativePath,
-        `sha256:${createHash('sha256').update(contents).digest('hex')}`,
+        hashContent(contents),
       ]),
     );
     const manifestPath = join(runRoot, 'manifest.json');
@@ -1961,3 +2078,23 @@ describe('archive utils', () => {
     });
   });
 });
+
+function hashContent(value: string | Buffer): string {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+function canonicalHash(value: unknown): string {
+  return hashContent(JSON.stringify(canonicalize(value)));
+}
+
+function canonicalize(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value)
+        .sort(([left], [right]) => left.localeCompare(right))
+        .map(([key, entry]) => [key, canonicalize(entry)]),
+    );
+  }
+  return value;
+}

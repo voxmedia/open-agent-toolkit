@@ -53,14 +53,9 @@
     "caseId": "explainer-authoring-redesign",
     "generatedAt": "2026-07-29T16:00:00.000Z",
     "browser": {
+      "kind": "launched",
       "name": "chromium",
-      "version": "147.0.7727.15",
-      "capture": {
-        "format": "png",
-        "fullPage": false,
-        "reducedMotion": "reduce",
-        "animationsDisabled": true
-      }
+      "version": "147.0.7727.15"
     },
     "outcome": "built-not-durable",
     "marking": "auto-drafted",

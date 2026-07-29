@@ -745,6 +745,25 @@ describe('validateOatSkills', () => {
     }
   });
 
+  it('keeps the explainer skill family on the trusted browser-session contract', async () => {
+    const [coreContract, adapterSkill] = await Promise.all([
+      readRepoFile(
+        '.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+      ),
+      readRepoFile('.agents/skills/oat-explainer-kit/SKILL.md'),
+    ]);
+
+    expect(coreContract).toContain('explainer-kit.package-coverage/v2');
+    expect(coreContract).toContain(
+      'export async function validateImmutablePackageEvidence',
+    );
+    expect(adapterSkill).toContain('`browserSession`');
+    expect(adapterSkill).toContain('`browserSessionModulePath`');
+    expect(adapterSkill).toMatch(
+      /Bare browser callbacks and caller-authored runtime metadata\s+are rejected/,
+    );
+  });
+
   it('keeps agent-instructions delta analysis aligned with numbered steps', async () => {
     const content = await readRepoFile(
       '.agents/skills/oat-agent-instructions-analyze/SKILL.md',

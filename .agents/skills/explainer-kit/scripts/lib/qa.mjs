@@ -1,6 +1,7 @@
 import { readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { assertBrowserProbeSession } from './browser-runtime.mjs';
 import { writeJsonAtomic } from './fs-safe.mjs';
 import { findUnpinnedResourceRefs } from './html-safety.mjs';
 import { decodeBrowserPng } from './png.mjs';
@@ -526,6 +527,7 @@ export function checkArtifactCohesion(artifacts, { ledger = null } = {}) {
 export async function runBrowserProbes({
   artifacts,
   probe,
+  browserSession,
   widths = REPRESENTATIVE_WIDTHS,
   evidenceRoot,
   requireEvidence = false,
@@ -533,8 +535,23 @@ export async function runBrowserProbes({
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Browser QA requires at least one artifact.');
   }
-  if (typeof probe !== 'function') {
+  if (browserSession !== undefined && probe !== undefined) {
+    throw new TypeError(
+      'Browser QA accepts either a trusted browser session or a bare non-retaining probe, not both.',
+    );
+  }
+  const session =
+    browserSession === undefined
+      ? null
+      : assertBrowserProbeSession(browserSession, { allowFixture: true });
+  const resolvedProbe = session?.probe ?? probe;
+  if (typeof resolvedProbe !== 'function') {
     throw new TypeError('Browser QA requires a probe callback.');
+  }
+  if (evidenceRoot && !session) {
+    throw new TypeError(
+      'A trusted browser session is required for retained evidence.',
+    );
   }
   if (
     !Array.isArray(widths) ||
@@ -596,7 +613,17 @@ export async function runBrowserProbes({
               },
             }),
         };
-        const result = await probe(request);
+        let result;
+        try {
+          result = await resolvedProbe(request);
+        } catch (cause) {
+          const error = new Error(
+            `Browser evidence callback failed: ${cause?.message ?? String(cause)}`,
+            { cause },
+          );
+          error.code = 'E_VISUAL_REVIEW';
+          throw error;
+        }
         probes += 1;
         validateProbeResult(result, artifact.id, width, request);
 
@@ -610,6 +637,7 @@ export async function runBrowserProbes({
             screenshotPath,
             metricsPath,
             result,
+            browserSession: session,
           });
           if (retained.valid) {
             evidence.push(retained.evidence);
@@ -733,6 +761,7 @@ export async function auditArtifactSet({
   artifacts,
   denylist = [],
   browserProbe,
+  browserSession,
   widths,
   evidenceRoot,
   requireBrowserEvidence = false,
@@ -755,10 +784,11 @@ export async function auditArtifactSet({
         ledger: setPlan.ledger,
       }),
   });
-  const browser = browserProbe
+  const browserProvider = browserSession ?? browserProbe;
+  const browser = browserProvider
     ? await runBrowserProbes({
         artifacts,
-        probe: browserProbe,
+        ...(browserSession ? { browserSession } : { probe: browserProbe }),
         ...(widths && { widths }),
         ...(evidenceRoot && { evidenceRoot }),
         ...(requireBrowserEvidence && { requireEvidence: true }),
@@ -787,6 +817,7 @@ async function retainBrowserEvidence({
   screenshotPath,
   metricsPath,
   result,
+  browserSession,
 }) {
   let screenshot;
   try {
@@ -820,17 +851,14 @@ async function retainBrowserEvidence({
     };
   }
   await writeJsonAtomic(evidenceRoot, metricsPath, {
-    schemaVersion: 'explainer-kit.browser-evidence/v1',
+    schemaVersion: 'explainer-kit.browser-evidence/v2',
     artifactId,
     viewport,
     viewportSize,
     scenario: 'default',
-    capture: {
-      format: 'png',
-      fullPage: false,
-      reducedMotion: 'reduce',
-      animationsDisabled: true,
-    },
+    runtime: structuredClone(browserSession.runtime),
+    capture: structuredClone(browserSession.capture),
+    captureIdentity: browserSession.captureIdentity,
     screenshotPath,
     metrics: structuredClone(result),
   });
@@ -844,6 +872,8 @@ async function retainBrowserEvidence({
       screenshotPath,
       decodedScreenshotHash: decoded.decodedHash,
       metricsPath,
+      runtime: structuredClone(browserSession.runtime),
+      captureIdentity: browserSession.captureIdentity,
     },
   };
 }

@@ -8,6 +8,8 @@
     "schemaVersion",
     "requestId",
     "requestHash",
+    "browserRuntime",
+    "captureIdentity",
     "plan",
     "renderedArtifacts"
   ],
@@ -17,6 +19,8 @@
     },
     "requestId": { "$ref": "#/$defs/safeId" },
     "requestHash": { "$ref": "#/$defs/hash" },
+    "browserRuntime": { "$ref": "#/$defs/browserRuntime" },
+    "captureIdentity": { "$ref": "#/$defs/hash" },
     "plan": { "$ref": "explainer-kit.set-plan/v1" },
     "renderedArtifacts": {
       "type": "array",
@@ -38,6 +42,16 @@
     "hash": {
       "type": "string",
       "pattern": "^sha256:[a-f0-9]{64}$"
+    },
+    "browserRuntime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kind", "name", "version"],
+      "properties": {
+        "kind": { "enum": ["launched", "fixture"] },
+        "name": { "const": "chromium" },
+        "version": { "type": "string", "minLength": 1 }
+      }
     },
     "renderedArtifact": {
       "type": "object",
@@ -87,14 +101,16 @@
         "screenshotPath",
         "screenshotHash",
         "metricsPath",
-        "metricsHash"
+        "metricsHash",
+        "captureIdentity"
       ],
       "properties": {
         "viewport": { "enum": ["desktop", "tablet", "mobile"] },
         "screenshotPath": { "$ref": "#/$defs/safeRelativePath" },
         "screenshotHash": { "$ref": "#/$defs/hash" },
         "metricsPath": { "$ref": "#/$defs/safeRelativePath" },
-        "metricsHash": { "$ref": "#/$defs/hash" }
+        "metricsHash": { "$ref": "#/$defs/hash" },
+        "captureIdentity": { "$ref": "#/$defs/hash" }
       }
     }
   }

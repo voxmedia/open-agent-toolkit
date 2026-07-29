@@ -7,7 +7,7 @@ import test, { afterEach } from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
+import { createBrowserProbeSession } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -219,8 +219,8 @@ test('author guidance carries briefs, evidence, artistic inputs, and expansion p
 
 test('adapter guidance exposes first-class browser and visual-review providers', () => {
   for (const input of [
-    'browserProbe',
-    'browserProbeModulePath',
+    'browserSession',
+    'browserSessionModulePath',
     'visualCritic',
     'visualCriticModulePath',
   ]) {
@@ -230,6 +230,8 @@ test('adapter guidance exposes first-class browser and visual-review providers',
     assert.match(visualReviewCallback, pattern);
   }
   assert.match(visualReviewCallback, /canonical 320, 768, and 1440\s+widths/);
+  assert.match(visualReviewCallback, /launched `Browser` instance/);
+  assert.match(visualReviewCallback, /rejected by unattended\s+project-recap/);
   assert.match(
     visualReviewCallback,
     /request's exact `requestId` and `requestHash`/,
@@ -549,39 +551,6 @@ async function completionPlanSet({ recipe, factBase }) {
   };
 }
 
-async function completionBrowserProbe(request) {
-  if (request.screenshotPath) {
-    await mkdir(dirname(request.screenshotPath), { recursive: true });
-    await writeFile(
-      request.screenshotPath,
-      png(request.viewport.width, request.viewport.height),
-    );
-  }
-  return {
-    pageOverflowX: false,
-    clippedX: [],
-    viewportClipped: [],
-    unreadableHeadings: [],
-    animationsDisabled: true,
-    reducedMotion: true,
-    keyboard: {
-      tab: true,
-      arrows: {
-        ArrowLeft: true,
-        ArrowRight: true,
-        ArrowUp: true,
-        ArrowDown: true,
-      },
-    },
-    ...(request.scenario !== 'default' && {
-      deckLayout: {
-        flow: 'vertical',
-        overflowX: request.scenario === 'print' ? 'visible' : 'auto',
-      },
-    }),
-  };
-}
-
 async function completionVisualCritic(request) {
   return {
     schemaVersion: 'explainer-kit.visual-review-result/v1',
@@ -700,55 +669,65 @@ async function recapFromEvidence({
   );
   const revision = revisionOutput.trim();
 
-  const result = await runOatExplainer({
-    adapterRoot: SOURCE_ADAPTER_ROOT,
-    userSkillsRoot: SOURCE_SKILLS_ROOT,
-    repoRoot: repoRootFixture,
-    invocation: 'project',
-    activeProject: '.oat/projects/shared/demo',
-    recipe: 'project-recap',
-    slug,
-    author,
-    planSet: completionPlanSet,
-    critic: async () => ({
-      criticId: 'autonomy-check-critic',
-      executedAt: '2026-07-20T12:00:00.000Z',
-      findings: [],
-    }),
-    browserProbe: completionBrowserProbe,
-    visualCritic: completionVisualCritic,
-    getConfig: async (key) => ({
-      status: 'ok',
-      key,
-      value:
-        key === 'explainers.defaults.palette'
-          ? 'neutral'
-          : key === 'explainers.defaults.visualProfile'
-            ? 'clean'
-            : key.startsWith('workflow.')
-              ? 'ask'
-              : null,
-      source: 'default',
-    }),
-    mode: 'unattended',
-  });
-  assert.ok(result.manifest, JSON.stringify(result.result));
-  const hubPath = result.manifest.artifacts?.find(
-    ({ id }) => id === 'project-recap',
-  )?.renderedPath;
-  assert.ok(hubPath, JSON.stringify(result.result));
+  const browserSession = await createBrowserProbeSession();
+  assert.equal(
+    browserSession.available,
+    true,
+    `installed Chromium unavailable: ${browserSession.reason}`,
+  );
+  try {
+    const result = await runOatExplainer({
+      adapterRoot: SOURCE_ADAPTER_ROOT,
+      userSkillsRoot: SOURCE_SKILLS_ROOT,
+      repoRoot: repoRootFixture,
+      invocation: 'project',
+      activeProject: '.oat/projects/shared/demo',
+      recipe: 'project-recap',
+      slug,
+      author,
+      planSet: completionPlanSet,
+      critic: async () => ({
+        criticId: 'autonomy-check-critic',
+        executedAt: '2026-07-20T12:00:00.000Z',
+        findings: [],
+      }),
+      browserSession,
+      visualCritic: completionVisualCritic,
+      getConfig: async (key) => ({
+        status: 'ok',
+        key,
+        value:
+          key === 'explainers.defaults.palette'
+            ? 'neutral'
+            : key === 'explainers.defaults.visualProfile'
+              ? 'clean'
+              : key.startsWith('workflow.')
+                ? 'ask'
+                : null,
+        source: 'default',
+      }),
+      mode: 'unattended',
+    });
+    assert.ok(result.manifest, JSON.stringify(result.result));
+    const hubPath = result.manifest.artifacts?.find(
+      ({ id }) => id === 'project-recap',
+    )?.renderedPath;
+    assert.ok(hubPath, JSON.stringify(result.result));
 
-  return {
-    result,
-    hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
-    factBase: JSON.parse(
-      await readFile(
-        join(result.result.runRoot, 'source', 'fact-base.json'),
-        'utf8',
+    return {
+      result,
+      hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
+      factBase: JSON.parse(
+        await readFile(
+          join(result.result.runRoot, 'source', 'fact-base.json'),
+          'utf8',
+        ),
       ),
-    ),
-    revision,
-  };
+      revision,
+    };
+  } finally {
+    await browserSession.close();
+  }
 }
 
 function lifecycleArtifacts({ decisions, components, checks }) {

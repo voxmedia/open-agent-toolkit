@@ -6,6 +6,12 @@ import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { browserCaptureIdentity } from '../../explainer-kit/scripts/lib/browser-runtime.mjs';
+import {
+  canonicalHash,
+  visualReviewRequestId,
+} from '../../explainer-kit/scripts/lib/contracts.mjs';
+import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 import {
   planTrackedRunFinalization as planTrackedRunFinalizationCore,
   verifyTrackedRunFinalization,
@@ -279,7 +285,7 @@ test('loads versioned package coverage from the explicit compatible core root', 
       project: 'demo',
       coreRoot: incompatibleCore,
     }),
-    /explainer-kit\.package-coverage\/v1/i,
+    /explainer-kit\.package-coverage\/v2/i,
   );
 });
 
@@ -375,6 +381,34 @@ test('rejects incomplete or mutated review evidence before planning commits', as
   );
 });
 
+test('rejects hash-valid cross-record browser capture identity drift', async () => {
+  const fixture = await createRun();
+  const metricsPath = 'qa/browser/recap/mobile.json';
+  const absoluteMetricsPath = join(fixture.runRoot, metricsPath);
+  const metrics = JSON.parse(await readFile(absoluteMetricsPath, 'utf8'));
+  metrics.runtime.version = '124.0.6367.0';
+  metrics.captureIdentity = browserCaptureIdentity(
+    metrics.runtime,
+    metrics.capture,
+  );
+  await writeFile(absoluteMetricsPath, `${JSON.stringify(metrics, null, 2)}\n`);
+
+  const manifest = JSON.parse(await readFile(fixture.manifestPath, 'utf8'));
+  manifest.immutableHashes[metricsPath] = await fileHash(absoluteMetricsPath);
+  await writeFile(
+    fixture.manifestPath,
+    `${JSON.stringify(manifest, null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    planTrackedRunFinalization(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /browser.*capture identity|capture identity.*mismatch/i,
+  );
+});
+
 function successfulObservation(fixture) {
   return {
     artifactCommit: { sha: SHA, paths: fixture.immutablePaths },
@@ -422,21 +456,146 @@ async function createRun({
     ['site/index.html', '<h1>Recap</h1>\n'],
   ];
   if (includeReviewEvidence) {
-    files.push(
-      ['qa/visual-review/attempt-1/request.json', '{}\n'],
-      ['qa/visual-review/attempt-1/result.json', '{}\n'],
-    );
-    for (const viewport of ['mobile', 'tablet', 'desktop']) {
-      files.push(
-        [`qa/browser/recap/${viewport}.png`, `png-${viewport}\n`],
-        [`qa/browser/recap/${viewport}.json`, '{}\n'],
+    const runtime = {
+      kind: 'launched',
+      name: 'chromium',
+      version: '123.0.6312.0',
+    };
+    const capture = {
+      format: 'png',
+      fullPage: false,
+      reducedMotion: 'reduce',
+      animationsDisabled: true,
+    };
+    const captureIdentity = browserCaptureIdentity(runtime, capture);
+    const renderedBytes = Buffer.from('<h1>Recap</h1>\n');
+    const plan = {
+      schemaVersion: 'explainer-kit.set-plan/v1',
+      planId: 'recap-plan',
+      recipe: { id: 'project-recap', version: '1' },
+      sourceIds: ['plan'],
+      ledger: {
+        terminology: [{ term: 'recap', meaning: 'The project recap.' }],
+        statuses: [{ subject: 'review', value: 'passed' }],
+        numbers: [{ subject: 'artifacts', value: 1, unit: 'artifact' }],
+      },
+      portfolio: [
+        {
+          artifactId: 'recap',
+          artifactType: 'hub',
+          profileId: 'recap-hub',
+          required: true,
+          sourceIds: ['plan'],
+          draft: 'Summarize the completed project.',
+          visualIntent: 'Lead with the reviewed outcome.',
+        },
+      ],
+    };
+    const evidence = [];
+    const reviewFiles = [];
+    for (const [viewport, width] of [
+      ['mobile', 320],
+      ['tablet', 768],
+      ['desktop', 1440],
+    ]) {
+      const screenshotBytes = png(width, 900);
+      const metrics = {
+        schemaVersion: 'explainer-kit.browser-evidence/v2',
+        artifactId: 'recap',
+        viewport,
+        scenario: 'default',
+        runtime,
+        capture,
+        captureIdentity,
+        metrics: {
+          pageOverflowX: false,
+          clippedX: [],
+          viewportClipped: [],
+          unreadableHeadings: [],
+        },
+      };
+      const metricsBytes = jsonBytes(metrics);
+      const screenshotPath = `qa/browser/recap/${viewport}.png`;
+      const metricsPath = `qa/browser/recap/${viewport}.json`;
+      evidence.push({
+        viewport,
+        screenshotPath,
+        screenshotHash: hashBytes(screenshotBytes),
+        metricsPath,
+        metricsHash: hashBytes(metricsBytes),
+        captureIdentity,
+      });
+      reviewFiles.push(
+        [screenshotPath, screenshotBytes],
+        [metricsPath, metricsBytes],
         [
           `qa/visual-review/attempt-1/evidence/recap/${viewport}.png`,
-          `png-${viewport}\n`,
+          screenshotBytes,
         ],
-        [`qa/visual-review/attempt-1/evidence/recap/${viewport}.json`, '{}\n'],
+        [
+          `qa/visual-review/attempt-1/evidence/recap/${viewport}.json`,
+          metricsBytes,
+        ],
       );
     }
+    const requestPayload = {
+      schemaVersion: 'explainer-kit.visual-review-request/v1',
+      browserRuntime: runtime,
+      captureIdentity,
+      plan,
+      renderedArtifacts: [
+        {
+          artifactId: 'recap',
+          renderedPath: 'site/index.html',
+          renderedHash: hashBytes(renderedBytes),
+          cohesionObservations: [
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'terminology',
+              claim: 'recap',
+              value: 'recap',
+            },
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'statuses',
+              claim: 'review',
+              value: 'passed',
+            },
+            {
+              artifactId: 'recap',
+              contentHash: hashBytes(renderedBytes),
+              group: 'numericClaims',
+              claim: 'artifacts',
+              value: 1,
+            },
+          ],
+          evidence,
+        },
+      ],
+    };
+    const requestHash = canonicalHash(requestPayload);
+    const reviewRequest = {
+      ...requestPayload,
+      requestId: visualReviewRequestId(requestHash),
+      requestHash,
+    };
+    const reviewResult = {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: 'finalizer-review',
+      requestId: reviewRequest.requestId,
+      requestHash,
+      reviewedAt: '2026-07-18T00:00:00.000Z',
+      disposition: 'pass',
+      artifactIds: ['recap'],
+      findings: [],
+    };
+    files.push(
+      ['qa/visual-review/attempt-1/request.json', jsonBytes(reviewRequest)],
+      ['qa/visual-review/attempt-1/result.json', jsonBytes(reviewResult)],
+      ...reviewFiles,
+    );
   }
   for (const [path, content] of files) {
     await mkdir(dirname(join(runRoot, path)), { recursive: true });
@@ -490,4 +649,12 @@ async function fileHash(path) {
   return `sha256:${createHash('sha256')
     .update(await readFile(path))
     .digest('hex')}`;
+}
+
+function hashBytes(value) {
+  return `sha256:${createHash('sha256').update(value).digest('hex')}`;
+}
+
+function jsonBytes(value) {
+  return Buffer.from(`${JSON.stringify(value, null, 2)}\n`);
 }

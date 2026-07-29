@@ -1,8 +1,8 @@
 {
   "schemaVersion": "explainer-kit.visual-review-result/v1",
   "reviewId": "simple-golden-review",
-  "requestId": "visual-review-abb0abc027a2efd453a2ee7e1447134d306b86d5d86a68cec6ffbda0ec7e8f12",
-  "requestHash": "sha256:abb0abc027a2efd453a2ee7e1447134d306b86d5d86a68cec6ffbda0ec7e8f12",
+  "requestId": "visual-review-21b019a9da413e865bd3a3b3bddafb13ede7179416b7f9038b1d37edc0ca6350",
+  "requestHash": "sha256:21b019a9da413e865bd3a3b3bddafb13ede7179416b7f9038b1d37edc0ca6350",
   "reviewedAt": "2026-07-29T16:00:00.000Z",
   "disposition": "pass",
   "artifactIds": ["project-recap", "architecture", "deck"],

@@ -106,7 +106,9 @@ Visual review uses provider-neutral
 `explainer-kit.visual-review-result/v1` envelopes. The request combines the
 shared plan with rendered artifact paths and viewport evidence, binds every
 rendered file, screenshot, and metrics file by raw-byte SHA-256 hash, and
-derives a deterministic `requestId` and canonical `requestHash`. The critic
+binds the launched Chromium name, version, and stable capture identity from
+`explainer-kit.browser-evidence/v2`. It derives a deterministic `requestId` and
+canonical `requestHash`. The critic
 receives a confined reader for those snapshotted paths and cannot read
 unlisted evidence. Core revalidates the bytes after the callback returns.
 Before snapshotting, each screenshot must fully decode as a bounded,
@@ -124,11 +126,20 @@ correction finding. Provider, model, command, credential, and dispatch fields
 are not part of any core contract.
 
 Unattended project recaps require retained browser evidence at every required
-viewport and a final visual-critic `pass`. A missing browser probe or visual
-critic, a terminal `fail`, or a second `correct` after the one allowed
-correction pass closes the QA gate with `built-needs-review`. That terminal
-outcome preserves rendered artifacts and all available review evidence while
-skipping durability and publish callbacks.
+viewport from a branded session returned by `createBrowserProbeSession()` and a
+final visual-critic `pass`. The core derives `runtime.name` and
+`runtime.version` from the launched browser instance; caller assertions cannot
+replace that identity. Deterministic fixture sessions are explicit and may be
+used only in bounded non-production tests. A fixture session, missing trusted
+session, visual-critic failure, terminal `fail`, or second `correct` after the
+one allowed correction pass closes the QA gate with `built-needs-review`. That
+terminal outcome preserves rendered artifacts and all available review
+evidence while skipping durability and publish callbacks.
+
+The canonical immutable evidence consumer contract is
+`explainer-kit.package-coverage/v2`. It requires one matching launched-Chromium
+runtime and capture identity across browser metrics, review requests, retained
+attempt copies, manifest hashes, finalization, and archive validation.
 
 ## Explicit source forms
 

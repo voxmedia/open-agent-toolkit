@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { CliError } from '@errors/cli-error';
 import { resolveAssetsRoot } from '@fs/assets';
 
-const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v1';
+const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
 
 export interface ExplainerPackageCoverage {
   PACKAGE_COVERAGE_VERSION: typeof PACKAGE_COVERAGE_VERSION;
@@ -12,6 +12,13 @@ export interface ExplainerPackageCoverage {
     manifest: unknown,
     options?: { runMode?: 'interactive' | 'unattended' },
   ) => string[];
+  validateImmutablePackageEvidence: (
+    manifest: unknown,
+    options: {
+      runMode?: 'interactive' | 'unattended';
+      read: (path: string) => Promise<Buffer | string>;
+    },
+  ) => Promise<void>;
 }
 
 let cachedCoverage: Promise<ExplainerPackageCoverage> | undefined;
@@ -45,7 +52,8 @@ async function loadGeneratedCoverage(): Promise<ExplainerPackageCoverage> {
   }
   if (
     loaded.PACKAGE_COVERAGE_VERSION !== PACKAGE_COVERAGE_VERSION ||
-    typeof loaded.requiredImmutablePackagePaths !== 'function'
+    typeof loaded.requiredImmutablePackagePaths !== 'function' ||
+    typeof loaded.validateImmutablePackageEvidence !== 'function'
   ) {
     throw new CliError(
       `Bundled assets must provide ${PACKAGE_COVERAGE_VERSION} package coverage.`,

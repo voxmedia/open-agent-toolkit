@@ -70,6 +70,7 @@ export async function buildVisualReviewRequest({
   if (typeof runRoot !== 'string' || runRoot.length === 0) {
     throw visualReviewError('Visual review requires a confined run root.');
   }
+  const browserBinding = browserBindingFor(evidence);
   const paths = [
     ...rendered.map(({ renderedPath }) => renderedPath),
     ...evidence.flatMap(({ screenshotPath, metricsPath }) => [
@@ -106,6 +107,8 @@ export async function buildVisualReviewRequest({
   }
   const payload = {
     schemaVersion: 'explainer-kit.visual-review-request/v1',
+    browserRuntime: browserBinding.runtime,
+    captureIdentity: browserBinding.captureIdentity,
     plan: structuredClone(plan),
     renderedArtifacts: rendered.map(({ artifactId, renderedPath }) => ({
       artifactId,
@@ -119,12 +122,13 @@ export async function buildVisualReviewRequest({
       }),
       evidence: evidence
         .filter((item) => item.artifactId === artifactId)
-        .map(({ viewport, screenshotPath, metricsPath }) => ({
+        .map(({ viewport, screenshotPath, metricsPath, captureIdentity }) => ({
           viewport,
           screenshotPath,
           screenshotHash: snapshots.get(screenshotPath).hash,
           metricsPath,
           metricsHash: snapshots.get(metricsPath).hash,
+          captureIdentity,
         })),
     })),
   };
@@ -154,6 +158,50 @@ export async function buildVisualReviewRequest({
     }
   }
   return { request, snapshots };
+}
+
+function browserBindingFor(evidence) {
+  if (evidence.length === 0) {
+    throw visualReviewError(
+      'Visual review requires trusted browser runtime evidence.',
+    );
+  }
+  const first = evidence[0];
+  if (
+    !validBrowserRuntime(first.runtime) ||
+    !/^sha256:[a-f0-9]{64}$/.test(first.captureIdentity ?? '')
+  ) {
+    throw visualReviewError(
+      'Visual review evidence is missing trusted browser runtime identity.',
+    );
+  }
+  const runtimeHash = canonicalHash(first.runtime);
+  for (const item of evidence) {
+    if (
+      !validBrowserRuntime(item.runtime) ||
+      canonicalHash(item.runtime) !== runtimeHash ||
+      item.captureIdentity !== first.captureIdentity
+    ) {
+      throw visualReviewError(
+        'Visual review browser runtime or capture identity does not match across evidence records.',
+      );
+    }
+  }
+  return {
+    runtime: structuredClone(first.runtime),
+    captureIdentity: first.captureIdentity,
+  };
+}
+
+function validBrowserRuntime(runtime) {
+  return (
+    runtime &&
+    typeof runtime === 'object' &&
+    ['launched', 'fixture'].includes(runtime.kind) &&
+    runtime.name === 'chromium' &&
+    typeof runtime.version === 'string' &&
+    runtime.version.length > 0
+  );
 }
 
 export function cohesionEvidenceFromLedger(artifacts, plan) {

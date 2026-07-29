@@ -1,4 +1,4 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { existsSync } from 'node:fs';
 import { mkdir } from 'node:fs/promises';
 import { createServer } from 'node:http';
@@ -37,6 +37,13 @@ const DISABLE_ANIMATIONS_CSS = `*, *::before, *::after {
   transition-duration: 0s !important;
   scroll-behavior: auto !important;
 }`;
+const BROWSER_SESSION_BRANDS = new WeakSet();
+const CAPTURE_SETTINGS = deepFreeze({
+  format: 'png',
+  fullPage: false,
+  reducedMotion: 'reduce',
+  animationsDisabled: true,
+});
 
 export const RUNTIME_UNAVAILABLE_REASONS = Object.freeze({
   driverMissing: 'browser-driver-not-installed',
@@ -137,6 +144,13 @@ export async function createBrowserProbeSession(options = {}) {
   }
 
   const browser = await runtime.launch();
+  let browserRuntime;
+  try {
+    browserRuntime = launchedBrowserRuntime(browser);
+  } catch (cause) {
+    await browser.close();
+    throw cause;
+  }
   const pages = new Map();
   const server = createServer((request, response) => {
     const html = pages.get(request.url);
@@ -159,18 +173,10 @@ export async function createBrowserProbeSession(options = {}) {
     throw cause;
   }
 
-  return {
+  return brandBrowserProbeSession({
     available: true,
-    runtime: {
-      name: runtime.name,
-      version: browser.version(),
-      capture: {
-        format: 'png',
-        fullPage: false,
-        reducedMotion: 'reduce',
-        animationsDisabled: true,
-      },
-    },
+    runtime: browserRuntime,
+    capture: CAPTURE_SETTINGS,
     probe: async (probeRequest) => {
       const route = `/${randomBytes(12).toString('hex')}.html`;
       pages.set(route, probeRequest.artifact.html);
@@ -187,7 +193,49 @@ export async function createBrowserProbeSession(options = {}) {
     close: async () => {
       await Promise.allSettled([browser.close(), closeServer(server)]);
     },
-  };
+  });
+}
+
+/**
+ * Deterministic probes are useful for bounded unit and integration tests, but
+ * they are never trusted production browser evidence.
+ */
+export function createFixtureBrowserProbeSession({ probe } = {}) {
+  if (typeof probe !== 'function') {
+    throw new TypeError('Fixture browser sessions require a probe callback.');
+  }
+  return brandBrowserProbeSession({
+    available: true,
+    runtime: {
+      kind: 'fixture',
+      name: 'chromium',
+      version: 'deterministic-fixture',
+    },
+    capture: CAPTURE_SETTINGS,
+    probe,
+    close: async () => {},
+  });
+}
+
+export function assertBrowserProbeSession(
+  session,
+  { allowFixture = false } = {},
+) {
+  if (
+    !session ||
+    typeof session !== 'object' ||
+    !BROWSER_SESSION_BRANDS.has(session)
+  ) {
+    throw new TypeError(
+      'Browser evidence requires a trusted browser session brand created by createBrowserProbeSession().',
+    );
+  }
+  if (session.runtime.kind === 'fixture' && !allowFixture) {
+    throw new TypeError(
+      'Deterministic fixture browser sessions are not allowed for production evidence.',
+    );
+  }
+  return session;
 }
 
 export async function probeRenderedPage(browser, url, request) {
@@ -465,4 +513,74 @@ function listen(server) {
 
 function closeServer(server) {
   return new Promise((resolveClose) => server.close(resolveClose));
+}
+
+function launchedBrowserRuntime(browser) {
+  const name = browser?.browserType?.().name?.();
+  const version = browser?.version?.();
+  if (
+    name !== 'chromium' ||
+    typeof version !== 'string' ||
+    version.trim().length === 0
+  ) {
+    throw new TypeError(
+      'Launched Chromium did not expose a trusted browser type and version.',
+    );
+  }
+  return deepFreeze({
+    kind: 'launched',
+    name,
+    version: version.trim(),
+  });
+}
+
+function brandBrowserProbeSession({
+  available,
+  runtime,
+  capture,
+  probe,
+  close,
+}) {
+  const trustedRuntime = deepFreeze(structuredClone(runtime));
+  const trustedCapture = deepFreeze(structuredClone(capture));
+  const session = Object.freeze({
+    available,
+    runtime: trustedRuntime,
+    capture: trustedCapture,
+    captureIdentity: browserCaptureIdentity(trustedRuntime, trustedCapture),
+    probe,
+    close,
+  });
+  BROWSER_SESSION_BRANDS.add(session);
+  return session;
+}
+
+export function browserCaptureIdentity(runtime, capture) {
+  return `sha256:${createHash('sha256')
+    .update(canonicalStringify({ runtime, capture }))
+    .digest('hex')}`;
+}
+
+function canonicalStringify(value) {
+  return JSON.stringify(canonicalize(value));
+}
+
+function canonicalize(value) {
+  if (Array.isArray(value)) return value.map(canonicalize);
+  if (value && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonicalize(value[key])]),
+    );
+  }
+  return value;
+}
+
+function deepFreeze(value) {
+  if (!value || typeof value !== 'object' || Object.isFrozen(value)) {
+    return value;
+  }
+  for (const nested of Object.values(value)) deepFreeze(nested);
+  return Object.freeze(value);
 }

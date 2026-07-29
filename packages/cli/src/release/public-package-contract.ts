@@ -94,8 +94,9 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       {
         path: 'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
         requiredContents: [
-          'explainer-kit.package-coverage/v1',
+          'explainer-kit.package-coverage/v2',
           'export function requiredImmutablePackagePaths',
+          'export async function validateImmutablePackageEvidence',
         ],
       },
       {

@@ -6,7 +6,7 @@ import { pathToFileURL } from 'node:url';
 const MODES = new Set(['dedicated', 'completion-bookkeeping']);
 const ARTIFACT_COMMIT_TOKEN = '$ARTIFACT_COMMIT';
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
-const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v1';
+const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v2';
 
 export async function planTrackedRunFinalization(request, context = {}) {
   assertRequest(request);
@@ -281,8 +281,8 @@ async function immutablePackagePaths(manifest, runRoot, packageCoverage) {
   }
   const runMode =
     manifest.recipe?.id === 'project-recap'
-    ? verifiedRunMode(verifiedBytes.get('run-request.json'))
-    : undefined;
+      ? verifiedRunMode(verifiedBytes.get('run-request.json'))
+      : undefined;
   const required = packageCoverage.requiredImmutablePackagePaths(manifest, {
     runMode,
   });
@@ -294,6 +294,10 @@ async function immutablePackagePaths(manifest, runRoot, packageCoverage) {
       `Manifest immutable hashes do not cover the canonical package: ${missing.join(', ')}.`,
     );
   }
+  await packageCoverage.validateImmutablePackageEvidence(manifest, {
+    runMode,
+    read: (path) => verifiedBytes.get(path),
+  });
   return paths;
 }
 
@@ -332,7 +336,8 @@ async function loadPackageCoverage(coreRoot) {
   }
   if (
     loaded.PACKAGE_COVERAGE_VERSION !== PACKAGE_COVERAGE_VERSION ||
-    typeof loaded.requiredImmutablePackagePaths !== 'function'
+    typeof loaded.requiredImmutablePackagePaths !== 'function' ||
+    typeof loaded.validateImmutablePackageEvidence !== 'function'
   ) {
     throw new Error(
       `coreRoot must provide ${PACKAGE_COVERAGE_VERSION} package coverage.`,

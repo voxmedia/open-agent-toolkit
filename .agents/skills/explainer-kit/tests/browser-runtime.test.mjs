@@ -49,9 +49,7 @@ test('probe applies injected CSS and neutralizes non-gated motion', async (t) =>
       injectedCss: ':root { --probe-injected: present; }',
       screenshotPath,
       evaluate: () => {
-        const animated = getComputedStyle(
-          document.querySelector('#animated'),
-        );
+        const animated = getComputedStyle(document.querySelector('#animated'));
         return {
           pageOverflowX: false,
           clippedX: [],
@@ -103,6 +101,64 @@ test('probe rejects unrecognized request fields', async () => {
   );
 });
 
+test('session identity comes from the launched browser instance', async () => {
+  let browserTypeReads = 0;
+  const browser = {
+    browserType() {
+      browserTypeReads += 1;
+      return { name: () => 'chromium' };
+    },
+    version() {
+      return '123.0.6312.0';
+    },
+    async close() {},
+  };
+  const session = await createBrowserProbeSession({
+    loadDriver: async () => ({
+      chromium: {
+        executablePath: () => '/opt/test-chromium',
+        launch: async () => browser,
+      },
+    }),
+    fileExists: (path) => path === '/opt/test-chromium',
+    env: {},
+  });
+
+  try {
+    assert.equal(session.available, true);
+    assert.deepEqual(session.runtime, {
+      kind: 'launched',
+      name: 'chromium',
+      version: '123.0.6312.0',
+    });
+    assert.match(session.captureIdentity, /^sha256:[a-f0-9]{64}$/);
+    assert.equal(browserTypeReads, 1);
+  } finally {
+    await session.close();
+  }
+});
+
+test('plain objects cannot forge a trusted browser session brand', async () => {
+  const { assertBrowserProbeSession } =
+    await import('../scripts/lib/browser-runtime.mjs');
+  assert.equal(typeof assertBrowserProbeSession, 'function');
+  assert.throws(
+    () =>
+      assertBrowserProbeSession({
+        available: true,
+        runtime: {
+          kind: 'launched',
+          name: 'chromium',
+          version: 'forged',
+        },
+        captureIdentity: `sha256:${'0'.repeat(64)}`,
+        probe: async () => ({}),
+        close: async () => {},
+      }),
+    /trusted browser session brand/i,
+  );
+});
+
 test('probe writes deterministic viewport screenshot evidence', async (t) => {
   const root = await mkdtemp(join(tmpdir(), 'explainer-browser-evidence-'));
   t.after(() => rm(root, { recursive: true, force: true }));
@@ -132,7 +188,11 @@ test('probe writes deterministic viewport screenshot evidence', async (t) => {
   };
 
   await probeRenderedPage(
-    { async newPage() { return page; } },
+    {
+      async newPage() {
+        return page;
+      },
+    },
     'https://example.invalid/probe',
     {
       artifact: { id: 'hub', type: 'hub', html: animatedFixture },

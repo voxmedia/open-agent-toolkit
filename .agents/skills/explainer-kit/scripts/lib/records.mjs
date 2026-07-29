@@ -12,6 +12,7 @@ import {
   SET_PLAN_RECORD_PATHS,
   VISUAL_REVISION_PATH,
   requiredImmutablePackagePaths,
+  validateImmutablePackageEvidence,
 } from './package-coverage.mjs';
 import { resolveRootConfinedPath } from './safe-paths.mjs';
 
@@ -20,6 +21,7 @@ export {
   SET_PLAN_RECORD_PATHS,
   VISUAL_REVISION_PATH,
   requiredImmutablePackagePaths,
+  validateImmutablePackageEvidence,
 } from './package-coverage.mjs';
 
 const STAGE_IDS = [
@@ -393,6 +395,10 @@ export async function writeManifestAtomic(run, manifest) {
       ? await verifiedRunRequestMode(run, manifest)
       : undefined;
   assertImmutablePackageCoverage(manifest, { runMode });
+  await validateImmutablePackageEvidence(manifest, {
+    runMode,
+    read: (path) => readFile(join(run.runRoot, path)),
+  });
   assertValidContract('manifest', manifest, { buildRecord });
   await writeJsonAtomic(run.runRoot, 'manifest.json', manifest);
   return run.manifestPath;
