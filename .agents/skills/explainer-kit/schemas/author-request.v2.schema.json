@@ -30,6 +30,11 @@
     "theme": { "$ref": "explainer-kit.theme/v1" },
     "setContext": { "$ref": "explainer-kit.set-plan/v1" },
     "plannedArtifact": { "$ref": "#/$defs/plannedArtifact" },
+    "graphSemantics": {
+      "type": "array",
+      "items": { "$ref": "#/$defs/graphSemantics" },
+      "minItems": 1
+    },
     "floor": {
       "type": "object",
       "additionalProperties": false,
@@ -45,6 +50,102 @@
     }
   },
   "$defs": {
+    "graphSemantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["direction", "nodes", "edges", "topology"],
+      "properties": {
+        "direction": { "enum": ["TD", "LR"] },
+        "nodes": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["id", "label", "shape", "explicit"],
+            "properties": {
+              "id": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+              "label": { "type": "string", "minLength": 1 },
+              "shape": { "enum": ["rectangle", "rounded", "diamond"] },
+              "explicit": { "type": "boolean" }
+            }
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "edges": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["from", "to", "kind", "label"],
+            "properties": {
+              "from": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "to": { "type": "string", "pattern": "^[A-Za-z][A-Za-z0-9_-]*$" },
+              "kind": { "enum": ["arrow", "line"] },
+              "label": { "type": "string" }
+            }
+          },
+          "minItems": 1
+        },
+        "topology": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "kind",
+            "features",
+            "branchNodes",
+            "fanInNodes",
+            "cycle",
+            "order"
+          ],
+          "properties": {
+            "kind": { "const": "non-linear" },
+            "features": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "branch",
+                  "fan-in",
+                  "cycle",
+                  "disconnected",
+                  "non-linear"
+                ]
+              },
+              "minItems": 1,
+              "uniqueItems": true
+            },
+            "branchNodes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "uniqueItems": true
+            },
+            "fanInNodes": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "uniqueItems": true
+            },
+            "cycle": { "type": "boolean" },
+            "order": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "pattern": "^[A-Za-z][A-Za-z0-9_-]*$"
+              },
+              "maxItems": 0
+            }
+          }
+        }
+      }
+    },
     "plannedArtifact": {
       "type": "object",
       "additionalProperties": false,

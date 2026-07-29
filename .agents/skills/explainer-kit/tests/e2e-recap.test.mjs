@@ -470,6 +470,79 @@ test('unattended recap always composes the adaptive hub, architecture, and deck 
   );
 });
 
+for (const [topology, diagram] of [
+  [
+    'branch',
+    `graph TD
+source --> accepted
+source --> rejected`,
+  ],
+  [
+    'fan-in',
+    `graph TD
+primary --> merged
+secondary --> merged`,
+  ],
+  [
+    'cycle',
+    `graph LR
+queued --> running
+running --> queued`,
+  ],
+]) {
+  for (const mutation of ['drop', 'add', 'duplicate', 'rewire']) {
+    test(`rejects artistic ${topology} output that ${mutation}s planner-owned graph semantics before visual review`, async () => {
+      const { request } = await fixture();
+      const critic = async (visualRequest) => {
+        critic.calls += 1;
+        return passingVisualCritic(visualRequest);
+      };
+      critic.calls = 0;
+      const baseAuthor = richAuthor();
+      const author = async (authorRequest) => {
+        if (authorRequest.artifactId !== 'architecture') {
+          return baseAuthor(authorRequest);
+        }
+        const graph = authorRequest.graphSemantics[0];
+        const nodes = graph.nodes.map(({ id }) => id);
+        const edges = graph.edges.map(({ from, to }) => [from, to]);
+        if (mutation === 'drop') edges.pop();
+        if (mutation === 'add') nodes.push('shadow');
+        if (mutation === 'duplicate') nodes.push(nodes[0]);
+        if (mutation === 'rewire') edges[0] = [edges[0][1], edges[0][0]];
+        const html = artisticHtml(authorRequest, {
+          title: `${topology} architecture`,
+          description: 'A planner-owned graph.',
+          nodes: `<svg data-direction="${graph.direction}">${nodes
+            .map((id) => `<g data-node="${id}"></g>`)
+            .join('')}${edges
+            .map(([from, to]) => `<g data-from="${from}" data-to="${to}"></g>`)
+            .join('')}</svg>`,
+          legend: '<span>Planner-owned graph</span>',
+        });
+        return authorResult(authorRequest, html);
+      };
+      const planSet = adaptivePlanSet();
+      const result = await runExplainer(request, {
+        author,
+        planSet: async (plannerRequest) => {
+          const plan = await planSet(plannerRequest);
+          plan.portfolio.find(({ artifactId }) => artifactId === 'architecture').draft =
+            `\`\`\`diagram\n${diagram}\n\`\`\``;
+          return plan;
+        },
+        browserProbe: cleanProbe(),
+        visualCritic: critic,
+        now: () => NOW,
+      });
+
+      assert.equal(result.outcome, 'failed');
+      assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+      assert.equal(critic.calls, 0);
+    });
+  }
+}
+
 test('explicit deterministic fallback composes the same portfolio from Markdown', async () => {
   const { request } = await fixture();
   request.recapMode = 'deterministic-markdown';

@@ -163,6 +163,17 @@ test('author v2 contracts require authored content and provenance', async () => 
   assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
   assert.equal(request.properties.visualAuthoringGuidance.type, 'string');
   assert.equal(request.properties.visualAuthoringGuidance.minLength, 1);
+  assert.equal(
+    request.properties.graphSemantics.items.$ref,
+    '#/$defs/graphSemantics',
+  );
+  assert.equal(request.$defs.graphSemantics.additionalProperties, false);
+  assert.deepEqual(request.$defs.graphSemantics.required, [
+    'direction',
+    'nodes',
+    'edges',
+    'topology',
+  ]);
   assert.deepEqual(result.required, [
     'schemaVersion',
     'artifactId',

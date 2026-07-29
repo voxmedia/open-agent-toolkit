@@ -172,6 +172,87 @@ export function renderDiagram(source, { theme } = {}) {
   };
 }
 
+export function graphSemanticsForArtisticAuthor(diagrams) {
+  if (!Array.isArray(diagrams) || diagrams.some(({ valid }) => valid !== true)) {
+    throw topologyError(
+      'Planner-owned artistic diagrams must use the supported graph grammar.',
+    );
+  }
+  return diagrams
+    .filter(({ inlineSupported }) => inlineSupported === false)
+    .map(({ direction, nodes, edges, topology }) =>
+      deepFreeze({
+        direction,
+        nodes: structuredClone(nodes),
+        edges: structuredClone(edges),
+        topology: structuredClone(topology),
+      }),
+    );
+}
+
+export function assertAuthoredGraphSemantics(html, graphSemantics) {
+  if (
+    typeof html !== 'string' ||
+    !Array.isArray(graphSemantics) ||
+    graphSemantics.length !== 1
+  ) {
+    throw topologyError(
+      'Artistic graph validation requires one unambiguous planned graph.',
+    );
+  }
+  const [planned] = graphSemantics;
+  const tags = html.match(/<[^>]+>/g) ?? [];
+  const directionTags = tags.filter((tag) => tag.includes('data-direction'));
+  const observedDirections = directionTags.flatMap((tag) =>
+    attributeValues(tag, 'data-direction'),
+  );
+  if (
+    directionTags.length !== 1 ||
+    observedDirections.length !== 1 ||
+    observedDirections[0] !== planned.direction
+  ) {
+    throw topologyError(
+      'Authored graph direction does not exactly match the planned graph.',
+    );
+  }
+
+  const nodeTags = tags.filter((tag) => tag.includes('data-node'));
+  const observedNodes = nodeTags.flatMap((tag) => {
+    const values = attributeValues(tag, 'data-node');
+    if (values.length !== 1 || !new RegExp(`^${ID_PATTERN}$`).test(values[0])) {
+      throw topologyError('Authored graph contains an ambiguous node observation.');
+    }
+    return values;
+  });
+  const edgeTags = tags.filter(
+    (tag) => tag.includes('data-from') || tag.includes('data-to'),
+  );
+  const observedEdges = edgeTags.map((tag) => {
+    const from = attributeValues(tag, 'data-from');
+    const to = attributeValues(tag, 'data-to');
+    if (
+      from.length !== 1 ||
+      to.length !== 1 ||
+      !new RegExp(`^${ID_PATTERN}$`).test(from[0]) ||
+      !new RegExp(`^${ID_PATTERN}$`).test(to[0])
+    ) {
+      throw topologyError('Authored graph contains an ambiguous edge observation.');
+    }
+    return `${from[0]}\0${to[0]}`;
+  });
+
+  const expectedNodes = planned.nodes.map(({ id }) => id);
+  const expectedEdges = planned.edges.map(({ from, to }) => `${from}\0${to}`);
+  if (
+    !sameMultiset(observedNodes, expectedNodes) ||
+    !sameMultiset(observedEdges, expectedEdges)
+  ) {
+    throw topologyError(
+      'Authored graph node or edge multiset does not exactly match the planned graph.',
+    );
+  }
+}
+
 function analyzeTopology(nodes, edges) {
   const nodeIds = nodes.map(({ id }) => id);
   const incoming = new Map(nodeIds.map((id) => [id, []]));
@@ -352,6 +433,35 @@ function stableHash(value) {
     hash = Math.imul(hash, 16777619);
   }
   return (hash >>> 0).toString(16).padStart(8, '0');
+}
+
+function attributeValues(tag, name) {
+  return [
+    ...tag.matchAll(
+      new RegExp(`(?:^|\\s)${name}\\s*=\\s*(["'])([^"'<>]*)\\1`, 'g'),
+    ),
+  ].map((match) => match[2]);
+}
+
+function sameMultiset(actual, expected) {
+  return (
+    actual.length === expected.length &&
+    [...actual].sort().every((value, index) => value === [...expected].sort()[index])
+  );
+}
+
+function topologyError(message) {
+  const error = new Error(message);
+  error.code = 'E_DIAGRAM_TOPOLOGY';
+  return error;
+}
+
+function deepFreeze(value) {
+  if (value && typeof value === 'object' && !Object.isFrozen(value)) {
+    Object.freeze(value);
+    for (const child of Object.values(value)) deepFreeze(child);
+  }
+  return value;
 }
 
 function escapeHtml(value) {

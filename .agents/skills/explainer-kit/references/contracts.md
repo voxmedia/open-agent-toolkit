@@ -90,6 +90,12 @@ duplicate artifact IDs, and unjustified optional entries are invalid. Each
 `author-request/v2` carries the complete immutable `setContext` plus the exact
 matching `plannedArtifact`. The planner finalizes floor and expansion entries
 before authoring; author results cannot add, remove, or replace artifacts.
+When a planner draft contains a supported non-linear graph, the request also
+carries its closed `graphSemantics` (direction, nodes, edges, and topology).
+Artistic HTML must expose one exact `data-direction`, one `data-node` per
+planned node, and one paired `data-from`/`data-to` observation per planned
+edge. Missing, extra, duplicate, rewired, or ambiguous observations fail with
+`E_DIAGRAM_TOPOLOGY` before browser or visual-critic review.
 
 Visual review uses provider-neutral
 `explainer-kit.visual-review-request/v1` and

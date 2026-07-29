@@ -506,6 +506,7 @@ function validateCrossRecord(kind, value, context, errors) {
   ) {
     validateAuthorSetContext(value, errors);
     validateVisualAuthoringGuidance(value, errors);
+    validateAuthorGraphSemantics(value, errors);
   }
 
   if (kind === 'visual-review-request') {
@@ -1131,6 +1132,40 @@ function validateVisualAuthoringGuidance(value, errors) {
       'malformed-authoring-guidance',
       `Visual authoring guidance is missing bundled topics: ${missing.join(', ')}.`,
     );
+  }
+}
+
+function validateAuthorGraphSemantics(value, errors) {
+  if (value.graphSemantics === undefined) {
+    return;
+  }
+  if (value.authoring !== 'html' || !Array.isArray(value.graphSemantics)) {
+    add(
+      errors,
+      '$.graphSemantics',
+      'graph-semantics',
+      'Planner-owned graph semantics are allowed only for artistic HTML authoring.',
+    );
+    return;
+  }
+  for (const [graphIndex, graph] of value.graphSemantics.entries()) {
+    if (!isObject(graph)) continue;
+    const nodes = Array.isArray(graph.nodes) ? graph.nodes : [];
+    const edges = Array.isArray(graph.edges) ? graph.edges : [];
+    const nodeIds = nodes.map(({ id }) => id);
+    const edgeIds = edges.map(({ from, to }) => `${from}\0${to}`);
+    if (
+      new Set(nodeIds).size !== nodeIds.length ||
+      new Set(edgeIds).size !== edgeIds.length ||
+      edges.some(({ from, to }) => !nodeIds.includes(from) || !nodeIds.includes(to))
+    ) {
+      add(
+        errors,
+        `$.graphSemantics[${graphIndex}]`,
+        'graph-semantics',
+        'Graph semantics require unique nodes and edges with declared endpoints.',
+      );
+    }
   }
 }
 

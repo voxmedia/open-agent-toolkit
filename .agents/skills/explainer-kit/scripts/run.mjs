@@ -14,7 +14,11 @@ import {
   initiativeCatalogPath,
 } from './lib/catalog.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
-import { parseDiagram } from './lib/diagram.mjs';
+import {
+  assertAuthoredGraphSemantics,
+  graphSemanticsForArtisticAuthor,
+  parseDiagram,
+} from './lib/diagram.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
@@ -1472,6 +1476,19 @@ async function authorArtifact(
     artifact.origin === 'floor'
       ? recipeRequiredNarrative(state.recipe, artifact.id)
       : [];
+  const plannedDiagrams = diagramAnalyses(artifact.plannedArtifact.draft);
+  const graphSemantics =
+    graphSemanticsForArtisticAuthor(plannedDiagrams);
+  if (
+    graphSemantics.length > 0 &&
+    resolveDiagramRenderingRoute(state.recipe, artifact, plannedDiagrams) !==
+      'artistic'
+  ) {
+    throw codedError(
+      'E_DIAGRAM_TOPOLOGY',
+      `Artifact ${artifact.id} cannot preserve its planner-owned non-linear graph through inline rendering.`,
+    );
+  }
   const authorRequest = {
     schemaVersion: 'explainer-kit.author-request/v2',
     artifactId: artifact.id,
@@ -1484,6 +1501,9 @@ async function authorArtifact(
     theme: structuredClone(state.theme),
     setContext: structuredClone(state.setPlan),
     plannedArtifact: structuredClone(artifact.plannedArtifact),
+    ...(graphSemantics.length > 0 && {
+      graphSemantics: structuredClone(graphSemantics),
+    }),
     ...(artifact.origin === 'floor' &&
       requiredNarrative.length > 0 && {
         floor: { requiredNarrative },
@@ -1538,6 +1558,8 @@ async function authorArtifact(
         `Artifact ${artifact.id} contains ${features || 'non-linear'} diagram topology that requires artistic composition; inline rendering is rejected.`,
       );
     }
+  } else if (graphSemantics.length > 0) {
+    assertAuthoredGraphSemantics(content, graphSemantics);
   }
   const retained = {
     ...structuredClone(result),

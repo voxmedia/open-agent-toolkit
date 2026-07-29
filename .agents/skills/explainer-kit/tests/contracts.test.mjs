@@ -594,6 +594,73 @@ test('requires complete bundled visual guidance in author requests', () => {
   );
 });
 
+test('requires closed, internally consistent planner-owned graph semantics', () => {
+  const request = authorRequestV2();
+  request.artifactId = 'system-visual';
+  request.artifactType = 'diagram';
+  request.authoring = 'html';
+  request.plannedArtifact = structuredClone(request.setContext.portfolio[1]);
+  delete request.floor;
+  request.graphSemantics = [
+    {
+      direction: 'TD',
+      nodes: [
+        {
+          id: 'source',
+          label: 'source',
+          shape: 'rectangle',
+          explicit: false,
+        },
+        {
+          id: 'accepted',
+          label: 'accepted',
+          shape: 'rectangle',
+          explicit: false,
+        },
+        {
+          id: 'rejected',
+          label: 'rejected',
+          shape: 'rectangle',
+          explicit: false,
+        },
+      ],
+      edges: [
+        { from: 'source', to: 'accepted', kind: 'arrow', label: '' },
+        { from: 'source', to: 'rejected', kind: 'arrow', label: '' },
+      ],
+      topology: {
+        kind: 'non-linear',
+        features: ['branch'],
+        branchNodes: ['source'],
+        fanInNodes: [],
+        cycle: false,
+        order: [],
+      },
+    },
+  ];
+
+  assert.deepEqual(validateContract('author-request', request), {
+    valid: true,
+    errors: [],
+  });
+  const detachedEndpoint = structuredClone(request);
+  detachedEndpoint.graphSemantics[0].edges[1].to = 'missing';
+  assert.ok(
+    validateContract('author-request', detachedEndpoint).errors.some(
+      ({ code }) => code === 'graph-semantics',
+    ),
+  );
+  const duplicateEdge = structuredClone(request);
+  duplicateEdge.graphSemantics[0].edges.push(
+    structuredClone(duplicateEdge.graphSemantics[0].edges[0]),
+  );
+  assert.ok(
+    validateContract('author-request', duplicateEdge).errors.some(
+      ({ code }) => code === 'graph-semantics',
+    ),
+  );
+});
+
 test('rejects unknown review dispositions and artifact references', () => {
   const disposition = visualReviewResult();
   disposition.disposition = 'maybe';

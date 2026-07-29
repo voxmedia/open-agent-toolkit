@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 
-import { parseDiagram, renderDiagram } from '../scripts/lib/diagram.mjs';
+import {
+  assertAuthoredGraphSemantics,
+  graphSemanticsForArtisticAuthor,
+  parseDiagram,
+  renderDiagram,
+} from '../scripts/lib/diagram.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 
 const COMPLETE_DIAGRAM = `%% supported grammar fixture
@@ -148,6 +153,53 @@ middle --> finish`;
   );
   assert.match(rendered.html, /data-from="start" data-to="middle"/);
   assert.match(rendered.html, /data-from="middle" data-to="finish"/);
+});
+
+test('binds artistic HTML to exact planner-owned graph node and edge multisets', () => {
+  const planned = graphSemanticsForArtisticAuthor([
+    parseDiagram(`graph TD
+source --> accepted
+source --> rejected`),
+  ]);
+  const exact =
+    '<svg data-direction="TD"><g data-node="source"></g><g data-node="accepted"></g><g data-node="rejected"></g><g data-from="source" data-to="accepted"></g><g data-from="source" data-to="rejected"></g></svg>';
+
+  assert.doesNotThrow(() => assertAuthoredGraphSemantics(exact, planned));
+  for (const [name, mutation] of [
+    [
+      'missing edge',
+      exact.replace('<g data-from="source" data-to="rejected"></g>', ''),
+    ],
+    [
+      'extra node',
+      exact.replace('</svg>', '<g data-node="shadow"></g></svg>'),
+    ],
+    [
+      'duplicate node',
+      exact.replace('</svg>', '<g data-node="source"></g></svg>'),
+    ],
+    [
+      'rewired edge',
+      exact.replace(
+        'data-from="source" data-to="rejected"',
+        'data-from="accepted" data-to="rejected"',
+      ),
+    ],
+    [
+      'ambiguous edge',
+      exact.replace(
+        'data-from="source" data-to="rejected"',
+        'data-from="source"',
+      ),
+    ],
+    ['wrong direction', exact.replace('data-direction="TD"', 'data-direction="LR"')],
+  ]) {
+    assert.throws(
+      () => assertAuthoredGraphSemantics(mutation, planned),
+      (error) => error?.code === 'E_DIAGRAM_TOPOLOGY',
+      name,
+    );
+  }
 });
 
 for (const [name, source] of [

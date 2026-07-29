@@ -905,6 +905,49 @@ test('unattended author receives structured per-artifact context and retains val
   }
 });
 
+test('artistic authors receive immutable planner graph semantics and exact output is accepted', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  let received;
+  const result = await runExplainerCore(fixture.request, {
+    planSet: async (plannerRequest) => {
+      const plan = plannedSet(plannerRequest);
+      plan.portfolio.find(({ artifactId }) => artifactId === 'architecture').draft =
+        `\`\`\`diagram
+graph TD
+source --> accepted
+source --> rejected
+\`\`\``;
+      return plan;
+    },
+    author: async (request) => {
+      if (request.artifactId !== 'architecture') return authorResult(request);
+      received = structuredClone(request.graphSemantics);
+      const base = authorResult(request);
+      base.content.html = base.content.html.replace(
+        '<rect data-node="overview" class="node active" width="80" height="40"></rect>',
+        '<svg data-direction="TD"><g data-node="source"></g><g data-node="accepted"></g><g data-node="rejected"></g><g data-from="source" data-to="accepted"></g><g data-from="source" data-to="rejected"></g></svg>',
+      );
+      request.graphSemantics[0].nodes.pop();
+      return base;
+    },
+    now: () => NOW,
+  });
+
+  assert.equal(
+    result.outcome,
+    'built-needs-review',
+    JSON.stringify(result.errors),
+  );
+  assert.deepEqual(received[0].topology.features, ['branch']);
+  assert.deepEqual(
+    received[0].edges.map(({ from, to }) => [from, to]),
+    [
+      ['source', 'accepted'],
+      ['source', 'rejected'],
+    ],
+  );
+});
+
 test('plans one immutable set after facts and before every artifact author', async () => {
   const fixture = await suppliedFixture('project-recap');
   const events = [];
