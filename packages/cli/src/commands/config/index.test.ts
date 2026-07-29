@@ -2756,6 +2756,49 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it.each([
+      [
+        'workflow.hillCheckpointDefault',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.archiveOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.createPrOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.postImplementSequence',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.reviewExecutionModel',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.autoReviewAtHillCheckpoints',
+        'Resolution: local > shared > user > legacy autoReviewAtCheckpoints > default.',
+      ],
+      [
+        'workflow.autoNarrowReReviewScope',
+        'Resolution: local > shared > user > default.',
+      ],
+    ] as const)(
+      'describe %s reports actual workflow precedence without an env layer',
+      async (key, expectedResolution) => {
+        const root = await createRepoRoot();
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, ['describe', key]);
+
+        expect(capture.info[0]).toContain(expectedResolution);
+        expect(capture.info[0]).not.toContain('Resolution: env >');
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
     it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
