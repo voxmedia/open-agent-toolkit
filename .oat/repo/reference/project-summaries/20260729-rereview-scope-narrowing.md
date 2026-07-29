@@ -157,3 +157,11 @@ Phase passed after one bounded release-consistency fix; passing review: reviews/
 ### 2026-07-29 · general · friction · Generated autonomy inventory coupling
 
 Promotes the original entry "2026-07-28 · project · friction · Phase 3 autonomy inventory boundary": prompt-path edits that change autonomy gates must preserve or regenerate the associated inventory evidence, with focused inventory tests run before cleanup.
+
+### 2026-07-29 · project · bug · Widened review ledger bypassed review-latest correlation
+
+The completion handoff audit found that PR #186 widened Reviews rows to eight columns while packages/cli/src/commands/review/latest.ts still accepted exactly five. A failing canonical fixture proved passed active artifacts retained default actionability; p08-t01 replaced cell-count parsing with header-relative correlation and passed the focused suite, lint, and type-check. (observed on 0.2.25)
+
+### 2026-07-29 · structural · oat-project-implement · p08
+
+Completion-handoff compatibility repair passed; packages/cli/src/commands/review/**tests**/latest.test.ts covers legacy and widened Reviews ledger actionability.
