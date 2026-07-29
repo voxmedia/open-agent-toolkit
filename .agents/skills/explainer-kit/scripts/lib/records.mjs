@@ -38,8 +38,6 @@ const ALLOWED_TRANSITIONS = {
   pending: new Set(['running', 'failed', 'skipped']),
   running: new Set(['running', 'passed', 'warned', 'failed']),
 };
-const RESUME_TOKEN_V1_PREFIX = 'ekrt1:';
-const RESUME_TOKEN_V1_PATTERN = /^ekrt1:[a-f0-9]{64}$/;
 const RESUME_TOKEN_V2_PREFIX = 'ekrt2:';
 const RESUME_TOKEN_V2_PATTERN = /^ekrt2:[a-f0-9]{64}$/;
 
@@ -526,15 +524,6 @@ export async function createSetPlanResumeToken(run) {
   return `${RESUME_TOKEN_V2_PREFIX}${digest}`;
 }
 
-async function createLegacySetPlanResumeToken(run) {
-  const digest = await hashResumeToken(run, {
-    domain: 'explainer-kit.set-plan-resume/v1\0',
-    bindCanonicalRoot: false,
-    bindRequest: false,
-  });
-  return `${RESUME_TOKEN_V1_PREFIX}${digest}`;
-}
-
 async function hashResumeToken(
   run,
   { domain, bindCanonicalRoot, bindRequest },
@@ -575,23 +564,15 @@ function updateResumeTokenFileHash(tokenHash, relativePath, bytes) {
 
 export async function verifySetPlanResumeToken(run, resumeToken) {
   assertRun(run);
-  if (typeof resumeToken !== 'string') {
+  if (
+    typeof resumeToken !== 'string' ||
+    !RESUME_TOKEN_V2_PATTERN.test(resumeToken)
+  ) {
     throw resumeRecordError(
       'Interactive approval resume requires a valid external resume token.',
     );
   }
-  let expectedToken;
-  let legacy = false;
-  if (RESUME_TOKEN_V2_PATTERN.test(resumeToken)) {
-    expectedToken = await createSetPlanResumeToken(run);
-  } else if (RESUME_TOKEN_V1_PATTERN.test(resumeToken)) {
-    legacy = true;
-    expectedToken = await createLegacySetPlanResumeToken(run);
-  } else {
-    throw resumeRecordError(
-      'Interactive approval resume requires a valid external resume token.',
-    );
-  }
+  const expectedToken = await createSetPlanResumeToken(run);
   const expected = Buffer.from(expectedToken, 'ascii');
   const supplied = Buffer.from(resumeToken, 'ascii');
   if (
@@ -601,29 +582,6 @@ export async function verifySetPlanResumeToken(run, resumeToken) {
     throw resumeRecordError(
       'Interactive approval resume token does not match the retained set plan.',
     );
-  }
-  if (legacy) {
-    let retainedRequest;
-    try {
-      retainedRequest = JSON.parse(
-        await readFile(
-          run.requestPath ?? join(run.runRoot, 'run-request.json'),
-          'utf8',
-        ),
-      );
-    } catch (error) {
-      throw resumeRecordError(
-        `Unable to read the legacy retained request: ${error.message}`,
-      );
-    }
-    if (
-      typeof retainedRequest.outputRoot !== 'string' ||
-      isAbsolute(retainedRequest.outputRoot)
-    ) {
-      throw resumeRecordError(
-        'Legacy resume tokens authorize only retained relative output roots.',
-      );
-    }
   }
 }
 

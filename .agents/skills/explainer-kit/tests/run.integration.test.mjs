@@ -387,7 +387,7 @@ test('interactive runs pause after rendered QA and do no external work before ap
   );
 });
 
-test('interactive resume preserves the discovered absolute run root for a persisted relative output root', async () => {
+test('interactive resume rejects a genuine legacy relative-root token before callbacks', async () => {
   const originalCwd = process.cwd();
   const initialCwd = await temporaryDirectory('explainer-relative-initial-');
   const resumedCwd = await temporaryDirectory('explainer-relative-resumed-');
@@ -401,12 +401,22 @@ test('interactive resume preserves the discovered absolute run root for a persis
     ...request({ outputRoot: relativeOutputRoot, factBasePath }),
     mode: 'interactive',
   };
+  const planSet = mock.fn(async (plannerRequest) => plannedSet(plannerRequest));
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const durability = mock.fn(async () => {});
+  const publish = mock.fn(async () => {});
 
   try {
     process.chdir(initialCwd);
     const canonicalInitialCwd = process.cwd();
-    const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+    const paused = await runExplainer(interactiveRequest, {
+      planSet,
+      author,
+      now: () => NOW,
+    });
     const resumeToken = await legacyResumeToken(paused.runRoot, paused.runId);
+    const planCallsBeforeResume = planSet.mock.callCount();
+    const authorCallsBeforeResume = author.mock.callCount();
     const expectedRunRoot = join(
       canonicalInitialCwd,
       relativeOutputRoot,
@@ -424,30 +434,87 @@ test('interactive resume preserves the discovered absolute run root for a persis
     );
 
     process.chdir(resumedCwd);
-    const resumed = await runExplainer(
-      {
-        ...interactiveRequest,
-        outputRoot: join(canonicalInitialCwd, relativeOutputRoot),
-      },
-      {
-        now: () => '2026-07-17T20:05:00Z',
-        reviewedSource: {
-          decision: 'approve',
-          reviewedAt: '2026-07-17T20:05:00Z',
-          reviewer: 'operator',
-          resumeToken,
+    await assert.rejects(
+      runExplainer(
+        {
+          ...interactiveRequest,
+          outputRoot: join(canonicalInitialCwd, relativeOutputRoot),
         },
-      },
+        {
+          planSet,
+          author,
+          durability,
+          publish,
+          now: () => '2026-07-17T20:05:00Z',
+          reviewedSource: {
+            decision: 'approve',
+            reviewedAt: '2026-07-17T20:05:00Z',
+            reviewer: 'operator',
+            resumeToken,
+          },
+        },
+      ),
+      { code: 'E_APPROVAL_RESUME' },
     );
-
-    assert.equal(resumed.runId, paused.runId);
-    assert.equal(resumed.runRoot, expectedRunRoot);
-    assert.equal(resumed.outcome, 'built-not-durable');
-    await access(resumed.manifestPath);
-    await access(resumed.buildRecordPath);
+    assert.equal(planSet.mock.callCount(), planCallsBeforeResume);
+    assert.equal(author.mock.callCount(), authorCallsBeforeResume);
+    assert.equal(durability.mock.callCount(), 0);
+    assert.equal(publish.mock.callCount(), 0);
   } finally {
     process.chdir(originalCwd);
   }
+});
+
+test('interactive resume rejects an ekrt1 downgrade after a current package root rewrite', async () => {
+  const fixture = await suppliedFixture();
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const planSet = mock.fn(async (plannerRequest) => plannedSet(plannerRequest));
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const durability = mock.fn(async () => {});
+  const publish = mock.fn(async () => {});
+  const paused = await runExplainer(interactiveRequest, {
+    planSet,
+    author,
+    now: () => NOW,
+  });
+  assert.match(paused.approval.resumeToken, /^ekrt2:[a-f0-9]{64}$/);
+  const legacyToken = await legacyResumeToken(paused.runRoot, paused.runId);
+  const planCallsBeforeResume = planSet.mock.callCount();
+  const authorCallsBeforeResume = author.mock.callCount();
+  const retainedRequestPath = join(paused.runRoot, 'run-request.json');
+  const retainedRequest = JSON.parse(
+    await readFile(retainedRequestPath, 'utf8'),
+  );
+  retainedRequest.outputRoot = 'rewritten-relative-output';
+  await writeFile(
+    retainedRequestPath,
+    `${JSON.stringify(retainedRequest, null, 2)}\n`,
+  );
+
+  await assert.rejects(
+    runExplainer(interactiveRequest, {
+      planSet,
+      author,
+      durability,
+      publish,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: legacyToken,
+      },
+    }),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+  assert.equal(planSet.mock.callCount(), planCallsBeforeResume);
+  assert.equal(author.mock.callCount(), authorCallsBeforeResume);
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
 });
 
 test('interactive resume preserves the original canonical root through a stable configured-output symlink', async () => {

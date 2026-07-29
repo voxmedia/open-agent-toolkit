@@ -837,7 +837,7 @@ test('derives a deterministic v2 resume token from the request and exact set-pla
   );
 });
 
-test('accepts legacy v1 resume tokens only for retained relative output roots', async () => {
+test('rejects every legacy v1 resume token regardless of retained output-root text', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(request(outputRoot));
   const factBase = { sources: [{ id: 'project' }] };
@@ -878,7 +878,10 @@ test('accepts legacy v1 resume tokens only for retained relative output roots', 
   const retainedRequest = JSON.parse(await readFile(requestPath, 'utf8'));
   retainedRequest.outputRoot = 'legacy-relative-output';
   await writeFile(requestPath, `${JSON.stringify(retainedRequest, null, 2)}\n`);
-  await verifySetPlanResumeToken(run, legacyToken);
+  await assert.rejects(
+    verifySetPlanResumeToken(run, legacyToken),
+    (error) => error.code === 'E_APPROVAL_RESUME',
+  );
 });
 
 test('rejects omitted reconciled sources and declared sources without artifact coverage', async () => {

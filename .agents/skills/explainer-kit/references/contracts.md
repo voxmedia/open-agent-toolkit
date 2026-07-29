@@ -192,11 +192,13 @@ Resume validates the fixed-length token with a timing-safe comparison before
 parsing retained request fields or hydrating set-plan, author, or content
 state. Missing, malformed, mismatched, relocated-root, or byte-drifted tokens
 fail `E_APPROVAL_RESUME` before planner, author, durability, or publish
-callbacks. Legacy `ekrt1:<64 lowercase hex characters>` tokens are accepted
-only when the retained request has a relative output root; they cannot
-authorize current absolute-root packages. Neither token version is written
-into the run request, content approval, build record, set-plan projections,
-manifest, or immutable-hash inventory.
+callbacks. Only the fixed-format authenticated `ekrt2` token is accepted.
+Every `ekrt1` token is rejected, including a correctly derived legacy digest.
+Legacy paused runs must restart to obtain an authenticated token; a retained
+relative `outputRoot` or any other mutable package state cannot opt into legacy
+resume behavior. The token is not written into the run request, content
+approval, build record, set-plan projections, manifest, or immutable-hash
+inventory.
 
 The run package retains the privacy-safe `run-request.json`,
 `source/content-approval.json`, `source/fact-base.json`,
