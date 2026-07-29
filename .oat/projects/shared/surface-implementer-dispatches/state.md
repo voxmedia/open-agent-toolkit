@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T12:29:21Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:36:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -128,7 +128,8 @@ Implementation - Phase 3 (`p03-t01`)
 - ✓ Phase 2 fix iteration 1 resolved both Important findings
 - ! Phase 2 re-review left one Important bare-provider adoption gap
 - ✓ Phase 2 fix iteration 2 resolved the bare-provider adoption gap
-- → Phase 2 fixes await final root-owned re-review before `p03-t01`
+- ✓ Phase 2 final root-owned review passed with no findings
+- → `p03-t01` bumps lockstep public package versions
 
 ## Blockers
 
@@ -136,4 +137,4 @@ None
 
 ## Next Milestone
 
-Run final root-owned Phase 2 re-review, then execute `p03-t01`
+Execute `p03-t01` to bump lockstep public package versions
