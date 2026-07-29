@@ -467,13 +467,45 @@ git commit -m "chore(release): bump public packages for dispatch notices"
 **Files:**
 
 - Modify: `.agents/docs/autonomy-contract.md`
+- Create: `.oat/repo/reference/decisions/AGENTS.md`
+- Modify:
+  `.oat/repo/pjm/backlog/items/BL-260706-front-load-recurring-gate.md`
+- Modify:
+  `.oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md`
+- Modify: `.oat/repo/pjm/backlog/items/BL-260712-per-project-override.md`
+- Modify:
+  `.oat/repo/pjm/backlog/items/BL-260713-root-agent-judgment-logging.md`
+- Modify: `.oat/repo/pjm/backlog/items/BL-260714-executable-backstops.md`
+- Modify:
+  `.oat/repo/pjm/backlog/archived/BL-260707-ask-to-enable-phase-review.md`
+- Modify:
+  `.oat/repo/pjm/backlog/archived/BL-260707-declare-gate-review-target.md`
+- Modify:
+  `.oat/repo/pjm/backlog/archived/BL-260707-support-producer-identity.md`
+- Modify:
+  `.oat/repo/pjm/backlog/archived/BL-260712-trim-dispatch-and-dry-run.md`
 - Move:
   `.oat/repo/pjm/backlog/items/BL-260727-surface-implementer-dispatches.md`
   to `.oat/repo/pjm/backlog/archived/`
 - Modify: `.oat/repo/pjm/backlog/completed.md`
 - Modify: `.oat/repo/pjm/backlog/index.md`
 
-**Step 1: Refresh the derived autonomy prompt-site inventory**
+**Step 1: Repair the pre-existing failing PJM checks**
+
+Run `pnpm run cli:source -- pjm init` to create the missing canonical
+`.oat/repo/reference/decisions/AGENTS.md` without replacing existing PJM files.
+Remove only `oat_template` and `oat_template_name` from the nine instantiated
+backlog records listed above. Preserve all record content and other metadata.
+
+Run:
+
+```bash
+pnpm run cli:source -- pjm doctor
+```
+
+Expected: no failing PJM checks. Existing layout/legacy warnings may remain.
+
+**Step 2: Refresh the derived autonomy prompt-site inventory**
 
 Remove stale mapping `ffb3af0ba8ef` for
 `oat-project-implement/SKILL.md` from `.agents/docs/autonomy-contract.md`. The
@@ -489,7 +521,7 @@ pnpm --filter @open-agent-toolkit/cli exec vitest run \
 
 Expected: the autonomy gate-inventory drift check passes.
 
-**Step 2: Archive the backlog item**
+**Step 3: Archive the backlog item**
 
 ```bash
 oat backlog archive BL-260727-surface-implementer-dispatches \
@@ -499,17 +531,27 @@ oat backlog archive BL-260727-surface-implementer-dispatches \
 Expected: the item is closed, moved to `archived/`, added to the completed
 ledger, and removed from the active index.
 
-**Step 3: Format**
+**Step 4: Format**
 
 ```bash
 pnpm exec oxfmt --write \
   ".agents/docs/autonomy-contract.md" \
+  ".oat/repo/reference/decisions/AGENTS.md" \
+  ".oat/repo/pjm/backlog/items/BL-260706-front-load-recurring-gate.md" \
+  ".oat/repo/pjm/backlog/items/BL-260711-skip-re-review-for-bookkeeping.md" \
+  ".oat/repo/pjm/backlog/items/BL-260712-per-project-override.md" \
+  ".oat/repo/pjm/backlog/items/BL-260713-root-agent-judgment-logging.md" \
+  ".oat/repo/pjm/backlog/items/BL-260714-executable-backstops.md" \
+  ".oat/repo/pjm/backlog/archived/BL-260707-ask-to-enable-phase-review.md" \
+  ".oat/repo/pjm/backlog/archived/BL-260707-declare-gate-review-target.md" \
+  ".oat/repo/pjm/backlog/archived/BL-260707-support-producer-identity.md" \
+  ".oat/repo/pjm/backlog/archived/BL-260712-trim-dispatch-and-dry-run.md" \
   ".oat/repo/pjm/backlog/archived/BL-260727-surface-implementer-dispatches.md" \
   ".oat/repo/pjm/backlog/completed.md" \
   ".oat/repo/pjm/backlog/index.md"
 ```
 
-**Step 4: Run definition-of-done verification**
+**Step 5: Run definition-of-done verification**
 
 ```bash
 pnpm check
@@ -526,10 +568,12 @@ git diff --check
 
 Expected: all required checks pass and PJM state is consistent.
 
-**Step 5: Commit**
+**Step 6: Commit**
 
 ```bash
-git add .agents/docs/autonomy-contract.md .oat/repo/pjm/backlog
+git add .agents/docs/autonomy-contract.md \
+  .oat/repo/reference/decisions/AGENTS.md \
+  .oat/repo/pjm/backlog
 git commit -m "chore(backlog): close implementer dispatch visibility"
 ```
 

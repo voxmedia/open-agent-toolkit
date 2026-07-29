@@ -364,7 +364,7 @@ oat_generated: false
 
 ### Task p03-t02: Archive the completed backlog item and run final verification
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** -
 
 **Blocker:**
@@ -381,6 +381,8 @@ oat_generated: false
   missing `reference/decisions/AGENTS.md` and template frontmatter in nine
   unrelated backlog files. The approved task mutations were restored and the
   worktree is clean.
+- **Resolution:** user approved bounded repair of those ten PJM files; warnings
+  outside the two failing checks remain non-blocking and out of scope.
 
 ---
 
@@ -664,6 +666,26 @@ Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Outstanding item:** explicit decision on bounded PJM remediation or
   documented gate exception
 
+### Run 3 — 2026-07-29
+
+<a id="run-3"></a>
+
+**Branch:** `surface-implementer-dispatches`
+**Provider / tier:** Cursor / Tier 1
+**Dispatch policy:** managed High
+**Resume point:** `p03-t02`
+
+#### Approved Plan Adjustment
+
+- **Decision:** repair the two pre-existing failing PJM doctor checks
+- **Files:** create canonical decisions `AGENTS.md`; remove template-only
+  frontmatter from nine instantiated backlog records
+- **Authorization:** explicit user approval
+- **Boundary:** existing non-failing PJM warnings remain documented and out of
+  scope
+- **Previous attempt:** terminal `BLOCKED`; Run 3 is a new same-target
+  continuation after the approved plan change
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -711,9 +733,10 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented                   | Actual / Accepted                                                          | Reason                                                                                                     | Source of Truth   | Follow-up |
-| ------------- | --------------- | -------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------- | --------- |
-| p03-t02       | `plan.md`       | Backlog archive and final verification | Also refresh stale `.agents/docs/autonomy-contract.md` prompt-site mapping | Phase 2 removed the mapped prompt-like line and repository-wide tests rejected the stale derived inventory | Updated `plan.md` | None      |
+| Task / Review | Source Artifact | Planned / Documented                   | Actual / Accepted                                                          | Reason                                                                                                            | Source of Truth   | Follow-up                                 |
+| ------------- | --------------- | -------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------- |
+| p03-t02       | `plan.md`       | Backlog archive and final verification | Also refresh stale `.agents/docs/autonomy-contract.md` prompt-site mapping | Phase 2 removed the mapped prompt-like line and repository-wide tests rejected the stale derived inventory        | Updated `plan.md` | None                                      |
+| p03-t02       | `plan.md`       | Updated inventory refresh and closeout | Also repair two pre-existing failing PJM doctor checks across ten files    | Full DoD cannot pass while canonical decisions guidance is missing and instantiated records retain template flags | Updated `plan.md` | Existing PJM warnings remain out of scope |
 
 ## Test Results
 

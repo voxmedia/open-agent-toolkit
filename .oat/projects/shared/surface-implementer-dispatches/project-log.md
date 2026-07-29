@@ -72,6 +72,10 @@ Phase outcome: blocked; fix-loop count: 0; Run 2 stopped at pre-existing failing
 
 STOP: explicit decision required on bounded PJM remediation or a documented pjm doctor exception.
 
+### 2026-07-29 · structural · oat-project-implement · p03-run3
+
+Blocker resolved by explicit approval: Run 3 may repair the two failing PJM doctor checks before resuming p03-t02; warnings remain out of scope.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
