@@ -472,7 +472,11 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
   Cursor Fable runtime-target extraction
 - **Route:** resume the original accepted Phase 2 implementer at the same exact
   target
-- **Status:** fixes pending
+- **Fix base:** `3d59d6299ec63bde3d82d3d3987eda826b118c94`
+- **Fix commit:** `e0fab56e00961d2db4bff18ea4ecc25e3c54d608`
+- **Outcome:** both Important findings fixed; 393 focused tests, CLI type-check,
+  and CLI check passed
+- **Status:** fixes complete; awaiting fresh root-owned Phase 2 re-review
 
 <!-- orchestration-runs-end -->
 

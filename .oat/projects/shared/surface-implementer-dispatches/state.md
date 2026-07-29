@@ -1,6 +1,6 @@
 ---
 oat_current_task: p03-t01
-oat_last_commit: a48bc356cfd6778630c046f23bcdc11bcb33ceac
+oat_last_commit: e0fab56e00961d2db4bff18ea4ecc25e3c54d608
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T12:07:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:16:41Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -125,7 +125,8 @@ Implementation - Phase 3 (`p03-t01`)
 - ✓ `p02-t02` updated implementation guidance, contract tests, and user docs
 - ✓ Phase 2 implementation completed
 - ! Phase 2 review found two Important effective-target disclosure gaps
-- → Phase 2 fix iteration 1 is pending before `p03-t01`
+- ✓ Phase 2 fix iteration 1 resolved both Important findings
+- → Phase 2 fixes await fresh root-owned re-review before `p03-t01`
 
 ## Blockers
 
@@ -133,4 +134,4 @@ None
 
 ## Next Milestone
 
-Resolve Phase 2 review findings, then execute `p03-t01`
+Run fresh root-owned Phase 2 re-review, then execute `p03-t01`
