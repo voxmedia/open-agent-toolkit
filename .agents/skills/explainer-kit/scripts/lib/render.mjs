@@ -216,9 +216,7 @@ function templateValues({
                 `<span>${escapeHtml(section.title ?? humanize(section.id))}</span>`,
             )
             .join(''),
-          renderSourceBacklinks(
-            sections.flatMap(({ backlinks }) => backlinks),
-          ),
+          renderSourceBacklinks(sections.flatMap(({ backlinks }) => backlinks)),
           renderRelatedLinks(links, content.slug, renderedPath, baseUrl),
         ].join(''),
       };

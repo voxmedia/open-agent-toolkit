@@ -274,8 +274,10 @@ test('bundled v2 recipes preserve floors and declare bounded expansion policy', 
     assert.equal(expansion.limits.maxArtifacts, expected.maxArtifacts, id);
 
     for (const briefRef of [
-      ...floor.map(({ briefRef }) => briefRef),
-      ...expansion.profiles.map(({ briefRef }) => briefRef),
+      ...floor.map(({ briefRef: floorBriefRef }) => floorBriefRef),
+      ...expansion.profiles.map(
+        ({ briefRef: profileBriefRef }) => profileBriefRef,
+      ),
     ]) {
       briefRefs.add(briefRef);
       assert.ok(

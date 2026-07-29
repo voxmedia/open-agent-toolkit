@@ -24,8 +24,8 @@ const CORE_ROOT = fileURLToPath(
   new URL('../../explainer-kit/', import.meta.url),
 );
 
-const planTrackedRunFinalization = (request, context = {}) =>
-  planTrackedRunFinalizationCore(request, {
+const planTrackedRunFinalization = (finalizationRequest, context = {}) =>
+  planTrackedRunFinalizationCore(finalizationRequest, {
     coreRoot: CORE_ROOT,
     ...context,
   });
@@ -433,7 +433,7 @@ function request(fixture, commitMode) {
 
 async function createRun({
   outcome = 'built-not-durable',
-  evidence,
+  evidence: providedEvidence,
   mode = 'unattended',
   includeReviewEvidence = mode === 'unattended',
 } = {}) {
@@ -622,7 +622,7 @@ async function createRun({
         contentPath: 'source/content/recap.md',
         renderedPath: 'site/index.html',
         status: 'built',
-        ...(evidence ? { durableEvidence: [evidence] } : {}),
+        ...(providedEvidence ? { durableEvidence: [providedEvidence] } : {}),
       },
     ],
     buildRecord: { path: 'build-record.json' },

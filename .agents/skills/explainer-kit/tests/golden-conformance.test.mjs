@@ -848,15 +848,15 @@ function benchmarkVisualCritic(input) {
     const architecture = request.renderedArtifacts.find(
       ({ artifactId }) => artifactId === 'architecture',
     );
-    const architectureHtml = (
+    const renderedArchitecture = (
       await evidenceInput.read(architecture.renderedPath)
     ).toString();
     for (const node of input.topology.nodes) {
-      assert.ok(architectureHtml.includes(`data-node="${node}"`));
+      assert.ok(renderedArchitecture.includes(`data-node="${node}"`));
     }
     for (const [from, to] of input.topology.edges) {
       assert.ok(
-        architectureHtml.includes(`data-from="${from}" data-to="${to}"`),
+        renderedArchitecture.includes(`data-from="${from}" data-to="${to}"`),
       );
     }
     calls.push({

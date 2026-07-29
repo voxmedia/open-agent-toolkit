@@ -213,10 +213,7 @@ async function verifyImmutablePackage(runRoot, manifest) {
       const actualHash = `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
       if (actualHash !== expectedHash) {
         errors.push(
-          error(
-            'hash-mismatch',
-            `Immutable package hash changed for ${path}.`,
-          ),
+          error('hash-mismatch', `Immutable package hash changed for ${path}.`),
         );
       }
     } catch (caught) {

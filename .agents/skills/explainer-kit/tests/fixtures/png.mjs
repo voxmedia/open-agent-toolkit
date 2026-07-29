@@ -12,7 +12,9 @@ export function png(width, height, options = {}) {
   } = options;
   const channels = colorType === 2 ? 3 : 4;
   if (!Buffer.isBuffer(pixels) || pixels.length !== width * height * channels) {
-    throw new TypeError('PNG fixture pixels must match width, height, and color type.');
+    throw new TypeError(
+      'PNG fixture pixels must match width, height, and color type.',
+    );
   }
   const cacheKey =
     Object.keys(options).length === 0 ? `${width}x${height}` : undefined;
@@ -27,7 +29,10 @@ export function png(width, height, options = {}) {
   const compressed = deflateSync(raw);
   const idatChunks = splitIdat
     ? [
-        pngChunk('IDAT', compressed.subarray(0, Math.ceil(compressed.length / 2))),
+        pngChunk(
+          'IDAT',
+          compressed.subarray(0, Math.ceil(compressed.length / 2)),
+        ),
         pngChunk('IDAT', compressed.subarray(Math.ceil(compressed.length / 2))),
       ]
     : [pngChunk('IDAT', compressed)];
@@ -79,7 +84,8 @@ function filteredScanlines(pixels, width, height, channels, filter) {
     scanlines[outputOffset] = filter;
     for (let column = 0; column < rowBytes; column += 1) {
       const value = pixels[inputOffset + column];
-      const left = column >= channels ? pixels[inputOffset + column - channels] : 0;
+      const left =
+        column >= channels ? pixels[inputOffset + column - channels] : 0;
       const up = row > 0 ? pixels[inputOffset - rowBytes + column] : 0;
       const upLeft =
         row > 0 && column >= channels
@@ -97,7 +103,8 @@ function filterPrediction(filter, left, up, upLeft) {
   if (filter === 1) return left;
   if (filter === 2) return up;
   if (filter === 3) return Math.floor((left + up) / 2);
-  if (filter !== 4) throw new TypeError(`Unsupported fixture filter ${filter}.`);
+  if (filter !== 4)
+    throw new TypeError(`Unsupported fixture filter ${filter}.`);
   const estimate = left + up - upLeft;
   const distances = [
     Math.abs(estimate - left),
@@ -105,5 +112,9 @@ function filterPrediction(filter, left, up, upLeft) {
     Math.abs(estimate - upLeft),
   ];
   const minimum = Math.min(...distances);
-  return distances[0] === minimum ? left : distances[1] === minimum ? up : upLeft;
+  return distances[0] === minimum
+    ? left
+    : distances[1] === minimum
+      ? up
+      : upLeft;
 }

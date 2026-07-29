@@ -837,7 +837,7 @@ export async function auditArtifactSet({
 
 async function retainBrowserEvidence({
   evidenceRoot,
-  artifactId,
+  artifactId: artifactIdentifier,
   viewport,
   viewportSize,
   screenshotPath,
@@ -851,7 +851,7 @@ async function retainBrowserEvidence({
   } catch {
     return {
       valid: false,
-      message: `Browser screenshot evidence is missing for ${artifactId} at ${viewportSize.width}px.`,
+      message: `Browser screenshot evidence is missing for ${artifactIdentifier} at ${viewportSize.width}px.`,
     };
   }
   if (
@@ -861,7 +861,7 @@ async function retainBrowserEvidence({
   ) {
     return {
       valid: false,
-      message: `Browser screenshot evidence for ${artifactId} at ${viewportSize.width}px is empty or exceeds ${MAX_SCREENSHOT_BYTES} bytes.`,
+      message: `Browser screenshot evidence for ${artifactIdentifier} at ${viewportSize.width}px is empty or exceeds ${MAX_SCREENSHOT_BYTES} bytes.`,
     };
   }
   const screenshotBytes = await readFile(join(evidenceRoot, screenshotPath));
@@ -873,12 +873,12 @@ async function retainBrowserEvidence({
   ) {
     return {
       valid: false,
-      message: `Browser screenshot evidence for ${artifactId} at ${viewportSize.width}px must be a viewport-matched PNG.`,
+      message: `Browser screenshot evidence for ${artifactIdentifier} at ${viewportSize.width}px must be a viewport-matched PNG.`,
     };
   }
   await writeJsonAtomic(evidenceRoot, metricsPath, {
     schemaVersion: 'explainer-kit.browser-evidence/v2',
-    artifactId,
+    artifactId: artifactIdentifier,
     viewport,
     viewportSize,
     scenario: 'default',
@@ -891,7 +891,7 @@ async function retainBrowserEvidence({
   return {
     valid: true,
     evidence: {
-      artifactId,
+      artifactId: artifactIdentifier,
       viewport,
       width: viewportSize.width,
       height: viewportSize.height,

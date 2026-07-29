@@ -387,8 +387,8 @@ test('requires complete review attempts for every non-handoff package retaining 
     ],
     immutableHashes,
   });
-  const reviewPaths = (manifest, runMode = 'unattended') =>
-    requiredImmutablePackagePaths(manifest, { runMode }).filter(
+  const reviewPaths = (manifestValue, runMode = 'unattended') =>
+    requiredImmutablePackagePaths(manifestValue, { runMode }).filter(
       (path) =>
         path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
     );

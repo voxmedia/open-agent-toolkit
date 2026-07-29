@@ -1445,15 +1445,17 @@ source --> rejected
 \`\`\``;
       return plan;
     },
-    author: async (request) => {
-      if (request.artifactId !== 'architecture') return authorResult(request);
-      received = structuredClone(request.graphSemantics);
-      const base = authorResult(request);
+    author: async (authorRequest) => {
+      if (authorRequest.artifactId !== 'architecture') {
+        return authorResult(authorRequest);
+      }
+      received = structuredClone(authorRequest.graphSemantics);
+      const base = authorResult(authorRequest);
       base.content.html = base.content.html.replace(
         '<rect data-node="overview" class="node active" width="80" height="40"></rect>',
         '<svg data-direction="TD"><g data-node="source" data-node-label="source" data-node-shape="rectangle" data-node-explicit="false"></g><g data-node="accepted" data-node-label="accepted" data-node-shape="rectangle" data-node-explicit="false"></g><g data-node="rejected" data-node-label="rejected" data-node-shape="rectangle" data-node-explicit="false"></g><g data-from="source" data-to="accepted" data-edge-kind="arrow" data-edge-label=""></g><g data-from="source" data-to="rejected" data-edge-kind="arrow" data-edge-label=""></g></svg>',
       );
-      request.graphSemantics[0].nodes.pop();
+      authorRequest.graphSemantics[0].nodes.pop();
       return base;
     },
     now: () => NOW,
@@ -1664,7 +1666,9 @@ test('invokes an independent critic once with the complete rendered recap set', 
     18,
   );
 
-  const sharedCallback = mock.fn(async (request) => authorResult(request));
+  const sharedCallback = mock.fn(async (callbackRequest) =>
+    authorResult(callbackRequest),
+  );
   const rejectedFixture = await suppliedFixture('project-recap');
   const rejected = await runExplainerCore(rejectedFixture.request, {
     author: sharedCallback,
@@ -1710,8 +1714,6 @@ test('rejects caller-forged Chromium identity before an unattended recap runs', 
 });
 
 test('rejects a branded deterministic fixture session in unattended recap production', async () => {
-  const { createFixtureBrowserProbeSession } =
-    await import('../scripts/lib/browser-runtime.mjs');
   assert.equal(typeof createFixtureBrowserProbeSession, 'function');
   const fixture = await suppliedFixture('project-recap');
   const browserSession = createFixtureBrowserProbeSession({
@@ -2137,9 +2139,9 @@ test('fails closed before durability and publication when recap review is missin
       const publish = mock.fn(async () => {});
       const browserRequests = [];
       const browserProbe = scenario.browserProbe
-        ? mock.fn(async (request) => {
-            browserRequests.push(request);
-            return scenario.browserProbe(request);
+        ? mock.fn(async (browserRequest) => {
+            browserRequests.push(browserRequest);
+            return scenario.browserProbe(browserRequest);
           })
         : undefined;
       const browserSession = browserProbe

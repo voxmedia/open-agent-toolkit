@@ -166,10 +166,7 @@ test('uploads additively with MIME/cache metadata and skips matching declared ob
     argument(artifactPuts[0], '--key'),
     'published/initiatives/demo/catalog.json',
   );
-  assert.equal(
-    argument(artifactPuts[0], '--content-type'),
-    'application/json',
-  );
+  assert.equal(argument(artifactPuts[0], '--content-type'), 'application/json');
   assert.equal(
     argument(artifactPuts[0], '--cache-control'),
     'public, max-age=300',
@@ -266,7 +263,9 @@ test('uses explicit index URLs, writes receipt hashes, and records sentinel clea
   assert.deepEqual(catalog.sourceBacklinks, fixture.manifest.source.backlinks);
   assert.equal(
     receipt.artifacts[1].hash,
-    hashBytes(harness.objects.get('published/initiatives/demo/catalog.json').Body),
+    hashBytes(
+      harness.objects.get('published/initiatives/demo/catalog.json').Body,
+    ),
   );
   assert.deepEqual(
     JSON.parse(await readFile(fixture.receiptPath, 'utf8')),
@@ -620,10 +619,10 @@ function fakeDestination({
       },
       body: sentinel
         ? Buffer.from('explainer-kit sentinel\n')
-        : object?.Body ??
+        : (object?.Body ??
           (url.endsWith('.json')
             ? Buffer.from('{}\n')
-            : Buffer.from('<!doctype html><title>Demo</title>\n')),
+            : Buffer.from('<!doctype html><title>Demo</title>\n'))),
     };
   };
   return { calls, urls, objects, dependencies: { command, httpGet } };

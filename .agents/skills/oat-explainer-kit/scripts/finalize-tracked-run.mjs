@@ -329,9 +329,10 @@ async function loadPackageCoverage(coreRoot) {
   let loaded;
   try {
     loaded = await import(pathToFileURL(modulePath).href);
-  } catch (error) {
+  } catch (loadError) {
     throw new Error(
-      `Compatible explainer package coverage could not be loaded from coreRoot: ${error.message}`,
+      `Compatible explainer package coverage could not be loaded from coreRoot: ${loadError.message}`,
+      { cause: loadError },
     );
   }
   if (
