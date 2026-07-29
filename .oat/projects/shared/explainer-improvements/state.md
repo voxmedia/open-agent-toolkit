@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t06
-oat_last_commit: 508da0b898e1a1e5f6545554b7d0715aa1f9ebd4
+oat_current_task: p05-t07
+oat_last_commit: a29cfc87d1f1e7e539576df3cd654567d6928c0
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -277,8 +277,9 @@ Phase p04 implementation in progress
 - ✓ All 60 implementation tasks and all repository/docs/release gates pass
 - ✓ The single bounded final project review completed with two Important
   integrity findings
-- ⧗ p05-t06 and p05-t07 are bounded as the imported plan's single authorized
-  Critical/Important fix pass
+- ✓ p05-t06 binds resume to the complete canonical privacy-safe request
+- ⧗ p05-t07 must retain trusted Chromium identity through immutable package,
+  finalizer, and archive evidence
 
 ## Blockers
 

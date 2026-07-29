@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p05-t06
+oat_current_task_id: p05-t07
 oat_generated: false
 ---
 
@@ -23,9 +23,9 @@ oat_generated: false
 | p02   | complete      |    13 |     13/13 |
 | p03   | complete      |    21 |     21/21 |
 | p04   | complete      |    14 |     14/14 |
-| p05   | fixes_pending |     7 |       5/7 |
+| p05   | fixes_pending |     7 |       6/7 |
 
-**Total:** 60/62 tasks completed
+**Total:** 61/62 tasks completed
 
 ---
 
@@ -276,7 +276,7 @@ oat_generated: false
 - [x] p05-t03 — Pass the archived project golden benchmark (`b47a79a9`)
 - [x] p05-t04 — Close versions, documentation, and release validation (`e309ef7e`)
 - [x] p05-t05 — Normalize generated HTML whitespace (`508da0b8`)
-- [ ] p05-t06 — Bind resume to the complete canonical request
+- [x] p05-t06 — Bind resume to the complete canonical request (`a29cfc87`)
 - [ ] p05-t07 — Retain trusted Chromium runtime identity
 
 ---
