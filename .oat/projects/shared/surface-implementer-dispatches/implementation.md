@@ -361,9 +361,9 @@ oat_generated: false
 - `pnpm format`: pass.
 - `pnpm build:docs`: pass.
 - `pnpm release:validate`: pass (five public packages; 65 visual measurements).
-- `pnpm run cli:source -- pjm doctor`: no failing checks; approved warnings
-  retained for top-level layout, legacy monoliths, loose reference files, and
-  duplicate active references.
+- `pnpm run cli:source -- pjm doctor`: warning status/exit `1`, with no failing
+  checks; approved warnings retained for top-level layout, legacy monoliths,
+  loose reference files, and duplicate active references.
 - `git diff --check`: pass.
 - Focused autonomy inventory: pass (4 tests).
 
@@ -422,8 +422,10 @@ oat_generated: false
 
 **Verification:**
 
-- Run: focused autonomy inventory test and all ten definition-of-done gates.
-- Result: pass; PJM doctor retained only the four approved non-blocking warning
+- Run: focused autonomy inventory test and the complete definition-of-done
+  command sequence.
+- Result: nine commands exited `0`; PJM doctor returned warning status/exit `1`
+  with zero failing checks and only the four approved non-blocking warning
   classes.
 
 **Notes / Decisions:**
@@ -755,6 +757,40 @@ Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-
 Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
 ```
 
+#### Dispatch Acceptance — p03 reviewer round 1
+
+- **Request:** `review-p03-r1-20260729T145300Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Selection reason:** exact matrix-pinned review target at the configured High
+  ceiling
+- **Candidates:** `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`
+- **Range:** `052d60887172355d96b2a06c978039e46b409326` →
+  `6a778c9c1992228c4bffa06f35a135845f3441e0`
+- **Outcome:** accepted once; artifact validated; `PASS`
+- **Findings:** 0 Critical, 0 Important, 0 Medium, 2 Minor
+- **Reconnaissance:** not attempted; no review-orchestration evidence required
+- **Artifact:**
+  `reviews/code-p03-review-2026-07-29T145300Z.md`
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p03 action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+```
+
+#### Phase Outcome — p03 Run 3
+
+| Phase | Tasks | Implementation | Root Review | Fix Loops | Result |
+| ----- | ----- | -------------- | ----------- | --------- | ------ |
+| p03   | 2/2   | `DONE`         | `PASS`      | 0         | passed |
+
+- **Non-blocking findings:** two Minor lifecycle-record inaccuracies corrected
+  before final review: archived backlog references and precise PJM doctor exit
+  status
+- **Phase gate:** disabled
+- **Parallel groups:** none
+- **Outstanding blocking items:** none
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -821,24 +857,54 @@ Track test execution during implementation.
 
 **What shipped:**
 
-- {capability 1}
-- {capability 2}
+- Dispatch Report V1 now carries task-class provenance, legacy preferred
+  selection, and ordered structured notices without changing compatibility
+  stamps.
+- Managed named-cap implementation/fix resolution warns when exact candidate
+  selection is skipped or a selected candidate lacks task classification.
+- Policy choices, effective adoption, and runtime review resolution disclose
+  terminal Fable reviewer access and retention constraints.
+- Implementation guidance and user documentation describe classified dispatch
+  calls, effective-target disclosure, and the corrected Cursor candidate
+  boundary; public packages are prepared at `0.2.25`.
 
 **Behavioral changes (user-facing):**
 
-- {bullet}
+- Human and JSON dispatch reports surface the same additive warning and
+  classification data while preserving successful resolution and exit code `0`.
+- Fable notices describe access and organization-owned retention verification
+  without claiming either is guaranteed.
 
 **Key files / modules:**
 
-- `{path}` - {purpose}
+- `packages/cli/src/providers/identity/dispatch-report.ts` - additive report
+  contract and formatting.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - classification
+  validation and managed-cap/runtime notices.
+- `packages/cli/src/config/dispatch-notices.ts` - shared terminal reviewer
+  disclosure metadata.
+- `.agents/skills/oat-project-implement/` - classified dispatch and effective
+  target workflow guidance.
+- `apps/oat-docs/docs/` - dispatch-policy and configuration documentation.
 
 **Verification performed:**
 
-- {tests/lint/typecheck/build/manual steps}
+- Focused report, resolver, integration, disclosure, skill-contract, and
+  autonomy-inventory suites.
+- `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`,
+  `pnpm format`, `pnpm build:docs`, and `pnpm release:validate`.
+- PJM doctor returned no failing checks; four approved legacy/layout warnings
+  remain. `git diff --check` passed.
+- Root phase reviews passed for p01, p02 after two bounded fix iterations, and
+  p03.
 
 **Design deltas (if any):**
 
-- {what changed vs design.md and why}
+- Phase 2 review generalized effective-target extraction for layered config,
+  bare provider values, and candidate arrays.
+- Phase 3 closeout added a derived autonomy inventory refresh and bounded
+  remediation of two pre-existing failing PJM checks after full verification
+  exposed them; non-failing PJM warnings remained out of scope.
 
 ## References
 

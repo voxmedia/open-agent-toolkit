@@ -587,7 +587,7 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 | p02    | code     | fixes_completed | 2026-07-29 | reviews/code-p02-review-2026-07-29T120024Z.md                 |
 | p02    | code     | fixes_completed | 2026-07-29 | reviews/code-p02-review-2026-07-29T121857Z.md                 |
 | p02    | code     | passed          | 2026-07-29 | reviews/code-p02-review-2026-07-29T123104Z.md                 |
-| p03    | code     | pending         | -          | -                                                             |
+| p03    | code     | passed          | 2026-07-29 | reviews/code-p03-review-2026-07-29T145300Z.md                 |
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
@@ -617,7 +617,7 @@ Ready for implementation after plan review and dispatch setup.
 - Design: `design.md`
 - Discovery: `discovery.md`
 - Backlog:
-  `.oat/repo/pjm/backlog/items/BL-260727-surface-implementer-dispatches.md`
+  `.oat/repo/pjm/backlog/archived/BL-260727-surface-implementer-dispatches.md`
 - Resolver:
   `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
 - Dispatch Report:

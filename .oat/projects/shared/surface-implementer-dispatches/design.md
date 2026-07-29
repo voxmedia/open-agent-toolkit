@@ -325,7 +325,7 @@ pnpm release:validate
 ## References
 
 - Backlog:
-  `.oat/repo/pjm/backlog/items/BL-260727-surface-implementer-dispatches.md`
+  `.oat/repo/pjm/backlog/archived/BL-260727-surface-implementer-dispatches.md`
 - Discovery: `discovery.md`
 - Resolver:
   `packages/cli/src/commands/project/dispatch-ceiling/index.ts`

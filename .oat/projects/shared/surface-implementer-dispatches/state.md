@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 complete; root review and HiLL closeout pending
+Implementation - Tasks complete; mandatory final review pending
 
 ## Artifacts
 
@@ -135,8 +135,11 @@ Implementation - Phase 3 complete; root review and HiLL closeout pending
 - ✓ User approved bounded repair of the two failing PJM doctor checks
 - ✓ `p03-t02` repaired PJM checks, refreshed autonomy inventory, and archived
   BL-260727
-- ✓ Phase 3 implementation completed with all definition-of-done gates passing
-- → Awaiting root-owned Phase 3/final review and HiLL closeout
+- ✓ Phase 3 implementation completed with nine zero-exit checks and accepted
+  PJM warning status with no failing checks
+- ✓ Phase 3 root-owned review passed with two Minor tracking findings
+- ✓ Minor archived-reference and PJM doctor status records aligned
+- → Awaiting mandatory final review and HiLL closeout
 
 ## Blockers
 
@@ -144,4 +147,5 @@ None
 
 ## Next Milestone
 
-Run root-owned Phase 3/final review, then complete the configured HiLL closeout
+Run mandatory final review, then complete the configured exit gate and HiLL
+closeout
