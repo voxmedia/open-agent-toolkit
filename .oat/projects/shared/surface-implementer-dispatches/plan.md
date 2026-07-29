@@ -139,6 +139,8 @@ Cover:
 - `--task-class` and Codex `--task-effort` parsing and validation;
 - rejection for invalid classes, provider-inapplicable task effort, either
   classification flag on reviewer routes, and existing selection conflicts;
+- exit-1 rejection when either classification flag lacks `--report-scope` or an
+  implementation/fix `--report-action`;
 - classification flags remaining independent from exact candidate flags and
   legacy `--preferred`, including distinct task and candidate effort values;
 - legacy `--preferred` surviving into
@@ -171,6 +173,9 @@ Expected: new assertions fail before implementation.
 - Add `--task-class` and `--task-effort` without overloading legacy
   `--preferred`; classification inputs must not participate in
   `normalizeRequestedCandidate`.
+- Require both report scope and an implementation/fix report action whenever
+  either classification flag is supplied so provenance cannot be silently
+  discarded.
 - Thread classification into Dispatch Report V1.
 - Derive skipped-selection and classification-missing notices only after the
   existing resolver returns, using policy, role/action, preflight, and selection
