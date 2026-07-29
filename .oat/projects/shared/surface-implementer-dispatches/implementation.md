@@ -879,6 +879,15 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
   by removing contradictory template placeholders
 - **Gate state:** allowed / passed
 
+#### Post-Implementation Sequence — snapshot
+
+- **Source:** configured
+- **Final phase:** `p03`
+- **Pre-approval:** `summary` → `document` → `pr`
+- **Post-approval:** none
+- **Approval:** pending
+- **Status:** pre-approval
+
 <!-- orchestration-runs-end -->
 
 ---
