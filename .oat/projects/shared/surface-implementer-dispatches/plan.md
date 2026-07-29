@@ -318,6 +318,8 @@ git commit -m "feat(cli): disclose terminal reviewer constraints"
 - Modify: `.agents/skills/oat-project-implement/SKILL.md`
 - Modify:
   `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
+- Modify:
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 - Modify:
   `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
@@ -325,9 +327,10 @@ git commit -m "feat(cli): disclose terminal reviewer constraints"
 
 **Step 1: Write failing contract tests**
 
-Require implementation/fix command examples to pass task classification and
-require the workflow to surface resolver notices before launch. Pin the
-access-versus-retention wording and corrected recommendation/catalog counts.
+Require implementation/fix command examples and the phase-execution resolver
+route to pass task classification and require the workflow to surface resolver
+notices before launch. Pin the access-versus-retention wording and corrected
+recommendation/catalog counts.
 
 Run:
 
@@ -342,6 +345,9 @@ Expected: new contract assertions fail before guidance changes.
 
 - Bump `oat-project-implement` once for this PR.
 - Update managed-capped implementation/fix examples with classification flags.
+- Update `phase-execution.md` so each phase resolver call carries
+  `--task-class` and Codex `--task-effort` when applicable, records
+  classification in Phase Scope, and surfaces structured notices before launch.
 - Require human-facing notice display before implementation or reviewer launch.
 - Explain terminal reviewer access and retention-policy responsibility.
 - Correct stale Cursor recommendation/catalog counts in configuration docs.
@@ -353,6 +359,7 @@ Expected: new contract assertions fail before guidance changes.
 pnpm exec oxfmt --write \
   ".agents/skills/oat-project-implement/SKILL.md" \
   ".agents/skills/oat-project-implement/references/dispatch-and-dry-run.md" \
+  ".agents/skills/oat-project-implement/references/phase-execution.md" \
   "packages/cli/src/validation/skills.test.ts" \
   "apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md" \
   "apps/oat-docs/docs/cli-utilities/configuration.md"
@@ -376,6 +383,7 @@ Expected: skill contracts, formatting, lint, and docs build pass.
 ```bash
 git add .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-implement/references/dispatch-and-dry-run.md \
+  .agents/skills/oat-project-implement/references/phase-execution.md \
   packages/cli/src/validation/skills.test.ts \
   apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md \
   apps/oat-docs/docs/cli-utilities/configuration.md
