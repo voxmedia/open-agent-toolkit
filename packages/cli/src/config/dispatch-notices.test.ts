@@ -76,6 +76,37 @@ describe('terminal reviewer dispatch notices', () => {
     ]);
   });
 
+  it.each([
+    ['provider string', 'claude-fable-5-thinking-high'],
+    [
+      'provider candidate array',
+      ['gpt-5.6-sol-high', 'claude-fable-5-thinking-high'],
+    ],
+  ] as const)('derives a Fable notice from a %s', (_label, providerValue) => {
+    expect(terminalReviewerNoticesForMatrix({ cursor: providerValue })).toEqual(
+      [
+        expect.objectContaining({
+          message: expect.stringContaining('claude-fable-5-thinking-high'),
+        }),
+      ],
+    );
+  });
+
+  it.each([
+    ['provider string', 'gpt-5.6-sol-high'],
+    [
+      'provider candidate array',
+      ['claude-fable-5-thinking-high', 'gpt-5.6-sol-high'],
+    ],
+  ] as const)(
+    'does not derive a Fable notice from a terminal non-Fable %s',
+    (_label, providerValue) => {
+      expect(
+        terminalReviewerNoticesForMatrix({ cursor: providerValue }),
+      ).toEqual([]);
+    },
+  );
+
   it('formats structured notices without adding policy claims', () => {
     const notice = terminalReviewerNoticeForTarget('fable');
     expect(notice).not.toBeNull();

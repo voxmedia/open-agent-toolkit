@@ -24,6 +24,11 @@ function candidateTarget(candidate: unknown): string | null {
 }
 
 function terminalTarget(providerValue: unknown): string | null {
+  if (typeof providerValue === 'string' || Array.isArray(providerValue)) {
+    return candidateTarget(
+      Array.isArray(providerValue) ? providerValue.at(-1) : providerValue,
+    );
+  }
   if (!isRecord(providerValue)) {
     return null;
   }

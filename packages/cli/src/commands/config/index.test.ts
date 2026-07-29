@@ -2092,6 +2092,72 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it.each([
+      ['claude-fable-5-thinking-high', 'human', false, true],
+      ['gpt-5.6-sol-high', 'human', false, false],
+      ['claude-fable-5-thinking-high', 'JSON', true, true],
+      ['gpt-5.6-sol-high', 'JSON', true, false],
+    ] as const)(
+      'uses a higher-precedence bare-provider %s target in %s post-adoption output',
+      async (effectiveTarget, _label, json, expectedNotice) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const overridePath = json
+          ? join(root, '.oat', 'config.local.json')
+          : join(root, '.oat', 'config.json');
+        await writeFile(
+          overridePath,
+          `${JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: { cursor: effectiveTarget },
+              },
+            },
+          })}\n`,
+          'utf8',
+        );
+        const recommendationTarget = expectedNotice
+          ? 'gpt-5.6-sol-high'
+          : 'claude-fable-5-thinking-high';
+        const { command, capture } = createHarness({
+          cwd: root,
+          home,
+          validateMatrixCell: vi.fn(async () => 'valid' as const),
+          assetFiles: {
+            '/tmp/assets/config/dispatch-matrix-recommendation.json':
+              JSON.stringify({
+                version: 'new',
+                providers: {
+                  cursor: {
+                    frontier: {
+                      candidates: [recommendationTarget],
+                    },
+                  },
+                },
+              }),
+          },
+        });
+
+        await runCommand(
+          command,
+          ['adopt', 'dispatch-matrix', json ? '--shared' : '--user'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain(effectiveTarget);
+        }
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
     it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
       const root = await createRepoRoot();
       await writeFile(

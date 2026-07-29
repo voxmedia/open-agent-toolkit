@@ -2283,16 +2283,24 @@ async function effectiveTerminalReviewerNotices(
   userConfigDir: string,
   dependencies: ConfigCommandDependencies,
 ): Promise<DispatchNotice[]> {
-  const effectiveProviders = await getConfigValue(
+  const resolved = await dependencies.resolveEffectiveConfig(
     repoRoot,
     userConfigDir,
-    'workflow.dispatchCeiling.providers',
-    dependencies,
-    true,
+    dependencies.processEnv,
   );
-  return terminalReviewerNoticesForMatrix(
-    isRecord(effectiveProviders.value) ? effectiveProviders.value : null,
-  );
+  const effectiveProviders: Record<string, unknown> = {};
+  for (const config of [resolved.user, resolved.shared, resolved.local]) {
+    for (const [provider, value] of Object.entries(
+      config.workflow?.dispatchCeiling?.providers ?? {},
+    )) {
+      const existing = effectiveProviders[provider];
+      effectiveProviders[provider] =
+        isRecord(existing) && isRecord(value)
+          ? { ...existing, ...value }
+          : value;
+    }
+  }
+  return terminalReviewerNoticesForMatrix(effectiveProviders);
 }
 
 async function adoptDispatchMatrixRecommendation(
