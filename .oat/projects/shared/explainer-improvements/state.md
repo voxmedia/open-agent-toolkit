@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t05
-oat_last_commit: cf579ca39ba6b0bc7b22e2adb70287dc1e77049f
+oat_current_task: p04-t06
+oat_last_commit: dbb2378e7680e636df546af94802d7f562305ae4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T04:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T04:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -215,6 +215,11 @@ Phase p04 implementation in progress
 - ⧗ Phase p04 remains blocked until graph semantics, backlink canonicalization,
   reviewed Git bytes, exact catalog roots, completion regressions, and canonical
   resume paths are fixed
+- ✓ p04-t05 implemented in atomic commit `dbb2378e`; focused verification
+  passed 131/131
+- ✓ Concurrent p04-t09 plan addition invalidated the initial dispatch without
+  consuming the remediation retry
+- ⧗ Remediation attempt 1/3 continues at p04-t06 from a clean worktree
 
 ## Blockers
 
@@ -222,5 +227,5 @@ None
 
 ## Next Milestone
 
-Execute p04-t05 through p04-t09, verify Phase p04 and p03 regressions, and run a
+Execute p04-t06 through p04-t09, verify Phase p04 and p03 regressions, and run a
 fresh remediation re-review.

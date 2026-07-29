@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t05
+oat_current_task_id: p04-t06
 oat_generated: false
 ---
 
@@ -22,10 +22,10 @@ oat_generated: false
 | p01   | complete      |     7 |       7/7 |
 | p02   | complete      |    13 |     13/13 |
 | p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |     9 |       4/9 |
+| p04   | fixes_pending |     9 |       5/9 |
 | p05   | pending       |     4 |       0/4 |
 
-**Total:** 45/54 tasks completed
+**Total:** 46/54 tasks completed
 
 ---
 
@@ -256,7 +256,7 @@ oat_generated: false
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
 - [x] p04-t03 — Generate and publish a manifest-derived initiative catalog (`2ecd3923`)
 - [x] p04-t04 — Align archive and packaged-layout consumers (`cf579ca3`)
-- [ ] p04-t05 — Bind artistic output to parsed graph semantics
+- [x] p04-t05 — Bind artistic output to parsed graph semantics (`dbb2378e`)
 - [ ] p04-t06 — Canonicalize backlinks and bind reviewed Git bytes
 - [ ] p04-t07 — Validate catalog URLs against the publish root
 - [ ] p04-t08 — Restore completion provenance regression coverage
@@ -689,6 +689,22 @@ oat_generated: false
   roots, completion provenance regression coverage, and canonical resume paths
 - External feedback disposition: confirmed relative-output-root defect added as
   p04-t09; narrative-section-ID report requires reproduction and is not queued
+- Initial dispatch outcome: `INVALID_RUN_ABORT` after p04-t05 because concurrent
+  root-owned planning added p04-t09; no remediation retry consumed
+- Completed commit: `dbb2378e7680e636df546af94802d7f562305ae4`
+  (p04-t05); focused verification passed 131/131
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 20 — Phase p04 remediation attempt 1 continuation
+
+- Request: `explainer-improvements-p04-fix-r1-resume-20260729T045500Z`
+- Launch intent: persisted
+- Tasks: p04-t06 through p04-t09, sequentially
+- Source artifact: `reviews/20260728-p04-code-review.md`
+- Review-remediation attempt: 1/3 continuation
+- Base: `dbb2378e7680e636df546af94802d7f562305ae4`
+- Scope: canonical reviewed backlinks, exact catalog roots, completion provenance
+  regression coverage, and canonical resume paths
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
