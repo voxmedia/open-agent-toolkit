@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: prev1-t05
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 2     | 2/2       |
-| Phase 2    | completed | 2     | 2/2       |
-| Phase 3    | completed | 2     | 2/2       |
-| Revision 1 | completed | 4     | 4/4       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 2     | 2/2       |
+| Phase 2    | completed   | 2     | 2/2       |
+| Phase 3    | completed   | 2     | 2/2       |
+| Revision 1 | in_progress | 5     | 4/5       |
 
-**Total:** 10/10 tasks completed
+**Total:** 10/11 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -1259,6 +1259,32 @@ dispositioned; archive the review and allow the configured exit gate.
 
 **Outcome:** Final lifecycle re-review passed after the required canonical
 skill version bump; refresh the configured implementation exit gate.
+
+### Review Received: Corrected gate blocking review
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T180703Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 0
+
+**Disposition:**
+
+- I1: `convert_to_task` — add `prev1-t05` to re-verify and update all six
+  `oat-project-implement` contract-version pins to `2.2.3`, then rerun the
+  focused and full test suites.
+- M1: `explicit_deferral` — continue the accepted report-context matrix
+  deferral; the contract-pin fix does not touch its trigger surface.
+
+**New tasks added:** `prev1-t05`
+
+**Next:** Execute `prev1-t05`, rerun the standard final review, then start a
+fresh configured exit-gate generation.
 
 ## Implementation Log
 

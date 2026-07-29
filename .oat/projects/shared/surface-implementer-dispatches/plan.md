@@ -748,6 +748,47 @@ git commit -m "chore(review): clean archived final review formatting"
 
 ---
 
+### Task prev1-t05: (review) Synchronize implementation skill contract pins
+
+**Files:**
+
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Verify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the required `oat-project-implement` skill version bump to
+`2.2.3` left six contract tests pinned to `2.2.2`, causing the focused suite and
+CI-gated `pnpm test` to fail.
+
+**Step 2: Implement fix**
+
+Re-verify each pinned contract against the current skill body, then update the
+six `oat-project-implement` version assertions from `2.2.2` to `2.2.3`.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/skills.test.ts
+pnpm run cli -- internal validate-skill-version-bumps --base-ref origin/main
+pnpm test
+```
+
+Expected: all skill-contract tests, canonical version validation, and the full
+CI-gated test suite pass.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/validation/skills.test.ts
+git commit -m "test(skills): align implementation contract version"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
@@ -767,7 +808,7 @@ git commit -m "chore(review): clean archived final review formatting"
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T171719Z.md           | ff92b31655fbbd5e1a99c40adf33340f60076173 | manual     | -                    |
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T173359Z.md           | 18017af6c732f9a5a26c34e5e5f03f16ddce4ba6 | gate       | cursor-fable-5-xhigh |
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T175311Z.md           | b977847a59124948e07a3a759f5fe304835127cc | manual     | -                    |
-| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T180703Z.md                    | a49a785b877c9f1e8d4022b011d6dba632744760 | gate       | cursor-fable-5-xhigh |
+| final  | code     | fixes_added     | 2026-07-29 | reviews/archived/final-review-2026-07-29T180703Z.md           | a49a785b877c9f1e8d4022b011d6dba632744760 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -782,10 +823,10 @@ review; no review artifact was produced for that event.
 - Phase 1: 2 tasks - Dispatch report schema, classification inputs, and warnings
 - Phase 2: 2 tasks - Terminal reviewer disclosures, skills, and docs
 - Phase 3: 2 tasks - Public release metadata and backlog closeout
-- Revision 1: 4 tasks - Merge current main, refresh release metadata, and close
+- Revision 1: 5 tasks - Merge current main, refresh release metadata, and close
   final review findings
 
-**Total: 10 tasks**
+**Total: 11 tasks**
 
 Ready for implementation after plan review and dispatch setup.
 
