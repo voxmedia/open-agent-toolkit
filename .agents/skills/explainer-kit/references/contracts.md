@@ -181,6 +181,15 @@ The run package retains the privacy-safe `run-request.json`,
 structured error and recovery action without deleting earlier outputs. Raw art
 direction is omitted unless the request explicitly opts in.
 
+`scripts/lib/package-coverage.mjs` is the versioned pure-ESM authority for
+required immutable paths. Successful unattended recaps require complete
+attempt-1 evidence. Successful interactive recaps require no review paths when
+none are retained, but any retained review material requires a complete
+attempt. Failed and incomplete packages follow the same no-evidence/complete-
+evidence split. Only `built-needs-review` may retain a deliberately partial
+chain. Outside that handoff, any attempt-2 material requires complete attempt
+1, the revision record, and complete attempt 2.
+
 Build-record stages are terminal once `passed` or `warned`. A rejected run that
 is later approved reopens the render and QA stages through a narrowly guarded
 record-level reset so the corrected sources are re-rendered and re-validated,

@@ -265,6 +265,9 @@ describe('oat project archive push', () => {
       '/tmp/workspace/open-agent-toolkit/.oat/projects/shared/demo-project',
       'explainers/project-recap/run-20260401',
     );
+    expect(
+      verifySelectedProjectRecapForArchive.mock.invocationCallOrder[0],
+    ).toBeLessThan(archiveProjectOnCompletion.mock.invocationCallOrder[0]);
     expect(process.exitCode).toBe(0);
   });
 

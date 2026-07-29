@@ -29,6 +29,8 @@ import {
   fileExists,
 } from '@fs/io';
 
+import { loadExplainerPackageCoverage } from './explainer-package-coverage';
+
 const execFileAsync = promisify(execFileCallback);
 
 export type ExecFileResult = {
@@ -157,14 +159,6 @@ export interface ArchiveProjectOnCompletionResult {
 }
 
 export const ARCHIVE_SNAPSHOT_METADATA_FILENAME = '.oat-archive-source.json';
-const RECAP_SET_PLAN_PATHS = [
-  'source/set-plan/request.json',
-  'source/set-plan/result.json',
-  'source/set-plan/ledger.json',
-  'source/set-plan/portfolio.json',
-  'source/set-plan/drafts.json',
-] as const;
-const REVIEW_VIEWPORTS = ['mobile', 'tablet', 'desktop'] as const;
 
 /**
  * Directories excluded from S3 archive sync. These contain process artifacts
@@ -642,148 +636,7 @@ function parseProjectRecapManifest(contents: string): ProjectRecapManifest {
     );
   }
 
-  const requiredProvenancePaths = [
-    'run-request.json',
-    'source/content-approval.json',
-  ];
-  const recordedImmutablePaths = Object.keys(value.immutableHashes);
-  const missingLegacyPaths = requiredProvenancePaths.filter(
-    (relativePath) => !(relativePath in value.immutableHashes),
-  );
-  if (missingLegacyPaths.length > 0) {
-    throw new CliError(
-      `Selected project recap uses a legacy manifest missing immutable coverage for ${missingLegacyPaths.join(', ')}; regenerate the recap package before archival.`,
-    );
-  }
-
-  const expectedImmutablePaths = new Set([
-    ...requiredProvenancePaths,
-    value.source.factBasePath,
-    'source/fact-base.md',
-    ...(value.source.authorResultPaths ?? []),
-    value.theme.path,
-    ...value.artifacts.flatMap((artifact) => [
-      artifact.contentPath,
-      ...(artifact.status === 'built' &&
-      typeof artifact.renderedPath === 'string'
-        ? [artifact.renderedPath]
-        : []),
-    ]),
-  ]);
-  if (
-    value.recipe.id === 'project-recap' &&
-    ['built-not-durable', 'built-durable'].includes(value.outcome)
-  ) {
-    for (const path of RECAP_SET_PLAN_PATHS) {
-      expectedImmutablePaths.add(path);
-    }
-  }
-  const missingExpectedPaths = [...expectedImmutablePaths].filter(
-    (relativePath) => !(relativePath in value.immutableHashes),
-  );
-  if (
-    missingExpectedPaths.some(
-      (path) =>
-        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
-    )
-  ) {
-    throw new CliError(
-      'Selected project recap manifest has an incomplete visual-review evidence chain.',
-    );
-  }
-  if (
-    expectedImmutablePaths.size === 0 ||
-    missingExpectedPaths.length > 0 ||
-    value.artifacts.some(
-      (artifact) =>
-        artifact.status === 'built' &&
-        typeof artifact.renderedPath === 'string' &&
-        artifact.hash !== value.immutableHashes[artifact.renderedPath],
-    )
-  ) {
-    throw new CliError(
-      'Selected project recap manifest immutable hashes do not cover the complete v1 package.',
-    );
-  }
-  if (
-    recordedImmutablePaths.some((path) =>
-      path.startsWith('qa/visual-review/'),
-    ) &&
-    [
-      'qa/visual-review/attempt-1/request.json',
-      'qa/visual-review/attempt-1/result.json',
-    ].some((path) => !(path in value.immutableHashes))
-  ) {
-    throw new CliError(
-      'Selected project recap manifest has an incomplete visual-review evidence chain.',
-    );
-  }
-  for (const path of recordedImmutablePaths) {
-    if (
-      (path.startsWith('qa/browser/') ||
-        path.includes('/visual-review/attempt-')) &&
-      path.endsWith('.png') &&
-      !(path.replace(/\.png$/, '.json') in value.immutableHashes)
-    ) {
-      throw new CliError(
-        `Selected project recap manifest screenshot evidence \`${path}\` is missing its immutable metrics record.`,
-      );
-    }
-  }
-
   return value;
-}
-
-function addRequiredReviewAttemptPaths(
-  required: Set<string>,
-  manifest: ProjectRecapManifest,
-  attempt: 1 | 2,
-): void {
-  const root = `qa/visual-review/attempt-${attempt}`;
-  required.add(`${root}/request.json`);
-  required.add(`${root}/result.json`);
-  for (const artifact of manifest.artifacts) {
-    if (artifact.status !== 'built') continue;
-    for (const viewport of REVIEW_VIEWPORTS) {
-      required.add(`qa/browser/${artifact.id}/${viewport}.png`);
-      required.add(`qa/browser/${artifact.id}/${viewport}.json`);
-      required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
-      required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
-    }
-  }
-}
-
-function assertModeAwareReviewCoverage(
-  manifest: ProjectRecapManifest,
-  runMode: 'interactive' | 'unattended',
-): void {
-  const recorded = Object.keys(manifest.immutableHashes);
-  const successfulRecap = ['built-not-durable', 'built-durable'].includes(
-    manifest.outcome,
-  );
-  const retainsReviewEvidence = recorded.some(
-    (relativePath) =>
-      relativePath.startsWith('qa/browser/') ||
-      relativePath.startsWith('qa/visual-review/'),
-  );
-  const required = new Set<string>();
-  if ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence) {
-    addRequiredReviewAttemptPaths(required, manifest, 1);
-  }
-  const retainsSecondAttempt =
-    recorded.includes('qa/visual-review/revision.json') ||
-    recorded.some((relativePath) =>
-      relativePath.startsWith('qa/visual-review/attempt-2/'),
-    );
-  if (retainsSecondAttempt) {
-    required.add('qa/visual-review/revision.json');
-    addRequiredReviewAttemptPaths(required, manifest, 2);
-  }
-  if ([...required].some((path) => !(path in manifest.immutableHashes))) {
-    throw new CliError(
-      'Selected project recap manifest has an incomplete visual-review evidence chain.',
-    );
-  }
 }
 
 function isProjectRecapManifestV1(
@@ -1173,7 +1026,45 @@ async function loadVerifiedProjectRecap(
     manifest,
   );
   const runMode = await readVerifiedRunMode(sourceRunRoot);
-  assertModeAwareReviewCoverage(manifest, runMode);
+  const packageCoverage = await loadExplainerPackageCoverage();
+  const missingCoverage = packageCoverage
+    .requiredImmutablePackagePaths(manifest, { runMode })
+    .filter((path) => !(path in manifest.immutableHashes));
+  const missingLegacyCoverage = missingCoverage.filter((path) =>
+    ['run-request.json', 'source/content-approval.json'].includes(path),
+  );
+  if (missingLegacyCoverage.length > 0) {
+    throw new CliError(
+      `Selected project recap uses a legacy manifest missing immutable coverage for ${missingLegacyCoverage.join(', ')}; regenerate the recap package before archival.`,
+    );
+  }
+  if (
+    missingCoverage.some(
+      (path) =>
+        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+    )
+  ) {
+    throw new CliError(
+      'Selected project recap manifest has an incomplete visual-review evidence chain.',
+    );
+  }
+  if (missingCoverage.length > 0) {
+    throw new CliError(
+      `Selected project recap manifest immutable hashes do not cover the complete v1 package: ${missingCoverage.join(', ')}.`,
+    );
+  }
+  if (
+    manifest.artifacts.some(
+      (artifact) =>
+        artifact.status === 'built' &&
+        typeof artifact.renderedPath === 'string' &&
+        artifact.hash !== manifest.immutableHashes[artifact.renderedPath],
+    )
+  ) {
+    throw new CliError(
+      'Selected project recap artifact hashes do not match the immutable package.',
+    );
+  }
   return {
     sourceRunRoot,
     manifestContents,

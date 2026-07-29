@@ -1,10 +1,12 @@
 import { createHash } from 'node:crypto';
 import { readFile, realpath } from 'node:fs/promises';
-import { relative, resolve, sep } from 'node:path';
+import { join, relative, resolve, sep } from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 const MODES = new Set(['dedicated', 'completion-bookkeeping']);
 const ARTIFACT_COMMIT_TOKEN = '$ARTIFACT_COMMIT';
 const SHA_PATTERN = /^[a-f0-9]{40}$/;
+const PACKAGE_COVERAGE_VERSION = 'explainer-kit.package-coverage/v1';
 
 export async function planTrackedRunFinalization(request, context = {}) {
   assertRequest(request);
@@ -27,10 +29,11 @@ export async function planTrackedRunFinalization(request, context = {}) {
       'built-needs-review requires a passing visual review before finalization.',
     );
   }
+  const packageCoverage = await loadPackageCoverage(context.coreRoot);
 
-  const immutablePaths = (await immutablePackagePaths(manifest, runRoot)).map(
-    (path) => toRepoPath(repoRoot, resolveRunPath(runRoot, path)),
-  );
+  const immutablePaths = (
+    await immutablePackagePaths(manifest, runRoot, packageCoverage)
+  ).map((path) => toRepoPath(repoRoot, resolveRunPath(runRoot, path)));
   const mutablePaths = [
     toRepoPath(repoRoot, manifestPath),
     toRepoPath(repoRoot, resolveRunPath(runRoot, manifest.buildRecord?.path)),
@@ -251,7 +254,7 @@ function commitCommands(paths, subject) {
   ];
 }
 
-async function immutablePackagePaths(manifest, runRoot) {
+async function immutablePackagePaths(manifest, runRoot, packageCoverage) {
   if (
     !manifest.immutableHashes ||
     typeof manifest.immutableHashes !== 'object' ||
@@ -276,13 +279,13 @@ async function immutablePackagePaths(manifest, runRoot) {
     }
     verifiedBytes.set(path, bytes);
   }
-  const successfulRecap =
-    manifest.recipe?.id === 'project-recap' &&
-    ['built-not-durable', 'built-durable'].includes(manifest.outcome);
-  const runMode = successfulRecap
+  const runMode =
+    manifest.recipe?.id === 'project-recap'
     ? verifiedRunMode(verifiedBytes.get('run-request.json'))
     : undefined;
-  const required = requiredPackagePaths(manifest, runMode);
+  const required = packageCoverage.requiredImmutablePackagePaths(manifest, {
+    runMode,
+  });
   const missing = required.filter(
     (path) => !(path in manifest.immutableHashes),
   );
@@ -292,60 +295,6 @@ async function immutablePackagePaths(manifest, runRoot) {
     );
   }
   return paths;
-}
-
-function requiredPackagePaths(manifest, runMode) {
-  const required = new Set([
-    'run-request.json',
-    'source/content-approval.json',
-    manifest.source?.factBasePath,
-    'source/fact-base.md',
-    ...(manifest.source?.authorResultPaths ?? []),
-    manifest.theme?.path,
-    ...(manifest.artifacts ?? []).flatMap((artifact) => [
-      artifact.contentPath,
-      ...(artifact.status === 'built' &&
-      typeof artifact.renderedPath === 'string'
-        ? [artifact.renderedPath]
-        : []),
-    ]),
-  ]);
-  required.delete(undefined);
-  const successfulRecap =
-    manifest.recipe?.id === 'project-recap' &&
-    ['built-not-durable', 'built-durable'].includes(manifest.outcome);
-  if (successfulRecap) {
-    for (const path of [
-      'source/set-plan/request.json',
-      'source/set-plan/result.json',
-      'source/set-plan/ledger.json',
-      'source/set-plan/portfolio.json',
-      'source/set-plan/drafts.json',
-    ]) {
-      required.add(path);
-    }
-  }
-  const recorded = new Set(Object.keys(manifest.immutableHashes ?? {}));
-  const retainsReviewEvidence = [...recorded].some(
-    (path) =>
-      path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
-  );
-  if (
-    manifest.recipe?.id === 'project-recap' &&
-    ((successfulRecap && runMode === 'unattended') || retainsReviewEvidence)
-  ) {
-    addReviewAttemptPaths(required, manifest, 1);
-  }
-  const retainsSecondAttempt =
-    recorded.has('qa/visual-review/revision.json') ||
-    [...recorded].some((path) =>
-      path.startsWith('qa/visual-review/attempt-2/'),
-    );
-  if (manifest.recipe?.id === 'project-recap' && retainsSecondAttempt) {
-    required.add('qa/visual-review/revision.json');
-    addReviewAttemptPaths(required, manifest, 2);
-  }
-  return [...required];
 }
 
 function verifiedRunMode(bytes) {
@@ -370,19 +319,26 @@ function verifiedRunMode(bytes) {
   return request.mode;
 }
 
-function addReviewAttemptPaths(required, manifest, attempt) {
-  const root = `qa/visual-review/attempt-${attempt}`;
-  required.add(`${root}/request.json`);
-  required.add(`${root}/result.json`);
-  for (const artifact of manifest.artifacts ?? []) {
-    if (artifact.status !== 'built') continue;
-    for (const viewport of ['mobile', 'tablet', 'desktop']) {
-      required.add(`qa/browser/${artifact.id}/${viewport}.png`);
-      required.add(`qa/browser/${artifact.id}/${viewport}.json`);
-      required.add(`${root}/evidence/${artifact.id}/${viewport}.png`);
-      required.add(`${root}/evidence/${artifact.id}/${viewport}.json`);
-    }
+async function loadPackageCoverage(coreRoot) {
+  const root = await realpathRequired(coreRoot, 'coreRoot');
+  const modulePath = join(root, 'scripts', 'lib', 'package-coverage.mjs');
+  let loaded;
+  try {
+    loaded = await import(pathToFileURL(modulePath).href);
+  } catch (error) {
+    throw new Error(
+      `Compatible explainer package coverage could not be loaded from coreRoot: ${error.message}`,
+    );
   }
+  if (
+    loaded.PACKAGE_COVERAGE_VERSION !== PACKAGE_COVERAGE_VERSION ||
+    typeof loaded.requiredImmutablePackagePaths !== 'function'
+  ) {
+    throw new Error(
+      `coreRoot must provide ${PACKAGE_COVERAGE_VERSION} package coverage.`,
+    );
+  }
+  return loaded;
 }
 
 function resolveRunPath(runRoot, path) {

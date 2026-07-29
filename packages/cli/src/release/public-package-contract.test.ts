@@ -95,6 +95,7 @@ describe('getPublicPackageContracts', () => {
           'assets/templates/repo-agents.md',
           'assets/templates/pjm-agents.md',
           'assets/templates/reference-agents.md',
+          'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
           'assets/NOTICES.md',
           'README.md',
         ]),
@@ -113,6 +114,13 @@ describe('getPublicPackageContracts', () => {
               expect.stringContaining('Copyright (c) 2025 Nico Bailon'),
             ]),
           }),
+          {
+            path: 'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+            requiredContents: [
+              'explainer-kit.package-coverage/v1',
+              'export function requiredImmutablePackagePaths',
+            ],
+          },
         ],
         versionPolicyAdditionalRoots: expect.arrayContaining([
           '.agents/skills',
@@ -207,6 +215,7 @@ describe('getPublicPackageContracts', () => {
       'assets/templates/repo-agents.md',
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
+      'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
       'assets/NOTICES.md',
       'README.md',
       'src/index.ts',
@@ -275,7 +284,7 @@ describe('getPublicPackageContracts', () => {
         },
         cliContract,
       ),
-    ).toHaveLength(9);
+    ).toHaveLength(10);
   });
 
   it('reports workspace protocol dependency specs from packed package metadata', () => {

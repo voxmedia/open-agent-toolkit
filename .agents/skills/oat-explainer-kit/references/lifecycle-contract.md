@@ -115,8 +115,10 @@ blocked.
 `planTrackedRunFinalization(request, context)` is the shared command planner for
 tracked project explainer and recap runs. The request contains `runRoot`,
 `manifestPath`, `commitMode`, and optional `relocatedFrom`. Context supplies the
-repository root, project name, and, for `completion-bookkeeping`, the existing
-full artifact commit SHA.
+repository root, project name, an explicit compatible `coreRoot`, and, for
+`completion-bookkeeping`, the existing full artifact commit SHA. Finalization
+dynamically loads the versioned package-coverage contract from that core root;
+it does not maintain an adapter-local path list.
 
 A core `built-needs-review` outcome is a terminal review gate, not a
 non-durable success. The planner rejects it before producing artifact,

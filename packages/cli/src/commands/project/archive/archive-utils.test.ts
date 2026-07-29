@@ -550,6 +550,39 @@ describe('archive utils', () => {
     ).rejects.toThrow(/hash verification failed.*run-request\.json/i);
   });
 
+  it.each(['failed', 'incomplete'] as const)(
+    'rejects partial review evidence retained by a %s package',
+    async (outcome) => {
+      const repoRoot = await createRepoRoot();
+      const projectPath = join(repoRoot, '.oat', 'projects', 'shared', outcome);
+      await mkdir(projectPath, { recursive: true });
+      const recap = await createRecapPackage(projectPath, { outcome });
+      const partialPath = 'qa/review-gate/attempt-1-error.json';
+      const partialContents = '{"code":"E_VISUAL_REVIEW"}\n';
+      await mkdir(dirname(join(recap.runRoot, partialPath)), {
+        recursive: true,
+      });
+      await writeFile(join(recap.runRoot, partialPath), partialContents);
+      const manifest = JSON.parse(
+        await readFile(recap.manifestPath, 'utf8'),
+      ) as { immutableHashes: Record<string, string> };
+      manifest.immutableHashes[partialPath] =
+        `sha256:${createHash('sha256').update(partialContents).digest('hex')}`;
+      await writeFile(recap.manifestPath, `${JSON.stringify(manifest)}\n`);
+
+      await expect(
+        archiveProjectOnCompletion({
+          repoRoot,
+          projectPath,
+          projectName: outcome,
+          projectsRoot: '.oat/projects/shared',
+          projectRecapRun: recap.relativeRunPath,
+          s3SyncOnComplete: false,
+        }),
+      ).rejects.toThrow(/incomplete visual-review evidence chain/i);
+    },
+  );
+
   it('preserves existing behavior when no recap run is selected', async () => {
     const repoRoot = await createRepoRoot();
     const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');

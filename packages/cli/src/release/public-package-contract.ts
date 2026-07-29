@@ -71,6 +71,7 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
       'assets/templates/repo-agents.md',
       'assets/templates/pjm-agents.md',
       'assets/templates/reference-agents.md',
+      'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
       'assets/NOTICES.md',
       'README.md',
     ],
@@ -87,6 +88,13 @@ const PUBLIC_PACKAGE_CONTRACTS: PublicPackageContract[] = [
           '**Source:** https://github.com/nicobailon/visual-explainer',
           '**Version referenced:** 0.8.1',
           `Copyright (c) 2025 Nico Bailon\n\n${MIT_LICENSE_BODY}`,
+        ],
+      },
+      {
+        path: 'assets/skills/explainer-kit/scripts/lib/package-coverage.mjs',
+        requiredContents: [
+          'explainer-kit.package-coverage/v1',
+          'export function requiredImmutablePackagePaths',
         ],
       },
     ],

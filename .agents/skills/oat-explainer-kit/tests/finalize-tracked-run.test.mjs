@@ -4,15 +4,25 @@ import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, test } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
 import {
-  planTrackedRunFinalization,
+  planTrackedRunFinalization as planTrackedRunFinalizationCore,
   verifyTrackedRunFinalization,
 } from '../scripts/finalize-tracked-run.mjs';
 
 const SHA = 'a'.repeat(40);
 const EVIDENCE_SHA = 'b'.repeat(40);
 const tempDirs = [];
+const CORE_ROOT = fileURLToPath(
+  new URL('../../explainer-kit/', import.meta.url),
+);
+
+const planTrackedRunFinalization = (request, context = {}) =>
+  planTrackedRunFinalizationCore(request, {
+    coreRoot: CORE_ROOT,
+    ...context,
+  });
 
 afterEach(async () => {
   await Promise.all(
@@ -244,6 +254,32 @@ test('refuses to finalize a recap whose visual review gate is unresolved', async
       project: 'demo',
     }),
     /built-needs-review.*visual review.*before finalization/i,
+  );
+});
+
+test('loads versioned package coverage from the explicit compatible core root', async () => {
+  const fixture = await createRun();
+  await assert.rejects(
+    planTrackedRunFinalizationCore(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+    }),
+    /coreRoot is required/i,
+  );
+
+  const incompatibleCore = join(fixture.repoRoot, 'incompatible-core');
+  await mkdir(join(incompatibleCore, 'scripts', 'lib'), { recursive: true });
+  await writeFile(
+    join(incompatibleCore, 'scripts', 'lib', 'package-coverage.mjs'),
+    "export const PACKAGE_COVERAGE_VERSION = 'future';\nexport const requiredImmutablePackagePaths = () => [];\n",
+  );
+  await assert.rejects(
+    planTrackedRunFinalizationCore(request(fixture, 'dedicated'), {
+      repoRoot: fixture.repoRoot,
+      project: 'demo',
+      coreRoot: incompatibleCore,
+    }),
+    /explainer-kit\.package-coverage\/v1/i,
   );
 });
 

@@ -347,6 +347,56 @@ test('allows partial visual-review evidence in built-needs-review handoffs', () 
   );
 });
 
+test('requires complete review attempts for every non-handoff package retaining evidence', () => {
+  const recap = (outcome, immutableHashes = {}) => ({
+    recipe: { id: 'project-recap' },
+    outcome,
+    source: { factBasePath: 'source/fact-base.json' },
+    theme: { path: 'theme.resolved.json' },
+    artifacts: [
+      {
+        id: 'project-recap',
+        status: 'built',
+        contentPath: 'source/content/project-recap.html',
+        renderedPath: 'site/project-recap.html',
+      },
+    ],
+    immutableHashes,
+  });
+  const reviewPaths = (manifest, runMode = 'unattended') =>
+    requiredImmutablePackagePaths(manifest, { runMode }).filter(
+      (path) =>
+        path.startsWith('qa/browser/') ||
+        path.startsWith('qa/visual-review/'),
+    );
+
+  for (const outcome of ['failed', 'incomplete']) {
+    assert.deepEqual(reviewPaths(recap(outcome)), []);
+    const required = reviewPaths(
+      recap(outcome, {
+        'qa/browser/project-recap/mobile.png': HASH,
+      }),
+    );
+    assert.ok(required.includes('qa/browser/project-recap/desktop.json'));
+    assert.ok(required.includes('qa/visual-review/attempt-1/request.json'));
+    assert.ok(required.includes('qa/visual-review/attempt-1/result.json'));
+  }
+
+  const secondAttempt = requiredImmutablePackagePaths(
+    recap('failed', {
+      'qa/visual-review/attempt-2/error.json': HASH,
+    }),
+    { runMode: 'unattended' },
+  );
+  assert.ok(
+    secondAttempt.includes('qa/visual-review/attempt-1/request.json'),
+  );
+  assert.ok(secondAttempt.includes('qa/visual-review/revision.json'));
+  assert.ok(
+    secondAttempt.includes('qa/visual-review/attempt-2/result.json'),
+  );
+});
+
 test('computes built-needs-review from a terminal recap review gate', async () => {
   const outputRoot = await temporaryDirectory();
   const run = await initializeRun(
