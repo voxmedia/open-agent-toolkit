@@ -905,6 +905,15 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Verification:** docs check/build and release validation passed
 - **Snapshot progress:** `[summary, document]`
 
+#### Post-Implementation Sequence — PR completed
+
+- **Commits:** `6f83a48f7`, `a28c8a37e`
+- **PR:** https://github.com/voxmedia/open-agent-toolkit/pull/187
+- **Title:** `feat: expose managed dispatch visibility and terminal reviewer constraints`
+- **Base / head:** `main` ← `surface-implementer-dispatches`
+- **Residual reviews:** six active artifacts archived with references aligned
+- **Snapshot progress:** `[summary, document, pr]`
+
 <!-- orchestration-runs-end -->
 
 ---
