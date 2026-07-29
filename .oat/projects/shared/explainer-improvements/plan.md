@@ -1795,6 +1795,35 @@ retained-root mutation cannot relocate a resumable package.
 
 ---
 
+### Task p04-t14: Require authenticated resume tokens
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Replace legacy-success assertions with RED regressions proving every
+   `ekrt1` token is rejected before retained state hydration or callbacks,
+   including relative-root and rewritten-current-package cases.
+2. Remove transparent `ekrt1` acceptance from resume verification. Accept only
+   fixed-format `ekrt2` tokens and preserve the existing equal-length,
+   timing-safe comparison for authenticated tokens.
+3. Update the external handoff contract to state that legacy paused runs must
+   restart; no mutable retained field can opt a package into legacy behavior.
+4. Run focused records and core integration tests, complete p03/p04 unions, and
+   all repository/release gates.
+5. Commit as `fix(p04-t14): require authenticated resume tokens`.
+
+**Acceptance:** No legacy token can authorize resume. Current and rewritten
+packages require an authenticated `ekrt2` token bound to the exact canonical
+root, request bytes, run identity, and retained set-plan hashes.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1957,10 +1986,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 13 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
+- Phase 4: 14 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 58 tasks**
+**Total: 59 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

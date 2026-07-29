@@ -1,8 +1,7 @@
 ---
-oat_current_task: null
+oat_current_task: p04-t14
 oat_last_commit: 996229cfad5392a45681e91e0084b4684acbcb47
-oat_blockers:
-  - Phase p04 operator-authorized 4/4 cap exhausted with I4-R4 unresolved.
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -257,14 +256,16 @@ Phase p04 implementation in progress
   to relative and downgrade to derived `ekrt1` because legacy eligibility is
   inferred from mutable retained state
 - ⚠ Operator-authorized Phase p04 review cap is exhausted
+- ✓ Operator selected secure closure: transparent legacy resume compatibility is
+  not required
+- ⧗ p04-t14 is authorized to remove `ekrt1` acceptance and require authenticated
+  `ekrt2`, followed by one closure review
 
 ## Blockers
 
-Phase p04 cap exhausted with I4-R4 unresolved. Secure closure requires either
-externally trusted legacy provenance or removal of transparent `ekrt1`
-compatibility; explicit operator disposition is required.
+None.
 
 ## Next Milestone
 
-Obtain explicit operator disposition for I4-R4 before any further remediation or
-advancement to the p05 HiLL checkpoint.
+Execute p04-t14, rerun Phase p04 and repository/release gates, then run the
+explicitly authorized closure review before the p05 HiLL checkpoint.

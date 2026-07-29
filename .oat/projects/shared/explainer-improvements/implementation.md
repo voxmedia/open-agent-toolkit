@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase p04 operator-authorized 4/4 cap exhausted with I4-R4 unresolved.
+oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: p04-t14
 oat_generated: false
 ---
 
@@ -18,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----: | --------: |
-| p01   | complete |     7 |       7/7 |
-| p02   | complete |    13 |     13/13 |
-| p03   | complete |    21 |     21/21 |
-| p04   | blocked  |    13 |     13/13 |
-| p05   | pending  |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | fixes_pending |    14 |     13/14 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 54/58 tasks completed
+**Total:** 54/59 tasks completed
 
 ---
 
@@ -251,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** blocked
+**Status:** fixes_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -266,6 +265,7 @@ oat_generated: false
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
 - [x] p04-t12 — Bind resume identity to the original canonical output root (`3b7b43b2`)
 - [x] p04-t13 — Authenticate the canonical resume root externally (`996229cf`)
+- [ ] p04-t14 — Require authenticated resume tokens
 
 ## Phase 5: Golden conformance and release closure
 
@@ -873,6 +873,20 @@ oat_generated: false
 - Required disposition: choose externally trusted legacy provenance, remove
   transparent v1 acceptance, accept the residual risk, or stop blocked
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 28 — Phase p04 explicit legacy-token removal
+
+- Request: `explainer-improvements-p04-fix-v1-removal-20260729T143000Z`
+- Launch intent: persisted
+- Task: p04-t14
+- Source artifact: `reviews/20260729-p04-code-review-r4.md`
+- Scope: remove transparent legacy resume-token acceptance and require
+  authenticated current tokens
+- Operator disposition: legacy paused-run compatibility is not required; reject
+  `ekrt1` and require `ekrt2`
+- Review authorization: one closure review explicitly authorized for this
+  operator-selected fix outside the exhausted automatic cap
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
