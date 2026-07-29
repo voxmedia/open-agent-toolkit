@@ -816,6 +816,20 @@ Dispatch: scope=p03 action=review role=reviewer producer=gpt-5.6-sol-high proven
 Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5.6-sol-high
 ```
 
+#### Configured Exit Gate — generation initialized
+
+- **Resolution:** configured
+- **Description:** Semantic cross-family final implementation review before
+  `oat-project-implement` exits
+- **Policy:** `block`, maximum 2 remediation attempts
+- **Reviewed head:** `79feab7f0b2fd23165f9dcea06bf04a70d645b62`
+- **Integration base:** `refs/remotes/origin/main`
+- **Implementation fingerprint:**
+  `sha256:effective-delta-v1:d4960a0417111fce00dd014ad495e3418ac0452ae1918b8742ccf91c27e4c607`
+- **Configuration fingerprint:**
+  `sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20`
+- **Status:** pending; launch not started
+
 <!-- orchestration-runs-end -->
 
 ---
