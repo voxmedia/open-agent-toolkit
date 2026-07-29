@@ -1,0 +1,87 @@
+{
+  "schemaVersion": "explainer-kit.golden-runtime-rubric/v1",
+  "caseId": "simple",
+  "generatedAt": "2026-07-29T16:00:00.000Z",
+  "checks": {
+    "adaptiveMinimumSet": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "firstViewport": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "hierarchy": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "representationChoice": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "legibility": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "cohesion": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "sourceCoverage": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "interactions": {
+      "status": "pass",
+      "evidence": ["runtime/run-summary.json"]
+    },
+    "topologyPreservation": {
+      "status": "pass",
+      "evidence": ["runtime/artifacts/architecture.html"]
+    },
+    "catalogParity": {
+      "status": "pass",
+      "evidence": ["runtime/catalog.json", "runtime/manifest.json"]
+    },
+    "boundedCorrection": {
+      "status": "pass",
+      "evidence": ["runtime/review-result.json"]
+    }
+  },
+  "runtime": {
+    "schemaVersion": "explainer-kit.golden-runtime-output/v1",
+    "caseId": "simple",
+    "generatedAt": "2026-07-29T16:00:00.000Z",
+    "browser": {
+      "name": "chromium",
+      "version": "147.0.7727.15",
+      "capture": {
+        "format": "png",
+        "fullPage": false,
+        "reducedMotion": "reduce",
+        "animationsDisabled": true
+      }
+    },
+    "outcome": "built-not-durable",
+    "marking": "auto-drafted",
+    "author": {
+      "id": "golden-benchmark-author",
+      "calls": ["project-recap", "architecture", "deck"]
+    },
+    "visualCritic": {
+      "id": "golden-benchmark-visual-critic",
+      "independentFromAuthor": true,
+      "calls": 1,
+      "disposition": "pass"
+    },
+    "reviewHistory": {
+      "attempts": 1,
+      "corrections": 0,
+      "terminalReview": "pass"
+    },
+    "archiveInput": {
+      "activeProjectRequired": false,
+      "sourcePath": "source-input.json"
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "schemaVersion": "explainer-kit.browser-evidence/v1",
+  "artifactId": "deck",
+  "viewport": "desktop",
+  "viewportSize": {
+    "width": 1440,
+    "height": 900
+  },
+  "scenario": "default",
+  "capture": {
+    "format": "png",
+    "fullPage": false,
+    "reducedMotion": "reduce",
+    "animationsDisabled": true
+  },
+  "screenshotPath": "qa/browser/deck/desktop.png",
+  "metrics": {
+    "pageOverflowX": false,
+    "clippedX": [],
+    "viewportClipped": [],
+    "unreadableHeadings": [],
+    "animationsDisabled": true,
+    "reducedMotion": true,
+    "deckLayout": {
+      "flow": "horizontal",
+      "overflowX": "auto"
+    },
+    "themeToggle": null,
+    "keyboard": {
+      "tab": true,
+      "arrows": {
+        "ArrowLeft": true,
+        "ArrowRight": true,
+        "ArrowUp": true,
+        "ArrowDown": true
+      }
+    }
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "schemaVersion": "explainer-kit.golden-runtime-output/v1",
+  "caseId": "simple",
+  "generatedAt": "2026-07-29T16:00:00.000Z",
+  "browser": {
+    "name": "chromium",
+    "version": "147.0.7727.15",
+    "capture": {
+      "format": "png",
+      "fullPage": false,
+      "reducedMotion": "reduce",
+      "animationsDisabled": true
+    }
+  },
+  "outcome": "built-not-durable",
+  "marking": "auto-drafted",
+  "author": {
+    "id": "golden-benchmark-author",
+    "calls": ["project-recap", "architecture", "deck"]
+  },
+  "visualCritic": {
+    "id": "golden-benchmark-visual-critic",
+    "independentFromAuthor": true,
+    "calls": 1,
+    "disposition": "pass"
+  },
+  "reviewHistory": {
+    "attempts": 1,
+    "corrections": 0,
+    "terminalReview": "pass"
+  },
+  "archiveInput": {
+    "activeProjectRequired": false,
+    "sourcePath": "source-input.json"
+  }
+}

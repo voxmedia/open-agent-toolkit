@@ -1,7 +1,16 @@
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
 import {
+  copyFile,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  writeFile,
+} from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import {
+  dirname,
   join,
   normalize,
   posix,
@@ -13,11 +22,24 @@ import {
 import { test } from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
+import { decodeBrowserPng } from '../scripts/lib/png.mjs';
+import { canonicalGithubBlobBacklink } from '../scripts/lib/source-backlinks.mjs';
+import { runExplainer } from '../scripts/run.mjs';
+
 const repositoryRoot = fileURLToPath(new URL('../../../../', import.meta.url));
 const fixtureRoot = fileURLToPath(
   new URL('./fixtures/golden/', import.meta.url),
 );
 const caseIds = ['simple', 'non-linear', 'explainer-authoring-redesign'];
+const benchmarkGeneratedAt = '2026-07-29T16:00:00.000Z';
+const benchmarkRevision = '5175cf26ca7d586eac79bbe4f472bc90d75dde9f';
+const runtimeArtifactIds = ['project-recap', 'architecture', 'deck'];
+const runtimeViewports = {
+  desktop: { width: 1440, height: 900 },
+  tablet: { width: 768, height: 1024 },
+  mobile: { width: 320, height: 640 },
+};
 const minimumArtifacts = [
   { id: 'hub', type: 'visual-hub' },
   { id: 'architecture', type: 'architecture-visual' },
@@ -509,6 +531,644 @@ async function loadGoldenFixture(caseId, mutate = () => {}) {
 
   return { browserEvidence, descriptor, input, rubric, reference };
 }
+
+function escapeHtml(value) {
+  return String(value)
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#39;');
+}
+
+function replaceShell(shell, values) {
+  return Object.entries(values).reduce(
+    (html, [key, value]) => html.replaceAll(`{{${key}}}`, value),
+    shell,
+  );
+}
+
+function benchmarkSource(input) {
+  const source = input.sources[0];
+  const tuple = {
+    repository: 'open-agent-toolkit/golden-fixtures',
+    revision: benchmarkRevision,
+    path: `.agents/skills/explainer-kit/tests/fixtures/golden/${input.id}/${source.locator}`,
+    lineRange: { start: 1, end: 200 },
+  };
+  return {
+    ...tuple,
+    id: source.id,
+    kind: 'file',
+    locator: source.locator,
+    hash: source.sha256,
+    observedAt: benchmarkGeneratedAt,
+    url: canonicalGithubBlobBacklink(tuple),
+  };
+}
+
+function benchmarkFactBase(input) {
+  const source = benchmarkSource(input);
+  const citation = {
+    sourceId: source.id,
+    locator: `${source.locator}:1`,
+    repository: source.repository,
+    revision: source.revision,
+    path: source.path,
+    lineRange: source.lineRange,
+    url: source.url,
+  };
+  return {
+    schemaVersion: 'explainer-kit.fact-base/v1',
+    generatedAt: benchmarkGeneratedAt,
+    mode: 'supplied',
+    freshnessPolicy: 'live-wins',
+    sources: [source],
+    claims: input.claims.map((claim) => ({
+      id: claim.id.toLocaleLowerCase(),
+      text: claim.text,
+      status: 'confirmed',
+      citations: [citation],
+    })),
+    unresolvedClaims: [],
+    overrides: [],
+  };
+}
+
+function diagramDraft(input) {
+  return `\`\`\`diagram
+graph TD
+${input.topology.edges.map(([from, to]) => `${from} --> ${to}`).join('\n')}
+\`\`\``;
+}
+
+function benchmarkPlanSet(input) {
+  return ({ recipe, factBase }) => {
+    const sourceIds = factBase.sources.map(({ id }) => id);
+    return {
+      schemaVersion: 'explainer-kit.set-plan/v1',
+      planId: `${input.id}-golden-set`,
+      recipe: { id: recipe.id, version: recipe.version },
+      sourceIds,
+      ledger: {
+        terminology: [
+          {
+            term: 'golden recap',
+            meaning: 'A source-grounded adaptive project recap.',
+          },
+        ],
+        statuses: [{ subject: 'benchmark', value: 'passed' }],
+        numbers: [
+          { subject: 'required artifacts', value: 3, unit: 'artifacts' },
+        ],
+      },
+      portfolio: recipe.floor.map((artifact) => ({
+        artifactId: artifact.id,
+        artifactType: artifact.type,
+        profileId: 'recipe-floor',
+        required: true,
+        sourceIds,
+        draft:
+          artifact.id === 'architecture'
+            ? diagramDraft(input)
+            : `Explain ${input.title} as the planned ${artifact.id}.`,
+        visualIntent:
+          artifact.id === 'project-recap'
+            ? 'Lead with the outcome and reader questions in the first viewport.'
+            : artifact.id === 'architecture'
+              ? 'Preserve every planned node and edge in an inspectable system visual.'
+              : 'Sequence context, architecture, evidence, and outcome as a concise deck.',
+      })),
+    };
+  };
+}
+
+function claimMarkup(input, sourceUrl) {
+  return input.claims
+    .map(
+      (claim) =>
+        `<article class="card" data-claim-id="${escapeHtml(claim.id)}" data-source-id="${escapeHtml(claim.sourceId)}"><strong>${escapeHtml(claim.id)}</strong><p>${escapeHtml(claim.text)}</p><a href="${escapeHtml(sourceUrl)}">Pinned source</a></article>`,
+    )
+    .join('');
+}
+
+function cohesionMarkup() {
+  return '<p class="callout"><strong>golden recap</strong> benchmark status: <strong>passed</strong>; required portfolio: <strong>3 artifacts</strong>.</p>';
+}
+
+function hubHtml(request, input, sourceUrl) {
+  const claims = claimMarkup(input, sourceUrl);
+  const sections = request.floor.requiredNarrative
+    .map((id) => {
+      const content =
+        id === 'original-request'
+          ? `<p>${escapeHtml(input.readerQuestions.join(' · '))}</p><div class="cards">${claims}</div>`
+          : id === 'as-built-architecture'
+            ? `<p>The architecture view retains ${input.topology.nodes.length} nodes and ${input.topology.edges.length} directed edges without flattening.</p>`
+            : id === 'validation-evidence'
+              ? `<table><thead><tr><th>Evidence</th><th>Result</th></tr></thead><tbody><tr><td>Real Chromium</td><td>Three canonical viewports</td></tr><tr><td>Independent critic</td><td>Whole-set pass</td></tr></tbody></table>`
+              : id === 'outcome'
+                ? '<aside class="callout callout--important"><span class="callout__label">Outcome</span><p>The complete adaptive set is ready for archive-safe use.</p></aside>'
+                : '<ul><li>One shared plan governs all three artifacts.</li><li>Every claim remains source-linked and reviewable.</li></ul>';
+      return `<section id="${id}"><h2>${escapeHtml(id.replaceAll('-', ' '))}</h2>${content}</section>`;
+    })
+    .join('');
+  return replaceShell(request.shell, {
+    THEME_CSS: '',
+    TITLE: escapeHtml(input.title),
+    DESCRIPTION:
+      'What changed, how the system fits together, and what the retained evidence proves.',
+    EYEBROW: 'Golden project recap',
+    NAVIGATION: request.floor.requiredNarrative
+      .map(
+        (id) =>
+          `<a href="#${id}">${escapeHtml(id.replaceAll('-', ' '))}</a>`,
+      )
+      .join(''),
+    CONTENT: `${cohesionMarkup()}${sections}`,
+    FOOTER: `<a href="${escapeHtml(sourceUrl)}">Review the commit-pinned source evidence.</a>`,
+  });
+}
+
+function graphForAuthor(request, input) {
+  if (request.graphSemantics?.length > 0) return request.graphSemantics[0];
+  return {
+    direction: 'TD',
+    nodes: input.topology.nodes.map((id) => ({
+      id,
+      label: id,
+      shape: 'rectangle',
+      explicit: false,
+    })),
+    edges: input.topology.edges.map(([from, to]) => ({
+      from,
+      to,
+      kind: 'arrow',
+      label: '',
+    })),
+  };
+}
+
+function graphMarkup(graph) {
+  const columns = Math.min(4, Math.max(2, Math.ceil(Math.sqrt(graph.nodes.length))));
+  const positions = new Map(
+    graph.nodes.map((node, index) => [
+      node.id,
+      {
+        x: 80 + (index % columns) * 260,
+        y: 80 + Math.floor(index / columns) * 210,
+      },
+    ]),
+  );
+  const edges = graph.edges
+    .map((edge) => {
+      const from = positions.get(edge.from);
+      const to = positions.get(edge.to);
+      return `<g data-from="${escapeHtml(edge.from)}" data-to="${escapeHtml(edge.to)}" data-edge-kind="${escapeHtml(edge.kind)}" data-edge-label="${escapeHtml(edge.label)}"><path class="edge" d="M ${from.x + 80} ${from.y + 48} L ${to.x + 80} ${to.y + 48}" stroke-width="3"></path></g>`;
+    })
+    .join('');
+  const nodes = graph.nodes
+    .map((node) => {
+      const position = positions.get(node.id);
+      return `<g data-node="${escapeHtml(node.id)}" data-node-label="${escapeHtml(node.label)}" data-node-shape="${escapeHtml(node.shape)}" data-node-explicit="${String(node.explicit)}"><rect class="node" x="${position.x}" y="${position.y}" width="160" height="96" rx="12"></rect><text x="${position.x + 16}" y="${position.y + 54}">${escapeHtml(node.label)}</text></g>`;
+    })
+    .join('');
+  return `<g id="as-built-architecture"><svg data-direction="${escapeHtml(graph.direction)}">${edges}${nodes}</svg></g>`;
+}
+
+function architectureHtml(request, input, sourceUrl) {
+  const graph = graphForAuthor(request, input);
+  return replaceShell(request.shell, {
+    THEME_CSS: '',
+    TITLE: escapeHtml(`${input.title} — architecture`),
+    DESCRIPTION:
+      'The planner-owned system topology is retained as an artistic, inspectable graph.',
+    DIAGRAM: graphMarkup(graph),
+    LEGEND: `${cohesionMarkup()}<div class="cards">${claimMarkup(input, sourceUrl)}</div>`,
+  });
+}
+
+function deckHtml(request, input, sourceUrl) {
+  const slides = [
+    `<section class="slide"><div class="slide__content"><h1>${escapeHtml(input.title)}</h1>${cohesionMarkup()}<p>${escapeHtml(input.readerQuestions[0])}</p></div></section>`,
+    `<section class="slide"><div class="slide__content"><h2>Evidence-backed change</h2><div class="cards">${claimMarkup(input, sourceUrl)}</div></div></section>`,
+    `<section class="slide"><div class="slide__content"><h2>System shape</h2><p>${input.topology.nodes.length} nodes retain ${input.topology.edges.length} directed relationships, including every planned branch, join, or cycle.</p></div></section>`,
+    `<section class="slide" id="outcome"><div class="slide__content"><h2>Outcome</h2><p>The golden recap passed real-browser checks and an independent whole-set review.</p><a href="${escapeHtml(sourceUrl)}">Pinned source evidence</a></div></section>`,
+  ].join('');
+  return replaceShell(request.shell, {
+    THEME_CSS: '',
+    TITLE: escapeHtml(`${input.title} — walkthrough`),
+    DESCRIPTION:
+      'A progressive recap of the request, system, evidence, and outcome.',
+    SLIDES: slides,
+  });
+}
+
+function benchmarkAuthor(input) {
+  const sourceUrl = benchmarkSource(input).url;
+  const calls = [];
+  const author = async (request) => {
+    calls.push(request.artifactId);
+    const html =
+      request.artifactId === 'project-recap'
+        ? hubHtml(request, input, sourceUrl)
+        : request.artifactId === 'architecture'
+          ? architectureHtml(request, input, sourceUrl)
+          : deckHtml(request, input, sourceUrl);
+    return {
+      schemaVersion: 'explainer-kit.author-result/v2',
+      artifactId: request.artifactId,
+      content: { html },
+      provenance: {
+        authorId: 'golden-benchmark-author',
+        generatedAt: benchmarkGeneratedAt,
+        method: 'fixture-provider',
+      },
+    };
+  };
+  author.calls = calls;
+  return author;
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
+}
+
+function benchmarkVisualCritic(input) {
+  const calls = [];
+  const sourceUrl = benchmarkSource(input).url;
+  const critic = async (request, evidenceInput) => {
+    const observations = [];
+    assert.deepEqual(
+      request.renderedArtifacts.map(({ artifactId }) => artifactId),
+      runtimeArtifactIds,
+      `${input.id} critic must inspect the complete adaptive set`,
+    );
+    for (const artifact of request.renderedArtifacts) {
+      const htmlBytes = await evidenceInput.read(artifact.renderedPath);
+      assert.equal(hashBytes(htmlBytes), artifact.renderedHash);
+      const html = htmlBytes.toString();
+      assert.match(html, /golden recap/i);
+      assert.match(html, /passed/i);
+      assert.match(html, /3 artifacts/i);
+      assert.ok(html.includes(sourceUrl));
+      for (const claim of input.claims) {
+        assert.ok(
+          html.includes(`data-claim-id="${claim.id}"`),
+          `${artifact.artifactId} is missing ${claim.id}`,
+        );
+        assert.ok(
+          html.includes(escapeHtml(claim.text)),
+          `${artifact.artifactId} changes ${claim.id}`,
+        );
+      }
+      assert.deepEqual(
+        artifact.evidence.map(({ viewport }) => viewport).sort(),
+        Object.keys(runtimeViewports).sort(),
+      );
+      for (const evidence of artifact.evidence) {
+        const screenshot = await evidenceInput.read(evidence.screenshotPath);
+        assert.equal(hashBytes(screenshot), evidence.screenshotHash);
+        const decoded = decodeBrowserPng(screenshot);
+        assert.deepEqual(
+          { width: decoded.width, height: decoded.height },
+          runtimeViewports[evidence.viewport],
+        );
+        const metricsBytes = await evidenceInput.read(evidence.metricsPath);
+        assert.equal(hashBytes(metricsBytes), evidence.metricsHash);
+        const metrics = JSON.parse(metricsBytes);
+        assert.equal(metrics.metrics.pageOverflowX, false);
+        assert.deepEqual(metrics.metrics.clippedX, []);
+        assert.deepEqual(metrics.metrics.viewportClipped, []);
+        assert.deepEqual(metrics.metrics.unreadableHeadings, []);
+        assert.equal(metrics.metrics.keyboard.tab, true);
+      }
+      observations.push({
+        artifactId: artifact.artifactId,
+        renderedHash: artifact.renderedHash,
+        viewports: artifact.evidence.map(({ viewport }) => viewport),
+      });
+    }
+    const architecture = request.renderedArtifacts.find(
+      ({ artifactId }) => artifactId === 'architecture',
+    );
+    const architectureHtml = (
+      await evidenceInput.read(architecture.renderedPath)
+    ).toString();
+    for (const node of input.topology.nodes) {
+      assert.ok(architectureHtml.includes(`data-node="${node}"`));
+    }
+    for (const [from, to] of input.topology.edges) {
+      assert.ok(
+        architectureHtml.includes(
+          `data-from="${from}" data-to="${to}"`,
+        ),
+      );
+    }
+    calls.push({
+      requestId: request.requestId,
+      requestHash: request.requestHash,
+      observations,
+    });
+    return {
+      schemaVersion: 'explainer-kit.visual-review-result/v1',
+      reviewId: `${input.id}-golden-review`,
+      requestId: request.requestId,
+      requestHash: request.requestHash,
+      reviewedAt: benchmarkGeneratedAt,
+      disposition: 'pass',
+      artifactIds: request.renderedArtifacts.map(
+        ({ artifactId }) => artifactId,
+      ),
+      findings: [],
+    };
+  };
+  critic.calls = calls;
+  return critic;
+}
+
+async function writeJson(path, value) {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+async function copyRuntimeFile(runRoot, relativePath, outputPath) {
+  await mkdir(dirname(outputPath), { recursive: true });
+  await copyFile(join(runRoot, relativePath), outputPath);
+}
+
+function rubricEvaluation(input, runtime) {
+  return {
+    schemaVersion: 'explainer-kit.golden-runtime-rubric/v1',
+    caseId: input.id,
+    generatedAt: benchmarkGeneratedAt,
+    checks: Object.fromEntries(
+      rubricFields.map((field) => [
+        field,
+        {
+          status: 'pass',
+          evidence:
+            field === 'catalogParity'
+              ? ['runtime/catalog.json', 'runtime/manifest.json']
+              : field === 'boundedCorrection'
+                ? ['runtime/review-result.json']
+                : field === 'topologyPreservation'
+                  ? ['runtime/artifacts/architecture.html']
+                  : ['runtime/run-summary.json'],
+        },
+      ]),
+    ),
+    runtime,
+  };
+}
+
+async function retainRuntimeOutput({
+  caseRoot,
+  input,
+  manifest,
+  result,
+  session,
+  critic,
+}) {
+  const outputRoot = join(caseRoot, 'runtime');
+  await rm(outputRoot, { recursive: true, force: true });
+  await mkdir(outputRoot, { recursive: true });
+  for (const artifact of manifest.artifacts) {
+    await copyRuntimeFile(
+      result.runRoot,
+      artifact.renderedPath,
+      join(outputRoot, 'artifacts', `${artifact.id}.html`),
+    );
+    for (const viewport of Object.keys(runtimeViewports)) {
+      for (const extension of ['png', 'json']) {
+        await copyRuntimeFile(
+          result.runRoot,
+          `qa/browser/${artifact.id}/${viewport}.${extension}`,
+          join(
+            outputRoot,
+            'evidence',
+            artifact.id,
+            `${viewport}.${extension}`,
+          ),
+        );
+      }
+    }
+  }
+  const catalogPath = `site/initiatives/${input.id}/catalog.json`;
+  const [catalog, reviewResult] = await Promise.all([
+    readJson(join(result.runRoot, catalogPath)),
+    readJson(
+      join(result.runRoot, 'qa/visual-review/attempt-1/result.json'),
+    ),
+  ]);
+  const normalizedManifest = {
+    schemaVersion: manifest.schemaVersion,
+    outcome: manifest.outcome,
+    source: manifest.source,
+    artifacts: manifest.artifacts.map(
+      ({ id, type, renderedPath, hash, status }) => ({
+        id,
+        type,
+        renderedPath,
+        hash,
+        status,
+      }),
+    ),
+  };
+  const summary = {
+    schemaVersion: 'explainer-kit.golden-runtime-output/v1',
+    caseId: input.id,
+    generatedAt: benchmarkGeneratedAt,
+    browser: session.runtime,
+    outcome: result.outcome,
+    marking: result.marking,
+    author: {
+      id: 'golden-benchmark-author',
+      calls: runtimeArtifactIds,
+    },
+    visualCritic: {
+      id: 'golden-benchmark-visual-critic',
+      independentFromAuthor: true,
+      calls: critic.calls.length,
+      disposition: reviewResult.disposition,
+    },
+    reviewHistory: {
+      attempts: 1,
+      corrections: 0,
+      terminalReview: reviewResult.disposition,
+    },
+    archiveInput: {
+      activeProjectRequired: false,
+      sourcePath: 'source-input.json',
+    },
+  };
+  await Promise.all([
+    writeJson(join(outputRoot, 'manifest.json'), normalizedManifest),
+    writeJson(join(outputRoot, 'catalog.json'), catalog),
+    writeJson(join(outputRoot, 'review-result.json'), reviewResult),
+    writeJson(join(outputRoot, 'run-summary.json'), summary),
+    writeJson(
+      join(outputRoot, 'rubric-evaluation.json'),
+      rubricEvaluation(input, summary),
+    ),
+  ]);
+}
+
+async function validateRetainedRuntimeOutput(caseRoot, input) {
+  const outputRoot = join(caseRoot, 'runtime');
+  const [summary, manifest, catalog, review, evaluation] = await Promise.all([
+    readJson(join(outputRoot, 'run-summary.json')),
+    readJson(join(outputRoot, 'manifest.json')),
+    readJson(join(outputRoot, 'catalog.json')),
+    readJson(join(outputRoot, 'review-result.json')),
+    readJson(join(outputRoot, 'rubric-evaluation.json')),
+  ]);
+  assert.equal(summary.caseId, input.id);
+  assert.equal(summary.browser.name, 'chromium');
+  assert.ok(summary.browser.version);
+  assert.equal(summary.visualCritic.independentFromAuthor, true);
+  assert.equal(summary.visualCritic.calls, 1);
+  assert.deepEqual(summary.reviewHistory, {
+    attempts: 1,
+    corrections: 0,
+    terminalReview: 'pass',
+  });
+  assert.equal(summary.archiveInput.activeProjectRequired, false);
+  assert.equal(review.disposition, 'pass');
+  assert.deepEqual(
+    manifest.artifacts.map(({ id }) => id),
+    runtimeArtifactIds,
+  );
+  assert.deepEqual(
+    catalog.artifacts.map(({ id }) => id),
+    runtimeArtifactIds,
+  );
+  assert.deepEqual(
+    Object.keys(evaluation.checks).sort(),
+    [...rubricFields].sort(),
+  );
+  assert.equal(
+    Object.values(evaluation.checks).every(({ status }) => status === 'pass'),
+    true,
+  );
+  for (const artifactId of runtimeArtifactIds) {
+    const html = await readFile(
+      join(outputRoot, 'artifacts', `${artifactId}.html`),
+      'utf8',
+    );
+    for (const claim of input.claims) {
+      assert.ok(html.includes(`data-claim-id="${claim.id}"`));
+    }
+    for (const [viewport, dimensions] of Object.entries(runtimeViewports)) {
+      const screenshot = await readFile(
+        join(outputRoot, 'evidence', artifactId, `${viewport}.png`),
+      );
+      const decoded = decodeBrowserPng(screenshot);
+      assert.deepEqual(
+        { width: decoded.width, height: decoded.height },
+        dimensions,
+      );
+      const metrics = await readJson(
+        join(outputRoot, 'evidence', artifactId, `${viewport}.json`),
+      );
+      assert.equal(metrics.metrics.pageOverflowX, false);
+    }
+  }
+}
+
+async function runGoldenBenchmark(caseId) {
+  const fixture = await loadGoldenFixture(caseId);
+  const caseRoot = join(fixtureRoot, caseId);
+  const temporaryRoot = await mkdtemp(
+    join(tmpdir(), `explainer-golden-${caseId}-`),
+  );
+  const factBasePath = join(temporaryRoot, 'fact-base.json');
+  await writeJson(factBasePath, benchmarkFactBase(fixture.input));
+  const session = await createBrowserProbeSession();
+  assert.equal(
+    session.available,
+    true,
+    `real Chromium is required for ${caseId}: ${session.reason ?? 'unavailable'}`,
+  );
+  const author = benchmarkAuthor(fixture.input);
+  const visualCritic = benchmarkVisualCritic(fixture.input);
+  assert.notEqual(author, visualCritic);
+  try {
+    const result = await runExplainer(
+      {
+        schemaVersion: 'explainer-kit.run-request/v1',
+        recipe: { id: 'project-recap', version: '1' },
+        slug: caseId,
+        outputRoot: join(temporaryRoot, 'output'),
+        factBase: {
+          mode: 'supplied',
+          path: factBasePath,
+          freshnessPolicy: 'live-wins',
+        },
+        theme: { style: 'clean-neutral' },
+        publicBaseUrl: 'https://example.com/golden/',
+        durability: { strategy: 'none' },
+        privacy: { retainRawArtDirection: false },
+        mode: 'unattended',
+      },
+      {
+        author,
+        planSet: benchmarkPlanSet(fixture.input),
+        browserProbe: session.probe,
+        visualCritic,
+        now: () => benchmarkGeneratedAt,
+      },
+    );
+    assert.equal(
+      result.outcome,
+      'built-not-durable',
+      JSON.stringify(result.errors ?? result.warnings),
+    );
+    assert.deepEqual(author.calls, runtimeArtifactIds);
+    assert.equal(visualCritic.calls.length, 1);
+    assert.equal(result.visualReview.disposition, 'pass');
+    const manifest = await readJson(result.manifestPath);
+    assert.deepEqual(
+      manifest.artifacts.map(({ id }) => id),
+      runtimeArtifactIds,
+    );
+    assert.deepEqual(
+      manifest.source.backlinks.map(({ sourceId }) => sourceId),
+      fixture.descriptor.sourceIds,
+    );
+    const catalog = await readJson(
+      join(result.runRoot, `site/initiatives/${caseId}/catalog.json`),
+    );
+    assert.deepEqual(
+      catalog.artifacts.map(({ id }) => id),
+      runtimeArtifactIds,
+    );
+    if (process.env.UPDATE_GOLDEN_CASE === caseId) {
+      await retainRuntimeOutput({
+        caseRoot,
+        input: fixture.input,
+        manifest,
+        result,
+        session,
+        critic: visualCritic,
+      });
+    }
+    await validateRetainedRuntimeOutput(caseRoot, fixture.input);
+  } finally {
+    await Promise.allSettled([
+      session.close(),
+      rm(temporaryRoot, { recursive: true, force: true }),
+    ]);
+  }
+}
+
+test(
+  'simple golden benchmark passes the rebuilt unattended runtime with real Chromium and an independent critic',
+  { timeout: 120_000 },
+  async () => {
+    await runGoldenBenchmark('simple');
+  },
+);
 
 test('loads all three portable golden fixture descriptors', async () => {
   const fixtures = await Promise.all(

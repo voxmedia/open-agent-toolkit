@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.initiative-catalog/v1",
+  "runId": "run-e370cf9a-9d44-4994-ac79-1149b9414cd4",
+  "slug": "simple",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-29T16:00:00.000Z",
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "status": "built",
+      "renderedPath": "site/initiatives/simple/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:7fbc467c8162f20b62a08a70c68020ca3030d02c85ce0aed69d732abc3d18f13",
+      "url": "https://example.com/golden/initiatives/simple/index.html"
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "status": "built",
+      "renderedPath": "site/diagrams/simple/architecture/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:3ce559f318fdba5be268e6494bda4304cf1ace9cace6fdbdc3427fdce746e397",
+      "url": "https://example.com/golden/diagrams/simple/architecture/index.html"
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "status": "built",
+      "renderedPath": "site/decks/simple/deck/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:0843b99b2b865f565a61b2538d55d1ff244e0818bd818699b21b102b6e3a1a16",
+      "url": "https://example.com/golden/decks/simple/deck/index.html"
+    }
+  ],
+  "sourceBacklinks": [
+    {
+      "sourceId": "project-record",
+      "url": "https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/simple/evidence/source-record.json#L1-L200"
+    }
+  ]
+}
