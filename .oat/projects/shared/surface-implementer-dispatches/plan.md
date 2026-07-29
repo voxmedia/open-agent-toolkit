@@ -750,21 +750,22 @@ git commit -m "chore(review): clean archived final review formatting"
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | passed          | 2026-07-29 | reviews/archived/code-p01-review-2026-07-29T043611Z.md        | -                                        | -          | -           |
-| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T120024Z.md        | -                                        | -          | -           |
-| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T121857Z.md        | -                                        | -          | -           |
-| p02    | code     | passed          | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T123104Z.md        | -                                        | -          | -           |
-| p03    | code     | passed          | 2026-07-29 | reviews/archived/code-p03-review-2026-07-29T145300Z.md        | -                                        | -          | -           |
-| final  | code     | passed          | 2026-07-29 | reviews/archived/code-final-review-2026-07-29T150100Z.md      | -                                        | -          | -           |
-| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T152853Z.md           | -                                        | -          | -           |
-| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
-| design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md | -                                        | -          | -           |
-| plan   | artifact | passed          | 2026-07-29 | -                                                             | -                                        | -          | -           |
-| plan   | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-plan-review-2026-07-29T034646Z.md   | -                                        | -          | -           |
-| final  | code     | fixes_completed | 2026-07-29 | reviews/archived/final-review-2026-07-29T165043Z.md           | 06f0777ba7145406fe406490c2630a945c2858c2 | manual     | -           |
-| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T171719Z.md           | ff92b31655fbbd5e1a99c40adf33340f60076173 | manual     | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target          |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | -------------------- |
+| p01    | code     | passed          | 2026-07-29 | reviews/archived/code-p01-review-2026-07-29T043611Z.md        | -                                        | -          | -                    |
+| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T120024Z.md        | -                                        | -          | -                    |
+| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T121857Z.md        | -                                        | -          | -                    |
+| p02    | code     | passed          | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T123104Z.md        | -                                        | -          | -                    |
+| p03    | code     | passed          | 2026-07-29 | reviews/archived/code-p03-review-2026-07-29T145300Z.md        | -                                        | -          | -                    |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/code-final-review-2026-07-29T150100Z.md      | -                                        | -          | -                    |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T152853Z.md           | -                                        | -          | -                    |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -                    |
+| design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md | -                                        | -          | -                    |
+| plan   | artifact | passed          | 2026-07-29 | -                                                             | -                                        | -          | -                    |
+| plan   | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-plan-review-2026-07-29T034646Z.md   | -                                        | -          | -                    |
+| final  | code     | fixes_completed | 2026-07-29 | reviews/archived/final-review-2026-07-29T165043Z.md           | 06f0777ba7145406fe406490c2630a945c2858c2 | manual     | -                    |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T171719Z.md           | ff92b31655fbbd5e1a99c40adf33340f60076173 | manual     | -                    |
+| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T173359Z.md                    | 18017af6c732f9a5a26c34e5e5f03f16ddce4ba6 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
