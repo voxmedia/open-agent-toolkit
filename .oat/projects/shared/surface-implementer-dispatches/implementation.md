@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p02-t02
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | in_progress | 2     | 1/2       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | pending   | 2     | 0/2       |
 
-**Total:** 3/6 tasks completed
+**Total:** 4/6 tasks completed
 
 ### Review Received: design
 
@@ -208,8 +208,44 @@ oat_generated: false
 
 ## Phase 2: Expose Terminal Reviewer Constraints
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-29
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Added shared structured notices for terminal Fable reviewer constraints to
+  policy choices, effective adoption results, and runtime resolution.
+- Updated implementation and fix guidance to require classification provenance
+  while keeping reviewer routes classification-free.
+- Documented effective-target runtime disclosure, organization-owned Fable
+  access and retention checks, and the 14-recommended/18-catalogued Cursor
+  boundary.
+
+**Key files touched:**
+
+- `packages/cli/src/config/dispatch-notices.ts` and resolver/config command
+  surfaces - centralized terminal-reviewer notice behavior.
+- `.agents/skills/oat-project-implement/` - classified resolver calls, Phase
+  Scope provenance, pre-launch notices, and effective-target disclosure.
+- Dispatch-policy and configuration docs - adoption/runtime boundaries, Fable
+  responsibilities, corrected Cursor counts, and copyable resolver examples.
+
+**Verification:**
+
+- Run: focused disclosure and skill-contract Vitest suites, CLI type-check,
+  docs index generation, workspace lint/format, docs checks, and docs build.
+- Result: pass (269 disclosure tests; 117 skill-contract tests; type-check,
+  lint, format, docs checks, and docs build clean).
+- Generated docs index: regenerated with 9 entries and no semantic diff.
+
+**Notes / Decisions:**
+
+- Bundled recommendation metadata never substitutes for the effective resolver
+  target when producing runtime disclosure.
+- Fable recommendation/catalogue presence does not establish access or
+  organization-specific retention eligibility.
 
 ### Task p02-t01: Add shared terminal-reviewer disclosures
 
@@ -249,13 +285,47 @@ oat_generated: false
 
 ### Task p02-t02: Update implementation guidance and documentation
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `a48bc356cfd6778630c046f23bcdc11bcb33ceac`
 
-**Approval boundary:**
+**Outcome (required when completed):**
 
-- Read-only documentation delta analysis is in progress. No task files may be
-  edited until the user approves the substantive proposal.
+- Required implementation and fix examples to carry task classification,
+  including Codex preferred effort, while reviewer routes remain free of
+  classification flags.
+- Required Phase Scope classification source/rationale and structured resolver
+  notices before launch, with runtime disclosure based on effective targets.
+- Documented Fable access/retention responsibility boundaries and corrected
+  Cursor counts to 14 recommended candidates and 18 catalogued IDs.
+
+**Files changed:**
+
+- `.agents/skills/oat-project-implement/SKILL.md` - bumped the contract from
+  2.2.1 to 2.2.2 and required pre-launch notices/effective-target disclosure.
+- `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md` -
+  classified implementation/fix commands and Dispatch Report notice handling.
+- `.agents/skills/oat-project-implement/references/phase-execution.md` - Phase
+  Scope classification provenance and effective-target rules.
+- `packages/cli/src/validation/skills.test.ts` - executable skill/docs contract
+  coverage.
+- Dispatch-policy and configuration docs - user-facing examples, Fable
+  boundaries, and corrected candidate counts.
+
+**Verification:**
+
+- Run: focused skill-contract Vitest suite, docs index generation, `pnpm lint`,
+  `pnpm format`, `pnpm --filter oat-docs check`, and `pnpm build:docs`.
+- Result: pass (117 focused tests; all documentation/workspace gates clean).
+
+**Notes / Decisions:**
+
+- Reviewer resolver commands deliberately carry no task classification flags.
+- The generated docs index was regenerated and remained unchanged.
+
+**Issues Encountered:**
+
+- New contract assertions failed before the skill and docs changes, then passed
+  after implementation.
 
 ---
 
@@ -410,7 +480,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 412       | 412    | 0      | Focused  |
-| 2     | 269       | 269    | 0      | Focused  |
+| 2     | 386       | 386    | 0      | Focused  |
 
 ## Final Summary (for PR/docs)
 

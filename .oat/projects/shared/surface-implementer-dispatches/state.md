@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t02
-oat_last_commit: e37a044a3a5afd9b8a65c3ffb2b47d0461ab94f5
+oat_current_task: p03-t01
+oat_last_commit: a48bc356cfd6778630c046f23bcdc11bcb33ceac
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T04:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T11:57:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 2 (`p02-t02`)
+Implementation - Phase 3 (`p03-t01`)
 
 ## Artifacts
 
@@ -95,8 +95,8 @@ Implementation - Phase 2 (`p02-t02`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (3/6 tasks complete; current
-  `p02-t02`)
+- **Implementation:** `implementation.md` (4/6 tasks complete; current
+  `p03-t01`)
 
 ## Progress
 
@@ -122,7 +122,9 @@ Implementation - Phase 2 (`p02-t02`)
 - ✓ Phase 1 root-owned review passed with no blocking findings
 - ✓ `p02-t01` added shared terminal-reviewer disclosures for policy choices,
   effective adoption, and runtime resolution
-- → `p02-t02` awaits approval of the substantive documentation delta
+- ✓ `p02-t02` updated implementation guidance, contract tests, and user docs
+- ✓ Phase 2 implementation completed
+- → `p03-t01` bumps lockstep public package versions
 
 ## Blockers
 
@@ -130,4 +132,4 @@ None
 
 ## Next Milestone
 
-Approve the `p02-t02` documentation delta, then continue Phase 2
+Execute `p03-t01` to bump lockstep public package versions
