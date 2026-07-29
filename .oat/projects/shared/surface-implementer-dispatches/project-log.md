@@ -92,6 +92,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 Configured exit gate received and allowed; M1 deferred with a durable follow-up trigger, m1 corrected, artifact archived at reviews/archived/final-review-2026-07-29T152853Z.md.
 
+### 2026-07-29 · structural · oat-explainer-kit · project-recap
+
+Non-blocking recap outcome: failed before intent/core invocation because the adapter is not installed at the canonical user-scoped path; no run path or summary update; recovery is oat tools install utility --scope user.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

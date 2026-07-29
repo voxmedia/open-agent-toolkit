@@ -71,7 +71,7 @@ oat_implement_exit_gate:
   failure: null
   updated_at: '2026-07-29T16:09:00Z'
 oat_post_implement_sequence:
-  status: pre_approval
+  status: awaiting_approval
   source: configured
   final_phase: p03
   pre_approval: [summary, document, pr]
@@ -86,7 +86,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/187' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T16:09:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T16:11:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — PR open; completion may run before or after merge.
+Implementation — Pre-approval complete; final HiLL approval pending.
 
 ## Artifacts
 
@@ -159,7 +159,9 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Documentation synchronized and repository reference state refreshed
 - ✓ PR created
 - ✓ Stored pre-approval sequence completed
-- → Awaiting project recap and HiLL approval
+- ! Project recap gate could not start because the adapter is not installed at
+  its canonical user-scoped path; completion policy treats this as non-blocking
+- → Awaiting final HiLL approval
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -168,8 +170,5 @@ None
 
 ## Next Milestone
 
-PR is open for review.
-
-- To incorporate feedback: run `oat-project-revise`
-- Complete before merge: run `oat-project-complete` now, then merge the PR.
-- Merge before completion: merge the PR, then run `oat-project-complete`.
+Approve, defer, or decline the final HiLL checkpoint. The PR remains open at
+https://github.com/voxmedia/open-agent-toolkit/pull/187.

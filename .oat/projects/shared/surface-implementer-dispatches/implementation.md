@@ -914,6 +914,23 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Residual reviews:** six active artifacts archived with references aligned
 - **Snapshot progress:** `[summary, document, pr]`
 
+#### Implementation-Tail Project Recap — non-blocking failure
+
+- **Fresh recap:** none
+- **Adapter outcome:** failed before intent/core invocation because
+  `oat-explainer-kit` is not installed at the canonical user-scoped skill path
+- **Run path:** none
+- **Summary update:** unchanged because no recap run or manifest exists
+- **Completion impact:** warning only; project implementation remains successful
+- **Recovery:** `oat tools install utility --scope user`
+
+#### Post-Implementation Sequence — awaiting approval
+
+- **Pre-approval completed:** `[summary, document, pr]`
+- **Approval:** pending
+- **Post-approval:** none
+- **PR:** https://github.com/voxmedia/open-agent-toolkit/pull/187
+
 <!-- orchestration-runs-end -->
 
 ---
