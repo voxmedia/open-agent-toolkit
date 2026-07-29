@@ -31,7 +31,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.25` makes managed-capped implementation and fix dispatches
+- CLI `0.2.26` makes managed-capped implementation and fix dispatches
   auditable without changing compatibility exit behavior. Dispatch Report V1
   now carries provider-neutral task classification, applicable Codex task
   effort, legacy preferred-selection provenance, and ordered structured
