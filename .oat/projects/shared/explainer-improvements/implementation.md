@@ -599,7 +599,7 @@ oat_generated: false
 ### Run 15 — Phase p04 implementation
 
 - Request: `explainer-improvements-p04-20260729T020000Z`
-- Launch intent: pending root tracking commit
+- Launch intent: persisted
 - Tasks: p04-t01 through p04-t03, sequentially
 - Scope: topology preservation, commit-pinned source backlinks, and
   manifest-derived initiative catalog
