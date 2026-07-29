@@ -1335,7 +1335,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.1.9',
+        version: '2.2.0',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1688,7 +1688,50 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
+  });
+
+  it('preserves provenance across implementation-owned Reviews ledger writes', async () => {
+    const phaseExecution = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const contract = phaseExecution.slice(
+      phaseExecution.indexOf('#### Reviews Ledger Mutation Contract'),
+      phaseExecution.indexOf('### Parallel Group Execution'),
+    );
+    const normalizedContract = contract.replace(/\s+/g, ' ');
+
+    expect(normalizedContract).toContain(
+      'directly dispositions a `## Reviews` event or re-points its artifact',
+    );
+    expect(normalizedContract).toContain(
+      'every checkpoint, final-review, gate-receive, and closeout path',
+    );
+    expect(normalizedContract).toContain(
+      'resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`, `Invocation`, and `Gate Target` by header name',
+    );
+    expect(normalizedContract).toMatch(
+      /legacy five-column table.*append the provenance columns \(`Reviewed Head`, `Invocation`, and `Gate Target`\).*pad every existing row with `-`/,
+    );
+    expect(normalizedContract).toContain(
+      'Preserve every unknown column in its original position',
+    );
+    expect(normalizedContract).toContain(
+      'preserve every existing known value unless the current operation explicitly advances that cell',
+    );
+    expect(normalizedContract).toContain(
+      'Never truncate a row to five, eight, or any other assumed width.',
+    );
+    expect(normalizedContract).toContain(
+      'accept `oat_review_head_sha` only as a full 40-character hexadecimal commit SHA',
+    );
+    expect(normalizedContract).toContain('preserve `oat_review_invocation`');
+    expect(normalizedContract).toContain(
+      'preserve `oat_gate_target` only for a gate invocation',
+    );
+    expect(normalizedContract).toMatch(
+      /archive re-point.*preserve existing provenance and unknown cells/,
+    );
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1909,7 +1952,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -2338,7 +2381,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.1.9');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.0');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2589,7 +2632,7 @@ describe('validateOatSkills', () => {
       ['oat-project-review-provide', '1.4.0'],
       ['oat-project-review-receive', '1.6.0'],
       ['oat-project-review-receive-remote', '1.5.0'],
-      ['oat-project-implement', '2.1.9'],
+      ['oat-project-implement', '2.2.0'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.5.4'],
@@ -3678,7 +3721,7 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.1.9'],
+      ['oat-project-implement', '2.2.0'],
       ['oat-project-review-provide', '1.4.0'],
       ['oat-project-review-provide-remote', '1.1.0'],
     ] as const;
