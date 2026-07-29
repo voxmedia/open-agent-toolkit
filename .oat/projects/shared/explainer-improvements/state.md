@@ -1,7 +1,8 @@
 ---
-oat_current_task: p04-review
+oat_current_task: null
 oat_last_commit: 996229cfad5392a45681e91e0084b4684acbcb47
-oat_blockers: []
+oat_blockers:
+  - Phase p04 operator-authorized 4/4 cap exhausted with I4-R4 unresolved.
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -70,7 +71,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T12:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:35:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -251,13 +252,19 @@ Phase p04 implementation in progress
 - ✓ Exact I4-R3 coordinated retarget plus retained-root mutation now fails
   before planner, author, or durability callbacks
 - ✓ Complete p03/p04 union passed 431/431 and all repository/release gates passed
-- ⧗ Operator-authorized final Phase p04 re-review attempt 4/4 is pending
+- ✓ Operator-authorized final Phase p04 re-review attempt 4/4 completed
+- ⧗ I4-R4 remains: current packages can rewrite retained absolute output roots
+  to relative and downgrade to derived `ekrt1` because legacy eligibility is
+  inferred from mutable retained state
+- ⚠ Operator-authorized Phase p04 review cap is exhausted
 
 ## Blockers
 
-None
+Phase p04 cap exhausted with I4-R4 unresolved. Secure closure requires either
+externally trusted legacy provenance or removal of transparent `ekrt1`
+compatibility; explicit operator disposition is required.
 
 ## Next Milestone
 
-Perform the operator-authorized final Phase p04 re-review; if it passes, stop at
-the p05 HiLL checkpoint for explicit approval.
+Obtain explicit operator disposition for I4-R4 before any further remediation or
+advancement to the p05 HiLL checkpoint.

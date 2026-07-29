@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - Phase p04 operator-authorized 4/4 cap exhausted with I4-R4 unresolved.
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-review
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -17,13 +18,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | review_pending |    13 |     13/13 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | complete |    13 |     13/13 |
+| p03   | complete |    21 |     21/21 |
+| p04   | blocked  |    13 |     13/13 |
+| p05   | pending  |     4 |       0/4 |
 
 **Total:** 54/58 tasks completed
 
@@ -250,7 +251,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** review_pending
+**Status:** blocked
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -861,6 +862,16 @@ oat_generated: false
 - Review-remediation attempt: 4/4 by explicit operator override
 - Scope: I4-R3, p04-t13, and regression checks for every previously resolved
   Phase p04 finding
+- Outcome: `BLOCKED`; operator-authorized cap exhausted
+- Artifact: `reviews/20260729-p04-code-review-r4.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Resolved: authenticated deterministic `ekrt2`, exact I4-R3 attack, and all
+  prior Phase p04 findings remain resolved; all verification gates pass
+- Blocking I4-R4: a current package can rewrite its mutable retained output root
+  from absolute to relative and use a derived `ekrt1`, because v1 legacy
+  eligibility is inferred from that unauthenticated field
+- Required disposition: choose externally trusted legacy provenance, remove
+  transparent v1 acceptance, accept the residual risk, or stop blocked
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

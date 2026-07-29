@@ -1929,7 +1929,8 @@ another review cycle.
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260728-p04-code-review.md    |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r2.md |
-| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
+| p04    | code     | received        | 2026-07-29 | reviews/20260729-p04-code-review-r4.md |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |
