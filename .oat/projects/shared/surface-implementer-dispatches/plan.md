@@ -324,6 +324,7 @@ git commit -m "feat(cli): disclose terminal reviewer constraints"
 - Modify:
   `apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md`
 - Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Regenerate (do not hand-edit): `apps/oat-docs/index.md`
 
 **Step 1: Write failing contract tests**
 
@@ -343,6 +344,9 @@ Expected: new contract assertions fail before guidance changes.
 
 **Step 2: Update skills and docs**
 
+- Perform an evidence-backed documentation delta analysis against the existing
+  pages and obtain user approval for the proposed substantive content before
+  editing.
 - Bump `oat-project-implement` once for this PR.
 - Update managed-capped implementation/fix examples with classification flags.
 - Update `phase-execution.md` so each phase resolver call carries
@@ -351,7 +355,8 @@ Expected: new contract assertions fail before guidance changes.
 - Require human-facing notice display before implementation or reviewer launch.
 - Explain terminal reviewer access and retention-policy responsibility.
 - Correct stale Cursor recommendation/catalog counts in configuration docs.
-- Do not edit generated `apps/oat-docs/index.md`.
+- Do not edit generated `apps/oat-docs/index.md`; Step 4 regenerates it from the
+  approved authored source delta.
 
 **Step 3: Format**
 
@@ -370,6 +375,7 @@ pnpm exec oxfmt --write \
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run \
   src/validation/skills.test.ts
+oat docs nav sync
 pnpm lint
 pnpm format
 pnpm --filter oat-docs check
@@ -386,7 +392,8 @@ git add .agents/skills/oat-project-implement/SKILL.md \
   .agents/skills/oat-project-implement/references/phase-execution.md \
   packages/cli/src/validation/skills.test.ts \
   apps/oat-docs/docs/workflows/projects/dispatch-ceiling.md \
-  apps/oat-docs/docs/cli-utilities/configuration.md
+  apps/oat-docs/docs/cli-utilities/configuration.md \
+  apps/oat-docs/index.md
 git commit -m "docs(oat): document dispatch notices and reviewer constraints"
 ```
 
