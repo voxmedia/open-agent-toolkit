@@ -1296,6 +1296,31 @@ fresh configured exit-gate generation.
 - **Outcome:** the blocking Important finding is fixed; standard final re-review
   is required before a new exit-gate generation.
 
+### Review Received: Contract-pin final re-review
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T182307Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**Disposition:**
+
+- M1: `explicit_deferral` — continue the accepted report-context matrix
+  deferral; its trigger remains un-fired.
+- m1: `address_now` — update the human-readable `state.md` implementation count
+  from 10/10 to 11/11 during receive bookkeeping.
+
+**New tasks added:** None.
+
+**Outcome:** Final lifecycle re-review passed and the Minor state wording drift
+was corrected; proceed to the final configured exit-gate attempt.
+
 ## Implementation Log
 
 Run-level chronology is recorded in `## Orchestration Runs` and
