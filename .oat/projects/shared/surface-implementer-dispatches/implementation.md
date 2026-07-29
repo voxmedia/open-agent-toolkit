@@ -506,7 +506,12 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
   Fable target
 - **Route:** resume the original accepted Phase 2 implementer at the same exact
   target
-- **Status:** fixes pending
+- **Fix base:** `49891d14cecc174e024595bfc451b3363914c3a8`
+- **Fix commit:** `48944e9fb9bf2fc76849e4c89958b53e10d98967`
+- **Outcome:** the remaining Important finding is fixed; 401 focused tests,
+  CLI type-check, and CLI check passed; direct extraction probe returned
+  Fable=1, non-Fable=0, candidate-array=1
+- **Status:** fixes complete; awaiting final root-owned Phase 2 re-review
 
 <!-- orchestration-runs-end -->
 
