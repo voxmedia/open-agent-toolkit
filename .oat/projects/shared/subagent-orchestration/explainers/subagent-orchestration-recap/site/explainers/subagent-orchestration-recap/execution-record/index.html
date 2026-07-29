@@ -1,0 +1,407 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, EYEBROW, NAVIGATION, CONTENT, DIAGRAM, FOOTER
+  CONTENT sections use data-active-nodes/data-active-edges and may include expandable snippets.
+  DIAGRAM contains validated inline SVG nodes and edges.
+-->
+<html lang="en" data-render-strategy="default-only" data-theme-mode="light">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Execution Record</title>
+    <meta name="description" content="Authored execution record." />
+    <style>
+      :root {
+        --canvas: hsl(215 24% 13%);
+        --panel: hsl(215 20% 18%);
+        --panel-muted: hsl(215 18% 22%);
+        --border: hsl(215 14% 32%);
+        --ink: hsl(210 18% 92%);
+        --muted: hsl(210 10% 70%);
+        --accent: hsl(190 38% 70%);
+        --warning: hsl(38 55% 68%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
+        --canvas: #f4f6f9;
+        --panel: #ffffff;
+        --panel-muted: #eef1f5;
+        --border: #eef1f5;
+        --ink: #16202e;
+        --muted: #4a5568;
+        --accent: #2f56c9;
+        --success: #157a54;
+        --warning: #965108;
+        --danger: #bd3a2c;
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --serif: ui-serif, Georgia, serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        --radius: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html {
+        scroll-behavior: smooth;
+      }
+      body {
+        margin: 0;
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+        line-height: 1.65;
+      }
+      .layout {
+        display: grid;
+        grid-template-columns: 13rem minmax(0, 1fr) 23rem;
+        gap: 2rem;
+        max-width: 86rem;
+        margin: auto;
+        padding-inline: 2rem;
+      }
+      .toc {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        max-height: 100dvh;
+        overflow-y: auto;
+        padding-block: 2.5rem;
+      }
+      .toc-brand,
+      .eyebrow {
+        color: var(--muted);
+        font: 0.7rem/1.4 var(--mono);
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+      }
+      .toc a {
+        display: block;
+        border-inline-start: 2px solid transparent;
+        padding: 0.35rem 0.75rem;
+        color: var(--muted);
+        text-decoration: none;
+      }
+      .toc a.active {
+        border-inline-start-color: var(--accent);
+        color: var(--accent);
+      }
+      .tour-body {
+        min-width: 0;
+        padding-block: 3.5rem 6rem;
+      }
+      h1,
+      h2 {
+        font-family: var(--serif);
+        line-height: 1.15;
+        text-wrap: balance;
+      }
+      h1 {
+        font-size: clamp(2.3rem, 5vw, 3.8rem);
+        margin-block: 0.6rem 1rem;
+      }
+      section {
+        margin-block: 4rem;
+        scroll-margin-top: 2rem;
+      }
+      .snippet {
+        overflow: hidden;
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        background: var(--panel);
+      }
+      .snippet-toggle {
+        width: 100%;
+        border: 0;
+        border-block-end: 1px solid transparent;
+        background: var(--panel-muted);
+        color: var(--ink);
+        cursor: pointer;
+        padding: 0.75rem 1rem;
+        text-align: start;
+        font: 0.85rem var(--sans);
+      }
+      .snippet-toggle[aria-expanded='true'] {
+        border-block-end-color: var(--border);
+      }
+      .snippet pre {
+        max-width: 100%;
+        margin: 0;
+        overflow-x: auto;
+        padding: 1rem;
+        font-family: var(--mono);
+      }
+      .snippet:not(.open) pre {
+        display: none;
+      }
+      .diagram-scroll {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      .diagram-scroll > svg {
+        display: block;
+      }
+      /* Narrative renderer block output. The renderer emits these for any
+         markdown artifact, so the shell must style them or the structure
+         renders as unformatted text. */
+      .callout {
+        min-width: 0;
+        border: 1px solid var(--border);
+        border-inline-start: 0.25rem solid var(--accent);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        overflow-wrap: anywhere;
+      }
+      .callout--important {
+        border-inline-start-color: var(--success, var(--accent));
+      }
+      .callout--warning {
+        border-inline-start-color: var(--warning);
+      }
+      .callout--caution {
+        border-inline-start-color: var(--danger, var(--warning));
+      }
+      .callout__label {
+        color: var(--muted);
+        font: 0.72rem/1.4 var(--mono);
+        font-weight: 700;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+      .timeline {
+        display: grid;
+        gap: 0.8rem;
+        padding-inline-start: 0;
+        list-style: none;
+      }
+      .timeline li {
+        display: grid;
+        grid-template-columns: minmax(7rem, 0.25fr) 1fr;
+        gap: 1rem;
+        border-inline-start: 0.2rem solid var(--accent);
+        padding-inline-start: 1rem;
+      }
+      .timeline time {
+        color: var(--muted);
+        font-family: var(--mono);
+      }
+      .table-scroll,
+      pre {
+        max-width: 100%;
+        overflow-x: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th,
+      td {
+        border-block-end: 1px solid var(--border);
+        padding: 0.6rem;
+        text-align: start;
+      }
+      pre {
+        border: 1px solid var(--border);
+        border-radius: 0.6rem;
+        background: var(--panel);
+        padding: 1rem;
+        font-family: var(--mono);
+      }
+      code {
+        font-family: var(--mono);
+      }
+      blockquote {
+        margin-inline: 0;
+        border-inline-start: 0.2rem solid var(--border);
+        color: var(--muted);
+        padding-inline-start: 1rem;
+      }
+      figure {
+        margin-inline: 0;
+      }
+      figcaption {
+        color: var(--muted);
+        font: 0.8rem/1.5 var(--mono);
+      }
+      .diagram-rail {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        height: 100dvh;
+        padding-block: 3.5rem 2rem;
+      }
+      .diagram-card {
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--panel);
+        padding: 1rem;
+      }
+      .diagram-card svg {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+      .diagram-card .node {
+        fill: var(--panel-muted);
+        stroke: var(--accent);
+        stroke-width: 1.5;
+      }
+      .diagram-card .edge {
+        fill: none;
+        stroke: var(--muted);
+      }
+      .diagram-card text {
+        fill: var(--ink);
+        font: 0.85rem var(--sans);
+      }
+      .diagram-card .node,
+      .diagram-card .edge {
+        transition: opacity 180ms ease, stroke 180ms ease, fill 180ms ease;
+      }
+      .diagram-card .node:not(.active),
+      .diagram-card .edge:not(.active) {
+        opacity: 0.35;
+      }
+      footer {
+        border-block-start: 1px solid var(--border);
+        color: var(--muted);
+        padding-block-start: 1rem;
+      }
+      @media (max-width: 74rem) {
+        .layout {
+          grid-template-columns: 12rem minmax(0, 1fr);
+        }
+        .diagram-rail {
+          display: none;
+        }
+      }
+      @media (max-width: 52rem) {
+        .layout {
+          grid-template-columns: 1fr;
+          padding-inline: 1rem;
+        }
+        .toc {
+          position: sticky;
+          top: 0;
+          z-index: 2;
+          display: flex;
+          max-height: none;
+          overflow-x: auto;
+          background: var(--canvas);
+          border-block-end: 1px solid var(--border);
+          padding-block: 0.5rem;
+        }
+        .toc-brand {
+          display: none;
+        }
+        .toc a {
+          flex: none;
+        }
+        .tour-body {
+          padding-block-start: 1.5rem;
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        html {
+          scroll-behavior: auto;
+        }
+        *,
+        *::before,
+        *::after {
+          transition-duration: 0.01ms !important;
+        }
+      }
+    </style>
+  </head>
+  <body data-explainer-shell="engineer-tour">
+    <div class="layout" data-shell-anchor="tour-layout">
+      <nav
+        class="toc"
+        data-shell-anchor="tour-navigation"
+        aria-label="Tour sections"
+      >
+        <div class="toc-brand">Explainer Kit</div>
+        <!-- AUTHOR EXTENSION REGION: section navigation -->
+        <a href="#overview" data-target="overview">Overview</a><a href="#phase-outcomes" data-target="phase-outcomes">Phase outcomes</a><a href="#the-blocked-phase" data-target="the-blocked-phase">The blocked phase</a><a href="#where-verification-caught-things" data-target="where-verification-caught-things">Where verification caught things</a><a href="#gate-results" data-target="gate-results">Gate results</a>
+        <!-- END AUTHOR EXTENSION REGION -->
+      </nav>
+      <main class="tour-body" data-shell-anchor="tour-body">
+        <header>
+          <div class="eyebrow">Explainer Kit</div>
+          <h1>Execution Record</h1>
+          <p>Authored execution record.</p>
+        </header>
+        <!-- AUTHOR EXTENSION REGION: narrative tour sections -->
+        <section id="overview" data-active-nodes="node-1" data-active-edges=""><h2>Overview</h2><p>The feature shipped in five phases. The more useful record is what the dispatch workflow did while shipping it, because this project&#39;s subject matter and its execution method were the same thing.</p></section><section id="phase-outcomes" data-active-nodes="node-2" data-active-edges=""><h2>Phase outcomes</h2><div class="table-scroll"><table><thead><tr><th>Phase</th><th>Result</th><th>Fix iterations</th></tr></thead><tbody><tr><td>p01</td><td>Passed re-review</td><td>1</td></tr><tr><td>p02</td><td>Passed re-review</td><td>1</td></tr><tr><td>p03</td><td>Blocked, then passed after authorized recovery</td><td>0</td></tr><tr><td>p04</td><td>Passed with no findings at any severity</td><td>0</td></tr><tr><td>p05</td><td>Final-review fixes, then clean re-review</td><td>1</td></tr></tbody></table></div><p>Three of five phases needed a fix iteration or a recovery. That is the ordinary shape of the loop rather than a warning sign, and the phases that needed nothing were the smaller ones.</p></section><section id="the-blocked-phase" data-active-nodes="node-3" data-active-edges=""><h2>The blocked phase</h2><p>Phase 3 is the interesting one. The root dispatch carried stale scope boundaries that contradicted the canonical <code>plan.md</code>. The accepted implementer noticed the conflict, made no changes, and left its worktree clean at the base commit.</p><ol class="timeline"><li><time>2026-07-23</time><span>p03 dispatched with stale boundaries</span></li><li><time>2026-07-23</time><span>Implementer declines to edit; worktree left clean</span></li><li><time>2026-07-23</time><span>Operator authorizes a fresh attempt from canonical plan</span></li><li><time>2026-07-23</time><span>p03 passes review; docs-link failures confirmed pre-existing</span></li></ol><p>The recovery required explicit operator authorization rather than an automatic retry, which is the same terminality rule the shipped feature enforces: a failure after acceptance is an outcome to record, not a trigger to relaunch on a substitute. The workflow applied to itself the constraint it was implementing.</p><aside class="callout callout--important" data-callout="important"><div class="callout__label">Important</div><p>The implementer making no changes is the desirable behavior. An agent that reconciled the contradiction on its own would have silently produced work against boundaries nobody approved.</p></aside></section><section id="where-verification-caught-things" data-active-nodes="node-4" data-active-edges=""><h2>Where verification caught things</h2><div class="table-scroll"><table><thead><tr><th>Stage</th><th>What it found</th></tr></thead><tbody><tr><td>Phase 1</td><td>Autonomy-inventory and reviewer-version contract drift, directly caused by the change</td></tr><tr><td>Phase 3 merge</td><td>Duplicate bootstrap-sync manifest conflict; two reviewed commits cherry-picked</td></tr><tr><td>Final verification</td><td>The new legacy-record fixture added a prompt site to the autonomy inventory</td></tr></tbody></table></div><p>The last one is worth naming precisely. A fixture added to prove backward compatibility was itself counted as a prompt site by the autonomy inventory. Mapping it as non-gating schema evidence resolved it — the fixture was evidence about the schema, not a prompt the system would execute.</p></section><section id="gate-results" data-active-nodes="node-5" data-active-edges=""><h2>Gate results</h2><p>The plan gate blocked once with one Important and one Medium finding, and the project proceeded under an explicit operator override after those were fixed. Every review after that was clean: independent phase reviews, the final lifecycle review, and two cross-family exit gates at <code>critical:0, important:0, medium:0, minor:0</code>.</p><p>Final verification covered workspace tests, lint, type-check, package and docs builds, release validation, registry checks, local docs-link crawling, and provider-sync dry runs. The work merged as <a href="https://github.com/voxmedia/open-agent-toolkit/pull/172">PR #172</a>: 93 commits across 128 files, +6,518/−261.</p></section>
+        <!-- END AUTHOR EXTENSION REGION -->
+        <footer>
+          <!-- AUTHOR EXTENSION REGION: supporting references and next steps -->
+          Authored from the retained reconciled fact base.
+          <!-- END AUTHOR EXTENSION REGION -->
+        </footer>
+      </main>
+      <aside
+        class="diagram-rail"
+        data-shell-anchor="diagram-rail"
+        aria-label="System diagram"
+      >
+        <div class="diagram-card" data-shell-anchor="diagram-card">
+          <svg viewBox="0 0 360 540" role="img" aria-label="Execution Record">
+            <!-- AUTHOR EXTENSION REGION: synchronized system diagram -->
+            <g data-node="node-1" class="node"><rect x="16" y="16" width="328" height="80" rx="8"></rect><text x="30" y="61">Overview</text></g><g data-node="node-2" class="node"><rect x="16" y="112" width="328" height="80" rx="8"></rect><text x="30" y="157">Phase outcomes</text></g><g data-node="node-3" class="node"><rect x="16" y="208" width="328" height="80" rx="8"></rect><text x="30" y="253">The blocked phase</text></g><g data-node="node-4" class="node"><rect x="16" y="304" width="328" height="80" rx="8"></rect><text x="30" y="349">Where verification caught things</text></g><g data-node="node-5" class="node"><rect x="16" y="400" width="328" height="80" rx="8"></rect><text x="30" y="445">Gate results</text></g>
+            <!-- END AUTHOR EXTENSION REGION -->
+          </svg>
+        </div>
+      </aside>
+    </div>
+    <script>
+      (() => {
+        document.querySelectorAll('.snippet-toggle').forEach((button) => {
+          button.setAttribute('aria-expanded', 'false');
+          button.addEventListener('click', () => {
+            const snippet = button.closest('.snippet');
+            const expanded = snippet.classList.toggle('open');
+            button.setAttribute('aria-expanded', String(expanded));
+          });
+        });
+
+        const sections = [...document.querySelectorAll('section[id]')];
+        const links = [...document.querySelectorAll('.toc a[data-target]')];
+        const nodes = [
+          ...document.querySelectorAll('.diagram-card [data-node]'),
+        ];
+        const edges = [
+          ...document.querySelectorAll('.diagram-card [data-edge]'),
+        ];
+        const activate = (section) => {
+          const activeNodes = new Set(
+            (section.dataset.activeNodes || '').split(',').filter(Boolean),
+          );
+          const activeEdges = new Set(
+            (section.dataset.activeEdges || '').split(',').filter(Boolean),
+          );
+          nodes.forEach((node) =>
+            node.classList.toggle('active', activeNodes.has(node.dataset.node)),
+          );
+          edges.forEach((edge) =>
+            edge.classList.toggle('active', activeEdges.has(edge.dataset.edge)),
+          );
+          links.forEach((link) =>
+            link.classList.toggle('active', link.dataset.target === section.id),
+          );
+        };
+        const observer = new IntersectionObserver(
+          (entries) => {
+            const visible = entries.find((entry) => entry.isIntersecting);
+            if (visible) activate(visible.target);
+          },
+          { rootMargin: '-15% 0px -60% 0px', threshold: [0.1, 0.4, 0.7] },
+        );
+        sections.forEach((section) => observer.observe(section));
+        if (sections[0]) activate(sections[0]);
+      })();
+    </script>
+  </body>
+</html>

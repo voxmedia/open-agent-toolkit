@@ -203,6 +203,36 @@ function publishReceipt() {
   };
 }
 
+function authorRequestV2() {
+  return {
+    schemaVersion: 'explainer-kit.author-request/v2',
+    artifactId: 'project-hub',
+    artifactType: 'hub',
+    authoring: 'markdown',
+    brief: '# Project recap author brief',
+    factBase: factBase(),
+    theme: theme(),
+    floor: {
+      requiredNarrative: ['context', 'architecture', 'validation'],
+    },
+  };
+}
+
+function authorResultV2() {
+  return {
+    schemaVersion: 'explainer-kit.author-result/v2',
+    artifactId: 'project-hub',
+    content: {
+      markdown: '# Project recap\n\nA concise, evidence-backed recap.',
+    },
+    provenance: {
+      authorId: 'author-agent',
+      generatedAt: NOW,
+      method: 'brief-guided',
+    },
+  };
+}
+
 test('accepts valid v1 fixtures for every contract kind', () => {
   const fixtures = {
     'run-request': runRequest(),
@@ -229,6 +259,76 @@ test('accepts valid v1 fixtures for every contract kind', () => {
       valid: true,
       errors: [],
     });
+  }
+});
+
+test('validates author contract v2 by kind, kind+version, and schema id', () => {
+  const request = authorRequestV2();
+  const result = authorResultV2();
+
+  for (const kind of [
+    'author-request',
+    'author-request/v2',
+    'explainer-kit.author-request/v2',
+  ]) {
+    assert.deepEqual(validateContract(kind, request), {
+      valid: true,
+      errors: [],
+    });
+  }
+
+  for (const kind of [
+    'author-result',
+    'author-result/v2',
+    'explainer-kit.author-result/v2',
+  ]) {
+    assert.deepEqual(validateContract(kind, result), {
+      valid: true,
+      errors: [],
+    });
+  }
+});
+
+test('accepts v2 expansion proposals while recipe policy remains external', () => {
+  const result = authorResultV2();
+  result.proposedArtifacts = [
+    {
+      id: 'architecture-detail',
+      profileId: 'supporting-diagram',
+      rationale: 'The component boundaries need a dedicated visual.',
+    },
+  ];
+
+  assert.equal(validateContract('author-result', result).valid, true);
+});
+
+test('rejects ambiguous v2 content and policy-bearing proposals', () => {
+  const ambiguous = authorResultV2();
+  ambiguous.content.html = '<h1>Project recap</h1>';
+  assert.ok(
+    validateContract('author-result', ambiguous).errors.some(
+      (error) => error.code === 'one-of',
+    ),
+  );
+
+  for (const forbidden of ['authoring', 'shell']) {
+    const result = authorResultV2();
+    result.proposedArtifacts = [
+      {
+        id: 'architecture-detail',
+        profileId: 'supporting-diagram',
+        rationale: 'The component boundaries need a dedicated visual.',
+        [forbidden]: forbidden === 'authoring' ? 'html' : 'diagram-shell',
+      },
+    ];
+    const validation = validateContract('author-result', result);
+    assert.equal(validation.valid, false);
+    assert.ok(
+      validation.errors.some(
+        (error) =>
+          error.code === 'unknown-key' && error.path.endsWith(`.${forbidden}`),
+      ),
+    );
   }
 });
 

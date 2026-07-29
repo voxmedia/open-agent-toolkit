@@ -105,6 +105,16 @@ Do not print `[0/N]` for this preflight step. The implementation denominator
 is not established by capability detection; use the literal `[preflight]`
 label above.
 
+**Root-inline phases:** the preflight above records the tier reason once for the
+run, so a sanctioned Tier 2 run needs no further per-phase record. Implementing
+a phase in the root during a Tier 1 run is different: subagents were available
+and approved, and the root took the work anyway. That is a deviation and must be
+recorded, but no child was accepted, so the generic dispatch record cannot carry
+it — that record is keyed on launch state the deviation does not have. Record it
+instead under a `Root-inline phase` heading placed beside the generic record at
+the same `$PROJECT_PATH/implementation.md#<run-anchor>`, giving the phase ID,
+the reason the root did not dispatch, and the model the root was running.
+
 **Tier lock:** tier is locked for the remainder of the run only after the
 dispatch target is resolved. Subsequent phase-implementer, optional nested,
 fix-continuation, and review dispatches use the same tier. Tier controls
@@ -187,10 +197,20 @@ Print before phase work:
 ```text
 OAT Dispatch Tier: balanced (codex, managed capped — pinned-variant)
 Resolved cap: high
+Classified task class: default-implementation
+Preferred effort: medium
+Selected effort: medium
 Source: project state
 Provider default effort: medium
 Note: OAT will use resolver-returned materialized Codex role names up to high. Base/unpinned roles resolve through the provider default only for explicit inherit/default behavior or the documented managed-uncapped reviewer exception.
 ```
+
+The classification and the resolved cap are separate lines because they answer
+separate questions: what the work needs, and what the policy permits. Here the
+class resolved to `default-implementation` at `medium` effort while the cap
+permitted `high`, so the selection sits below the ceiling. A stamp reporting
+`not-classified` against a selected value equal to its cap is recording that the
+first question went unasked.
 
 If no policy resolves and the session is interactive, present the dispatch
 policy prompt once before starting work. Print the unresolved-policy heading,
@@ -400,6 +420,28 @@ Cursor rules:
 - Treat every configured Cursor candidate string as opaque. Do not normalize it
   or infer capability from its spelling. The materialized mapping and resolver
   alone translate it to a native variant.
+- Select the concrete candidate before resolving, and select it through the
+  Task-Class Resolution contract in
+  `oat-dispatch-subagents/references/provider-cursor.md`, intersected with the
+  dated class guidance in the active `subagent-orchestration` selection
+  reference. That contract owns the decision; do not restate it here and do not
+  merge the two references. The Codex effort bands above are not a substitute:
+  they are defined on an effort axis Cursor does not expose, since Cursor
+  carries effort inside the candidate string and reports
+  `effort_axis=not-applicable`.
+- Eligibility is wider than the ceiling tier. For implementation and fix work
+  every candidate from the lowest tier through the project's named maximum is
+  eligible, so a phase below the ceiling class has somewhere to land.
+- The managed-capped route takes the exact-candidate branch above, so
+  `--candidate-model` is required. Omitting it does not ask the resolver to
+  choose; with no preferred value to compare against it takes the capped branch
+  and sets the selected value to the policy value, reporting
+  `selectionMode=capped` with the selected model equal to the cap. That pairing
+  is the signature of a skipped selection rather than evidence that the ceiling
+  was warranted, and it resolves without error, so nothing else will flag it.
+- A ceiling is a maximum, not a target. Selecting the cap is correct only when
+  task-class resolution independently arrives there; reaching it because no
+  candidate was selected is a defect.
 - For managed capped phase-implementer/fix dispatch, call
   `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <phase-id> --report-action implementation --json`.
   For bounded fixes, reuse the exact phase target with a bounded fix scope.
@@ -463,12 +505,13 @@ Requested controls: {model=<value|none>, effort=<value|none>, target=<value|unkn
 Configured defaults: {provider default effort/model | unknown | not-applicable}
 Runtime confirmation: {observed:<slug> | declared:<slug> | not-observable | mismatch:<detail>}
 Preferred effort: {low | medium | high | xhigh | max | provider-default | not-applicable}
+Classified task class: {mechanical-recon | intelligent-recon | default-implementation | hard-reasoning | consequential | not-classified}
 OAT Dispatch Tier: {economy | balanced | high | frontier | uncapped | inherit host defaults | legacy capped}
 Resolved cap: {resolved cap value | none}
 Selected effort: {low | medium | high | xhigh | max | provider-default | not-applicable}
 Policy source: {repo config | project state | preflight prompt}
 Provider default effort: {value | unknown | not-applicable}
-Selection mode: {capped | uncapped | review-target | no-review-target | inherit-default}
+Selection mode: {candidate | capped | uncapped | review-target | no-review-target | inherit-default | unresolved}
 Route level: {0 | 1 | ... | none}
 Model axis: { selected:<value> | inherited | not-applicable | host-auto }
 Effort axis: { selected:<value> | provider-default | inherited | not-applicable | host-auto }
@@ -476,6 +519,26 @@ Dispatch target: {host-specific subagent/role/tool target}
 Dispatch stamp: Dispatch: scope=<phase-or-task> action=<implementation|fix|review> role=<implementer|fix|reviewer> producer=<slug|unknown> provenance=<declared|observed|inferred|unknown> model_axis=<axis> effort_axis=<axis> dispatch_policy=<policy|unknown> dispatch_ceiling=<value|none> target=<target|unknown>
 Rationale: {short rationale grounded in phase scope and any policy cap/uncapped/default behavior}
 ```
+
+`Classified task class` carries the same value as the generic record's
+`task_class` field in
+`oat-dispatch-subagents/references/record-schema.md`, which is provider-neutral
+across all five classes. Do not introduce a second vocabulary here. Where a
+provider also classifies on an effort axis, that classification stays in
+`Preferred effort`; Cursor reports `effort_axis=not-applicable` and carries the
+class alone.
+
+A managed-capped implementer or fix dispatch must carry a class. Because it
+takes the exact-candidate branch, a correct one resolves to
+`Selection mode: candidate`, or to `unresolved` when the requested candidate is
+not selectable. `not-classified` is reserved for routes that make no selection,
+and on a managed-capped route it pairs with `Selection mode: capped` to mark the
+defect described under Cursor rules: the resolver reports `capped` precisely
+because no candidate was supplied to select. That pairing is what distinguishes
+a justified selection from a silent one.
+
+Mirror the resolver's `selectionMode` values exactly. Omitting one forces a
+correct dispatch to log a value that means something else.
 
 For an explicit inherit/default fallback (for example a base `oat-reviewer`
 under inherit policy), the log reads `Route: none; level=none`,

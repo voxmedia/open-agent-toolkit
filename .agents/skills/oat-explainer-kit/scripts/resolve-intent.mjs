@@ -130,6 +130,20 @@ export function validateIntentRecord(product, record) {
   return record;
 }
 
+export function explainerModeForIntent(intent) {
+  if (
+    !intent ||
+    typeof intent !== 'object' ||
+    intent.product !== 'projectRecap' ||
+    intent.decision !== 'generate'
+  ) {
+    throw new Error(
+      'Only a generated projectRecap intent can select completion-chain explainer mode.',
+    );
+  }
+  return 'unattended';
+}
+
 function resolveAutonomous({
   product,
   state,

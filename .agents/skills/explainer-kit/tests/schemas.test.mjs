@@ -18,8 +18,8 @@ const schemas = {
   'durability-evidence': 'explainer-kit.durability-evidence/v1',
   'publish-request': 'explainer-kit.publish-request/v1',
   'publish-receipt': 'explainer-kit.publish-receipt/v1',
-  'author-request': 'explainer-kit.author-request/v1',
-  'author-result': 'explainer-kit.author-result/v1',
+  'author-request.v2': 'explainer-kit.author-request/v2',
+  'author-result.v2': 'explainer-kit.author-result/v2',
 };
 
 async function loadSchema(name) {
@@ -41,7 +41,7 @@ function collectObjectSchemas(value, location = '#', found = []) {
   return found;
 }
 
-test('every v1 contract has the required identity and closed objects', async () => {
+test('every supported contract has the required identity and closed objects', async () => {
   for (const [name, id] of Object.entries(schemas)) {
     const schema = await loadSchema(name);
     assert.equal(
@@ -136,30 +136,36 @@ test('durability request and publish receipt declare unique path evidence', asyn
   );
 });
 
-test('author contracts require structured per-artifact narrative and provenance', async () => {
-  const request = await loadSchema('author-request');
-  const result = await loadSchema('author-result');
+test('author v2 contracts require authored content and provenance', async () => {
+  const request = await loadSchema('author-request.v2');
+  const result = await loadSchema('author-result.v2');
 
   assert.deepEqual(request.required, [
     'schemaVersion',
-    'run',
-    'recipe',
-    'artifact',
-    'narrativeOutline',
+    'artifactId',
+    'artifactType',
+    'authoring',
+    'brief',
     'factBase',
-    'discovery',
+    'theme',
   ]);
-  assert.equal(request.properties.narrativeOutline.minItems, 1);
+  assert.deepEqual(request.properties.authoring.enum, ['markdown', 'html']);
   assert.deepEqual(result.required, [
     'schemaVersion',
     'artifactId',
     'content',
     'provenance',
   ]);
-  assert.equal(result.properties.content.properties.sections.minItems, 1);
-  assert.equal(
-    result.properties.content.properties.sections.items.properties.prose
-      .minLength,
-    1,
-  );
+  assert.equal(result.properties.content.oneOf.length, 2);
+  assert.deepEqual(result.properties.provenance.required, [
+    'authorId',
+    'generatedAt',
+  ]);
+  // The trust level is core-stamped on the retained record, so it is declared
+  // but never required of an incoming author result.
+  assert.deepEqual(result.properties.provenance.properties.trust.enum, [
+    'caller-bound',
+    'self-asserted',
+  ]);
+  assert.equal(result.properties.provenance.additionalProperties, false);
 });

@@ -158,6 +158,67 @@ export async function updateBuildRecord(run, stage) {
   return record;
 }
 
+export async function reopenBuildStages(run, { ids, reason }) {
+  assertRun(run);
+  if (
+    !Array.isArray(ids) ||
+    ids.length === 0 ||
+    ids.some((id) => !STAGE_IDS.includes(id)) ||
+    typeof reason !== 'string' ||
+    reason.length === 0
+  ) {
+    throw new Error('Stage reopen requires supported stage ids and a reason.');
+  }
+
+  const indexes = ids.map((id) => STAGE_IDS.indexOf(id));
+  const firstIndex = Math.min(...indexes);
+  const lastIndex = Math.max(...indexes);
+  if (
+    new Set(indexes).size !== indexes.length ||
+    indexes.some((index, offset) => index !== firstIndex + offset) ||
+    ids.some((id, index) => STAGE_IDS[firstIndex + index] !== id)
+  ) {
+    throw new Error('Reopened stages must be unique and contiguous in order.');
+  }
+
+  const record = JSON.parse(await readFile(run.buildRecordPath, 'utf8'));
+  if (record.runId !== run.runId) {
+    throw new Error('Build record does not belong to this run.');
+  }
+  if (
+    !record.stages
+      .slice(0, firstIndex)
+      .every(({ status }) => SUCCESSFUL_TERMINAL_STATUSES.has(status)) ||
+    !record.stages
+      .slice(firstIndex, lastIndex + 1)
+      .every(({ status }) => SUCCESSFUL_TERMINAL_STATUSES.has(status)) ||
+    !record.stages
+      .slice(lastIndex + 1)
+      .every(({ status }) => status === 'pending')
+  ) {
+    throw new Error(
+      'Stages may reopen only after successful prerequisites and before downstream work.',
+    );
+  }
+
+  const timestamp = new Date().toISOString();
+  for (let index = firstIndex; index <= lastIndex; index += 1) {
+    const previous = record.stages[index];
+    record.stages[index] = {
+      id: previous.id,
+      status: 'pending',
+      outputPaths: [],
+      warnings: [...previous.warnings, `stage-reopened:${reason}:${timestamp}`],
+    };
+  }
+  record.outcome = 'incomplete';
+  delete record.completedAt;
+
+  assertValidContract('build-record', record);
+  await writeJsonAtomic(run.runRoot, 'build-record.json', record);
+  return record;
+}
+
 export async function writeManifestAtomic(run, manifest) {
   assertRun(run);
   if (!isObject(manifest)) {

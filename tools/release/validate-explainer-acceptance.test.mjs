@@ -363,7 +363,7 @@ async function createFixture() {
       {
         id: 'project-explainer',
         version: '1',
-        schemaVersion: 'explainer-kit.recipe/v1',
+        schemaVersion: 'explainer-kit.recipe/v2',
         path: 'recipes/project-explainer.json',
         sha256: HASH('d'),
       },

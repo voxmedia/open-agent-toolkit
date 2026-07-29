@@ -399,9 +399,9 @@ async function classifyOperation(
   renderedContent?: string,
 ): Promise<Pick<SyncPlanEntry, 'operation' | 'reason'>> {
   if (strategy === 'symlink') {
-    let stat: Awaited<ReturnType<typeof lstat>>;
+    let providerStat: Awaited<ReturnType<typeof lstat>>;
     try {
-      stat = await lstat(providerPath);
+      providerStat = await lstat(providerPath);
     } catch (error) {
       if (
         typeof error === 'object' &&
@@ -417,7 +417,7 @@ async function classifyOperation(
       throw error;
     }
 
-    if (!stat.isSymbolicLink()) {
+    if (!providerStat.isSymbolicLink()) {
       return {
         operation: 'update_symlink',
         reason: 'provider path is not a symlink',

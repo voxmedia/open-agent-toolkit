@@ -1,5 +1,5 @@
 {
-  "schemaVersion": "explainer-kit.recipe/v1",
+  "schemaVersion": "explainer-kit.recipe/v2",
   "id": "program-recap",
   "version": "1",
   "sourceRoles": [
@@ -11,22 +11,46 @@
       "maxBindings": 1
     }
   ],
-  "requiredNarrative": [
-    "program-overview",
-    "wave-map",
-    "per-wave-outcomes",
-    "convention-evolution",
-    "aggregate-numbers",
-    "follow-up-ledger"
-  ],
-  "artifacts": [
+  "floor": [
     {
       "id": "program-recap",
       "type": "hub",
+      "authoring": "markdown",
       "template": "house-style",
-      "required": true
+      "required": true,
+      "briefRef": "briefs/program-recap.md",
+      "requiredNarrative": [
+        "program-overview",
+        "wave-map",
+        "per-wave-outcomes",
+        "convention-evolution",
+        "aggregate-numbers",
+        "follow-up-ledger"
+      ]
     }
   ],
+  "expansion": {
+    "profiles": [
+      {
+        "profileId": "supporting-diagram",
+        "type": "diagram",
+        "authoring": "html",
+        "briefRef": "briefs/supporting-diagram.md",
+        "shell": "diagram-shell",
+        "maxCount": 3
+      },
+      {
+        "profileId": "project-page",
+        "type": "explainer",
+        "authoring": "markdown",
+        "briefRef": "briefs/project-page.md",
+        "maxCount": 12
+      }
+    ],
+    "limits": {
+      "maxArtifacts": 12
+    }
+  },
   "discoveryLimits": {
     "consecutiveNoNewFindingsRounds": 2,
     "maxRounds": 8

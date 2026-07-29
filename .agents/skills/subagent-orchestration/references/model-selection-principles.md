@@ -12,11 +12,24 @@ Never select from a model family name alone. Preserve these axes separately:
 - provider-native effort or reasoning selector;
 - service tier, including fast or priority variants;
 - reasoning mode when the provider exposes one independently of effort;
+- task class and the reasoning depth the work requires;
+- consequence and the independent-review requirement it creates;
+- reviewer role and the anticipated failure mode that reviewer should catch;
+- eligibility, including selector availability, retention policy, access,
+  context, safeguards, and harness-version constraints;
 - role, context inheritance, authority, deadline, and route.
 
 Do not normalize effort labels across providers. `medium`, `high`, `xhigh`,
 `max`, extended thinking, adaptive thinking, and provider-specific modes have
-different semantics. The exact pair or tuple is the route.
+different semantics. Compare same-labelled rungs only as an analysis view
+within a named harness, never as evidence that the labels are equivalent. The
+exact pair or tuple is the route.
+
+Task class, effort, consequence, reviewer role, and eligibility are related but
+independent decisions. Reasoning depth determines effort escalation.
+Consequence normally adds independent review, root-owned authorization, or
+stronger verification; it does not automatically force the highest effort.
+Eligibility filters the candidate set before capability or economy is compared.
 
 ## Five Task Classes
 
@@ -47,6 +60,15 @@ still require enough capability to use tools, follow scope, and return complete
 evidence. Prefer scripts over models when a deterministic program fully solves
 the task.
 
+A named route is only usable where the harness can actually select it. The
+models named per task class in these references are dated examples, and a
+harness will often expose a different set. When a named route is unavailable,
+substitute one meeting the same class floor, or move one class up; never fall
+through to the strongest model on offer merely because the named one was
+missing. Where a harness restricts selection to a configured set, keep enough
+distinct entries that a classification has somewhere to land — a set holding a
+single entry cannot express a choice, only a default.
+
 ## Escalation Boundaries
 
 - Mechanical to intelligent recon when judgment is required to identify a
@@ -59,7 +81,27 @@ the task.
   adversarial behavior, or expensive failure dominates.
 
 Narrow a poorly decomposed task before escalating its model. Model capability
-never repairs an over-broad objective.
+never repairs an over-broad objective. A consequential classification does not
+by itself justify top effort; raise effort only when deeper reasoning is also a
+bottleneck.
+
+## Eligibility
+
+Eliminate ineligible routes before ranking capability, cost, or speed. Verify:
+
+- the exact selector and required effort or thinking control exist in the live
+  launching surface;
+- retention, data-handling, authorization, and safeguard behavior permit the
+  workload;
+- account access, rate limits, service-tier commitments, and harness version
+  permit the route;
+- the context window, long-context quality, and threshold pricing fit the
+  input;
+- tool support and fallback behavior are understood and do not silently change
+  the selected route.
+
+Provider evidence can nominate a candidate. It cannot prove that another
+harness exposes the same selector or control.
 
 ## Long Context
 
@@ -88,8 +130,40 @@ the final answer is short.
 
 A fast or priority tier is a latency control unless the provider explicitly
 documents a capability difference. It does not satisfy a higher task-class
-floor. Choose it only when wall-clock latency is worth the price and record it
+floor. Choose it only when measured latency is worth the price and record it
 separately from the model and effort.
+
+Speed is a multi-measure contract, not a single throughput number. This section
+defines that contract; other references cite it rather than restating their own
+version.
+
+Required in any speed claim:
+
+- time to first token;
+- active agent runtime;
+- total user-observed elapsed time;
+- output tokens;
+- steps, turns, or tool calls;
+- completion rate and variance.
+
+Time to first token is required, not substitutable. Where a harness cannot
+expose it, record it explicitly as not-reported rather than silently omitting
+it or supplying a different measure in its place; an absent measure and an
+unmeasurable one are different claims.
+
+Record additionally when available:
+
+- first useful action, which is a complement to time to first token and never
+  a replacement for it;
+- output rate;
+- input and cached-input tokens;
+- retries, recoveries, refusals, and operator interventions;
+- service tier, rate limits, and agent-slot occupancy;
+- cost per attempted and completed task.
+
+Do not relabel active runtime as total elapsed time, and do not infer latency
+from tokens or steps. Trajectory measures cannot substitute for measured
+latency. Compare list pricing separately from total trajectory cost.
 
 ## Independent Review
 
@@ -97,6 +171,22 @@ For high-risk diffs and foundational decisions, prefer an author and reviewer
 from different model families or providers. Agreement is not proof; disagreement
 is evidence that the root must resolve. The root verifies every load-bearing
 claim and retains final judgment.
+
+Choose the reviewer according to the failure mode the reviewer should catch:
+engineering execution, tool trajectory, missing domain concepts, factual
+knowledge, policy interpretation, or adversarial weakness. Named reviewer
+instantiations in provider guidance are dated and provisional unless a relevant
+evaluation qualifies them. Reviewer independence never transfers authorization
+away from the root.
+
+One exception to effort following reasoning depth is worth stating so it does
+not read as a contradiction. A quality gate may hold its reviewer at a fixed
+configured rung regardless of the phase under review, because a gate that
+varies its reviewer stops being comparable across runs and a regression becomes
+indistinguishable from a change of reviewer. That is a determinism argument
+rather than a depth argument, and it applies to the gate's own reviewer, not to
+review generally: it neither raises the authoring route nor licenses treating
+consequence as a reason for top effort elsewhere.
 
 ## Staleness
 

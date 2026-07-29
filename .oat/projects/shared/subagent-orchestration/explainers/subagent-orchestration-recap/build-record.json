@@ -1,0 +1,99 @@
+{
+  "schemaVersion": "explainer-kit.build-record/v1",
+  "runId": "run-3f0d9f71-09d4-40ab-863f-97318b37bfc9",
+  "renderStrategy": "default-only",
+  "startedAt": "2026-07-27T19:35:00.455Z",
+  "stages": [
+    {
+      "id": "validate",
+      "status": "passed",
+      "outputPaths": ["run-request.json"],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.474Z",
+      "completedAt": "2026-07-27T19:35:00.482Z"
+    },
+    {
+      "id": "fact-base",
+      "status": "passed",
+      "outputPaths": ["source/fact-base.json", "source/fact-base.md"],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.490Z",
+      "completedAt": "2026-07-27T19:35:00.524Z"
+    },
+    {
+      "id": "content",
+      "status": "passed",
+      "outputPaths": [
+        "source/content/project-recap.md",
+        "source/content/ownership-split.html",
+        "source/content/selection-to-launch.html",
+        "source/content/routing-policy.md",
+        "source/content/execution-record.md",
+        "source/author/project-recap.json",
+        "source/author/ownership-split.json",
+        "source/author/selection-to-launch.json",
+        "source/author/routing-policy.json",
+        "source/author/execution-record.json"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.534Z",
+      "completedAt": "2026-07-27T19:35:00.661Z"
+    },
+    {
+      "id": "theme",
+      "status": "warned",
+      "outputPaths": ["theme.resolved.json"],
+      "warnings": [
+        "No explicit style was selected; defaulted to clean-neutral."
+      ],
+      "startedAt": "2026-07-27T19:35:00.670Z",
+      "completedAt": "2026-07-27T19:35:00.685Z"
+    },
+    {
+      "id": "render",
+      "status": "passed",
+      "outputPaths": [
+        "site/initiatives/subagent-orchestration-recap/index.html",
+        "site/diagrams/subagent-orchestration-recap/ownership-split/index.html",
+        "site/diagrams/subagent-orchestration-recap/selection-to-launch/index.html",
+        "site/explainers/subagent-orchestration-recap/routing-policy/index.html",
+        "site/explainers/subagent-orchestration-recap/execution-record/index.html"
+      ],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.694Z",
+      "completedAt": "2026-07-27T19:35:00.753Z"
+    },
+    {
+      "id": "qa",
+      "status": "warned",
+      "outputPaths": [
+        "site/initiatives/subagent-orchestration-recap/index.html",
+        "site/diagrams/subagent-orchestration-recap/ownership-split/index.html",
+        "site/diagrams/subagent-orchestration-recap/selection-to-launch/index.html",
+        "site/explainers/subagent-orchestration-recap/routing-policy/index.html",
+        "site/explainers/subagent-orchestration-recap/execution-record/index.html"
+      ],
+      "warnings": ["render-qa-skipped-no-probe"],
+      "startedAt": "2026-07-27T19:35:00.762Z",
+      "completedAt": "2026-07-27T19:35:00.775Z"
+    },
+    {
+      "id": "durability",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.793Z",
+      "completedAt": "2026-07-27T19:35:00.793Z"
+    },
+    {
+      "id": "publish",
+      "status": "skipped",
+      "outputPaths": [],
+      "warnings": [],
+      "startedAt": "2026-07-27T19:35:00.802Z",
+      "completedAt": "2026-07-27T19:35:00.802Z"
+    }
+  ],
+  "outcome": "built-not-durable",
+  "completedAt": "2026-07-27T19:35:00.802Z"
+}

@@ -1,13 +1,33 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, test } from 'node:test';
 
-import { resolveContentApproval } from '../scripts/lib/content-approval.mjs';
+import {
+  readContentApproval,
+  resolveContentApproval,
+} from '../scripts/lib/content-approval.mjs';
 import { initializeRun } from '../scripts/lib/records.mjs';
 
 const NOW = '2026-07-17T20:00:00Z';
+const RESOLVED_ARTIFACTS = [
+  {
+    artifactId: 'project-explainer',
+    origin: 'floor',
+    authoring: 'markdown',
+    contentPath: 'source/content/project-explainer.md',
+    authorResultPath: 'source/author/project-explainer.json',
+  },
+  {
+    artifactId: 'architecture-overview',
+    origin: 'expansion',
+    profileId: 'supporting-diagram',
+    authoring: 'html',
+    contentPath: 'source/content/architecture-overview.html',
+    authorResultPath: 'source/author/architecture-overview.json',
+  },
+];
 const tempDirs = [];
 
 afterEach(async () => {
@@ -16,12 +36,12 @@ afterEach(async () => {
   );
 });
 
-async function makeRun(mode = 'interactive') {
+async function makeRun(mode = 'interactive', recipeId = 'project-explainer') {
   const outputRoot = await mkdtemp(join(tmpdir(), 'content-approval-'));
   tempDirs.push(outputRoot);
   return initializeRun({
     schemaVersion: 'explainer-kit.run-request/v1',
-    recipe: { id: 'project-explainer', version: '1' },
+    recipe: { id: recipeId, version: '1' },
     slug: 'approval-demo',
     outputRoot,
     factBase: {
@@ -39,6 +59,15 @@ async function readApproval(run) {
   );
 }
 
+async function writeApproval(run, record) {
+  await mkdir(join(run.runRoot, 'source'), { recursive: true });
+  await writeFile(
+    join(run.runRoot, 'source/content-approval.json'),
+    `${JSON.stringify(record, null, 2)}\n`,
+    'utf8',
+  );
+}
+
 test('interactive content remains pending until an explicit decision', async () => {
   const run = await makeRun();
 
@@ -47,7 +76,42 @@ test('interactive content remains pending until an explicit decision', async () 
   assert.equal(approval.status, 'pending');
   assert.equal(approval.canResume, false);
   assert.equal(approval.path, 'source/content-approval.json');
-  assert.equal((await readApproval(run)).runId, run.runId);
+  const persisted = await readApproval(run);
+  assert.equal(persisted.schemaVersion, 'explainer-kit.content-approval/v2');
+  assert.equal(persisted.runId, run.runId);
+  assert.equal('marking' in persisted, false);
+  assert.equal('artifacts' in persisted, false);
+  assert.deepEqual(await readContentApproval(run), persisted);
+});
+
+test('v2 artifact and author-result sets round-trip through interactive approval', async () => {
+  const run = await makeRun();
+  const authorResultPaths = RESOLVED_ARTIFACTS.map(
+    ({ authorResultPath }) => authorResultPath,
+  );
+
+  const pending = await resolveContentApproval(
+    run,
+    'interactive',
+    undefined,
+    authorResultPaths,
+    RESOLVED_ARTIFACTS,
+  );
+  assert.deepEqual(pending.record.artifacts, RESOLVED_ARTIFACTS);
+  assert.deepEqual(pending.record.authorResultPaths, authorResultPaths);
+  assert.deepEqual(
+    (await readContentApproval(run)).artifacts,
+    RESOLVED_ARTIFACTS,
+  );
+
+  const approved = await resolveContentApproval(run, 'interactive', {
+    decision: 'approve',
+    reviewedAt: NOW,
+    reviewer: 'operator',
+  });
+  assert.equal(approved.record.marking, 'human-approved');
+  assert.deepEqual(approved.record.artifacts, RESOLVED_ARTIFACTS);
+  assert.deepEqual(approved.record.authorResultPaths, authorResultPaths);
 });
 
 test('persists rejection corrections and later approval for the same run', async () => {
@@ -81,6 +145,8 @@ test('persists rejection corrections and later approval for the same run', async
     'Remove the stale date.',
   ]);
   assert.equal(persisted.attempts[1].decision, 'approve');
+  assert.equal(persisted.schemaVersion, 'explainer-kit.content-approval/v2');
+  assert.equal(persisted.marking, 'human-approved');
   assert.equal(persisted.reviewedSource.kind, 'human-review');
 });
 
@@ -107,7 +173,89 @@ test('unattended approval records lifecycle provenance without prompting', async
   assert.deepEqual(persisted.authorResultPaths, [
     'source/author/project-explainer.json',
   ]);
+  assert.equal(persisted.schemaVersion, 'explainer-kit.content-approval/v2');
+  assert.equal(persisted.marking, 'auto-drafted');
   assert.equal(persisted.attempts.length, 0);
+});
+
+test('normalizes legacy v1 approval records onto floor content files', async () => {
+  const run = await makeRun();
+  await writeApproval(run, {
+    schemaVersion: 'explainer-kit.content-approval/v1',
+    runId: run.runId,
+    mode: 'interactive',
+    status: 'approved',
+    reviewedSource: {
+      kind: 'human-review',
+      locator: 'source/content/project-explainer.md',
+    },
+    attempts: [
+      {
+        decision: 'approve',
+        reviewedAt: NOW,
+        corrections: [],
+      },
+    ],
+  });
+
+  const normalized = await readContentApproval(run);
+  assert.equal(normalized.schemaVersion, 'explainer-kit.content-approval/v2');
+  assert.equal(normalized.marking, 'human-approved');
+  assert.deepEqual(normalized.artifacts, [
+    {
+      artifactId: 'project-explainer',
+      origin: 'floor',
+      authoring: 'markdown',
+      contentPath: 'source/content/project-explainer.md',
+    },
+  ]);
+
+  await resolveContentApproval(run, 'interactive');
+  assert.deepEqual(await readApproval(run), normalized);
+});
+
+test('normalizes legacy HTML floors onto HTML content files', async () => {
+  const run = await makeRun('interactive', 'engineer-tour');
+  await writeApproval(run, {
+    schemaVersion: 'explainer-kit.content-approval/v1',
+    runId: run.runId,
+    mode: 'interactive',
+    status: 'pending',
+    attempts: [],
+  });
+
+  const normalized = await readContentApproval(run);
+  assert.deepEqual(normalized.artifacts, [
+    {
+      artifactId: 'engineer-tour',
+      origin: 'floor',
+      authoring: 'html',
+      contentPath: 'source/content/engineer-tour.html',
+    },
+  ]);
+});
+
+test('normalizes legacy unattended marking and available author-result paths', async () => {
+  const run = await makeRun('unattended');
+  await writeApproval(run, {
+    schemaVersion: 'explainer-kit.content-approval/v1',
+    runId: run.runId,
+    mode: 'unattended',
+    status: 'approved',
+    reviewedSource: {
+      kind: 'approved-fact-base',
+      locator: 'approved-facts.json',
+    },
+    authorResultPaths: ['source/author/project-explainer.json'],
+    attempts: [],
+  });
+
+  const normalized = await readContentApproval(run);
+  assert.equal(normalized.marking, 'auto-drafted');
+  assert.equal(
+    normalized.artifacts[0].authorResultPath,
+    'source/author/project-explainer.json',
+  );
 });
 
 test('unattended approval rejects missing author provenance', async () => {
@@ -132,5 +280,14 @@ test('rejects invalid modes and malformed explicit review decisions', async () =
       reviewedAt: NOW,
     }),
     /decision/i,
+  );
+  await assert.rejects(
+    resolveContentApproval(run, 'interactive', undefined, undefined, [
+      {
+        ...RESOLVED_ARTIFACTS[1],
+        origin: 'floor',
+      },
+    ]),
+    /profileId/i,
   );
 });

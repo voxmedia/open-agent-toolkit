@@ -9,20 +9,36 @@ import { resolveContentApproval } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
-import { auditArtifactSet, checkSourceDumping } from './lib/qa.mjs';
+import { validateHtmlSafety } from './lib/html-safety.mjs';
 import {
+  auditArtifactSet,
+  checkGuidelines,
+  checkSourceDumping,
+  RENDER_QA_WARNING_IDS,
+  renderQaWarningIds,
+  renderWarningIds,
+} from './lib/qa.mjs';
+import {
+  evaluateExpansionProposals,
   loadRecipe,
+  recipeExpansion,
+  recipeFloor,
+  recipeRequiredNarrative,
   shouldStopDiscovery,
   validateContentModel,
   validateSourceBindings,
 } from './lib/recipes.mjs';
 import {
   initializeRun,
+  reopenBuildStages,
   updateBuildRecord,
   writeManifestAtomic,
 } from './lib/records.mjs';
-import { renderArtifact } from './lib/render.mjs';
+import { artifactPath, renderArtifact } from './lib/render.mjs';
 import { resolveTheme } from './lib/theme.mjs';
+
+// Stages a rejected draft reruns once its content is corrected.
+const REOPENED_ON_REJECTION = Object.freeze(['render', 'qa']);
 
 export async function runExplainer(request, options = {}) {
   assertValidRequest(request);
@@ -39,13 +55,26 @@ export async function runExplainer(request, options = {}) {
     contentModels: [],
     contentPaths: new Map(),
     authorResultPaths: [],
+    resolvedArtifacts: [],
+    authoredContent: new Map(),
+    expansion: {
+      valid: true,
+      accepted: [],
+      rejected: [],
+      warnings: [],
+      errors: [],
+    },
+    qaErrors: [],
     theme: null,
+    themeWarnings: [],
     renderStrategy: run.request.theme.renderStrategy,
     rendered: [],
     artifacts: [],
     warnings: [],
+    reopenedWarnings: {},
     discovery: { rounds: 0, findings: [], reason: 'not-requested' },
     approval: null,
+    resumedApprovalStatus: null,
   };
 
   try {
@@ -82,31 +111,41 @@ export async function runExplainer(request, options = {}) {
           status: processed.checks.warnings.length > 0 ? 'warned' : 'passed',
         };
       });
+      await prepareTheme(state);
       await executeStage(run, 'content', options, async () => {
         state.discovery = await runDiscovery(recipe, state.factBase, options);
-        if (run.request.mode === 'unattended') {
-          const authored = await createAuthoredContent(state, options.author);
-          state.contentModels = authored.models;
-          state.authorResultPaths = authored.resultPaths;
-        } else {
-          state.contentModels = recipe.artifacts.map((artifact) =>
-            createContentModel(recipe, artifact, run.slug, state.factBase),
-          );
-        }
-        for (const model of state.contentModels) {
-          const validation = validateContentModel(recipe, model);
-          if (!validation.valid) {
-            throw codedError(
-              'E_CONTENT',
-              `Invalid content model: ${validation.errors.join('; ')}`,
-            );
-          }
-          const path = `source/content/${model.artifactId}.md`;
-          await writeTextAtomic(run.runRoot, path, contentMarkdown(model));
-          state.contentPaths.set(model.artifactId, path);
-        }
-        return { outputPaths: [...state.contentPaths.values()] };
+        await createAuthoredContent(state, options, now);
+        return {
+          outputPaths: [
+            ...state.contentPaths.values(),
+            ...state.authorResultPaths,
+          ],
+          warnings: state.expansion.warnings,
+          status: state.expansion.warnings.length > 0 ? 'warned' : 'passed',
+        };
       });
+    }
+
+    if (!resumed) {
+      await executeThemeStage(state, options);
+    }
+    if (!resumed || state.resumedApprovalStatus === 'rejected') {
+      if (state.resumedApprovalStatus === 'rejected') {
+        const reopened = await reopenBuildStages(run, {
+          ids: [...REOPENED_ON_REJECTION],
+          reason: 'content-rejected',
+        });
+        // Reopen markers are the D4 audit trail, so they survive the rerun's
+        // replacement of each stage's warning set.
+        state.reopenedWarnings = Object.fromEntries(
+          reopened.stages.map(({ id, warnings }) => [
+            id,
+            warnings.filter((warning) => warning.startsWith('stage-reopened:')),
+          ]),
+        );
+      }
+      await executeRenderStage(state, options);
+      await executeQaStage(state, options);
     }
 
     state.approval = await resolveContentApproval(
@@ -114,81 +153,11 @@ export async function runExplainer(request, options = {}) {
       run.request.mode,
       options.reviewedSource,
       state.authorResultPaths,
+      approvalArtifacts(state),
     );
     if (!state.approval.canResume) {
       return resultFor(state);
     }
-
-    await executeStage(run, 'theme', options, async () => {
-      const resolved = await resolveTheme(run.request.theme);
-      state.theme = resolved.theme;
-      state.renderStrategy = resolved.renderStrategy;
-      state.warnings.push(...resolved.warnings);
-      await writeJsonAtomic(run.runRoot, 'theme.resolved.json', state.theme);
-      return {
-        outputPaths: ['theme.resolved.json'],
-        warnings: resolved.warnings,
-        status: resolved.warnings.length > 0 ? 'warned' : 'passed',
-      };
-    });
-    await executeStage(run, 'render', options, async () => {
-      for (const recipeArtifact of recipe.artifacts) {
-        const content = state.contentModels.find(
-          ({ artifactId }) => artifactId === recipeArtifact.id,
-        );
-        const rendered = await renderArtifact({
-          recipeArtifact,
-          content,
-          theme: state.theme,
-          renderStrategy: state.renderStrategy,
-          ...(run.request.publicBaseUrl && {
-            publicBaseUrl: run.request.publicBaseUrl,
-          }),
-        });
-        await writeTextAtomic(
-          run.runRoot,
-          rendered.renderedPath,
-          rendered.html,
-        );
-        state.rendered.push(rendered);
-        state.artifacts.push({
-          id: rendered.artifactId,
-          type: rendered.type,
-          contentPath: state.contentPaths.get(rendered.artifactId),
-          renderedPath: rendered.renderedPath,
-          mediaType: rendered.mediaType,
-          status: 'built',
-          hash: hashBytes(rendered.html),
-          rebuildable: false,
-        });
-      }
-      return {
-        outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
-      };
-    });
-    await executeStage(run, 'qa', options, async () => {
-      const report = await auditArtifactSet({
-        artifacts: state.rendered.map((artifact) => ({
-          id: artifact.artifactId,
-          type: artifact.type,
-          html: artifact.html,
-        })),
-        ...(options.denylist && { denylist: options.denylist }),
-        ...(options.browserProbe && { browserProbe: options.browserProbe }),
-        ...(options.widths && { widths: options.widths }),
-      });
-      if (!report.valid) {
-        throw codedError(
-          'E_QA',
-          report.issues
-            .map(({ code, message }) => `${code}: ${message}`)
-            .join('; '),
-        );
-      }
-      return {
-        outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
-      };
-    });
 
     await executeDurabilityAndPublish(state, options, now);
     await persistManifest(state, now());
@@ -199,6 +168,202 @@ export async function runExplainer(request, options = {}) {
     }
     return resultFor(state, error);
   }
+}
+
+async function executeThemeStage(state, options) {
+  await executeStage(state.run, 'theme', options, async () => {
+    await writeJsonAtomic(
+      state.run.runRoot,
+      'theme.resolved.json',
+      state.theme,
+    );
+    return {
+      outputPaths: ['theme.resolved.json'],
+      warnings: state.themeWarnings,
+      status: state.themeWarnings.length > 0 ? 'warned' : 'passed',
+    };
+  });
+}
+
+async function prepareTheme(state) {
+  const resolved = await resolveTheme(state.run.request.theme);
+  state.theme = resolved.theme;
+  state.renderStrategy = resolved.renderStrategy;
+  state.themeWarnings = resolved.warnings;
+  state.warnings.push(...resolved.warnings);
+}
+
+async function executeRenderStage(state, options) {
+  state.rendered = [];
+  state.artifacts = [];
+  await executeStage(state.run, 'render', options, async () => {
+    for (const artifact of state.resolvedArtifacts) {
+      const rendered =
+        artifact.authoring === 'markdown'
+          ? await renderArtifact({
+              recipeArtifact: renderDescriptor(artifact),
+              content: state.contentModels.find(
+                ({ artifactId }) => artifactId === artifact.id,
+              ),
+              theme: state.theme,
+              renderStrategy: state.renderStrategy,
+              ...(state.run.request.publicBaseUrl && {
+                publicBaseUrl: state.run.request.publicBaseUrl,
+              }),
+            })
+          : artisticRender(state, artifact);
+      await writeTextAtomic(
+        state.run.runRoot,
+        rendered.renderedPath,
+        rendered.html,
+      );
+      state.rendered.push(rendered);
+      state.artifacts.push(artifactRecord(state, rendered));
+    }
+    // D7 degradation findings are guideline severity, so they travel to the
+    // run result and the manifest as warnings rather than failing the stage.
+    const degradation = renderWarningIds(
+      state.rendered.flatMap(
+        ({ warnings: sectionWarnings = [] }) => sectionWarnings,
+      ),
+    );
+    state.warnings.push(...degradation);
+    const warnings = [...(state.reopenedWarnings.render ?? []), ...degradation];
+    return {
+      outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+      warnings,
+      status: warnings.length > 0 ? 'warned' : 'passed',
+    };
+  });
+}
+
+async function executeQaStage(state, options) {
+  await executeStage(state.run, 'qa', options, async () => {
+    const htmlSafetyErrors = [];
+    const qaWarnings = [];
+    return auditRenderedArtifacts(state, options, {
+      browserProbe: resolveBrowserProbe(options),
+      htmlSafetyErrors,
+      qaWarnings,
+    });
+  });
+}
+
+/**
+ * Render QA drives a caller-supplied probe only. The core never launches a
+ * headless runtime itself; agents review rendered output in their own browser.
+ */
+function resolveBrowserProbe(options) {
+  if (options.browserProbe === undefined) return null;
+  if (typeof options.browserProbe !== 'function') {
+    throw codedError(
+      'E_BROWSER_PROBE',
+      'options.browserProbe must be a function when supplied.',
+    );
+  }
+  return options.browserProbe;
+}
+
+async function auditRenderedArtifacts(
+  state,
+  options,
+  { browserProbe, htmlSafetyErrors, qaWarnings },
+) {
+  for (const artifact of state.resolvedArtifacts.filter(
+    ({ authoring }) => authoring === 'html',
+  )) {
+    const safety = validateHtmlSafety({
+      html: state.authoredContent.get(artifact.id),
+      shell: artifact.shellContent,
+      shellName: artifact.shell ?? artifact.template,
+    });
+    htmlSafetyErrors.push(
+      ...safety.errors.map((code) => ({
+        code,
+        message: `Artistic artifact ${artifact.id} failed DOM safety validation.`,
+      })),
+    );
+    qaWarnings.push(...safety.warnings);
+  }
+
+  const probeArtifacts = state.rendered.map((artifact) => ({
+    id: artifact.artifactId,
+    type: artifact.type,
+    html: artifact.html,
+  }));
+  const report = await auditArtifactSet({
+    artifacts: probeArtifacts,
+    ...(options.denylist && { denylist: options.denylist }),
+    ...(browserProbe && { browserProbe }),
+    ...(options.widths && { widths: options.widths }),
+  });
+  const hardIssues = report.issues.filter((issue) => isHardQaIssue(issue.code));
+  const warningIssues = report.issues.filter(
+    (issue) => !isHardQaIssue(issue.code),
+  );
+  // A code the render-QA vocabulary already covers must not also emit an ad
+  // hoc `qa-*` twin; the generic conversion is for structural codes only.
+  qaWarnings.push(
+    ...renderQaWarningIds(warningIssues),
+    ...warningIssues
+      .filter(({ code }) => renderQaWarningIds([{ code }]).length === 0)
+      .map(({ code }) => `qa-${code}`),
+  );
+  if (!browserProbe) {
+    qaWarnings.push(RENDER_QA_WARNING_IDS.skippedNoProbe);
+  }
+  const guidelines = checkGuidelines({
+    recipe: state.recipe,
+    artifacts: probeArtifacts,
+    expansion: state.expansion,
+  });
+  qaWarnings.push(...guidelines.warnings, ...state.expansion.warnings);
+
+  const errors = [...state.qaErrors, ...htmlSafetyErrors, ...hardIssues];
+  if (errors.length > 0) {
+    throw codedError(
+      'E_QA',
+      errors.map(({ code, message }) => `${code}: ${message}`).join('; '),
+    );
+  }
+  state.warnings.push(...qaWarnings);
+  const warnings = [
+    ...(state.reopenedWarnings.qa ?? []),
+    ...new Set(qaWarnings),
+  ];
+  return {
+    outputPaths: state.rendered.map(({ renderedPath }) => renderedPath),
+    warnings,
+    status: warnings.length > 0 ? 'warned' : 'passed',
+  };
+}
+
+function isHardQaIssue(code) {
+  return (
+    [
+      'denylisted-string',
+      'external-asset',
+      'link-form',
+      'tag-balance',
+      'unresolved-token',
+    ].includes(code) || code.startsWith('cohesion-')
+  );
+}
+
+function artisticRender(state, artifact) {
+  const renderedPath = artifactPath(renderDescriptor(artifact), state.run.slug);
+  const publicBaseUrl = state.run.request.publicBaseUrl?.replace(/\/+$/g, '');
+  return {
+    artifactId: artifact.id,
+    type: artifact.type,
+    renderedPath,
+    publicUrl: publicBaseUrl
+      ? `${publicBaseUrl}/${renderedPath.slice('site/'.length)}`
+      : undefined,
+    mediaType: 'text/html',
+    html: state.authoredContent.get(artifact.id),
+    warnings: [],
+  };
 }
 
 async function loadResumableRun(request) {
@@ -222,11 +387,16 @@ async function loadResumableRun(request) {
     throw error;
   }
 
-  const content = record.stages?.find(({ id }) => id === 'content');
-  const theme = record.stages?.find(({ id }) => id === 'theme');
+  const approvalUnresolved = ['pending', 'rejected'].includes(approval.status);
+  const completedBeforeApproval = ['content', 'theme', 'render', 'qa'].every(
+    (id) =>
+      ['passed', 'warned', 'skipped'].includes(
+        record.stages?.find((stage) => stage.id === id)?.status,
+      ),
+  );
   if (
-    content?.status !== 'passed' ||
-    theme?.status !== 'pending' ||
+    !approvalUnresolved ||
+    !completedBeforeApproval ||
     approval.runId !== record.runId
   ) {
     return null;
@@ -259,39 +429,118 @@ async function loadResumableRun(request) {
 }
 
 async function hydrateResumableState(state) {
-  const [factBase, approval] = await Promise.all([
+  const [factBase, approval, theme, record] = await Promise.all([
     readJson(join(state.run.runRoot, 'source/fact-base.json')),
     readJson(join(state.run.runRoot, 'source/content-approval.json')),
+    readJson(join(state.run.runRoot, 'theme.resolved.json')),
+    readJson(state.run.buildRecordPath),
   ]);
   state.factBase = factBase;
-  state.authorResultPaths = Array.isArray(approval.authorResultPaths)
-    ? [...approval.authorResultPaths]
-    : [];
+  state.theme = theme;
+  state.themeWarnings = [];
+  state.resumedApprovalStatus = approval.status;
+  // Reopened stages rerun against the corrected content, so carrying their
+  // prior warnings forward would outlive the fix that resolved them.
+  const rerunning = approval.status === 'rejected' ? REOPENED_ON_REJECTION : [];
+  state.warnings.push(
+    ...record.stages
+      .filter(({ id }) => !rerunning.includes(id))
+      .flatMap(({ warnings = [] }) =>
+        warnings.filter((warning) => !warning.startsWith('stage-reopened:')),
+      ),
+  );
   state.inputHashes = inputHashes(state.factBase);
   state.factBaseHash = canonicalHash(state.factBase);
   state.contentModels = [];
-  for (const artifact of state.recipe.artifacts) {
-    const base = createContentModel(
-      state.recipe,
-      artifact,
-      state.run.slug,
-      state.factBase,
-    );
-    const path = `source/content/${base.artifactId}.md`;
-    const model = contentModelFromMarkdown(
-      base,
-      await readFile(join(state.run.runRoot, path), 'utf8'),
-    );
-    const validation = validateContentModel(state.recipe, model);
-    if (!validation.valid) {
-      throw codedError(
-        'E_CONTENT',
-        `Reviewed content is invalid: ${validation.errors.join('; ')}`,
+  const persistedArtifacts = Array.isArray(approval.artifacts)
+    ? approval.artifacts
+    : recipeFloor(state.recipe).map((artifact) => ({
+        artifactId: artifact.id,
+        origin: 'floor',
+        authoring: artifact.authoring ?? 'markdown',
+        contentPath: `source/content/${artifact.id}.md`,
+      }));
+  for (const persisted of persistedArtifacts) {
+    const artifact = resolvedArtifactFromApproval(state.recipe, persisted);
+    if (artifact.authoring === 'html') {
+      artifact.shellContent = await readSkillFile(
+        `templates/${artifact.shell}.html`,
       );
     }
-    state.contentModels.push(model);
-    state.contentPaths.set(model.artifactId, path);
+    const content = await readFile(
+      join(state.run.runRoot, persisted.contentPath),
+      'utf8',
+    );
+    state.resolvedArtifacts.push(artifact);
+    state.authoredContent.set(artifact.id, content);
+    state.contentPaths.set(artifact.id, persisted.contentPath);
+    if (persisted.authorResultPath) {
+      state.authorResultPaths.push(persisted.authorResultPath);
+    }
   }
+  const links = expansionLinks(state.resolvedArtifacts);
+  for (const artifact of state.resolvedArtifacts) {
+    if (artifact.authoring !== 'markdown') continue;
+    state.contentModels.push(
+      markdownContentModel(
+        artifact,
+        state.run.slug,
+        state.authoredContent.get(artifact.id),
+        artifact.origin === 'floor' ? links : [],
+      ),
+    );
+  }
+  state.expansion.accepted = state.resolvedArtifacts
+    .filter(({ origin }) => origin === 'expansion')
+    .map((artifact) => ({
+      id: artifact.id,
+      profileId: artifact.profileId,
+      rationale: 'Persisted approved expansion artifact.',
+      status: 'accepted',
+      profile: expansionProfile(state.recipe, artifact.profileId),
+    }));
+  await hydrateRenderedState(state);
+}
+
+async function hydrateRenderedState(state) {
+  state.rendered = [];
+  state.artifacts = [];
+  for (const artifact of state.resolvedArtifacts) {
+    const descriptor =
+      artifact.authoring === 'markdown'
+        ? await renderArtifact({
+            recipeArtifact: renderDescriptor(artifact),
+            content: state.contentModels.find(
+              ({ artifactId }) => artifactId === artifact.id,
+            ),
+            theme: state.theme,
+            renderStrategy: state.renderStrategy,
+            ...(state.run.request.publicBaseUrl && {
+              publicBaseUrl: state.run.request.publicBaseUrl,
+            }),
+          })
+        : artisticRender(state, artifact);
+    const html = await readFile(
+      join(state.run.runRoot, descriptor.renderedPath),
+      'utf8',
+    );
+    const rendered = { ...descriptor, html };
+    state.rendered.push(rendered);
+    state.artifacts.push(artifactRecord(state, rendered));
+  }
+}
+
+function artifactRecord(state, rendered) {
+  return {
+    id: rendered.artifactId,
+    type: rendered.type,
+    contentPath: state.contentPaths.get(rendered.artifactId),
+    renderedPath: rendered.renderedPath,
+    mediaType: rendered.mediaType,
+    status: 'built',
+    hash: hashBytes(rendered.html),
+    rebuildable: false,
+  };
 }
 
 async function readJson(path) {
@@ -338,7 +587,7 @@ async function executeStage(run, id, options, operation) {
       id,
       status: result.status ?? 'passed',
       outputPaths: result.outputPaths ?? [],
-      warnings: result.warnings ?? [],
+      ...(result.warnings !== undefined && { warnings: result.warnings }),
     });
   } catch (error) {
     await updateBuildRecord(run, {
@@ -512,7 +761,7 @@ async function persistFailureManifest(state, error, createdAt) {
   const record = JSON.parse(await readFile(state.run.buildRecordPath, 'utf8'));
   const recordedIds = new Set(state.artifacts.map(({ id }) => id));
   state.artifacts.push(
-    ...state.recipe.artifacts
+    ...recipeFloor(state.recipe)
       .filter(({ id }) => !recordedIds.has(id))
       .map((artifact) => ({
         id: artifact.id,
@@ -567,109 +816,262 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
   };
 }
 
-async function createAuthoredContent(state, author) {
+async function createAuthoredContent(state, options, now) {
+  const author = options.author;
   if (typeof author !== 'function') {
     throw codedError(
       'E_AUTHOR_REQUIRED',
-      'Unattended runs require an explicit author callback.',
+      'Explainer runs require an explicit author callback in both modes.',
+    );
+  }
+  const trust = authorTrustContext(options, now);
+
+  const floor = await Promise.all(
+    recipeFloor(state.recipe).map((artifact) =>
+      authorArtifact(
+        state,
+        {
+          ...artifact,
+          origin: 'floor',
+          shell: artifact.authoring === 'html' ? artifact.template : undefined,
+        },
+        author,
+        trust,
+      ),
+    ),
+  );
+  const proposals = floor.flatMap(
+    ({ result }) => result.proposedArtifacts ?? [],
+  );
+  state.expansion = evaluateExpansionProposals(state.recipe, proposals);
+  if (!state.expansion.valid) {
+    throw codedError(
+      'E_AUTHOR_RESULT',
+      `Invalid expansion proposals: ${state.expansion.errors.join('; ')}`,
     );
   }
 
-  const authored = [];
-  for (const artifact of state.recipe.artifacts) {
-    const resultPath = `source/author/${artifact.id}.json`;
-    const authorRequest = {
-      schemaVersion: 'explainer-kit.author-request/v1',
-      run: { runId: state.run.runId, slug: state.run.slug },
-      recipe: {
-        id: state.recipe.id,
-        version: state.recipe.version,
-        requiredNarrative: [...state.recipe.requiredNarrative],
+  const expansions = [];
+  for (const accepted of state.expansion.accepted) {
+    const profile = accepted.profile;
+    const item = await authorArtifact(
+      state,
+      {
+        id: accepted.id,
+        type: profile.type,
+        authoring: profile.authoring,
+        briefRef: profile.briefRef,
+        shell: profile.shell,
+        template:
+          profile.authoring === 'markdown'
+            ? templateForType(profile.type)
+            : profile.shell,
+        required: false,
+        origin: 'expansion',
+        profileId: profile.profileId,
       },
-      artifact: {
-        id: artifact.id,
-        type: artifact.type,
-      },
-      narrativeOutline: state.recipe.requiredNarrative.map((id) => ({
-        id,
-        title: humanize(id),
-      })),
-      factBase: structuredClone(state.factBase),
-      discovery: structuredClone(state.discovery),
-    };
-    const requestValidation = validateContract('author-request', authorRequest);
-    if (!requestValidation.valid) {
-      throw codedError(
-        'E_AUTHOR_REQUEST',
-        contractErrorMessage('author request', requestValidation.errors),
-      );
-    }
-
-    const result = await author(structuredClone(authorRequest));
-    const resultValidation = validateContract('author-result', result);
-    if (!resultValidation.valid) {
+      author,
+      trust,
+    );
+    if ((item.result.proposedArtifacts ?? []).length > 0) {
       throw codedError(
         'E_AUTHOR_RESULT',
-        contractErrorMessage('author result', resultValidation.errors),
+        `Expansion artifact ${accepted.id} cannot propose nested artifacts.`,
       );
     }
-    const sectionIds = result.content.sections.map(({ id }) => id);
-    if (
-      result.artifactId !== artifact.id ||
-      sectionIds.length !== state.recipe.requiredNarrative.length ||
-      state.recipe.requiredNarrative.some(
-        (id, index) => sectionIds[index] !== id,
-      )
-    ) {
-      throw codedError(
-        'E_AUTHOR_RESULT',
-        `Author result for ${artifact.id} must contain the exact required section IDs in order.`,
-      );
-    }
-    const dumpCheck = checkSourceDumping({
-      authoredSections: result.content.sections.map(({ id, prose }) => ({
-        id,
-        text: prose,
-      })),
-      sourceTexts: [
-        ...state.factBase.claims,
-        ...state.factBase.unresolvedClaims,
-      ].map(({ text }) => text),
-    });
-    if (!dumpCheck.valid) {
-      throw codedError(
-        'E_SOURCE_DUMP',
-        dumpCheck.issues.map(({ message }) => message).join('; '),
-      );
-    }
-
-    authored.push({
-      result: structuredClone(result),
-      resultPath,
-      model: {
-        artifactId: artifact.id,
-        slug: state.run.slug,
-        title: result.content.title,
-        description: result.content.description,
-        ...(result.content.eyebrow && { eyebrow: result.content.eyebrow }),
-        ...(result.content.footer && { footer: result.content.footer }),
-        sections: result.content.sections.map(({ id, title, prose }) => ({
-          id,
-          title,
-          content: prose,
-        })),
-        artifactLinks: result.content.artifactLinks ?? [],
-      },
-    });
+    expansions.push(item);
   }
 
+  const authored = [...floor, ...expansions];
+  state.resolvedArtifacts = authored.map(({ artifact }) => artifact);
+  const links = expansionLinks(state.resolvedArtifacts);
   for (const item of authored) {
     await writeJsonAtomic(state.run.runRoot, item.resultPath, item.result);
+    await writeTextAtomic(state.run.runRoot, item.contentPath, item.content);
+    state.authorResultPaths.push(item.resultPath);
+    state.contentPaths.set(item.artifact.id, item.contentPath);
+    state.authoredContent.set(item.artifact.id, item.content);
+    if (item.artifact.authoring === 'markdown') {
+      state.contentModels.push(
+        assertValidContentModel(
+          state.recipe,
+          markdownContentModel(
+            item.artifact,
+            state.run.slug,
+            item.content,
+            item.artifact.origin === 'floor' ? links : [],
+          ),
+          item.artifact,
+        ),
+      );
+    }
+  }
+}
+
+// Expansion artifacts are not recipe-floor entries, so only floor content models
+// can be checked against the floor-scoped contract.
+function assertValidContentModel(recipe, model, artifact) {
+  if (artifact.origin !== 'floor') return model;
+  const result = validateContentModel(recipe, model);
+  if (!result.valid) {
+    throw codedError(
+      'E_CONTENT_MODEL',
+      `Authored content for ${artifact.id} violates the narrative contract: ${result.errors.join('; ')}`,
+    );
+  }
+  return model;
+}
+
+// Provenance authenticity cannot come from the party being identified, so
+// identity and method are bound to trusted caller configuration and the
+// generation time is stamped from the run's injected clock.
+function authorTrustContext(options, now) {
+  const generatedAt = now();
+  const declared = options.authorProvenance;
+  if (declared === undefined) return { generatedAt, bound: null };
+  const valid =
+    typeof declared === 'object' &&
+    declared !== null &&
+    !Array.isArray(declared) &&
+    typeof declared.authorId === 'string' &&
+    declared.authorId.length > 0 &&
+    (declared.method === undefined ||
+      (typeof declared.method === 'string' && declared.method.length > 0));
+  if (!valid) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      'Trusted author provenance requires a non-empty authorId and, when present, a non-empty method.',
+    );
   }
   return {
-    models: authored.map(({ model }) => model),
-    resultPaths: authored.map(({ resultPath }) => resultPath),
+    generatedAt,
+    bound: {
+      authorId: declared.authorId,
+      ...(declared.method !== undefined && { method: declared.method }),
+    },
   };
+}
+
+function resolveAuthorProvenance(claimed, trust, artifactId) {
+  if ('trust' in claimed) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      `Author result for ${artifactId} must not assert a provenance trust level; the core stamps it.`,
+    );
+  }
+  if (trust.bound === null) {
+    return {
+      ...claimed,
+      generatedAt: trust.generatedAt,
+      trust: 'self-asserted',
+    };
+  }
+  if (
+    claimed.authorId !== trust.bound.authorId ||
+    (trust.bound.method !== undefined && claimed.method !== trust.bound.method)
+  ) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      `Author result for ${artifactId} claims provenance that does not match the trusted caller context.`,
+    );
+  }
+  return {
+    ...trust.bound,
+    generatedAt: trust.generatedAt,
+    trust: 'caller-bound',
+  };
+}
+
+async function authorArtifact(state, artifact, author, trust) {
+  const brief = await readSkillFile(artifact.briefRef);
+  const shellContent =
+    artifact.authoring === 'html'
+      ? await readSkillFile(`templates/${artifact.shell}.html`)
+      : undefined;
+  const resolvedArtifact = {
+    ...artifact,
+    ...(shellContent && { shellContent }),
+  };
+  const requiredNarrative =
+    artifact.origin === 'floor'
+      ? recipeRequiredNarrative(state.recipe, artifact.id)
+      : [];
+  const authorRequest = {
+    schemaVersion: 'explainer-kit.author-request/v2',
+    artifactId: artifact.id,
+    artifactType: artifact.type,
+    authoring: artifact.authoring,
+    brief,
+    factBase: structuredClone(state.factBase),
+    ...(shellContent && { shell: shellContent }),
+    theme: structuredClone(state.theme),
+    ...(artifact.origin === 'floor' &&
+      requiredNarrative.length > 0 && {
+        floor: { requiredNarrative },
+      }),
+  };
+  const requestValidation = validateContract(
+    'author-request/v2',
+    authorRequest,
+  );
+  if (!requestValidation.valid) {
+    throw codedError(
+      'E_AUTHOR_REQUEST',
+      contractErrorMessage('author request', requestValidation.errors),
+    );
+  }
+
+  const result = await author(structuredClone(authorRequest));
+  const resultValidation = validateContract('author-result/v2', result);
+  if (!resultValidation.valid) {
+    throw codedError(
+      'E_AUTHOR_RESULT',
+      contractErrorMessage('author result', resultValidation.errors),
+    );
+  }
+  const content = result.content?.[artifact.authoring];
+  if (result.artifactId !== artifact.id || typeof content !== 'string') {
+    throw codedError(
+      'E_AUTHOR_RESULT',
+      `Author result for ${artifact.id} must match its identity and ${artifact.authoring} path.`,
+    );
+  }
+  const retained = {
+    ...structuredClone(result),
+    provenance: resolveAuthorProvenance(result.provenance, trust, artifact.id),
+  };
+  const retainedValidation = validateContract('author-result/v2', retained);
+  if (!retainedValidation.valid) {
+    throw codedError(
+      'E_AUTHOR_PROVENANCE',
+      contractErrorMessage('retained author result', retainedValidation.errors),
+    );
+  }
+  const dumpCheck = checkSourceDumping({
+    authoredText: content,
+    sourceTexts: [
+      ...state.factBase.claims,
+      ...state.factBase.unresolvedClaims,
+    ].map(({ text }) => text),
+  });
+  state.qaErrors.push(
+    ...dumpCheck.issues.map((issue) => ({
+      code: issue.code,
+      message: issue.message,
+    })),
+  );
+
+  return {
+    artifact: resolvedArtifact,
+    result: retained,
+    resultPath: `source/author/${artifact.id}.json`,
+    content,
+    contentPath: `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,
+  };
+}
+
+async function readSkillFile(relativePath) {
+  return readFile(new URL(`../${relativePath}`, import.meta.url), 'utf8');
 }
 
 function contractErrorMessage(label, errors) {
@@ -678,49 +1080,185 @@ function contractErrorMessage(label, errors) {
     .join('; ')}`;
 }
 
-function createContentModel(recipe, artifact, slug, factBase) {
-  const facts = [
-    ...factBase.claims.map(({ text, sections }) => ({ text, sections })),
-    ...factBase.unresolvedClaims.map(({ text, sections }) => ({
-      text: `Needs confirmation: ${text}`,
-      sections,
-    })),
-  ];
-  const unknownSections = [
-    ...new Set(
-      facts
-        .flatMap(({ sections }) => sections ?? [])
-        .filter((section) => !recipe.requiredNarrative.includes(section)),
-    ),
-  ];
-  if (unknownSections.length > 0) {
-    throw codedError(
-      'E_CONTENT',
-      `Unknown narrative section tags: ${unknownSections.join(', ')}`,
-    );
+// renderArtifact validates an exact key set, so normalized v2 floor entries
+// must be narrowed before they reach it.
+function renderDescriptor(artifact) {
+  return {
+    id: artifact.id,
+    type: artifact.type,
+    template: artifact.template,
+    required: artifact.required,
+    origin: artifact.origin,
+  };
+}
+
+const LEAD_SECTION_IDS = ['overview', 'introduction', 'lead'];
+
+function markdownContentModel(artifact, slug, markdown, artifactLinks) {
+  const titleMatch = markdown.match(/^# (.+)$/m);
+  const title = titleMatch?.[1]?.trim() ?? humanize(artifact.id);
+  const headings = [...markdown.matchAll(/^## (.+)$/gm)];
+  if (headings.length === 0) {
+    return contentModel({
+      artifact,
+      slug,
+      title,
+      artifactLinks,
+      sections: [{ id: 'overview', title: 'Overview', content: markdown }],
+    });
   }
+
+  // Prose between the document title and the first `##` is authored content,
+  // so it is carried as a leading section rather than silently dropped.
+  const bodyStart = titleMatch ? titleMatch.index + titleMatch[0].length : 0;
+  const lead = markdown.slice(bodyStart, headings[0].index).trim();
+  const authoredIds = new Set(
+    headings.map((heading) => slugify(heading[1].trim())),
+  );
+  const sections = headings.map((heading, index) => ({
+    id: slugify(heading[1].trim()),
+    title: heading[1].trim(),
+    content: markdown
+      .slice(
+        heading.index + heading[0].length,
+        headings[index + 1]?.index ?? markdown.length,
+      )
+      .trim(),
+  }));
+  if (lead.length > 0) {
+    const leadId =
+      LEAD_SECTION_IDS.find((candidate) => !authoredIds.has(candidate)) ??
+      'lead';
+    sections.unshift({
+      id: leadId,
+      title: humanize(leadId),
+      content: lead,
+    });
+  }
+
+  return contentModel({
+    artifact,
+    slug,
+    title,
+    artifactLinks,
+    sections: disambiguateSectionIds(sections),
+  });
+}
+
+// A repeated heading is legitimate authoring, but duplicate anchors break
+// navigation, so later collisions get a deterministic suffix.
+function disambiguateSectionIds(sections) {
+  const used = new Map();
+  return sections.map((section) => {
+    const seen = used.get(section.id) ?? 0;
+    used.set(section.id, seen + 1);
+    if (seen === 0) return section;
+    let candidate = `${section.id}-${seen + 1}`;
+    let offset = seen + 1;
+    while (used.has(candidate)) {
+      offset += 1;
+      candidate = `${section.id}-${offset}`;
+    }
+    used.set(candidate, 1);
+    return { ...section, id: candidate };
+  });
+}
+
+function contentModel({ artifact, slug, title, artifactLinks, sections }) {
   return {
     artifactId: artifact.id,
     slug,
-    title: humanize(recipe.id),
-    description: `Approved-source ${humanize(recipe.id).toLowerCase()}.`,
+    title,
+    description: `Authored ${humanize(artifact.id).toLowerCase()}.`,
     eyebrow: 'Explainer Kit',
-    footer: 'Generated from the retained reconciled fact base.',
-    sections: recipe.requiredNarrative.map((id) => {
-      const sectionFacts = facts
-        .filter(({ sections }) => !sections || sections.includes(id))
-        .map(({ text }) => text);
-      return {
-        id,
-        title: humanize(id),
-        content:
-          sectionFacts.length > 0
-            ? sectionFacts.join(' ')
-            : 'No confirmed facts.',
-      };
-    }),
-    artifactLinks: [],
+    footer: 'Authored from the retained reconciled fact base.',
+    sections,
+    artifactLinks,
   };
+}
+
+function approvalArtifacts(state) {
+  return state.resolvedArtifacts.map((artifact) => ({
+    artifactId: artifact.id,
+    origin: artifact.origin,
+    ...(artifact.profileId && { profileId: artifact.profileId }),
+    authoring: artifact.authoring,
+    contentPath:
+      state.contentPaths.get(artifact.id) ??
+      `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,
+    authorResultPath:
+      state.authorResultPaths.find((path) =>
+        path.endsWith(`/${artifact.id}.json`),
+      ) ?? `source/author/${artifact.id}.json`,
+  }));
+}
+
+function expansionLinks(artifacts) {
+  return artifacts
+    .filter(({ origin }) => origin === 'expansion')
+    .map((artifact) => ({
+      id: artifact.id,
+      type: artifact.type,
+      label: humanize(artifact.id),
+      origin: 'expansion',
+    }));
+}
+
+function expansionProfile(recipe, profileId) {
+  return recipeExpansion(recipe).profiles.find(
+    (profile) => profile.profileId === profileId,
+  );
+}
+
+function resolvedArtifactFromApproval(recipe, persisted) {
+  if (persisted.origin === 'floor') {
+    const artifact = recipeFloor(recipe).find(
+      ({ id }) => id === persisted.artifactId,
+    );
+    if (!artifact) {
+      throw codedError(
+        'E_APPROVAL_RESUME',
+        `Approval references unknown floor artifact ${persisted.artifactId}.`,
+      );
+    }
+    return {
+      ...artifact,
+      origin: 'floor',
+      shell: artifact.authoring === 'html' ? artifact.template : undefined,
+    };
+  }
+  const profile = expansionProfile(recipe, persisted.profileId);
+  if (!profile) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      `Approval references unknown expansion profile ${persisted.profileId}.`,
+    );
+  }
+  return {
+    id: persisted.artifactId,
+    type: profile.type,
+    authoring: profile.authoring,
+    briefRef: profile.briefRef,
+    shell: profile.shell,
+    template:
+      profile.authoring === 'markdown'
+        ? templateForType(profile.type)
+        : profile.shell,
+    required: false,
+    origin: 'expansion',
+    profileId: profile.profileId,
+  };
+}
+
+function templateForType(type) {
+  return (
+    {
+      hub: 'house-style',
+      diagram: 'diagram-shell',
+      explainer: 'engineer-tour',
+      deck: 'deck-shell',
+    }[type] ?? 'house-style'
+  );
 }
 
 function validateRecipeSources(recipe, binding) {
@@ -781,33 +1319,6 @@ function factBaseMarkdown(factBase) {
   return `# Fact base\n\n## Confirmed claims\n\n${confirmed || '- None.'}\n\n## Unresolved claims\n\n${unresolved || '- None.'}\n`;
 }
 
-function contentMarkdown(model) {
-  return `# ${model.title}\n\n${model.sections
-    .map(({ title, content }) => `## ${title}\n\n${content}`)
-    .join('\n\n')}\n`;
-}
-
-function contentModelFromMarkdown(base, markdown) {
-  const title = markdown.match(/^# (.+)$/m)?.[1]?.trim();
-  const sections = [];
-  const headings = [...markdown.matchAll(/^## (.+)$/gm)];
-  for (const [index, heading] of headings.entries()) {
-    const start = heading.index + heading[0].length;
-    const end = headings[index + 1]?.index ?? markdown.length;
-    const sectionTitle = heading[1].trim();
-    sections.push({
-      id: slugify(sectionTitle),
-      title: sectionTitle,
-      content: markdown.slice(start, end).trim(),
-    });
-  }
-  return {
-    ...base,
-    ...(title && { title }),
-    sections,
-  };
-}
-
 function assertValidRequest(request) {
   const result = validateContract('run-request', request);
   if (!result.valid) {
@@ -831,12 +1342,18 @@ function resultFor(state, error) {
       : state.approval?.canResume === false
         ? 'incomplete'
         : 'built-not-durable',
+    ...(state.approval?.record?.marking && {
+      marking: state.approval.record.marking,
+    }),
     warnings: [...new Set(state.warnings)],
     discovery: state.discovery,
     ...(state.approval && {
       approval: {
         status: state.approval.status,
         path: state.approval.path,
+        ...(state.approval.record.marking && {
+          marking: state.approval.record.marking,
+        }),
       },
     }),
     ...(error && {

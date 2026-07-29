@@ -361,13 +361,18 @@ even when the reusable ladder is user-owned.
 }
 ```
 
+The example above is illustrative rather than a copy of the bundled ladder; its
+tiers are trimmed for readability.
+
 The bundled recommendation covers 13 Codex model/effort combinations: Luna and
 Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
-`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 12
-verified multi-family flat IDs across Composer, Claude, GPT, and Grok. An
-explicit mapping connects each flat ladder ID to a separate bracket-form
-frontmatter model; configuration and skills never derive or normalize either
-form.
+`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 16
+candidates across four tiers, drawn from a materialization catalogue of 18
+verified multi-family flat IDs spanning Composer, Claude (Sonnet, Opus, and
+Fable), GPT, and Grok; the two figures differ because some approved mappings
+stay materializable without being recommended. An explicit mapping connects
+each flat ladder ID to a separate bracket-form frontmatter model; configuration
+and skills never derive or normalize either form.
 
 The corresponding pinned Codex variant catalogue includes
 `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and

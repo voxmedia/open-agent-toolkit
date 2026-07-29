@@ -43,7 +43,7 @@ artifact archival, fresh clones, and worktree hand-offs.
 - Reviews ledger readers and writers now resolve known cells by header name,
   widen legacy rows safely, preserve unknown columns, and validate full SHAs.
 - User docs, generated provider views, and all five public packages shipped in
-  lockstep at `0.2.20`.
+  lockstep at `0.2.25`.
 
 ## Key Decisions
 
@@ -78,8 +78,8 @@ artifact archival, fresh clones, and worktree hand-offs.
   and one Minor wording issue. All four became a final repair phase, and one
   combined narrowed verification review resolved them with zero findings.
 - Release validation exposed a stale bundled public-package version snapshot
-  even though package manifests were correct. Regenerating the snapshot made
-  clean builds preserve the committed `0.2.20` release surface.
+  even though package manifests were correct. Regeneration and post-merge
+  reconciliation kept the final release surface lockstep at `0.2.25`.
 
 ## Tradeoffs Made
 

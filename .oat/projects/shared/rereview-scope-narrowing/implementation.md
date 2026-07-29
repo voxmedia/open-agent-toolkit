@@ -727,7 +727,7 @@ verified by the passing narrowed final review.
 - Local lifecycle, configured gate, project remote, and ad-hoc remote rails keep
   independent provenance and fail open safely.
 - Public packages and bundled provider assets are released in lockstep at
-  0.2.20.
+  0.2.25.
 
 **Behavioral changes (user-facing):**
 

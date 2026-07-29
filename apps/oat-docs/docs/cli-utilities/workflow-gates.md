@@ -717,8 +717,21 @@ Each liveness tick keeps stdout-idle time and also reports `processAlive` plus
 the latest metadata-only transcript activity as `lastActivityEvidence` when
 available. The probe performs bounded depth-two traversal and compares newest
 mtime plus total size with its spawn baseline. It never reads transcript
-contents, never extends a budget, and never changes pass/fail or receive
-eligibility.
+contents and never changes pass/fail or receive eligibility.
+
+When the hard timeout fires, OAT stops periodic liveness ticks, sends `SIGTERM`,
+schedules the existing `SIGKILL` fallback, and then starts one final transcript
+observation with the timeout timestamp. Once the child closes, result resolution
+waits no longer than the one-second observation grace and does not delay either
+signal. A final sample available before result resolution supersedes older
+in-flight periodic work; otherwise OAT retains the latest valid periodic
+evidence.
+
+On a normal child close, OAT waits within the same one-second grace only when a
+periodic transcript observation is already in flight. This preserves late
+evidence but can add up to one second to an otherwise successful execution. The
+one-second observation grace and five-second force-kill fallback are fixed
+safety bounds, not environment-tunable settings.
 
 Claude and Cursor evidence has `scope: project-dir`. Codex's date-sharded
 sessions directory is shared across the runtime, so its evidence has
@@ -726,7 +739,18 @@ sessions directory is shared across the runtime, so its evidence has
 attributable to this gate child).” Probe errors fail soft to process and stdout
 telemetry.
 
-Timeout and child-failure envelopes include the latest `activityEvidence`.
+Timeout and child-failure JSON envelopes include the latest `activityEvidence`.
+For human timeout and non-refusal child-failure output, OAT prints a second line
+with this shape:
+
+```text
+Activity evidence: <runtime> <project|ambient> transcript metadata <changed|did not change> since baseline; observed <milliseconds>ms ago; latest transcript change was <milliseconds>ms before observation.
+```
+
+When the evidence scope is ambient, the line ends with `This activity is not
+attributable to this gate child.` Structured refusals omit the extra human
+diagnostic because the refusal itself explains why execution stopped.
+
 Before spawn, the gate also writes a transient marker under the system temp
 directory at `oat-gate-runs/<runId>.json`; startup diagnostics print its path.
 The marker records target, runtime, project, review type/scope, start time,
