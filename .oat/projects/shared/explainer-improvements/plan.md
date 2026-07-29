@@ -1946,6 +1946,32 @@ another review cycle.
 
 ---
 
+### Task p05-t05: Normalize generated HTML whitespace
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/simple/runtime/`
+- Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/runtime/`
+- Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/runtime/`
+
+**Steps:**
+
+1. Add a RED renderer assertion proving empty template-token substitutions do
+   not leave trailing horizontal whitespace on generated HTML lines.
+2. Normalize rendered template output centrally without changing authored text
+   semantics or hand-editing retained golden evidence.
+3. Regenerate all three runtime fixtures through `UPDATE_GOLDEN_CASE`, then run
+   the complete golden conformance suite.
+4. Run formatting, `git diff --check`, repository tests, and release validation.
+5. Commit as `fix(p05-t05): normalize generated html whitespace`.
+
+**Acceptance:** All generated golden HTML is byte-deterministic and passes
+`git diff --check`; all three real-browser benchmarks remain green.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                               |
@@ -1988,9 +2014,9 @@ additional unrelated review cycles.
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
 - Phase 4: 14 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
-- Phase 5: 4 tasks — three benchmark cases and release closure
+- Phase 5: 5 tasks — three benchmark cases, release closure, and generated-output hygiene
 
-**Total: 59 tasks**
+**Total: 60 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

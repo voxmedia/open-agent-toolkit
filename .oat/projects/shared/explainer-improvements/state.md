@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t01
-oat_last_commit: 9d7d650172fe40e5ddd8590ac2ea3078cc700ed4
+oat_current_task: p05-t05
+oat_last_commit: e309ef7ec1b2d64518bf6e1a16b79528e916faae
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -265,7 +265,11 @@ Phase p04 implementation in progress
   repository tests, and release validation passed
 - ✓ Explicitly authorized Phase p04 closure review passed with zero findings
 - ✓ Phase p05 HiLL checkpoint approved by the operator
-- ⧗ Phase p05 begins at p05-t01
+- ✓ p05-t01 through p05-t04 implemented in four atomic commits
+- ✓ All three real-Chromium golden benchmarks passed without correction and
+  repository/docs/release gates passed
+- ⧗ Root `git diff --check` found trailing whitespace in nine generated HTML
+  fixtures; p05-t05 is bounded to fix the generator and regenerate evidence
 
 ## Blockers
 
@@ -273,4 +277,4 @@ None.
 
 ## Next Milestone
 
-Execute p05-t01 through p05-t04, then run the final project review.
+Execute p05-t05, rerun final gates, then run the final project review.

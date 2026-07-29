@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p05-t01
+oat_current_task_id: p05-t05
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----: | --------: |
-| p01   | complete    |     7 |       7/7 |
-| p02   | complete    |    13 |     13/13 |
-| p03   | complete    |    21 |     21/21 |
-| p04   | complete    |    14 |     14/14 |
-| p05   | in_progress |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | complete      |    14 |     14/14 |
+| p05   | fixes_pending |     5 |       4/5 |
 
-**Total:** 55/59 tasks completed
+**Total:** 59/60 tasks completed
 
 ---
 
@@ -269,12 +269,13 @@ oat_generated: false
 
 ## Phase 5: Golden conformance and release closure
 
-**Status:** pending
+**Status:** fixes_pending
 
-- [ ] p05-t01 — Pass the simple-project golden benchmark
-- [ ] p05-t02 — Pass the non-linear architecture golden benchmark
-- [ ] p05-t03 — Pass the archived project golden benchmark
-- [ ] p05-t04 — Close versions, documentation, and release validation
+- [x] p05-t01 — Pass the simple-project golden benchmark (`1d9b884e`)
+- [x] p05-t02 — Pass the non-linear architecture golden benchmark (`9d234d88`)
+- [x] p05-t03 — Pass the archived project golden benchmark (`b47a79a9`)
+- [x] p05-t04 — Close versions, documentation, and release validation (`e309ef7e`)
+- [ ] p05-t05 — Normalize generated HTML whitespace
 
 ---
 
@@ -920,7 +921,24 @@ oat_generated: false
 - Tasks: p05-t01 through p05-t04, sequentially
 - Scope: simple, non-linear, and archived-project golden conformance plus
   release closure
+- Outcome: `DONE`
+- Task commits: `1d9b884e` (p05-t01), `9d234d88` (p05-t02), `b47a79a9`
+  (p05-t03), and `e309ef7e` (p05-t04)
+- Verification: all three real-Chromium benchmarks passed without correction;
+  golden suite 20/20 and all repository/docs/release gates passed
+- Root verification: golden suite passed 20/20 but `git diff --check` found
+  trailing whitespace in nine generated HTML artifacts
 - Dispatch: scope=p05 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 31 — Phase p05 generated-output hygiene
+
+- Request: `explainer-improvements-p05-html-whitespace-20260729T153000Z`
+- Launch intent: persisted
+- Task: p05-t05
+- Scope: central renderer normalization and runtime regeneration for all three
+  golden cases
+- Root boundary: generated evidence must be regenerated, never hand-edited
+- Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
