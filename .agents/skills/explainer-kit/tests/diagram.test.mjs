@@ -83,6 +83,73 @@ input --> output`;
   assert.notEqual(lightSvg.html, darkSvg.html);
 });
 
+for (const [name, source, feature] of [
+  [
+    'branch',
+    `graph TD
+source --> accepted
+source --> rejected`,
+    'branch',
+  ],
+  [
+    'fan-in',
+    `graph TD
+primary --> merged
+secondary --> merged`,
+    'fan-in',
+  ],
+  [
+    'cycle',
+    `graph LR
+queued --> running
+running --> queued`,
+    'cycle',
+  ],
+]) {
+  test(`detects ${name} topology before inline rendering and preserves its graph for artistic rerouting`, () => {
+    const parsed = parseDiagram(source);
+    const rendered = renderDiagram(source);
+
+    assert.equal(parsed.valid, true);
+    assert.equal(parsed.inlineSupported, false);
+    assert.equal(parsed.topology.kind, 'non-linear');
+    assert.ok(parsed.topology.features.includes(feature));
+    assert.equal(rendered.degraded, true);
+    assert.equal(rendered.warnings[0].code, 'non-linear-diagram-reroute');
+    assert.doesNotMatch(rendered.html, /<svg\b/);
+    assert.equal(rendered.reroute.target, 'artistic');
+    assert.equal(rendered.reroute.source, source);
+    assert.deepEqual(rendered.reroute.graph.nodes, parsed.nodes);
+    assert.deepEqual(rendered.reroute.graph.edges, parsed.edges);
+  });
+}
+
+test('lays out a supported linear flow in graph order instead of declaration order', () => {
+  const source = `graph LR
+finish[Finish]
+start[Start]
+middle[Middle]
+start --> middle
+middle --> finish`;
+  const parsed = parseDiagram(source);
+  const rendered = renderDiagram(source);
+
+  assert.equal(parsed.inlineSupported, true);
+  assert.equal(parsed.topology.kind, 'linear');
+  assert.deepEqual(parsed.topology.order, ['start', 'middle', 'finish']);
+  assert.equal(rendered.degraded, false);
+  assert.ok(
+    rendered.html.indexOf('data-node="start"') <
+      rendered.html.indexOf('data-node="middle"'),
+  );
+  assert.ok(
+    rendered.html.indexOf('data-node="middle"') <
+      rendered.html.indexOf('data-node="finish"'),
+  );
+  assert.match(rendered.html, /data-from="start" data-to="middle"/);
+  assert.match(rendered.html, /data-from="middle" data-to="finish"/);
+});
+
 for (const [name, source] of [
   [
     'subgraphs',

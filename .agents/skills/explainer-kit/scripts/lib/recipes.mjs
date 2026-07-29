@@ -113,6 +113,28 @@ export function selectRecipeAuthoring(recipe, mode = 'artistic') {
   return selected;
 }
 
+export function resolveDiagramRenderingRoute(recipe, artifact, diagrams) {
+  if (
+    !recipe ||
+    typeof recipe !== 'object' ||
+    !artifact ||
+    typeof artifact !== 'object' ||
+    !Array.isArray(diagrams)
+  ) {
+    throw new TypeError(
+      'Diagram routing requires a recipe, artifact, and diagram analyses.',
+    );
+  }
+  const supported = diagrams.filter(({ valid }) => valid === true);
+  if (
+    supported.length === 0 ||
+    supported.every(({ inlineSupported }) => inlineSupported === true)
+  ) {
+    return 'inline';
+  }
+  return artifact.authoring === 'html' ? 'artistic' : 'reject';
+}
+
 export function recipeFloor(recipe) {
   if (recipe?.schemaVersion === RECIPE_SCHEMA_V2) {
     return structuredClone(recipe.floor);

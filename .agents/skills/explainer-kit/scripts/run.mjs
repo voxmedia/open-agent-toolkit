@@ -10,9 +10,11 @@ import {
   resolveContentApproval,
 } from './lib/content-approval.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
+import { parseDiagram } from './lib/diagram.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
 import { writeJsonAtomic, writeTextAtomic } from './lib/fs-safe.mjs';
 import { validateHtmlSafety } from './lib/html-safety.mjs';
+import { parseMarkdown } from './lib/markdown.mjs';
 import {
   auditArtifactSet,
   checkGuidelines,
@@ -26,6 +28,7 @@ import {
   recipeExpansion,
   recipeFloor,
   recipeRequiredNarrative,
+  resolveDiagramRenderingRoute,
   selectRecipeAuthoring,
   shouldStopDiscovery,
   validateContentModel,
@@ -1449,6 +1452,24 @@ async function authorArtifact(
       `Author result for ${artifact.id} must match its identity and ${artifact.authoring} path.`,
     );
   }
+  if (artifact.authoring === 'markdown') {
+    const diagrams = diagramAnalyses(content);
+    if (
+      diagrams.length > 0 &&
+      resolveDiagramRenderingRoute(state.recipe, artifact, diagrams) ===
+        'reject'
+    ) {
+      const features = [
+        ...new Set(
+          diagrams.flatMap(({ topology }) => topology?.features ?? []),
+        ),
+      ].join(', ');
+      throw codedError(
+        'E_DIAGRAM_TOPOLOGY',
+        `Artifact ${artifact.id} contains ${features || 'non-linear'} diagram topology that requires artistic composition; inline rendering is rejected.`,
+      );
+    }
+  }
   const retained = {
     ...structuredClone(result),
     provenance: resolveAuthorProvenance(result.provenance, trust, artifact.id),
@@ -1481,6 +1502,23 @@ async function authorArtifact(
     content,
     contentPath: `source/content/${artifact.id}.${artifact.authoring === 'markdown' ? 'md' : 'html'}`,
   };
+}
+
+function diagramAnalyses(markdown) {
+  const ast = parseMarkdown(markdown);
+  const diagrams = [];
+  const visit = (nodes) => {
+    for (const node of nodes) {
+      if (node.type === 'diagram') {
+        diagrams.push(parseDiagram(node.source));
+      }
+      if (Array.isArray(node.children)) {
+        visit(node.children);
+      }
+    }
+  };
+  visit(ast.children);
+  return diagrams;
 }
 
 async function readSkillFile(relativePath) {

@@ -892,6 +892,94 @@ test('render degradation warnings reach the result and the manifest', async () =
   }
 });
 
+test('rejects non-linear deterministic fallback diagrams before inline rendering', async () => {
+  const { request } = await fixture();
+  request.recapMode = 'deterministic-markdown';
+  const authoredIds = [];
+  const result = await runExplainer(request, {
+    author: async (authorRequest) => {
+      authoredIds.push(authorRequest.artifactId);
+      return authorResult(
+        authorRequest,
+        authorRequest.artifactId === 'architecture'
+          ? `# Architecture
+
+## As built architecture
+
+\`\`\`diagram
+graph TD
+router --> enrich
+router --> audit
+\`\`\`
+`
+          : deepDiveMarkdown(authorRequest.artifactId),
+      );
+    },
+    planSet: adaptivePlanSet(),
+    browserProbe: cleanProbe(),
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'failed');
+  assert.equal(result.errors[0].code, 'E_DIAGRAM_TOPOLOGY');
+  assert.match(result.errors[0].message, /branch.*artistic/i);
+  assert.deepEqual(authoredIds, ['project-recap', 'architecture']);
+  await assert.rejects(
+    access(
+      join(
+        result.runRoot,
+        `site/diagrams/${SLUG}/architecture/index.html`,
+      ),
+    ),
+    { code: 'ENOENT' },
+  );
+});
+
+test('preserves branch semantics through the artistic architecture composer', async () => {
+  const baseAuthor = richAuthor();
+  const author = async (request) =>
+    request.artifactId === 'architecture'
+      ? authorResult(
+          request,
+          artisticHtml(request, {
+            title: 'Atlas Index branching architecture',
+            description: 'The router preserves both downstream branches.',
+            nodes: [
+              '<g data-node="router" class="node"><rect x="60" y="40" width="240" height="72" rx="8"></rect><text x="84" y="82">Router</text></g>',
+              '<g data-node="enrich" class="node"><rect x="20" y="220" width="140" height="72" rx="8"></rect><text x="44" y="262">Enrich</text></g>',
+              '<g data-node="audit" class="node"><rect x="200" y="220" width="140" height="72" rx="8"></rect><text x="224" y="262">Audit</text></g>',
+              '<path class="edge" data-from="router" data-to="enrich" d="M 140 112 L 90 220"></path>',
+              '<path class="edge" data-from="router" data-to="audit" d="M 220 112 L 270 220"></path>',
+            ].join(''),
+            legend: '<span>Router</span><span>Enrich</span><span>Audit</span>',
+          }),
+        )
+      : baseAuthor(request);
+  const { result } = await richRun({ author });
+
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+  const architecture = await readFile(
+    join(result.runRoot, `site/diagrams/${SLUG}/architecture/index.html`),
+    'utf8',
+  );
+  for (const node of ['router', 'enrich', 'audit']) {
+    assert.match(architecture, new RegExp(`data-node="${node}"`));
+  }
+  assert.match(
+    architecture,
+    /data-from="router" data-to="enrich"|data-to="enrich" data-from="router"/,
+  );
+  assert.match(
+    architecture,
+    /data-from="router" data-to="audit"|data-to="audit" data-from="router"/,
+  );
+});
+
 test('a run without an injected probe warns rather than skipping silently', async () => {
   const { request } = await markdownFixture();
   const result = await runExplainer(request, {

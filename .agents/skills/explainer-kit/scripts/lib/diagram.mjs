@@ -68,11 +68,14 @@ export function parseDiagram(source) {
     return degraded('Diagram requires at least one node declaration or edge.');
   }
 
+  const topology = analyzeTopology([...nodes.values()], edges);
   return {
     valid: true,
     direction: headerMatch[1],
     nodes: [...nodes.values()],
     edges,
+    inlineSupported: topology.kind === 'linear',
+    topology,
     warnings: [],
   };
 }
@@ -86,14 +89,39 @@ export function renderDiagram(source, { theme } = {}) {
       degraded: true,
     };
   }
+  if (!parsed.inlineSupported) {
+    const features = parsed.topology.features.join(', ');
+    return {
+      html: `<div class="diagram-fallback" role="note"><p class="diagram-warning">${escapeHtml(`Non-linear diagram topology (${features}) requires artistic composition.`)}</p><pre><code>${escapeHtml(source)}</code></pre></div>`,
+      warnings: [
+        {
+          code: 'non-linear-diagram-reroute',
+          message: `Non-linear diagram topology (${features}) requires artistic composition.`,
+        },
+      ],
+      degraded: true,
+      reroute: {
+        target: 'artistic',
+        source,
+        graph: {
+          direction: parsed.direction,
+          nodes: structuredClone(parsed.nodes),
+          edges: structuredClone(parsed.edges),
+        },
+        topology: structuredClone(parsed.topology),
+      },
+    };
+  }
 
   const horizontal = parsed.direction === 'LR';
   const nodeWidth = 180;
   const nodeHeight = 72;
   const gap = 90;
   const margin = 50;
+  const nodeById = new Map(parsed.nodes.map((node) => [node.id, node]));
+  const orderedNodes = parsed.topology.order.map((id) => nodeById.get(id));
   const positions = new Map(
-    parsed.nodes.map((node, index) => [
+    orderedNodes.map((node, index) => [
       node.id,
       horizontal
         ? { x: margin + index * (nodeWidth + gap), y: margin }
@@ -102,14 +130,14 @@ export function renderDiagram(source, { theme } = {}) {
   );
   const width = horizontal
     ? margin * 2 +
-      parsed.nodes.length * nodeWidth +
-      (parsed.nodes.length - 1) * gap
+      orderedNodes.length * nodeWidth +
+      (orderedNodes.length - 1) * gap
     : margin * 2 + nodeWidth;
   const height = horizontal
     ? margin * 2 + nodeHeight
     : margin * 2 +
-      parsed.nodes.length * nodeHeight +
-      (parsed.nodes.length - 1) * gap;
+      orderedNodes.length * nodeHeight +
+      (orderedNodes.length - 1) * gap;
   const markerId = `diagram-arrow-${stableHash(source)}`;
   const mode = theme?.modes?.[theme.defaultMode];
   const panel = mode?.surface?.panel ?? '#ffffff';
@@ -126,7 +154,7 @@ export function renderDiagram(source, { theme } = {}) {
       }),
     )
     .join('');
-  const nodes = parsed.nodes
+  const nodes = orderedNodes
     .map((node) =>
       renderNode(node, positions.get(node.id), { nodeWidth, nodeHeight }),
     )
@@ -142,6 +170,109 @@ export function renderDiagram(source, { theme } = {}) {
     warnings: [],
     degraded: false,
   };
+}
+
+function analyzeTopology(nodes, edges) {
+  const nodeIds = nodes.map(({ id }) => id);
+  const incoming = new Map(nodeIds.map((id) => [id, []]));
+  const outgoing = new Map(nodeIds.map((id) => [id, []]));
+  for (const edge of edges) {
+    outgoing.get(edge.from).push(edge.to);
+    incoming.get(edge.to).push(edge.from);
+  }
+
+  const branchNodes = nodeIds.filter((id) => outgoing.get(id).length > 1);
+  const fanInNodes = nodeIds.filter((id) => incoming.get(id).length > 1);
+  const cycle = hasDirectedCycle(nodeIds, outgoing);
+  const connected = isWeaklyConnected(nodeIds, incoming, outgoing);
+  const features = [
+    ...(branchNodes.length > 0 ? ['branch'] : []),
+    ...(fanInNodes.length > 0 ? ['fan-in'] : []),
+    ...(cycle ? ['cycle'] : []),
+    ...(!connected ? ['disconnected'] : []),
+  ];
+  const order =
+    features.length === 0
+      ? linearOrder(nodeIds, incoming, outgoing)
+      : [];
+  if (features.length === 0 && order.length !== nodeIds.length) {
+    features.push('non-linear');
+  }
+
+  return {
+    kind: features.length === 0 ? 'linear' : 'non-linear',
+    features,
+    branchNodes,
+    fanInNodes,
+    cycle,
+    order: features.length === 0 ? order : [],
+  };
+}
+
+function hasDirectedCycle(nodeIds, outgoing) {
+  const visiting = new Set();
+  const visited = new Set();
+  const visit = (id) => {
+    if (visiting.has(id)) return true;
+    if (visited.has(id)) return false;
+    visiting.add(id);
+    for (const next of outgoing.get(id)) {
+      if (visit(next)) return true;
+    }
+    visiting.delete(id);
+    visited.add(id);
+    return false;
+  };
+  return nodeIds.some((id) => visit(id));
+}
+
+function isWeaklyConnected(nodeIds, incoming, outgoing) {
+  if (nodeIds.length <= 1) return true;
+  const seen = new Set();
+  const pending = [nodeIds[0]];
+  while (pending.length > 0) {
+    const id = pending.pop();
+    if (seen.has(id)) continue;
+    seen.add(id);
+    pending.push(...incoming.get(id), ...outgoing.get(id));
+  }
+  return seen.size === nodeIds.length;
+}
+
+function linearOrder(nodeIds, incoming, outgoing) {
+  if (nodeIds.length === 1 && incoming.get(nodeIds[0]).length === 0) {
+    return [...nodeIds];
+  }
+  const starts = nodeIds.filter(
+    (id) => incoming.get(id).length === 0 && outgoing.get(id).length === 1,
+  );
+  const ends = nodeIds.filter(
+    (id) => incoming.get(id).length === 1 && outgoing.get(id).length === 0,
+  );
+  const middleIsLinear = nodeIds
+    .filter((id) => !starts.includes(id) && !ends.includes(id))
+    .every(
+      (id) => incoming.get(id).length === 1 && outgoing.get(id).length === 1,
+    );
+  if (
+    starts.length !== 1 ||
+    ends.length !== 1 ||
+    !middleIsLinear ||
+    edgesFor(outgoing) !== nodeIds.length - 1
+  ) {
+    return [];
+  }
+  const order = [];
+  let current = starts[0];
+  while (current !== undefined && !order.includes(current)) {
+    order.push(current);
+    current = outgoing.get(current)[0];
+  }
+  return order;
+}
+
+function edgesFor(outgoing) {
+  return [...outgoing.values()].reduce((total, targets) => total + targets.length, 0);
 }
 
 function parseNode(value) {
