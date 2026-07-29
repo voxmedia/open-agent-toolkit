@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: prev1-t04
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 2     | 2/2       |
-| Phase 2    | completed   | 2     | 2/2       |
-| Phase 3    | completed   | 2     | 2/2       |
-| Revision 1 | in_progress | 4     | 3/4       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 2     | 2/2       |
+| Phase 2    | completed | 2     | 2/2       |
+| Phase 3    | completed | 2     | 2/2       |
+| Revision 1 | completed | 4     | 4/4       |
 
-**Total:** 9/10 tasks completed
+**Total:** 10/10 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -559,7 +559,21 @@ oat_generated: false
 
 ### Task prev1-t04: (review) Clean archived review whitespace
 
-**Status:** pending
+**Status:** completed
+**Commit:** `4e39077ad8deec33dd9dd4479c66d35b8e7911ed`
+
+**Outcome (required when completed):**
+
+- Removed eight Markdown hard-break trailing spaces from the archived prior
+  final review without changing its meaning.
+- Advanced summary freshness through `prev1-t04` and recorded both final-review
+  fixes as completed Revision 1 history.
+
+**Verification:**
+
+- Run: `git diff --check` for both the guarded review range and
+  `origin/main...HEAD`.
+- Result: both authoritative ranges pass.
 
 ---
 
