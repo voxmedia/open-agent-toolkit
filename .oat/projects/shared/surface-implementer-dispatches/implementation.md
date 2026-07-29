@@ -94,7 +94,7 @@ oat_generated: false
 
 ---
 
-## Phase 1: {Phase Name}
+## Phase 1: Enforce Selection Provenance
 
 **Status:** in_progress
 **Started:** 2026-07-28
@@ -118,10 +118,10 @@ oat_generated: false
 
 - {trade-offs or deviations discovered during implementation}
 
-### Task p01-t01: {Task Name}
+### Task p01-t01: Extend Dispatch Report V1 with classification and notices
 
-**Status:** completed / in_progress / pending / blocked
-**Commit:** {sha} (if completed)
+**Status:** in_progress
+**Commit:** -
 
 **Outcome (required when completed):**
 
@@ -146,7 +146,7 @@ oat_generated: false
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add classification inputs and managed-cap warnings
 
 **Status:** pending
 **Commit:** -
@@ -157,12 +157,38 @@ oat_generated: false
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: Expose Terminal Reviewer Constraints
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Add shared terminal-reviewer disclosures
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p02-t02: Update implementation guidance and documentation
+
+**Status:** pending
+**Commit:** -
+
+---
+
+## Phase 3: Release and Backlog Closeout
+
+**Status:** pending
+**Started:** -
+
+### Task p03-t01: Bump lockstep public package versions
+
+**Status:** pending
+**Commit:** -
+
+---
+
+### Task p03-t02: Archive the completed backlog item and run final verification
 
 **Status:** pending
 **Commit:** -
