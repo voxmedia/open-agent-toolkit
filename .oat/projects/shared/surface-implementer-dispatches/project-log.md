@@ -104,6 +104,10 @@ target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:1,medium:1,minor:0 exit=1 status=blocked artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T180703Z.md
 
+### 2026-07-29 · structural · oat gate review · final
+
+target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
