@@ -16,6 +16,7 @@
   - [Commit Conventions](contributing/commit-conventions.md) — Commit message patterns and traceability rules for cross-artifact linkage.
   - [CLI Design Principles](contributing/design-principles.md) — Cross-cutting design rules for CLI commands, UX, logging, safety, and verification.
   - [Contributing to OAT Docs](contributing/documentation.md) — Docs authoring contract for OAT: navigation, local workflow, and contributor guidance.
+  - [Verifying Explainer Kit](contributing/explainer-kit-verification.md) — Maintainer runbook for golden recap cases, real-Chromium evidence, fixture regeneration, and release validation.
   - [Hooks and Safety](contributing/hooks-and-safety.md) — Pre-commit hooks and safety contracts for provider sync mutations.
   - [Markdown Features](contributing/markdown-features.md) — Supported markdown patterns for OAT docs, including frontmatter, callouts, Mermaid, tabs, and code blocks.
   - [Writing Skills](contributing/skills.md) — Contributor guide to authoring OAT skills, including runtime contracts, governance, and where to start.
@@ -70,6 +71,7 @@
     - [State Machine](workflows/projects/state-machine.md) — Workflow and review state transitions across lifecycle phases and checkpoints.
   - Skills
     - [Skills](workflows/skills/index.md) — User-facing guide to OAT skill families, recommended entry points, and where contributor-facing skill authoring docs live.
+    - [Explainer Provider Integration](workflows/skills/explainer-kit-providers.md) — Provider-neutral planner, author, browser-session, and visual-critic contracts for Explainer Kit integrators.
     - [Explainer Kit](workflows/skills/explainer-kit.md) — Build destination-neutral visual explainers directly or from OAT project lifecycle artifacts.
     - [Repo Improve](workflows/skills/repo-improve.md) — Turn repository audits, maintainability reviews, and backlog sources into standalone external implementation plans.
   - [Wave Workflows](workflows/wave-workflows.md) — How OAT coordinates a corpus of external plans into waves while preserving project-lifecycle ownership and human judgment.

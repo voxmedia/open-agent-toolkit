@@ -43,6 +43,18 @@ bind one project source set. The adapter binds `plan.md`, `design.md`, and
 set for `program-recap`; direct core callers can use `engineer-tour` without
 adding an OAT dependency.
 
+### Project recap modes
+
+Project recaps default to `recapMode: artistic`. This mode uses the shared set
+plan and provider-neutral author seam to compose the required HTML hub,
+architecture view, and deck.
+
+`recapMode: deterministic-markdown` is an explicit fallback for callers that
+need deterministic output. It preserves the same planned artifact portfolio and
+cardinality rather than collapsing the recap to one file. The runtime never
+switches modes after an artistic author failure: changing modes requires a new
+request, and a failed artistic run remains failed.
+
 ### Expansion profiles
 
 Each recipe declares the expansion it licenses as a list of profiles. A profile
@@ -112,18 +124,6 @@ portfolio. Every run also requires one provider-neutral author callback, in
 **both** modes — there is no synthetic content model to fall back on. A run
 without one fails with `E_AUTHOR_REQUIRED`.
 
-In-process core callers supply `options.author`; core CLI callers use
-`--author-module`. The OAT adapter accepts either an in-process `author` or an
-`authorModulePath`, and rejects zero or two seams before it invokes the core.
-Callback and module paths are transient and never persisted in the run request.
-Validated results are retained under `source/author/` and authored content under
-`source/content/<artifact>.md` or `.html`; both are covered by the run's
-immutable hashes.
-
-The OAT adapter exposes planner and author callbacks, or their validated module
-entry points, as first-class seams. Executable callbacks and paths remain
-transient and never enter retained request contracts.
-
 The core invokes the author once per planned artifact with an
 `explainer-kit.author-request/v2` payload carrying the artifact identity and
 type, its authoring path, the inlined brief, the reconciled fact base, the
@@ -134,6 +134,11 @@ provider capabilities can enhance composition but are not required. The core
 accepts only a schema-valid `explainer-kit.author-result/v2` containing exactly one of
 `content.markdown` or `content.html` plus non-secret provenance. Authored
 content is still checked for excessive verbatim overlap with the fact base.
+
+Direct callbacks and module entry points are first-class but transient: they
+never enter retained request contracts. See
+[Explainer Provider Integration](explainer-kit-providers.md) for the exact
+planner, author, browser-session, and visual-critic boundaries.
 
 ### Planner-owned adaptive sets
 
@@ -174,14 +179,19 @@ distinguishes the two honestly: `explainer-kit.content-approval/v2` carries
 unattended run.
 
 Unattended project recaps also require a separate whole-set visual review.
-The browser provider captures each rendered artifact at exact 320, 768, and
-1440 viewports in real Chromium. The core validates those screenshots, binds
-them and their metrics by byte hash, and sends only that confined evidence to
-an independent critic. A `correct` disposition permits one bounded correction
-and exactly one final review; there is no second correction or third review.
-Missing or invalid evidence, a failed critic, or an unresolved correction ends
-as `built-needs-review`. Such output is retained for diagnosis but cannot
-become durable or publish.
+The adapter supplies a branded session created by the compatible core, which
+derives Chromium name and version from the launched browser rather than trusting
+caller metadata. The browser captures each rendered artifact at exact 320, 768,
+and 1440 viewports. The core validates decoded PNG dimensions and pixels, binds
+screenshots and metrics to one capture identity, and sends only that confined
+evidence to an independent critic. Fixture sessions are test-only and are
+rejected in unattended production.
+
+A `correct` disposition permits one bounded correction and exactly one final
+review; there is no second correction or third review. Missing, forged,
+cross-record-mismatched, or invalid evidence, a failed critic, or an unresolved
+correction ends as `built-needs-review`. Such output is retained for diagnosis
+but cannot become durable, finalized, archived, or published.
 
 The approval record is also the durable source of truth for the resolved
 artifact set. It records every floor and accepted expansion artifact for all
@@ -190,6 +200,26 @@ rehydrates with stable artifact IDs, paths, hub links, and hashes without
 re-invoking the author.
 
 Content approval never authorizes publishing.
+
+### Interactive resume security
+
+An incomplete interactive run returns an opaque `approval.resumeToken`. Keep it
+outside the package, then echo it as `reviewedSource.resumeToken` when resuming
+the same request. Only fixed-format authenticated `ekrt2` tokens are accepted.
+They bind the run ID, original canonical output root, exact retained
+`run-request.json` bytes, and all retained set-plan records.
+
+Before hydrating authored content or invoking planner, author, durability, or
+publish callbacks, resume also compares the complete canonical current request
+with the authenticated retained request. Changes to source binding, recipe,
+mode, theme, render strategy, privacy, public URL, durability, or publish
+destination fail with `E_APPROVAL_RESUME`. Intentionally non-retained art
+direction is omitted from the persisted request projection; executable provider
+seams are separately transient and never part of request equality.
+
+Every legacy `ekrt1` token is rejected. A paused run created with the legacy
+format must restart to receive an authenticated token; editing retained package
+state cannot opt it into compatibility.
 
 ## Warnings and QA severity
 
@@ -220,16 +250,18 @@ succeed in both modes.
 | `render-qa-deck-print-layout`            | A deck degrades incorrectly in print layout                     |
 | `render-qa-skipped-no-probe`             | Render QA was skipped because no browser probe was supplied     |
 
-When a caller supplies a browser probe, the stage serves the built site
+When a caller supplies a browser provider, the stage serves the built site
 directory, loads each artifact with animations disabled, and runs the
 layout-probe battery. Viewport clipping deliberately exempts content inside a
 horizontally scrollable ancestor, so intentionally paged deck slides are not
 reported as clipped while genuinely unreachable content still is. The core
-never launches a browser on its own. For ordinary runs, omitting the injected
-probe records `render-qa-skipped-no-probe` and continues. For unattended
-project recaps, however, the OAT adapter requires first-class browser-probe and
-visual-critic seams, and missing evidence fails closed as
-`built-needs-review`.
+never launches a browser implicitly; the caller creates and closes an explicit
+session, and the OAT adapter validates it before core invocation. For ordinary
+non-retaining runs, omitting a legacy probe records
+`render-qa-skipped-no-probe` and continues. Unattended project recaps require
+the branded browser session and visual critic described in
+[Explainer Provider Integration](explainer-kit-providers.md); missing evidence
+fails closed as `built-needs-review`.
 
 ## Curated styles and themes
 
