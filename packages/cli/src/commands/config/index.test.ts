@@ -1985,6 +1985,113 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it('uses a higher-precedence shared non-Fable override after user adoption in human output', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-opus-5-thinking-xhigh'],
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-fable-5-thinking-high'],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--user']);
+
+      expect(capture.info.join('\n')).not.toContain(
+        'terminal-reviewer-eligibility',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('uses a higher-precedence local Fable override after shared adoption in JSON output', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-fable-5-thinking-high'],
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-opus-5-thinking-xhigh'],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(
+        command,
+        ['adopt', 'dispatch-matrix', '--shared'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('claude-fable-5-thinking-high'),
+          },
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
     it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
       const root = await createRepoRoot();
       await writeFile(

@@ -49,6 +49,24 @@ function isFableTarget(target: string): boolean {
   return /(^|[-_.])fable($|[-_.])/i.test(target);
 }
 
+export function effectiveTerminalReviewerTarget(
+  provider: string,
+  target: unknown,
+  selectedValue: unknown,
+): string | null {
+  const routedTarget = candidateTarget(target);
+  if (routedTarget) {
+    return routedTarget;
+  }
+  if (
+    (provider === 'claude' || provider === 'cursor') &&
+    typeof selectedValue === 'string'
+  ) {
+    return selectedValue;
+  }
+  return null;
+}
+
 export function terminalReviewerNoticeForTarget(
   target: string | null | undefined,
   source: TerminalReviewerNoticeSource = 'runtime',

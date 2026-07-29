@@ -2278,6 +2278,23 @@ function applyDispatchMatrixRecommendation(
   };
 }
 
+async function effectiveTerminalReviewerNotices(
+  repoRoot: string,
+  userConfigDir: string,
+  dependencies: ConfigCommandDependencies,
+): Promise<DispatchNotice[]> {
+  const effectiveProviders = await getConfigValue(
+    repoRoot,
+    userConfigDir,
+    'workflow.dispatchCeiling.providers',
+    dependencies,
+    true,
+  );
+  return terminalReviewerNoticesForMatrix(
+    isRecord(effectiveProviders.value) ? effectiveProviders.value : null,
+  );
+}
+
 async function adoptDispatchMatrixRecommendation(
   repoRoot: string,
   userConfigDir: string,
@@ -2309,8 +2326,10 @@ async function adoptDispatchMatrixRecommendation(
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
-      notices: terminalReviewerNoticesForMatrix(
-        workflow.dispatchCeiling?.providers,
+      notices: await effectiveTerminalReviewerNotices(
+        repoRoot,
+        userConfigDir,
+        dependencies,
       ),
     };
   }
@@ -2335,8 +2354,10 @@ async function adoptDispatchMatrixRecommendation(
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
-      notices: terminalReviewerNoticesForMatrix(
-        workflow.dispatchCeiling?.providers,
+      notices: await effectiveTerminalReviewerNotices(
+        repoRoot,
+        userConfigDir,
+        dependencies,
       ),
     };
   }
@@ -2360,8 +2381,10 @@ async function adoptDispatchMatrixRecommendation(
     key: 'workflow.dispatchCeiling.providers',
     value: recommendation.version,
     source,
-    notices: terminalReviewerNoticesForMatrix(
-      workflow.dispatchCeiling?.providers,
+    notices: await effectiveTerminalReviewerNotices(
+      repoRoot,
+      userConfigDir,
+      dependencies,
     ),
   };
 }

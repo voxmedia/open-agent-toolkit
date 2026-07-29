@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  effectiveTerminalReviewerTarget,
   formatDispatchNotices,
   terminalReviewerNoticeForTarget,
   terminalReviewerNoticesForMatrix,
@@ -29,6 +30,29 @@ describe('terminal reviewer dispatch notices', () => {
       expect(terminalReviewerNoticeForTarget(target)).toBeNull();
     },
   );
+
+  it('extracts routed models and supported bare provider values', () => {
+    expect(
+      effectiveTerminalReviewerTarget(
+        'cursor',
+        { model: 'claude-fable-5-thinking-high' },
+        'ignored-selection',
+      ),
+    ).toBe('claude-fable-5-thinking-high');
+    expect(
+      effectiveTerminalReviewerTarget(
+        'cursor',
+        null,
+        'claude-fable-5-thinking-high',
+      ),
+    ).toBe('claude-fable-5-thinking-high');
+    expect(effectiveTerminalReviewerTarget('claude', null, 'fable')).toBe(
+      'fable',
+    );
+    expect(
+      effectiveTerminalReviewerTarget('codex', null, 'gpt-5.6-sol-high'),
+    ).toBeNull();
+  });
 
   it('derives the terminal reviewer from effective Frontier cells', () => {
     expect(

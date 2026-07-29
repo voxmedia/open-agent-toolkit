@@ -14,6 +14,7 @@ import {
 } from '@config/dispatch-ceiling-preset';
 import { normalizeDispatchMatrix } from '@config/dispatch-matrix';
 import {
+  effectiveTerminalReviewerTarget,
   formatDispatchNotices,
   terminalReviewerNoticeForTarget,
 } from '@config/dispatch-notices';
@@ -2232,10 +2233,11 @@ async function resolveDispatchCeiling(
   const terminalReviewerNotice =
     role === 'reviewer' || options.preflight === true
       ? terminalReviewerNoticeForTarget(
-          providerResolution.target?.model ??
-            (provider === 'claude'
-              ? providerResolution.selection.selectedValue
-              : null),
+          effectiveTerminalReviewerTarget(
+            provider,
+            providerResolution.target,
+            providerResolution.selection.selectedValue,
+          ),
         )
       : null;
   const notices = terminalReviewerNotice ? [terminalReviewerNotice] : [];

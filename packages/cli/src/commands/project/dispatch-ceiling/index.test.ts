@@ -1612,6 +1612,90 @@ describe('oat project dispatch-ceiling resolve', () => {
   });
 
   it.each([
+    ['human', false],
+    ['JSON', true],
+  ] as const)(
+    'discloses bare Cursor reviewer Fable targets in %s output with a non-Fable control',
+    async (_label, json) => {
+      for (const [target, expectedNotice] of [
+        ['claude-fable-5-thinking-high', true],
+        ['gpt-5.6-sol-high', false],
+      ] as const) {
+        const { root, home } = await setup();
+        await writeJson(join(root, '.oat', 'config.json'), {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: { cursor: target },
+            },
+          },
+        });
+
+        const { command, capture } = createHarness({ cwd: root, home });
+        await runCommand(
+          command,
+          ['--provider', 'cursor', '--role', 'reviewer'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain('claude-fable-5-thinking-high');
+        }
+        expect(process.exitCode).toBe(0);
+      }
+    },
+  );
+
+  it.each([
+    ['human', false],
+    ['JSON', true],
+  ] as const)(
+    'discloses bare Cursor tier-cell Fable targets during preflight in %s output with a non-Fable control',
+    async (_label, json) => {
+      for (const [target, expectedNotice] of [
+        ['claude-fable-5-thinking-high', true],
+        ['gpt-5.6-sol-high', false],
+      ] as const) {
+        const { root, home } = await setup();
+        await writeJson(join(root, '.oat', 'config.json'), {
+          version: 1,
+          workflow: {
+            dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+            dispatchCeiling: {
+              providers: {
+                cursor: { frontier: target },
+              },
+            },
+          },
+        });
+
+        const { command, capture } = createHarness({ cwd: root, home });
+        await runCommand(
+          command,
+          ['--provider', 'cursor', '--preflight'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain('claude-fable-5-thinking-high');
+        }
+      }
+    },
+  );
+
+  it.each([
     ['claude', 'high', 'opus'],
     ['cursor', 'frontier', 'custom-frontier-reviewer'],
   ] as const)(
