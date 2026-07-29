@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.initiative-catalog/v1",
+  "runId": "run-5b918074-fe4f-4dd9-90dd-4e4a1f90c9bc",
+  "slug": "explainer-authoring-redesign",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-29T16:00:00.000Z",
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "status": "built",
+      "renderedPath": "site/initiatives/explainer-authoring-redesign/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:e74a7a389e8cfcadba0dbba8788bc5702e161feac2c6a749d2fece6c5b379c21",
+      "url": "https://example.com/golden/initiatives/explainer-authoring-redesign/index.html"
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "status": "built",
+      "renderedPath": "site/diagrams/explainer-authoring-redesign/architecture/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:7121e20b7b38b3976ebc7931100e96f930bb61862d41ee316393ac9588d3dadb",
+      "url": "https://example.com/golden/diagrams/explainer-authoring-redesign/architecture/index.html"
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "status": "built",
+      "renderedPath": "site/decks/explainer-authoring-redesign/deck/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:4434f14e74846409f76372323f54303a55d323a86482016c0008a73cc855dd75",
+      "url": "https://example.com/golden/decks/explainer-authoring-redesign/deck/index.html"
+    }
+  ],
+  "sourceBacklinks": [
+    {
+      "sourceId": "archived-summary",
+      "url": "https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200"
+    }
+  ]
+}

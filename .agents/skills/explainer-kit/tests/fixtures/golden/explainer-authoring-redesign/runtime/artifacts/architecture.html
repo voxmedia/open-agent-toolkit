@@ -1,0 +1,241 @@
+<!doctype html>
+<!--
+  Neutral production shell. Worked content: ../examples/
+  TEMPLATE CONTRACT: THEME_CSS, TITLE, DESCRIPTION, DIAGRAM, LEGEND
+  DIAGRAM contains validated inline SVG children; external diagram runtimes are not allowed.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Explainer authoring redesign recap — architecture</title>
+    <meta name="description" content="The planner-owned system topology is retained as an artistic, inspectable graph." />
+    <style>
+      :root {
+        --canvas: hsl(210 20% 98%);
+        --panel: hsl(0 0% 100%);
+        --border: hsl(210 14% 80%);
+        --ink: hsl(215 24% 16%);
+        --muted: hsl(215 12% 38%);
+        --accent: hsl(215 28% 32%);
+        --sans: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+        --mono: ui-monospace, SFMono-Regular, Consolas, monospace;
+        /* AUTHOR EXTENSION REGION: resolved theme tokens */
+        
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: clamp(1rem, 4vw, 3rem);
+        background: var(--canvas);
+        color: var(--ink);
+        font-family: var(--sans);
+      }
+      main {
+        max-width: 80rem;
+        margin: auto;
+      }
+      header {
+        max-width: 55rem;
+        margin-block-end: 1.5rem;
+      }
+      h1 {
+        margin-block: 0 0.4rem;
+        font-size: clamp(2rem, 5vw, 3.5rem);
+        line-height: 1.1;
+        text-wrap: balance;
+      }
+      header p,
+      .diagram-hint {
+        color: var(--muted);
+      }
+      .diagram-shell {
+        position: relative;
+        min-width: 0;
+      }
+      .diagram-hint {
+        font: 0.75rem/1.4 var(--mono);
+      }
+      .diagram-viewport {
+        position: relative;
+        width: 100%;
+        min-height: min(65vh, 40rem);
+        overflow: auto;
+        border: 1px solid var(--border);
+        border-radius: 0.75rem;
+        background: var(--panel);
+        cursor: grab;
+      }
+      .diagram-viewport.is-panning {
+        cursor: grabbing;
+        user-select: none;
+      }
+      .diagram-canvas {
+        display: block;
+        width: 100%;
+        min-width: 42rem;
+        height: auto;
+        transform-origin: top left;
+      }
+      .diagram-canvas text {
+        fill: var(--ink);
+        font-family: var(--sans);
+      }
+      .diagram-canvas .node {
+        fill: var(--panel);
+        stroke: var(--accent);
+      }
+      .diagram-canvas .edge {
+        fill: none;
+        stroke: var(--muted);
+      }
+      .zoom-controls {
+        position: absolute;
+        z-index: 2;
+        inset: 0.6rem 0.6rem auto auto;
+        display: flex;
+        gap: 0.25rem;
+        padding: 0.25rem;
+        border: 1px solid var(--border);
+        border-radius: 0.5rem;
+        background: var(--panel);
+      }
+      .zoom-controls button {
+        min-width: 2rem;
+        min-height: 2rem;
+        border: 0;
+        background: transparent;
+        color: var(--ink);
+        cursor: pointer;
+      }
+      .legend {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        margin-block-start: 1rem;
+        color: var(--muted);
+        font: 0.8rem/1.5 var(--mono);
+      }
+      @media (max-width: 45rem) {
+        .diagram-canvas {
+          min-width: 34rem;
+        }
+      }
+    </style>
+  </head>
+  <body data-explainer-shell="diagram-shell">
+    <main>
+      <header>
+        <h1 id="diagram-title" data-shell-anchor="diagram-title">Explainer authoring redesign recap — architecture</h1>
+        <p id="diagram-description" data-shell-anchor="diagram-description">
+          The planner-owned system topology is retained as an artistic, inspectable graph.
+        </p>
+      </header>
+      <section
+        class="diagram-shell"
+        data-shell-anchor="diagram-shell"
+        aria-labelledby="diagram-title"
+      >
+        <p class="diagram-hint">
+          Use the controls or Ctrl/Command + wheel to zoom; drag to pan.
+        </p>
+        <div
+          class="zoom-controls"
+          data-shell-anchor="zoom-controls"
+          aria-label="Diagram zoom"
+        >
+          <button type="button" data-zoom="in" aria-label="Zoom in">+</button>
+          <button type="button" data-zoom="out" aria-label="Zoom out">−</button>
+          <button type="button" data-zoom="reset" aria-label="Reset zoom">
+            ↺
+          </button>
+        </div>
+        <div class="diagram-viewport" data-shell-anchor="diagram-viewport">
+          <svg
+            class="diagram-canvas"
+            data-shell-anchor="diagram-canvas"
+            viewBox="0 0 1200 720"
+            role="img"
+            aria-labelledby="diagram-title diagram-description"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <!-- AUTHOR EXTENSION REGION: accessible inline SVG diagram -->
+            <g id="as-built-architecture"><svg data-direction="TD"><g data-from="fact-base" data-to="recipe-policy" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 160 128 L 420 128" stroke-width="3"></path></g><g data-from="recipe-policy" data-to="narrative-author" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 420 128 L 680 128" stroke-width="3"></path></g><g data-from="recipe-policy" data-to="artistic-author" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 420 128 L 160 338" stroke-width="3"></path></g><g data-from="narrative-author" data-to="render" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 680 128 L 420 338" stroke-width="3"></path></g><g data-from="artistic-author" data-to="render" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 160 338 L 420 338" stroke-width="3"></path></g><g data-from="render" data-to="browser-review" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 420 338 L 680 338" stroke-width="3"></path></g><g data-from="browser-review" data-to="publish" data-edge-kind="arrow" data-edge-label=""><path class="edge" d="M 680 338 L 160 548" stroke-width="3"></path></g><g data-node="fact-base" data-node-label="fact-base" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="80" y="80" width="160" height="96" rx="12"></rect><text x="96" y="134">fact-base</text></g><g data-node="recipe-policy" data-node-label="recipe-policy" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="340" y="80" width="160" height="96" rx="12"></rect><text x="356" y="134">recipe-policy</text></g><g data-node="narrative-author" data-node-label="narrative-author" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="600" y="80" width="160" height="96" rx="12"></rect><text x="616" y="134">narrative-author</text></g><g data-node="artistic-author" data-node-label="artistic-author" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="80" y="290" width="160" height="96" rx="12"></rect><text x="96" y="344">artistic-author</text></g><g data-node="render" data-node-label="render" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="340" y="290" width="160" height="96" rx="12"></rect><text x="356" y="344">render</text></g><g data-node="browser-review" data-node-label="browser-review" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="600" y="290" width="160" height="96" rx="12"></rect><text x="616" y="344">browser-review</text></g><g data-node="publish" data-node-label="publish" data-node-shape="rectangle" data-node-explicit="false"><rect class="node" x="80" y="500" width="160" height="96" rx="12"></rect><text x="96" y="554">publish</text></g></svg></g>
+            <!-- END AUTHOR EXTENSION REGION -->
+          </svg>
+        </div>
+        <div
+          class="legend"
+          data-shell-anchor="diagram-legend"
+          aria-label="Diagram legend"
+        >
+          <!-- AUTHOR EXTENSION REGION: optional visual legend -->
+          <p class="callout"><strong>golden recap</strong> benchmark status: <strong>passed</strong>; required portfolio: <strong>3 artifacts</strong>.</p><div class="cards"><article class="card" data-claim-id="A-1" data-source-id="archived-summary"><strong>A-1</strong><p>Recipe policy selects the path through expansion profiles; the author does not.</p><a href="https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200">Pinned source</a></article><article class="card" data-claim-id="A-2" data-source-id="archived-summary"><strong>A-2</strong><p>Explainer authoring is two-path with a caller-owned author seam.</p><a href="https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200">Pinned source</a></article><article class="card" data-claim-id="A-3" data-source-id="archived-summary"><strong>A-3</strong><p>No gate could see the styling surface.</p><a href="https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200">Pinned source</a></article><article class="card" data-claim-id="A-4" data-source-id="archived-summary"><strong>A-4</strong><p>Final gates: core 231, adapter 59, release 44 (1 env-gated skip), smoke 129, plus `release:validate`, `release:check-versions`, `lint`, and `type-check`.</p><a href="https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200">Pinned source</a></article></div>
+          <!-- END AUTHOR EXTENSION REGION -->
+        </div>
+      </section>
+    </main>
+    <script>
+      (() => {
+        const viewport = document.querySelector('.diagram-viewport');
+        const canvas = document.querySelector('.diagram-canvas');
+        let zoom = 1;
+        let dragging = false;
+        let originX = 0;
+        let originY = 0;
+        let scrollX = 0;
+        let scrollY = 0;
+        const apply = () => {
+          canvas.style.transform = `scale(${zoom})`;
+        };
+        document.querySelectorAll('[data-zoom]').forEach((button) => {
+          button.addEventListener('click', () => {
+            const action = button.dataset.zoom;
+            zoom =
+              action === 'reset'
+                ? 1
+                : Math.min(
+                    3,
+                    Math.max(0.5, zoom * (action === 'in' ? 1.2 : 0.8)),
+                  );
+            apply();
+          });
+        });
+        viewport.addEventListener(
+          'wheel',
+          (event) => {
+            if (!event.ctrlKey && !event.metaKey) return;
+            event.preventDefault();
+            zoom = Math.min(
+              3,
+              Math.max(0.5, zoom * (event.deltaY < 0 ? 1.1 : 0.9)),
+            );
+            apply();
+          },
+          { passive: false },
+        );
+        viewport.addEventListener('pointerdown', (event) => {
+          dragging = true;
+          originX = event.clientX;
+          originY = event.clientY;
+          scrollX = viewport.scrollLeft;
+          scrollY = viewport.scrollTop;
+          viewport.classList.add('is-panning');
+          viewport.setPointerCapture(event.pointerId);
+        });
+        viewport.addEventListener('pointermove', (event) => {
+          if (!dragging) return;
+          viewport.scrollLeft = scrollX - (event.clientX - originX);
+          viewport.scrollTop = scrollY - (event.clientY - originY);
+        });
+        viewport.addEventListener('pointerup', () => {
+          dragging = false;
+          viewport.classList.remove('is-panning');
+        });
+      })();
+    </script>
+  </body>
+</html>

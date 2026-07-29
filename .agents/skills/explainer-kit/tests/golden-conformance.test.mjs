@@ -1178,6 +1178,14 @@ test(
   },
 );
 
+test(
+  'explainer-authoring-redesign golden benchmark rebuilds from archive-only evidence',
+  { timeout: 120_000 },
+  async () => {
+    await runGoldenBenchmark('explainer-authoring-redesign');
+  },
+);
+
 test('loads all three portable golden fixture descriptors', async () => {
   const fixtures = await Promise.all(
     caseIds.map((caseId) => loadGoldenFixture(caseId)),

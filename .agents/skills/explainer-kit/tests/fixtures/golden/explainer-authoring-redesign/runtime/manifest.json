@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "outcome": "built-not-durable",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:e75a6c39fa93450f8b13e12151915f0b698552bb9823373e5023606cbec3dfe3",
+    "inputHashes": {
+      "inputs/archived-summary": "sha256:9fa802f45b3939ff717f2e61aafc6bfea69f4cab5de3876368fa9299708756b5"
+    },
+    "backlinks": [
+      {
+        "sourceId": "archived-summary",
+        "url": "https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/evidence/source-record.json#L1-L200"
+      }
+    ],
+    "authorResultPaths": [
+      "source/author/project-recap.json",
+      "source/author/architecture.json",
+      "source/author/deck.json"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "renderedPath": "site/initiatives/explainer-authoring-redesign/index.html",
+      "hash": "sha256:e74a7a389e8cfcadba0dbba8788bc5702e161feac2c6a749d2fece6c5b379c21",
+      "status": "built"
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "renderedPath": "site/diagrams/explainer-authoring-redesign/architecture/index.html",
+      "hash": "sha256:7121e20b7b38b3976ebc7931100e96f930bb61862d41ee316393ac9588d3dadb",
+      "status": "built"
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "renderedPath": "site/decks/explainer-authoring-redesign/deck/index.html",
+      "hash": "sha256:4434f14e74846409f76372323f54303a55d323a86482016c0008a73cc855dd75",
+      "status": "built"
+    }
+  ]
+}

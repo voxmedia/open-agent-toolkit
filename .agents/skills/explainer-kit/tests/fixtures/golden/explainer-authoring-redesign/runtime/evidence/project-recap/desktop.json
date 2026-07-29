@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "explainer-kit.browser-evidence/v1",
+  "artifactId": "project-recap",
+  "viewport": "desktop",
+  "viewportSize": {
+    "width": 1440,
+    "height": 900
+  },
+  "scenario": "default",
+  "capture": {
+    "format": "png",
+    "fullPage": false,
+    "reducedMotion": "reduce",
+    "animationsDisabled": true
+  },
+  "screenshotPath": "qa/browser/project-recap/desktop.png",
+  "metrics": {
+    "pageOverflowX": false,
+    "clippedX": [],
+    "viewportClipped": [],
+    "unreadableHeadings": [],
+    "animationsDisabled": true,
+    "reducedMotion": true,
+    "deckLayout": null,
+    "themeToggle": null,
+    "keyboard": {
+      "tab": true
+    }
+  }
+}

@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "explainer-kit.visual-review-result/v1",
+  "reviewId": "explainer-authoring-redesign-golden-review",
+  "requestId": "visual-review-e1addfdaba847edcb2d633eb515862c59f0622ae163e1433560473b08524cf02",
+  "requestHash": "sha256:e1addfdaba847edcb2d633eb515862c59f0622ae163e1433560473b08524cf02",
+  "reviewedAt": "2026-07-29T16:00:00.000Z",
+  "disposition": "pass",
+  "artifactIds": ["project-recap", "architecture", "deck"],
+  "findings": []
+}
