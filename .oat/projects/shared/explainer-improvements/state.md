@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t20
-oat_last_commit: acdc81092ebeb37992997a1fabccaa6b49e298ed
+oat_current_task: p04-t01
+oat_last_commit: 8317ed30f02b6aac567db1975c6f8bbc2e3b9b93
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 review remediation attempt 2 of 3 pending
+Phase p03 remediation re-review attempt 2 of 3 pending
 
 ## Artifacts
 
@@ -177,6 +177,12 @@ Phase p03 review remediation attempt 2 of 3 pending
 - ✓ All four focused task gates passed
 - ⧗ Expanded Phase p03 verification passed 383/385; two stale rebuildability
   assertions are bounded as p03-t20
+- ✓ p03-t20 committed and rebuildability passed 4/4
+- ✓ Expanded Phase p03 union passed 385/385
+- ✓ CLI validation passed 192/192 and smoke tests passed 7/7
+- ✓ Repository check, lint, format, type-check, build, full test, and release
+  validation gates passed
+- ⧗ Fresh narrowed Phase p03 re-review attempt 2/3 is ready to launch
 
 ## Blockers
 
@@ -184,5 +190,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t20 within remediation attempt 2/3, resume root verification, and
-perform a fresh narrowed Phase p03 re-review.
+Run the fresh narrowed Phase p03 re-review. If it passes, close Phase p03 and
+continue directly to p04-t01.

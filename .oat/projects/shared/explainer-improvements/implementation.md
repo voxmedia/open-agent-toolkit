@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t20
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    20 |     19/20 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | review_pending |    20 |     20/20 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 39/47 tasks completed
+**Total:** 40/47 tasks completed
 
 ---
 
@@ -175,7 +175,7 @@ oat_generated: false
 - [x] p03-t17 — Share one canonical recap package-coverage contract (`f0c3543e`)
 - [x] p03-t18 — Complete the review-gate failure matrix (`eea0172f`)
 - [x] p03-t19 — Align explainer and public release versions (`acdc8109`)
-- [ ] p03-t20 — Align rebuildability with the canonical coverage release
+- [x] p03-t20 — Align rebuildability with the canonical coverage release (`8317ed30`)
 
 ### Phase Implementation Summary
 
@@ -235,6 +235,9 @@ oat_generated: false
 - p03-t16 through p03-t19 are committed. Focused verification passed; the
   expanded Phase p03 union passed 383/385 and exposed two stale rebuildability
   assertions, now bounded as p03-t20 before re-review.
+- p03-t20 aligned the rebuildability fixture with the released core and
+  mode-aware coverage contract. The expanded Phase p03 union and all
+  repository, smoke, and release gates pass.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -522,7 +525,25 @@ oat_generated: false
   union stopped at 383/385 on two stale rebuildability assertions
 - Follow-up boundary: p03-t20 aligns the core version and supplies verified
   unattended mode to the shared package-coverage contract
+- p03-t20 commit: `8317ed30`
+- Final verification: rebuildability 4/4, Phase p03 385/385, CLI validation
+  192/192, smoke 7/7, and check, lint, format, type-check, build, full test, and
+  release validation passed
+- Verification concern: one transient timeout passed both isolated and complete
+  retry and did not reproduce
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 12 — Phase p03 remediation re-review attempt 2
+
+- Request: `explainer-improvements-p03-review-r2-20260729T011000Z`
+- Launch intent: persisted
+- Review-remediation attempt: 2/3
+- Base: `16395d2cdc22426f943b5c2fb9a87c81eed83490`
+- Reviewed head: `8317ed30f02b6aac567db1975c6f8bbc2e3b9b93`
+- Source artifact: `reviews/20260728-p03-code-review-r1.md`
+- Planned artifact: `reviews/20260728-p03-code-review-r2.md`
+- Scope: C1-R1, I3-R1, M1-R1, and p03-t16 through p03-t20
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
