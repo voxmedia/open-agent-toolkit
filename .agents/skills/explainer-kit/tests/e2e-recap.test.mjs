@@ -549,6 +549,62 @@ test('a rich recap ships with an empty warning set', async () => {
   );
 });
 
+test('writes a manifest-derived initiative catalog with absolute artifact and source URLs', async () => {
+  const { factBasePath, request } = await fixture();
+  request.publicBaseUrl = 'https://cdn.example.com/published/';
+  const suppliedFactBase = await readJson(factBasePath);
+  Object.assign(suppliedFactBase.sources[0], {
+    repository: 'acme/atlas-index',
+    revision: '0123456789abcdef0123456789abcdef01234567',
+    path: 'docs/atlas index/implementation.md',
+    lineRange: { start: 1, end: 104 },
+  });
+  await writeFile(
+    factBasePath,
+    `${JSON.stringify(suppliedFactBase, null, 2)}\n`,
+  );
+
+  const result = await runExplainer(request, {
+    author: richAuthor(),
+    planSet: adaptivePlanSet(),
+    browserProbe: cleanProbe(),
+    visualCritic: passingVisualCritic,
+    now: () => NOW,
+  });
+  assert.equal(
+    result.outcome,
+    'built-not-durable',
+    JSON.stringify(result.errors),
+  );
+
+  const manifest = await readJson(result.manifestPath);
+  const catalog = await readJson(
+    join(
+      result.runRoot,
+      `site/initiatives/${SLUG}/catalog.json`,
+    ),
+  );
+  assert.deepEqual(
+    catalog.artifacts.map(({ id, type, hash }) => ({ id, type, hash })),
+    manifest.artifacts.map(({ id, type, hash }) => ({ id, type, hash })),
+  );
+  assert.equal(
+    catalog.artifacts.every(
+      ({ url }) =>
+        new URL(url).origin === 'https://cdn.example.com' &&
+        url.startsWith('https://cdn.example.com/published/'),
+    ),
+    true,
+  );
+  assert.deepEqual(catalog.sourceBacklinks, manifest.source.backlinks);
+  assert.deepEqual(catalog.sourceBacklinks, [
+    {
+      sourceId: 'atlas-index-project',
+      url: 'https://github.com/acme/atlas-index/blob/0123456789abcdef0123456789abcdef01234567/docs/atlas%20index/implementation.md#L1-L104',
+    },
+  ]);
+});
+
 test('source-backed optional artifacts get distinct identities and retained paths', async () => {
   const { result } = await richRun({
     planSet: adaptivePlanSet([

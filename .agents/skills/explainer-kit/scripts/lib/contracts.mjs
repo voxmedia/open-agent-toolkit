@@ -918,10 +918,24 @@ function validateCrossRecord(kind, value, context, errors) {
   ) {
     const expected = new Map();
     for (const artifact of context.manifest.artifacts ?? []) {
-      if (isObject(artifact) && typeof artifact.renderedPath === 'string') {
+      if (
+        isObject(artifact) &&
+        artifact.status === 'built' &&
+        typeof artifact.renderedPath === 'string'
+      ) {
         expected.set(artifact.renderedPath, artifact.hash);
       }
     }
+    if (
+      isObject(context.catalogArtifact) &&
+      typeof context.catalogArtifact.relativePath === 'string'
+    ) {
+      expected.set(
+        context.catalogArtifact.relativePath,
+        context.catalogArtifact.hash,
+      );
+    }
+    const received = new Set();
     for (const artifact of value.artifacts) {
       if (
         isObject(artifact) &&
@@ -934,6 +948,26 @@ function validateCrossRecord(kind, value, context, errors) {
           'Publish receipt artifact does not match the manifest.',
         );
       }
+      if (received.has(artifact?.relativePath)) {
+        add(
+          errors,
+          '$.artifacts',
+          'receipt-artifact-parity',
+          'Publish receipt artifact paths must be unique.',
+        );
+      }
+      received.add(artifact?.relativePath);
+    }
+    if (
+      received.size !== expected.size ||
+      [...expected.keys()].some((path) => !received.has(path))
+    ) {
+      add(
+        errors,
+        '$.artifacts',
+        'receipt-artifact-parity',
+        'Publish receipt must exactly cover every manifest artifact and the generated catalog.',
+      );
     }
   }
 }

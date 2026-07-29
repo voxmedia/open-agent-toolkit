@@ -12,6 +12,12 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve, sep } from 'node:path';
 import { promisify } from 'node:util';
 
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+  serializeInitiativeCatalog,
+  validateInitiativeCatalog,
+} from './catalog.mjs';
 import { validateContract } from './contracts.mjs';
 
 const execFile = promisify(execFileCallback);
@@ -131,15 +137,43 @@ export async function publishS3Static(request, dependencies = {}) {
     randomBytes,
   );
   const sentinelTargetPath = targetPath(sentinelRelativePath, roots);
+  const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
+  const catalogValidation = validateInitiativeCatalog(catalog, manifest);
+  if (!catalogValidation.valid) {
+    throw publishError(
+      'E_PUBLISH_INPUT',
+      `Invalid initiative catalog: ${catalogValidation.errors[0].message}`,
+    );
+  }
+  const catalogBody = Buffer.from(serializeInitiativeCatalog(catalog));
+  const catalogManifestPath = initiativeCatalogPath(manifest.slug);
+  const catalogPublishPath = catalogManifestPath.slice('site/'.length);
+  if (artifacts.some(({ publishPath }) => publishPath === catalogPublishPath)) {
+    throw publishError(
+      'E_PUBLISH_INPUT',
+      `Generated catalog path collides with a manifest artifact: ${catalogManifestPath}`,
+    );
+  }
   const sentinelDirectory = await mkdtemp(
     join(tmpdir(), 'explainer-sentinel-'),
   );
   const sentinelBodyPath = join(sentinelDirectory, 'sentinel.txt');
+  const catalogBodyPath = join(sentinelDirectory, 'catalog.json');
+  const catalogArtifact = {
+    manifestPath: catalogManifestPath,
+    publishPath: catalogPublishPath,
+    filePath: catalogBodyPath,
+    hash: fileHash(catalogBody),
+    contentType: 'application/json',
+    cacheControl: 'public, max-age=300',
+  };
+  const publicationArtifacts = [...artifacts, catalogArtifact];
   let sentinelUploaded = false;
   let sentinelDeleted = false;
 
   try {
     await writeFile(sentinelBodyPath, SENTINEL_BODY, 'utf8');
+    await writeFile(catalogBodyPath, catalogBody);
     await runAws(
       command,
       putObjectArgs({
@@ -178,7 +212,7 @@ export async function publishS3Static(request, dependencies = {}) {
     sentinelDeleted = true;
 
     const receiptArtifacts = [];
-    for (const artifact of artifacts) {
+    for (const artifact of publicationArtifacts) {
       const target = targetPath(artifact.publishPath, roots);
       const metadata = await readExistingMetadata(
         command,
@@ -251,6 +285,10 @@ export async function publishS3Static(request, dependencies = {}) {
     };
     const receiptValidation = validateContract('publish-receipt', receipt, {
       manifest,
+      catalogArtifact: {
+        relativePath: catalogArtifact.manifestPath,
+        hash: catalogArtifact.hash,
+      },
     });
     if (!receiptValidation.valid) {
       throw publishError(

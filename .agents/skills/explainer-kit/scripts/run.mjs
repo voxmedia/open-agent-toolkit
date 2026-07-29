@@ -9,6 +9,10 @@ import {
   readContentApproval,
   resolveContentApproval,
 } from './lib/content-approval.mjs';
+import {
+  catalogFromManifest,
+  initiativeCatalogPath,
+} from './lib/catalog.mjs';
 import { canonicalHash, validateContract } from './lib/contracts.mjs';
 import { parseDiagram } from './lib/diagram.mjs';
 import { processFactBase } from './lib/fact-base.mjs';
@@ -218,8 +222,14 @@ export async function runExplainer(request, options = {}) {
       return resultFor(state);
     }
 
-    await executeDurabilityAndPublish(state, options, now);
-    await persistManifest(state, now());
+    const manifestFinalized = await executeDurabilityAndPublish(
+      state,
+      options,
+      now,
+    );
+    if (!manifestFinalized) {
+      await persistManifest(state, now());
+    }
     return resultFor(state);
   } catch (error) {
     if (state.theme && state.factBase) {
@@ -1128,7 +1138,7 @@ async function executeDurabilityAndPublish(state, options, now) {
   if (strategy === 'none') {
     await updateBuildRecord(state.run, { id: 'durability', status: 'skipped' });
     await updateBuildRecord(state.run, { id: 'publish', status: 'skipped' });
-    return;
+    return false;
   }
 
   if (strategy === 'commit') {
@@ -1153,30 +1163,44 @@ async function executeDurabilityAndPublish(state, options, now) {
       ],
     });
     await updateBuildRecord(state.run, { id: 'publish', status: 'skipped' });
-    return;
+    return false;
   }
 
   await updateBuildRecord(state.run, { id: 'durability', status: 'skipped' });
   await updateBuildRecord(state.run, { id: 'publish', status: 'running' });
-  await persistManifest(state, now());
   if (typeof options.publish !== 'function') {
     throw codedError(
       'E_PUBLISH',
       'Publish durability was requested without an explicit publisher callback.',
     );
   }
-  await options.publish({
-    request: structuredClone(state.run.request.durability.publish),
-    runRoot: state.run.runRoot,
-    manifestPath: state.run.manifestPath,
-  });
   await updateBuildRecord(state.run, {
     id: 'publish',
     status: 'warned',
     warnings: [
-      'Publishing completed; verified receipt evidence must be recorded separately.',
+      'Publishing requires separately retained verified receipt evidence.',
     ],
   });
+  await persistManifest(state, now());
+  try {
+    await options.publish({
+      request: structuredClone(state.run.request.durability.publish),
+      runRoot: state.run.runRoot,
+      manifestPath: state.run.manifestPath,
+    });
+  } catch (error) {
+    await updateBuildRecord(state.run, {
+      id: 'publish',
+      status: 'failed',
+      error: {
+        code: error.code ?? 'E_PUBLISH',
+        message: safeMessage(error),
+        recovery: ['Correct the publish failure and start a new run.'],
+      },
+    });
+    throw error;
+  }
+  return true;
 }
 
 async function persistManifest(state, createdAt) {
@@ -1188,6 +1212,16 @@ async function persistManifest(state, createdAt) {
     await immutableHashesFor(state),
   );
   await writeManifestAtomic(state.run, manifest);
+  const publicBaseUrl =
+    state.run.request.publicBaseUrl ??
+    state.run.request.durability?.publish?.publicBaseUrl;
+  if (publicBaseUrl) {
+    await writeJsonAtomic(
+      state.run.runRoot,
+      initiativeCatalogPath(manifest.slug),
+      catalogFromManifest(manifest, publicBaseUrl),
+    );
+  }
   return manifest;
 }
 
@@ -1230,6 +1264,7 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
       factBasePath: 'source/fact-base.json',
       factBaseHash: state.factBaseHash,
       inputHashes: state.inputHashes,
+      backlinks: manifestSourceBacklinks(state.factBase),
       ...(state.authorResultPaths.length > 0 && {
         authorResultPaths: state.authorResultPaths,
       }),
@@ -1248,6 +1283,36 @@ function manifestFor(state, buildRecord, createdAt, immutableHashes) {
     },
     warnings: [...new Set(state.warnings)],
   };
+}
+
+function manifestSourceBacklinks(factBase) {
+  const backlinks = [
+    ...(factBase?.sources ?? [])
+      .filter(({ url }) => typeof url === 'string')
+      .map(({ id, url }) => ({ sourceId: id, url })),
+    ...(factBase?.claims ?? [])
+      .flatMap(({ citations }) => citations ?? [])
+      .filter(({ url }) => typeof url === 'string')
+      .map(({ sourceId, url }) => ({ sourceId, url })),
+    ...(factBase?.unresolvedClaims ?? [])
+      .flatMap(({ citations }) => citations ?? [])
+      .filter(({ url }) => typeof url === 'string')
+      .map(({ sourceId, url }) => ({ sourceId, url })),
+  ];
+  return [
+    ...new Map(
+      backlinks
+        .sort(
+          (left, right) =>
+            left.sourceId.localeCompare(right.sourceId) ||
+            left.url.localeCompare(right.url),
+        )
+        .map((backlink) => [
+          `${backlink.sourceId}\0${backlink.url}`,
+          backlink,
+        ]),
+    ).values(),
+  ];
 }
 
 async function createAuthoredContent(state, options, now) {

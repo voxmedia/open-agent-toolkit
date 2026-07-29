@@ -9,6 +9,10 @@ import {
   validateContract,
   visualReviewRequestId,
 } from '../scripts/lib/contracts.mjs';
+import {
+  catalogFromManifest,
+  validateInitiativeCatalog,
+} from '../scripts/lib/catalog.mjs';
 import { resolveRootConfinedPath } from '../scripts/lib/safe-paths.mjs';
 import { runValidationCli } from '../scripts/validate.mjs';
 
@@ -138,6 +142,12 @@ function manifest() {
       factBaseHash: HASH_A,
       inputHashes: { 'plan.md': HASH_A },
       authorResultPaths: ['source/author/hub.json'],
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1-L8`,
+        },
+      ],
     },
     theme: { path: 'theme.resolved.json', hash: HASH_A, derived: false },
     artifacts: [
@@ -206,6 +216,79 @@ function publishReceipt() {
     ],
   };
 }
+
+test('derives an exact, absolute initiative catalog from the finalized manifest', () => {
+  const finalized = manifest();
+  const catalog = catalogFromManifest(
+    finalized,
+    'https://cdn.example.com/published/',
+  );
+
+  assert.deepEqual(
+    catalog.artifacts.map(({ id, hash, url }) => ({ id, hash, url })),
+    [
+      {
+        id: 'hub',
+        hash: HASH_B,
+        url: 'https://cdn.example.com/published/index.html',
+      },
+    ],
+  );
+  assert.deepEqual(catalog.sourceBacklinks, finalized.source.backlinks);
+  assert.deepEqual(validateInitiativeCatalog(catalog, finalized), {
+    valid: true,
+    errors: [],
+  });
+
+  const stale = structuredClone(catalog);
+  stale.artifacts[0].hash = HASH_A;
+  assert.ok(
+    validateInitiativeCatalog(stale, finalized).errors.some(
+      ({ code }) => code === 'catalog-artifact-mismatch',
+    ),
+  );
+});
+
+test('requires publish receipts to cover the exact manifest and generated catalog', () => {
+  const finalized = manifest();
+  const catalog = catalogFromManifest(
+    finalized,
+    'https://example.com/explainers',
+  );
+  const receipt = publishReceipt();
+  receipt.artifacts.push({
+    relativePath: 'site/initiatives/demo-project/catalog.json',
+    hash: canonicalHash(catalog),
+    s3Uri:
+      's3://example/explainers/initiatives/demo-project/catalog.json',
+    publicUrl:
+      'https://example.com/explainers/initiatives/demo-project/catalog.json',
+    httpStatus: 200,
+    contentType: 'application/json',
+  });
+
+  assert.equal(
+    validateContract('publish-receipt', receipt, {
+      manifest: finalized,
+      catalogArtifact: {
+        relativePath: 'site/initiatives/demo-project/catalog.json',
+        hash: canonicalHash(catalog),
+      },
+    }).valid,
+    true,
+  );
+
+  receipt.artifacts.pop();
+  assert.ok(
+    validateContract('publish-receipt', receipt, {
+      manifest: finalized,
+      catalogArtifact: {
+        relativePath: 'site/initiatives/demo-project/catalog.json',
+        hash: canonicalHash(catalog),
+      },
+    }).errors.some(({ code }) => code === 'receipt-artifact-parity'),
+  );
+});
 
 function authorRequestV2() {
   return {
