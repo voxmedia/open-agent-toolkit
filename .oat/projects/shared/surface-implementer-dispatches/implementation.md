@@ -364,7 +364,7 @@ oat_generated: false
 
 ### Task p03-t02: Archive the completed backlog item and run final verification
 
-**Status:** blocked
+**Status:** in_progress
 **Commit:** -
 
 **Blocker:**
@@ -375,6 +375,8 @@ oat_generated: false
   file `.agents/docs/autonomy-contract.md` is outside the current Phase 3 task
   boundary.
 - Backlog archive changes were reverted; the worktree is clean.
+- **Resolution:** user approved adding the derived autonomy-contract refresh to
+  p03-t02; `plan.md` is now the source of truth for the expanded file boundary.
 
 ---
 
@@ -605,6 +607,25 @@ Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Outstanding item:** decide whether to add the derived
   `.agents/docs/autonomy-contract.md` refresh to the approved plan
 
+### Run 2 — 2026-07-29
+
+<a id="run-2"></a>
+
+**Branch:** `surface-implementer-dispatches`
+**Provider / tier:** Cursor / Tier 1
+**Dispatch policy:** managed High
+**Resume point:** `p03-t02`
+
+#### Approved Plan Adjustment
+
+- **Decision:** add `.agents/docs/autonomy-contract.md` to p03-t02 and remove
+  stale prompt-site mapping `ffb3af0ba8ef`
+- **Reason:** Phase 2 removed the mapped prompt-like line; the repository-wide
+  inventory test requires the derived contract to match HEAD
+- **Authorization:** explicit user approval
+- **Previous attempt:** terminal `BLOCKED`; Run 2 is a new same-target
+  continuation after the approved plan change, not fallback within Run 1
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -652,9 +673,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review | Source Artifact | Planned / Documented                   | Actual / Accepted                                                          | Reason                                                                                                     | Source of Truth   | Follow-up |
+| ------------- | --------------- | -------------------------------------- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------- | ----------------- | --------- |
+| p03-t02       | `plan.md`       | Backlog archive and final verification | Also refresh stale `.agents/docs/autonomy-contract.md` prompt-site mapping | Phase 2 removed the mapped prompt-like line and repository-wide tests rejected the stale derived inventory | Updated `plan.md` | None      |
 
 ## Test Results
 

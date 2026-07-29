@@ -466,13 +466,30 @@ git commit -m "chore(release): bump public packages for dispatch notices"
 
 **Files:**
 
+- Modify: `.agents/docs/autonomy-contract.md`
 - Move:
   `.oat/repo/pjm/backlog/items/BL-260727-surface-implementer-dispatches.md`
   to `.oat/repo/pjm/backlog/archived/`
 - Modify: `.oat/repo/pjm/backlog/completed.md`
 - Modify: `.oat/repo/pjm/backlog/index.md`
 
-**Step 1: Archive the backlog item**
+**Step 1: Refresh the derived autonomy prompt-site inventory**
+
+Remove stale mapping `ffb3af0ba8ef` for
+`oat-project-implement/SKILL.md` from `.agents/docs/autonomy-contract.md`. The
+Phase 2 wording change removed that prompt-like site; no replacement mapping is
+required.
+
+Run:
+
+```bash
+pnpm --filter @open-agent-toolkit/cli exec vitest run \
+  src/validation/autonomy-gate-inventory.test.ts
+```
+
+Expected: the autonomy gate-inventory drift check passes.
+
+**Step 2: Archive the backlog item**
 
 ```bash
 oat backlog archive BL-260727-surface-implementer-dispatches \
@@ -482,16 +499,17 @@ oat backlog archive BL-260727-surface-implementer-dispatches \
 Expected: the item is closed, moved to `archived/`, added to the completed
 ledger, and removed from the active index.
 
-**Step 2: Format**
+**Step 3: Format**
 
 ```bash
 pnpm exec oxfmt --write \
+  ".agents/docs/autonomy-contract.md" \
   ".oat/repo/pjm/backlog/archived/BL-260727-surface-implementer-dispatches.md" \
   ".oat/repo/pjm/backlog/completed.md" \
   ".oat/repo/pjm/backlog/index.md"
 ```
 
-**Step 3: Run definition-of-done verification**
+**Step 4: Run definition-of-done verification**
 
 ```bash
 pnpm check
@@ -508,10 +526,10 @@ git diff --check
 
 Expected: all required checks pass and PJM state is consistent.
 
-**Step 4: Commit**
+**Step 5: Commit**
 
 ```bash
-git add .oat/repo/pjm/backlog
+git add .agents/docs/autonomy-contract.md .oat/repo/pjm/backlog
 git commit -m "chore(backlog): close implementer dispatch visibility"
 ```
 

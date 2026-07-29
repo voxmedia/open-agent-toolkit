@@ -60,6 +60,10 @@ Phase outcome: blocked; fix-loop count: 0; p03-t02 stopped at pnpm test due stal
 
 STOP: plan decision required before refreshing .agents/docs/autonomy-contract.md and resuming p03-t02.
 
+### 2026-07-29 · structural · oat-project-implement · p03-t02-resume
+
+Blocker resolved by explicit approval: p03-t02 now includes the derived .agents/docs/autonomy-contract.md refresh; resume in Run 2.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
