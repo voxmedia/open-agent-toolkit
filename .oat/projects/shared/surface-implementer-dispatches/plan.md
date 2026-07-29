@@ -525,6 +525,7 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
 | plan   | artifact | passed          | 2026-07-29 | -                                                             |
+| plan   | artifact | received        | 2026-07-29 | reviews/artifact-plan-review-2026-07-29T034646Z.md            |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
