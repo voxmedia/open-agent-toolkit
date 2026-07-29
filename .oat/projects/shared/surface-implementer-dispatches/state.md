@@ -1,7 +1,10 @@
 ---
 oat_current_task: p03-t02
 oat_last_commit: fadf2cc418ac8e3012c056ddd457e8561d0b801f
-oat_blockers: []
+oat_blockers:
+  - task_id: p03-t02
+    reason: 'oat pjm doctor reports missing reference/decisions/AGENTS.md and template frontmatter in nine pre-existing backlog files'
+    since: 2026-07-29
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
   ] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -75,7 +78,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T14:29:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T14:37:03Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -132,12 +135,15 @@ Implementation - Phase 3 (`p03-t02`)
 - ✓ `p03-t01` bumped all five lockstep public packages and bundled inventory to
   `0.2.25`
 - ✓ User approved adding the derived autonomy-contract refresh to p03-t02
-- → `p03-t02` resumes with the updated plan boundary
+- ! `p03-t02` Run 2 is blocked by two pre-existing failing PJM doctor checks
 
 ## Blockers
 
-None
+- `p03-t02`: missing canonical `reference/decisions/AGENTS.md` and template
+  frontmatter in nine unrelated backlog files. All approved task mutations were
+  restored.
 
 ## Next Milestone
 
-Resume `p03-t02` under the approved derived-inventory boundary
+Choose bounded PJM remediation, a documented gate exception, or keep p03-t02
+blocked

@@ -364,7 +364,7 @@ oat_generated: false
 
 ### Task p03-t02: Archive the completed backlog item and run final verification
 
-**Status:** in_progress
+**Status:** blocked
 **Commit:** -
 
 **Blocker:**
@@ -377,6 +377,10 @@ oat_generated: false
 - Backlog archive changes were reverted; the worktree is clean.
 - **Resolution:** user approved adding the derived autonomy-contract refresh to
   p03-t02; `plan.md` is now the source of truth for the expanded file boundary.
+- **Run 2 blocker:** `oat pjm doctor` reports two pre-existing failing checks:
+  missing `reference/decisions/AGENTS.md` and template frontmatter in nine
+  unrelated backlog files. The approved task mutations were restored and the
+  worktree is clean.
 
 ---
 
@@ -625,6 +629,40 @@ Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Authorization:** explicit user approval
 - **Previous attempt:** terminal `BLOCKED`; Run 2 is a new same-target
   continuation after the approved plan change, not fallback within Run 1
+
+#### Dispatch Acceptance — p03 implementer Run 2
+
+- **Request:** `impl-p03-run2-20260729T142944Z`
+- **Accepted target:** `oat-phase-implementer-gpt-5-6-sol-medium`
+- **Task classification:** `default-implementation` (caller)
+- **Selection reason:** same exact target as Run 1; first sufficient High-tier
+  candidate under the managed High ceiling
+- **Base / result:** `81cad8c162a0e6d4e07b92c2c9195b998fe623c7`
+  unchanged
+- **Outcome:** accepted once; `BLOCKED` at `oat pjm doctor`; no commits; no
+  optional children
+- **Restoration:** inventory and backlog mutations reverted; clean worktree
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
+```
+
+#### Phase Outcome — p03 Run 2
+
+| Phase | Tasks | Implementation | Root Review | Fix Loops | Result  |
+| ----- | ----- | -------------- | ----------- | --------- | ------- |
+| p03   | 1/2   | `BLOCKED`      | not run     | 0         | blocked |
+
+- **Passing gates:** inventory test, check, type-check, test, build, lint,
+  format, docs build, release validation
+- **Blocking gate:** `oat pjm doctor`
+- **Failing checks:** missing canonical decisions `AGENTS.md`; template
+  frontmatter in nine pre-existing backlog files
+- **Warnings:** pre-existing PJM layout/legacy warnings are non-blocking
+- **Outstanding item:** explicit decision on bounded PJM remediation or
+  documented gate exception
 
 <!-- orchestration-runs-end -->
 

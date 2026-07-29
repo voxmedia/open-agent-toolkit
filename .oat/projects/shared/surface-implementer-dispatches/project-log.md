@@ -64,6 +64,14 @@ STOP: plan decision required before refreshing .agents/docs/autonomy-contract.md
 
 Blocker resolved by explicit approval: p03-t02 now includes the derived .agents/docs/autonomy-contract.md refresh; resume in Run 2.
 
+### 2026-07-29 · structural · oat-project-implement · p03-run2
+
+Phase outcome: blocked; fix-loop count: 0; Run 2 stopped at pre-existing failing pjm doctor checks after all earlier gates passed.
+
+### 2026-07-29 · structural · oat-project-implement · p03-t02-stop-2
+
+STOP: explicit decision required on bounded PJM remediation or a documented pjm doctor exception.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
