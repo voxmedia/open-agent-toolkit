@@ -589,6 +589,7 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 | p02    | code     | passed          | 2026-07-29 | reviews/code-p02-review-2026-07-29T123104Z.md                 |
 | p03    | code     | passed          | 2026-07-29 | reviews/code-p03-review-2026-07-29T145300Z.md                 |
 | final  | code     | passed          | 2026-07-29 | reviews/code-final-review-2026-07-29T150100Z.md               |
+| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T152853Z.md                    |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
 | plan   | artifact | passed          | 2026-07-29 | -                                                             |
