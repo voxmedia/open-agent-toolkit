@@ -31,6 +31,16 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
+- CLI `0.2.26` makes managed-capped implementation and fix dispatches
+  auditable without changing compatibility exit behavior. Dispatch Report V1
+  now carries provider-neutral task classification, applicable Codex task
+  effort, legacy preferred-selection provenance, and ordered structured
+  notices. A skipped exact-candidate selection or an exact candidate without a
+  task class emits a stable coded warning in human and JSON output while
+  resolution remains successful. Policy choices, post-adoption output, and
+  runtime reviewer resolution also disclose effective terminal Fable targets;
+  organizations remain responsible for confirming model access and applicable
+  retention-policy eligibility.
 - CLI `0.2.25` narrows lifecycle and gate re-reviews by default from a
   lineage-qualified prior reviewed head; `false` is the explicit full-scope
   opt-out. Review artifacts and the tracked Reviews ledger preserve validated

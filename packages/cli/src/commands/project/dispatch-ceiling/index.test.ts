@@ -318,6 +318,10 @@ describe('oat project dispatch-ceiling resolve', () => {
     expect(capture.info.join('\n')).toContain('6. Inherit Host Defaults');
     expect(capture.info.join('\n')).toContain('7. Leave Unresolved');
     expect(capture.info.join('\n')).toContain('planning/preflight deferral');
+    expect(capture.info.join('\n')).toContain(
+      '[advisory] terminal-reviewer-eligibility',
+    );
+    expect(capture.info.join('\n')).toContain('bundled recommendation');
     expect(process.exitCode).toBe(0);
   });
 
@@ -334,6 +338,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           value: 'frontier',
           kind: 'managed-capped',
           runtimePolicy: true,
+          notices: [
+            expect.objectContaining({
+              code: 'terminal-reviewer-eligibility',
+              level: 'advisory',
+            }),
+          ],
         }),
         expect.objectContaining({
           value: 'leave-unresolved',
@@ -1581,8 +1591,145 @@ describe('oat project dispatch-ceiling resolve', () => {
         },
       },
     });
+    expect(capture.jsonPayloads[0]).not.toHaveProperty('notices');
     expect(process.exitCode).toBe(0);
   });
+
+  it('renders the effective Fable terminal reviewer notice in human output', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: { dispatchCeiling: { providers: { claude: 'fable' } } },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, ['--provider', 'claude', '--role', 'reviewer']);
+
+    const output = capture.info.join('\n');
+    expect(output).toContain('[advisory] terminal-reviewer-eligibility');
+    expect(output).toMatch(/fable.*model access.*retention policy/i);
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    ['human', false],
+    ['JSON', true],
+  ] as const)(
+    'discloses bare Cursor reviewer Fable targets in %s output with a non-Fable control',
+    async (_label, json) => {
+      for (const [target, expectedNotice] of [
+        ['claude-fable-5-thinking-high', true],
+        ['gpt-5.6-sol-high', false],
+      ] as const) {
+        const { root, home } = await setup();
+        await writeJson(join(root, '.oat', 'config.json'), {
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: { cursor: target },
+            },
+          },
+        });
+
+        const { command, capture } = createHarness({ cwd: root, home });
+        await runCommand(
+          command,
+          ['--provider', 'cursor', '--role', 'reviewer'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain('claude-fable-5-thinking-high');
+        }
+        expect(process.exitCode).toBe(0);
+      }
+    },
+  );
+
+  it.each([
+    ['human', false],
+    ['JSON', true],
+  ] as const)(
+    'discloses bare Cursor tier-cell Fable targets during preflight in %s output with a non-Fable control',
+    async (_label, json) => {
+      for (const [target, expectedNotice] of [
+        ['claude-fable-5-thinking-high', true],
+        ['gpt-5.6-sol-high', false],
+      ] as const) {
+        const { root, home } = await setup();
+        await writeJson(join(root, '.oat', 'config.json'), {
+          version: 1,
+          workflow: {
+            dispatchPolicy: { mode: 'managed', policy: 'frontier' },
+            dispatchCeiling: {
+              providers: {
+                cursor: { frontier: target },
+              },
+            },
+          },
+        });
+
+        const { command, capture } = createHarness({ cwd: root, home });
+        await runCommand(
+          command,
+          ['--provider', 'cursor', '--preflight'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain('claude-fable-5-thinking-high');
+        }
+      }
+    },
+  );
+
+  it.each([
+    ['claude', 'high', 'opus'],
+    ['cursor', 'frontier', 'custom-frontier-reviewer'],
+  ] as const)(
+    'does not disclose Fable for a %s %s policy with effective target %s',
+    async (provider, policy, target) => {
+      const { root, home } = await setup();
+      await writeJson(join(root, '.oat', 'config.json'), {
+        version: 1,
+        workflow: {
+          dispatchPolicy: { mode: 'managed', policy },
+          dispatchCeiling: {
+            providers: {
+              [provider]: {
+                [policy]: { candidates: [target] },
+              },
+            },
+          },
+        },
+      });
+
+      const { command, capture } = createHarness({ cwd: root, home });
+      await runCommand(command, [
+        '--provider',
+        provider,
+        '--role',
+        'reviewer',
+        '--json',
+      ]);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'resolved' });
+      expect(capture.jsonPayloads[0]).not.toHaveProperty('notices');
+      expect(process.exitCode).toBe(0);
+    },
+  );
 
   it.each([
     ['low', 'low', false],
@@ -2014,6 +2161,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       'gpt-5.6-terra',
       '--candidate-effort',
       'medium',
+      '--task-class',
+      'default-implementation',
+      '--task-effort',
+      'high',
       '--report-scope',
       'p03-t04',
       '--report-action',
@@ -2053,6 +2204,7 @@ describe('oat project dispatch-ceiling resolve', () => {
             model: 'gpt-5.6-terra',
             effort: 'medium',
           },
+          preferredValue: null,
           candidateTier: 'balanced',
           candidateIndex: 1,
           exactSelectedTarget: {
@@ -2062,6 +2214,12 @@ describe('oat project dispatch-ceiling resolve', () => {
           selectionBranch: 'candidate-requested',
           cellSource: 'repo-config',
         },
+        classification: {
+          taskClass: 'default-implementation',
+          preferredEffort: 'high',
+          source: 'caller',
+        },
+        notices: [],
         requestedControls: {
           model: {
             value: 'gpt-5.6-terra',
@@ -2081,6 +2239,284 @@ describe('oat project dispatch-ceiling resolve', () => {
           provenance: 'unknown',
           confidence: 'not-reported',
         },
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns without failing when managed capped implementation selection is skipped', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const jsonHarness = createHarness({ cwd: root, home });
+    await runCommand(jsonHarness.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p01-t02',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(jsonHarness.capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      dispatchReport: {
+        classification: {
+          taskClass: null,
+          preferredEffort: null,
+          source: 'not-reported',
+        },
+        notices: [
+          {
+            code: 'managed-capped-selection-skipped',
+            level: 'warning',
+          },
+        ],
+      },
+    });
+    expect(process.exitCode).toBe(0);
+
+    const humanHarness = createHarness({ cwd: root, home });
+    await runCommand(humanHarness.command, [
+      '--provider',
+      'codex',
+      '--report-scope',
+      'p01-t02',
+      '--report-action',
+      'implementation',
+    ]);
+    expect(humanHarness.capture.info.join('\n')).toContain(
+      '[warning] managed-capped-selection-skipped:',
+    );
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('warns when an exact managed candidate lacks task classification', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--candidate-model',
+      'gpt-5.6-terra',
+      '--candidate-effort',
+      'medium',
+      '--report-scope',
+      'p01-t02',
+      '--report-action',
+      'fix',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      dispatchReport: {
+        notices: [
+          {
+            code: 'managed-capped-classification-missing',
+            level: 'warning',
+          },
+        ],
+      },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it('does not emit selection warnings for managed policy preflight', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'balanced' },
+        dispatchCeiling: {
+          providers: {
+            codex: {
+              balanced: {
+                candidates: [
+                  {
+                    harness: 'codex',
+                    model: 'gpt-5.6-terra',
+                    effort: 'medium',
+                  },
+                ],
+              },
+            },
+          },
+        },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--preflight',
+      '--report-scope',
+      'p01-preflight',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      dispatchReport: { notices: [] },
+    });
+    expect(process.exitCode).toBe(0);
+  });
+
+  it.each([
+    {
+      args: [
+        '--provider',
+        'codex',
+        '--task-class',
+        'invalid',
+        '--report-scope',
+        'p01-t02',
+        '--report-action',
+        'implementation',
+      ],
+      message: 'Invalid task class',
+    },
+    {
+      args: [
+        '--provider',
+        'claude',
+        '--task-effort',
+        'high',
+        '--report-scope',
+        'p01-t02',
+        '--report-action',
+        'implementation',
+      ],
+      message: '--task-effort is only valid for Codex',
+    },
+    {
+      args: [
+        '--provider',
+        'codex',
+        '--task-effort',
+        'extreme',
+        '--report-scope',
+        'p01-t02',
+        '--report-action',
+        'implementation',
+      ],
+      message: 'Invalid Codex task effort',
+    },
+    {
+      args: [
+        '--provider',
+        'codex',
+        '--role',
+        'reviewer',
+        '--task-class',
+        'consequential',
+        '--report-scope',
+        'p01-review',
+        '--report-action',
+        'review',
+      ],
+      message: 'Classification flags are not supported for reviewer routes',
+    },
+    {
+      args: ['--provider', 'codex', '--task-class', 'hard-reasoning'],
+      message:
+        'Classification flags require --report-scope and an implementation or fix --report-action',
+    },
+  ])(
+    'rejects invalid classification input: $message',
+    async ({ args, message }) => {
+      const { root, home } = await setup();
+      const { command, capture } = createHarness({ cwd: root, home });
+
+      await runCommand(command, [...args, '--json']);
+
+      expect(capture.jsonPayloads[0]).toMatchObject({ status: 'error' });
+      expect(capture.jsonPayloads[0]?.message).toContain(message);
+      expect(process.exitCode).toBe(1);
+    },
+  );
+
+  it('keeps legacy preferred selection auditable without a skipped-selection warning', async () => {
+    const { root, home } = await setup();
+    await writeJson(join(root, '.oat', 'config.json'), {
+      version: 1,
+      workflow: {
+        dispatchPolicy: { mode: 'managed', policy: 'high' },
+        dispatchCeiling: { providers: { codex: 'high' } },
+      },
+    });
+    const { command, capture } = createHarness({ cwd: root, home });
+    await runCommand(command, [
+      '--provider',
+      'codex',
+      '--preferred',
+      'medium',
+      '--task-class',
+      'default-implementation',
+      '--task-effort',
+      'high',
+      '--report-scope',
+      'p01-t02',
+      '--report-action',
+      'implementation',
+      '--json',
+    ]);
+
+    expect(capture.jsonPayloads[0]).toMatchObject({
+      status: 'resolved',
+      dispatchReport: {
+        selection: { preferredValue: 'medium' },
+        classification: {
+          taskClass: 'default-implementation',
+          preferredEffort: 'high',
+          source: 'caller',
+        },
+        notices: [],
       },
     });
     expect(process.exitCode).toBe(0);
@@ -2208,6 +2644,7 @@ describe('oat project dispatch-ceiling resolve', () => {
           effort: 'high',
           effortSource: 'codex-config',
         },
+        notices: [],
       },
     });
   });
@@ -3760,6 +4197,10 @@ describe('oat project dispatch-ceiling resolve', () => {
       'claude',
       '--role',
       'reviewer',
+      '--report-scope',
+      'p02-review',
+      '--report-action',
+      'review',
       '--json',
     ]);
 
@@ -3782,6 +4223,22 @@ describe('oat project dispatch-ceiling resolve', () => {
             selectedValue: 'fable',
           },
         },
+      },
+      notices: [
+        {
+          code: 'terminal-reviewer-eligibility',
+          level: 'advisory',
+          message: expect.stringContaining('fable'),
+        },
+      ],
+      dispatchReport: {
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('fable'),
+          },
+        ],
       },
     });
     expect(process.exitCode).toBe(0);

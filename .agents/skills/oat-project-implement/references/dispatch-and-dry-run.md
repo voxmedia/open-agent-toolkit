@@ -157,7 +157,7 @@ Use the CLI resolver as the source of truth. The command name remains
 policy:
 
 ```bash
-oat project dispatch-ceiling resolve --provider <active-provider> --preflight --report-scope implementation-preflight --report-action implementation --json
+oat project dispatch-ceiling resolve --provider <active-provider> --preflight --task-class <task-class> [--task-effort <codex-preferred-effort>] --report-scope implementation-preflight --report-action implementation --json
 ```
 
 If `oat` is not in PATH, run the same command through
@@ -317,9 +317,11 @@ report context:
 - review: `--report-scope <phase-or-review-scope> --report-action review`
 
 Require `dispatchReport.schemaVersion: 1` in the completed resolver JSON before
-dispatch. Consume the report as the human/audit source: render the versioned
-block with `formatDispatchReport(dispatchReport)` semantics, and derive the
-formal compatibility line only through
+dispatch. Surface every structured entry in `dispatchReport.notices`, then
+render the versioned block with `formatDispatchReport(dispatchReport)`
+semantics, before the implementation, fix, or reviewer launch. Consume the
+report as the human/audit source, and derive the formal compatibility line only
+through
 `formatDispatchStamp(dispatchReport)` / `toDispatchStampRecord(dispatchReport)`.
 Never hand-assemble a second `Dispatch:` schema from policy labels, role names,
 candidate strings, or target names.
@@ -329,6 +331,10 @@ The exact provider invocation remains authoritative in
 the report does not replace or weaken target-pinned dispatch. Add independently
 observed runtime identity to `dispatchReport.runtimeIdentity` only when such an
 observation exists. Requested/configured controls are not runtime observation.
+Runtime disclosure must use the effective resolved target in that completed
+response. Never infer runtime controls or eligibility from
+`recommendationVersion`, which identifies only the bundled recommendation that
+was adopted.
 For gate-originated review, keep `dispatchReport.gateInvocation`, existing
 work-producer `diversity`, and reviewer `runtimeIdentity` as three distinct
 facts; producer stamps or self-report never overwrite configured invocation.
@@ -369,8 +375,9 @@ requested; never silently downgrade to it.
 6. For managed capped phase-implementer/fix dispatch, choose an exact
    configured candidate and use the exact-candidate branch, not the
    preferred-selection branch. For implementation, call
-   `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+   `oat project dispatch-ceiling resolve --provider codex --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --candidate-effort <effort> --task-class <task-class> --task-effort <preferred-effort> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
    For a bounded fix, use the same phase target with
+   the same `--task-class` and `--task-effort` classification provenance and
    `--report-scope <phase-or-fix-scope> --report-action fix`. Read
    `providers.codex.dispatchArgs.variant` and
    `providers.codex.selection.target`; never reuse a cap-only variant.
@@ -406,8 +413,9 @@ Claude rules:
   - Capped managed policy: target the configured policy cap directly.
   - Managed `Uncapped` or inherit/default: no reviewer target exists; omit `model` and log inherited/default model behavior.
 - For managed capped phase-implementer/fix dispatch, call
-  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
-  For bounded fixes, reuse the exact phase target with a bounded fix scope.
+  `oat project dispatch-ceiling resolve --provider claude --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <model> --task-class <task-class> --orchestrator-tier <current-orchestrator-tier> --escalation-level <route-level> --report-scope <phase-id> --report-action implementation --json`.
+  For bounded fixes, reuse the exact phase target and task classification with a
+  bounded fix scope.
   For review dispatch, call the resolver with
   `--role reviewer --report-scope <phase-or-review-scope> --report-action review --json`
   and no candidate flags. Read `providers.claude.dispatchArgs.model` and pass it
@@ -443,8 +451,9 @@ Cursor rules:
   task-class resolution independently arrives there; reaching it because no
   candidate was selected is a defect.
 - For managed capped phase-implementer/fix dispatch, call
-  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --report-scope <phase-id> --report-action implementation --json`.
-  For bounded fixes, reuse the exact phase target with a bounded fix scope.
+  `oat project dispatch-ceiling resolve --provider cursor --role implementer --ceiling-tier <project-or-phase-tier> --candidate-model <opaque-model> --task-class <task-class> --report-scope <phase-id> --report-action implementation --json`.
+  For bounded fixes, reuse the exact phase target and task classification with a
+  bounded fix scope.
 - Require `providers.cursor.dispatchArgs.variant` and launch that exact
   resolver-selected native agent type first. Native acceptance plus the
   complete launcher payload is configured invocation evidence; it does not

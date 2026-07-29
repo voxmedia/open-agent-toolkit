@@ -1,7 +1,7 @@
 # ReviewPlan Workflow: Current-State and Fresh-Thread Handoff
 
-**Prepared:** 2026-07-29  
-**Status:** orientation evidence; revalidate before planning  
+**Prepared:** 2026-07-29
+**Status:** orientation evidence; revalidate before planning
 **Backlog:** `BL-260729-implement-reviewplan-first`
 
 ## Why This Project Exists

@@ -63,6 +63,10 @@ Adoption fills missing provider/tier cells and records
 existing cells. Planning shows the complete recommendation before asking which
 scope should own it. If the resulting ladder is still missing or incomplete,
 planning remains blocked rather than replacing the user's explicit values.
+The recommendation version describes only the bundled recommendation. After
+preserving existing cells, OAT resolves the effective ladder and uses that
+effective result—not the recommendation version—for dispatch targets and
+runtime disclosure.
 
 ### Upgrading to a newer recommendation version
 
@@ -90,6 +94,12 @@ the cheaper one absent a comparison favoring xhigh. The evidence record above
 does not compare the two rungs. Both models remain in the pin catalog and stay
 available to a hand-edited ladder. An adopter still on the prior version keeps their existing
 Cursor tiers untouched until they take one of the actions above.
+
+The terminal Fable target may require model access from the executing provider.
+The adopting organization is responsible for confirming its applicable
+retention policy. OAT does not determine model access or organizational
+retention eligibility; recommendation membership and catalogue presence are
+configuration data, not an eligibility decision.
 
 The terminal entries in that version are chosen, not incidental. Because the
 final candidate in a tier is the target its implementation-phase self-review
@@ -274,6 +284,10 @@ oat project dispatch-ceiling resolve \
   --ceiling-tier high \
   --candidate-model gpt-5.6-terra \
   --candidate-effort medium \
+  --task-class default-implementation \
+  --task-effort medium \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 # Claude: exact model argument
@@ -282,6 +296,9 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model sonnet \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 # Cursor: exact opaque configured string
@@ -290,8 +307,15 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model gpt-5.6-sol-high \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 ```
+
+Use the same classification flags and `--report-action fix` for a bounded fix.
+Reviewer routes use neither `--task-class` nor `--task-effort`; the CLI rejects
+classification flags for reviewers.
 
 `--ceiling-tier` accepts `economy`, `balanced`, `high`, or `frontier`. It
 overrides a layered active-policy ceiling for that resolver invocation only. It
@@ -306,10 +330,14 @@ Successful JSON reports:
   `selection.requestedCandidate`
 - the exact provider-specific `dispatchArgs`
 
-The resolver rejects a missing candidate, an above-ceiling candidate, an
-ambiguous route, malformed ordering, a reviewer candidate request, or controls
-that cannot compile exactly. The root blocks instead of reusing its own target,
-a base role, or a provider default.
+The resolver rejects an above-ceiling candidate, an ambiguous route, malformed
+ordering, a reviewer candidate request, or controls that cannot compile
+exactly. For compatibility, omitting an exact candidate from a managed
+named-cap implementation or fix still resolves successfully at the cap. When
+report context is present, that path emits the coded
+`managed-capped-selection-skipped` warning in human and JSON output. The root
+must treat the warning as a dispatch-policy violation and select an exact
+candidate before launch even though the command retains exit code `0`.
 
 Implementer and fix resolution has two mutually exclusive selection branches:
 
@@ -411,20 +439,38 @@ write authority. See
 
 Resolver calls that pass `--report-scope` and `--report-action` include a
 `dispatchReport` object in JSON output. Consumers must require
-`dispatchReport.schemaVersion: 1` before dispatch. The report keeps four
-different decisions separate:
+`dispatchReport.schemaVersion: 1` before dispatch. The report keeps these
+concerns separate:
 
-| Report area                                                         | What it means                                                        |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source    |
-| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                     |
-| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position |
-| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route             |
+| Report area                                                         | What it means                                                                                 |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source                             |
+| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                                              |
+| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position                          |
+| `selection.preferredValue`                                          | The legacy `--preferred` selection value, or `null` when that compatibility path was not used |
+| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route                                      |
+| `classification`                                                    | Caller-reported task class, applicable Codex preferred effort, and provenance source          |
+| `notices`                                                           | Ordered coded warnings and advisories derived from the effective dispatch context             |
 
 A named policy or ceiling is never a substitute for the requested candidate or
-exact selected target. `requestedControls` records what OAT put into the host
-payload. `configuredDefaults` records fallback configuration and is explicitly
-not a runtime observation.
+exact selected target. Classification is provenance only: it records the
+root's judgment but does not participate in candidate normalization or let OAT
+judge whether that classification was correct. `requestedControls` records
+what OAT put into the host payload. `configuredDefaults` records fallback
+configuration and is explicitly not a runtime observation.
+
+Managed named-cap implementation and fix reports can include two warning codes:
+
+- `managed-capped-selection-skipped` means no exact candidate or legacy
+  preferred value was supplied, so compatibility behavior selected the cap.
+- `managed-capped-classification-missing` means an exact candidate was supplied
+  without `--task-class`.
+
+Both warnings preserve resolved status and exit code `0`. They do not apply to
+policy-only preflight, reviewer, inherit, uncapped, unresolved, or
+legacy-preferred routes. `terminal-reviewer-eligibility` is an advisory tied to
+an effective Fable reviewer target, not proof of model access or organizational
+retention eligibility.
 
 `gateInvocation` is an immutable copy of configured gate controls.
 `runtimeIdentity` is separate and stays `not-reported` until independently
@@ -445,6 +491,11 @@ names, candidate strings, or target names. `producer` is the runtime model slug
 when OAT can establish it; otherwise it is `unknown`. `provenance` is
 `declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
 can remain exact even when runtime producer identity is not reported.
+
+Before launching an implementation, fix, or reviewer, surface the structured
+notices in `dispatchReport.notices` and render the report. Structured notices
+and runtime disclosure use the effective target returned by that resolver call,
+never a target inferred from the bundled recommendation version.
 
 ## Legacy Compatibility
 

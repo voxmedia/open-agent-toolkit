@@ -308,6 +308,15 @@ Adoption fills missing provider/tier cells and preserves explicit existing
 values. Planning shows the complete bundled recommendation before asking for
 this scope, then rechecks the effective ladder. If explicit cells still leave
 the ladder incomplete, readiness blocks; OAT does not overwrite them.
+`workflow.dispatchCeiling.recommendationVersion` describes only the bundled
+recommendation that was adopted. Dispatch targets, structured notices, and
+runtime disclosure come from the effective ladder after explicit cells have
+been preserved.
+
+A recommended Fable target may require model access from the executing
+provider. The adopting organization is responsible for confirming its
+applicable retention policy. OAT does not determine model access or
+organizational retention eligibility.
 
 Scope determines ownership and Codex/Cursor materialization:
 
@@ -366,13 +375,13 @@ tiers are trimmed for readability.
 
 The bundled recommendation covers 13 Codex model/effort combinations: Luna and
 Terra at `low`, `medium`, `high`, and `xhigh`, plus Sol at those efforts and
-`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. Cursor covers 16
-candidates across four tiers, drawn from a materialization catalogue of 18
-verified multi-family flat IDs spanning Composer, Claude (Sonnet, Opus, and
-Fable), GPT, and Grok; the two figures differ because some approved mappings
-stay materializable without being recommended. An explicit mapping connects
-each flat ladder ID to a separate bracket-form frontmatter model; configuration
-and skills never derive or normalize either form.
+`max`. Claude covers `haiku`, `sonnet`, `opus`, and `fable`. The recommendation
+carries 14 Cursor candidates across four tiers, drawn from a materialization
+catalogue with 18 catalogued multi-family flat IDs spanning Composer, Claude
+(Sonnet, Opus, and Fable), GPT, and Grok; the two figures differ because some
+approved mappings stay materializable without being recommended. An explicit
+mapping connects each flat ladder ID to a separate bracket-form frontmatter
+model; configuration and skills never derive or normalize either form.
 
 The corresponding pinned Codex variant catalogue includes
 `gpt-5.6-luna-high`, `gpt-5.6-terra-xhigh`, `gpt-5.6-sol-high`, and
@@ -432,6 +441,10 @@ oat project dispatch-ceiling resolve \
   --ceiling-tier high \
   --candidate-model gpt-5.6-terra \
   --candidate-effort medium \
+  --task-class default-implementation \
+  --task-effort medium \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 oat project dispatch-ceiling resolve \
@@ -439,6 +452,9 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model sonnet \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 oat project dispatch-ceiling resolve \
@@ -446,8 +462,18 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model gpt-5.6-sol-high \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 ```
+
+Use the same classification flags and `--report-action fix` for bounded fixes.
+Reviewer routes carry neither `--task-class` nor `--task-effort`; the CLI
+rejects classification flags for reviewers. Before any implementation, fix, or
+reviewer launch, display `dispatchReport.notices` and the formatted report. The
+effective resolver target—not the recommendation version—owns runtime
+disclosure.
 
 `--ceiling-tier` is invocation-only. It accepts `economy`, `balanced`, `high`,
 or `frontier`, overrides layered active-policy ceilings for that call, and never
@@ -455,10 +481,15 @@ writes user, shared, local, or project configuration. JSON reports top-level
 `source: invocation`; `providers.<provider>.cellSource` still identifies the
 config layer that owns the selected candidate.
 
-The resolver fails closed when a candidate is missing, above the maximum,
-ambiguous, malformed, or cannot compile exact provider controls. `--preferred`
-remains compatibility behavior for legacy scalar ceilings and managed
-`Uncapped`; it is not the exact managed phase-agent path.
+The resolver fails closed when a requested candidate is above the maximum,
+ambiguous, malformed, or cannot compile exact provider controls. Omitting an
+exact candidate from a managed named-cap implementation or fix currently
+preserves compatibility by resolving successfully at the cap; with report
+context, human and JSON output include the
+`managed-capped-selection-skipped` warning. Callers must surface that warning
+and select an exact candidate before launch. `--preferred` remains
+compatibility behavior for legacy scalar ceilings and managed `Uncapped`; it is
+not the exact managed phase-agent path.
 
 ### Provider enforcement and materialization
 

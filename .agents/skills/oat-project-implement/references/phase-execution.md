@@ -20,13 +20,18 @@ responsible for file boundaries, verification, and task commits.
 Before each phase:
 
 1. Resolve the project dispatch policy and optional narrower phase maximum from
-   the plan's `## Dispatch Profile`.
+   the plan's `## Dispatch Profile`. Classify the complete phase scope and
+   record the classification source and rationale. For Codex, also classify
+   the preferred task effort.
 2. Resolve one exact phase implementer target with
-   `--role implementer --ceiling-tier <project-or-phase-named-tier> --report-scope <pNN> --report-action implementation`.
+   `--role implementer --ceiling-tier <project-or-phase-named-tier> --task-class <task-class> [--task-effort <codex-preferred-effort>] --report-scope <pNN> --report-action implementation`.
    Use the phase scope, not each task ID. Omit `--ceiling-tier` only for
    uncapped or inherit/default policy.
-3. Build the provider invocation before recording target, model/effort axes,
-   selection reason, candidates, and formal dispatch stamp.
+3. Require the completed Dispatch Report, surface its structured notices, and
+   render the report before launch. Build the provider invocation before
+   recording target, model/effort axes, selection reason, candidates, and
+   formal dispatch stamp. Runtime disclosure comes from the effective resolved
+   target, never `recommendationVersion`.
 4. Record `PHASE_BASE_HEAD=$(git rev-parse HEAD)` and require a clean worktree.
 5. Send one self-contained Phase Scope:
 
@@ -54,6 +59,10 @@ Before each phase:
    dispatch_args: {complete provider invocation payload}
    model_axis: {resolver value}
    effort_axis: {resolver value}
+   task_class: {mechanical-recon|intelligent-recon|default-implementation|hard-reasoning|consequential}
+   preferred_effort: {codex low|medium|high|xhigh|max; null for other providers}
+   classification_source: {plan dispatch profile|phase scope analysis|other explicit source}
+   classification_rationale: {short rationale grounded in the complete phase scope}
    selection_reason: {stable shared reason}
    candidates_considered: {ordered exact candidates}
    dispatch_stamp: {formal Dispatch: line}

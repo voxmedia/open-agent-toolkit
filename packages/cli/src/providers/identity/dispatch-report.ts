@@ -9,6 +9,27 @@ import type {
 
 export type DispatchReportPolicyStatus = 'resolved' | 'unresolved' | 'blocked';
 export type DispatchReportPolicyMode = 'managed' | 'inherit' | null;
+export type DispatchTaskClass =
+  | 'mechanical-recon'
+  | 'intelligent-recon'
+  | 'default-implementation'
+  | 'hard-reasoning'
+  | 'consequential';
+
+export interface DispatchReportClassification {
+  taskClass: DispatchTaskClass | null;
+  preferredEffort: string | null;
+  source: 'caller' | 'not-reported';
+}
+
+export interface DispatchNotice {
+  code:
+    | 'managed-capped-selection-skipped'
+    | 'managed-capped-classification-missing'
+    | 'terminal-reviewer-eligibility';
+  level: 'warning' | 'advisory';
+  message: string;
+}
 
 export interface ResolvedDispatchTargetReport {
   harness: string;
@@ -63,6 +84,7 @@ export interface DispatchRuntimeIdentity {
 export interface DispatchReportSelectionInput {
   role: DispatchRole;
   requestedCandidate: { model: string; effort?: string } | null;
+  preferredValue?: string | null;
   candidateTier: WorkflowDispatchMatrixTier | null;
   candidateIndex: number | null;
   ceilingTier: WorkflowDispatchMatrixTier | null;
@@ -105,6 +127,7 @@ export interface DispatchReportV1 {
   };
   selection: {
     requestedCandidate: { model: string; effort?: string } | null;
+    preferredValue: string | null;
     candidateTier: WorkflowDispatchMatrixTier | null;
     candidateIndex: number | null;
     ceilingTier: WorkflowDispatchMatrixTier | null;
@@ -115,6 +138,8 @@ export interface DispatchReportV1 {
     selectionBranch: string;
     cellSource: string | null;
   };
+  classification: DispatchReportClassification;
+  notices: DispatchNotice[];
   requestedControls: DispatchRequestedControls;
   configuredDefaults: DispatchConfiguredDefaults;
   gateInvocation: Readonly<DispatchGateInvocation> | null;
@@ -128,6 +153,8 @@ export interface DispatchReportInput {
   resolution: DispatchReportResolution;
   requestedControls: DispatchRequestedControls;
   configuredDefaults: DispatchConfiguredDefaults;
+  classification?: DispatchReportClassification;
+  notices?: DispatchNotice[];
   gateInvocation?: DispatchGateInvocation | null;
   runtimeIdentity?: DispatchRuntimeIdentity;
 }
@@ -144,6 +171,12 @@ const NOT_REPORTED_RUNTIME_IDENTITY: DispatchRuntimeIdentity = {
   effort: null,
   provenance: 'unknown',
   confidence: 'not-reported',
+};
+
+const NOT_REPORTED_CLASSIFICATION: DispatchReportClassification = {
+  taskClass: null,
+  preferredEffort: null,
+  source: 'not-reported',
 };
 
 function cloneTarget(
@@ -206,6 +239,7 @@ function orderedReport(report: DispatchReportV1): DispatchReportV1 {
               : { effort: report.selection.requestedCandidate.effort }),
           }
         : null,
+      preferredValue: report.selection.preferredValue,
       candidateTier: report.selection.candidateTier,
       candidateIndex: report.selection.candidateIndex,
       ceilingTier: report.selection.ceilingTier,
@@ -216,6 +250,16 @@ function orderedReport(report: DispatchReportV1): DispatchReportV1 {
       selectionBranch: report.selection.selectionBranch,
       cellSource: report.selection.cellSource,
     },
+    classification: {
+      taskClass: report.classification.taskClass,
+      preferredEffort: report.classification.preferredEffort,
+      source: report.classification.source,
+    },
+    notices: report.notices.map((notice) => ({
+      code: notice.code,
+      level: notice.level,
+      message: notice.message,
+    })),
     requestedControls: {
       model: {
         value: report.requestedControls.model.value,
@@ -361,6 +405,7 @@ export function buildDispatchReport(
       requestedCandidate: selection.requestedCandidate
         ? { ...selection.requestedCandidate }
         : null,
+      preferredValue: selection.preferredValue ?? null,
       candidateTier: selection.candidateTier,
       candidateIndex: selection.candidateIndex,
       ceilingTier: selection.ceilingTier,
@@ -371,6 +416,10 @@ export function buildDispatchReport(
       selectionBranch: selection.selectionBranch,
       cellSource: selection.cellSource,
     },
+    classification: input.classification
+      ? { ...input.classification }
+      : { ...NOT_REPORTED_CLASSIFICATION },
+    notices: (input.notices ?? []).map((notice) => ({ ...notice })),
     requestedControls: {
       model: { ...input.requestedControls.model },
       effort: { ...input.requestedControls.effort },
@@ -418,6 +467,7 @@ export function formatDispatchReport(report: DispatchReportV1): string {
     `  Source: ${display(report.policy.source)}`,
     'Selection',
     `  Requested candidate: ${formatCandidate(report.selection.requestedCandidate)}`,
+    `  Legacy preferred value: ${display(report.selection.preferredValue)}`,
     `  Candidate tier / index: ${display(report.selection.candidateTier)} / ${display(report.selection.candidateIndex)}`,
     `  Ceiling tier: ${display(report.selection.ceilingTier)}`,
     `  Ceiling target: ${formatTarget(report.selection.ceilingTarget)}`,
@@ -425,6 +475,16 @@ export function formatDispatchReport(report: DispatchReportV1): string {
     `  Exact selected target: ${formatTarget(report.selection.exactSelectedTarget)}`,
     `  Mode / branch: ${report.selection.selectionMode} / ${report.selection.selectionBranch}`,
     `  Cell source: ${display(report.selection.cellSource)}`,
+    'Classification',
+    `  Task class: ${display(report.classification.taskClass)}`,
+    `  Preferred effort: ${display(report.classification.preferredEffort)}`,
+    `  Source: ${report.classification.source}`,
+    'Notices',
+    ...(report.notices.length === 0
+      ? ['  None']
+      : report.notices.map(
+          (notice) => `  [${notice.level}] ${notice.code}: ${notice.message}`,
+        )),
     'Requested controls',
     formatControl('Model', report.requestedControls.model),
     formatControl('Effort', report.requestedControls.effort),

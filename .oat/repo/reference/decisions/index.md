@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260729-additive-dispatch-reports      | 2026-07-29 | accepted | Additive dispatch reports                                               | -      |
+| DR-260729-classification-only-provenance | 2026-07-29 | accepted | Classification-only provenance                                          | -      |
+| DR-260729-effective-target-reviewer      | 2026-07-29 | accepted | Effective-target reviewer notices                                       | -      |
+| DR-260729-provider-neutral-selection     | 2026-07-29 | accepted | Provider-neutral selection warnings                                     | -      |
 | DR-260729-classification-reports-but     | 2026-07-29 | accepted | Classification reports but does not skip                                | -      |
 | DR-260729-default-narrowing              | 2026-07-29 | accepted | Default narrowing with explicit opt-out                                 | -      |
 | DR-260729-dual-durable-review-provenance | 2026-07-29 | accepted | Dual durable review provenance                                          | -      |

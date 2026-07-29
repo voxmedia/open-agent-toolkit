@@ -1,7 +1,13 @@
+import type { DispatchNotice } from '@providers/identity/dispatch-report';
+
 import {
   dispatchPolicyProviderTargets,
   type CappedManagedDispatchPolicy,
 } from './dispatch-ceiling-preset';
+import {
+  formatDispatchNotices,
+  terminalReviewerNoticeForTarget,
+} from './dispatch-notices';
 import {
   VALID_MANAGED_DISPATCH_POLICIES,
   type WorkflowManagedDispatchPolicy,
@@ -19,6 +25,7 @@ export interface DispatchPolicyChoice {
   kind: DispatchPolicyChoiceKind;
   runtimePolicy: boolean;
   description: string;
+  notices: DispatchNotice[];
   policy?: WorkflowManagedDispatchPolicy;
   providers?: {
     codex: string;
@@ -56,14 +63,20 @@ function managedChoice(
   policy: WorkflowManagedDispatchPolicy,
 ): DispatchPolicyChoice {
   if (isCappedManagedPolicy(policy)) {
+    const providers = dispatchPolicyProviderTargets(policy);
+    const terminalNotice = terminalReviewerNoticeForTarget(
+      providers.claude,
+      'bundled-recommendation',
+    );
     return {
       value: policy,
       label: MANAGED_POLICY_LABELS[policy],
       kind: 'managed-capped',
       runtimePolicy: true,
       description: MANAGED_POLICY_DESCRIPTIONS[policy],
+      notices: terminalNotice ? [terminalNotice] : [],
       policy,
-      providers: dispatchPolicyProviderTargets(policy),
+      providers,
     };
   }
 
@@ -73,6 +86,7 @@ function managedChoice(
     kind: 'managed-uncapped',
     runtimePolicy: true,
     description: MANAGED_POLICY_DESCRIPTIONS[policy],
+    notices: [],
     policy,
   };
 }
@@ -87,6 +101,7 @@ export function getDispatchPolicyChoices(): DispatchPolicyChoice[] {
       runtimePolicy: true,
       description:
         'OAT does not choose model or effort. Subagents use the current host/provider default behavior, such as parent session model, base Codex role defaults, or provider config.',
+      notices: [],
     },
     {
       value: 'leave-unresolved',
@@ -95,6 +110,7 @@ export function getDispatchPolicyChoices(): DispatchPolicyChoice[] {
       runtimePolicy: false,
       description:
         'Planning records no policy as a planning/preflight deferral. Implementation preflight must block until a policy is configured or explicitly selected.',
+      notices: [],
     },
   ];
 }
@@ -139,9 +155,13 @@ export function renderDispatchPolicyChoicesMarkdown(
   return [
     'Set the dispatch policy - how OAT should choose subagent model/effort controls.',
     '',
-    ...choices.map(
-      (choice, index) =>
+    ...choices.map((choice, index) =>
+      [
         `${index + 1}. ${choice.label} - ${providerSummary(choice)}. ${choice.description}`,
+        ...(choice.notices.length > 0
+          ? [formatDispatchNotices(choice.notices)]
+          : []),
+      ].join('\n'),
     ),
   ].join('\n');
 }

@@ -14,6 +14,11 @@ import {
 } from '@config/dispatch-ceiling-preset';
 import { normalizeDispatchMatrix } from '@config/dispatch-matrix';
 import {
+  effectiveTerminalReviewerTarget,
+  formatDispatchNotices,
+  terminalReviewerNoticeForTarget,
+} from '@config/dispatch-notices';
+import {
   getDispatchPolicyChoices,
   managedDispatchPolicyValueList,
   renderDispatchPolicyChoicesMarkdown,
@@ -60,7 +65,10 @@ import {
   buildDispatchReport,
   formatDispatchReport,
   type DispatchControlRequest,
+  type DispatchNotice,
+  type DispatchReportClassification,
   type DispatchReportV1,
+  type DispatchTaskClass,
 } from '@providers/identity/dispatch-report';
 import {
   classifyModelFamily,
@@ -122,6 +130,8 @@ interface DispatchCeilingResolveOptions {
   ceilingTier?: string;
   candidateModel?: string;
   candidateEffort?: string;
+  taskClass?: string;
+  taskEffort?: string;
   escalationLevel?: string;
   projectPath?: string;
   preflight?: boolean;
@@ -145,6 +155,7 @@ interface DispatchCeilingResolution {
   source: DispatchCeilingSource | null;
   preset: string | null;
   unresolved: boolean;
+  notices?: DispatchNotice[];
   projectPath: string | null;
   providerDefaultEffort: string;
   matrix: ProjectDispatchMatrix | null;
@@ -163,6 +174,14 @@ const CODEX_VALUES: readonly WorkflowCodexDispatchCeiling[] = [
 
 const CLAUDE_VALUES: readonly WorkflowClaudeDispatchCeiling[] = [
   ...VALID_CLAUDE_DISPATCH_CEILINGS,
+];
+
+const TASK_CLASSES: readonly DispatchTaskClass[] = [
+  'mechanical-recon',
+  'intelligent-recon',
+  'default-implementation',
+  'hard-reasoning',
+  'consequential',
 ];
 
 type DispatchSelectionMode =
@@ -1590,6 +1609,68 @@ function normalizeRequestedCandidate(
   return { model };
 }
 
+function normalizeClassification(
+  provider: DispatchCeilingProvider,
+  role: CeilingRole,
+  options: DispatchCeilingResolveOptions,
+): DispatchReportClassification {
+  const hasTaskClass = options.taskClass !== undefined;
+  const hasTaskEffort = options.taskEffort !== undefined;
+  if (!hasTaskClass && !hasTaskEffort) {
+    return {
+      taskClass: null,
+      preferredEffort: null,
+      source: 'not-reported',
+    };
+  }
+
+  if (role === 'reviewer') {
+    throw new Error(
+      'Classification flags are not supported for reviewer routes.',
+    );
+  }
+  if (
+    options.reportScope === undefined ||
+    (options.reportAction !== 'implementation' &&
+      options.reportAction !== 'fix')
+  ) {
+    throw new Error(
+      'Classification flags require --report-scope and an implementation or fix --report-action.',
+    );
+  }
+
+  const taskClassValue = options.taskClass?.trim() ?? '';
+  if (
+    hasTaskClass &&
+    !(TASK_CLASSES as readonly string[]).includes(taskClassValue)
+  ) {
+    throw new Error(
+      `Invalid task class "${taskClassValue}". Valid values: ${TASK_CLASSES.join(', ')}.`,
+    );
+  }
+
+  const taskEffort = options.taskEffort?.trim() ?? '';
+  if (hasTaskEffort && provider !== 'codex') {
+    throw new Error(
+      `--task-effort is only valid for Codex; received ${provider}.`,
+    );
+  }
+  if (
+    hasTaskEffort &&
+    !CODEX_VALUES.includes(taskEffort as WorkflowCodexDispatchCeiling)
+  ) {
+    throw new Error(
+      `Invalid Codex task effort "${taskEffort}". Valid values: ${CODEX_VALUES.join(', ')}.`,
+    );
+  }
+
+  return {
+    taskClass: hasTaskClass ? (taskClassValue as DispatchTaskClass) : null,
+    preferredEffort: hasTaskEffort ? taskEffort : null,
+    source: 'caller',
+  };
+}
+
 function normalizeEscalationLevel(value: string | undefined): number {
   if (value === undefined) {
     return 0;
@@ -2149,6 +2230,17 @@ async function resolveDispatchCeiling(
   const providers: Record<string, ProviderResolution> = {
     [provider]: providerResolution,
   };
+  const terminalReviewerNotice =
+    role === 'reviewer' || options.preflight === true
+      ? terminalReviewerNoticeForTarget(
+          effectiveTerminalReviewerTarget(
+            provider,
+            providerResolution.target,
+            providerResolution.selection.selectedValue,
+          ),
+        )
+      : null;
+  const notices = terminalReviewerNotice ? [terminalReviewerNotice] : [];
 
   if (resolvedValue) {
     const requiresManagedCodexDepth =
@@ -2180,6 +2272,7 @@ async function resolveDispatchCeiling(
           source: resolvedValue.source,
           preset: resolvedValue.preset,
           unresolved: true,
+          ...(notices.length > 0 ? { notices } : {}),
           projectPath,
           providerDefaultEffort,
           matrix: resolvedValue.matrix,
@@ -2231,6 +2324,7 @@ async function resolveDispatchCeiling(
         source: resolvedValue.source,
         preset: resolvedValue.preset,
         unresolved: true,
+        ...(notices.length > 0 ? { notices } : {}),
         projectPath,
         providerDefaultEffort,
         matrix:
@@ -2253,6 +2347,7 @@ async function resolveDispatchCeiling(
       source: resolvedValue.source,
       preset: resolvedValue.preset,
       unresolved: false,
+      ...(notices.length > 0 ? { notices } : {}),
       projectPath,
       providerDefaultEffort,
       matrix:
@@ -2285,6 +2380,7 @@ async function resolveDispatchCeiling(
     source: policyResolution?.source ?? null,
     preset: policyResolution?.preset ?? null,
     unresolved: true,
+    ...(notices.length > 0 ? { notices } : {}),
     projectPath,
     providerDefaultEffort,
     matrix: reportedMatrix,
@@ -2620,6 +2716,9 @@ function writeHumanResolution(
       );
     }
   }
+  if (resolution.notices && resolution.notices.length > 0) {
+    context.logger.info(formatDispatchNotices(resolution.notices));
+  }
 }
 
 function reportRole(action: DispatchAction): DispatchRole {
@@ -2660,6 +2759,14 @@ function buildResolutionReport(
   resolution: DispatchCeilingResolution,
   options: DispatchCeilingResolveOptions,
 ): DispatchReportV1 | null {
+  const requestedClassification =
+    options.taskClass !== undefined || options.taskEffort !== undefined
+      ? normalizeClassification(
+          resolution.provider,
+          normalizeRole(options.role),
+          options,
+        )
+      : null;
   const hasScope = options.reportScope !== undefined;
   const hasAction = options.reportAction !== undefined;
   if (!hasScope && !hasAction) {
@@ -2692,11 +2799,55 @@ function buildResolutionReport(
     );
   }
 
+  const classification =
+    requestedClassification ??
+    normalizeClassification(
+      resolution.provider,
+      providerResolution.selection.role,
+      options,
+    );
+  const namedManagedImplementation =
+    resolution.status === 'resolved' &&
+    resolution.policyMode === 'managed' &&
+    (VALID_DISPATCH_MATRIX_TIERS as readonly string[]).includes(
+      resolution.policy ?? '',
+    ) &&
+    action !== 'review' &&
+    options.preflight !== true;
+  const notices: DispatchNotice[] = [...(resolution.notices ?? [])];
+  if (
+    namedManagedImplementation &&
+    providerResolution.selection.requestedCandidate === null &&
+    providerResolution.selection.preferredValue === null &&
+    providerResolution.selection.selectedValue !== null
+  ) {
+    notices.push({
+      code: 'managed-capped-selection-skipped',
+      level: 'warning',
+      message:
+        'Managed capped implementation/fix dispatch resolved without an exact candidate; pass the provider candidate flags to preserve explicit selection provenance.',
+    });
+  }
+  if (
+    namedManagedImplementation &&
+    providerResolution.selection.requestedCandidate !== null &&
+    classification.taskClass === null
+  ) {
+    notices.push({
+      code: 'managed-capped-classification-missing',
+      level: 'warning',
+      message:
+        'Managed capped implementation/fix dispatch selected an exact candidate without a task class; pass --task-class to preserve classification provenance.',
+    });
+  }
+
   return buildDispatchReport({
     scope,
     action,
     role,
     resolution,
+    classification,
+    notices,
     requestedControls: {
       model: reportControl(
         providerResolution.modelAxis,
@@ -2848,6 +2999,14 @@ export function createProjectDispatchCeilingCommand(
       .option(
         '--candidate-effort <effort>',
         'Exact configured Codex candidate effort paired with --candidate-model',
+      )
+      .option(
+        '--task-class <class>',
+        `Provider-neutral task classification provenance: ${TASK_CLASSES.join(', ')}`,
+      )
+      .option(
+        '--task-effort <effort>',
+        'Codex-only task effort classification provenance; does not select a candidate',
       )
       .option(
         '--escalation-level <level>',

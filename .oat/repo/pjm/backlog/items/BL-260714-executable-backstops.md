@@ -15,8 +15,6 @@ associated_issues:
     { type: project, ref: 'orchestration-run-log' },
   ]
 external_plans: [] # repo-relative .oat/repo/reference/external-plans/*.md paths
-oat_template: false
-oat_template_name: backlog-item
 ---
 
 ## Description
