@@ -938,6 +938,11 @@ oat_generated: false
 - Scope: central renderer normalization and runtime regeneration for all three
   golden cases
 - Root boundary: generated evidence must be regenerated, never hand-edited
+- Initial outcome: `INVALID_RUN_ABORT`; all regeneration commands passed but the
+  golden artistic author bypasses the production renderer through a local shell
+  substitution helper
+- Boundary correction: add `tests/golden-conformance.test.mjs` so retained
+  fixtures consume the same central substitution contract; no retry consumed
 - Dispatch: scope=p05 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

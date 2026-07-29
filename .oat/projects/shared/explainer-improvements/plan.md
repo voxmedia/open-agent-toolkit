@@ -1952,6 +1952,7 @@ another review cycle.
 
 - Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
 - Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/simple/runtime/`
 - Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/runtime/`
 - Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/explainer-authoring-redesign/runtime/`
@@ -1960,8 +1961,9 @@ another review cycle.
 
 1. Add a RED renderer assertion proving empty template-token substitutions do
    not leave trailing horizontal whitespace on generated HTML lines.
-2. Normalize rendered template output centrally without changing authored text
-   semantics or hand-editing retained golden evidence.
+2. Normalize rendered template output centrally and route the golden artistic
+   author shell substitution through that same helper, without changing
+   authored text semantics or hand-editing retained golden evidence.
 3. Regenerate all three runtime fixtures through `UPDATE_GOLDEN_CASE`, then run
    the complete golden conformance suite.
 4. Run formatting, `git diff --check`, repository tests, and release validation.

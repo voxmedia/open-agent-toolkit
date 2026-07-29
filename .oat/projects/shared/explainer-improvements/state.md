@@ -270,6 +270,10 @@ Phase p04 implementation in progress
   repository/docs/release gates passed
 - ⧗ Root `git diff --check` found trailing whitespace in nine generated HTML
   fixtures; p05-t05 is bounded to fix the generator and regenerate evidence
+- ✓ Initial p05-t05 dispatch stopped without retained edits when regeneration
+  exposed a local golden shell-substitution owner outside the task boundary
+- ⧗ p05-t05 now includes the golden harness required to share the central
+  substitution contract; no retry was consumed
 
 ## Blockers
 
