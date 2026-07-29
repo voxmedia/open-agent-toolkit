@@ -432,6 +432,84 @@ test('interactive resume preserves the discovered absolute run root for a persis
   }
 });
 
+test('interactive resume preserves the original canonical root through a stable configured-output symlink', async () => {
+  const fixture = await suppliedFixture();
+  const originalOutputRoot = join(fixture.cwd, 'original-output');
+  const configuredOutputRoot = join(fixture.cwd, 'configured-output');
+  await mkdir(originalOutputRoot);
+  await symlink(originalOutputRoot, configuredOutputRoot);
+  const interactiveRequest = {
+    ...fixture.request,
+    outputRoot: configuredOutputRoot,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+  const durability = mock.fn(async () => {});
+  const persistedRequest = JSON.parse(
+    await readFile(join(paused.runRoot, 'run-request.json'), 'utf8'),
+  );
+  assert.equal(persistedRequest.outputRoot, dirname(paused.runRoot));
+
+  const resumed = await runExplainer(interactiveRequest, {
+    now: () => '2026-07-17T20:05:00Z',
+    durability,
+    reviewedSource: {
+      decision: 'approve',
+      reviewedAt: '2026-07-17T20:05:00Z',
+      reviewer: 'operator',
+      resumeToken: paused.approval.resumeToken,
+    },
+  });
+
+  assert.equal(resumed.runId, paused.runId);
+  assert.equal(resumed.runRoot, paused.runRoot);
+  assert.equal(resumed.outcome, 'built-not-durable');
+  assert.equal(durability.mock.callCount(), 1);
+});
+
+test('interactive resume rejects a configured-output symlink retargeted to a relocated package', async () => {
+  const fixture = await suppliedFixture();
+  const originalOutputRoot = join(fixture.cwd, 'original-output');
+  const relocatedOutputRoot = join(fixture.cwd, 'relocated-output');
+  const configuredOutputRoot = join(fixture.cwd, 'configured-output');
+  await mkdir(originalOutputRoot);
+  await symlink(originalOutputRoot, configuredOutputRoot);
+  const interactiveRequest = {
+    ...fixture.request,
+    outputRoot: configuredOutputRoot,
+    mode: 'interactive',
+    durability: { strategy: 'commit' },
+  };
+  const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+  await rename(originalOutputRoot, relocatedOutputRoot);
+  await rm(configuredOutputRoot);
+  await symlink(relocatedOutputRoot, configuredOutputRoot);
+  const durability = mock.fn(async () => {});
+
+  await assert.rejects(
+    runExplainer(interactiveRequest, {
+      now: () => '2026-07-17T20:05:00Z',
+      durability,
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: paused.approval.resumeToken,
+      },
+    }),
+    { code: 'E_APPROVAL_RESUME' },
+  );
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(
+    (await readFile(
+      join(relocatedOutputRoot, 'project-explainer-demo', 'run-request.json'),
+      'utf8',
+    )) !== '',
+    true,
+  );
+});
+
 test('interactive resume rejects a run-root symlink that relocates a package outside its output root', async () => {
   const fixture = await suppliedFixture();
   const interactiveRequest = {

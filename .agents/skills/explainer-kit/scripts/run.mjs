@@ -786,14 +786,30 @@ async function loadResumableRun(request) {
       'The resumable run root escapes the configured output root.',
     );
   }
-  let approval;
-  let record;
   let persistedRequest;
   try {
-    [approval, record, persistedRequest] = await Promise.all([
+    persistedRequest = await readJson(join(runRoot, 'run-request.json'));
+  } catch (error) {
+    if (error?.code === 'ENOENT') return null;
+    throw error;
+  }
+  if (
+    typeof persistedRequest.outputRoot !== 'string' ||
+    (isAbsolute(persistedRequest.outputRoot) &&
+      persistedRequest.outputRoot !== canonicalOutputRoot)
+  ) {
+    throw codedError(
+      'E_APPROVAL_RESUME',
+      'The resumable run does not match the original canonical output root.',
+    );
+  }
+
+  let approval;
+  let record;
+  try {
+    [approval, record] = await Promise.all([
       readJson(join(runRoot, 'source/content-approval.json')),
       readJson(join(runRoot, 'build-record.json')),
-      readJson(join(runRoot, 'run-request.json')),
     ]);
   } catch (error) {
     if (error?.code === 'ENOENT') return null;
