@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t06
-oat_last_commit: dbb2378e7680e636df546af94802d7f562305ae4
+oat_current_task: p04-review
+oat_last_commit: 0158516be8f7dd844466295a2982a18bfebfee42
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T04:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T05:55:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -219,7 +219,12 @@ Phase p04 implementation in progress
   passed 131/131
 - ✓ Concurrent p04-t09 plan addition invalidated the initial dispatch without
   consuming the remediation retry
-- ⧗ Remediation attempt 1/3 continues at p04-t06 from a clean worktree
+- ✓ p04-t06 through p04-t09 implemented in four atomic commits
+- ✓ Complete p03/p04 union passed 421/421, CLI contracts 77/77, and explainer
+  smoke 8/8
+- ✓ Repository and release gates passed, including five public packages and 65
+  visual measurements
+- ⧗ Fresh Phase p04 remediation re-review attempt 1/3 is pending
 
 ## Blockers
 
@@ -227,5 +232,5 @@ None
 
 ## Next Milestone
 
-Execute p04-t06 through p04-t09, verify Phase p04 and p03 regressions, and run a
-fresh remediation re-review.
+Run a fresh Phase p04 remediation re-review; if it passes, continue to the p05
+HiLL checkpoint.

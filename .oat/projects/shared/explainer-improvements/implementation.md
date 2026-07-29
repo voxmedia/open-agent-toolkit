@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t06
+oat_current_task_id: p04-review
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |     9 |       5/9 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |     9 |       9/9 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 46/54 tasks completed
+**Total:** 50/54 tasks completed
 
 ---
 
@@ -250,17 +250,17 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
 - [x] p04-t03 — Generate and publish a manifest-derived initiative catalog (`2ecd3923`)
 - [x] p04-t04 — Align archive and packaged-layout consumers (`cf579ca3`)
 - [x] p04-t05 — Bind artistic output to parsed graph semantics (`dbb2378e`)
-- [ ] p04-t06 — Canonicalize backlinks and bind reviewed Git bytes
-- [ ] p04-t07 — Validate catalog URLs against the publish root
-- [ ] p04-t08 — Restore completion provenance regression coverage
-- [ ] p04-t09 — Preserve the resolved output root across resume
+- [x] p04-t06 — Canonicalize backlinks and bind reviewed Git bytes (`d87670ef`)
+- [x] p04-t07 — Validate catalog URLs against the publish root (`b4042d1c`)
+- [x] p04-t08 — Restore completion provenance regression coverage (`8d3f4aeb`)
+- [x] p04-t09 — Preserve the resolved output root across resume (`0158516b`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -705,7 +705,31 @@ oat_generated: false
 - Base: `dbb2378e7680e636df546af94802d7f562305ae4`
 - Scope: canonical reviewed backlinks, exact catalog roots, completion provenance
   regression coverage, and canonical resume paths
+- Outcome: `DONE`
+- Task commits:
+  `d87670ef` (p04-t06), `b4042d1c` (p04-t07), `8d3f4aeb` (p04-t08), and
+  `0158516b` (p04-t09)
+- Verification: p04-t06 core/adapter 65/65, CLI 77/77, smoke 2/2; p04-t07
+  41/41; p04-t08 17/17; p04-t09 59/59
+- Final gates: complete p03/p04 union 421/421, CLI contracts 77/77, explainer
+  smoke 8/8, check, type-check, full test, build, lint, format, and
+  five-package/65-measurement release validation passed
+- Final HEAD: `0158516be8f7dd844466295a2982a18bfebfee42`
+- Worktree: clean; tracking and review artifacts untouched
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 21 — Phase p04 remediation re-review attempt 1
+
+- Request: `explainer-improvements-p04-review-r1-20260729T055500Z`
+- Launch intent: persisted
+- Base: `cf579ca39ba6b0bc7b22e2adb70287dc1e77049f`
+- Reviewed head: `0158516be8f7dd844466295a2982a18bfebfee42`
+- Source artifact: `reviews/20260728-p04-code-review.md`
+- Planned artifact: `reviews/20260729-p04-code-review-r1.md`
+- Review-remediation attempt: 1/3
+- Scope: C1, C2, I1-I3, p04-t05 through p04-t09, and regression checks for
+  previously accepted Phase p04 behavior
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
