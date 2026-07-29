@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t21
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    21 |     20/21 |
-| p04   | pending       |     3 |       0/3 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | review_pending |    21 |     21/21 |
+| p04   | pending        |     3 |       0/3 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 40/48 tasks completed
+**Total:** 41/48 tasks completed
 
 ---
 
@@ -176,7 +176,7 @@ oat_generated: false
 - [x] p03-t18 — Complete the review-gate failure matrix (`eea0172f`)
 - [x] p03-t19 — Align explainer and public release versions (`acdc8109`)
 - [x] p03-t20 — Align rebuildability with the canonical coverage release (`8317ed30`)
-- [ ] p03-t21 — Bind decoded image geometry through visual review
+- [x] p03-t21 — Bind decoded image geometry through visual review (`df757228`)
 
 ### Phase Implementation Summary
 
@@ -242,6 +242,9 @@ oat_generated: false
 - Fresh re-review attempt 2/3 resolved the canonical package-coverage and
   failure-matrix findings, but found that the decoded screenshot identity
   omitted geometry. The final remediation attempt 3/3 is bounded as p03-t21.
+- p03-t21 binds geometry, image profile, and reconstructed pixels across QA and
+  pre-critic decoding. The demonstrated reshape regression and all repository,
+  smoke, package, and release gates pass.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -566,7 +569,25 @@ oat_generated: false
 - Review-remediation attempt: 3/3
 - Scope: bind decoded geometry/profile and reconstructed pixels across QA and
   pre-critic re-decoding
+- Outcome: `DONE`
+- Commit: `df75722873638a957a24983974f9ce6087ae512c`
+- Verification: focused 90/90, Phase p03 230/230, CLI 192/192, smoke 7/7,
+  check, lint, format, type-check, build, full test, five-package release
+  validation, and 65 visual measurements passed
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 14 — Phase p03 final remediation re-review
+
+- Request: `explainer-improvements-p03-review-r3-20260729T015000Z`
+- Launch intent: persisted
+- Review-remediation attempt: 3/3
+- Base: `08565a93`
+- Reviewed head: `df75722873638a957a24983974f9ce6087ae512c`
+- Source artifact: `reviews/20260728-p03-code-review-r2.md`
+- Planned artifact: `reviews/20260728-p03-code-review-r3.md`
+- Scope: C1-R2 and p03-t21 with regression checks for previously resolved Phase
+  p03 findings
+- Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

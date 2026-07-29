@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t21
-oat_last_commit: 8317ed30f02b6aac567db1975c6f8bbc2e3b9b93
+oat_current_task: p04-t01
+oat_last_commit: df75722873638a957a24983974f9ce6087ae512c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 review remediation attempt 3 of 3 pending
+Phase p03 final remediation re-review pending
 
 ## Artifacts
 
@@ -186,6 +186,12 @@ Phase p03 review remediation attempt 3 of 3 pending
 - ✓ Package coverage and failure-matrix findings are resolved
 - ⧗ Re-review remained blocked on one Critical decoded-geometry binding gap
 - ⧗ p03-t21 is bounded as the final remediation attempt 3/3
+- ✓ p03-t21 committed with the reshape regression passing before critic
+  invocation
+- ✓ Focused 90/90, Phase p03 230/230, CLI 192/192, and smoke 7/7 tests passed
+- ✓ Repository and release gates passed, including five public packages and 65
+  visual measurements
+- ⧗ Final narrowed Phase p03 re-review is ready to launch
 
 ## Blockers
 
@@ -193,5 +199,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t21 as remediation attempt 3/3, rerun root verification, and
-perform the final narrowed Phase p03 re-review.
+Run the final narrowed Phase p03 re-review. If it passes, close Phase p03 and
+continue directly to p04-t01.
