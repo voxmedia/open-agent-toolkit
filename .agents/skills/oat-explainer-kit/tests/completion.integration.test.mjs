@@ -1,13 +1,16 @@
 import assert from 'node:assert/strict';
+import { execFile as execFileCallback } from 'node:child_process';
 import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import test, { afterEach } from 'node:test';
 import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 
-import { runOatExplainer } from '../scripts/run.mjs';
 import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
+import { runOatExplainer } from '../scripts/run.mjs';
 
+const execFile = promisify(execFileCallback);
 const repoRoot = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '../../../..',
@@ -408,6 +411,20 @@ test('the documented author seam turns lifecycle evidence into a rich recap', as
     'built-not-durable',
     JSON.stringify(built.result.result.errors),
   );
+  const reviewedSources = built.factBase.sources.filter(({ id }) =>
+    ['plan', 'design', 'spec', 'implementation', 'summary'].includes(id),
+  );
+  assert.equal(reviewedSources.length, 5);
+  for (const source of reviewedSources) {
+    assert.equal(source.repository, 'acme/completion-provenance');
+    assert.equal(source.revision, built.revision);
+    assert.match(
+      source.url,
+      new RegExp(
+        `^https://github\\.com/acme/completion-provenance/blob/${built.revision}/`,
+      ),
+    );
+  }
 
   // Every brief-declared section is present, so coverage is earned rather than
   // waived by a warning.
@@ -654,6 +671,34 @@ async function recapFromEvidence({
   )) {
     await writeFile(join(projectRoot, name), content);
   }
+  await execFile('git', ['init', '--quiet'], { cwd: repoRootFixture });
+  await execFile(
+    'git',
+    [
+      'remote',
+      'add',
+      'origin',
+      'https://github.com/acme/completion-provenance.git',
+    ],
+    { cwd: repoRootFixture },
+  );
+  await execFile('git', ['add', '.'], { cwd: repoRootFixture });
+  await execFile('git', ['commit', '--quiet', '-m', 'fixture'], {
+    cwd: repoRootFixture,
+    env: {
+      ...process.env,
+      GIT_AUTHOR_NAME: 'Completion Fixture',
+      GIT_AUTHOR_EMAIL: 'completion@example.com',
+      GIT_COMMITTER_NAME: 'Completion Fixture',
+      GIT_COMMITTER_EMAIL: 'completion@example.com',
+    },
+  });
+  const { stdout: revisionOutput } = await execFile(
+    'git',
+    ['rev-parse', 'HEAD'],
+    { cwd: repoRootFixture },
+  );
+  const revision = revisionOutput.trim();
 
   const result = await runOatExplainer({
     adapterRoot: SOURCE_ADAPTER_ROOT,
@@ -696,6 +741,13 @@ async function recapFromEvidence({
   return {
     result,
     hub: await readFile(join(result.result.runRoot, hubPath), 'utf8'),
+    factBase: JSON.parse(
+      await readFile(
+        join(result.result.runRoot, 'source', 'fact-base.json'),
+        'utf8',
+      ),
+    ),
+    revision,
   };
 }
 
