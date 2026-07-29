@@ -1633,6 +1633,33 @@ and all p03 browser/critic behavior passes under the Phase p04 adapter boundary.
 
 ---
 
+### Task p04-t09: Preserve the resolved output root across resume
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED interactive-resume case using a relative `outputRoot`, then change
+   the process working directory before resume and prove the discovered package
+   is not reopened through a different relative path.
+2. Keep the absolute run root resolved during resumable-run discovery instead
+   of reconstructing it from the persisted relative `outputRoot`.
+3. Return canonical absolute `outputRoot`, `runRoot`, request, build-record, and
+   manifest paths for the resumed run without weakening request-identity or
+   root-confinement checks.
+4. Run the focused interactive resume tests and the complete core integration
+   file.
+5. Commit as `fix(p04-t09): preserve resumed output root`.
+
+**Acceptance:** Resuming a package found through a relative output root always
+continues in that exact canonical package even when the process working
+directory changed between pause and resume.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1791,10 +1818,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 8 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
+- Phase 4: 9 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 53 tasks**
+**Total: 54 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

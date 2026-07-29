@@ -22,10 +22,10 @@ oat_generated: false
 | p01   | complete      |     7 |       7/7 |
 | p02   | complete      |    13 |     13/13 |
 | p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |     8 |       4/8 |
+| p04   | fixes_pending |     9 |       4/9 |
 | p05   | pending       |     4 |       0/4 |
 
-**Total:** 45/53 tasks completed
+**Total:** 45/54 tasks completed
 
 ---
 
@@ -260,6 +260,7 @@ oat_generated: false
 - [ ] p04-t06 — Canonicalize backlinks and bind reviewed Git bytes
 - [ ] p04-t07 — Validate catalog URLs against the publish root
 - [ ] p04-t08 — Restore completion provenance regression coverage
+- [ ] p04-t09 — Preserve the resolved output root across resume
 
 ## Phase 5: Golden conformance and release closure
 
@@ -681,11 +682,13 @@ oat_generated: false
 
 - Request: `explainer-improvements-p04-fix-r1-20260729T042000Z`
 - Launch intent: persisted
-- Tasks: p04-t05 through p04-t08, sequentially
+- Tasks: p04-t05 through p04-t09, sequentially
 - Source artifact: `reviews/20260728-p04-code-review.md`
 - Review-remediation attempt: 1/3
 - Scope: graph semantic binding, canonical reviewed backlinks, exact catalog
-  roots, and completion provenance regression coverage
+  roots, completion provenance regression coverage, and canonical resume paths
+- External feedback disposition: confirmed relative-output-root defect added as
+  p04-t09; narrative-section-ID report requires reproduction and is not queued
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

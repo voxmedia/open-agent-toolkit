@@ -211,9 +211,10 @@ Phase p04 implementation in progress
   validation, and `git diff --check` gates passed
 - ✓ Fresh Phase p04 review completed with two Critical and three Important
   findings
-- ⧗ p04-t05 through p04-t08 are bounded as review-remediation attempt 1/3
+- ⧗ p04-t05 through p04-t09 are bounded as review-remediation attempt 1/3
 - ⧗ Phase p04 remains blocked until graph semantics, backlink canonicalization,
-  reviewed Git bytes, exact catalog roots, and completion regressions are fixed
+  reviewed Git bytes, exact catalog roots, completion regressions, and canonical
+  resume paths are fixed
 
 ## Blockers
 
@@ -221,5 +222,5 @@ None
 
 ## Next Milestone
 
-Execute p04-t05 through p04-t08, verify Phase p04 and p03 regressions, and run a
+Execute p04-t05 through p04-t09, verify Phase p04 and p03 regressions, and run a
 fresh remediation re-review.
