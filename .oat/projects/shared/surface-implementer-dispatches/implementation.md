@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: prev1-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,28 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 2     | 2/2       |
+| Phase 2    | completed   | 2     | 2/2       |
+| Phase 3    | completed   | 2     | 2/2       |
+| Revision 1 | in_progress | 2     | 0/2       |
 
-**Total:** 6/6 tasks completed
+**Total:** 6/8 tasks completed
+
+### Revision Received: Inline Feedback
+
+**Date:** 2026-07-29
+**Source:** inline conversation
+
+**Changes requested:**
+
+- Merge current `origin/main` into the project branch.
+- Bump the lockstep public packages above the merged release baseline.
+
+**New tasks added:** `prev1-t01`, `prev1-t02`
+
+**Next:** Execute revision tasks via the `oat-project-implement` skill.
 
 ### Review Received: design
 

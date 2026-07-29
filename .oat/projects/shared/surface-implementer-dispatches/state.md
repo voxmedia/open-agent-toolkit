@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: prev1-t01
 oat_last_commit: c6f1dd2665598569fb07dcfe10faf1def7a6d4fa
 oat_blockers: []
 associated_issues: [
@@ -14,7 +14,7 @@ oat_hill_checkpoints: [p03] # Configured: which phases require human-in-the-loop
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: pr_open # Status: in_progress | complete | pr_open
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -36,7 +36,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: allowed
+  status: stale
   resolution: configured
   disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -68,8 +68,8 @@ oat_implement_exit_gate:
   receive_commit: 9fd85f4d0e684110f9ac3b731aba746afd883e24
   receive_eligible: true
   receive_completed: true
-  failure: null
-  updated_at: '2026-07-29T16:12:00Z'
+  failure: 'implementation_changed_after_gate: user requested merging current origin/main and bumping the lockstep public package versions'
+  updated_at: '2026-07-29T16:33:05Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -86,7 +86,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/187' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T16:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T16:33:05Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Pre-approval complete; final HiLL approval pending.
+Implementation — Revision 1 in progress after post-PR feedback.
 
 ## Artifacts
 
@@ -106,8 +106,8 @@ Implementation — Pre-approval complete; final HiLL approval pending.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (6/6 tasks complete; review and
-  closeout pending)
+- **Implementation:** `implementation.md` (6/8 tasks complete; revision in
+  progress)
 
 ## Progress
 
@@ -161,7 +161,9 @@ Implementation — Pre-approval complete; final HiLL approval pending.
 - ✓ Stored pre-approval sequence completed
 - ! Project recap gate could not start because the adapter is not installed at
   its canonical user-scoped path; completion policy treats this as non-blocking
-- → Awaiting final HiLL approval
+- ! Prior final review and exit-gate generation marked stale by requested
+  post-PR implementation changes
+- → `prev1-t01`: merge current `origin/main`
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -170,5 +172,6 @@ None
 
 ## Next Milestone
 
-Approve, defer, or decline the final HiLL checkpoint. The PR remains open at
+Execute Revision 1, refresh final verification and review, then return to the
+final HiLL checkpoint. The PR remains open at
 https://github.com/voxmedia/open-agent-toolkit/pull/187.

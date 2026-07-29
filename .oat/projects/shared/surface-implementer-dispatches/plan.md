@@ -579,6 +579,91 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 
 ---
 
+## Phase p-rev1: Revision 1
+
+Source: inline feedback (2026-07-29)
+
+### Task prev1-t01: (revision) Merge current origin/main
+
+**Files:**
+
+- Modify as required: files changed by both this branch and `origin/main`
+
+**Step 1: Merge current main**
+
+Fetch and merge `origin/main` into the project branch without rebasing or
+force-pushing.
+
+**Step 2: Resolve and verify**
+
+Preserve this project's dispatch visibility behavior and lifecycle artifacts
+while accepting compatible upstream review-scope changes.
+
+Run:
+
+```bash
+git diff --check
+git diff --name-only --diff-filter=U
+```
+
+Expected: no whitespace errors or unmerged paths remain.
+
+**Step 3: Commit**
+
+Use the merge commit created by `git merge origin/main`; do not rewrite branch
+history.
+
+---
+
+### Task prev1-t02: (revision) Bump lockstep public packages after merge
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Bump release metadata**
+
+After the merge, inspect the merged public-package baseline and bump all five
+lockstep public packages plus the bundled inventory to the next patch version.
+The fetched `origin/main` baseline is `0.2.25`, so the target is `0.2.26`.
+
+**Step 2: Verify**
+
+Run:
+
+```bash
+pnpm check
+pnpm type-check
+pnpm test
+pnpm build
+pnpm lint
+pnpm format
+pnpm build:docs
+pnpm release:validate
+git diff --check
+```
+
+Expected: all CI, skill/docs, docs-build, and publishable-package checks pass.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/package.json \
+  packages/control-plane/package.json \
+  packages/docs-config/package.json \
+  packages/docs-theme/package.json \
+  packages/docs-transforms/package.json \
+  packages/cli/assets/public-package-versions.json
+git commit -m "chore(release): bump public packages after main merge"
+```
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                                                      |
@@ -608,8 +693,9 @@ review; no review artifact was produced for that event.
 - Phase 1: 2 tasks - Dispatch report schema, classification inputs, and warnings
 - Phase 2: 2 tasks - Terminal reviewer disclosures, skills, and docs
 - Phase 3: 2 tasks - Public release metadata and backlog closeout
+- Revision 1: 2 tasks - Merge current main and refresh lockstep release metadata
 
-**Total: 6 tasks**
+**Total: 8 tasks**
 
 Ready for implementation after plan review and dispatch setup.
 
