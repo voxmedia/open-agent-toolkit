@@ -791,6 +791,31 @@ Dispatch: scope=p03 action=review role=reviewer producer=gpt-5.6-sol-high proven
 - **Parallel groups:** none
 - **Outstanding blocking items:** none
 
+#### Dispatch Acceptance — final reviewer round 1
+
+- **Request:** `review-final-r1-20260729T150100Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Selection reason:** exact matrix-pinned final review target at the configured
+  High ceiling
+- **Candidates:** `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`
+- **Range:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5` →
+  `79feab7f0b2fd23165f9dcea06bf04a70d645b62`
+- **Outcome:** accepted once; artifact validated; `PASS`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Reconnaissance:** not attempted; no review-orchestration evidence required
+- **Artifact:**
+  `reviews/code-final-review-2026-07-29T150100Z.md`
+- **Non-blocking follow-up:** expand command-level report-context coverage for
+  lower-tier exact candidates, at-cap legacy preference, managed Claude/Cursor,
+  and inherit/uncapped/unresolved suppression; retained as an explicit future
+  follow-up rather than expanding the completed implementation plan
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5.6-sol-high
+```
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -897,6 +922,8 @@ Track test execution during implementation.
   remain. `git diff --check` passed.
 - Root phase reviews passed for p01, p02 after two bounded fix iterations, and
   p03.
+- Mandatory final review passed with one non-blocking Medium test-matrix
+  follow-up.
 
 **Design deltas (if any):**
 

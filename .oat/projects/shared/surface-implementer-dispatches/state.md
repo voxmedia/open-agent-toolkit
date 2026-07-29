@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Tasks complete; mandatory final review pending
+Implementation - Final review passed; configured exit gate pending
 
 ## Artifacts
 
@@ -139,7 +139,9 @@ Implementation - Tasks complete; mandatory final review pending
   PJM warning status with no failing checks
 - ✓ Phase 3 root-owned review passed with two Minor tracking findings
 - ✓ Minor archived-reference and PJM doctor status records aligned
-- → Awaiting mandatory final review and HiLL closeout
+- ✓ Mandatory final review passed with one non-blocking Medium test-matrix
+  follow-up
+- → Awaiting configured exit gate and HiLL closeout
 
 ## Blockers
 
@@ -147,5 +149,5 @@ None
 
 ## Next Milestone
 
-Run mandatory final review, then complete the configured exit gate and HiLL
+Resolve and run the configured implementation exit gate, then complete the HiLL
 closeout
