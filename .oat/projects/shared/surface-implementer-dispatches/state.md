@@ -1,6 +1,6 @@
 ---
-oat_current_task: p01-t02
-oat_last_commit: fdd075bec64d8dadd79c99f9ba158a0d9331af18
+oat_current_task: p02-t01
+oat_last_commit: d3ce4975068e10640858fc831822607e3e09f9cd
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 1 (`p01-t02`)
+Implementation - Phase 2 (`p02-t01`)
 
 ## Artifacts
 
@@ -95,8 +95,8 @@ Implementation - Phase 1 (`p01-t02`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (1/6 tasks complete; current
-  `p01-t02`)
+- **Implementation:** `implementation.md` (2/6 tasks complete; current
+  `p02-t01`)
 
 ## Progress
 
@@ -117,7 +117,9 @@ Implementation - Phase 1 (`p01-t02`)
 - ✓ Final HiLL checkpoint configured at Phase 3 with auto-review enabled
 - ✓ `p01-t01` extended Dispatch Report V1 with additive classification,
   preferred-selection, and notice fields
-- → Phase 1 implementation continues at `p01-t02`
+- ✓ `p01-t02` added classification inputs and managed-cap warnings
+- ✓ Phase 1 implementation completed
+- → Next task is `p02-t01` after the root-owned Phase 1 review
 
 ## Blockers
 
@@ -125,4 +127,4 @@ None
 
 ## Next Milestone
 
-Complete Phase 1 at `p01-t02`
+Complete the Phase 1 review, then start Phase 2 at `p02-t01`

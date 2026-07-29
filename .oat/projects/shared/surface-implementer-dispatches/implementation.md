@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p01-t02
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | 2     | 1/2       |
-| Phase 2 | pending     | 2     | 0/2       |
-| Phase 3 | pending     | 2     | 0/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | pending   | 2     | 0/2       |
+| Phase 3 | pending   | 2     | 0/2       |
 
-**Total:** 1/6 tasks completed
+**Total:** 2/6 tasks completed
 
 ### Review Received: design
 
@@ -96,27 +96,40 @@ oat_generated: false
 
 ## Phase 1: Enforce Selection Provenance
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-28
 
 ### Phase Summary (fill when phase is complete)
 
 **Outcome (what changed):**
 
-- {2-5 bullets describing user-visible / behavior-level changes delivered in this phase}
+- Dispatch Report V1 records task classification, legacy preferred selection,
+  and ordered structured notices with backward-compatible defaults.
+- Managed named-cap implementation/fix resolution warns when exact candidate
+  selection is skipped or an exact candidate lacks task-class provenance.
+- Classification flags remain independent from candidate flags and legacy
+  `--preferred`; warning routes preserve resolved status and exit code 0.
 
 **Key files touched:**
 
-- `{path}` - {why}
+- `packages/cli/src/providers/identity/dispatch-report.ts` - additive report
+  schema, serialization, and human formatting.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` -
+  classification validation, notice derivation, and CLI flags.
+- Focused report, resolver, integration, gate, and help tests - contract and
+  regression coverage.
 
 **Verification:**
 
-- Run: `{command(s)}`
-- Result: {pass/fail + notes}
+- Run: Phase 1 focused Vitest suite and CLI type-check.
+- Result: pass (214 focused tests; type-check clean).
 
 **Notes / Decisions:**
 
-- {trade-offs or deviations discovered during implementation}
+- Classification is report provenance only and never participates in candidate
+  normalization or target selection.
+- Notices are derived after resolution and suppressed for preflight, review,
+  inherit, uncapped, unresolved, and legacy-preferred paths.
 
 ### Task p01-t01: Extend Dispatch Report V1 with classification and notices
 
@@ -155,12 +168,41 @@ oat_generated: false
 
 ### Task p01-t02: Add classification inputs and managed-cap warnings
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `d3ce4975068e10640858fc831822607e3e09f9cd`
 
-**Notes:**
+**Outcome (required when completed):**
 
-- {Notes will be added during implementation}
+- Added provider-neutral `--task-class` and Codex-only `--task-effort`
+  provenance inputs plus deterministic managed-cap warnings in human and JSON
+  reports.
+
+**Files changed:**
+
+- `packages/cli/src/commands/project/dispatch-ceiling/index.ts` - parsed and
+  validated classification, threaded report metadata, and derived notices.
+- `packages/cli/src/commands/project/dispatch-ceiling/index.test.ts` - covered
+  classification, warning, suppression, and exit behavior.
+- `packages/cli/src/commands/commands.integration.test.ts` - verified
+  end-to-end report classification.
+- `packages/cli/src/commands/help-snapshots.test.ts` - verified the new help
+  surface.
+
+**Verification:**
+
+- Run: focused resolver/integration/help/report Vitest suite and CLI
+  type-check.
+- Result: pass (214 tests; type-check clean).
+
+**Notes / Decisions:**
+
+- Legacy `--preferred` remains a selection control and is serialized separately
+  as `selection.preferredValue`.
+
+**Issues Encountered:**
+
+- New command tests initially failed on unknown flags and missing notices, then
+  passed after implementation.
 
 ---
 
@@ -271,7 +313,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | -         | -      | -      | -        |
+| 1     | 214       | 214    | 0      | Focused  |
 | 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
