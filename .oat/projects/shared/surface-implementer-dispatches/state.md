@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T00:01:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T00:13:53Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -105,6 +105,7 @@ Plan - Executable tasks drafted; resolving review and dispatch setup
 - ✓ Lightweight design approved
 - ✓ Executable implementation plan drafted
 - ✓ Important design-review false-positive fixed in plan inputs
+- ✓ Design review received and all findings resolved in artifacts
 - ⧗ Resolving phase gate and plan review
 
 ## Blockers

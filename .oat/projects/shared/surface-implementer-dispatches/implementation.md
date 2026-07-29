@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: surface-implementer-dispatches
 
 **Started:** 2026-07-28
-**Last Updated:** 2026-07-28
+**Last Updated:** 2026-07-29
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -30,6 +30,40 @@ oat_generated: false
 | Phase 2 | pending     | N     | 0/N       |
 
 **Total:** 0/{N} tasks completed
+
+### Review Received: design
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/artifact-design-review-2026-07-28T235619Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 3
+- Minor: 3
+
+**Disposition:**
+
+- I1: `resolve_in_artifact` — exclude legacy `--preferred` selection from the
+  skipped-selection notice predicate.
+- M1: `resolve_in_artifact` — serialize nullable
+  `selection.preferredValue` for auditability.
+- M2: `resolve_in_artifact` — distinguish the static choices recommendation
+  from effective adoption/runtime disclosure.
+- M3: `resolve_in_artifact` — use `--task-effort` for classification and retain
+  legacy `--preferred` for selection.
+- m1: `resolve_in_artifact` — name invalid reviewer classification flags
+  explicitly.
+- m2: `resolve_in_artifact` — validate task effort against Codex effort values
+  and use null for non-Codex providers.
+- m3: `resolve_in_artifact` — define Frontier/Fable terminology and cite the
+  bundled recommendation.
+
+**New tasks added:** None — artifact reviews update lifecycle artifacts directly.
+
+**Next:** Re-review the design artifact or continue quick-start plan review.
 
 ---
 

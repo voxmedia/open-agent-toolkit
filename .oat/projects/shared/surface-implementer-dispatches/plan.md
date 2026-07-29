@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-28
+oat_last_updated: 2026-07-29
 oat_phase: plan
 oat_phase_status: in_progress
 oat_plan_parallel_groups: []
@@ -36,7 +36,7 @@ status, exit codes, and compatibility stamps.
 - [x] Evaluated phase-level parallelism
 - [x] Stable task IDs assigned
 - [ ] Plan artifact review passed
-- [ ] Dispatch policy and optional phase gate resolved
+- [x] Dispatch policy and optional phase gate resolved
 
 ## Parallelism
 
@@ -64,6 +64,7 @@ final.
 Add tests for:
 
 - additive top-level classification with null/`not-reported` defaults;
+- additive nullable `selection.preferredValue` for legacy selection auditability;
 - ordered `notices` serialization;
 - human formatting of classification and notices;
 - compatibility for existing gate report producers;
@@ -85,8 +86,8 @@ Expected: new assertions fail before implementation.
   notice shape.
 - Extend `DispatchReportV1`, input types, builders, ordered serializer, and human
   formatter.
-- Default legacy producers to null/`not-reported` classification and `[]`
-  notices.
+- Default legacy producers to null/`not-reported` classification, null
+  `selection.preferredValue`, and `[]` notices.
 - Keep `formatDispatchStamp()` unchanged.
 
 **Step 3: Format**
@@ -135,9 +136,13 @@ git commit -m "feat(cli): add dispatch classification report fields"
 
 Cover:
 
-- `--task-class` and Codex `--preferred-effort` parsing and validation;
-- rejection for invalid classes, provider-inapplicable effort, reviewer action,
-  and conflicting controls;
+- `--task-class` and Codex `--task-effort` parsing and validation;
+- rejection for invalid classes, provider-inapplicable task effort, either
+  classification flag on reviewer routes, and existing selection conflicts;
+- classification flags remaining independent from exact candidate flags and
+  legacy `--preferred`, including distinct task and candidate effort values;
+- legacy `--preferred` surviving into
+  `DispatchReportV1.selection.preferredValue`;
 - no candidate on actual managed named-cap implementation/fix producing
   `managed-capped-selection-skipped`;
 - candidate without task class producing
@@ -163,7 +168,9 @@ Expected: new assertions fail before implementation.
 
 **Step 2: Implement classification and notice derivation**
 
-- Add CLI options and normalization without overloading `--preferred`.
+- Add `--task-class` and `--task-effort` without overloading legacy
+  `--preferred`; classification inputs must not participate in
+  `normalizeRequestedCandidate`.
 - Thread classification into Dispatch Report V1.
 - Derive skipped-selection and classification-missing notices only after the
   existing resolver returns, using policy, role/action, preflight, and selection
@@ -228,10 +235,12 @@ git commit -m "feat(cli): warn on unclassified capped dispatches"
 
 Cover:
 
-- recommendation adoption/choice output naming the configured terminal reviewer
-  conditionally;
-- human and JSON adoption output carrying the same coded advisory;
-- preserved explicit Frontier cells not being misrepresented by version alone;
+- policy choices naming the bundled recommendation's terminal reviewer in a
+  structured notice without claiming effective configuration;
+- human and JSON adoption output naming the effective post-adoption terminal
+  reviewer after preserved cells are applied;
+- preserved explicit Frontier cells not being misrepresented by recommendation
+  version alone;
 - runtime preflight/reviewer resolution disclosing the actual effective Fable
   target;
 - no disclosure for High or custom non-Fable Frontier targets.
@@ -251,7 +260,8 @@ Expected: new assertions fail before implementation.
 **Step 2: Implement shared disclosure metadata**
 
 - Centralize terminal-reviewer notice metadata and matching.
-- Add conditional disclosure to adoption and policy choices.
+- Add a static bundled-recommendation disclosure to policy choices and an
+  effective post-adoption disclosure to adoption output.
 - Derive runtime disclosure from the effective resolved target, not the
   recommendation version.
 - Reuse the structured notice shape from Phase 1.
@@ -483,15 +493,15 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                             |
-| ------ | -------- | -------- | ---------- | ---------------------------------------------------- |
-| p01    | code     | pending  | -          | -                                                    |
-| p02    | code     | pending  | -          | -                                                    |
-| p03    | code     | pending  | -          | -                                                    |
-| final  | code     | pending  | -          | -                                                    |
-| spec   | artifact | pending  | -          | -                                                    |
-| design | artifact | received | 2026-07-28 | reviews/artifact-design-review-2026-07-28T235619Z.md |
-| plan   | artifact | pending  | -          | -                                                    |
+| Scope  | Type     | Status          | Date       | Artifact                                                      |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
+| p01    | code     | pending         | -          | -                                                             |
+| p02    | code     | pending         | -          | -                                                             |
+| p03    | code     | pending         | -          | -                                                             |
+| final  | code     | pending         | -          | -                                                             |
+| spec   | artifact | pending         | -          | -                                                             |
+| design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
+| plan   | artifact | pending         | -          | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

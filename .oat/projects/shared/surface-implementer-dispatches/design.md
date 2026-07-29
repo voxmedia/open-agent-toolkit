@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-28
+oat_last_updated: 2026-07-29
 oat_generated: false
 oat_template: false
 oat_template_name: design
@@ -22,10 +22,10 @@ human and JSON output while preserving `status: resolved` and exit code `0`.
 
 A shared structured notice shape carries skipped-selection warnings,
 classification warnings, and terminal-reviewer eligibility advisories without
-changing the compatibility stamp. Recommendation adoption and policy choices
-disclose the configured terminal reviewer; runtime disclosure derives from the
-effective resolved target. The CLI does not claim to determine model access or
-organizational retention policy.
+changing the compatibility stamp. Policy choices disclose the bundled
+recommendation's terminal reviewer, while adoption and runtime disclosure
+derive from effective configured targets. The CLI does not claim to determine
+model access or organizational retention policy.
 
 ## Architecture
 
@@ -37,13 +37,13 @@ comparison, or target materialization.
 
 **Key Components:**
 
-- **Classification input:** parses task class and provider-specific preferred
-  effort independently of selection controls.
+- **Classification input:** parses task class and provider-specific task effort
+  independently of selection controls.
 - **Contextual notice derivation:** evaluates the completed selection with
   policy, role/action, preflight, and effective-target context.
 - **Dispatch Report V1:** stores additive nullable classification and notices.
-- **Recommendation disclosure:** describes the default terminal reviewer during
-  adoption and choices.
+- **Reviewer disclosure:** distinguishes the static choices recommendation from
+  effective adoption and runtime targets.
 - **Presenters:** render the same notices in human and JSON output.
 
 ### Component Diagram
@@ -80,8 +80,8 @@ terminal-reviewer disclosure helper
 3. Build notices from the completed resolution and report context.
 4. Build Dispatch Report V1 with classification and notices.
 5. Render human or JSON output from the same structured data.
-6. For recommendation adoption/choices, describe the recommendation
-   conditionally. For runtime preflight/review, match the effective target.
+6. For policy choices, describe the bundled recommendation. For adoption and
+   runtime preflight/review, match the effective configured target.
 
 ## Component Design
 
@@ -93,9 +93,9 @@ replacement for exact candidate selection.
 **Responsibilities:**
 
 - Accept `--task-class` for implementation/fix provenance across providers.
-- Accept `--preferred-effort` for Codex provenance without selecting a target.
-- Reject invalid classes, provider-inapplicable effort, reviewer classification,
-  and conflicting controls.
+- Accept `--task-effort` for Codex provenance without selecting a target.
+- Reject invalid classes, provider-inapplicable task effort, and either
+  classification flag on reviewer routes.
 - Keep classification distinct from ceiling, requested candidate, and selected
   candidate.
 
@@ -111,7 +111,7 @@ type DispatchTaskClass =
 
 interface DispatchClassification {
   taskClass: DispatchTaskClass | null;
-  preferredEffort: string | null;
+  preferredEffort: (typeof CODEX_VALUES)[number] | null;
 }
 ```
 
@@ -149,20 +149,21 @@ meanings.
 
 **Responsibilities:**
 
-- Add nullable classification and an ordered notice collection.
+- Add nullable classification, nullable legacy preferred selection, and an
+  ordered notice collection.
 - Default old producers to null/`not-reported` classification and `[]` notices.
 - Preserve stable ordered serialization and human formatting.
 - Leave the compatibility `Dispatch:` stamp unchanged.
 
 ### Terminal Reviewer Disclosure
 
-**Purpose:** Make the configured review target and user-owned constraints
-explicit.
+**Purpose:** Make the relevant review target and user-owned constraints
+explicit without conflating recommendation and effective configuration.
 
 **Responsibilities:**
 
-- Describe recommendation defaults conditionally during adoption and choices.
-- Match the effective resolved target at runtime.
+- Describe the bundled recommendation's terminal target in policy choices.
+- Match the effective configured terminal target after adoption and at runtime.
 - Avoid inferring runtime target from recommendation version because explicit
   cells may be preserved.
 - Avoid claiming that availability probing establishes organizational retention
@@ -179,26 +180,45 @@ interface DispatchReportClassification {
 
 interface DispatchReportV1 {
   // Existing fields remain unchanged.
+  selection: {
+    // Existing selection fields remain unchanged.
+    preferredValue: string | null;
+  };
   classification: DispatchReportClassification;
   notices: DispatchNotice[];
 }
 ```
 
 `classification` is top-level so it remains separate from policy and selection.
-New builders always emit the additive fields; legacy callers receive safe
-defaults. Resolver and configuration envelopes may reuse `DispatchNotice`, but
-notice derivation remains owned by each command's effective context.
+`selection.preferredValue` records legacy preferred selection so warning
+suppression is auditable. New builders always emit the additive fields; legacy
+callers receive safe defaults. Resolver and configuration envelopes may reuse
+`DispatchNotice`, but notice derivation remains owned by each command's
+effective context.
 
 ## API Design
 
 ### Classification Flags
 
 - `--task-class <class>`: provider-neutral implementation/fix classification.
-- `--preferred-effort <effort>`: Codex classification provenance, separate from
-  candidate selection.
+- `--task-effort <effort>`: Codex classification provenance validated against
+  `CODEX_VALUES`, separate from candidate selection.
 
 Classification flags require implementation/fix report context and are invalid
 for reviewers. They do not satisfy or replace exact-candidate requirements.
+`--task-effort` is invalid for non-Codex providers and serializes to
+`classification.preferredEffort`; every non-Codex report stores null.
+
+Selection and classification controls remain independent:
+
+| Inputs                                       | Behavior                                                                       |
+| -------------------------------------------- | ------------------------------------------------------------------------------ |
+| `--task-class` + `--task-effort`             | Allowed for Codex implementation/fix routes                                    |
+| Classification flags + exact candidate flags | Allowed; classification never participates in candidate normalization          |
+| Classification flags + legacy `--preferred`  | Allowed; legacy selection remains auditable through `selection.preferredValue` |
+| Either classification flag + reviewer role   | Exit-1 input error                                                             |
+| `--task-effort` + non-Codex provider         | Exit-1 input error                                                             |
+| Legacy `--preferred` + exact candidate flags | Preserve the existing exit-1 conflict                                          |
 
 ### Notice Behavior
 
@@ -216,16 +236,20 @@ classification.
 
 ### Disclosure Behavior
 
-Adoption output states the recommendation's terminal target conditionally
-because explicit cells may remain unchanged. Runtime output derives disclosure
-from the actual effective target. High and custom non-Fable Frontier targets do
-not receive the Fable disclosure.
+Policy choices add `notices` to their existing human/JSON envelope and label
+Fable as the bundled recommendation's Frontier terminal reviewer; this path is
+static and does not claim to inspect effective configuration. Adoption output
+derives disclosure from the effective post-adoption Frontier target after
+preserved cells are applied. Runtime output derives disclosure from the actual
+effective target. High and custom non-Fable Frontier targets do not receive the
+Fable disclosure. Here, Frontier is the highest named tier and Fable is its
+bundled Claude terminal target.
 
 ## Error Handling
 
-- Invalid task-class values, provider-inapplicable preferred efforts,
-  conflicting controls, or reviewer classification are CLI input errors with
-  exit code `1`.
+- Invalid task-class values, provider-inapplicable task efforts,
+  `--task-class` or `--task-effort` on a reviewer route, and existing selection
+  control conflicts are CLI input errors with exit code `1`.
 - Missing candidate or classification on an actual managed-capped
   implementation/fix route produces coded warnings, not errors.
 - Existing unresolved/blocked policy and ladder behavior remains authoritative.
@@ -253,15 +277,18 @@ not receive the Fable disclosure.
 ### Dispatch Report Tests
 
 - Legacy producers receive nullable defaults.
-- Ordered JSON serialization includes classification and notices.
+- Ordered JSON serialization includes classification,
+  `selection.preferredValue`, and notices.
 - Human formatting renders the new fields.
 - Gate report producers remain compatible.
 - `formatDispatchStamp()` output is byte-for-byte unchanged.
 
 ### Disclosure Tests
 
-- Recommendation adoption/choices identify the default terminal reviewer.
-- Preserved explicit cells are described conditionally.
+- Policy choices identify the bundled recommendation's terminal reviewer in a
+  structured notice without claiming effective configuration.
+- Adoption identifies the effective post-adoption terminal reviewer after
+  preserved explicit cells are applied.
 - Runtime disclosure appears only when the effective reviewer target matches
   the constrained target.
 - High and custom non-matching Frontier targets do not receive the disclosure.
@@ -304,5 +331,7 @@ pnpm release:validate
   `packages/cli/src/commands/project/dispatch-ceiling/index.ts`
 - Dispatch report:
   `packages/cli/src/providers/identity/dispatch-report.ts`
+- Bundled dispatch recommendation:
+  `packages/cli/config/dispatch-matrix-recommendation.json`
 - Dispatch guidance:
   `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
