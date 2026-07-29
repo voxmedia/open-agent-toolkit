@@ -600,7 +600,12 @@ interface ProjectRecapManifest {
   source: {
     factBasePath: string;
     factBaseHash: string;
+    inputHashes: Record<string, string>;
     authorResultPaths?: string[];
+    backlinks?: Array<{
+      sourceId: string;
+      url: string;
+    }>;
   };
   theme: {
     path: string;
@@ -679,13 +684,15 @@ function isProjectRecapManifestV1(
     !hasExactKeys(
       value.source,
       ['factBasePath', 'factBaseHash', 'inputHashes'],
-      ['sourceRevision', 'authorResultPaths'],
+      ['sourceRevision', 'authorResultPaths', 'backlinks'],
     ) ||
     !isSafeRelativePath(value.source.factBasePath) ||
     !isSha256(value.source.factBaseHash) ||
     !isHashMap(value.source.inputHashes) ||
     (value.source.authorResultPaths !== undefined &&
       !isUniqueSafePathArray(value.source.authorResultPaths)) ||
+    (value.source.backlinks !== undefined &&
+      !isCanonicalSourceBacklinks(value.source.backlinks)) ||
     (value.source.sourceRevision !== undefined &&
       !isNonEmptyString(value.source.sourceRevision)) ||
     !isRecord(value.theme) ||
@@ -819,6 +826,40 @@ function isHashMap(value: unknown): value is Record<string, string> {
         isSafeRelativePath(relativePath) && isSha256(hash),
     )
   );
+}
+
+function isCanonicalSourceBacklinks(
+  value: unknown,
+): value is NonNullable<ProjectRecapManifest['source']['backlinks']> {
+  if (!Array.isArray(value)) {
+    return false;
+  }
+  const identities = new Set<string>();
+  for (const backlink of value) {
+    if (
+      !isRecord(backlink) ||
+      !hasExactKeys(backlink, ['sourceId', 'url']) ||
+      !isNonEmptyString(backlink.sourceId) ||
+      typeof backlink.url !== 'string'
+    ) {
+      return false;
+    }
+    const match = backlink.url.match(
+      /^https:\/\/github\.com\/[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+\/blob\/[a-f0-9]{40}\/[^\s?#]+#L([1-9][0-9]*)(?:-L([1-9][0-9]*))?$/,
+    );
+    if (
+      !match ||
+      (match[2] !== undefined && Number(match[2]) < Number(match[1]))
+    ) {
+      return false;
+    }
+    const identity = `${backlink.sourceId}\0${backlink.url}`;
+    if (identities.has(identity)) {
+      return false;
+    }
+    identities.add(identity);
+  }
+  return true;
 }
 
 function isUniqueSafePathArray(value: unknown): boolean {

@@ -26,6 +26,7 @@ import {
   resolveArchiveProjectTarget,
   resolveLocalArchiveProjectPath,
   resolvePrimaryRepoRoot,
+  verifySelectedProjectRecapForArchive,
 } from './archive-utils';
 
 describe('archive utils', () => {
@@ -57,6 +58,7 @@ describe('archive utils', () => {
       outcome = 'built-not-durable',
       recipeId = 'project-recap',
       runName = 'selected-run',
+      sourceBacklinks,
     }: {
       distinctCanonicalHashes?: boolean;
       includeReviewEvidence?: boolean;
@@ -68,6 +70,7 @@ describe('archive utils', () => {
         | 'incomplete';
       recipeId?: string;
       runName?: string;
+      sourceBacklinks?: unknown;
     } = {},
   ): Promise<{
     relativeRunPath: string;
@@ -142,6 +145,9 @@ describe('archive utils', () => {
             : immutableHashes['source/fact-base.json'],
           inputHashes: {},
           authorResultPaths: ['source/author/recap.json'],
+          ...(sourceBacklinks !== undefined && {
+            backlinks: sourceBacklinks,
+          }),
         },
         theme: {
           path: 'theme.resolved.json',
@@ -801,6 +807,75 @@ describe('archive utils', () => {
       'project-recaps',
     );
     expect(await readdir(exportParent)).toEqual([]);
+  });
+
+  it('accepts canonical immutable GitHub source backlinks', async () => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      sourceBacklinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/docs/phase%204/plan.md#L12-L19`,
+        },
+      ],
+    });
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).resolves.toBeUndefined();
+  });
+
+  it.each([
+    {
+      name: 'an unknown backlink key',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
+          branch: 'main',
+        },
+      ],
+    },
+    {
+      name: 'a moving branch revision',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: 'https://github.com/acme/project/blob/main/plan.md#L1',
+        },
+      ],
+    },
+    {
+      name: 'a non-GitHub source URL',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://example.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L1`,
+        },
+      ],
+    },
+    {
+      name: 'an invalid line range',
+      backlinks: [
+        {
+          sourceId: 'plan',
+          url: `https://github.com/acme/project/blob/${'1'.repeat(40)}/plan.md#L19-L12`,
+        },
+      ],
+    },
+  ])('rejects source backlinks with $name', async ({ backlinks }) => {
+    const repoRoot = await createRepoRoot();
+    const projectPath = join(repoRoot, '.oat', 'projects', 'shared', 'demo');
+    await mkdir(projectPath, { recursive: true });
+    const recap = await createRecapPackage(projectPath, {
+      sourceBacklinks: backlinks,
+    });
+
+    await expect(
+      verifySelectedProjectRecapForArchive(projectPath, recap.relativeRunPath),
+    ).rejects.toThrow(/manifest contract/i);
   });
 
   it.each([
