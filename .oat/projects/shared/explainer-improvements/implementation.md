@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t01
+oat_current_task_id: p04-t04
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----: | --------: |
-| p01   | complete |     7 |       7/7 |
-| p02   | complete |    13 |     13/13 |
-| p03   | complete |    21 |     21/21 |
-| p04   | pending  |     3 |       0/3 |
-| p05   | pending  |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | fixes_pending |     4 |       3/4 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 41/48 tasks completed
+**Total:** 44/49 tasks completed
 
 ---
 
@@ -250,11 +250,12 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** pending
+**Status:** fixes_pending
 
-- [ ] p04-t01 — Detect and reroute non-linear diagrams
-- [ ] p04-t02 — Emit commit-pinned source backlinks
-- [ ] p04-t03 — Generate and publish a manifest-derived initiative catalog
+- [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
+- [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
+- [x] p04-t03 — Generate and publish a manifest-derived initiative catalog (`2ecd3923`)
+- [ ] p04-t04 — Align archive and packaged-layout consumers
 
 ## Phase 5: Golden conformance and release closure
 
