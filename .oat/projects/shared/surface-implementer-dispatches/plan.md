@@ -35,7 +35,7 @@ status, exit codes, and compatibility stamps.
 - [x] Lightweight design approved
 - [x] Evaluated phase-level parallelism
 - [x] Stable task IDs assigned
-- [ ] Plan artifact review passed
+- [x] Plan artifact review passed
 - [x] Dispatch policy and optional phase gate resolved
 
 ## Parallelism
@@ -524,7 +524,7 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 | final  | code     | pending         | -          | -                                                             |
 | spec   | artifact | pending         | -          | -                                                             |
 | design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
-| plan   | artifact | pending         | -          | -                                                             |
+| plan   | artifact | passed          | 2026-07-29 | -                                                             |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

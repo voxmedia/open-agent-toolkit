@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T03:34:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T03:39:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -110,7 +110,8 @@ Plan - Executable tasks drafted; resolving review and dispatch setup
 - ✓ Medium plan-review docs workflow gap fixed
 - ✓ Fumadocs generation command corrected after re-review
 - ✓ Contextless classification rejection added after re-review
-- ⧗ Resolving phase gate and plan review
+- ✓ Plan artifact review passed
+- ⧗ Running configured quick-start exit gate
 
 ## Blockers
 
