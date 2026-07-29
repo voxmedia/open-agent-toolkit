@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t05
-oat_last_commit: e309ef7ec1b2d64518bf6e1a16b79528e916faae
+oat_current_task: final-review
+oat_last_commit: 508da0b898e1a1e5f6545554b7d0715aa1f9ebd4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -272,8 +272,10 @@ Phase p04 implementation in progress
   fixtures; p05-t05 is bounded to fix the generator and regenerate evidence
 - ✓ Initial p05-t05 dispatch stopped without retained edits when regeneration
   exposed a local golden shell-substitution owner outside the task boundary
-- ⧗ p05-t05 now includes the golden harness required to share the central
-  substitution contract; no retry was consumed
+- ✓ p05-t05 corrected the shared substitution boundary and regenerated all
+  retained runtime evidence without trailing whitespace
+- ✓ All 60 implementation tasks and all repository/docs/release gates pass
+- ⧗ The single bounded final project review is pending
 
 ## Blockers
 
@@ -281,4 +283,4 @@ None.
 
 ## Next Milestone
 
-Execute p05-t05, rerun final gates, then run the final project review.
+Run the single bounded final project review and disposition any findings.
