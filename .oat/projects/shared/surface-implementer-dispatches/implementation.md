@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: prev1-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 2     | 2/2       |
-| Phase 2    | completed   | 2     | 2/2       |
-| Phase 3    | completed   | 2     | 2/2       |
-| Revision 1 | in_progress | 2     | 1/2       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 2     | 2/2       |
+| Phase 2    | completed | 2     | 2/2       |
+| Phase 3    | completed | 2     | 2/2       |
+| Revision 1 | completed | 2     | 2/2       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -453,8 +453,25 @@ oat_generated: false
 
 ## Phase p-rev1: Revision 1
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-29
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Merged current `origin/main`, preserving upstream re-review narrowing and
+  this project's dispatch visibility behavior.
+- Bumped the five lockstep public packages and bundled inventory from the
+  merged `0.2.25` baseline to `0.2.26`.
+
+**Verification:**
+
+- `pnpm check`, `pnpm type-check`, `pnpm test`, `pnpm build`, `pnpm lint`,
+  `pnpm format`, `pnpm build:docs`, `pnpm release:validate`, and
+  `git diff --check`: pass.
+- Release validation packed and inspected all five public packages at
+  `0.2.26`; visual validation passed with 65 measurements.
 
 ### Task prev1-t01: (revision) Merge current origin/main
 
@@ -494,7 +511,29 @@ oat_generated: false
 
 ### Task prev1-t02: (revision) Bump lockstep public packages after merge
 
-**Status:** pending
+**Status:** completed
+**Commit:** `36260b34245ade376016debd784ff840508b6f40`
+
+**Outcome (required when completed):**
+
+- Bumped all five lockstep public packages and the bundled public-package
+  inventory from `0.2.25` to `0.2.26`.
+- Updated the dispatch feature's repository current-state release marker to
+  `0.2.26` while preserving the merged re-review release record at `0.2.25`.
+
+**Files changed:**
+
+- Five public package manifests under `packages/` - lockstep release versions.
+- `packages/cli/assets/public-package-versions.json` - bundled package-version
+  inventory.
+- `.oat/repo/pjm/current-state.md` - release attribution after the merge.
+
+**Verification:**
+
+- Run: complete CI, skill/docs, docs-build, and publishable-package command
+  sequence from the revision plan.
+- Result: all nine commands passed; release validation confirmed five
+  `0.2.26` packages and 65 visual measurements.
 
 ---
 
@@ -1075,7 +1114,7 @@ Track test execution during implementation.
   terminal Fable reviewer access and retention constraints.
 - Implementation guidance and user documentation describe classified dispatch
   calls, effective-target disclosure, and the corrected Cursor candidate
-  boundary; public packages are prepared at `0.2.25`.
+  boundary; public packages are prepared at `0.2.26`.
 
 **Behavioral changes (user-facing):**
 

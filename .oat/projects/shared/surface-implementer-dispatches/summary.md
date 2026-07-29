@@ -38,7 +38,7 @@ eligibility.
 - Updated implementation guidance, executable skill contracts, and user
   documentation for classified dispatches, pre-launch notice handling, and the
   14-recommended/18-catalogued Cursor boundary.
-- Bumped the five lockstep public packages and bundled inventory to `0.2.25`,
+- Bumped the five lockstep public packages and bundled inventory to `0.2.26`,
   repaired the bounded PJM doctor failures, refreshed the autonomy inventory,
   and archived `BL-260727-surface-implementer-dispatches`.
 
