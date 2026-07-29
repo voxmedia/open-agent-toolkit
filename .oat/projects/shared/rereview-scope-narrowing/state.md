@@ -106,6 +106,7 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Automatic final review found no new defects
 - ✓ Human disposition recorded: fix all three Mediums and the Minor
 - ✓ Phase 7 repairs, sync, and release validation completed
+- ✓ Phase 8 completion-handoff ledger compatibility repair completed
 - ✓ Combined narrowed final verification review passed with zero findings
 - ✓ Final `p06` HiLL checkpoint completed
 - ✓ PR created

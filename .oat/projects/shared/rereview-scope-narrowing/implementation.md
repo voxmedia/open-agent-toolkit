@@ -30,8 +30,9 @@ oat_template_name: implementation
 | p05   | completed | 1     | 1/1       |
 | p06   | completed | 3     | 3/3       |
 | p07   | completed | 5     | 5/5       |
+| p08   | completed | 1     | 1/1       |
 
-**Total:** 18/18 tasks completed
+**Total:** 19/19 tasks completed
 
 ---
 
@@ -688,6 +689,28 @@ the final checkpoint.
 
 ---
 
+## Phase 8: Completion handoff compatibility repair
+
+**Status:** completed
+
+### Task p08-t01: Parse widened review ledgers in `oat review latest`
+
+**Status:** completed
+
+**Outcome:** The completion handoff audit found that this project widened the
+Reviews ledger to eight columns while `oat review latest` still discarded every
+row whose cell count was not exactly five. This caused active passed artifacts
+to retain default actionability instead of honoring artifact-correlated ledger
+status. The parser now resolves `Scope`, `Type`, `Status`, and `Artifact` by
+header name, preserving the legacy five-column shape and accepting the widened
+provenance ledger.
+
+**Verification:** A new canonical eight-column regression fixture failed before
+the parser change and passed afterward. All 12 focused `review latest` tests,
+CLI lint, and CLI type-check pass.
+
+---
+
 ## Final Review Findings Resolved
 
 All four fix-now dispositions were implemented in Phase 7 and independently
@@ -717,6 +740,7 @@ verified by the passing narrowed final review.
 | p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory     |
 | p06   | Docs build + workspace build/test/lint/type-check/format/release       | 3,675  | 0      | Docs, parity, provider sync, lockstep versions, bundled release assets |
 | p07   | Focused contracts/parsing/config + full workspace release gate         | 3,556  | 0      | Ledger migration, header parsing, precedence metadata, provider sync   |
+| p08   | Focused review-latest suite + CLI lint/type-check                      | 12     | 0      | Legacy and widened ledger actionability correlation                    |
 
 ## Final Summary (for PR/docs)
 
@@ -726,6 +750,8 @@ verified by the passing narrowed final review.
   guarded by durable provenance, full-SHA validation, existence, and ancestry.
 - Local lifecycle, configured gate, project remote, and ad-hoc remote rails keep
   independent provenance and fail open safely.
+- Review-latest actionability correlation accepts both legacy and widened
+  Reviews ledger schemas.
 - Public packages and bundled provider assets are released in lockstep at
   0.2.25.
 
@@ -742,13 +768,15 @@ verified by the passing narrowed final review.
 - `packages/cli/src/review-remote/`
 - `.agents/skills/oat-project-review-provide*/`
 - `.agents/skills/oat-review-provide-remote/`
+- `packages/cli/src/commands/review/latest.ts`
 - `packages/control-plane/src/state/reviews.ts`
 
 **Verification performed:**
 
 - Plan artifact review, six original phase reviews, two configured cross-family
   gates, Phase 7 focused verification, full workspace validation, and
-  publishable-package release validation passed. The combined narrowed final
+  publishable-package release validation passed. The Phase 8 compatibility
+  regression test and focused CLI checks also pass. The combined narrowed final
   fix review resolved all four carried findings and passed with zero findings.
 
 **Design deltas (if any):**

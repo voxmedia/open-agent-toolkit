@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
 oat_generated: true
-oat_summary_last_task: p07-t05
+oat_summary_last_task: p08-t01
 oat_summary_revision_count: 0
 oat_summary_includes_revisions: []
 ---
@@ -42,6 +42,8 @@ artifact archival, fresh clones, and worktree hand-offs.
   informational and never skips review.
 - Reviews ledger readers and writers now resolve known cells by header name,
   widen legacy rows safely, preserve unknown columns, and validate full SHAs.
+- `oat review latest` correlates actionability against both legacy five-column
+  and widened provenance ledgers instead of discarding widened rows.
 - User docs, generated provider views, and all five public packages shipped in
   lockstep at `0.2.25`.
 
@@ -80,6 +82,9 @@ artifact archival, fresh clones, and worktree hand-offs.
 - Release validation exposed a stale bundled public-package version snapshot
   even though package manifests were correct. Regeneration and post-merge
   reconciliation kept the final release surface lockstep at `0.2.25`.
+- The follow-up-project handoff found one remaining five-column assumption in
+  `oat review latest`; a failing eight-column fixture reproduced it before the
+  completion repair.
 
 ## Tradeoffs Made
 
@@ -106,6 +111,10 @@ artifact archival, fresh clones, and worktree hand-offs.
   deterministically validated optimization that can omit reviewer dispatch when
   every fix is lifecycle bookkeeping. This project supplies reporting
   classification only and deliberately does not authorize that skip.
+- `BL-260729-implement-reviewplan-first` and the scaffolded
+  `review-plan-workflow` project preserve the broader artifact-first intake,
+  ReviewPlan, delegation-economics, deadline, and replay-boundary redesign that
+  this project intentionally excluded.
 
 ## Workflow Observations
 

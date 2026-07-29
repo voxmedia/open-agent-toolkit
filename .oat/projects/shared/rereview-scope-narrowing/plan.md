@@ -771,6 +771,43 @@ create an empty commit when sync and build produce no tracked changes.
 
 ---
 
+## Phase 8: Completion handoff compatibility repair
+
+Closes a review-ledger consumer regression found while preparing the follow-up
+ReviewPlan project before this project is archived.
+
+### Task p08-t01: Parse widened review ledgers in `oat review latest`
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/review/latest.ts`
+- Modify: `packages/cli/src/commands/review/__tests__/latest.test.ts`
+
+**Step 1: Reproduce**
+
+Add a canonical eight-column Reviews ledger fixture and verify that
+`--actionable-project` incorrectly treats the newest active artifact as
+actionable because the parser discards every widened row.
+
+**Step 2: Change**
+
+Resolve `Scope`, `Type`, `Status`, and `Artifact` by header name rather than
+requiring exactly five cells. Preserve legacy five-column compatibility and
+tolerate the provenance columns introduced by this project.
+
+**Step 3: Verify**
+
+Run the focused `review latest` suite plus CLI lint and type-check.
+
+**Step 4: Commit**
+
+```bash
+git add packages/cli/src/commands/review/
+git commit -m "fix(review): parse widened project review ledgers"
+```
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -823,8 +860,9 @@ create an empty commit when sync and build produce no tracked changes.
 - Phase 5: 1 task - config default flipped to narrow
 - Phase 6: 3 tasks - documentation, cross-surface parity verification, provider sync and lockstep version bump
 - Phase 7: 5 tasks - final deferred-finding fixes, generated asset refresh, and release revalidation
+- Phase 8: 1 task - widened review-ledger actionability compatibility repair
 
-**Total: 18 tasks**
+**Total: 19 tasks**
 
 Implementation and final narrowed verification are complete.
 
@@ -835,7 +873,8 @@ Implementation and final narrowed verification are complete.
 - Discovery: `discovery.md`
 - Design: N/A (quick mode, straight to plan)
 - Spec: N/A (quick mode)
-- Upstream feedback that motivated this work: `.oat/projects/local/slow-review-triage/slow-review-feedback.md` (untracked local reference)
+- Upstream feedback that motivated this work:
+  `.oat/projects/shared/review-plan-workflow/references/slow-review-feedback.md`
 - Canonical narrowing semantics: `packages/cli/src/review-remote/narrowing.ts`
 - Module/skill drift warning: `packages/cli/src/review-remote/README.md`
 - Closeout-only classifier referenced by the deferred skip-entirely idea: `.agents/skills/oat-project-implement/references/completion-and-closeout.md`
