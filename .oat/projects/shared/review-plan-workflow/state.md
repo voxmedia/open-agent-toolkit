@@ -71,21 +71,20 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T14:52:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T21:52:44Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-plan-workflow
 
-**Status:** Discovery — revalidation pending
+**Status:** Discovery — direction validated
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-29
 
 ## Current Phase
 
-Discovery — populated from the originating incident, source proposal, current
-contracts, and prerequisite projects; awaiting fresh-thread revalidation before
-design-depth selection or planning.
+Discovery — fresh-thread revalidation complete. The integrated contract slice
+is confirmed; awaiting design-depth selection before planning.
 
 ## Artifacts
 
@@ -104,7 +103,8 @@ design-depth selection or planning.
 - ✓ Original feedback preserved under project references
 - ✓ Current-state and fresh-thread handoff captured
 - ✓ Discovery populated from incident evidence and repository contracts
-- ⧗ Awaiting fresh-thread discovery revalidation
+- ✓ Fresh-thread baseline and first implementation slice revalidated
+- ⧗ Awaiting design-depth selection
 
 ## Blockers
 
@@ -112,5 +112,5 @@ None
 
 ## Next Milestone
 
-Revalidate discovery in the fresh worktree, then choose straight-to-plan,
-lightweight design, or promotion to spec-driven workflow.
+Choose straight-to-plan, lightweight design, or promotion to spec-driven
+workflow.

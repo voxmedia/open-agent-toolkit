@@ -216,15 +216,67 @@ multi-consumer atomicity obligations before the core strategy can ship.
 
 ### Chosen Direction
 
-**Approach:** Not yet validated. Approach 2 is the current recommendation for
-fresh-thread discussion.
+**Approach:** Approach 2 — an integrated, contract-first ReviewPlan and
+review-runtime slice.
 
-**Rationale:** The ReviewPlan needs real metadata and budget inputs to change
-behavior, but transactional artifact publication is sufficiently cross-cutting
-to deserve an explicit architecture decision rather than accidental inclusion.
+**Rationale:** Current implementation seams can carry a metadata-only change
+map, an in-memory ReviewPlan, and the gate's already-resolved outer budget
+without introducing a durable runtime manifest. Pairing those inputs with
+selective intake plus explicit delegation and replay boundaries addresses the
+observed giant-diff-first and serial-mega-worker failure shape as one coherent
+slice. Mechanically enforced phase state and transactional partial artifacts
+remain sufficiently cross-cutting to require a separate decision and consumer
+migration.
 
-**User validated:** No. Revalidate after PR #186 is merged/rebased and the
-current contracts are reread.
+**User validated:** Yes, during fresh-thread revalidation on 2026-07-29.
+
+### Fresh-Thread Revalidation
+
+- PR #185 and PR #186 are merged and their merge commits are present in this
+  branch. Their timeout diagnostics and guarded narrowing behavior are
+  prerequisites, not work to repeat.
+- The central gap remains current: the reviewer understands the artifacts and
+  diff before classifying lanes, the project wrapper passes only a
+  `git diff --name-only` inventory, and the inline fallback reads every changed
+  file.
+- The current post-hoc `Review Orchestration` section provides vocabulary that
+  can be promoted into a pre-intake ReviewPlan rather than creating a competing
+  strategy schema.
+- Gate code already resolves and records an outer timeout budget, but does not
+  propagate that budget to the reviewer prompt or child environment.
+- Existing lineage, run correlation, artifact snapshot, and nested-directory
+  scanning behavior provide reusable safety seams. They do not provide a
+  ReviewPlan type, rich change-map collector, every-file accounting validator,
+  complexity threshold, or partial-dossier contract.
+- A contract-first first release is feasible without a durable runtime
+  manifest. It will enforce behavior through reviewer/wrapper contracts and
+  focused tests; mechanical proof that planning occurred before arbitrary file
+  reads remains deferred.
+
+### Confirmed First Slice
+
+Include:
+
+- metadata-only change-map collection with provenance and complete file
+  accounting;
+- an internal ReviewPlan produced before source or content-level diff intake;
+- selective, risk-ordered evidence loading and a validated whole-diff
+  complexity threshold;
+- delegation eligibility based on at least two independent, substantial lanes
+  and explicit coordination economics;
+- a narrower primary replay boundary that preserves direct verification of
+  findings, consequential absence claims, conflicts, and risk-based samples;
+- propagation and allocation of the gate's existing resolved outer budget;
+- artifact-mode and structured-output parity through a compact strategy and
+  coverage summary without adding a separate durable plan file.
+
+Defer:
+
+- a runtime-enforced review state machine;
+- transactional in-progress or partial review artifacts;
+- adaptive/work-derived outer timeout calculation;
+- manual prior-verdict reuse and bookkeeping-only review skipping;
+- broad ownership/prose deduplication beyond changes required by this slice.
 
 ## Options Considered
 
