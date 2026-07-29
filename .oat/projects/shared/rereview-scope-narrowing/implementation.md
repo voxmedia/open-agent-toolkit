@@ -1,9 +1,9 @@
 ---
 oat_status: in_progress
-oat_ready_for: null
+oat_ready_for: oat-project-review-provide
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p07-t01
+oat_current_task_id: null
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -21,17 +21,17 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase | Status      | Tasks | Completed |
-| ----- | ----------- | ----- | --------- |
-| p01   | completed   | 3     | 3/3       |
-| p02   | completed   | 3     | 3/3       |
-| p03   | completed   | 2     | 2/2       |
-| p04   | completed   | 1     | 1/1       |
-| p05   | completed   | 1     | 1/1       |
-| p06   | completed   | 3     | 3/3       |
-| p07   | in_progress | 5     | 0/5       |
+| Phase | Status    | Tasks | Completed |
+| ----- | --------- | ----- | --------- |
+| p01   | completed | 3     | 3/3       |
+| p02   | completed | 3     | 3/3       |
+| p03   | completed | 2     | 2/2       |
+| p04   | completed | 1     | 1/1       |
+| p05   | completed | 1     | 1/1       |
+| p06   | completed | 3     | 3/3       |
+| p07   | completed | 5     | 5/5       |
 
-**Total:** 13/18 tasks completed
+**Total:** 18/18 tasks completed
 
 ---
 
@@ -349,8 +349,9 @@ all five packages passed without tracked mutations.
 
 ## Phase 7: Final review fixes
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-28
+**Completed:** 2026-07-28
 
 ### Phase Summary
 
@@ -361,25 +362,79 @@ phase but does not receive an independent review cycle; one combined narrowed
 final verification review covers the Medium fix set and its accompanying
 wording correction.
 
+- Added header-relative, widening-safe provenance preservation to every
+  implementation-owned and remote-receive Reviews ledger mutation path.
+- Made the control-plane review parser resolve all known columns by header name
+  while retaining legacy rows, row order, full-SHA validation, and unknown
+  column tolerance.
+- Corrected seven workflow catalog descriptions to match actual layered config
+  precedence while preserving the legacy checkpoint fallback.
+- Synced all scopes, discarded unrelated Cursor live-catalog and manifest
+  drift, confirmed the provider views were already current, and passed the full
+  release definition of done with all public packages at `0.2.20`.
+
 ### Task p07-t01: Preserve provenance in implementation-ledger writes
 
-**Status:** pending
+**Status:** completed
+**Commit:** `29d119c62ed7950a0229d837bef80c0a0ee8cb52`
+
+**Outcome:** Every implementation-owned review disposition and archive
+re-point now widens and pads legacy rows, mutates by header name, preserves
+known and unknown cells, and populates only validated artifact provenance.
+
+**Verification:** File-scoped formatting and 143 focused implementation,
+autonomy, version, and review-skill contract tests passed.
 
 ### Task p07-t02: Parse review provenance by header name
 
-**Status:** pending
+**Status:** completed
+**Commit:** `bf13da3785bfb0f9a364cebb4e85a13c49e9948c`
+
+**Outcome:** Known Reviews columns are resolved from normalized header names,
+including reordered columns with unknown cells interleaved; legacy five-column
+rows and append order remain compatible.
+
+**Verification:** 13 focused parser tests, control-plane lint, type-check, and
+file-scoped formatting passed.
 
 ### Task p07-t03: Preserve clean remote-receive ledger migrations
 
-**Status:** pending
+**Status:** completed
+**Commit:** `beb17c01e1018ee36858d30c8074fbd67f7d7aa8`
+
+**Outcome:** The clean and findings-bearing remote receive branches now share
+one explicit widen, pad, mutate-by-header, preserve, and never-truncate
+contract. The skill remains at version `1.5.0`.
+
+**Verification:** File-scoped formatting and 144 focused review-skill and
+version tests passed.
 
 ### Task p07-t04: Correct workflow catalog precedence wording
 
-**Status:** pending
+**Status:** completed
+**Commit:** `25ca7a2d554e1a29b305a841b58ed94edd6879da`
+
+**Outcome:** Seven workflow catalog entries no longer claim a nonexistent
+environment override; `workflow.autoReviewAtHillCheckpoints` retains its
+`legacy autoReviewAtCheckpoints` fallback.
+
+**Verification:** 140 focused config tests, CLI lint, type-check, and
+file-scoped formatting passed.
 
 ### Task p07-t05: Resync and revalidate final release assets
 
-**Status:** pending
+**Status:** completed
+**Commit:** no-op
+
+**Outcome:** `oat sync --scope all` found the project-owned implementation and
+remote-receive provider views already current. Unrelated generated Cursor Opus
+roles and the sync-manifest version-only drift were removed, so no generated
+asset commit was required. All five public package manifests and
+`packages/cli/assets/public-package-versions.json` remain at `0.2.20`.
+
+**Verification:** Workspace build, 3,556 tests across tested public packages,
+lint, type-check, formatting, and release validation for all five public
+packages passed. The tracked worktree was clean afterward.
 
 ---
 
@@ -587,11 +642,11 @@ the final checkpoint.
 - [x] p06 bundled public-package version fix — `87455b33c`
 - [x] final automatic review — no new defects; deferred ledger revalidated
 - [x] final HiLL deferred-finding disposition — all four selected for fix-now
-- [ ] p07-t01: Preserve provenance in implementation-ledger writes
-- [ ] p07-t02: Parse review provenance by header name
-- [ ] p07-t03: Preserve clean remote-receive ledger migrations
-- [ ] p07-t04: Correct workflow catalog precedence wording
-- [ ] p07-t05: Resync and revalidate final release assets
+- [x] p07-t01: Preserve provenance in implementation-ledger writes — `29d119c62`
+- [x] p07-t02: Parse review provenance by header name — `bf13da378`
+- [x] p07-t03: Preserve clean remote-receive ledger migrations — `beb17c01e`
+- [x] p07-t04: Correct workflow catalog precedence wording — `25ca7a2d5`
+- [x] p07-t05: Resync and revalidate final release assets — no-op
 - [ ] combined narrowed final fix verification review
 
 **Decisions:**
@@ -641,8 +696,9 @@ the final checkpoint.
 | p04   | Focused parser/builder/narrowing/integration/contract suites + checks  | 241    | 0      | Remote provenance, gates, discovery fallback, diagnostics              |
 | p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory     |
 | p06   | Docs build + workspace build/test/lint/type-check/format/release       | 3,675  | 0      | Docs, parity, provider sync, lockstep versions, bundled release assets |
+| p07   | Focused contracts/parsing/config + full workspace release gate         | 3,556  | 0      | Ledger migration, header parsing, precedence metadata, provider sync   |
 
-## Final Summary (draft; pending Phase 7)
+## Final Summary (draft; pending combined verification review)
 
 **What shipped:**
 
@@ -671,8 +727,9 @@ the final checkpoint.
 **Verification performed:**
 
 - Plan artifact review, six original phase reviews, two configured cross-family
-  gates, full workspace validation, and publishable-package release validation
-  passed. Phase 7 repairs and final narrowed verification remain pending.
+  gates, Phase 7 focused verification, full workspace validation, and
+  publishable-package release validation passed. The combined narrowed final
+  fix verification review remains pending.
 
 **Design deltas (if any):**
 

@@ -1,6 +1,6 @@
 ---
-oat_current_task: p07-t01
-oat_last_commit: 87455b33c5b338ac717d10ebe5862924c538aeef
+oat_current_task: null
+oat_last_commit: 25ca7a2d554e1a29b305a841b58ed94edd6879da
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T01:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T01:19:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -105,7 +105,8 @@ Phase 7 — final review fixes
 - ✓ Phase 6 completed and reviewed
 - ✓ Automatic final review found no new defects
 - ✓ Human disposition recorded: fix all three Mediums and the Minor
-- ⧗ Phase 7 repairs and combined narrowed final verification pending
+- ✓ Phase 7 repairs, sync, and release validation completed
+- ⧗ Combined narrowed final verification review pending
 
 ## Blockers
 
@@ -113,6 +114,6 @@ None
 
 ## Next Milestone
 
-Complete `p07-t01` through `p07-t05`, then run one combined narrowed final
-verification review. The Minor wording fix does not require a separate review
-cycle. Complete the `p06` HiLL checkpoint only after the repair review passes.
+Run one combined narrowed final verification review for the completed Phase 7
+repair range. The Minor wording fix does not require a separate review cycle.
+Complete the `p06` HiLL checkpoint only after the repair review passes.
