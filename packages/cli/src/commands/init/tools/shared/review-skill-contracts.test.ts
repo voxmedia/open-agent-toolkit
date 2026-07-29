@@ -534,6 +534,61 @@ describe('review skill contracts', () => {
     );
   });
 
+  it('preserves remote receive ledger migrations on clean and findings paths', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+    );
+    const contractStart = content.indexOf(
+      '**Reviews ledger write contract (all receive paths):**',
+    );
+    const cleanStart = content.indexOf('If no unresolved comments:');
+    const findingsStart = content.indexOf(
+      '### Step 6: Update Project Artifacts',
+    );
+    const cleanPath = content.slice(
+      cleanStart,
+      content.indexOf('### Step 3: Classify and Normalize Findings'),
+    );
+    const findingsPath = content.slice(
+      findingsStart,
+      content.indexOf('### Step 6.5: Commit Review Bookkeeping'),
+    );
+    const contract = content
+      .slice(contractStart, cleanStart)
+      .replace(/\s+/g, ' ');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(contractStart).toBeGreaterThanOrEqual(0);
+    expect(contractStart).toBeLessThan(cleanStart);
+    expect(contractStart).toBeLessThan(findingsStart);
+    expect(contract).toContain(
+      'Resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`, `Invocation`, and `Gate Target` by header name',
+    );
+    expect(contract).toMatch(
+      /legacy five columns.*add `Reviewed Head`, `Invocation`, and `Gate Target`.*pad every existing row with `-`/,
+    );
+    expect(contract).toContain(
+      'pad a shorter row with `-` through the current header width',
+    );
+    expect(contract).toContain(
+      'Preserve every unknown column in its original position',
+    );
+    expect(contract).toContain(
+      'every existing known value unless the operation explicitly advances that cell',
+    );
+    expect(contract).toContain(
+      'Never truncate a row to five, eight, or any other assumed width.',
+    );
+    for (const [name, path] of [
+      ['clean', cleanPath],
+      ['findings', findingsPath],
+    ] as const) {
+      expect(path, `${name} path applies shared ledger contract`).toContain(
+        'Apply the Reviews ledger write contract above',
+      );
+    }
+  });
+
   it('fails open remote review discovery errors without unnecessary enumeration', () => {
     const skillPaths = [
       '.agents/skills/oat-project-review-provide-remote/SKILL.md',

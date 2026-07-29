@@ -128,6 +128,20 @@ lineage cannot be associated with this receive event, leave the corresponding
 ledger cells unknown (`-`). Never infer lineage from the reviewer identity or
 substitute the current PR head for the commit that was actually reviewed.
 
+**Reviews ledger write contract (all receive paths):**
+
+- Resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`,
+  `Invocation`, and `Gate Target` by header name before mutating a row; never
+  use fixed cell positions.
+- If the Reviews table has only the legacy five columns, add `Reviewed Head`,
+  `Invocation`, and `Gate Target` to its header and separator and pad every
+  existing row with `-`. In an already widened table, pad a shorter row with
+  `-` through the current header width before mutation.
+- Mutate only the event selected by the event-identity rules below. Preserve
+  every unknown column in its original position and every existing known value
+  unless the operation explicitly advances that cell. Never truncate a row to
+  five, eight, or any other assumed width.
+
 If no unresolved comments:
 
 1. Create a UTC timestamp and event-distinct filename:
@@ -138,6 +152,8 @@ If no unresolved comments:
    remain in top-level `reviews/`.
 3. Record the clean result as a `passed` Reviews event whose event identity
    combines `Scope`, `Type`, and artifact filename:
+   - Apply the Reviews ledger write contract above before claiming, appending,
+     or mutating the event.
    - Claim only an unbound `pending` placeholder with matching Scope + Type and
      Artifact `-`; otherwise append a distinct row.
    - Set Date and Artifact to this clean event. Advance only this event and
@@ -222,10 +238,8 @@ Update `plan.md`:
   Scope + Type + artifact filename, never by scope or `github-pr #<N>` alone.
 - Never move an event status backward or overwrite an earlier event from the
   same PR.
-- If the Reviews table has only the legacy five columns, add `Reviewed Head`,
-  `Invocation`, and `Gate Target` to its header and separator and pad all
-  existing rows with `-`. Otherwise mutate by header name and preserve every
-  unknown trailing cell. Never rewrite a widened row to five or eight cells.
+- Apply the Reviews ledger write contract above before claiming, appending, or
+  mutating the event.
 - Update `## Implementation Complete` totals.
 
 Update `implementation.md`:
