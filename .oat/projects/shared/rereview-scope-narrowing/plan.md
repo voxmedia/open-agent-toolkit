@@ -624,6 +624,153 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 
 ---
 
+## Phase 7: Final review fixes
+
+Resolve every deferred finding selected at the final HiLL checkpoint, then
+refresh generated assets and rerun the release definition of done.
+
+### Task p07-t01: Preserve provenance in implementation-ledger writes
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Change**
+
+Add the shared review-ledger mutation contract to every implementation-owned
+review disposition and archival path: resolve cells by header name, widen
+legacy tables, pad missing cells with `-`, preserve unknown columns, populate
+validated artifact provenance, and never truncate known values. Bump
+`oat-project-implement` once from `2.1.9` to `2.2.0`.
+
+**Step 2: Verify**
+
+Run the focused skill-version and autonomy/implementation contract tests plus
+file-scoped formatting.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-implement/
+git add packages/cli/src/validation/skills.test.ts
+git commit -m "fix(p07-t01): preserve provenance in implementation review writes"
+```
+
+---
+
+### Task p07-t02: Parse review provenance by header name
+
+**Files:**
+
+- Modify: `packages/control-plane/src/state/reviews.ts`
+- Modify: `packages/control-plane/src/state/reviews.test.ts`
+
+**Step 1: Change**
+
+Resolve known review columns from the table header instead of fixed positions,
+while preserving legacy five-column compatibility, append order, full-SHA
+validation, and unknown-column tolerance. Cover reordered and interleaved
+columns.
+
+**Step 2: Verify**
+
+Run the focused control-plane review parser tests, lint, and type-check.
+
+**Step 3: Commit**
+
+```bash
+git add packages/control-plane/src/state/reviews.ts
+git add packages/control-plane/src/state/reviews.test.ts
+git commit -m "fix(p07-t02): parse review provenance by header name"
+```
+
+---
+
+### Task p07-t03: Preserve clean remote-receive ledger migrations
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-receive-remote/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Change**
+
+Apply the same widen/pad/mutate-by-header/never-truncate contract to the clean
+remote-receive branch as the findings-bearing branch. Keep the skill at
+`1.5.0`; its single PR-scoped version bump already landed in Phase 2.
+
+**Step 2: Verify**
+
+Run focused review-skill contract and version tests plus file-scoped formatting.
+
+**Step 3: Commit**
+
+```bash
+git add .agents/skills/oat-project-review-receive-remote/SKILL.md
+git add packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts
+git commit -m "fix(p07-t03): preserve clean remote review ledger migrations"
+```
+
+---
+
+### Task p07-t04: Correct workflow catalog precedence wording
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Change**
+
+Remove the nonexistent `env >` layer from every affected workflow catalog
+entry, preserving special legacy fallback wording. Update catalog/describe
+assertions for all affected entries; do not add new runtime environment
+overrides.
+
+**Step 2: Verify**
+
+Run focused config command tests, lint, type-check, and formatting.
+
+**Step 3: Commit**
+
+```bash
+git add packages/cli/src/commands/config/index.ts
+git add packages/cli/src/commands/config/index.test.ts
+git commit -m "docs(p07-t04): correct workflow config precedence"
+```
+
+---
+
+### Task p07-t05: Resync and revalidate final release assets
+
+**Files:**
+
+- Modify: generated provider views corresponding to the changed canonical
+  implementation and remote-receive skills
+- Modify: generated bundled assets only when the clean build proves they are
+  stale
+
+**Step 1: Change**
+
+Run `oat sync --scope all`, retain only project-owned generated changes, and
+confirm all public package manifests remain lockstep `0.2.20`. Do not add
+unrelated live-catalog Opus roles or broad sync-manifest drift.
+
+**Step 2: Verify**
+
+Run:
+`pnpm build && pnpm test && pnpm lint && pnpm type-check && pnpm format && pnpm release:validate`.
+Require a clean tracked worktree afterward.
+
+**Step 3: Commit**
+
+Commit only changed project-owned generated views or bundled assets. Do not
+create an empty commit when sync and build produce no tracked changes.
+
+---
+
 ## Reviews
 
 {Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
@@ -636,7 +783,7 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 | p04    | code     | fixes_completed | 2026-07-28 | reviews/archived/p04-review-2026-07-28T222436Z.md           | 8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230108Z.md           | e9b6ffe0afc37c99959431c59f1031edf0b0c3a8 | auto       | -                    |
 | p06    | code     | fixes_completed | 2026-07-28 | reviews/archived/p06-review-2026-07-28T232956Z.md           | f95864d2ee8cbbf94eec311abeeb83547851ff37 | auto       | -                    |
-| final  | code     | received        | 2026-07-28 | reviews/final-review-2026-07-28T235646Z.md                  | b9f6f5a6098a5f9e7d0b55a7e454a9d309ef0663 | auto       | -                    |
+| final  | code     | fixes_added     | 2026-07-28 | reviews/archived/final-review-2026-07-28T235646Z.md         | b9f6f5a6098a5f9e7d0b55a7e454a9d309ef0663 | auto       | -                    |
 | plan   | artifact | passed          | 2026-07-27 | inline (structured)                                         | -                                        | -          | -                    |
 | spec   | artifact | n/a             | -          | -                                                           | -                                        | -          | -                    |
 | design | artifact | n/a             | -          | -                                                           | -                                        | -          | -                    |
@@ -674,10 +821,11 @@ git commit -m "chore(p06-t03): sync provider views and bump public packages"
 - Phase 4: 1 task - remote rails aligned
 - Phase 5: 1 task - config default flipped to narrow
 - Phase 6: 3 tasks - documentation, cross-surface parity verification, provider sync and lockstep version bump
+- Phase 7: 5 tasks - final deferred-finding fixes, generated asset refresh, and release revalidation
 
-**Total: 13 tasks**
+**Total: 18 tasks**
 
-Ready for code review and merge.
+Phase 7 is ready for implementation.
 
 ---
 

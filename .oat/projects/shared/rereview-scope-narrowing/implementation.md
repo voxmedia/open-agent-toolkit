@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: null
+oat_current_task_id: p07-t01
 oat_generated: false
 oat_template: false
 oat_template_name: implementation
@@ -21,16 +21,17 @@ oat_template_name: implementation
 
 ## Progress Overview
 
-| Phase | Status    | Tasks | Completed |
-| ----- | --------- | ----- | --------- |
-| p01   | completed | 3     | 3/3       |
-| p02   | completed | 3     | 3/3       |
-| p03   | completed | 2     | 2/2       |
-| p04   | completed | 1     | 1/1       |
-| p05   | completed | 1     | 1/1       |
-| p06   | completed | 3     | 3/3       |
+| Phase | Status      | Tasks | Completed |
+| ----- | ----------- | ----- | --------- |
+| p01   | completed   | 3     | 3/3       |
+| p02   | completed   | 3     | 3/3       |
+| p03   | completed   | 2     | 2/2       |
+| p04   | completed   | 1     | 1/1       |
+| p05   | completed   | 1     | 1/1       |
+| p06   | completed   | 3     | 3/3       |
+| p07   | in_progress | 5     | 0/5       |
 
-**Total:** 13/13 tasks completed
+**Total:** 13/18 tasks completed
 
 ---
 
@@ -346,6 +347,42 @@ all five packages passed without tracked mutations.
 
 ---
 
+## Phase 7: Final review fixes
+
+**Status:** in_progress
+**Started:** 2026-07-28
+
+### Phase Summary
+
+The final automatic review found no new defects and revalidated the three
+deferred Medium findings plus one Minor wording finding. At the HiLL checkpoint,
+the user selected fix-now for all four. The Minor is included in this repair
+phase but does not receive an independent review cycle; one combined narrowed
+final verification review covers the Medium fix set and its accompanying
+wording correction.
+
+### Task p07-t01: Preserve provenance in implementation-ledger writes
+
+**Status:** pending
+
+### Task p07-t02: Parse review provenance by header name
+
+**Status:** pending
+
+### Task p07-t03: Preserve clean remote-receive ledger migrations
+
+**Status:** pending
+
+### Task p07-t04: Correct workflow catalog precedence wording
+
+**Status:** pending
+
+### Task p07-t05: Resync and revalidate final release assets
+
+**Status:** pending
+
+---
+
 ## Orchestration Runs
 
 <!-- orchestration-runs-start -->
@@ -549,7 +586,13 @@ the final checkpoint.
 - [x] p06-t03: Sync provider views and bump public packages — `f95864d2e`
 - [x] p06 bundled public-package version fix — `87455b33c`
 - [x] final automatic review — no new defects; deferred ledger revalidated
-- [ ] final HiLL deferred-finding disposition
+- [x] final HiLL deferred-finding disposition — all four selected for fix-now
+- [ ] p07-t01: Preserve provenance in implementation-ledger writes
+- [ ] p07-t02: Parse review provenance by header name
+- [ ] p07-t03: Preserve clean remote-receive ledger migrations
+- [ ] p07-t04: Correct workflow catalog precedence wording
+- [ ] p07-t05: Resync and revalidate final release assets
+- [ ] combined narrowed final fix verification review
 
 **Decisions:**
 
@@ -563,26 +606,24 @@ the final checkpoint.
   re-review.
 - Phase 4 required two bounded Important-finding fix rounds and then passed
   final narrowed re-review.
-- Phase 5 passed standard review and its independent gate; one pre-existing
-  catalog wording Minor is deferred to final disposition.
+- Phase 5 passed standard review and its independent gate; its catalog wording
+  Minor was converted to `p07-t04`.
 - Phase 6 required one bounded release-consistency fix and then passed narrowed
   re-review with the full release gate set clean.
+- The final automatic review found no new defects and revalidated all four
+  deferred findings. The user selected fix-now for each one; they became Phase
+  7 tasks. The Minor does not require a separate re-review.
 
 ---
 
-## Deferred Findings (Medium)
+## Final Review Findings Converted to Tasks
 
-| ID     | Source                                              | Finding                                                                                   | Deferral rationale                                                                                                                | Final trigger         |
-| ------ | --------------------------------------------------- | ----------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- | --------------------- |
-| p02-M1 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Add provenance migration/preservation rules to the `oat-project-implement` ledger writer. | Requires a canonical skill version bump, assertion update, and focused verification; missing provenance fails open to full scope. | Final review Step 8.5 |
-| p02-M2 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Parse known provenance columns by header name rather than fixed position.                 | Canonical tables retain the expected order; ambiguous provenance fails open.                                                      | Final review Step 8.5 |
-| p02-M3 | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Apply the ledger widening/preservation contract to the clean remote-receive path.         | Bounded contract gap with safe fail-open behavior; resolve with assertion coverage.                                               | Final review Step 8.5 |
-
-## Deferred Findings
-
-| ID     | Severity | Source                                              | Finding                                                                                  | Deferral rationale                                                                                          | Final trigger           |
-| ------ | -------- | --------------------------------------------------- | ---------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------- |
-| p05-m1 | Minor    | `reviews/archived/p05-review-2026-07-28T230930Z.md` | Config catalog claims an env precedence layer unavailable to this key and five siblings. | Runtime behavior is correct; a catalog-wide wording sweep avoids making the shared pattern less consistent. | Final minor disposition |
+| ID     | Severity | Source                                              | Finding                                                                                   | User decision | Repair task |
+| ------ | -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------- | ----------- |
+| p02-M1 | Medium   | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Add provenance migration/preservation rules to the `oat-project-implement` ledger writer. | fix now       | `p07-t01`   |
+| p02-M2 | Medium   | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Parse known provenance columns by header name rather than fixed position.                 | fix now       | `p07-t02`   |
+| p02-M3 | Medium   | `reviews/archived/p02-review-2026-07-28T214026Z.md` | Apply the ledger widening/preservation contract to the clean remote-receive path.         | fix now       | `p07-t03`   |
+| p05-m1 | Minor    | `reviews/archived/p05-review-2026-07-28T230930Z.md` | Correct nonexistent environment precedence wording across workflow catalog entries.       | fix now       | `p07-t04`   |
 
 ## Deviations from Plan / Design
 
@@ -601,7 +642,7 @@ the final checkpoint.
 | p05   | Focused config/inventory + full CLI suite, lint, type-check, reviews   | 3,429  | 0      | Defaults, source attribution, metadata, generated prompt inventory     |
 | p06   | Docs build + workspace build/test/lint/type-check/format/release       | 3,675  | 0      | Docs, parity, provider sync, lockstep versions, bundled release assets |
 
-## Final Summary (for PR/docs)
+## Final Summary (draft; pending Phase 7)
 
 **What shipped:**
 
@@ -629,8 +670,9 @@ the final checkpoint.
 
 **Verification performed:**
 
-- Plan artifact review, six phase reviews, two configured cross-family gates,
-  full workspace validation, and publishable-package release validation passed.
+- Plan artifact review, six original phase reviews, two configured cross-family
+  gates, full workspace validation, and publishable-package release validation
+  passed. Phase 7 repairs and final narrowed verification remain pending.
 
 **Design deltas (if any):**
 

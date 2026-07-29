@@ -1,5 +1,5 @@
 ---
-oat_current_task: null
+oat_current_task: p07-t01
 oat_last_commit: 87455b33c5b338ac717d10ebe5862924c538aeef
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -73,7 +73,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T23:56:46Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T01:02:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -85,7 +85,7 @@ oat_generated: false
 
 ## Current Phase
 
-Final HiLL checkpoint — deferred-finding disposition pending
+Phase 7 — final review fixes
 
 ## Artifacts
 
@@ -104,7 +104,8 @@ Final HiLL checkpoint — deferred-finding disposition pending
 - ✓ Phase 5 completed; lifecycle review and independent gate passed
 - ✓ Phase 6 completed and reviewed
 - ✓ Automatic final review found no new defects
-- ⧗ Human disposition required for three deferred Mediums and one Minor
+- ✓ Human disposition recorded: fix all three Mediums and the Minor
+- ⧗ Phase 7 repairs and combined narrowed final verification pending
 
 ## Blockers
 
@@ -112,4 +113,6 @@ None
 
 ## Next Milestone
 
-Record final deferred-finding decisions and complete the p06 HiLL checkpoint
+Complete `p07-t01` through `p07-t05`, then run one combined narrowed final
+verification review. The Minor wording fix does not require a separate review
+cycle. Complete the `p06` HiLL checkpoint only after the repair review passes.
