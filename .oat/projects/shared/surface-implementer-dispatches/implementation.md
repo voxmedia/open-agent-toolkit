@@ -1236,6 +1236,30 @@ dispositioned; archive the review and allow the configured exit gate.
 - **Receive commit:** `6c9ae5d3395a7ec89f3effdc68bc3b5dae78be92`
 - **Gate state:** `allowed` / `passed`
 
+### Review Received: Skill-version correction final re-review
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T175311Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Disposition:**
+
+- M1: `explicit_deferral` — continue the existing post-release report-context
+  matrix deferral. The canonical skill frontmatter correction did not touch
+  its managed-cap predicate or command-level test trigger.
+
+**New tasks added:** None.
+
+**Outcome:** Final lifecycle re-review passed after the required canonical
+skill version bump; refresh the configured implementation exit gate.
+
 ## Implementation Log
 
 Run-level chronology is recorded in `## Orchestration Runs` and
