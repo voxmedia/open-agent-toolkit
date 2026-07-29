@@ -847,6 +847,17 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
   `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ade10742-63f4-4884-9133-a9dac76d5449.json`
 - **State:** accepted; awaiting the correlated structured envelope
 
+#### Configured Exit Gate — result persisted
+
+- **Run:** `ade10742-63f4-4884-9133-a9dac76d5449`
+- **Envelope:** `ok`; receive eligible with corroborated handoff
+- **Artifact:** `reviews/final-review-2026-07-29T152853Z.md`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 1 Minor
+- **Diversity:** different-family achieved; OpenAI implementation stamps were
+  reviewed by Claude Fable through Cursor
+- **Disposition:** gate passed at the Important threshold; receive required
+  before the result becomes allowed
+
 <!-- orchestration-runs-end -->
 
 ---
