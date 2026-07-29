@@ -226,6 +226,20 @@ async function malformedBrowserProbe(probeRequest) {
   return {};
 }
 
+function browserProbeOmittingScreenshot(width) {
+  return async (probeRequest) => {
+    if (
+      probeRequest.scenario === 'default' &&
+      probeRequest.viewport.width === width
+    ) {
+      const { screenshotPath: _omitted, ...requestWithoutScreenshot } =
+        probeRequest;
+      return retainingBrowserProbe(requestWithoutScreenshot);
+    }
+    return retainingBrowserProbe(probeRequest);
+  };
+}
+
 function humanize(value) {
   return value
     .split('-')
@@ -1342,6 +1356,33 @@ test('fails closed before durability and publication when recap review is missin
       warning: 'visual-review-required:review-chain-failed:',
     },
     {
+      name: 'omitted browser screenshot',
+      browserProbe: browserProbeOmittingScreenshot(320),
+      visualDisposition: 'pass',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+      expectedBrowserEvidence: 6,
+      expectedStructuredError: true,
+    },
+    {
+      name: 'visual-review evidence copy failure',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'pass',
+      strategy: 'publish',
+      warning: 'visual-review-required:review-chain-failed:',
+      blockEvidenceCopy: true,
+      expectedBrowserEvidence: 9,
+      expectedStructuredError: true,
+    },
+    {
+      name: 'recap viewport override is disallowed',
+      browserProbe: retainingBrowserProbe,
+      visualDisposition: 'fail',
+      strategy: 'publish',
+      widths: [500],
+      expectRequiredWidths: true,
+    },
+    {
       name: 'throwing browser evidence callback',
       browserProbe: async () => {
         throw new Error('browser provider unavailable');
@@ -1379,6 +1420,16 @@ test('fails closed before durability and publication when recap review is missin
       const fixture = await suppliedFixture('project-recap');
       const durability = mock.fn(async () => {});
       const publish = mock.fn(async () => {});
+      const browserRequests = [];
+      const browserProbe = scenario.browserProbe
+        ? mock.fn(async (request) => {
+            browserRequests.push(request);
+            return scenario.browserProbe(request);
+          })
+        : undefined;
+      const correctArtifact = scenario.correctArtifact
+        ? mock.fn(scenario.correctArtifact)
+        : undefined;
       const visualCritic =
         scenario.visualDisposition === null
           ? undefined
@@ -1388,6 +1439,16 @@ test('fails closed before durability and publication when recap review is missin
               }
               if (scenario.visualDisposition === 'malformed') {
                 return { disposition: 'pass' };
+              }
+              if (scenario.blockEvidenceCopy) {
+                await mkdir(
+                  join(
+                    fixture.outputRoot,
+                    'project-recap-demo',
+                    'qa/visual-review/attempt-1/evidence/project-recap/mobile.png',
+                  ),
+                  { recursive: true },
+                );
               }
               return {
                 schemaVersion: 'explainer-kit.visual-review-result/v1',
@@ -1438,13 +1499,10 @@ test('fails closed before durability and publication when recap review is missin
       const result = await runExplainerCore(reviewedRequest, {
         author: async (authorRequest) => authorResult(authorRequest),
         planSet: async (plannerRequest) => plannedSet(plannerRequest),
-        ...(scenario.browserProbe && {
-          browserProbe: scenario.browserProbe,
-        }),
+        ...(browserProbe && { browserProbe }),
         ...(visualCritic && { visualCritic }),
-        ...(scenario.correctArtifact && {
-          correctArtifact: scenario.correctArtifact,
-        }),
+        ...(correctArtifact && { correctArtifact }),
+        ...(scenario.widths && { widths: scenario.widths }),
         durability,
         publish,
         now: () => NOW,
@@ -1462,6 +1520,13 @@ test('fails closed before durability and publication when recap review is missin
       assert.equal(durability.mock.callCount(), 0);
       assert.equal(publish.mock.callCount(), 0);
       assert.ok((visualCritic?.mock.callCount() ?? 0) <= 2);
+      assert.ok((correctArtifact?.mock.callCount() ?? 0) <= 1);
+      if (scenario.expectRequiredWidths) {
+        assert.deepEqual(
+          [...new Set(browserRequests.map(({ viewport }) => viewport.width))],
+          [320, 768, 1440],
+        );
+      }
       const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
       const record = JSON.parse(await readFile(result.buildRecordPath, 'utf8'));
       assert.equal(manifest.outcome, 'built-needs-review');
@@ -1472,6 +1537,23 @@ test('fails closed before durability and publication when recap review is missin
           warning.startsWith(scenario.warning ?? 'visual-review-required:'),
         ),
       );
+      if (scenario.expectedStructuredError) {
+        const errorPath = 'qa/review-gate/attempt-1-error.json';
+        const retainedError = JSON.parse(
+          await readFile(join(result.runRoot, errorPath), 'utf8'),
+        );
+        assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
+        assert.equal(
+          retainedError.evidencePaths.length,
+          scenario.expectedBrowserEvidence * 2,
+        );
+        assert.ok(
+          retainedError.evidencePaths.every(
+            (path) => manifest.immutableHashes[path],
+          ),
+        );
+        assert.ok(manifest.immutableHashes[errorPath]);
+      }
     });
   }
 
