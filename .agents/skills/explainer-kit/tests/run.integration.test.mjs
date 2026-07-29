@@ -369,6 +369,68 @@ test('interactive runs pause after rendered QA and do no external work before ap
   );
 });
 
+test('interactive resume preserves the discovered absolute run root for a persisted relative output root', async () => {
+  const originalCwd = process.cwd();
+  const initialCwd = await temporaryDirectory('explainer-relative-initial-');
+  const resumedCwd = await temporaryDirectory('explainer-relative-resumed-');
+  const factBasePath = join(initialCwd, 'approved-facts.json');
+  await writeFile(
+    factBasePath,
+    `${JSON.stringify(suppliedFactBase(), null, 2)}\n`,
+  );
+  const relativeOutputRoot = 'relative-output';
+  const interactiveRequest = {
+    ...request({ outputRoot: relativeOutputRoot, factBasePath }),
+    mode: 'interactive',
+  };
+
+  try {
+    process.chdir(initialCwd);
+    const canonicalInitialCwd = process.cwd();
+    const paused = await runExplainer(interactiveRequest, { now: () => NOW });
+    const expectedRunRoot = join(
+      canonicalInitialCwd,
+      relativeOutputRoot,
+      interactiveRequest.slug,
+    );
+    assert.equal(paused.runRoot, expectedRunRoot);
+    const persistedRequestPath = join(paused.runRoot, 'run-request.json');
+    const persistedRequest = JSON.parse(
+      await readFile(persistedRequestPath, 'utf8'),
+    );
+    persistedRequest.outputRoot = relativeOutputRoot;
+    await writeFile(
+      persistedRequestPath,
+      `${JSON.stringify(persistedRequest, null, 2)}\n`,
+    );
+
+    process.chdir(resumedCwd);
+    const resumed = await runExplainer(
+      {
+        ...interactiveRequest,
+        outputRoot: join(canonicalInitialCwd, relativeOutputRoot),
+      },
+      {
+        now: () => '2026-07-17T20:05:00Z',
+        reviewedSource: {
+          decision: 'approve',
+          reviewedAt: '2026-07-17T20:05:00Z',
+          reviewer: 'operator',
+          resumeToken: paused.approval.resumeToken,
+        },
+      },
+    );
+
+    assert.equal(resumed.runId, paused.runId);
+    assert.equal(resumed.runRoot, expectedRunRoot);
+    assert.equal(resumed.outcome, 'built-not-durable');
+    await access(resumed.manifestPath);
+    await access(resumed.buildRecordPath);
+  } finally {
+    process.chdir(originalCwd);
+  }
+});
+
 test('interactive resume requires an exact closed-format external token before callbacks', async () => {
   for (const [label, candidate] of [
     ['missing', () => undefined],
@@ -911,8 +973,9 @@ test('artistic authors receive immutable planner graph semantics and exact outpu
   const result = await runExplainerCore(fixture.request, {
     planSet: async (plannerRequest) => {
       const plan = plannedSet(plannerRequest);
-      plan.portfolio.find(({ artifactId }) => artifactId === 'architecture').draft =
-        `\`\`\`diagram
+      plan.portfolio.find(
+        ({ artifactId }) => artifactId === 'architecture',
+      ).draft = `\`\`\`diagram
 graph TD
 source --> accepted
 source --> rejected

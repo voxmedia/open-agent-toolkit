@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
 import { createHash } from 'node:crypto';
-import { readFile } from 'node:fs/promises';
-import { join, resolve } from 'node:path';
+import { readFile, realpath } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { catalogFromManifest, initiativeCatalogPath } from './lib/catalog.mjs';
@@ -799,11 +799,11 @@ async function loadResumableRun(request) {
     );
   }
 
-  const canonicalRunRoot = join(persistedRequest.outputRoot, normalized.slug);
+  const canonicalRunRoot = await realpath(runRoot);
   return {
     runId: record.runId,
     slug: normalized.slug,
-    outputRoot: persistedRequest.outputRoot,
+    outputRoot: dirname(canonicalRunRoot),
     runRoot: canonicalRunRoot,
     requestPath: join(canonicalRunRoot, 'run-request.json'),
     buildRecordPath: join(canonicalRunRoot, 'build-record.json'),
