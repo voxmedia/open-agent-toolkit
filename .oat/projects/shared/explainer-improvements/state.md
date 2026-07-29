@@ -66,17 +66,17 @@ oat_workflow_origin: imported # native | imported
 #   failure: null
 #   updated_at: '2026-07-18T00:00:00Z'
 oat_docs_updated: complete # null | skipped | complete — documentation sync status
-oat_pr_status: ready # null | ready | open | closed | merged — actual PR state for the current project
-oat_pr_url: null # null | string — tracked PR URL when a PR exists
+oat_pr_status: open # null | ready | open | closed | merged — actual PR state for the current project
+oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/188' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T22:43:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T22:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: explainer-improvements
 
-**Status:** PR Ready
+**Status:** PR Open
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-29
 
@@ -284,7 +284,8 @@ Implementation — PR open; completion may run before or after merge.
 - ✓ Focused suites, full workspace tests, build, lint, format, docs, release
   payload validation, 65 visual measurements, and `git diff --check` pass
 - ✓ Final PR description generated
-- ⧗ Opening PR for human review
+- ✓ PR created
+- ⧗ Awaiting human review
 
 ## Blockers
 
@@ -292,4 +293,8 @@ None.
 
 ## Next Milestone
 
-PR artifact is ready; GitHub PR creation is in progress.
+PR is open for review.
+
+- To incorporate feedback: run `oat-project-revise`
+- Complete before merge: run `oat-project-complete` now, then merge the PR.
+- Merge before completion: merge the PR, then run `oat-project-complete`.
