@@ -872,44 +872,39 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 
 ---
 
+### Review Received: final exit gate
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T152853Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**Judgment-sweep dispositions:**
+
+- M1: `explicit_deferral` — accept the provider/suppression report-context
+  matrix as a post-release follow-up. The warning predicate is provider-neutral,
+  focused and full verification pass, and expanding the matrix is bounded test
+  hardening rather than a correctness fix. The follow-up trigger is the next
+  change to managed-cap warning predicates or Dispatch Report command-context
+  coverage.
+- m1: `address_now` — remove the unused template-only Implementation Log
+  placeholders so the durable artifact no longer contradicts completed state.
+
+**New tasks added:** None — the passing gate judgment sweep records the Medium
+deferral durably and addresses the Minor artifact hygiene item directly.
+
+**Next:** Complete receive bookkeeping and allow the configured exit gate.
+
 ## Implementation Log
 
-Chronological log of implementation progress.
-
-### 2026-07-28
-
-**Session Start:** {time}
-
-- [x] p01-t01: {Task name} - {commit sha}
-- [ ] p01-t02: {Task name} - in progress
-
-**What changed (high level):**
-
-- {short bullets suitable for PR/docs}
-
-**Decisions:**
-
-- {Decision made and rationale}
-
-**Follow-ups / TODO:**
-
-- {anything discovered during implementation that should be captured for later}
-
-**Blockers:**
-
-- {Blocker description} - {status: resolved/pending}
-
-**Session End:** {time}
-
----
-
-### 2026-07-28
-
-**Session Start:** {time}
-
-{Continue log...}
-
----
+Run-level chronology is recorded in `## Orchestration Runs` and
+`project-log.md`; no separate session entries were needed.
 
 ## Deviations from Plan / Design
 
@@ -919,6 +914,18 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | ------------- | --------------- | -------------------------------------- | -------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | ----------------- | ----------------------------------------- |
 | p03-t02       | `plan.md`       | Backlog archive and final verification | Also refresh stale `.agents/docs/autonomy-contract.md` prompt-site mapping | Phase 2 removed the mapped prompt-like line and repository-wide tests rejected the stale derived inventory        | Updated `plan.md` | None                                      |
 | p03-t02       | `plan.md`       | Updated inventory refresh and closeout | Also repair two pre-existing failing PJM doctor checks across ten files    | Full DoD cannot pass while canonical decisions guidance is missing and instantiated records retain template flags | Updated `plan.md` | Existing PJM warnings remain out of scope |
+
+## Deferred Findings (Medium)
+
+- **M1 — Cross-provider warning/suppression report-context matrix**
+  - **Source:**
+    `reviews/archived/final-review-2026-07-29T152853Z.md`
+  - **Disposition:** Explicitly deferred to post-release.
+  - **Rationale:** The warning predicate is provider-neutral and correct by
+    inspection, all focused and final verification passes, and the missing
+    cases are regression-depth hardening rather than a known behavior defect.
+  - **Follow-up trigger:** Revisit when managed-cap warning predicates or
+    command-level Dispatch Report context tests next change.
 
 ## Test Results
 
