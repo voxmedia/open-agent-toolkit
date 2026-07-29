@@ -364,8 +364,17 @@ oat_generated: false
 
 ### Task p03-t02: Archive the completed backlog item and run final verification
 
-**Status:** pending
+**Status:** blocked
 **Commit:** -
+
+**Blocker:**
+
+- `pnpm test` reports stale autonomy gate-inventory mapping
+  `ffb3af0ba8ef` for `oat-project-implement/SKILL.md`.
+- The direct cause is the Phase 2 skill wording change; the derived contract
+  file `.agents/docs/autonomy-contract.md` is outside the current Phase 3 task
+  boundary.
+- Backlog archive changes were reverted; the worktree is clean.
 
 ---
 
@@ -563,6 +572,38 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
 - **Phase gate:** disabled
 - **Parallel groups:** none
 - **Outstanding blocking items:** none
+
+#### Dispatch Acceptance — p03 implementer
+
+- **Request:** `impl-p03-20260729T123620Z`
+- **Accepted target:** `oat-phase-implementer-gpt-5-6-sol-medium`
+- **Task classification:** `default-implementation` (caller)
+- **Selection reason:** first sufficient High-tier candidate under the managed
+  High ceiling
+- **Candidates:** `gpt-5.6-sol-medium`, `gpt-5.6-sol-high`
+- **Base / result:** `052d60887172355d96b2a06c978039e46b409326` →
+  `f71fabc9adeb7acd105dfb442270d71ac99a7f68`
+- **Outcome:** accepted once; `BLOCKED` after p03-t01; report and two-commit
+  task/bookkeeping sequence validated; no optional children
+- **Resolver notices:** none
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
+```
+
+#### Phase Outcome — p03
+
+| Phase | Tasks | Implementation | Root Review | Fix Loops | Result  |
+| ----- | ----- | -------------- | ----------- | --------- | ------- |
+| p03   | 1/2   | `BLOCKED`      | not run     | 0         | blocked |
+
+- **Trigger:** `pnpm test` rejected stale autonomy gate-inventory mapping
+  `ffb3af0ba8ef` after the Phase 2 skill edit
+- **Restoration:** backlog archive changes reverted; clean worktree preserved
+- **Outstanding item:** decide whether to add the derived
+  `.agents/docs/autonomy-contract.md` refresh to the approved plan
 
 <!-- orchestration-runs-end -->
 
