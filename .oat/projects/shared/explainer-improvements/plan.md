@@ -45,6 +45,10 @@ permits up to three bounded block-fix-review retries. The runtime still permits
 one visual correction pass followed by one final review. No recursive or
 open-ended review loop is allowed.
 
+**Phase p04 override:** On 2026-07-29, after retry 3/3 exposed I4-R3, the
+operator authorized one final recommended p04 fix and review. Phase p04 alone
+therefore permits attempt 4/4; all other review caps remain unchanged.
+
 **Commit convention:** `{type}({task-id}): {description}`.
 
 ## Planning Checklist
@@ -1754,6 +1758,43 @@ before retained content is trusted.
 
 ---
 
+### Task p04-t13: Authenticate the canonical resume root externally
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED coordinated attack that pauses through a configured-root symlink,
+   relocates and retargets the root, rewrites only retained
+   `run-request.json.outputRoot` to the relocated canonical path, and proves the
+   original valid external token cannot authorize resume or durability.
+2. Introduce a versioned resume-token format that authenticates the original
+   canonical output root or exact retained request bytes together with the run
+   ID and existing raw-byte set-plan hashes.
+3. Issue the authenticated token before the interactive pause and verify it
+   before trusting retained request fields or hydrating any package content.
+4. Preserve `ekrt1` compatibility only for genuinely legacy relative retained
+   roots; a rewritten current absolute-root request must require the new token
+   and fail closed with `E_APPROVAL_RESUME`.
+5. Preserve stable configured-root symlinks, legitimate legacy changed-CWD
+   resume, run-root confinement, approval/request identity, deterministic token
+   behavior, and set-plan tamper protection.
+6. Update the external token handoff contract and run focused records/core
+   integration tests, complete p03/p04 unions, and all repository/release gates.
+7. Commit as `fix(p04-t13): authenticate canonical resume root`.
+
+**Acceptance:** The external resume token authenticates the original canonical
+root before retained request bytes are trusted, so coordinated filesystem and
+retained-root mutation cannot relocate a resumable package.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1888,7 +1929,7 @@ another review cycle.
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260728-p04-code-review.md    |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r2.md |
-| p04    | code     | received        | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
+| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |
@@ -1915,10 +1956,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 12 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
+- Phase 4: 13 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 57 tasks**
+**Total: 58 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

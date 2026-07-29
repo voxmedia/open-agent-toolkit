@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - Phase p04 retry cap exhausted with I4-R3 unresolved; operator disposition required.
+oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: p04-t13
 oat_generated: false
 ---
 
@@ -18,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status   | Tasks | Completed |
-| ----- | -------- | ----: | --------: |
-| p01   | complete |     7 |       7/7 |
-| p02   | complete |    13 |     13/13 |
-| p03   | complete |    21 |     21/21 |
-| p04   | blocked  |    12 |     12/12 |
-| p05   | pending  |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | fixes_pending |    13 |     12/13 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 53/57 tasks completed
+**Total:** 53/58 tasks completed
 
 ---
 
@@ -251,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** blocked
+**Status:** fixes_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -265,6 +264,7 @@ oat_generated: false
 - [x] p04-t10 — Verify complete artistic graph semantics (`995c38a9`)
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
 - [x] p04-t12 — Bind resume identity to the original canonical output root (`3b7b43b2`)
+- [ ] p04-t13 — Authenticate the canonical resume root externally
 
 ## Phase 5: Golden conformance and release closure
 
@@ -829,6 +829,18 @@ oat_generated: false
   fourth remediation attempt or additional task/review can be scheduled
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
+### Run 26 — Phase p04 operator-authorized remediation attempt 4
+
+- Request: `explainer-improvements-p04-fix-r4-20260729T120000Z`
+- Launch intent: persisted
+- Task: p04-t13
+- Source artifact: `reviews/20260729-p04-code-review-r3.md`
+- Review-remediation attempt: 4/4 by explicit operator override
+- Scope: externally authenticate the original canonical resume root and reject
+  coordinated filesystem plus retained-request mutation
+- Operator authorization: “approve final recommended fix and review”
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -867,6 +879,7 @@ oat_generated: false
 | p04 code review       | p04 review      | Routing, backlinks, catalog, and consumers satisfy acceptance | Add p04-t05 through p04-t08          | Review found two Critical semantic/URL bypasses and three Important provenance, catalog, and regression gaps                  | p04 review artifact                    | p04-t05–p04-t08  |
 | p04 re-review R1      | p04 re-review   | Remediation closes all original blocking findings             | Add p04-t10 and p04-t11              | Graph validation omits semantic fields and resume follows a run-root symlink outside the configured output root               | p04 re-review artifact                 | p04-t10–p04-t11  |
 | p04 re-review R2      | p04 re-review   | Canonical run-root confinement closes the resume gap          | Add bounded p04-t12                  | Retargeting the configured output-root symlink relocates the valid package without a persisted canonical-root mismatch        | p04 re-review artifact                 | p04-t12          |
+| p04 re-review R3      | p04 re-review   | Persisted canonical-root comparison authenticates resume      | Add operator-approved p04-t13        | Mutable retained request bytes are not bound to the external resume token, permitting coordinated relocation                  | p04 re-review artifact                 | p04-t13          |
 
 ## Test Results
 
@@ -880,7 +893,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 57 tasks and the final review._
+_Fill from implementation evidence after all 58 tasks and the final review._
 
 ## References
 
