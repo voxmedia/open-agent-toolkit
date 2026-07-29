@@ -1321,6 +1321,22 @@ fresh configured exit-gate generation.
 **Outcome:** Final lifecycle re-review passed and the Minor state wording drift
 was corrected; proceed to the final configured exit-gate attempt.
 
+### Configured Exit Gate: Contract-pin correction
+
+- **Generation:** initialized at `2026-07-29T18:27:45Z` from reviewed head
+  `24d4ebec49068886a5046b8f789c35a9a7f92311`
+- **Implementation fingerprint:**
+  `sha256:effective-delta-v1:9afc11aee41094aec92d470cb461c780314a35bda1a187b04ee768fdde625153`
+- **Launch intent:**
+  `implement-exit-20260729T182852Z-fcbad6e3-f79d-4502-8d20-f165407791a6`
+  persisted before launch
+- **Accepted run:** `1bcc4ae6-563d-4df1-966d-04c7ef6cee0c` through
+  `cursor-fable-5-xhigh`
+- **Result:** `ok`; 0 Critical, 0 Important, 1 Medium, 1 Minor; receive eligible
+- **Artifact:** `reviews/final-review-2026-07-29T183546Z.md`
+- **Disposition:** gate passed at the Important threshold; receive required
+  before the generation becomes allowed
+
 ## Implementation Log
 
 Run-level chronology is recorded in `## Orchestration Runs` and
