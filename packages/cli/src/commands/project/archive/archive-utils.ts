@@ -1075,9 +1075,9 @@ async function loadVerifiedProjectRecap(
   const packageCoverage = await loadExplainerPackageCoverage();
   const missingCoverage = packageCoverage
     .requiredImmutablePackagePaths(manifest, { runMode })
-    .filter((path) => !(path in manifest.immutableHashes));
-  const missingLegacyCoverage = missingCoverage.filter((path) =>
-    ['run-request.json', 'source/content-approval.json'].includes(path),
+    .filter((relativePath) => !(relativePath in manifest.immutableHashes));
+  const missingLegacyCoverage = missingCoverage.filter((relativePath) =>
+    ['run-request.json', 'source/content-approval.json'].includes(relativePath),
   );
   if (missingLegacyCoverage.length > 0) {
     throw new CliError(
@@ -1086,8 +1086,9 @@ async function loadVerifiedProjectRecap(
   }
   if (
     missingCoverage.some(
-      (path) =>
-        path.startsWith('qa/browser/') || path.startsWith('qa/visual-review/'),
+      (relativePath) =>
+        relativePath.startsWith('qa/browser/') ||
+        relativePath.startsWith('qa/visual-review/'),
     )
   ) {
     throw new CliError(
@@ -1102,7 +1103,7 @@ async function loadVerifiedProjectRecap(
   try {
     await packageCoverage.validateImmutablePackageEvidence(manifest, {
       runMode,
-      read: (path) => readFile(join(sourceRunRoot, path)),
+      read: (relativePath) => readFile(join(sourceRunRoot, relativePath)),
     });
   } catch (error) {
     throw new CliError(

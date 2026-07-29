@@ -12,8 +12,21 @@ import { describe, expect, it } from 'vitest';
 
 import { buildReviewBody, type BuilderFinding } from '../../body-builder';
 import { parseMarkerBlock } from '../../marker-parser';
+import {
+  pickNarrowingTarget,
+  priorReviewFromMarker,
+  type GitInvoker,
+} from '../../narrowing';
 
 const HEAD_SHA = 'a1b2c3d4e5f60718293a4b5c6d7e8f9012345678';
+const PRIOR_SHA = '1111111111111111111111111111111111111111';
+
+const reachableGit: GitInvoker = {
+  objectExists: async () => true,
+  isAncestor: async () => true,
+  fetchRef: async () => true,
+  changedFiles: async () => ['src/app.ts'],
+};
 
 describe('ad-hoc provide-remote round-trip', () => {
   it('round-trips ad-hoc markers through builder → parser', () => {
@@ -110,5 +123,34 @@ describe('ad-hoc provide-remote round-trip', () => {
       findings: [{ severity: 'medium' }],
     });
     expect(body.startsWith('<!-- oat-review-metadata')).toBe(true);
+  });
+
+  it('keeps an invocation-less legacy marker ineligible for ad-hoc narrowing', async () => {
+    const marker = parseMarkerBlock(`<!-- oat-review-metadata
+oat_provide_remote: true
+oat_review_head_sha: ${PRIOR_SHA}
+oat_review_scope: ad-hoc
+-->`);
+    if (marker === null) {
+      throw new Error(
+        'legacy ad-hoc marker must preserve non-lineage metadata',
+      );
+    }
+
+    const result = await pickNarrowingTarget({
+      reviews: [priorReviewFromMarker(marker, '2026-05-29T10:00:00Z')],
+      rail: 'ad-hoc',
+      project: null,
+      scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
+      headSha: HEAD_SHA,
+      git: reachableGit,
+    });
+
+    expect(marker.oat_review_invocation).toBeUndefined();
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
   });
 });

@@ -691,6 +691,10 @@ describe('CLI command integration', () => {
       'gpt-5.6-terra',
       '--candidate-effort',
       'medium',
+      '--task-class',
+      'default-implementation',
+      '--task-effort',
+      'high',
       '--report-scope',
       'p03-t04',
       '--report-action',
@@ -712,6 +716,12 @@ describe('CLI command integration', () => {
         candidateIndex: 1,
         selectionBranch: 'candidate-requested',
       },
+      classification: {
+        taskClass: 'default-implementation',
+        preferredEffort: 'high',
+        source: 'caller',
+      },
+      notices: [],
     });
   });
 

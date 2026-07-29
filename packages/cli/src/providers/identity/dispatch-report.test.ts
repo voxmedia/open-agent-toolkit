@@ -9,6 +9,7 @@ import {
   type DispatchReportResolution,
   type DispatchReportV1,
 } from './dispatch-report';
+import { formatDispatchStamp } from './stamp';
 
 function resolution(
   overrides: Partial<DispatchReportResolution> = {},
@@ -190,6 +191,7 @@ describe('buildDispatchReport', () => {
           model: 'gpt-5.6-sol',
           effort: 'high',
         },
+        preferredValue: null,
         candidateTier: 'high',
         candidateIndex: 1,
         ceilingTier: 'high',
@@ -214,6 +216,12 @@ describe('buildDispatchReport', () => {
         selectionBranch: 'candidate-requested',
         cellSource: 'repo-config',
       },
+      classification: {
+        taskClass: null,
+        preferredEffort: null,
+        source: 'not-reported',
+      },
+      notices: [],
       requestedControls: input().requestedControls,
       configuredDefaults: input().configuredDefaults,
       gateInvocation: null,
@@ -244,6 +252,52 @@ describe('buildDispatchReport', () => {
       selectionBranch: 'inherit',
       cellSource: null,
     });
+  });
+
+  it('copies caller classification, legacy preferred selection, and ordered notices', () => {
+    const report = buildDispatchReport(
+      input({
+        resolution: resolution({
+          providers: {
+            codex: {
+              ...resolution().providers['codex']!,
+              selection: {
+                ...resolution().providers['codex']!.selection,
+                preferredValue: 'medium',
+              },
+            },
+          },
+        }),
+        classification: {
+          taskClass: 'default-implementation',
+          preferredEffort: 'medium',
+          source: 'caller',
+        },
+        notices: [
+          {
+            code: 'managed-capped-classification-missing',
+            level: 'warning',
+            message: 'Second notice.',
+          },
+          {
+            code: 'managed-capped-selection-skipped',
+            level: 'warning',
+            message: 'First notice.',
+          },
+        ],
+      }),
+    );
+
+    expect(report.selection.preferredValue).toBe('medium');
+    expect(report.classification).toEqual({
+      taskClass: 'default-implementation',
+      preferredEffort: 'medium',
+      source: 'caller',
+    });
+    expect(report.notices.map(({ code }) => code)).toEqual([
+      'managed-capped-classification-missing',
+      'managed-capped-selection-skipped',
+    ]);
   });
 
   it('keeps unresolved policy explicit and deterministic', () => {
@@ -414,10 +468,21 @@ describe('dispatch report rendering', () => {
         ceilingTier: report.selection.ceilingTier,
         candidateIndex: report.selection.candidateIndex,
         candidateTier: report.selection.candidateTier,
+        preferredValue: report.selection.preferredValue,
         requestedCandidate: {
           effort: report.selection.requestedCandidate!.effort,
           model: report.selection.requestedCandidate!.model,
         },
+      },
+      notices: report.notices.map((notice) => ({
+        message: notice.message,
+        level: notice.level,
+        code: notice.code,
+      })),
+      classification: {
+        source: report.classification.source,
+        preferredEffort: report.classification.preferredEffort,
+        taskClass: report.classification.taskClass,
       },
       policy: {
         source: report.policy.source,
@@ -468,6 +533,8 @@ describe('dispatch report rendering', () => {
       'route',
       'policy',
       'selection',
+      'classification',
+      'notices',
       'requestedControls',
       'configuredDefaults',
       'gateInvocation',
@@ -477,6 +544,7 @@ describe('dispatch report rendering', () => {
     expect(Object.keys(policy)).toEqual(['status', 'mode', 'name', 'source']);
     expect(Object.keys(selection)).toEqual([
       'requestedCandidate',
+      'preferredValue',
       'candidateTier',
       'candidateIndex',
       'ceilingTier',
@@ -487,6 +555,10 @@ describe('dispatch report rendering', () => {
       'selectionBranch',
       'cellSource',
     ]);
+    expect(
+      Object.keys(parsed['classification'] as Record<string, unknown>),
+    ).toEqual(['taskClass', 'preferredEffort', 'source']);
+    expect(parsed['notices']).toEqual([]);
     expect(Object.keys(requestedCandidate)).toEqual(['model', 'effort']);
     for (const target of [ceilingTarget, exactSelectedTarget]) {
       expect(Object.keys(target)).toEqual([
@@ -553,6 +625,7 @@ describe('dispatch report rendering', () => {
         Source: invocation
       Selection
         Requested candidate: model=gpt-5.6-sol effort=high
+        Legacy preferred value: none
         Candidate tier / index: high / 1
         Ceiling tier: high
         Ceiling target: harness=codex model=gpt-5.6-sol effort=high crossHarness=false routeIndex=0 routeLength=1
@@ -560,6 +633,12 @@ describe('dispatch report rendering', () => {
         Exact selected target: harness=codex model=gpt-5.6-sol effort=high crossHarness=false routeIndex=0 routeLength=1
         Mode / branch: candidate / candidate-requested
         Cell source: repo-config
+      Classification
+        Task class: none
+        Preferred effort: none
+        Source: not-reported
+      Notices
+        None
       Requested controls
         Model: gpt-5.6-sol (materialized-role) — Exact managed candidate selected by the resolver.
         Effort: high (materialized-role) — Exact managed candidate selected by the resolver.
@@ -593,6 +672,7 @@ describe('dispatch report rendering', () => {
           Source: project-state
         Selection
           Requested candidate: none
+          Legacy preferred value: none
           Candidate tier / index: none / none
           Ceiling tier: none
           Ceiling target: none
@@ -600,6 +680,12 @@ describe('dispatch report rendering', () => {
           Exact selected target: none
           Mode / branch: inherit-default / inherit
           Cell source: none
+        Classification
+          Task class: none
+          Preferred effort: none
+          Source: not-reported
+        Notices
+          None
         Requested controls
           Model: none (host-inherited) — The host owns model selection.
           Effort: none (provider-default) — The provider default applies.
@@ -634,6 +720,7 @@ describe('dispatch report rendering', () => {
           Source: project-state
         Selection
           Requested candidate: model=gpt-5.6-sol effort=high
+          Legacy preferred value: none
           Candidate tier / index: high / 1
           Ceiling tier: high
           Ceiling target: none
@@ -641,6 +728,12 @@ describe('dispatch report rendering', () => {
           Exact selected target: none
           Mode / branch: unresolved / candidate-requested
           Cell source: repo-config
+        Classification
+          Task class: none
+          Preferred effort: none
+          Source: not-reported
+        Notices
+          None
         Requested controls
           Model: gpt-5.6-sol (materialized-role) — Exact managed candidate selected by the resolver.
           Effort: high (materialized-role) — Exact managed candidate selected by the resolver.
@@ -668,6 +761,35 @@ describe('dispatch report rendering', () => {
     expect(output).toContain('Producer: not reported');
     expect(output).not.toContain('Producer: gpt-5.6-sol');
     expect(output).not.toContain('Runtime model: medium');
+  });
+
+  it('formats classification and notices while preserving the compatibility stamp', () => {
+    const report = buildDispatchReport(
+      input({
+        classification: {
+          taskClass: 'hard-reasoning',
+          preferredEffort: 'high',
+          source: 'caller',
+        },
+        notices: [
+          {
+            code: 'managed-capped-selection-skipped',
+            level: 'warning',
+            message: 'Select an exact candidate.',
+          },
+        ],
+      }),
+    );
+
+    expect(formatDispatchReport(report)).toContain(
+      'Task class: hard-reasoning',
+    );
+    expect(formatDispatchReport(report)).toContain(
+      '[warning] managed-capped-selection-skipped: Select an exact candidate.',
+    );
+    expect(formatDispatchStamp(report)).toBe(
+      'Dispatch: scope=p03-t01 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol effort_axis=selected:high dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high',
+    );
   });
 
   it('derives compatibility stamp records from the report without a second identity schema', () => {

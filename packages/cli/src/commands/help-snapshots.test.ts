@@ -1110,6 +1110,18 @@ describe('help output snapshots', () => {
     expect(help).toMatch(/never\s+persists configuration or project state/);
     expect(help).toContain('--report-scope <scope>');
     expect(help).toContain('--report-action <action>');
+    expect(help).toContain('--task-class <class>');
+    for (const taskClass of [
+      'mechanical-recon',
+      'intelligent-recon',
+      'default-implementation',
+      'hard-reasoning',
+      'consequential',
+    ]) {
+      expect(help).toContain(taskClass);
+    }
+    expect(help).toContain('--task-effort <effort>');
+    expect(help).toMatch(/Codex-only task effort classification\s+provenance/);
     expect(help).toMatch(/choices: "implementation", "fix",\s+"review"/);
     expect(help).toMatch(/Dispatch Report V1 action/);
   });

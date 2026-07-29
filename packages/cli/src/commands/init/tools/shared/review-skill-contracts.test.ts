@@ -62,7 +62,7 @@ describe('review skill contracts', () => {
     const templateEnd = content.indexOf('````', templateStart + 4);
     const nextStep = content.indexOf('## Recommended Next Step');
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.0');
     expect(content).toContain(
       'must represent the same instant from the same `date -u` capture',
     );
@@ -259,6 +259,26 @@ describe('review skill contracts', () => {
     expect(content).toContain(
       'For contiguous phase-range scopes (`pNN-pMM`), aggregate commit matches for each phase in the inclusive range',
     );
+  });
+
+  it('preserves narrowed-review provenance in the inline artifact template', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const template =
+      content.match(
+        /\*\*Review artifact template:\*\*[\s\S]*?```markdown\n([\s\S]*?)\n```/,
+      )?.[1] ?? '';
+
+    for (const field of [
+      'oat_review_range',
+      'oat_prior_review_artifact',
+      'oat_prior_review_head_sha',
+    ]) {
+      expect(template, `${field} in inline artifact template`).toContain(
+        `${field}:`,
+      );
+    }
   });
 
   it('pins headless routing and pre-plan inheritance in review-provide', () => {
@@ -541,6 +561,129 @@ describe('review skill contracts', () => {
     expect(remote).toMatch(
       /oat gate[\s\S]{0,160}must not contain or add[\s\S]{0,120}--target/i,
     );
+  });
+
+  it('preserves remote receive ledger migrations on clean and findings paths', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-receive-remote/SKILL.md',
+    );
+    const contractStart = content.indexOf(
+      '**Reviews ledger write contract (all receive paths):**',
+    );
+    const cleanStart = content.indexOf('If no unresolved comments:');
+    const findingsStart = content.indexOf(
+      '### Step 6: Update Project Artifacts',
+    );
+    const cleanPath = content.slice(
+      cleanStart,
+      content.indexOf('### Step 3: Classify and Normalize Findings'),
+    );
+    const findingsPath = content.slice(
+      findingsStart,
+      content.indexOf('### Step 6.5: Commit Review Bookkeeping'),
+    );
+    const contract = content
+      .slice(contractStart, cleanStart)
+      .replace(/\s+/g, ' ');
+
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.0');
+    expect(contractStart).toBeGreaterThanOrEqual(0);
+    expect(contractStart).toBeLessThan(cleanStart);
+    expect(contractStart).toBeLessThan(findingsStart);
+    expect(contract).toContain(
+      'Resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`, `Invocation`, and `Gate Target` by header name',
+    );
+    expect(contract).toMatch(
+      /legacy five columns.*add `Reviewed Head`, `Invocation`, and `Gate Target`.*pad every existing row with `-`/,
+    );
+    expect(contract).toContain(
+      'pad a shorter row with `-` through the current header width',
+    );
+    expect(contract).toContain(
+      'Preserve every unknown column in its original position',
+    );
+    expect(contract).toContain(
+      'every existing known value unless the operation explicitly advances that cell',
+    );
+    expect(contract).toContain(
+      'Never truncate a row to five, eight, or any other assumed width.',
+    );
+    for (const [name, path] of [
+      ['clean', cleanPath],
+      ['findings', findingsPath],
+    ] as const) {
+      expect(path, `${name} path applies shared ledger contract`).toContain(
+        'Apply the Reviews ledger write contract above',
+      );
+    }
+  });
+
+  it('fails open remote review discovery errors without unnecessary enumeration', () => {
+    const skillPaths = [
+      '.agents/skills/oat-project-review-provide-remote/SKILL.md',
+      '.agents/skills/oat-review-provide-remote/SKILL.md',
+    ];
+
+    for (const path of skillPaths) {
+      const content = readRepoFile(path);
+      const diagnosticInit = content.indexOf('REVIEWS_ERROR_FILE=""');
+      const firstRedirect = content.indexOf('2>"$REVIEWS_ERROR_FILE"');
+      const finallySection = content.indexOf(
+        'Always release the ephemeral worktree in a `finally`',
+      );
+      const finalDiagnosticCleanup = content.indexOf(
+        'if [[ -n "${REVIEWS_ERROR_FILE:-}" ]]',
+        finallySection,
+      );
+
+      expect(
+        diagnosticInit,
+        `${path} diagnostic initialization exists`,
+      ).toBeGreaterThanOrEqual(0);
+      expect(
+        firstRedirect,
+        `${path} diagnostic redirect exists`,
+      ).toBeGreaterThan(diagnosticInit);
+      expect(
+        content.slice(diagnosticInit, firstRedirect),
+        `${path} guarded diagnostic creation precedes redirect`,
+      ).toContain('REVIEWS_ERROR_FILE=$(mktemp ');
+      expect(content, `${path} bounded diagnostic before cleanup`).toMatch(
+        /else\s+REVIEWS_DIAGNOSTIC=\$\(dd if="\$REVIEWS_ERROR_FILE" bs=500 count=1 2>\/dev\/null\)[\s\S]{0,160}rm -f -- "\$REVIEWS_ERROR_FILE"/,
+      );
+      expect(
+        content.match(/rm -f -- "\$REVIEWS_ERROR_FILE"/g)?.length ?? 0,
+        `${path} success, failure, and final cleanup`,
+      ).toBeGreaterThanOrEqual(3);
+      expect(
+        finalDiagnosticCleanup,
+        `${path} finally cleanup follows finally contract`,
+      ).toBeGreaterThan(finallySection);
+      expect(content, `${path} diagnostic creation failure policy`).toMatch(
+        /Do not run `gh api` when diagnostic-file creation fails[\s\S]{0,600}REVIEWS_DISCOVERY_OK=false/,
+      );
+      expect(content, `${path} stable discovery reason`).toContain(
+        '`prior-reviews-unavailable`',
+      );
+      expect(content, `${path} automatic fail-open`).toMatch(
+        /automatic path[\s\S]{0,180}fails open to full PR scope/i,
+      );
+      expect(content, `${path} forced hard error`).toMatch(
+        /forced `--narrow`[\s\S]{0,180}hard error/i,
+      );
+      expect(content, `${path} diagnostic preservation`).toMatch(
+        /preserve at most 500 bytes from stderr[\s\S]{0,240}parse error/i,
+      );
+      expect(content, `${path} disabled enumeration skip`).toMatch(
+        /`--no-narrow`[\s\S]{0,180}skips `gh api` review enumeration entirely/i,
+      );
+      expect(content, `${path} preference-false enumeration skip`).toMatch(
+        /only `false` forces full PR scope[\s\S]{0,120}skips `gh api` review enumeration entirely/i,
+      );
+      expect(content, `${path} response parsing failure`).toMatch(
+        /response-level enumeration\/parsing failure/i,
+      );
+    }
   });
 
   it('dispatches concrete Cursor reviews through resolver-selected native variants', () => {

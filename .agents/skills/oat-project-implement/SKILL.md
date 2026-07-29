@@ -1,6 +1,6 @@
 ---
 name: oat-project-implement
-version: 2.2.0
+version: 2.2.3
 description: Use when plan.md is ready for execution. Dispatches one phase implementer per phase, owns independent phase review and bounded fix routing, and supports plan-declared worktree-isolated parallel phases.
 oat_gateable: true
 argument-hint: '[--retry-limit <N>] [--dry-run]'
@@ -19,16 +19,14 @@ Execute the implementation plan task-by-task with full state tracking.
 
 ## Shared Subagent Dispatch Contract
 
-Before resolving or launching any phase implementer, optional nested worker,
-fix continuation, or reviewer, read and follow
-`.agents/skills/oat-project-dispatch-subagents/SKILL.md`. The project adapter
-resolves lifecycle scope and then requires
-`.agents/skills/oat-dispatch-subagents/SKILL.md` for provider-neutral
-selection, recovery, and evidence. This explicit two-skill load is mandatory;
-do not rely on ambient skill discovery. This implementation skill retains
-lifecycle sequencing, verification, integration, and approval-aware final
-closeout.
-Correctness must not require a provider restart or hot reload.
+Before resolving or launching a phase implementer, optional child, fix, or
+reviewer, read `.agents/skills/oat-project-dispatch-subagents/SKILL.md`, then
+`.agents/skills/oat-dispatch-subagents/SKILL.md`. The former resolves lifecycle
+scope; the latter owns provider-neutral selection, recovery, and evidence.
+Display structured resolver notices before every implementation, fix, or
+reviewer launch. Runtime disclosure uses the effective resolved target, never
+the bundled recommendation version. This explicit load is mandatory, and
+correctness must not require a provider restart or hot reload.
 
 Read
 `.agents/skills/subagent-orchestration/references/model-selection-principles.md`.
@@ -52,6 +50,9 @@ to be clean; each append is committed by the bookkeeping that owns it.
   dispatch record at `$PROJECT_PATH/implementation.md#<run-anchor>`;
   never mirror that record. Do not write the project log at acceptance; append
   it with the phase-outcome entry after the child's report returns.
+- Implementing a phase in the root during a Tier 1 run is a deviation, never a
+  silent default: record the phase ID, reason, and root model under a sibling
+  `Root-inline phase` heading at that run anchor. Sanctioned Tier 2 needs none.
 - Before validating the review artifact or updating project bookkeeping, consume
   exactly one brief artifact-mode confirmation of reconnaissance:
 - `**Reconnaissance:** attempted`

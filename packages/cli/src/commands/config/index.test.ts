@@ -1942,7 +1942,263 @@ describe('oat config', () => {
         detailed: true,
       });
       expect(capture.info[0]).toContain('2026-07-07.1');
+      expect(capture.info.join('\n')).toContain(
+        '[advisory] terminal-reviewer-eligibility',
+      );
+      expect(capture.info.join('\n')).toContain('fable');
       expect(capture.warn).toHaveLength(0);
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('returns structured effective post-adoption terminal reviewer notices in JSON', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                claude: { frontier: { candidates: ['fable'] } },
+              },
+            }),
+        },
+      });
+
+      await runCommand(
+        command,
+        ['adopt', 'dispatch-matrix', '--shared'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('fable'),
+          },
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('uses a higher-precedence shared non-Fable override after user adoption in human output', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-opus-5-thinking-xhigh'],
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-fable-5-thinking-high'],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--user']);
+
+      expect(capture.info.join('\n')).not.toContain(
+        'terminal-reviewer-eligibility',
+      );
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('uses a higher-precedence local Fable override after shared adoption in JSON output', async () => {
+      const root = await createRepoRoot();
+      const home = await createHome();
+      await writeFile(
+        join(root, '.oat', 'config.local.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-fable-5-thinking-high'],
+                  },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        home,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                cursor: {
+                  frontier: {
+                    candidates: ['claude-opus-5-thinking-xhigh'],
+                  },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(
+        command,
+        ['adopt', 'dispatch-matrix', '--shared'],
+        ['--json'],
+      );
+
+      expect(capture.jsonPayloads[0]).toMatchObject({
+        status: 'ok',
+        notices: [
+          {
+            code: 'terminal-reviewer-eligibility',
+            level: 'advisory',
+            message: expect.stringContaining('claude-fable-5-thinking-high'),
+          },
+        ],
+      });
+      expect(process.exitCode).toBe(0);
+    });
+
+    it.each([
+      ['claude-fable-5-thinking-high', 'human', false, true],
+      ['gpt-5.6-sol-high', 'human', false, false],
+      ['claude-fable-5-thinking-high', 'JSON', true, true],
+      ['gpt-5.6-sol-high', 'JSON', true, false],
+    ] as const)(
+      'uses a higher-precedence bare-provider %s target in %s post-adoption output',
+      async (effectiveTarget, _label, json, expectedNotice) => {
+        const root = await createRepoRoot();
+        const home = await createHome();
+        const overridePath = json
+          ? join(root, '.oat', 'config.local.json')
+          : join(root, '.oat', 'config.json');
+        await writeFile(
+          overridePath,
+          `${JSON.stringify({
+            version: 1,
+            workflow: {
+              dispatchCeiling: {
+                providers: { cursor: effectiveTarget },
+              },
+            },
+          })}\n`,
+          'utf8',
+        );
+        const recommendationTarget = expectedNotice
+          ? 'gpt-5.6-sol-high'
+          : 'claude-fable-5-thinking-high';
+        const { command, capture } = createHarness({
+          cwd: root,
+          home,
+          validateMatrixCell: vi.fn(async () => 'valid' as const),
+          assetFiles: {
+            '/tmp/assets/config/dispatch-matrix-recommendation.json':
+              JSON.stringify({
+                version: 'new',
+                providers: {
+                  cursor: {
+                    frontier: {
+                      candidates: [recommendationTarget],
+                    },
+                  },
+                },
+              }),
+          },
+        });
+
+        await runCommand(
+          command,
+          ['adopt', 'dispatch-matrix', json ? '--shared' : '--user'],
+          json ? ['--json'] : [],
+        );
+
+        const output = json
+          ? JSON.stringify(capture.jsonPayloads[0])
+          : capture.info.join('\n');
+        expect(output.includes('terminal-reviewer-eligibility')).toBe(
+          expectedNotice,
+        );
+        if (expectedNotice) {
+          expect(output).toContain(effectiveTarget);
+        }
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
+    it('does not infer Fable from recommendation version when an explicit Frontier cell is preserved', async () => {
+      const root = await createRepoRoot();
+      await writeFile(
+        join(root, '.oat', 'config.json'),
+        `${JSON.stringify({
+          version: 1,
+          workflow: {
+            dispatchCeiling: {
+              recommendationVersion: 'old',
+              providers: {
+                claude: {
+                  frontier: { candidates: ['opus'] },
+                },
+              },
+            },
+          },
+        })}\n`,
+        'utf8',
+      );
+      const { command, capture } = createHarness({
+        cwd: root,
+        validateMatrixCell: vi.fn(async () => 'valid' as const),
+        assetFiles: {
+          '/tmp/assets/config/dispatch-matrix-recommendation.json':
+            JSON.stringify({
+              version: 'new',
+              providers: {
+                claude: {
+                  frontier: { candidates: ['fable'] },
+                },
+              },
+            }),
+        },
+      });
+
+      await runCommand(command, ['adopt', 'dispatch-matrix', '--shared']);
+
+      expect(capture.info.join('\n')).not.toContain(
+        'terminal-reviewer-eligibility',
+      );
+      expect(capture.info.join('\n')).not.toContain('fable');
       expect(process.exitCode).toBe(0);
     });
 
@@ -1954,7 +2210,7 @@ describe('oat config', () => {
         ),
       ) as Record<string, unknown>;
 
-      expect(recommendation.version).toBe('2026-07-25.1');
+      expect(recommendation.version).toBe('2026-07-27.1');
       expect(recommendation.providers).toMatchObject({
         codex: {
           economy: {
@@ -2010,20 +2266,18 @@ describe('oat config', () => {
           },
           high: {
             candidates: [
-              'gpt-5.6-sol-medium',
-              'gpt-5.6-sol-high',
               'claude-opus-5-thinking-medium',
+              'gpt-5.6-sol-medium',
               'claude-opus-5-thinking-high',
+              'gpt-5.6-sol-high',
             ],
           },
           frontier: {
             candidates: [
-              'claude-fable-5-thinking-high',
-              'claude-fable-5-thinking-xhigh',
               'gpt-5.6-sol-xhigh',
-              'gpt-5.6-sol-max',
               'claude-opus-5-thinking-xhigh',
-              'claude-opus-5-thinking-max',
+              'gpt-5.6-sol-max',
+              'claude-fable-5-thinking-high',
             ],
           },
         },
@@ -2766,6 +3020,49 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it.each([
+      [
+        'workflow.hillCheckpointDefault',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.archiveOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.createPrOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.postImplementSequence',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.reviewExecutionModel',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.autoReviewAtHillCheckpoints',
+        'Resolution: local > shared > user > legacy autoReviewAtCheckpoints > default.',
+      ],
+      [
+        'workflow.autoNarrowReReviewScope',
+        'Resolution: local > shared > user > default.',
+      ],
+    ] as const)(
+      'describe %s reports actual workflow precedence without an env layer',
+      async (key, expectedResolution) => {
+        const root = await createRepoRoot();
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, ['describe', key]);
+
+        expect(capture.info[0]).toContain(expectedResolution);
+        expect(capture.info[0]).not.toContain('Resolution: env >');
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
     it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
@@ -2790,6 +3087,26 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
       expect(capture.info[0]).toContain('Type: boolean');
       expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.autoNarrowReReviewScope shows enabled-by-default metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'workflow.autoNarrowReReviewScope',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: workflow.autoNarrowReReviewScope',
+      );
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: true');
+      expect(capture.info[0]).toContain('Narrowing is enabled by default');
+      expect(capture.info[0]).toContain('false opts out');
+      expect(capture.info[0]).not.toContain('When unset, the skill prompts');
       expect(process.exitCode).toBe(0);
     });
 

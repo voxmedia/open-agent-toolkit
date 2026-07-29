@@ -44,15 +44,13 @@ export interface OutOfDiffFinding {
   body: string;
 }
 
-export interface BuildInput {
+interface BuildInputBase {
   /** Full 40-char hex SHA of the reviewed PR HEAD. */
   headSha: string;
   /** Scope token (`pNN`, `final`, …) or the `ad-hoc` sentinel. */
   scope: string;
   /** Project path — set only on the project rail; omitted on ad-hoc. */
   project?: string;
-  /** How the review was invoked. */
-  invocation: ReviewInvocation;
   /** 2-3 sentence human-readable summary. */
   summary: string;
   findings: BuilderFinding[];
@@ -69,6 +67,20 @@ export interface BuildInput {
   /** Commands the user can run to verify fixes; omitted when absent/empty. */
   verificationCommands?: string[];
 }
+
+interface LifecycleBuildInput {
+  invocation: Exclude<ReviewInvocation, 'gate'>;
+  gateTarget?: never;
+}
+
+interface GateBuildInput {
+  invocation: 'gate';
+  /** Exact non-empty target that owns this gate review lineage. */
+  gateTarget: string;
+}
+
+export type BuildInput = BuildInputBase &
+  (LifecycleBuildInput | GateBuildInput);
 
 /**
  * Map a finding set to the GitHub review verdict: `REQUEST_CHANGES` when any
@@ -117,6 +129,20 @@ function buildMarkerBlock(input: BuildInput): string {
     lines.push(`oat_project: ${input.project}`);
   }
   lines.push(`oat_review_invocation: ${input.invocation}`);
+  if (input.invocation === 'gate') {
+    if (
+      input.gateTarget.trim() === '' ||
+      input.gateTarget.trim() !== input.gateTarget
+    ) {
+      throw new Error('gate invocation requires an exact non-empty gateTarget');
+    }
+    lines.push(`oat_gate_target: ${input.gateTarget}`);
+  } else if (
+    'gateTarget' in input &&
+    (input as { gateTarget?: unknown }).gateTarget !== undefined
+  ) {
+    throw new Error('lifecycle invocation must not include gateTarget');
+  }
   return `<!-- ${MARKER_BLOCK_OPEN}\n${lines.join('\n')}\n-->`;
 }
 

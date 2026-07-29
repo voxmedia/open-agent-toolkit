@@ -85,10 +85,16 @@
 - Explainer Kit golden visual recovery is complete. The packaged notices,
   adaptive recap set, independent browser-backed critic, exact non-linear
   topology, commit-pinned backlinks, initiative catalogs, authenticated resume,
-  and trusted Chromium evidence all ship in CLI `0.2.23`. The four recovery
+  and trusted Chromium evidence all ship in CLI `0.2.27`. The four recovery
   successors and umbrella are archived; only
   `BL-260728-additional-visual-workflows` remains open for lower-priority diff,
   plan, fact-check, dashboard, complex-table, and richer-composition work.
+- The broader high-priority review redesign is tracked separately in
+  `BL-260729-implement-reviewplan-first`: enforce artifact-only intake,
+  metadata-only change mapping, an explicit ReviewPlan, selective evidence
+  lanes, economically justified delegation, bounded deadlines, and a narrower
+  primary replay boundary. PR #185 diagnostics and PR #186 guarded narrowing
+  are prerequisites, not substitutes for this work.
 
 <!-- OAT BACKLOG-INDEX -->
 
@@ -99,6 +105,7 @@
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
+| BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                           | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments           | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |

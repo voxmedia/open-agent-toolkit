@@ -52,6 +52,42 @@ describe('parseMarkerBlock', () => {
     expect(parsed?.oat_review_invocation).toBe('auto');
   });
 
+  it('parses a gate invocation with its exact non-empty target', () => {
+    const parsed = parseMarkerBlock(
+      body(
+        [
+          'oat_provide_remote: true',
+          `oat_review_head_sha: ${FULL_SHA}`,
+          'oat_review_scope: p02',
+          'oat_project: .oat/projects/shared/remote-review',
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-xhigh',
+        ].join('\n'),
+      ),
+    );
+
+    expect(parsed?.oat_review_invocation).toBe('gate');
+    expect(parsed?.oat_gate_target).toBe('cursor-fable-5-xhigh');
+    expect(parsed?.extras).toBeUndefined();
+  });
+
+  it('keeps a gate invocation but omits a blank target', () => {
+    const parsed = parseMarkerBlock(
+      body(
+        [
+          'oat_provide_remote: true',
+          `oat_review_head_sha: ${FULL_SHA}`,
+          'oat_review_scope: p02',
+          'oat_review_invocation: gate',
+          'oat_gate_target:   ',
+        ].join('\n'),
+      ),
+    );
+
+    expect(parsed?.oat_review_invocation).toBe('gate');
+    expect(parsed?.oat_gate_target).toBeUndefined();
+  });
+
   it('returns null when no marker block is present (non-OAT review)', () => {
     expect(
       parseMarkerBlock('## Summary\n\nA human review with no OAT markers.'),
@@ -186,7 +222,7 @@ describe('parseMarkerBlock', () => {
     expect(parseMarkerBlock(text)?.oat_review_scope).toBe('ad-hoc');
   });
 
-  it('defaults oat_review_invocation to manual when omitted', () => {
+  it('leaves oat_review_invocation unknown when omitted', () => {
     const parsed = parseMarkerBlock(
       body(
         [
@@ -197,6 +233,24 @@ describe('parseMarkerBlock', () => {
       ),
     );
 
-    expect(parsed?.oat_review_invocation).toBe('manual');
+    expect(parsed?.oat_review_invocation).toBeUndefined();
+  });
+
+  it('leaves oat_review_invocation unknown for an unrecognized value', () => {
+    const parsed = parseMarkerBlock(
+      body(
+        [
+          'oat_provide_remote: true',
+          `oat_review_head_sha: ${FULL_SHA}`,
+          'oat_review_scope: ad-hoc',
+          'oat_review_invocation: future-mode',
+          'oat_future_field: preserved',
+        ].join('\n'),
+      ),
+    );
+
+    expect(parsed?.oat_review_invocation).toBeUndefined();
+    expect(parsed?.oat_review_scope).toBe('ad-hoc');
+    expect(parsed?.extras?.oat_future_field).toBe('preserved');
   });
 });

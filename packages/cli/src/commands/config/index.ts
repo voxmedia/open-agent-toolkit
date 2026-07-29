@@ -17,6 +17,10 @@ import {
   type DispatchMatrixNormalizationIssue,
 } from '@config/dispatch-matrix';
 import {
+  formatDispatchNotices,
+  terminalReviewerNoticesForMatrix,
+} from '@config/dispatch-notices';
+import {
   dispatchPolicyModeDescription,
   dispatchPolicyPolicyDescription,
   managedDispatchPolicyValueList,
@@ -60,6 +64,7 @@ import {
   type MatrixCellAvailabilityResponse,
   type ValidateMatrixCellOptions,
 } from '@providers/identity/availability';
+import type { DispatchNotice } from '@providers/identity/dispatch-report';
 import {
   createDispatchValidationPassContext,
   validateDispatchMatrixRefs,
@@ -723,7 +728,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.hillCheckpointDefault <value>',
     description:
-      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Default HiLL checkpoint behavior in oat-project-implement: "every" pauses after every phase, "final" pauses only after the last phase. When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.archiveOnComplete',
@@ -735,7 +740,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.archiveOnComplete <true|false>',
     description:
-      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Skip the "Archive after completion?" prompt in oat-project-complete. When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.createPrOnComplete',
@@ -747,7 +752,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.createPrOnComplete <true|false>',
     description:
-      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: env > local > shared > user > default.',
+      'Skip the "Open a PR?" prompt in oat-project-complete. When true, completion auto-triggers PR creation. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.postImplementSequence',
@@ -760,7 +765,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       "oat config set workflow.postImplementSequence '<legacy-or-json>'",
     description:
-      'Default post-implementation chaining. Legacy strings remain supported unchanged. Structured JSON uses {"preApproval":[...],"postApproval":[...]} with the canonical sequence steps. Plain get/list/dump output serializes structured values as compact JSON; get --json preserves the object value. When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Default post-implementation chaining. Legacy strings remain supported unchanged. Structured JSON uses {"preApproval":[...],"postApproval":[...]} with the canonical sequence steps. Plain get/list/dump output serializes structured values as compact JSON; get --json preserves the object value. When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.reviewExecutionModel',
@@ -772,7 +777,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     mutability: 'read/write',
     owningCommand: 'oat config set workflow.reviewExecutionModel <value>',
     description:
-      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Default execution model for the final review step in oat-project-implement: "subagent" dispatches a review subagent, "inline" runs the review in-context, "fresh-session" prints guidance for running the review in a separate session (with an escape hatch to subagent/inline). When unset, the skill prompts. Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.autoReviewAtHillCheckpoints',
@@ -785,7 +790,7 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     owningCommand:
       'oat config set workflow.autoReviewAtHillCheckpoints <true|false>',
     description:
-      'Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase oat-reviewer gates. When unset, the skill prompts. Resolution: env > local > shared > user > legacy autoReviewAtCheckpoints > default.',
+      'Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase oat-reviewer gates. When unset, the skill prompts. Resolution: local > shared > user > legacy autoReviewAtCheckpoints > default.',
   },
   {
     key: 'workflow.autoNarrowReReviewScope',
@@ -793,12 +798,12 @@ const CONFIG_CATALOG: ConfigCatalogEntry[] = [
     file: '.oat/config.local.json | .oat/config.json | ~/.oat/config.json',
     scope: 'workflow',
     type: 'boolean',
-    defaultValue: 'unset',
+    defaultValue: 'true',
     mutability: 'read/write',
     owningCommand:
       'oat config set workflow.autoNarrowReReviewScope <true|false>',
     description:
-      'Auto-narrow re-review scope to fix-task commits in oat-project-review-provide when re-reviewing completed fix tasks. Has no effect on initial reviews (there is nothing to narrow to). When unset, the skill prompts. Resolution: env > local > shared > user > default.',
+      'Automatically narrows re-review scope to changes since the prior same-lineage review. Narrowing is enabled by default; false opts out to full scope. Has no effect on initial reviews (there is nothing to narrow to). Resolution: local > shared > user > default.',
   },
   {
     key: 'workflow.autoArtifactReview.plan',
@@ -2177,6 +2182,7 @@ interface AdoptDispatchMatrixResult {
   key: string;
   value: string;
   source: Exclude<ConfigSurface, 'auto'>;
+  notices: DispatchNotice[];
 }
 
 async function loadDispatchMatrixRecommendation(
@@ -2272,6 +2278,31 @@ function applyDispatchMatrixRecommendation(
   };
 }
 
+async function effectiveTerminalReviewerNotices(
+  repoRoot: string,
+  userConfigDir: string,
+  dependencies: ConfigCommandDependencies,
+): Promise<DispatchNotice[]> {
+  const resolved = await dependencies.resolveEffectiveConfig(
+    repoRoot,
+    userConfigDir,
+    dependencies.processEnv,
+  );
+  const effectiveProviders: Record<string, unknown> = {};
+  for (const config of [resolved.user, resolved.shared, resolved.local]) {
+    for (const [provider, value] of Object.entries(
+      config.workflow?.dispatchCeiling?.providers ?? {},
+    )) {
+      const existing = effectiveProviders[provider];
+      effectiveProviders[provider] =
+        isRecord(existing) && isRecord(value)
+          ? { ...existing, ...value }
+          : value;
+    }
+  }
+  return terminalReviewerNoticesForMatrix(effectiveProviders);
+}
+
 async function adoptDispatchMatrixRecommendation(
   repoRoot: string,
   userConfigDir: string,
@@ -2291,17 +2322,23 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
+    const workflow = applyDispatchMatrixRecommendation(
+      userConfig.workflow,
+      recommendation,
+    );
     await dependencies.writeUserConfig(userConfigDir, {
       ...userConfig,
-      workflow: applyDispatchMatrixRecommendation(
-        userConfig.workflow,
-        recommendation,
-      ),
+      workflow,
     });
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
+      notices: await effectiveTerminalReviewerNotices(
+        repoRoot,
+        userConfigDir,
+        dependencies,
+      ),
     };
   }
 
@@ -2313,17 +2350,23 @@ async function adoptDispatchMatrixRecommendation(
       dependencies,
       context.logger.warn,
     );
+    const workflow = applyDispatchMatrixRecommendation(
+      localConfig.workflow,
+      recommendation,
+    );
     await dependencies.writeOatLocalConfig(repoRoot, {
       ...localConfig,
-      workflow: applyDispatchMatrixRecommendation(
-        localConfig.workflow,
-        recommendation,
-      ),
+      workflow,
     });
     return {
       key: 'workflow.dispatchCeiling.providers',
       value: recommendation.version,
       source,
+      notices: await effectiveTerminalReviewerNotices(
+        repoRoot,
+        userConfigDir,
+        dependencies,
+      ),
     };
   }
 
@@ -2334,17 +2377,23 @@ async function adoptDispatchMatrixRecommendation(
     dependencies,
     context.logger.warn,
   );
+  const workflow = applyDispatchMatrixRecommendation(
+    sharedConfig.workflow,
+    recommendation,
+  );
   await dependencies.writeOatConfig(repoRoot, {
     ...sharedConfig,
-    workflow: applyDispatchMatrixRecommendation(
-      sharedConfig.workflow,
-      recommendation,
-    ),
+    workflow,
   });
   return {
     key: 'workflow.dispatchCeiling.providers',
     value: recommendation.version,
     source,
+    notices: await effectiveTerminalReviewerNotices(
+      repoRoot,
+      userConfigDir,
+      dependencies,
+    ),
   };
 }
 
@@ -2539,6 +2588,9 @@ async function runAdopt(
       context.logger.info(
         `Adopted dispatch matrix recommendation ${result.value} to ${result.source} config.`,
       );
+      if (result.notices.length > 0) {
+        context.logger.info(formatDispatchNotices(result.notices));
+      }
     }
     process.exitCode = 0;
   } catch (error) {

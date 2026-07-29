@@ -95,14 +95,15 @@ async function writePlan(
   root: string,
   projectPath: string,
   rows: string[],
+  headers = ['Scope', 'Type', 'Status', 'Date', 'Artifact'],
 ): Promise<void> {
   await writeFile(
     join(root, projectPath, 'plan.md'),
     [
       '## Reviews',
       '',
-      '| Scope | Type | Status | Date | Artifact |',
-      '| --- | --- | --- | --- | --- |',
+      `| ${headers.join(' | ')} |`,
+      `| ${headers.map(() => '---').join(' | ')} |`,
       ...rows,
     ].join('\n'),
     'utf8',
@@ -335,6 +336,54 @@ describe('oat review latest', () => {
       generatedAt: '2026-06-01',
       kind: 'project',
       archived: false,
+      actionable: true,
+    });
+  });
+
+  it('correlates received events from the widened review ledger', async () => {
+    const root = await createRepoRoot();
+    const projectPath = '.oat/projects/shared/demo';
+    const receivedPath = `${projectPath}/reviews/received.md`;
+    const passedPath = `${projectPath}/reviews/passed.md`;
+
+    await writeReview(root, receivedPath, {
+      generatedAt: '2026-06-01',
+      scope: 'p01',
+      project: projectPath,
+    });
+    await writeReview(root, passedPath, {
+      generatedAt: '2026-06-02',
+      scope: 'final',
+      project: projectPath,
+    });
+    await writePlan(
+      root,
+      projectPath,
+      [
+        '| p01 | code | received | 2026-06-01 | reviews/received.md | aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa | manual | - |',
+        '| final | code | passed | 2026-06-02 | reviews/passed.md | bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb | manual | - |',
+      ],
+      [
+        'Scope',
+        'Type',
+        'Status',
+        'Date',
+        'Artifact',
+        'Reviewed Head',
+        'Invocation',
+        'Gate Target',
+      ],
+    );
+
+    const result = await findLatestReview({
+      repoRoot: root,
+      projectPath,
+      actionableProjectOnly: true,
+    });
+
+    expect(result).toMatchObject({
+      path: receivedPath,
+      scope: 'p01',
       actionable: true,
     });
   });

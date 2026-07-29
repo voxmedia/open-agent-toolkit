@@ -59,4 +59,27 @@ describe('dispatch policy option metadata', () => {
     expect(markdown).toContain('not host default behavior');
     expect(markdown).toContain('planning/preflight deferral');
   });
+
+  it('discloses the bundled Frontier recommendation without claiming effective configuration', () => {
+    const frontier = getDispatchPolicyChoices().find(
+      (choice) => choice.value === 'frontier',
+    );
+
+    expect(frontier?.notices).toEqual([
+      expect.objectContaining({
+        code: 'terminal-reviewer-eligibility',
+        level: 'advisory',
+        message: expect.stringMatching(
+          /fable.*model access.*retention policy/i,
+        ),
+      }),
+    ]);
+    expect(frontier?.notices[0]?.message).toContain('bundled recommendation');
+    expect(frontier?.notices[0]?.message).not.toContain(
+      'effective configuration',
+    );
+    expect(renderDispatchPolicyChoicesMarkdown()).toContain(
+      '[advisory] terminal-reviewer-eligibility',
+    );
+  });
 });

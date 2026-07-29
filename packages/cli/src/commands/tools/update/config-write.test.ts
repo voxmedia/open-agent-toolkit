@@ -10,7 +10,7 @@ const {
   buildCommandContext,
   loggerCapture,
 } = vi.hoisted(() => {
-  const loggerCapture = {
+  const capture = {
     info: [] as string[],
     warn: [] as string[],
     error: [] as string[],
@@ -37,26 +37,26 @@ const {
       interactive: false,
       logger: {
         debug(message: string) {
-          loggerCapture.debug.push(message);
+          capture.debug.push(message);
         },
         info(message: string) {
-          loggerCapture.info.push(message);
+          capture.info.push(message);
         },
         warn(message: string) {
-          loggerCapture.warn.push(message);
+          capture.warn.push(message);
         },
         error(message: string) {
-          loggerCapture.error.push(message);
+          capture.error.push(message);
         },
         success(message: string) {
-          loggerCapture.success.push(message);
+          capture.success.push(message);
         },
         json(payload: unknown) {
-          loggerCapture.jsonPayloads.push(payload);
+          capture.jsonPayloads.push(payload);
         },
       },
     })),
-    loggerCapture,
+    loggerCapture: capture,
   };
 });
 

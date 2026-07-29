@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.0.4
+version: 1.1.0
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -56,7 +56,7 @@ If you catch yourself:
 - Pushing or committing anything from this machine -> STOP; machine A's receive-remote owns all project-state mutations.
 - Posting the review to GitHub without explicit user confirmation -> STOP and present the body + verdict for approval first.
 - Narrowing against a prior review SHA without running the existence + ancestry guard -> STOP and run the guard first.
-- Narrowing against a prior review for a different project or a different scope -> STOP; only the same `(project, scope)` prior review narrows this one.
+- Narrowing against a prior review for a different project, scope, or lineage -> STOP; only the same `(project, scope, lineage)` prior review narrows this one.
 - Forgetting to remove the ephemeral worktree after posting (or on failure) -> STOP and release it in a `finally`.
 
 ## Progress Indicators (User-Facing)
@@ -90,7 +90,7 @@ oat-project-review-provide-remote [code <scope>|artifact <scope>]
 - `--pr <N>`: target PR number. When omitted, auto-detect from the current branch.
 - `--project <path>`: explicit OAT project directory. Takes precedence over the diff scan. Required when the diff touches zero or multiple projects' `state.md`.
 - `--no-checkout`: skip the ephemeral worktree and review from `gh pr diff` only (degraded context; project artifacts read from `gh` blob fetches instead of the checkout).
-- `--narrow` / `--no-narrow`: force or forbid re-review narrowing against a prior provide-remote review for this `(project, scope)`. When neither is passed, honor `workflow.autoNarrowReReviewScope` (no prompt when `true`; confirm prompt otherwise).
+- `--narrow` / `--no-narrow`: force or forbid re-review narrowing against a prior provide-remote review for this `(project, scope, lineage)`. `--narrow` takes precedence over the configured preference; `--no-narrow` forces full scope. When neither is passed, honor `workflow.autoNarrowReReviewScope`: unset and `true` narrow automatically, while only `false` forces full scope. This path never prompts for a narrowing decision.
 
 Inputs are CLI-style args parsed from `$ARGUMENTS`. No file inputs. No file outputs on this machine.
 
@@ -186,26 +186,69 @@ NEVER mutate, commit, or push any project artifact. This is a read-only project 
 
 ### Step 4: Detect Prior Reviews + Narrow Scope
 
-List prior PR reviews and parse each body's marker block. Filter to reviews where `oat_provide_remote: true` AND `oat_project == "$PROJECT_PATH"` AND `oat_review_scope == "<current-scope-token>"`. Different-project or different-scope prior reviews do NOT narrow this one (mirrors the tested helper at `packages/cli/src/review-remote/narrowing.ts`, `pickNarrowingTarget` with `rail: "project"`).
+Resolve the current invocation lineage before selecting a candidate:
+
+- `manual` and `auto` are the lifecycle lineage and are interchangeable.
+- `gate` is a separate lineage qualified by the exact `oat_gate_target`.
+
+Resolve preference and per-invocation flags before candidate enumeration:
+
+1. `--no-narrow` forces full PR scope with reason `narrowing-disabled` and skips `gh api` review enumeration entirely.
+2. `--narrow` forces a narrowing attempt even when the configured preference is `false`.
+3. With neither flag, unset and `true` attempt narrowing; only `false` forces full PR scope with reason `narrowing-disabled` and skips `gh api` review enumeration entirely.
+
+Only when narrowing will be attempted, list prior PR reviews and parse each body's target-qualified GitHub review marker block. Capture command status and stderr separately:
 
 ```bash
-gh api "/repos/{owner}/{repo}/pulls/$PR/reviews"
+REVIEWS_ERROR_FILE=""
+REVIEWS_DIAGNOSTIC=""
+REVIEWS_DISCOVERY_OK=false
+
+if ! REVIEWS_ERROR_FILE=$(mktemp "${TMPDIR:-/tmp}/oat-review-errors.XXXXXX"); then
+  REVIEWS_DIAGNOSTIC="diagnostic-file-unavailable: unable to create a temporary stderr file"
+elif REVIEWS_JSON=$(gh api "/repos/{owner}/{repo}/pulls/$PR/reviews" 2>"$REVIEWS_ERROR_FILE"); then
+  REVIEWS_DISCOVERY_OK=true
+  rm -f -- "$REVIEWS_ERROR_FILE"
+  REVIEWS_ERROR_FILE=""
+else
+  REVIEWS_DIAGNOSTIC=$(dd if="$REVIEWS_ERROR_FILE" bs=500 count=1 2>/dev/null)
+  rm -f -- "$REVIEWS_ERROR_FILE"
+  REVIEWS_ERROR_FILE=""
+fi
 ```
 
-Take the most recent matching review (by submitted timestamp). Before narrowing to `<prior_sha>..<HEAD>`, run the stale-SHA guard (design.md → Error Handling → Stale prior-review SHA):
+Do not run `gh api` when diagnostic-file creation fails. Treat that failure, a nonzero `gh api` result, or a response-level enumeration/parsing failure as discovery failure. Before removing the diagnostic file, preserve at most 500 bytes from stderr. If response parsing later fails, set `REVIEWS_DISCOVERY_OK=false` and put at most 500 characters of the parse error in `REVIEWS_DIAGNOSTIC`. Apply the forced/automatic policy below whenever `REVIEWS_DISCOVERY_OK=false`. Do not treat individual irrelevant or lineage-ineligible marker blocks as response-level failure.
+
+- With forced `--narrow`, discovery failure is a hard error with reason `prior-reviews-unavailable`; report the diagnostic and stop instead of pretending to narrow.
+- On the automatic path, discovery failure fails open to full PR scope with stable reason `prior-reviews-unavailable` plus the diagnostic detail, then continues to review the full PR diff.
+
+After successful enumeration, candidate discovery belongs to this rail: use only marker blocks where `oat_provide_remote: true`, `oat_project == "$PROJECT_PATH"`, and `oat_review_scope == "<current-scope-token>"`, then require the same lineage. A lifecycle invocation accepts only a prior `manual` or `auto` marker. A gate invocation accepts only a prior `gate` marker carrying the same exact non-empty `oat_gate_target`; a target-less gate marker is ineligible, and a gate never inherits a lifecycle review or another gate target. Invocation-less or unknown legacy markers, and markers for another project or scope, remain unknown and ineligible. Do not read the local lifecycle Reviews table or use a project-plan fallback on this rail.
+
+Take the most recent eligible marker by submitted timestamp. Candidate discovery and marker provenance remain rail-specific; only after this rail supplies that candidate apply the shared guard, fallback, and classification semantics mirrored by `packages/cli/src/review-remote/narrowing.ts`. When no eligible marker supplies a full 40-character hexadecimal `oat_review_head_sha`, use full PR scope with reason `no-prior-review`. Do not run Git guards for an invalid candidate.
+
+Before accepting `<prior_sha>..<PR_HEAD_SHA>`, run the stale-SHA guard (design.md → Error Handling → Stale prior-review SHA):
 
 Run the guard in the available git context `$GIT_CTX` — `$EPHEMERAL_PATH` in rich-context (checkout) mode, or `$REPO_ROOT` in diff-only mode (where no worktree exists):
 
 1. **Existence:** `git -C "$GIT_CTX" cat-file -e <prior_sha>` (diff-only mode: `git -C "$REPO_ROOT" fetch origin <prior_sha>:refs/oat-prior-review` first, then re-check; if that fetch fails, fall back to full PR scope).
 2. **Ancestry:** `git -C "$GIT_CTX" merge-base --is-ancestor <prior_sha> "$PR_HEAD_SHA"`.
 
-Guard outcomes:
+Guard outcomes and reasons:
 
-- Both pass -> narrow to `<prior_sha>..<HEAD>`.
-- Either fails -> fall back to full PR scope and warn that the prior SHA is unreachable (likely rebase/force-push).
+- Both pass -> narrow to exactly `<prior_sha>..<PR_HEAD_SHA>` with reason `narrowed from guarded prior reviewed head`.
+- Object missing or fetch failure -> fall back to full PR scope with reason `stale-sha` and detail `prior-commit-missing`.
+- Ancestry failure -> fall back to full PR scope with reason `stale-sha` and detail `prior-commit-not-ancestor`.
 - `--narrow` set AND guard fails -> hard error; surface unreachability and stop.
-- `workflow.autoNarrowReReviewScope == true` -> never prompt; guard failure auto-falls back to full scope with the warning as the auto-fallback notice.
-- No matching prior review (for this `(project, scope)`) -> use full PR diff.
+- The automatic path fails open for every candidate or guard failure and preserves the applicable reason.
+
+When a guarded narrow range is accepted, enumerate its changed files with `git diff --name-only "<prior_sha>..<PR_HEAD_SHA>"` and classify it for reporting. Resolve `PROJECT_RELATIVE` as the active project's repository-relative path first:
+
+- `empty`: no changed files.
+- `bookkeeping-only`: every changed path is inside the exact active project prefix `"$PROJECT_RELATIVE/"`.
+- `substantive`: any changed path is outside that exact prefix.
+- If changed-file enumeration fails, conservatively classify as `substantive` and add `changed-files-unavailable` to the reason.
+
+Classification is reporting-only: `empty`, `bookkeeping-only`, and `substantive` all dispatch the review over the same resolved range. It never skips, gates, or shortens the review. Print one narrowing resolution line containing the resolved full-scope or narrow range, classification when narrowed, and the explicit reason. Do not print another narrowing prompt or decision line elsewhere.
 
 ### Step 5: Run the Review (Tier 1/2/3 Dispatch)
 
@@ -311,11 +354,12 @@ oat_provide_remote: true
 oat_review_head_sha: <PR_HEAD_SHA>
 oat_review_scope: <scope token, e.g. p02 | final>
 oat_project: <PROJECT_PATH>
-oat_review_invocation: manual
+oat_review_invocation: <manual | auto | gate>
+oat_gate_target: <exact configured gate target; omit for lifecycle>
 -->
 ```
 
-`oat_project` carries the resolved project path so machine A's `oat-project-review-receive-remote` routes findings into the right project's plan tasks. Verdict: `REQUEST_CHANGES` when any critical or important finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
+`oat_project` carries the resolved project path so machine A's `oat-project-review-receive-remote` routes findings into the right project's plan tasks. Preserve the current invocation lineage in the GitHub marker: omit `oat_gate_target` for lifecycle reviews and include the exact target for gate reviews. Verdict: `REQUEST_CHANGES` when any critical or important finding exists; `COMMENT` otherwise (including a clean, zero-findings review — never auto-`APPROVE`).
 
 ### Step 8: Post the Review + Clean Up
 
@@ -353,6 +397,9 @@ Posting failure handling (design.md → Error Handling → Posting failures): on
 Always release the ephemeral worktree in a `finally`, even when review or posting fails:
 
 ```bash
+if [[ -n "${REVIEWS_ERROR_FILE:-}" ]]; then
+  rm -f -- "$REVIEWS_ERROR_FILE"
+fi
 git -C "$REPO_ROOT" worktree remove --force "$EPHEMERAL_PATH" || git -C "$REPO_ROOT" worktree prune
 rm -rf "$EPHEMERAL_PATH"
 ```
@@ -378,7 +425,7 @@ At completion, report:
 - Review type and scope token.
 - Read mode (worktree checkout vs diff-only).
 - Dispatch tier used (Tier 1 structured-output / Tier 2 fresh session / Tier 3 inline).
-- Narrowing decision (full scope vs `<prior_sha>..<HEAD>`, and why).
+- Narrowing decision (full scope vs `<prior_sha>..<PR_HEAD_SHA>`), reporting-only classification when narrowed, and the explicit reason.
 - Severity counts and total findings.
 - Inline-comment count posted vs findings downgraded to the body (out-of-diff).
 - Verdict (`REQUEST_CHANGES` or `COMMENT`).
@@ -391,7 +438,9 @@ At completion, report:
 - PR scope resolved and confirmed.
 - OAT project resolved from the diff (or `--project` override) and validated; project artifacts read read-only for mode-aware context.
 - PR content acquired via ephemeral worktree (or diff-only fallback) without mutating the caller's working tree.
-- Prior provide-remote reviews detected and filtered to this `(project, scope)`; re-review narrowing applied only after the stale-SHA guard passes.
+- Prior provide-remote GitHub markers detected and filtered to this `(project, scope, lineage)`; re-review narrowing applied only after the full-SHA, existence, and ancestry guards pass, with explicit fail-open reasons and no local Reviews-table or project-plan fallback.
+- Unset and `true` narrow automatically, only `false` forces full scope, per-invocation flags retain precedence, and no narrowing prompt remains.
+- Narrowed ranges are classified as `empty`, `bookkeeping-only`, or `substantive` for reporting only; changed-file enumeration failure conservatively reports `substantive`.
 - Review executed via Tier 1 (`oat-reviewer` structured-output, NO artifact) /
   Tier 2 (fresh session) / Tier 3 (inline), with fallthrough limited to
   dispatch unavailability or explicit pre-start native role rejection.

@@ -176,8 +176,8 @@ function authorResult(authorRequest, overrides = {}) {
   };
 }
 
-async function runExplainer(request, options = {}) {
-  return runExplainerCore(request, {
+async function runExplainer(runRequest, options = {}) {
+  return runExplainerCore(runRequest, {
     ...(typeof options.author !== 'function'
       ? { author: async (authorRequest) => authorResult(authorRequest) }
       : {}),

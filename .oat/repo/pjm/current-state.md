@@ -31,7 +31,7 @@ copying their content here. -->
 
 <!-- Summarize shipped capabilities and important repo conventions here. -->
 
-- CLI `0.2.23` closes the Explainer Kit golden visual recovery: one immutable
+- CLI `0.2.27` closes the Explainer Kit golden visual recovery: one immutable
   adaptive set plans a hub, architecture view, and deck from a shared claim
   ledger; artistic routing preserves exact branch, fan-in, cycle, node, edge,
   direction, and label semantics; lifecycle sources resolve to commit-pinned
@@ -43,6 +43,24 @@ copying their content here. -->
   Three portable real-Chromium golden cases, five public package payloads, and
   the 65-measurement release visual gate pass. Additional visual workflows
   remain separately tracked as `BL-260728-additional-visual-workflows`.
+- CLI `0.2.26` makes managed-capped implementation and fix dispatches
+  auditable without changing compatibility exit behavior. Dispatch Report V1
+  now carries provider-neutral task classification, applicable Codex task
+  effort, legacy preferred-selection provenance, and ordered structured
+  notices. A skipped exact-candidate selection or an exact candidate without a
+  task class emits a stable coded warning in human and JSON output while
+  resolution remains successful. Policy choices, post-adoption output, and
+  runtime reviewer resolution also disclose effective terminal Fable targets;
+  organizations remain responsible for confirming model access and applicable
+  retention-policy eligibility.
+- CLI `0.2.25` narrows lifecycle and gate re-reviews by default from a
+  lineage-qualified prior reviewed head; `false` is the explicit full-scope
+  opt-out. Review artifacts and the tracked Reviews ledger preserve validated
+  full-SHA provenance across archival, clones, and worktrees. Missing,
+  conflicting, non-existent, or non-ancestor provenance fails open to full
+  scope, and every re-review reports its resolved range plus
+  empty/bookkeeping-only/substantive classification without using that
+  classification to skip review.
 - CLI `0.2.21` rebuilds Explainer Kit authoring on two per-artifact paths,
   replacing slot-filling that produced structurally thin output. A narrative
   path promotes Markdown from provenance to actual renderer input, so tables,

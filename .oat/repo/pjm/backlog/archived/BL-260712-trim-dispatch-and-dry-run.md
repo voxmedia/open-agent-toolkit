@@ -10,8 +10,6 @@ assignee: null
 created: '2026-07-12T19:27:00Z'
 updated: '2026-07-13T04:13:27Z'
 associated_issues: []
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description
