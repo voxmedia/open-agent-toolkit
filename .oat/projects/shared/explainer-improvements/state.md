@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t14
-oat_last_commit: 996229cfad5392a45681e91e0084b4684acbcb47
+oat_current_task: p04-closure-review
+oat_last_commit: 9d7d650172fe40e5ddd8590ac2ea3078cc700ed4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -260,6 +260,10 @@ Phase p04 implementation in progress
   not required
 - ⧗ p04-t14 is authorized to remove `ekrt1` acceptance and require authenticated
   `ekrt2`, followed by one closure review
+- ✓ p04-t14 implemented in atomic commit `9d7d6501`
+- ✓ Legacy downgrade regressions, focused resume tests, complete p03/p04 union,
+  repository tests, and release validation passed
+- ⧗ Explicitly authorized Phase p04 closure review is pending
 
 ## Blockers
 
@@ -267,5 +271,5 @@ None.
 
 ## Next Milestone
 
-Execute p04-t14, rerun Phase p04 and repository/release gates, then run the
-explicitly authorized closure review before the p05 HiLL checkpoint.
+Run the explicitly authorized Phase p04 closure review, then stop at the p05
+HiLL checkpoint if it passes.

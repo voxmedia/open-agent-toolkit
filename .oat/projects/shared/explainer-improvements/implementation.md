@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t14
+oat_current_task_id: p05-t01
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |    14 |     13/14 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |    14 |     14/14 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 54/59 tasks completed
+**Total:** 55/59 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -265,7 +265,7 @@ oat_generated: false
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
 - [x] p04-t12 — Bind resume identity to the original canonical output root (`3b7b43b2`)
 - [x] p04-t13 — Authenticate the canonical resume root externally (`996229cf`)
-- [ ] p04-t14 — Require authenticated resume tokens
+- [x] p04-t14 — Require authenticated resume tokens (`9d7d6501`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -886,7 +886,26 @@ oat_generated: false
   `ekrt1` and require `ekrt2`
 - Review authorization: one closure review explicitly authorized for this
   operator-selected fix outside the exhausted automatic cap
+- Outcome: `DONE`
+- Commit: `9d7d650172fe40e5ddd8590ac2ea3078cc700ed4`
+- Verification: legacy downgrade regressions 3/3, records 24/24, core
+  integration 64/64, resume invariants 8/8, p03/p04 union 432/432, repository
+  tests and release validation passed
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 29 — Phase p04 authorized closure review
+
+- Request: `explainer-improvements-p04-review-r5-20260729T150000Z`
+- Launch intent: persisted
+- Base: `996229cfad5392a45681e91e0084b4684acbcb47`
+- Reviewed head: `9d7d650172fe40e5ddd8590ac2ea3078cc700ed4`
+- Source artifact: `reviews/20260729-p04-code-review-r4.md`
+- Planned artifact: `reviews/20260729-p04-code-review-r5.md`
+- Scope: I4-R4, p04-t14, and regressions for every previously resolved Phase
+  p04 finding
+- Authorization: explicit operator-selected secure closure outside the exhausted
+  automatic cap
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
