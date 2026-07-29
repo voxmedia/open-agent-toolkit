@@ -15,10 +15,10 @@ oat_template_name: design
 The CLI keeps the existing resolver selection behavior but adds explicit
 observability around it. Managed named-cap implementation/fix calls accept
 classification separately from candidate selection and policy. Dispatch Report
-V1 gains nullable classification fields. When an actual runtime resolution
-reaches `selectionMode=capped` without an exact candidate, the command emits a
-coded warning in both human and JSON output while preserving
-`status: resolved` and exit code `0`.
+V1 gains nullable classification fields. When an actual managed named-cap
+implementation/fix resolution selects a value without either an exact candidate
+or legacy `--preferred` selection, the command emits a coded warning in both
+human and JSON output while preserving `status: resolved` and exit code `0`.
 
 A shared structured notice shape carries skipped-selection warnings,
 classification warnings, and terminal-reviewer eligibility advisories without
@@ -123,11 +123,11 @@ humans and automation.
 **Responsibilities:**
 
 - Detect missing exact candidate only for actual managed named-cap
-  implementation/fix routes.
+  implementation/fix routes that also lack legacy `--preferred` selection.
 - Detect missing classification when an exact candidate exists.
 - Describe terminal reviewer access/retention constraints.
-- Exclude preflight, reviewer-only, inherit, uncapped, unresolved, and
-  non-applicable routes.
+- Exclude preflight, reviewer-only, inherit, uncapped, unresolved,
+  non-applicable, and legacy `--preferred` routes.
 
 **Interfaces:**
 
@@ -202,8 +202,9 @@ for reviewers. They do not satisfy or replace exact-candidate requirements.
 
 ### Notice Behavior
 
-- `managed-capped-selection-skipped`: no exact candidate; resolver selected the
-  cap.
+- `managed-capped-selection-skipped`: on a managed named-cap
+  implementation/fix route, `requestedCandidate` and `preferredValue` are null
+  while `selectedValue` is non-null.
 - `managed-capped-classification-missing`: exact candidate supplied but no task
   class recorded.
 - `terminal-reviewer-eligibility`: effective reviewer target requires access and
@@ -228,7 +229,8 @@ not receive the Fable disclosure.
 - Missing candidate or classification on an actual managed-capped
   implementation/fix route produces coded warnings, not errors.
 - Existing unresolved/blocked policy and ladder behavior remains authoritative.
-- Policy-only preflight is excluded from skipped-selection warnings.
+- Policy-only preflight and legacy `--preferred` selection are excluded from
+  skipped-selection warnings.
 - Terminal reviewer disclosure is advisory.
 - JSON notices are the source of truth; logger output is only a rendering.
 - Compatibility stamps remain parseable and unchanged.
@@ -246,6 +248,7 @@ not receive the Fable disclosure.
 - Above-cap candidate retains its existing error.
 - Preflight, reviewer, inherit, uncapped, and unresolved paths emit no false
   implementation/fix warning.
+- Legacy `--preferred` below or at the cap emits no skipped-selection warning.
 
 ### Dispatch Report Tests
 

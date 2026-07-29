@@ -29,6 +29,10 @@ oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 #         - { harness: cursor, model: gpt-5.5-xhigh }
 #   source: project-state
 # oat_dispatch_ceiling: # legacy compatibility alias for capped managed provider targets
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 # oat_implement_exit_gate: # optional; durable configured implementation exit-gate state
@@ -71,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T23:54:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T00:01:37Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -100,6 +104,7 @@ Plan - Executable tasks drafted; resolving review and dispatch setup
 - ✓ Existing backlog scope and prior review decisions collected
 - ✓ Lightweight design approved
 - ✓ Executable implementation plan drafted
+- ✓ Important design-review false-positive fixed in plan inputs
 - ⧗ Resolving phase gate and plan review
 
 ## Blockers

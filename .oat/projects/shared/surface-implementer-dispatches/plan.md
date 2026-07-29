@@ -147,6 +147,7 @@ Cover:
 - unchanged above-cap error;
 - no false warning for policy preflight, reviewer, inherit, uncapped, or
   unresolved paths;
+- no skipped-selection warning for legacy `--preferred` below or at the cap;
 - matching human and JSON notices.
 
 Run:
@@ -167,6 +168,9 @@ Expected: new assertions fail before implementation.
 - Derive skipped-selection and classification-missing notices only after the
   existing resolver returns, using policy, role/action, preflight, and selection
   context.
+- Emit `managed-capped-selection-skipped` only for a managed named-cap
+  implementation/fix route where `requestedCandidate` and `preferredValue` are
+  null and `selectedValue` is non-null.
 - Preserve `status: resolved`, exit code `0`, and selection behavior.
 - Render human notices from the same structured data returned in JSON.
 
