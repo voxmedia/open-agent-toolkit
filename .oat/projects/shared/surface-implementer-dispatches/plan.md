@@ -479,15 +479,15 @@ git commit -m "chore(backlog): close implementer dispatch visibility"
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date | Artifact |
-| ------ | -------- | ------- | ---- | -------- |
-| p01    | code     | pending | -    | -        |
-| p02    | code     | pending | -    | -        |
-| p03    | code     | pending | -    | -        |
-| final  | code     | pending | -    | -        |
-| spec   | artifact | pending | -    | -        |
-| design | artifact | pending | -    | -        |
-| plan   | artifact | pending | -    | -        |
+| Scope  | Type     | Status   | Date       | Artifact                                             |
+| ------ | -------- | -------- | ---------- | ---------------------------------------------------- |
+| p01    | code     | pending  | -          | -                                                    |
+| p02    | code     | pending  | -          | -                                                    |
+| p03    | code     | pending  | -          | -                                                    |
+| final  | code     | pending  | -          | -                                                    |
+| spec   | artifact | pending  | -          | -                                                    |
+| design | artifact | received | 2026-07-28 | reviews/artifact-design-review-2026-07-28T235619Z.md |
+| plan   | artifact | pending  | -          | -                                                    |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
