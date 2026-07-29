@@ -8,6 +8,7 @@ import {
   RUNTIME_UNAVAILABLE_REASONS,
   resolveHeadlessRuntime,
 } from '../scripts/lib/browser-runtime.mjs';
+import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import {
   GUIDELINE_WARNING_IDS,
   REPRESENTATIVE_WIDTHS,
@@ -24,6 +25,7 @@ import { renderArtifact } from '../scripts/lib/render.mjs';
 import { resolveTheme } from '../scripts/lib/theme.mjs';
 import { runVisualReview } from '../scripts/lib/visual-review.mjs';
 import { runRenderQaCli, runRenderQaStage } from '../scripts/render-qa.mjs';
+import { png } from './fixtures/png.mjs';
 
 const fixture = (
   body = '<h1>System overview</h1><p>Ready.</p>',
@@ -43,15 +45,6 @@ const fixture = (
   </head>
   <body><main>${body}</main></body>
 </html>`;
-
-function png(width, height) {
-  const bytes = Buffer.alloc(45);
-  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
-  bytes.writeUInt32BE(width, 16);
-  bytes.writeUInt32BE(height, 20);
-  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
-  return bytes;
-}
 
 const deck = () =>
   fixture(
@@ -1006,13 +999,22 @@ test('independent visual review binds the full rendered set and actionable rubri
     artifactId,
     renderedPath: `site/${artifactId}/index.html`,
   }));
+  const viewportSizes = {
+    mobile: [320, 640],
+    tablet: [768, 1024],
+    desktop: [1440, 900],
+  };
   const evidence = rendered.flatMap(({ artifactId }) =>
-    ['mobile', 'tablet', 'desktop'].map((viewport) => ({
-      artifactId,
-      viewport,
-      screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
-      metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
-    })),
+    ['mobile', 'tablet', 'desktop'].map((viewport) => {
+      const bytes = png(...viewportSizes[viewport]);
+      return {
+        artifactId,
+        viewport,
+        screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
+        decodedScreenshotHash: decodeBrowserPng(bytes).pixelHash,
+        metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
+      };
+    }),
   );
   const runRoot = await mkdtemp(join(tmpdir(), 'explainer-visual-review-'));
   t.after(() => rm(runRoot, { recursive: true, force: true }));
@@ -1028,11 +1030,7 @@ test('independent visual review binds the full rendered set and actionable rubri
     const viewport = evidence.find(
       (item) => item.screenshotPath === screenshotPath,
     ).viewport;
-    const size = {
-      mobile: [320, 640],
-      tablet: [768, 1024],
-      desktop: [1440, 900],
-    }[viewport];
+    const size = viewportSizes[viewport];
     await writeFile(join(runRoot, screenshotPath), png(...size));
     await writeFile(join(runRoot, metricsPath), '{}');
   }
@@ -1054,6 +1052,21 @@ test('independent visual review binds the full rendered set and actionable rubri
       },
     ],
   }));
+
+  const decodedHash = evidence[0].decodedScreenshotHash;
+  evidence[0].decodedScreenshotHash = `sha256:${'0'.repeat(64)}`;
+  await assert.rejects(
+    runVisualReview({
+      plan,
+      rendered,
+      evidence,
+      visualCritic,
+      runRoot,
+    }),
+    /decoded screenshot hash/i,
+  );
+  assert.equal(visualCritic.mock.callCount(), 0);
+  evidence[0].decodedScreenshotHash = decodedHash;
 
   const review = await runVisualReview({
     plan,

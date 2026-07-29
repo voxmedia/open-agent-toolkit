@@ -15,17 +15,10 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
+import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
 
 const tempDirs = [];
 
-function png(width, height) {
-  const bytes = Buffer.alloc(45);
-  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
-  bytes.writeUInt32BE(width, 16);
-  bytes.writeUInt32BE(height, 20);
-  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
-  return bytes;
-}
 const SOURCE_SKILLS_ROOT = resolve(
   dirname(fileURLToPath(import.meta.url)),
   '..',

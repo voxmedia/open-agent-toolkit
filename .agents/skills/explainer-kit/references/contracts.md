@@ -99,6 +99,10 @@ rendered file, screenshot, and metrics file by raw-byte SHA-256 hash, and
 derives a deterministic `requestId` and canonical `requestHash`. The critic
 receives a confined reader for those snapshotted paths and cannot read
 unlisted evidence. Core revalidates the bytes after the callback returns.
+Before snapshotting, each screenshot must fully decode as a bounded,
+CRC-verified, non-interlaced 8-bit RGB or RGBA PNG with exact zlib consumption
+and viewport-matched dimensions. The pixel hash established during QA must
+match the later visual-review snapshot.
 The result must echo the exact request identity and hash, name the complete
 artifact set, include artifact-scoped rubric findings, and select exactly one
 `pass`, `correct`, or `fail` disposition. Application validation must pass the

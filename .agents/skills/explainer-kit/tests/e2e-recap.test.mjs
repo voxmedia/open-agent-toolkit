@@ -13,18 +13,11 @@ import { afterEach, test } from 'node:test';
 
 import { validateContract } from '../scripts/lib/contracts.mjs';
 import { runExplainer } from '../scripts/run.mjs';
+import { png } from './fixtures/png.mjs';
 
 const NOW = '2026-03-09T18:00:00Z';
 const SLUG = 'atlas-index-recap';
 
-function png(width, height) {
-  const bytes = Buffer.alloc(45);
-  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
-  bytes.writeUInt32BE(width, 16);
-  bytes.writeUInt32BE(height, 20);
-  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
-  return bytes;
-}
 const REQUIRED_NARRATIVE = [
   'original-request',
   'key-agent-decisions',

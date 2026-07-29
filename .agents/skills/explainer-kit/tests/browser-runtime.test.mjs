@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, rm } from 'node:fs/promises';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { test } from 'node:test';
@@ -8,6 +8,7 @@ import {
   createBrowserProbeSession,
   probeRenderedPage,
 } from '../scripts/lib/browser-runtime.mjs';
+import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 
 const animatedFixture = `<!doctype html>
 <html lang="en">
@@ -31,6 +32,9 @@ test('probe applies injected CSS and neutralizes non-gated motion', async (t) =>
     return;
   }
 
+  const root = await mkdtemp(join(tmpdir(), 'explainer-browser-real-png-'));
+  t.after(() => rm(root, { recursive: true, force: true }));
+  const screenshotPath = join(root, 'probe.png');
   try {
     const result = await session.probe({
       artifact: {
@@ -43,6 +47,7 @@ test('probe applies injected CSS and neutralizes non-gated motion', async (t) =>
       reducedMotion: 'reduce',
       disableAnimations: true,
       injectedCss: ':root { --probe-injected: present; }',
+      screenshotPath,
       evaluate: () => {
         const animated = getComputedStyle(
           document.querySelector('#animated'),
@@ -66,6 +71,11 @@ test('probe applies injected CSS and neutralizes non-gated motion', async (t) =>
 
     assert.equal(result.injectedMarker, 'present');
     assert.equal(result.animationsDisabled, true);
+    const decoded = decodeBrowserPng(await readFile(screenshotPath));
+    assert.deepEqual(
+      { width: decoded.width, height: decoded.height },
+      { width: 768, height: 900 },
+    );
   } finally {
     await session.close();
   }

@@ -7,6 +7,7 @@ import {
   validateContract,
   visualReviewRequestId,
 } from './contracts.mjs';
+import { decodeBrowserPng } from './png.mjs';
 
 const REQUIRED_VIEWPORTS = Object.freeze(['mobile', 'tablet', 'desktop']);
 
@@ -84,6 +85,25 @@ export async function buildVisualReviewRequest({
       ]),
     ),
   );
+  for (const item of evidence) {
+    const snapshot = snapshots.get(item.screenshotPath);
+    let decoded;
+    try {
+      decoded = decodeBrowserPng(snapshot.bytes);
+    } catch (error) {
+      throw visualReviewError(
+        `Visual review screenshot ${item.screenshotPath} is not a decodable browser PNG: ${error.message}`,
+      );
+    }
+    if (
+      typeof item.decodedScreenshotHash !== 'string' ||
+      decoded.pixelHash !== item.decodedScreenshotHash
+    ) {
+      throw visualReviewError(
+        `Visual review screenshot ${item.screenshotPath} does not match its decoded screenshot hash.`,
+      );
+    }
+  }
   const payload = {
     schemaVersion: 'explainer-kit.visual-review-request/v1',
     plan: structuredClone(plan),

@@ -14,24 +14,18 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { afterEach, mock, test } from 'node:test';
 
+import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { canonicalHash, validateContract } from '../scripts/lib/contracts.mjs';
+import { decodeBrowserPng } from '../scripts/lib/png.mjs';
 import {
   runExplainer as runExplainerCore,
   runExplainerCli,
 } from '../scripts/run.mjs';
+import { png } from './fixtures/png.mjs';
 
 const NOW = '2026-07-17T20:00:00Z';
 const HASH = `sha256:${'a'.repeat(64)}`;
 const tempDirs = [];
-
-function png(width, height) {
-  const bytes = Buffer.alloc(45);
-  Buffer.from('89504e470d0a1a0a0000000d49484452', 'hex').copy(bytes);
-  bytes.writeUInt32BE(width, 16);
-  bytes.writeUInt32BE(height, 20);
-  Buffer.from('0000000049454e44ae426082', 'hex').copy(bytes, 33);
-  return bytes;
-}
 
 afterEach(async () => {
   mock.reset();
@@ -141,7 +135,7 @@ function authorResult(authorRequest, overrides = {}) {
     .replaceAll('{{FOOTER}}', 'Authored from validated evidence.')
     .replaceAll(
       '{{SLIDES}}',
-      '<section class="slide"><h1>Overview</h1></section>',
+      '<section class="slide"><div class="slide__content"><h1>Overview</h1></div></section>',
     )
     .replaceAll('{{LEGEND}}', '<span>Overview</span>')
     .replaceAll('{{THEME_CSS}}', '');
@@ -1101,6 +1095,62 @@ test('invokes an independent critic once with the complete rendered recap set', 
     ),
   );
   assert.equal(sharedCallback.mock.callCount(), 3);
+});
+
+test('runs a complete recap review with installed Chromium PNG evidence', async (t) => {
+  const session = await createBrowserProbeSession();
+  if (!session.available) {
+    if (process.env.CI) {
+      assert.fail(`headless runtime unavailable in CI: ${session.reason}`);
+    }
+    t.skip(`optional headless runtime unavailable: ${session.reason}`);
+    return;
+  }
+
+  try {
+    const fixture = await suppliedFixture('project-recap');
+    const visualCritic = mock.fn(async (reviewRequest, evidenceInput) => {
+      for (const artifact of reviewRequest.renderedArtifacts) {
+        for (const evidence of artifact.evidence) {
+          const decoded = decodeBrowserPng(
+            await evidenceInput.read(evidence.screenshotPath),
+          );
+          assert.equal(
+            decoded.width,
+            { mobile: 320, tablet: 768, desktop: 1440 }[evidence.viewport],
+          );
+        }
+      }
+      return {
+        schemaVersion: 'explainer-kit.visual-review-result/v1',
+        reviewId: 'real-chromium-review',
+        requestId: reviewRequest.requestId,
+        requestHash: reviewRequest.requestHash,
+        reviewedAt: NOW,
+        disposition: 'pass',
+        artifactIds: reviewRequest.renderedArtifacts.map(
+          ({ artifactId }) => artifactId,
+        ),
+        findings: [],
+      };
+    });
+    const result = await runExplainerCore(fixture.request, {
+      author: async (authorRequest) => authorResult(authorRequest),
+      planSet: async (plannerRequest) => plannedSet(plannerRequest),
+      browserProbe: session.probe,
+      visualCritic,
+      now: () => NOW,
+    });
+
+    assert.equal(
+      result.outcome,
+      'built-not-durable',
+      JSON.stringify(result.warnings),
+    );
+    assert.equal(visualCritic.mock.callCount(), 1);
+  } finally {
+    await session.close();
+  }
 });
 
 test('caps visual review at one correction and one final review', async (t) => {
