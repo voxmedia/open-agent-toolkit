@@ -112,6 +112,38 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('parses reordered known columns with unknown columns interleaved', () => {
+    const reviewedHead = 'c'.repeat(40);
+    const planContent = `## Reviews
+
+| Notes  | Artifact              | Gate Target   | Scope | Owner | Status   | Reviewed Head                              | Date       | Invocation | Type |
+| ------ | --------------------- | ------------- | ----- | ----- | -------- | ------------------------------------------ | ---------- | ---------- | ---- |
+| first  | reviews/p04-review.md | codex-default | p04   | team  | passed   | ${reviewedHead} | 2026-07-28 | gate       | code |
+| second | reviews/p05-review.md | -             | p05   | team  | received | -                                          | 2026-07-29 | auto       | code |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'p04',
+        type: 'code',
+        status: 'passed',
+        date: '2026-07-28',
+        artifact: 'reviews/p04-review.md',
+        reviewedHead,
+        invocation: 'gate',
+        gateTarget: 'codex-default',
+      },
+      {
+        scope: 'p05',
+        type: 'code',
+        status: 'received',
+        date: '2026-07-29',
+        artifact: 'reviews/p05-review.md',
+        invocation: 'auto',
+      },
+    ]);
+  });
+
   it('treats empty widened provenance cells as absent', () => {
     const planContent = `## Reviews
 
