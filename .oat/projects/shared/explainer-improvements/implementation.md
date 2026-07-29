@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-review
+oat_current_task_id: p04-t12
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | review_pending |    11 |     11/11 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | fixes_pending |    12 |     11/12 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 52/56 tasks completed
+**Total:** 52/57 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -263,6 +263,7 @@ oat_generated: false
 - [x] p04-t09 — Preserve the resolved output root across resume (`0158516b`)
 - [x] p04-t10 — Verify complete artistic graph semantics (`995c38a9`)
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
+- [ ] p04-t12 — Bind resume identity to the original canonical output root
 
 ## Phase 5: Golden conformance and release closure
 
@@ -774,7 +775,25 @@ oat_generated: false
 - Review-remediation attempt: 2/3
 - Scope: C1-R1, I4-R1, p04-t10, p04-t11, and regressions for all previously
   resolved Phase p04 findings
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260729-p04-code-review-r2.md`
+- Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
+- Resolved: complete artistic graph semantics; all earlier backlink, Git blob,
+  catalog, completion, and run-root symlink findings remain resolved
+- Blocking: retargeting the configured output-root symlink adopts the relocated
+  package because resume identity does not compare the persisted canonical root
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 24 — Phase p04 review remediation attempt 3
+
+- Request: `explainer-improvements-p04-fix-r3-20260729T071500Z`
+- Launch intent: persisted
+- Task: p04-t12
+- Source artifact: `reviews/20260729-p04-code-review-r2.md`
+- Review-remediation attempt: 3/3
+- Scope: bind resume identity to the original persisted canonical output root
+  before retained package adoption
+- Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -813,6 +832,7 @@ oat_generated: false
 | p04 verification      | plan p04-t02/03 | New provenance and manifest fields pass all consumers         | Add bounded p04-t04                  | Strict CLI archive parsing omitted canonical backlinks and the packaged fixture had no reviewed Git identity                  | full repository smoke tests            | p04-t04          |
 | p04 code review       | p04 review      | Routing, backlinks, catalog, and consumers satisfy acceptance | Add p04-t05 through p04-t08          | Review found two Critical semantic/URL bypasses and three Important provenance, catalog, and regression gaps                  | p04 review artifact                    | p04-t05–p04-t08  |
 | p04 re-review R1      | p04 re-review   | Remediation closes all original blocking findings             | Add p04-t10 and p04-t11              | Graph validation omits semantic fields and resume follows a run-root symlink outside the configured output root               | p04 re-review artifact                 | p04-t10–p04-t11  |
+| p04 re-review R2      | p04 re-review   | Canonical run-root confinement closes the resume gap          | Add bounded p04-t12                  | Retargeting the configured output-root symlink relocates the valid package without a persisted canonical-root mismatch        | p04 re-review artifact                 | p04-t12          |
 
 ## Test Results
 
@@ -826,7 +846,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 56 tasks and the final review._
+_Fill from implementation evidence after all 57 tasks and the final review._
 
 ## References
 

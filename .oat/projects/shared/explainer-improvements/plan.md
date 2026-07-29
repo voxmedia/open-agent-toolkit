@@ -1723,6 +1723,37 @@ resume still targets the exact original package.
 
 ---
 
+### Task p04-t12: Bind resume identity to the original canonical output root
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED regression that starts through a configured output-root symlink,
+   pauses successfully, relocates the package, retargets the configured symlink,
+   and proves the unchanged lexical request plus valid external token cannot
+   authorize the relocated package.
+2. Persist the canonical absolute output root when a resumable run is created
+   and bind it to retained request identity and immutable package coverage.
+3. Before reading or hydrating retained package content, compare that persisted
+   canonical root with the current canonical configured output root and reject
+   any mismatch with `E_APPROVAL_RESUME`.
+4. Preserve stable configured-root symlinks, legitimate changed-CWD resume for
+   legacy relative requests, run-root symlink rejection, approval-token and
+   request-identity checks, and canonical root confinement.
+5. Run focused resume regressions, the complete core integration file, expanded
+   p03/p04 unions, and all repository/release gates.
+6. Commit as `fix(p04-t12): bind canonical resume root`.
+
+**Acceptance:** Retargeting any configured output-root symlink cannot relocate a
+resumable package; resume is bound to the original persisted canonical root
+before retained content is trusted.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1855,7 +1886,8 @@ another review cycle.
 | p02    | code     | passed          | 2026-07-28 | reviews/20260728-p02-code-review-r2.md |
 | p03    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p03-code-review.md    |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260728-p04-code-review.md    |
-| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
+| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260729-p04-code-review-r2.md |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |
@@ -1882,10 +1914,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 11 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
+- Phase 4: 12 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 56 tasks**
+**Total: 57 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
