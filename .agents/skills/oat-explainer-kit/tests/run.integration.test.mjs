@@ -33,7 +33,7 @@ afterEach(async () => {
   );
 });
 
-async function createFixture({ coreVersion = '2.0.2' } = {}) {
+async function createFixture({ coreVersion = '2.0.3' } = {}) {
   const root = await mkdtemp(join(tmpdir(), 'oat-explainer-run-'));
   tempDirs.push(root);
   const repoRoot = join(root, 'repo');

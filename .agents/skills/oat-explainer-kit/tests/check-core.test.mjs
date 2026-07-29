@@ -62,10 +62,10 @@ test('accepts a compatible installed canonical core', async () => {
 });
 
 test('adapter requires the core release that supports adaptive set planning', async () => {
-  assert.equal(MINIMUM_CORE_VERSION, '2.0.2');
+  assert.equal(MINIMUM_CORE_VERSION, '2.0.3');
   for (const [version, ok] of [
-    ['2.0.1', false],
-    ['2.0.2', true],
+    ['2.0.2', false],
+    ['2.0.3', true],
   ]) {
     const { adapterRoot, skillsRoot } = await createInstalledLayout(version);
     const result = await checkCoreCompatibility({
