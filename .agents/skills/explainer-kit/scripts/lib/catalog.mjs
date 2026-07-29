@@ -3,10 +3,7 @@ import { canonicalStringify, validateContract } from './contracts.mjs';
 const CATALOG_SCHEMA_VERSION = 'explainer-kit.initiative-catalog/v1';
 
 export function initiativeCatalogPath(slug) {
-  if (
-    typeof slug !== 'string' ||
-    !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)
-  ) {
+  if (typeof slug !== 'string' || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
     throw new TypeError('Initiative catalog requires a safe initiative slug.');
   }
   return `site/initiatives/${slug}/catalog.json`;
@@ -53,8 +50,21 @@ export function catalogFromManifest(manifest, publicBaseUrl) {
   };
 }
 
-export function validateInitiativeCatalog(catalog, manifest) {
+export function validateInitiativeCatalog(catalog, manifest, publicBaseUrl) {
   const errors = [];
+  let normalizedPublicBaseUrl;
+  try {
+    normalizedPublicBaseUrl = normalizePublicBaseUrl(publicBaseUrl);
+  } catch (error) {
+    add(
+      errors,
+      '$.artifacts',
+      'catalog-public-root',
+      error instanceof Error
+        ? error.message
+        : 'Initiative catalog requires an HTTPS public base URL.',
+    );
+  }
   if (!catalog || typeof catalog !== 'object' || Array.isArray(catalog)) {
     return {
       valid: false,
@@ -100,7 +110,9 @@ export function validateInitiativeCatalog(catalog, manifest) {
       );
     }
   }
-  if (canonicalStringify(catalog.recipe) !== canonicalStringify(manifest?.recipe)) {
+  if (
+    canonicalStringify(catalog.recipe) !== canonicalStringify(manifest?.recipe)
+  ) {
     add(
       errors,
       '$.recipe',
@@ -135,13 +147,13 @@ export function validateInitiativeCatalog(catalog, manifest) {
       renderedPath: artifact.renderedPath,
       ...(artifact.mediaType && { mediaType: artifact.mediaType }),
       hash: artifact.hash,
-      url: entry?.url,
+      url:
+        normalizedPublicBaseUrl === undefined
+          ? undefined
+          : absoluteArtifactUrl(normalizedPublicBaseUrl, artifact.renderedPath),
     };
     const actual = entry && typeof entry === 'object' ? entry : undefined;
-    if (
-      canonicalStringify(actual) !== canonicalStringify(expected) ||
-      !isAbsoluteArtifactUrl(entry?.url, artifact.renderedPath)
-    ) {
+    if (canonicalStringify(actual) !== canonicalStringify(expected)) {
       add(
         errors,
         `$.artifacts[${index}]`,
@@ -162,8 +174,9 @@ export function validateInitiativeCatalog(catalog, manifest) {
       'Catalog source backlinks do not match the finalized manifest.',
     );
   }
-  for (const [index, backlink] of (
-    Array.isArray(catalog.sourceBacklinks) ? catalog.sourceBacklinks : []
+  for (const [index, backlink] of (Array.isArray(catalog.sourceBacklinks)
+    ? catalog.sourceBacklinks
+    : []
   ).entries()) {
     if (
       typeof backlink?.sourceId !== 'string' ||
@@ -190,7 +203,9 @@ function normalizePublicBaseUrl(value) {
   try {
     url = new URL(value);
   } catch {
-    throw new TypeError('Initiative catalog requires an HTTPS public base URL.');
+    throw new TypeError(
+      'Initiative catalog requires an HTTPS public base URL.',
+    );
   }
   if (
     url.protocol !== 'https:' ||
@@ -212,29 +227,6 @@ function absoluteArtifactUrl(baseUrl, renderedPath) {
     .split('/')
     .map((part) => encodeURIComponent(part))
     .join('/')}`;
-}
-
-function isAbsoluteArtifactUrl(value, renderedPath) {
-  if (typeof value !== 'string') return false;
-  try {
-    const url = new URL(value);
-    return (
-      url.protocol === 'https:' &&
-      !url.username &&
-      !url.password &&
-      !url.search &&
-      !url.hash &&
-      url.pathname.endsWith(
-        `/${renderedPath
-          .slice('site/'.length)
-          .split('/')
-          .map((part) => encodeURIComponent(part))
-          .join('/')}`,
-      )
-    );
-  } catch {
-    return false;
-  }
 }
 
 function isImmutableGithubUrl(value) {

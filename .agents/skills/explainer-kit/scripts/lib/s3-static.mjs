@@ -138,7 +138,11 @@ export async function publishS3Static(request, dependencies = {}) {
   );
   const sentinelTargetPath = targetPath(sentinelRelativePath, roots);
   const catalog = catalogFromManifest(manifest, roots.publicBaseUrl);
-  const catalogValidation = validateInitiativeCatalog(catalog, manifest);
+  const catalogValidation = validateInitiativeCatalog(
+    catalog,
+    manifest,
+    roots.publicBaseUrl,
+  );
   if (!catalogValidation.valid) {
     throw publishError(
       'E_PUBLISH_INPUT',

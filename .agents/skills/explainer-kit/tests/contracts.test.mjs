@@ -235,17 +235,63 @@ test('derives an exact, absolute initiative catalog from the finalized manifest'
     ],
   );
   assert.deepEqual(catalog.sourceBacklinks, finalized.source.backlinks);
-  assert.deepEqual(validateInitiativeCatalog(catalog, finalized), {
-    valid: true,
-    errors: [],
-  });
+  assert.deepEqual(
+    validateInitiativeCatalog(
+      catalog,
+      finalized,
+      'https://cdn.example.com/published/',
+    ),
+    {
+      valid: true,
+      errors: [],
+    },
+  );
 
   const stale = structuredClone(catalog);
   stale.artifacts[0].hash = HASH_A;
   assert.ok(
-    validateInitiativeCatalog(stale, finalized).errors.some(
-      ({ code }) => code === 'catalog-artifact-mismatch',
-    ),
+    validateInitiativeCatalog(
+      stale,
+      finalized,
+      'https://cdn.example.com/published/',
+    ).errors.some(({ code }) => code === 'catalog-artifact-mismatch'),
+  );
+});
+
+test('binds initiative catalog URLs to the exact normalized publish root', () => {
+  const finalized = manifest();
+  const base = 'https://cdn.example.com/published';
+  const catalog = catalogFromManifest(finalized, base);
+  const mutations = [
+    ['wrong origin', 'https://other.example.com/published/index.html'],
+    ['wrong base', 'https://cdn.example.com/elsewhere/index.html'],
+    ['credentials', 'https://user:secret@cdn.example.com/published/index.html'],
+    ['query', `${catalog.artifacts[0].url}?token=secret`],
+    ['fragment', `${catalog.artifacts[0].url}#stale`],
+    ['encoded mutation', 'https://cdn.example.com/published/%69ndex.html'],
+  ];
+  for (const [label, url] of mutations) {
+    const changed = structuredClone(catalog);
+    changed.artifacts[0].url = url;
+    assert.equal(
+      validateInitiativeCatalog(changed, finalized, base).valid,
+      false,
+      label,
+    );
+  }
+
+  const unknown = structuredClone(catalog);
+  unknown.artifacts[0].extra = true;
+  assert.equal(
+    validateInitiativeCatalog(unknown, finalized, base).valid,
+    false,
+  );
+
+  const duplicate = structuredClone(catalog);
+  duplicate.artifacts.push(structuredClone(duplicate.artifacts[0]));
+  assert.equal(
+    validateInitiativeCatalog(duplicate, finalized, base).valid,
+    false,
   );
 });
 
