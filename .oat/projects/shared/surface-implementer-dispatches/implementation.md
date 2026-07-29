@@ -858,6 +858,16 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Disposition:** gate passed at the Important threshold; receive required
   before the result becomes allowed
 
+#### Configured Exit Gate — receive intent
+
+- **Run:** `ade10742-63f4-4884-9133-a9dac76d5449`
+- **Source:** `reviews/final-review-2026-07-29T152853Z.md`
+- **Archive destination:**
+  `reviews/archived/final-review-2026-07-29T152853Z.md`
+- **Review event:** `final|code|final-review-2026-07-29T152853Z.md`
+- **Pre-receive head:** `477b5b5b2cbabb097a46cbcc5604aa14443bb244`
+- **State:** receive intent persisted before judgment-sweep disposition
+
 <!-- orchestration-runs-end -->
 
 ---
