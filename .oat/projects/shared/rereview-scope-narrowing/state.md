@@ -9,10 +9,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p06] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p06] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -73,19 +73,19 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-26T21:42:59.126Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T01:19:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T01:30:38Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: rereview-scope-narrowing
 
-**Status:** Implementation
+**Status:** Implementation Complete
 **Started:** 2026-07-26
-**Last Updated:** 2026-07-28
+**Last Updated:** 2026-07-29
 
 ## Current Phase
 
-Phase 7 — final review fixes
+Implementation complete — final narrowed review passed
 
 ## Artifacts
 
@@ -106,7 +106,8 @@ Phase 7 — final review fixes
 - ✓ Automatic final review found no new defects
 - ✓ Human disposition recorded: fix all three Mediums and the Minor
 - ✓ Phase 7 repairs, sync, and release validation completed
-- ⧗ Combined narrowed final verification review pending
+- ✓ Combined narrowed final verification review passed with zero findings
+- ✓ Final `p06` HiLL checkpoint completed
 
 ## Blockers
 
@@ -114,6 +115,5 @@ None
 
 ## Next Milestone
 
-Run one combined narrowed final verification review for the completed Phase 7
-repair range. The Minor wording fix does not require a separate review cycle.
-Complete the `p06` HiLL checkpoint only after the repair review passes.
+Choose the post-implementation route with `oat-project-progress` (documentation,
+summary, final PR, or project completion as appropriate).

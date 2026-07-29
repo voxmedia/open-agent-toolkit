@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-implement
 oat_blockers: []
-oat_last_updated: 2026-07-28
+oat_last_updated: 2026-07-29
 oat_phase: plan
 oat_phase_status: complete
 oat_plan_hill_phases: ['p06'] # pause only after the final phase
@@ -783,7 +783,7 @@ create an empty commit when sync and build produce no tracked changes.
 | p04    | code     | fixes_completed | 2026-07-28 | reviews/archived/p04-review-2026-07-28T222436Z.md           | 8df5b27cf506a2ad76f7b9eeab2307979dcf0d6d | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230108Z.md           | e9b6ffe0afc37c99959431c59f1031edf0b0c3a8 | auto       | -                    |
 | p06    | code     | fixes_completed | 2026-07-28 | reviews/archived/p06-review-2026-07-28T232956Z.md           | f95864d2ee8cbbf94eec311abeeb83547851ff37 | auto       | -                    |
-| final  | code     | fixes_added     | 2026-07-28 | reviews/archived/final-review-2026-07-28T235646Z.md         | b9f6f5a6098a5f9e7d0b55a7e454a9d309ef0663 | auto       | -                    |
+| final  | code     | fixes_completed | 2026-07-28 | reviews/archived/final-review-2026-07-28T235646Z.md         | b9f6f5a6098a5f9e7d0b55a7e454a9d309ef0663 | auto       | -                    |
 | plan   | artifact | passed          | 2026-07-27 | inline (structured)                                         | -                                        | -          | -                    |
 | spec   | artifact | n/a             | -          | -                                                           | -                                        | -          | -                    |
 | design | artifact | n/a             | -          | -                                                           | -                                        | -          | -                    |
@@ -797,7 +797,7 @@ create an empty commit when sync and build produce no tracked changes.
 | p04    | code     | passed          | 2026-07-28 | reviews/archived/p04-review-2026-07-28T225031Z.md           | 6fed0cf0bc8e225dcb137795b3aed4fdb871014b | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230930Z.md           | d1e3cd6fef90227c9e1ddaf2c7d5cdd938e548ff | gate       | cursor-fable-5-xhigh |
 | p06    | code     | passed          | 2026-07-28 | reviews/archived/p06-review-2026-07-28T233714Z.md           | 87455b33c5b338ac717d10ebe5862924c538aeef | auto       | -                    |
-| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T012157Z.md                  | 66ff93add752f5eee2dd912395bc9ae48a9d5846 | auto       | -                    |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T012157Z.md         | 66ff93add752f5eee2dd912395bc9ae48a9d5846 | auto       | -                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
@@ -826,7 +826,7 @@ create an empty commit when sync and build produce no tracked changes.
 
 **Total: 18 tasks**
 
-Phase 7 is ready for implementation.
+Implementation and final narrowed verification are complete.
 
 ---
 

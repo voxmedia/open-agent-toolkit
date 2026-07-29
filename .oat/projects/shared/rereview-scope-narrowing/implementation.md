@@ -1,8 +1,8 @@
 ---
-oat_status: in_progress
-oat_ready_for: oat-project-review-provide
+oat_status: complete
+oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-28
+oat_last_updated: 2026-07-29
 oat_current_task_id: null
 oat_generated: false
 oat_template: false
@@ -12,7 +12,7 @@ oat_template_name: implementation
 # Implementation: rereview-scope-narrowing
 
 **Started:** 2026-07-28
-**Last Updated:** 2026-07-28
+**Last Updated:** 2026-07-29
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -436,6 +436,21 @@ asset commit was required. All five public package manifests and
 lint, type-check, formatting, and release validation for all five public
 packages passed. The tracked worktree was clean afterward.
 
+### Final narrowed verification review
+
+**Status:** passed
+**Artifact:** `reviews/archived/final-review-2026-07-29T012157Z.md`
+**Reviewed head:** `66ff93add752f5eee2dd912395bc9ae48a9d5846`
+**Range:** `b9f6f5a6098a5f9e7d0b55a7e454a9d309ef0663..66ff93add752f5eee2dd912395bc9ae48a9d5846`
+
+**Outcome:** The combined narrowed review independently verified all four
+repairs as resolved and found no Critical, Important, Medium, or Minor defects.
+Full-project coverage remains inherited from the prior final artifact.
+
+**Verification:** 297 focused tests and 3,556 full-suite tests passed, along
+with build, lint, type-check, formatting, five-package release validation, and
+provider-view sync checks.
+
 ---
 
 ## Orchestration Runs
@@ -647,7 +662,7 @@ the final checkpoint.
 - [x] p07-t03: Preserve clean remote-receive ledger migrations — `beb17c01e`
 - [x] p07-t04: Correct workflow catalog precedence wording — `25ca7a2d5`
 - [x] p07-t05: Resync and revalidate final release assets — no-op
-- [ ] combined narrowed final fix verification review
+- [x] combined narrowed final fix verification review — passed, 0 findings
 
 **Decisions:**
 
@@ -668,10 +683,15 @@ the final checkpoint.
 - The final automatic review found no new defects and revalidated all four
   deferred findings. The user selected fix-now for each one; they became Phase
   7 tasks. The Minor does not require a separate re-review.
+- One combined narrowed final review verified all four repairs as resolved with
+  zero findings. The `p06` final HiLL checkpoint is complete.
 
 ---
 
-## Final Review Findings Converted to Tasks
+## Final Review Findings Resolved
+
+All four fix-now dispositions were implemented in Phase 7 and independently
+verified by the passing narrowed final review.
 
 | ID     | Severity | Source                                              | Finding                                                                                   | User decision | Repair task |
 | ------ | -------- | --------------------------------------------------- | ----------------------------------------------------------------------------------------- | ------------- | ----------- |
@@ -698,7 +718,7 @@ the final checkpoint.
 | p06   | Docs build + workspace build/test/lint/type-check/format/release       | 3,675  | 0      | Docs, parity, provider sync, lockstep versions, bundled release assets |
 | p07   | Focused contracts/parsing/config + full workspace release gate         | 3,556  | 0      | Ledger migration, header parsing, precedence metadata, provider sync   |
 
-## Final Summary (draft; pending combined verification review)
+## Final Summary (for PR/docs)
 
 **What shipped:**
 
@@ -729,7 +749,7 @@ the final checkpoint.
 - Plan artifact review, six original phase reviews, two configured cross-family
   gates, Phase 7 focused verification, full workspace validation, and
   publishable-package release validation passed. The combined narrowed final
-  fix verification review remains pending.
+  fix review resolved all four carried findings and passed with zero findings.
 
 **Design deltas (if any):**
 
