@@ -1088,6 +1088,21 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Artifact:**
   `reviews/archived/final-review-2026-07-29T165043Z.md`
 
+#### Dispatch Acceptance — Revision 1 final re-review
+
+- **Request:** `final-rereview-rev1-20260729T171719Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Model / effort axes:** `selected:gpt-5.6-sol-high` /
+  `not-applicable`
+- **Mode:** background; required for an interactive multi-minute reviewer
+- **Range:** `06f0777ba7145406fe406490c2630a945c2858c2` →
+  `ff92b31655fbbd5e1a99c40adf33340f60076173`
+- **Outcome:** accepted once; artifact validated; `PASS`
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Reconnaissance:** not-attempted
+- **Artifact:**
+  `reviews/archived/final-review-2026-07-29T171719Z.md`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1146,6 +1161,30 @@ deferral durably and addresses the Minor artifact hygiene item directly.
 **New tasks added:** `prev1-t03`, `prev1-t04`
 
 **Next:** Execute the two bounded review-fix tasks, then rerun the final review.
+
+### Review Received: Revision 1 final re-review
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T171719Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 0
+
+**Disposition:**
+
+- M1: `explicit_deferral` — retain the existing report-context matrix deferral.
+  The managed-cap predicate/report-context trigger did not fire, and the
+  reviewer confirmed the gap remains non-blocking regression hardening.
+
+**New tasks added:** None.
+
+**Outcome:** Final lifecycle re-review passed; continue to the configured
+implementation exit gate refresh.
 
 ## Implementation Log
 
