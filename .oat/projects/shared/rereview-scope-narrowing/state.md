@@ -93,7 +93,7 @@ Implementation complete — final narrowed review passed
 - **Spec:** N/A (quick mode)
 - **Design:** N/A (quick mode)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (in progress)
+- **Implementation:** `implementation.md` (complete)
 
 ## Progress
 
