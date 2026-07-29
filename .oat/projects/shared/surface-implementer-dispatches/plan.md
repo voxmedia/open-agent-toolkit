@@ -375,14 +375,17 @@ pnpm exec oxfmt --write \
 ```bash
 pnpm --filter @open-agent-toolkit/cli exec vitest run \
   src/validation/skills.test.ts
-oat docs nav sync
+pnpm -w run cli:source -- docs generate-index \
+  --docs-dir apps/oat-docs/docs \
+  --output apps/oat-docs/index.md
 pnpm lint
 pnpm format
 pnpm --filter oat-docs check
 pnpm build:docs
 ```
 
-Expected: skill contracts, formatting, lint, and docs build pass.
+Expected: skill contracts, Fumadocs index regeneration, formatting, lint, and
+docs build pass.
 
 **Step 5: Commit**
 
