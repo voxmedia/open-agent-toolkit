@@ -188,21 +188,30 @@ Only an explicit `false` skips a loop. The retry bound comes from `oat_orchestra
 
 ## Re-review scope narrowing
 
-When re-reviewing after fix tasks have been applied, `oat-project-review-provide` detects completed `(review)` fix tasks and offers to narrow the re-review scope to just the fix-task commits. This avoids re-examining already-approved code.
+Re-reviews narrow by default to the commits after the prior matching review's recorded head. Set `workflow.autoNarrowReReviewScope` to `false` to opt out and use the nominal full scope. An unset value and an explicit `true` both enable narrowing; the re-review path does not prompt for this decision.
 
-The behavior can be set as a default via `workflow.autoNarrowReReviewScope`:
+Initial reviews have no prior reviewed head and therefore use the nominal full scope. A follow-up review narrows only from a completed review in the same lineage:
 
-- `true` — automatically narrow to fix commits, no prompt
-- `false` — always use the full scope, no prompt
-- unset (default) — prompt the user on each re-review
+- Lifecycle reviews (`manual` and `auto`) can build only on prior lifecycle reviews for the same project and exact scope.
+- A configured gate can build only on its own prior run for the same exact gate target and scope. It never inherits a lifecycle review or another gate's coverage.
+- Project remote and ad-hoc remote reviews use their own GitHub review-marker lineages. No rail borrows another rail's reviewed head merely because the commit exists.
 
-Typically set at user scope since it's a personal workflow preference:
+Each rail owns its provenance:
 
-```bash
-oat config set workflow.autoNarrowReReviewScope true --user
-```
+- The local project rail checks the matching review artifact and the lineage-qualified tracked Reviews row. The artifact is primary while present; the row preserves the reviewed head after receive, archival, cleanup, or a worktree hand-off. If both sources exist, they must agree.
+- The project remote rail reads same-project, same-scope, same-lineage GitHub review marker blocks.
+- The ad-hoc remote rail reads ad-hoc GitHub review marker blocks and has no project-plan fallback.
+- A configured gate reads its target-qualified gate-owned state and artifacts.
 
-The preference only applies when there are completed fix tasks to narrow to. Initial reviews (before any fix tasks exist) always use the full scope regardless of the preference. See [Workflow preferences in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for the full list of preference keys.
+A candidate reviewed head must be a full 40-character hexadecimal commit SHA. OAT verifies that the commit exists and is an ancestor of the current review head before accepting the exact `<prior-reviewed-head>..<current-head>` range. An explicit `base_sha=<sha>` or `<sha1>..<sha2>` input overrides automatic narrowing. On the project remote rail, `--narrow` forces narrowing even when the configured preference is `false`, while `--no-narrow` forces the nominal full scope. Nominal scope tokens such as `pNN`, `pNN-tNN`, `pNN-pMM`, and `final` still participate in automatic narrowing; they identify the review subject rather than overriding its range.
+
+Automatic narrowing fails open to the nominal full scope and reports why when there is no matching prior review, a legacy artifact or Reviews row has no usable lineage, a reviewed head is missing or invalid, local provenance sources disagree, the commit does not exist, ancestry fails, or remote prior-review discovery is unavailable. A forced remote `--narrow` request instead treats discovery or guard failure as an error. These guards intentionally make narrowing opportunistic: rebases, integration merges, force pushes, shallow history, and worktree consolidation can invalidate the prior commit relationship and cause a full-scope review.
+
+Every re-review reports one resolution line naming the selected range, the reason narrowing applied or fell back, and an `empty`, `bookkeeping-only`, or `substantive` classification. Explicit range overrides are classified too. `empty` means the resolved diff has no changed paths. Classification is informational only; every classification still dispatches the review over the complete resolved range.
+
+A narrowed artifact names the prior artifact and reviewed head it builds on. It must not restate requirements-coverage claims that the narrowed pass did not verify; it references the prior artifact's coverage or marks inherited rows as inherited so the union of passes remains auditable.
+
+See [Workflow preferences in the Configuration guide](../../cli-utilities/configuration.md#workflow-preferences-workflow) for config scopes and the full list of preference keys.
 
 ## Phase and final review
 

@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive-remote
-version: 1.4.2
+version: 1.5.0
 description: Use when processing GitHub PR review comments within project context. Fetches PR comments, creates plan tasks, and updates project artifacts.
 disable-model-invocation: true
 user-invocable: true
@@ -115,6 +115,33 @@ Confirm resolved PR number with user.
 npx agent-reviews --json --unresolved --pr <N>
 ```
 
+Resolve provenance from the GitHub review event that produced the fetched
+feedback, not from the PR's current head. Parse its OAT marker block when
+present:
+
+- accept `oat_review_head_sha` only as a full 40-character hexadecimal SHA;
+- preserve `oat_review_invocation` as the invocation kind;
+- preserve `oat_gate_target` only for a gate invocation.
+
+If the source review is legacy, multiple source reviews disagree, or the
+lineage cannot be associated with this receive event, leave the corresponding
+ledger cells unknown (`-`). Never infer lineage from the reviewer identity or
+substitute the current PR head for the commit that was actually reviewed.
+
+**Reviews ledger write contract (all receive paths):**
+
+- Resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`,
+  `Invocation`, and `Gate Target` by header name before mutating a row; never
+  use fixed cell positions.
+- If the Reviews table has only the legacy five columns, add `Reviewed Head`,
+  `Invocation`, and `Gate Target` to its header and separator and pad every
+  existing row with `-`. In an already widened table, pad a shorter row with
+  `-` through the current header width before mutation.
+- Mutate only the event selected by the event-identity rules below. Preserve
+  every unknown column in its original position and every existing known value
+  unless the operation explicitly advances that cell. Never truncate a row to
+  five, eight, or any other assumed width.
+
 If no unresolved comments:
 
 1. Create a UTC timestamp and event-distinct filename:
@@ -125,10 +152,14 @@ If no unresolved comments:
    remain in top-level `reviews/`.
 3. Record the clean result as a `passed` Reviews event whose event identity
    combines `Scope`, `Type`, and artifact filename:
+   - Apply the Reviews ledger write contract above before claiming, appending,
+     or mutating the event.
    - Claim only an unbound `pending` placeholder with matching Scope + Type and
      Artifact `-`; otherwise append a distinct row.
    - Set Date and Artifact to this clean event. Advance only this event and
      never mutate another row by scope alone.
+   - Populate `Reviewed Head`, `Invocation`, and `Gate Target` only from the
+     validated source-review provenance above; use `-` when it is unknown.
 4. Commit `plan.md` and the clean review artifact atomically with
    `chore(oat): record clean remote review (pr-#<N>)`. Do not stop with
    uncommitted bookkeeping.
@@ -176,7 +207,8 @@ For each converted finding:
 ### Step 6: Update Project Artifacts
 
 Before changing the ledger, write an event-distinct review artifact containing
-the PR number, fetch timestamp, normalized findings, and dispositions:
+the PR number, fetch timestamp, normalized findings, dispositions, and any
+validated source-review head/invocation/gate-target provenance:
 `reviews/archived/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`. Remote receive
 fully dispositions the event as `passed` or `fixes_added`, so the artifact is
 consumed immediately and belongs in `reviews/archived/`, not top-level
@@ -198,11 +230,16 @@ Update `plan.md`:
   - status `passed` when no actionable findings remain
   - date set to today
   - artifact `reviews/archived/remote-pr-<N>-review-YYYY-MM-DDTHHMMSSZ.md`
+  - reviewed head set to the validated full source-review SHA, or `-`
+  - invocation set to the source-review invocation kind, or `-`
+  - gate target set only for a gate source review, or `-`
 - Claim an unbound `pending` placeholder only when its Scope + Type matches and
   its Artifact is `-`; otherwise append the event. Later mutations select it by
   Scope + Type + artifact filename, never by scope or `github-pr #<N>` alone.
 - Never move an event status backward or overwrite an earlier event from the
   same PR.
+- Apply the Reviews ledger write contract above before claiming, appending, or
+  mutating the event.
 - Update `## Implementation Complete` totals.
 
 Update `implementation.md`:

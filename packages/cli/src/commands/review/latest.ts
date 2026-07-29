@@ -183,23 +183,40 @@ function parseReviewLedgerEvents(planContent: string): ReviewLedgerEvent[] {
   const section =
     nextHeadingIndex === -1 ? remaining : remaining.slice(0, nextHeadingIndex);
 
-  return section
+  const rows = section
     .split('\n')
     .filter((line) => line.trim().startsWith('|'))
-    .slice(2)
     .map((line) =>
       line
         .split('|')
         .slice(1, -1)
         .map((cell) => cell.trim()),
-    )
-    .filter((cells) => cells.length === 5)
-    .map(([scope = '', type = '', status = '', , artifact = '']) => ({
-      scope,
-      type,
-      status,
-      artifact,
-    }));
+    );
+  const headers = rows[0];
+  if (!headers) {
+    return [];
+  }
+
+  const normalizedHeaders = headers.map((header) => header.toLowerCase());
+  const scopeIndex = normalizedHeaders.indexOf('scope');
+  const typeIndex = normalizedHeaders.indexOf('type');
+  const statusIndex = normalizedHeaders.indexOf('status');
+  const artifactIndex = normalizedHeaders.indexOf('artifact');
+  if (
+    scopeIndex === -1 ||
+    typeIndex === -1 ||
+    statusIndex === -1 ||
+    artifactIndex === -1
+  ) {
+    return [];
+  }
+
+  return rows.slice(2).map((cells) => ({
+    scope: cells[scopeIndex] ?? '',
+    type: cells[typeIndex] ?? '',
+    status: cells[statusIndex] ?? '',
+    artifact: cells[artifactIndex] ?? '',
+  }));
 }
 
 async function correlateProjectActionability(

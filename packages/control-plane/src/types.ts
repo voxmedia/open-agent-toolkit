@@ -61,6 +61,12 @@ export interface ReviewStatus {
   status: string;
   date: string;
   artifact: string;
+  /** Full 40-character commit SHA at the head of the reviewed range. */
+  reviewedHead?: string;
+  /** Review invocation kind used to qualify the review lineage. */
+  invocation?: string;
+  /** Configured gate target for gate-originated review lineage. */
+  gateTarget?: string;
 }
 
 export interface ReviewArtifactStatus {

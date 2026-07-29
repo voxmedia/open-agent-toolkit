@@ -35,6 +35,18 @@ Reads one OAT project directory and returns a full `ProjectState` snapshot, incl
 - blocker and HiLL metadata
 - PR/docs timestamps and recommendation output
 
+Review ledger entries in `ProjectState.reviews` expose the stable five-column
+event identity (`scope`, `type`, `status`, `date`, and `artifact`) plus optional
+provenance:
+
+- `reviewedHead`: validated full 40-character commit SHA at the head of the
+  reviewed range
+- `invocation`: invocation kind recorded by the review writer
+- `gateTarget`: configured target for gate-originated review lineage
+
+Legacy five-column review rows remain supported. Missing, empty, placeholder,
+or invalid provenance is omitted from the parsed object.
+
 ### `listProjects(projectsRoot)`
 
 Reads all projects under a configured projects root and returns lightweight `ProjectSummary` records suitable for list or dashboard surfaces.

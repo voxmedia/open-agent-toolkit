@@ -540,7 +540,7 @@ Workflow preference keys live under the `workflow.*` namespace:
 - `workflow.postImplementSequence` — legacy `wait`, `summary`, `pr`, or `docs-pr`, or `{ "preApproval": [...], "postApproval": [...] }`. Legacy values remain strings; structured arrays contain ordered, globally unique `summary`, `document`, and `pr` steps. Pre-approval steps run after final review and before final HiLL approval; post-approval steps run only after that approval. Plain retrieval keeps legacy strings and prints structured values as compact JSON; `--json` returns the raw value.
 - `workflow.reviewExecutionModel` — `subagent`, `inline`, or `fresh-session`. Default final-review execution model in `oat-project-implement`. `subagent` and `inline` run automatically. `fresh-session` is a soft preference: the skill prints guidance to run the review in another session but still offers escape hatches to `subagent` or `inline` if you change your mind. When unset, the skill prompts.
 - `workflow.autoReviewAtHillCheckpoints` — boolean. Automatically run the extra lifecycle review when a HiLL checkpoint is reached. This does not control Tier 1 per-phase `oat-reviewer` gates, which run after each phase in Tier 1 regardless of this setting. When unset, the skill prompts.
-- `workflow.autoNarrowReReviewScope` — boolean. Auto-narrow re-review scope to fix-task commits only in `oat-project-review-provide`. When unset, the skill prompts.
+- `workflow.autoNarrowReReviewScope` — boolean, default `true`. Re-reviews automatically use the guarded range after the prior matching review's recorded head. Unset and `true` enable narrowing without a prompt; set `false` to opt out and use the nominal full scope.
 - `workflow.autoArtifactReview.plan` — boolean, default `true`. Automatically run the bounded artifact-review loop for generated `plan.md` files before implementation handoff. Set to `false` only when you intentionally want to skip the plan artifact review.
 - `workflow.autoArtifactReview.analysis` — boolean, default `true`. Automatically run the bounded accuracy-review loop for generated docs and agent-instructions analysis artifacts before the matching apply workflow consumes them.
 - `workflow.projectLog` — `auto`, `true`, or `false`; default `auto`. `auto` creates the append-only `project-log.md` on the first lifecycle append, `true` also enables scaffold-time creation, and `false` skips appends when no log exists. An existing artifact remains enabled regardless of the current setting.
@@ -617,7 +617,6 @@ oat config set workflow.createPrOnComplete true --user
 oat config set workflow.postImplementSequence pr --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
-oat config set workflow.autoNarrowReReviewScope true --user
 oat config set workflow.designMode selective --user
 oat config set workflow.dispatchCeiling.preset balanced --user
 oat config adopt dispatch-matrix --user
@@ -668,11 +667,10 @@ Other preferences **depend on per-repo configuration** to be safe. These should 
 **Recommended split for most users:**
 
 ```bash
-# Personal defaults (apply everywhere)
+# Personal preferences that differ from built-in defaults (apply everywhere)
 oat config set workflow.hillCheckpointDefault final --user
 oat config set workflow.reviewExecutionModel subagent --user
 oat config set workflow.autoReviewAtHillCheckpoints true --user
-oat config set workflow.autoNarrowReReviewScope true --user
 
 # Per-repo team decisions (set in each repo where they apply)
 oat config set workflow.archiveOnComplete true --shared

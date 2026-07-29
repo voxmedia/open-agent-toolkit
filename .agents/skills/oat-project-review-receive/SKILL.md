@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-receive
-version: 1.5.9
+version: 1.6.0
 description: Use when the user explicitly asks to receive review findings for an OAT project — e.g. "receive review", "process review", "process the project review", or confirms a previously offered review-receive step. Do NOT auto-invoke merely because a review file exists. Resolves the latest review and offers before acting.
 disable-model-invocation: false
 user-invocable: true
@@ -138,6 +138,14 @@ Use this fallback only for active project reviews. It cannot discover ad-hoc rev
 - Do not prompt for selection; proceed immediately with the most recent.
 
 **Read the selected review file completely.**
+
+For a code review, read `oat_review_head_sha`, `oat_review_invocation`, and
+`oat_gate_target` from frontmatter. Accept the reviewed head only when it is a
+full 40-character hexadecimal SHA; never expand or infer an abbreviated,
+symbolic, or range value during receive. A missing invocation remains unknown;
+do not assume a legacy artifact was manual. Write `-` for absent provenance
+rather than borrowing values from another review event. `oat_gate_target` is
+meaningful only when the invocation is `gate`.
 
 Derive archive bookkeeping before making lifecycle edits:
 
@@ -406,8 +414,17 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
 **Review-fix bookkeeping (required):**
 - When you add review-generated fix tasks:
   - Locate the Reviews event matching the selected review's Scope, Type, and `SOURCE_REVIEW_FILENAME`, then update it to `fixes_added` (work queued), set the Date, and replace its Artifact with `reviews/archived/$REVIEW_FILENAME`.
+  - For code events, populate or preserve `Reviewed Head`, `Invocation`, and
+    `Gate Target` from the selected artifact's validated frontmatter. Never
+    replace known provenance with `-`; if the artifact is legacy or a value is
+    invalid, preserve existing cells and otherwise leave the value unknown.
   - The written `REVIEW_FILENAME` becomes the event's artifact filename and identity for every later mutation; use the already-resolved final basename in every plan and implementation reference.
   - Never select a row by scope alone or move an event status backward. If the exact bound event is missing, stop and reconcile the ledger instead of mutating another event.
+  - Mutate cells by header name. If the table is still the legacy five-column
+    shape, add `Reviewed Head`, `Invocation`, and `Gate Target` to the header
+    and separator and pad every existing row with `-`. If it is already
+    widened, preserve all existing and unknown trailing cells; never rebuild a
+    row as only five or eight cells.
   - Update `## Implementation Complete` totals (phase counts + total task count) so downstream PR/review summaries don’t go stale.
   - If the plan includes any phase rollups that reference task counts, update those too.
 
@@ -429,6 +446,9 @@ Add new tasks to plan.md in the target phase. When adding or editing tasks, pres
   - Status: `fixes_added` (if tasks were added) or `passed` (if no Critical/Important/Medium and no unresolved final-scope gates)
   - Date: `{today}`
   - Artifact: `reviews/archived/$REVIEW_FILENAME`
+  - Reviewed Head: validated full `oat_review_head_sha` for code reviews
+  - Invocation: `oat_review_invocation` for code reviews
+  - Gate Target: exact `oat_gate_target` for gate code reviews; `-` otherwise
 ````
 
 **Status semantics (v1):**

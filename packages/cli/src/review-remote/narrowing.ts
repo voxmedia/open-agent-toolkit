@@ -10,9 +10,17 @@
  * misleading partial range.
  */
 
-import type { ReviewInvocation } from './marker-parser';
+import type { MarkerBlock, ReviewInvocation } from './marker-parser';
+
+const FULL_COMMIT_SHA = /^[0-9a-f]{40}$/i;
 
 export type ReviewRail = 'ad-hoc' | 'project';
+
+export type ReviewLineage =
+  | { kind: 'lifecycle' }
+  | { kind: 'gate'; target: string };
+
+export type ReviewInvocationKind = ReviewInvocation;
 
 /** A prior provide-remote review, distilled from its parsed marker block. */
 export interface PriorReview {
@@ -22,9 +30,100 @@ export interface PriorReview {
   scope: string;
   /** Project path — present only for project-rail reviews. */
   project?: string;
-  invocation: ReviewInvocation;
+  invocation?: ReviewInvocationKind;
+  /** Review lineage; absent on legacy records, which are not eligible. */
+  lineage?: ReviewLineage;
   /** ISO-8601 review submission timestamp, used for descending sort. */
   submittedAt: string;
+}
+
+/** Provenance persisted on one tracked Reviews ledger row. */
+export interface ReviewLedgerProvenance {
+  reviewedHead: string;
+  scope: string;
+  project?: string;
+  invocation?: string;
+  gateTarget?: string;
+  artifact: string;
+  submittedAt: string;
+}
+
+/**
+ * Normalize one parsed GitHub marker into a narrowing candidate. Unknown
+ * invocation and target-less gate markers preserve their metadata but carry no
+ * lineage, so tuple matching rejects them and fails open.
+ */
+export function priorReviewFromMarker(
+  marker: MarkerBlock,
+  submittedAt: string,
+): PriorReview {
+  const lineage = markerLineage(marker);
+  return {
+    headSha: marker.oat_review_head_sha,
+    scope: marker.oat_review_scope,
+    ...(marker.oat_project ? { project: marker.oat_project } : {}),
+    ...(marker.oat_review_invocation
+      ? { invocation: marker.oat_review_invocation }
+      : {}),
+    ...(lineage ? { lineage } : {}),
+    submittedAt,
+  };
+}
+
+function markerLineage(marker: MarkerBlock): ReviewLineage | undefined {
+  if (
+    marker.oat_review_invocation === 'manual' ||
+    marker.oat_review_invocation === 'auto'
+  ) {
+    return { kind: 'lifecycle' };
+  }
+
+  const gateTarget = marker.oat_gate_target?.trim();
+  return marker.oat_review_invocation === 'gate' && gateTarget
+    ? { kind: 'gate', target: gateTarget }
+    : undefined;
+}
+
+/**
+ * Normalize durable ledger provenance into the same candidate shape used by
+ * artifact-sourced reviews. Both sources then pass through {@link matchesTuple}
+ * and cannot drift into separate lineage predicates.
+ */
+export function priorReviewFromLedger(
+  row: ReviewLedgerProvenance,
+): PriorReview {
+  const invocation = isReviewInvocationKind(row.invocation)
+    ? row.invocation
+    : undefined;
+  const lineage = ledgerLineage(row);
+
+  return {
+    headSha: row.reviewedHead,
+    scope: row.scope,
+    ...(row.project ? { project: row.project } : {}),
+    ...(invocation ? { invocation } : {}),
+    ...(lineage ? { lineage } : {}),
+    submittedAt: row.submittedAt,
+  };
+}
+
+function isReviewInvocationKind(
+  invocation: string | undefined,
+): invocation is ReviewInvocationKind {
+  return (
+    invocation === 'manual' || invocation === 'auto' || invocation === 'gate'
+  );
+}
+
+function ledgerLineage(row: ReviewLedgerProvenance): ReviewLineage | undefined {
+  if (row.invocation === 'manual' || row.invocation === 'auto') {
+    return { kind: 'lifecycle' };
+  }
+
+  const gateTarget = row.gateTarget?.trim();
+  return row.invocation === 'gate' && gateTarget
+    ? { kind: 'gate', target: gateTarget }
+    : undefined;
 }
 
 /**
@@ -39,6 +138,8 @@ export interface GitInvoker {
   isAncestor(sha: string, head: string): Promise<boolean>;
   /** `git fetch origin <sha>:<ref>` — fetch a single ref (diff-only mode). */
   fetchRef(sha: string): Promise<boolean>;
+  /** Files changed in `<priorSha>..<headSha>`. */
+  changedFiles(priorSha: string, headSha: string): Promise<string[]>;
 }
 
 export interface NarrowingInput {
@@ -48,25 +149,32 @@ export interface NarrowingInput {
   project: string | null;
   /** Current scope token, or `ad-hoc`. */
   scope: string;
+  /** Current review lineage, including the target for gate invocations. */
+  lineage: ReviewLineage;
   /** Current PR HEAD SHA. */
   headSha: string;
   git: GitInvoker;
   /** `--narrow` was passed explicitly: guard failure becomes a hard error. */
   forceNarrow?: boolean;
-  /** `workflow.autoNarrowReReviewScope === true`: never prompt. */
-  autoNarrow?: boolean;
+  /** Resolved preference: unset and true narrow; false forces full scope. */
+  narrowingPreference?: boolean;
   /** Diff-only mode (no ephemeral worktree): fetch the single ref first. */
   diffOnly?: boolean;
 }
 
-export type FullScopeReason = 'no-prior-review' | 'stale-sha';
+export type FullScopeReason =
+  | 'narrowing-disabled'
+  | 'no-prior-review'
+  | 'stale-sha';
+export type RangeClassification = 'empty' | 'bookkeeping-only' | 'substantive';
 
 export interface NarrowRangeResult {
   kind: 'narrow-range';
   priorSha: string;
   headSha: string;
-  /** Whether the caller still owes the user a confirm prompt. */
-  prompted: boolean;
+  classification: RangeClassification;
+  /** Why classification conservatively fell back, when enumeration failed. */
+  classificationReason?: 'changed-files-unavailable';
 }
 
 export interface FullScopeFallbackResult {
@@ -74,7 +182,6 @@ export interface FullScopeFallbackResult {
   reason: FullScopeReason;
   /** The stale SHA that triggered the fallback, when applicable. */
   priorSha?: string;
-  prompted: boolean;
 }
 
 export interface HardErrorResult {
@@ -88,17 +195,31 @@ export type NarrowingResult =
   | FullScopeFallbackResult
   | HardErrorResult;
 
-/** Does a prior review match the current `(rail, project, scope)` tuple? */
+/** Does a prior review match the current rail, project, scope, and lineage? */
 function matchesTuple(review: PriorReview, input: NarrowingInput): boolean {
+  if (!FULL_COMMIT_SHA.test(review.headSha)) {
+    return false;
+  }
+
+  const sameLineage =
+    review.lineage !== undefined &&
+    review.lineage.kind === input.lineage.kind &&
+    (input.lineage.kind === 'lifecycle' ||
+      (review.lineage.kind === 'gate' &&
+        review.lineage.target === input.lineage.target));
+
   if (input.rail === 'ad-hoc') {
     // Ad-hoc: scope sentinel must match AND there must be no project key.
-    return review.scope === 'ad-hoc' && review.project === undefined;
+    return (
+      review.scope === 'ad-hoc' && review.project === undefined && sameLineage
+    );
   }
   // Project rail: same project AND same scope.
   return (
     review.project !== undefined &&
     review.project === input.project &&
-    review.scope === input.scope
+    review.scope === input.scope &&
+    sameLineage
   );
 }
 
@@ -135,18 +256,57 @@ async function guardPasses(
   return input.git.isAncestor(priorSha, input.headSha);
 }
 
+async function classifyRange(
+  priorSha: string,
+  input: NarrowingInput,
+): Promise<Pick<NarrowRangeResult, 'classification' | 'classificationReason'>> {
+  let files: string[];
+  try {
+    files = await input.git.changedFiles(priorSha, input.headSha);
+  } catch {
+    // Classification is reporting-only, so enumeration failure must not block
+    // dispatch. Treat unknown work as substantive and disclose the fallback.
+    return {
+      classification: 'substantive',
+      classificationReason: 'changed-files-unavailable',
+    };
+  }
+
+  if (files.length === 0) {
+    return { classification: 'empty' };
+  }
+
+  const projectPrefix =
+    input.project === null ? null : `${input.project.replace(/\/+$/, '')}/`;
+  // Path-only classification is sufficient while it is reporting-only. If it
+  // ever authorizes skipping work, strengthen it with lifecycle corroboration.
+  return {
+    classification:
+      projectPrefix !== null &&
+      files.every((file) => file.startsWith(projectPrefix))
+        ? 'bookkeeping-only'
+        : 'substantive',
+  };
+}
+
 /**
  * Pick the narrowing target for the current re-review pass.
  */
 export async function pickNarrowingTarget(
   input: NarrowingInput,
 ): Promise<NarrowingResult> {
+  if (input.narrowingPreference === false && !input.forceNarrow) {
+    return {
+      kind: 'full-scope-fallback',
+      reason: 'narrowing-disabled',
+    };
+  }
+
   const prior = mostRecentMatch(input);
   if (!prior) {
     return {
       kind: 'full-scope-fallback',
       reason: 'no-prior-review',
-      prompted: false,
     };
   }
 
@@ -156,8 +316,7 @@ export async function pickNarrowingTarget(
       kind: 'narrow-range',
       priorSha: prior.headSha,
       headSha: input.headSha,
-      // Auto-narrow skips the prompt; otherwise the caller still confirms.
-      prompted: !input.autoNarrow,
+      ...(await classifyRange(prior.headSha, input)),
     };
   }
 
@@ -170,13 +329,10 @@ export async function pickNarrowingTarget(
     };
   }
 
-  // Otherwise fall back to full scope. Auto-narrow surfaces this as the
-  // auto-fallback notice (no prompt); manual mode does not prompt here either —
-  // the fallback is informational.
+  // Otherwise fail open to full scope and preserve the guard failure reason.
   return {
     kind: 'full-scope-fallback',
     reason: 'stale-sha',
     priorSha: prior.headSha,
-    prompted: false,
   };
 }

@@ -833,7 +833,7 @@ describe('validateOatSkills', () => {
     const content = await readRepoFile('.agents/agents/oat-reviewer.md');
     const tools = content.match(/^tools:\s*(.+)$/m)?.[1] ?? '';
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.1.9');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.2.0');
     expect(tools).toContain('Task');
     for (const broadReview of [
       'final code reviews',
@@ -1335,7 +1335,7 @@ describe('validateOatSkills', () => {
       },
       {
         skillName: 'oat-project-implement',
-        version: '2.2.1',
+        version: '2.2.2',
         finalizedHeading: '### Step 13: Trigger Final Review',
         gateHeading: '### Step 14: Gate Execution',
         completionHeading: '### Step 16: Mark Implementation Complete',
@@ -1688,7 +1688,50 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.2');
+  });
+
+  it('preserves provenance across implementation-owned Reviews ledger writes', async () => {
+    const phaseExecution = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const contract = phaseExecution.slice(
+      phaseExecution.indexOf('#### Reviews Ledger Mutation Contract'),
+      phaseExecution.indexOf('### Parallel Group Execution'),
+    );
+    const normalizedContract = contract.replace(/\s+/g, ' ');
+
+    expect(normalizedContract).toContain(
+      'directly dispositions a `## Reviews` event or re-points its artifact',
+    );
+    expect(normalizedContract).toContain(
+      'every checkpoint, final-review, gate-receive, and closeout path',
+    );
+    expect(normalizedContract).toContain(
+      'resolve `Scope`, `Type`, `Status`, `Date`, `Artifact`, `Reviewed Head`, `Invocation`, and `Gate Target` by header name',
+    );
+    expect(normalizedContract).toMatch(
+      /legacy five-column table.*append the provenance columns \(`Reviewed Head`, `Invocation`, and `Gate Target`\).*pad every existing row with `-`/,
+    );
+    expect(normalizedContract).toContain(
+      'Preserve every unknown column in its original position',
+    );
+    expect(normalizedContract).toContain(
+      'preserve every existing known value unless the current operation explicitly advances that cell',
+    );
+    expect(normalizedContract).toContain(
+      'Never truncate a row to five, eight, or any other assumed width.',
+    );
+    expect(normalizedContract).toContain(
+      'accept `oat_review_head_sha` only as a full 40-character hexadecimal commit SHA',
+    );
+    expect(normalizedContract).toContain('preserve `oat_review_invocation`');
+    expect(normalizedContract).toContain(
+      'preserve `oat_gate_target` only for a gate invocation',
+    );
+    expect(normalizedContract).toMatch(
+      /archive re-point.*preserve existing provenance and unknown cells/,
+    );
   });
 
   it('routes implementation phases through bounded progressive disclosure', async () => {
@@ -1911,7 +1954,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-implement/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.1');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.2');
     expect(content).toMatch(
       /accepted native reviewer[\s\S]{0,260}(?:poll|nudge|continue)[\s\S]{0,180}existing handle/i,
     );
@@ -1930,7 +1973,7 @@ describe('validateOatSkills', () => {
       '.agents/skills/oat-project-review-provide/SKILL.md',
     );
 
-    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.3.22');
+    expect(content.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.4.0');
     expect(content).toMatch(
       /resolver-returned Codex variant[\s\S]{0,260}first[\s\S]{0,180}native[\s\S]{0,100}`agent_type`/i,
     );
@@ -2084,9 +2127,9 @@ describe('validateOatSkills', () => {
   it('keeps the complete artifact hygiene block equivalent at every runtime boundary', async () => {
     const runtimeSurfaces = [
       ['.agents/agents/oat-phase-implementer.md', '1.0.10'],
-      ['.agents/agents/oat-reviewer.md', '1.1.9'],
-      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.3.22'],
-      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.5.9'],
+      ['.agents/agents/oat-reviewer.md', '1.2.0'],
+      ['.agents/skills/oat-project-review-provide/SKILL.md', '1.4.0'],
+      ['.agents/skills/oat-project-review-receive/SKILL.md', '1.6.0'],
       ['.agents/skills/oat-project-summary/SKILL.md', '1.3.5'],
       ['.agents/skills/oat-project-document/SKILL.md', '1.6.2'],
       ['.agents/skills/oat-project-pr-final/SKILL.md', '1.5.3'],
@@ -2342,7 +2385,7 @@ describe('validateOatSkills', () => {
       /implements one plan phase end-to-end/i,
     );
     expect(agent.match(/^tools:\s*(.+)$/m)?.[1]).toContain('Task');
-    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.1');
+    expect(implement.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('2.2.2');
     expect(agent).toMatch(
       /directly execute(?:s)? every task in dependency order/i,
     );
@@ -2673,10 +2716,10 @@ describe('validateOatSkills', () => {
   it('defines append-ordered monotonic review events across lifecycle skills', async () => {
     const expectedVersions = [
       ['oat-project-plan-writing', '1.2.17'],
-      ['oat-project-review-provide', '1.3.22'],
-      ['oat-project-review-receive', '1.5.9'],
-      ['oat-project-review-receive-remote', '1.4.2'],
-      ['oat-project-implement', '2.2.1'],
+      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-receive', '1.6.0'],
+      ['oat-project-review-receive-remote', '1.5.0'],
+      ['oat-project-implement', '2.2.2'],
       ['oat-project-pr-final', '1.5.3'],
       ['oat-project-pr-progress', '1.2.3'],
       ['oat-project-complete', '1.6.0'],
@@ -2757,7 +2800,7 @@ describe('validateOatSkills', () => {
       receive.indexOf('### Step 2: Parse Findings into Buckets'),
     );
 
-    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.5.9');
+    expect(receive.match(/^version:\s*(.+)$/m)?.[1]?.trim()).toBe('1.6.0');
     expect(resolver).toContain(
       'oat review latest --project "$PROJECT_PATH" --actionable-project --json',
     );
@@ -3750,7 +3793,7 @@ describe('validateOatSkills', () => {
       ['oat-project-plan', '1.4.3'],
       ['oat-project-quick-start', '2.3.4'],
       ['oat-project-import-plan', '1.4.8'],
-      ['oat-project-review-provide', '1.3.22'],
+      ['oat-project-review-provide', '1.4.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {
@@ -3765,9 +3808,9 @@ describe('validateOatSkills', () => {
 
   it('tracks Dispatch Report V1 workflow contract versions and provenance boundaries', async () => {
     const expectedVersions = [
-      ['oat-project-implement', '2.2.1'],
-      ['oat-project-review-provide', '1.3.22'],
-      ['oat-project-review-provide-remote', '1.0.4'],
+      ['oat-project-implement', '2.2.2'],
+      ['oat-project-review-provide', '1.4.0'],
+      ['oat-project-review-provide-remote', '1.1.0'],
     ] as const;
 
     for (const [skillName, expectedVersion] of expectedVersions) {

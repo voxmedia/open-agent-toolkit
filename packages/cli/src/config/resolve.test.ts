@@ -419,7 +419,7 @@ describe('resolveEffectiveConfig', () => {
         source: 'default',
       });
       expect(result.resolved['workflow.autoNarrowReReviewScope']).toEqual({
-        value: null,
+        value: true,
         source: 'default',
       });
       expect(result.resolved['workflow.autoArtifactReview.plan']).toEqual({
@@ -449,6 +449,87 @@ describe('resolveEffectiveConfig', () => {
       ).toEqual({
         value: null,
         source: 'default',
+      });
+    });
+
+    it.each([
+      {
+        source: 'local',
+        local: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: false },
+        } satisfies OatLocalConfig,
+        shared: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: true },
+        } satisfies OatConfig,
+        user: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: true },
+        } satisfies UserConfig,
+      },
+      {
+        source: 'shared',
+        local: { version: 1 } satisfies OatLocalConfig,
+        shared: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: false },
+        } satisfies OatConfig,
+        user: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: true },
+        } satisfies UserConfig,
+      },
+      {
+        source: 'user',
+        local: { version: 1 } satisfies OatLocalConfig,
+        shared: { version: 1 } satisfies OatConfig,
+        user: {
+          version: 1,
+          workflow: { autoNarrowReReviewScope: false },
+        } satisfies UserConfig,
+      },
+    ])(
+      'preserves explicit false for workflow.autoNarrowReReviewScope from $source',
+      async ({ source, local, shared, user }) => {
+        const result = await resolveEffectiveConfig(
+          '/repo',
+          '/tmp/user',
+          {},
+          {
+            readOatConfig: async () => shared,
+            readOatLocalConfig: async () => local,
+            readUserConfig: async () => user,
+          },
+        );
+
+        expect(result.resolved['workflow.autoNarrowReReviewScope']).toEqual({
+          value: false,
+          source,
+        });
+      },
+    );
+
+    it('preserves explicit true for workflow.autoNarrowReReviewScope', async () => {
+      const result = await resolveEffectiveConfig(
+        '/repo',
+        '/tmp/user',
+        {},
+        {
+          readOatConfig: async () =>
+            ({
+              version: 1,
+              workflow: { autoNarrowReReviewScope: true },
+            }) satisfies OatConfig,
+          readOatLocalConfig: async () =>
+            ({ version: 1 }) satisfies OatLocalConfig,
+          readUserConfig: async () => ({ version: 1 }) satisfies UserConfig,
+        },
+      );
+
+      expect(result.resolved['workflow.autoNarrowReReviewScope']).toEqual({
+        value: true,
+        source: 'shared',
       });
     });
 

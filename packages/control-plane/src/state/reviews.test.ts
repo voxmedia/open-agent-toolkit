@@ -89,6 +89,121 @@ describe('parseReviewTable', () => {
     ]);
   });
 
+  it('parses widened rows with reviewed-head and lineage provenance', () => {
+    const reviewedHead = 'a'.repeat(40);
+    const planContent = `## Reviews
+
+| Scope | Type | Status | Date       | Artifact                    | Reviewed Head                              | Invocation | Gate Target   |
+| ----- | ---- | ------ | ---------- | --------------------------- | ------------------------------------------ | ---------- | ------------- |
+| p02   | code | passed | 2026-07-28 | reviews/p02-review.md       | ${reviewedHead} | gate       | codex-default |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'p02',
+        type: 'code',
+        status: 'passed',
+        date: '2026-07-28',
+        artifact: 'reviews/p02-review.md',
+        reviewedHead,
+        invocation: 'gate',
+        gateTarget: 'codex-default',
+      },
+    ]);
+  });
+
+  it('parses reordered known columns with unknown columns interleaved', () => {
+    const reviewedHead = 'c'.repeat(40);
+    const planContent = `## Reviews
+
+| Notes  | Artifact              | Gate Target   | Scope | Owner | Status   | Reviewed Head                              | Date       | Invocation | Type |
+| ------ | --------------------- | ------------- | ----- | ----- | -------- | ------------------------------------------ | ---------- | ---------- | ---- |
+| first  | reviews/p04-review.md | codex-default | p04   | team  | passed   | ${reviewedHead} | 2026-07-28 | gate       | code |
+| second | reviews/p05-review.md | -             | p05   | team  | received | -                                          | 2026-07-29 | auto       | code |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'p04',
+        type: 'code',
+        status: 'passed',
+        date: '2026-07-28',
+        artifact: 'reviews/p04-review.md',
+        reviewedHead,
+        invocation: 'gate',
+        gateTarget: 'codex-default',
+      },
+      {
+        scope: 'p05',
+        type: 'code',
+        status: 'received',
+        date: '2026-07-29',
+        artifact: 'reviews/p05-review.md',
+        invocation: 'auto',
+      },
+    ]);
+  });
+
+  it('treats empty widened provenance cells as absent', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
+| ----- | ---- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
+| p02   | code | pending | -    | -        |               |            |             |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'p02',
+        type: 'code',
+        status: 'pending',
+        date: '-',
+        artifact: '-',
+      },
+    ]);
+  });
+
+  it('rejects a non-full reviewed head without rejecting the row', () => {
+    const planContent = `## Reviews
+
+| Scope | Type | Status | Date       | Artifact              | Reviewed Head | Invocation | Gate Target |
+| ----- | ---- | ------ | ---------- | --------------------- | ------------- | ---------- | ----------- |
+| final | code | passed | 2026-07-28 | reviews/final.md      | abc1234       | manual     |             |
+`;
+
+    expect(parseReviewTable(planContent)).toEqual([
+      {
+        scope: 'final',
+        type: 'code',
+        status: 'passed',
+        date: '2026-07-28',
+        artifact: 'reviews/final.md',
+        invocation: 'manual',
+      },
+    ]);
+  });
+
+  it('preserves row count and ordering in a mixed legacy and widened table', () => {
+    const reviewedHead = 'b'.repeat(40);
+    const planContent = `## Reviews
+
+| Scope | Type | Status   | Date       | Artifact                    | Reviewed Head                              | Invocation | Gate Target |
+| ----- | ---- | -------- | ---------- | --------------------------- | ------------------------------------------ | ---------- | ----------- |
+| p01   | code | passed   | 2026-07-27 | reviews/p01-review.md       |
+| p02   | code | received | 2026-07-28 | reviews/p02-review.md       | ${reviewedHead} | auto       |             |
+| p03   | code | pending  | -          | -                           |
+`;
+
+    const reviews = parseReviewTable(planContent);
+
+    expect(reviews).toHaveLength(3);
+    expect(reviews.map(({ scope }) => scope)).toEqual(['p01', 'p02', 'p03']);
+    expect(reviews[1]).toMatchObject({
+      reviewedHead,
+      invocation: 'auto',
+    });
+  });
+
   it('parses only the exact Reviews heading through the next level-two section', () => {
     const planContent = [
       '## Phase 1: Example',
