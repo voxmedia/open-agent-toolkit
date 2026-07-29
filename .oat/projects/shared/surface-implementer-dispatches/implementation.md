@@ -1336,6 +1336,10 @@ was corrected; proceed to the final configured exit-gate attempt.
 - **Artifact:** `reviews/final-review-2026-07-29T183546Z.md`
 - **Disposition:** gate passed at the Important threshold; receive required
   before the generation becomes allowed
+- **Receive intent:** source `reviews/final-review-2026-07-29T183546Z.md`,
+  archive destination `reviews/archived/final-review-2026-07-29T183546Z.md`,
+  and event `final|code|final-review-2026-07-29T183546Z.md` bound to
+  pre-receive head `e26dd547ed95c0d36ae7702f4b43652513e98320`
 
 ## Implementation Log
 
