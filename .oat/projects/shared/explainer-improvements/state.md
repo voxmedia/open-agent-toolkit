@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: df75722873638a957a24983974f9ce6087ae512c
+oat_current_task: p04-t04
+oat_last_commit: 2ecd39230acaafe3c651014063793ead8d5f630f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-28T18:31:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T03:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -78,7 +78,7 @@ oat_generated: false
 
 **Status:** Implementation In Progress
 **Started:** 2026-07-28
-**Last Updated:** 2026-07-28
+**Last Updated:** 2026-07-29
 
 ## Current Phase
 
@@ -98,7 +98,7 @@ Phase p04 implementation in progress
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 48 tasks currently tracked
+- ✓ Five phases / 49 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -198,7 +198,13 @@ Phase p04 implementation in progress
   ownership boundaries; no retry was consumed
 - ✓ p04-t01 through p04-t03 file boundaries now include the core orchestration,
   adapter source binding, and contract validation owners required by acceptance
-- ⧗ Phase p04 implementation relaunch is prepared from a clean worktree
+- ✓ p04-t01 through p04-t03 implemented in three atomic commits
+- ✓ Task gates and complete Phase p04 union passed 81/81; check and type-check
+  passed
+- ⧗ Full tests passed smoke 128/130 and exposed two consumer compatibility gaps
+- ✓ p04-t04 bounds strict CLI backlink parsing and real packaged-layout Git
+  provenance without consuming a review-remediation attempt
+- ⧗ Phase p04 consumer-alignment follow-up is prepared from a clean worktree
 
 ## Blockers
 
@@ -206,4 +212,4 @@ None
 
 ## Next Milestone
 
-Execute p04-t01 through p04-t03, then run Phase p04 verification and review.
+Execute p04-t04, rerun Phase p04 and repository/release gates, then review.

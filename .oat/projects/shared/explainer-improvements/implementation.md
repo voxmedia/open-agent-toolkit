@@ -621,6 +621,28 @@ oat_generated: false
 - Tasks: p04-t01 through p04-t03, sequentially
 - Scope: corrected topology-routing, reviewed-source, manifest-construction, and
   catalog-validation ownership boundaries
+- Outcome: `BLOCKED` after all three task commits and phase verification
+- Task commits:
+  `0360c481` (p04-t01), `6f6c42eb` (p04-t02), and `2ecd3923` (p04-t03)
+- Verification: task gates passed 27/27, 39/39, and 32/32 plus 93/93
+  supporting tests; complete Phase p04 union passed 81/81; `pnpm check` and
+  `pnpm type-check` passed
+- Full test result: smoke passed 128/130; failures identified one strict CLI
+  manifest-consumer gap and one non-Git packaged-adapter fixture gap
+- Follow-up boundary: p04-t04 aligns the archive manifest parser with canonical
+  source backlinks and makes the packaged-layout smoke exercise real reviewed
+  Git provenance
+- Final HEAD: `2ecd39230acaafe3c651014063793ead8d5f630f`
+- Worktree: clean; no tracking or review artifacts changed by the implementer
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 17 — Phase p04 consumer-alignment follow-up
+
+- Request: `explainer-improvements-p04-consumers-20260729T031500Z`
+- Launch intent: persisted
+- Task: p04-t04
+- Scope: strict CLI source-backlink parsing and real packaged-layout reviewed
+  repository provenance
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -657,20 +679,21 @@ oat_generated: false
 | p03 re-review R1      | p03 re-review   | Remediation closes all original blocking findings       | Add p03-t16 through p03-t19          | Pseudo-PNGs remain accepted and package coverage is duplicated/inconsistent outside success                                   | p03 re-review artifact                 | p03-t16–p03-t19  |
 | p03 re-review R2      | p03 re-review   | Full decoding binds the screenshot through review       | Add bounded p03-t21                  | Pixel-only decoded hash permits geometry changes with identical flat bytes                                                    | p03 re-review artifact                 | p03-t21          |
 | p04 preflight         | plan p04        | Declared files contain all task ownership boundaries    | Expand p04-t01 through p04-t03 files | Render routing, reviewed source binding, manifest construction, and receipt validation have owners outside the original lists | repository preflight at `65b95624`     | p04-t01–p04-t03  |
+| p04 verification      | plan p04-t02/03 | New provenance and manifest fields pass all consumers   | Add bounded p04-t04                  | Strict CLI archive parsing omitted canonical backlinks and the packaged fixture had no reviewed Git identity                  | full repository smoke tests            | p04-t04          |
 
 ## Test Results
 
-| Phase | Tests Run                                                       | Passed | Failed | Coverage                        |
-| ----- | --------------------------------------------------------------- | -----: | -----: | ------------------------------- |
-| p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed         |
-| p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed         |
-| p03   | focused union, full suite, smoke, release validation            |    211 |      0 | Remediation verification passed |
-| p04   | -                                                               |      - |      - | -                               |
-| p05   | -                                                               |      - |      - | -                               |
+| Phase | Tests Run                                                       | Passed | Failed | Coverage                   |
+| ----- | --------------------------------------------------------------- | -----: | -----: | -------------------------- |
+| p01   | focused package, golden, validation, smoke, full suite, release |  3,513 |      0 | Phase acceptance passed    |
+| p02   | focused union, full suite, release validation                   |    141 |      0 | Phase acceptance passed    |
+| p03   | focused union, full suite, smoke, release validation            |    230 |      0 | Phase acceptance passed    |
+| p04   | task gates, focused union, check, type-check, smoke             |    302 |      2 | Consumer alignment pending |
+| p05   | -                                                               |      - |      - | -                          |
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 48 tasks and the final review._
+_Fill from implementation evidence after all 49 tasks and the final review._
 
 ## References
 

@@ -1460,6 +1460,38 @@ URLs resolve in local connector tests.
 
 ---
 
+### Task p04-t04: Align archive and packaged-layout consumers
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `tools/smoke/explainer-kit/fixtures/package-root.mjs`
+- Modify: `tools/smoke/explainer-kit/packaged-layout.test.mjs`
+
+**Steps:**
+
+1. Preserve the two RED full-suite failures proving that the CLI archive
+   consumer rejects canonical manifest source backlinks and that the packaged
+   adapter fixture lacks reviewed Git repository provenance.
+2. Extend the CLI's strict manifest parser and local type to accept only the
+   canonical optional `source.backlinks` entries: exact `sourceId` and
+   immutable absolute GitHub blob URL fields, with no unknown keys.
+3. Initialize the packaged adapter fixture as a real committed Git repository
+   with a canonical GitHub origin so it exercises adapter-owned reviewed
+   repository and commit resolution rather than bypassing provenance.
+4. Assert the packaged adapter result carries the fixture's immutable reviewed
+   repository and full commit identity without leaking the source checkout.
+5. Run the focused archive tests and the complete explainer-kit smoke suite,
+   then rerun the Phase p04 union and all remaining repository/release gates.
+6. Commit as `fix(p04-t04): align recap package consumers`.
+
+**Acceptance:** The untouched Phase p04 core package passes strict CLI archive
+validation, the installed adapter resolves real commit-pinned provenance in its
+packaged-layout smoke, and malformed or moving source backlinks remain rejected.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1617,11 +1649,11 @@ additional unrelated review cycles.
 
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
-- Phase 3: 11 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 3 tasks — topology routing, pinned backlinks, generated catalog
+- Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
+- Phase 4: 4 tasks — topology routing, pinned backlinks, generated catalog, and consumer alignment
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 38 tasks**
+**Total: 49 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
