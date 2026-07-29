@@ -1,6 +1,6 @@
 ---
-oat_current_task: prev1-t05
-oat_last_commit: 4e39077ad8deec33dd9dd4479c66d35b8e7911ed
+oat_current_task: null
+oat_last_commit: 6f807da68f1c822ebe34885410ba41bb2dbed2d8
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -36,7 +36,7 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: blocked
+  status: stale
   resolution: configured
   disposition: null
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
@@ -68,8 +68,8 @@ oat_implement_exit_gate:
   receive_commit: 54ed48e6f78baf0b59d530c46ccebd6e18481cf0
   receive_eligible: true
   receive_completed: true
-  failure: 'blocking_findings: one Important skill-contract version pin regression queued as prev1-t05'
-  updated_at: '2026-07-29T18:15:00Z'
+  failure: 'implementation_changed_after_gate: prev1-t05 fixed the blocking skill-contract version pin regression'
+  updated_at: '2026-07-29T18:17:55Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -86,7 +86,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/187' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T18:15:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T18:17:55Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 

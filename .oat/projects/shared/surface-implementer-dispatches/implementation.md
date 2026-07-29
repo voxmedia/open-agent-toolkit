@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: prev1-t05
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status      | Tasks | Completed |
-| ---------- | ----------- | ----- | --------- |
-| Phase 1    | completed   | 2     | 2/2       |
-| Phase 2    | completed   | 2     | 2/2       |
-| Phase 3    | completed   | 2     | 2/2       |
-| Revision 1 | in_progress | 5     | 4/5       |
+| Phase      | Status    | Tasks | Completed |
+| ---------- | --------- | ----- | --------- |
+| Phase 1    | completed | 2     | 2/2       |
+| Phase 2    | completed | 2     | 2/2       |
+| Phase 3    | completed | 2     | 2/2       |
+| Revision 1 | completed | 5     | 5/5       |
 
-**Total:** 10/11 tasks completed
+**Total:** 11/11 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -1285,6 +1285,16 @@ skill version bump; refresh the configured implementation exit gate.
 
 **Next:** Execute `prev1-t05`, rerun the standard final review, then start a
 fresh configured exit-gate generation.
+
+### Task prev1-t05 Complete: Synchronize implementation skill contract pins
+
+- **Commit:** `6f807da6a`
+- **Change:** re-verified the six `oat-project-implement` contract assertions
+  and advanced each expected version from `2.2.2` to `2.2.3`.
+- **Verification:** focused skill validation passed 118/118, canonical
+  skill-version validation passed, and the full workspace test gate passed.
+- **Outcome:** the blocking Important finding is fixed; standard final re-review
+  is required before a new exit-gate generation.
 
 ## Implementation Log
 
