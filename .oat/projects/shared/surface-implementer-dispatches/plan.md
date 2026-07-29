@@ -765,7 +765,7 @@ git commit -m "chore(review): clean archived final review formatting"
 | plan   | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-plan-review-2026-07-29T034646Z.md   | -                                        | -          | -                    |
 | final  | code     | fixes_completed | 2026-07-29 | reviews/archived/final-review-2026-07-29T165043Z.md           | 06f0777ba7145406fe406490c2630a945c2858c2 | manual     | -                    |
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T171719Z.md           | ff92b31655fbbd5e1a99c40adf33340f60076173 | manual     | -                    |
-| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T173359Z.md                    | 18017af6c732f9a5a26c34e5e5f03f16ddce4ba6 | gate       | cursor-fable-5-xhigh |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T173359Z.md           | 18017af6c732f9a5a26c34e5e5f03f16ddce4ba6 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`

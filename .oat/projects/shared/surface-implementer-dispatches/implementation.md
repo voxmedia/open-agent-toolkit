@@ -954,7 +954,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=gpt-5.6-sol-high proven
 **Dispatch stamp:**
 
 ```text
-Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5.6-sol-high
+Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 ```
 
 #### Configured Exit Gate — generation initialized
@@ -1205,6 +1205,33 @@ implementation exit gate refresh.
   archive destination `reviews/archived/final-review-2026-07-29T173359Z.md`,
   and event `final|code|final-review-2026-07-29T173359Z.md` bound to
   pre-receive head `f5f9fdd0b11ffccdee9f1d3023d4615ccbf054f7`
+
+### Review Received: Refreshed configured exit gate
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T173359Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**Judgment-sweep disposition:**
+
+- M1: `explicit_deferral` — retain the existing cross-provider report-context
+  matrix deferral. No post-deferral change touched the managed-cap warning
+  predicates or command-level Dispatch Report context tests, so its trigger
+  remains un-fired.
+- m1: `address_now` — correct the single dotted reviewer target token to the
+  registered dashed role name in this implementation record.
+
+**New tasks added:** None.
+
+**Outcome:** Passing-gate receive sweep completed with every finding explicitly
+dispositioned; archive the review and allow the configured exit gate.
 
 ## Implementation Log
 
