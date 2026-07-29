@@ -649,7 +649,20 @@ oat_generated: false
 - Verification: focused archive tests passed 55/55, complete explainer-kit smoke
   passed 7/7, expanded Phase p04 union passed 105/105, and all repository and
   release gates passed
+- Ancestry concern resolved: intervening `6d21bc9e` is root-owned OAT
+  bookkeeping; p04-t04 itself remains one atomic four-file task commit
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 18 — Phase p04 code review
+
+- Request: `explainer-improvements-p04-review-20260729T035000Z`
+- Launch intent: persisted
+- Base: `dda6ff61a2845614f87b81ac2dbee77261c1c175`
+- Reviewed head: `cf579ca39ba6b0bc7b22e2adb70287dc1e77049f`
+- Planned artifact: `reviews/20260728-p04-code-review.md`
+- Scope: p04-t01 through p04-t04 acceptance, regression safety, and phase
+  integration
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
