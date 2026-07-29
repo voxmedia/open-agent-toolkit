@@ -24,21 +24,21 @@
       "id": "project-recap",
       "type": "hub",
       "renderedPath": "site/initiatives/non-linear/index.html",
-      "hash": "sha256:861a1dc54da38877f5c0566cfb0cc4ab7f8627168fa345600cac7b59c5fe3d16",
+      "hash": "sha256:185c70b1de0fd6cd0abfe5a3fa4ef1c2f923e64fe2149aa2f3ad4a5af33f3f62",
       "status": "built"
     },
     {
       "id": "architecture",
       "type": "diagram",
       "renderedPath": "site/diagrams/non-linear/architecture/index.html",
-      "hash": "sha256:9b32ea854d15b253edd88ff546318ee2cb932accea8c383b40156cc63a4f2657",
+      "hash": "sha256:d7d7bcc531c2be98586ff0cf01bffd616c51d4367b912e67a0433dbcc6db81ca",
       "status": "built"
     },
     {
       "id": "deck",
       "type": "deck",
       "renderedPath": "site/decks/non-linear/deck/index.html",
-      "hash": "sha256:618995ec9e9e6c4943549c474bdbf3363fdd6b1198260f25e6fa934d3c00067e",
+      "hash": "sha256:b59b2686f92972df341504439131017e1e0a02dbe3cb9ca3ff83a66d84143a24",
       "status": "built"
     }
   ]

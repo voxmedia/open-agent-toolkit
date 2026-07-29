@@ -321,3 +321,16 @@ test('rejects unknown and unresolved template tokens', () => {
     /unresolved template token/i,
   );
 });
+
+test('empty template substitutions leave no trailing horizontal whitespace', () => {
+  const rendered = substituteTemplate(
+    'before\n  {{OPTIONAL}}\ncontent {{OPTIONAL}}  \n<pre>{{AUTHORED}}</pre>\nafter\n',
+    {
+      OPTIONAL: '',
+      AUTHORED: 'authored trailing spaces  ',
+    },
+  );
+
+  assert.doesNotMatch(rendered, /[ \t]+$/m);
+  assert.match(rendered, /<pre>authored trailing spaces  <\/pre>/);
+});

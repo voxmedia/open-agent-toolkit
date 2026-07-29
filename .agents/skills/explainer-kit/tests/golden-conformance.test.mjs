@@ -24,6 +24,7 @@ import { fileURLToPath } from 'node:url';
 
 import { createBrowserProbeSession } from '../scripts/lib/browser-runtime.mjs';
 import { decodeBrowserPng } from '../scripts/lib/png.mjs';
+import { substituteTemplate } from '../scripts/lib/render.mjs';
 import { canonicalGithubBlobBacklink } from '../scripts/lib/source-backlinks.mjs';
 import { runExplainer } from '../scripts/run.mjs';
 
@@ -541,13 +542,6 @@ function escapeHtml(value) {
     .replaceAll("'", '&#39;');
 }
 
-function replaceShell(shell, values) {
-  return Object.entries(values).reduce(
-    (html, [key, value]) => html.replaceAll(`{{${key}}}`, value),
-    shell,
-  );
-}
-
 function benchmarkSource(input) {
   const source = input.sources[0];
   const tuple = {
@@ -673,7 +667,7 @@ function hubHtml(request, input, sourceUrl) {
       return `<section id="${id}"><h2>${escapeHtml(id.replaceAll('-', ' '))}</h2>${content}</section>`;
     })
     .join('');
-  return replaceShell(request.shell, {
+  return substituteTemplate(request.shell, {
     THEME_CSS: '',
     TITLE: escapeHtml(input.title),
     DESCRIPTION:
@@ -738,7 +732,7 @@ function graphMarkup(graph) {
 
 function architectureHtml(request, input, sourceUrl) {
   const graph = graphForAuthor(request, input);
-  return replaceShell(request.shell, {
+  return substituteTemplate(request.shell, {
     THEME_CSS: '',
     TITLE: escapeHtml(`${input.title} — architecture`),
     DESCRIPTION:
@@ -755,7 +749,7 @@ function deckHtml(request, input, sourceUrl) {
     `<section class="slide"><div class="slide__content"><h2>System shape</h2><p>${input.topology.nodes.length} nodes retain ${input.topology.edges.length} directed relationships, including every planned branch, join, or cycle.</p></div></section>`,
     `<section class="slide" id="outcome"><div class="slide__content"><h2>Outcome</h2><p>The golden recap passed real-browser checks and an independent whole-set review.</p><a href="${escapeHtml(sourceUrl)}">Pinned source evidence</a></div></section>`,
   ].join('');
-  return replaceShell(request.shell, {
+  return substituteTemplate(request.shell, {
     THEME_CSS: '',
     TITLE: escapeHtml(`${input.title} — walkthrough`),
     DESCRIPTION:

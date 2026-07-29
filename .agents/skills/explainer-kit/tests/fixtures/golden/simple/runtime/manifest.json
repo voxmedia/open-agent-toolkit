@@ -24,21 +24,21 @@
       "id": "project-recap",
       "type": "hub",
       "renderedPath": "site/initiatives/simple/index.html",
-      "hash": "sha256:7fbc467c8162f20b62a08a70c68020ca3030d02c85ce0aed69d732abc3d18f13",
+      "hash": "sha256:62de54811ca36620bad7f3596b334a5bfa9f85dab61d41e75f12f201c312b4bb",
       "status": "built"
     },
     {
       "id": "architecture",
       "type": "diagram",
       "renderedPath": "site/diagrams/simple/architecture/index.html",
-      "hash": "sha256:3ce559f318fdba5be268e6494bda4304cf1ace9cace6fdbdc3427fdce746e397",
+      "hash": "sha256:fa0c0e4f8541811a8d4fb29982e03b017f3513830962dca7fbecc920d96a8296",
       "status": "built"
     },
     {
       "id": "deck",
       "type": "deck",
       "renderedPath": "site/decks/simple/deck/index.html",
-      "hash": "sha256:0843b99b2b865f565a61b2538d55d1ff244e0818bd818699b21b102b6e3a1a16",
+      "hash": "sha256:3f32078efd3f9512c485662b2044abeab2d7a6479d66424206205fbd3b7ca811",
       "status": "built"
     }
   ]

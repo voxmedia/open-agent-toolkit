@@ -112,12 +112,32 @@ export function substituteTemplate(template, values) {
     throw new Error(`Unresolved template token: ${missing[0]}.`);
   }
 
-  const rendered = template.replace(TOKEN_PATTERN, (_, key) => values[key]);
+  const normalizedTemplate = normalizeEmptySubstitutionWhitespace(
+    template,
+    values,
+  );
+  const rendered = normalizedTemplate.replace(
+    TOKEN_PATTERN,
+    (_, key) => values[key],
+  );
   const unresolved = rendered.match(TOKEN_PATTERN)?.[1];
   if (unresolved) {
     throw new Error(`Unresolved template token: ${unresolved}.`);
   }
   return rendered;
+}
+
+function normalizeEmptySubstitutionWhitespace(template, values) {
+  let normalized = template;
+  let previous;
+  do {
+    previous = normalized;
+    normalized = normalized.replace(
+      /[ \t]*{{([A-Z][A-Z_]*)}}[ \t]*(?=\r?$)/gm,
+      (match, key) => (values[key] === '' ? '' : match),
+    );
+  } while (normalized !== previous);
+  return normalized;
 }
 
 function templateValues({
