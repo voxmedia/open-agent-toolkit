@@ -200,6 +200,16 @@ resume behavior. The token is not written into the run request, content
 approval, build record, set-plan projections, manifest, or immutable-hash
 inventory.
 
+After authenticating the retained bytes, resume applies initialization's same
+canonical privacy-safe request projection to the current request, including the
+canonical output root and default render strategy, and requires an exact match
+with `run-request.json` before installing current request state or hydrating any
+package content. This binds recipe and recap mode, fact-base input, complete
+theme and render policy, privacy, public base URL, durability, publish
+destination, and run mode. Raw art direction may differ only when
+`privacy.retainRawArtDirection` is not `true`, because that deliberately
+redacted input is non-semantic after the rendered package has paused.
+
 The run package retains the privacy-safe `run-request.json`,
 `source/content-approval.json`, `source/fact-base.json`,
 `source/fact-base.md`, authored content under `source/content/*.md` and

@@ -41,20 +41,16 @@ const ALLOWED_TRANSITIONS = {
 const RESUME_TOKEN_V2_PREFIX = 'ekrt2:';
 const RESUME_TOKEN_V2_PATTERN = /^ekrt2:[a-f0-9]{64}$/;
 
+export function canonicalPersistedRunRequest(request, { outputRoot } = {}) {
+  return privacySafeRequest(
+    normalizeRunRequest(request, {
+      ...(outputRoot !== undefined && { outputRoot }),
+    }),
+  );
+}
+
 export async function initializeRun(request) {
-  if (!isObject(request)) {
-    throw new TypeError('Run request must be an object.');
-  }
-
-  const normalizedRequest = structuredClone(request);
-  normalizedRequest.slug = normalizeRequestSlug(request.slug);
-  normalizedRequest.theme = {
-    ...(isObject(normalizedRequest.theme) ? normalizedRequest.theme : {}),
-    renderStrategy: normalizedRequest.theme?.renderStrategy ?? 'default-only',
-  };
-
-  assertValidContract('run-request', normalizedRequest);
-
+  const normalizedRequest = normalizeRunRequest(request);
   const paths = await createConfinedRunRoot(
     normalizedRequest.outputRoot,
     normalizedRequest.slug,
@@ -94,7 +90,9 @@ export async function initializeRun(request) {
   await writeJsonAtomic(
     run.runRoot,
     'run-request.json',
-    privacySafeRequest(normalizedRequest),
+    canonicalPersistedRunRequest(normalizedRequest, {
+      outputRoot: paths.outputRoot,
+    }),
   );
 
   return run;
@@ -721,6 +719,23 @@ function normalizeRequestSlug(slug) {
   if (!normalized) {
     throw new Error('Slug must contain at least one letter or number.');
   }
+  return normalized;
+}
+
+function normalizeRunRequest(request, { outputRoot } = {}) {
+  if (!isObject(request)) {
+    throw new TypeError('Run request must be an object.');
+  }
+  const normalized = structuredClone(request);
+  normalized.slug = normalizeRequestSlug(request.slug);
+  normalized.theme = {
+    ...(isObject(normalized.theme) ? normalized.theme : {}),
+    renderStrategy: normalized.theme?.renderStrategy ?? 'default-only',
+  };
+  if (outputRoot !== undefined) {
+    normalized.outputRoot = outputRoot;
+  }
+  assertValidContract('run-request', normalized);
   return normalized;
 }
 

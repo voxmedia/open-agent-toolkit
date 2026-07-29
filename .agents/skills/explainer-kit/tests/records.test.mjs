@@ -16,6 +16,7 @@ import { afterEach, test } from 'node:test';
 import { canonicalHash } from '../scripts/lib/contracts.mjs';
 import { loadRecipe } from '../scripts/lib/recipes.mjs';
 import {
+  canonicalPersistedRunRequest,
   createSetPlanResumeToken,
   initializeRun,
   readSetPlanRecords,
@@ -153,6 +154,12 @@ test('persists a normalized request without transient art direction', async () =
   const run = await initializeRun(request(outputRoot));
   const persisted = JSON.parse(await readFile(run.requestPath, 'utf8'));
 
+  assert.deepEqual(
+    persisted,
+    canonicalPersistedRunRequest(run.request, {
+      outputRoot: run.outputRoot,
+    }),
+  );
   assert.equal(persisted.slug, 'demo-project');
   assert.equal(persisted.theme.renderStrategy, 'default-only');
   assert.equal('artDirection' in persisted.theme, false);

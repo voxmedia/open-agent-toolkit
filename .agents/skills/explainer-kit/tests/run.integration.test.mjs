@@ -387,6 +387,199 @@ test('interactive runs pause after rendered QA and do no external work before ap
   );
 });
 
+test('interactive resume rejects every changed semantic request field before hydration or callbacks', async (t) => {
+  const mutations = [
+    [
+      'recipe',
+      (candidate) => {
+        candidate.recipe = { id: 'project-explainer', version: '1' };
+        delete candidate.recapMode;
+      },
+    ],
+    [
+      'recap mode',
+      (candidate) => {
+        candidate.recapMode = 'deterministic-markdown';
+      },
+    ],
+    [
+      'fact-base binding',
+      (candidate) => {
+        candidate.factBase.path = 'changed-approved-facts.json';
+      },
+    ],
+    [
+      'theme',
+      (candidate) => {
+        candidate.theme.palette = 'changed-palette';
+      },
+    ],
+    [
+      'render strategy',
+      (candidate) => {
+        candidate.theme.renderStrategy = 'user-switchable';
+      },
+    ],
+    [
+      'privacy',
+      (candidate) => {
+        candidate.privacy.retainRawArtDirection = true;
+      },
+    ],
+    [
+      'public base URL',
+      (candidate) => {
+        candidate.publicBaseUrl = 'https://changed.example.com/explainers';
+      },
+    ],
+    [
+      'durability',
+      (candidate) => {
+        candidate.durability = { strategy: 'commit' };
+      },
+    ],
+    [
+      'publish destination',
+      (candidate) => {
+        candidate.durability.publish.s3Uri = 's3://changed-bucket/explainers';
+      },
+    ],
+    [
+      'mode',
+      (candidate) => {
+        candidate.mode = 'unattended';
+      },
+    ],
+  ];
+
+  for (const [label, mutate] of mutations) {
+    await t.test(label, async () => {
+      const fixture = await suppliedFixture('project-recap');
+      const planSet = mock.fn(async (plannerRequest) =>
+        plannedSet(plannerRequest),
+      );
+      const author = mock.fn(async (authorRequest) =>
+        authorResult(authorRequest),
+      );
+      const durability = mock.fn(async () => {});
+      const publish = mock.fn(async () => {});
+      const interactiveRequest = {
+        ...fixture.request,
+        recapMode: 'artistic',
+        theme: {
+          ...fixture.request.theme,
+          defaultMode: 'light',
+          renderStrategy: 'default-only',
+        },
+        publicBaseUrl: 'https://docs.example.com/explainers',
+        durability: {
+          strategy: 'publish',
+          publish: {
+            schemaVersion: 'explainer-kit.publish-request/v1',
+            provider: 's3-static',
+            s3Uri: 's3://example-bucket/explainers',
+            publicBaseUrl: 'https://docs.example.com/explainers',
+            awsRegion: 'us-east-1',
+            siteRoot: join(fixture.outputRoot, 'project-recap-demo/site'),
+            manifestPath: join(
+              fixture.outputRoot,
+              'project-recap-demo/manifest.json',
+            ),
+          },
+        },
+        mode: 'interactive',
+      };
+      const paused = await runExplainerCore(interactiveRequest, {
+        planSet,
+        author,
+        durability,
+        publish,
+        now: () => NOW,
+      });
+      const planCallsBeforeResume = planSet.mock.callCount();
+      const authorCallsBeforeResume = author.mock.callCount();
+      const changedRequest = structuredClone(interactiveRequest);
+      mutate(changedRequest);
+
+      await rm(join(paused.runRoot, 'source/fact-base.json'));
+      await assert.rejects(
+        runExplainerCore(changedRequest, {
+          planSet,
+          author,
+          durability,
+          publish,
+          now: () => '2026-07-17T20:05:00Z',
+          reviewedSource: {
+            decision: 'approve',
+            reviewedAt: '2026-07-17T20:05:00Z',
+            reviewer: 'operator',
+            resumeToken: paused.approval.resumeToken,
+          },
+        }),
+        (error) => {
+          assert.equal(error.code, 'E_APPROVAL_RESUME', label);
+          assert.match(error.message, /complete canonical request/i, label);
+          return true;
+        },
+        label,
+      );
+      assert.equal(planSet.mock.callCount(), planCallsBeforeResume, label);
+      assert.equal(author.mock.callCount(), authorCallsBeforeResume, label);
+      assert.equal(durability.mock.callCount(), 0, label);
+      assert.equal(publish.mock.callCount(), 0, label);
+    });
+  }
+});
+
+test('interactive resume ignores intentionally redacted art direction drift', async () => {
+  const fixture = await suppliedFixture();
+  const planSet = mock.fn(async (plannerRequest) => plannedSet(plannerRequest));
+  const author = mock.fn(async (authorRequest) => authorResult(authorRequest));
+  const durability = mock.fn(async () => {});
+  const publish = mock.fn(async () => {});
+  const interactiveRequest = {
+    ...fixture.request,
+    mode: 'interactive',
+  };
+  const paused = await runExplainerCore(interactiveRequest, {
+    planSet,
+    author,
+    now: () => NOW,
+  });
+  const planCallsBeforeResume = planSet.mock.callCount();
+  const authorCallsBeforeResume = author.mock.callCount();
+
+  const resumed = await runExplainerCore(
+    {
+      ...interactiveRequest,
+      theme: {
+        ...interactiveRequest.theme,
+        artDirection: 'Changed transient direction',
+      },
+    },
+    {
+      planSet,
+      author,
+      durability,
+      publish,
+      now: () => '2026-07-17T20:05:00Z',
+      reviewedSource: {
+        decision: 'approve',
+        reviewedAt: '2026-07-17T20:05:00Z',
+        reviewer: 'operator',
+        resumeToken: paused.approval.resumeToken,
+      },
+    },
+  );
+
+  assert.equal(resumed.runId, paused.runId);
+  assert.equal(resumed.outcome, 'built-not-durable');
+  assert.equal(planSet.mock.callCount(), planCallsBeforeResume);
+  assert.equal(author.mock.callCount(), authorCallsBeforeResume);
+  assert.equal(durability.mock.callCount(), 0);
+  assert.equal(publish.mock.callCount(), 0);
+});
+
 test('interactive resume rejects a genuine legacy relative-root token before callbacks', async () => {
   const originalCwd = process.cwd();
   const initialCwd = await temporaryDirectory('explainer-relative-initial-');

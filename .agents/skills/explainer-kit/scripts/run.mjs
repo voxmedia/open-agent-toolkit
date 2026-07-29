@@ -41,6 +41,7 @@ import {
   validateSourceBindings,
 } from './lib/recipes.mjs';
 import {
+  canonicalPersistedRunRequest,
   createSetPlanResumeToken,
   initializeRun,
   readSetPlanRecords,
@@ -753,10 +754,6 @@ function normalizeRunRequest(request) {
 
 async function loadResumableRun(request, resumeToken) {
   const normalized = structuredClone(request);
-  normalized.theme = {
-    ...(normalized.theme ?? {}),
-    renderStrategy: normalized.theme?.renderStrategy ?? 'default-only',
-  };
   let canonicalOutputRoot;
   try {
     canonicalOutputRoot = await realpath(resolve(normalized.outputRoot));
@@ -848,24 +845,28 @@ async function loadResumableRun(request, resumeToken) {
     );
   }
 
+  const currentPersistedRequest = canonicalPersistedRunRequest(normalized, {
+    outputRoot: canonicalOutputRoot,
+  });
   if (
-    persistedRequest.slug !== normalized.slug ||
-    persistedRequest.recipe?.id !== normalized.recipe.id ||
-    persistedRequest.recipe?.version !== normalized.recipe.version ||
-    persistedRequest.recapMode !== normalized.recapMode ||
-    persistedRequest.mode !== normalized.mode ||
-    canonicalHash(persistedRequest.factBase) !==
-      canonicalHash(normalized.factBase)
+    canonicalHash(persistedRequest) !== canonicalHash(currentPersistedRequest)
   ) {
     throw codedError(
       'E_APPROVAL_RESUME',
-      'The resumable run does not match the current request identity.',
+      'The resumable run does not match the complete canonical request.',
     );
   }
 
+  const resumedRequest = structuredClone(currentPersistedRequest);
+  if (
+    normalized.theme?.artDirection !== undefined &&
+    resumedRequest.theme.artDirection === undefined
+  ) {
+    resumedRequest.theme.artDirection = normalized.theme.artDirection;
+  }
   return {
     ...resumableRun,
-    request: normalized,
+    request: resumedRequest,
   };
 }
 
