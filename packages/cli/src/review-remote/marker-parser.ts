@@ -26,7 +26,7 @@ const MARKER_BLOCK_PATTERN = new RegExp(
 /** A full 40-character lowercase/uppercase hex SHA. */
 const FULL_SHA_PATTERN = /^[0-9a-fA-F]{40}$/;
 
-export type ReviewInvocation = 'manual' | 'auto';
+export type ReviewInvocation = 'manual' | 'auto' | 'gate';
 
 export interface MarkerBlock {
   /** Always `true` for an OAT provide-remote review; the discriminator. */
@@ -40,8 +40,13 @@ export interface MarkerBlock {
    * `null` value) discriminates project rail from ad-hoc rail.
    */
   oat_project?: string;
-  /** How the review was invoked. Defaults to `manual` when omitted. */
-  oat_review_invocation: ReviewInvocation;
+  /**
+   * How the review was invoked. Missing and unknown values stay undefined so
+   * legacy markers cannot silently acquire lifecycle lineage.
+   */
+  oat_review_invocation?: ReviewInvocation;
+  /** Exact gate target. Required before a gate marker can establish lineage. */
+  oat_gate_target?: string;
   /** Forward-compat bag for unknown marker keys. Omitted when none seen. */
   extras?: Record<string, string>;
 }
@@ -52,6 +57,7 @@ const KNOWN_KEYS = new Set([
   'oat_review_scope',
   'oat_project',
   'oat_review_invocation',
+  'oat_gate_target',
 ]);
 
 /**
@@ -106,19 +112,29 @@ export function parseMarkerBlock(body: string): MarkerBlock | null {
   }
 
   const invocationRaw = raw['oat_review_invocation'];
-  const oat_review_invocation: ReviewInvocation =
-    invocationRaw === 'auto' ? 'auto' : 'manual';
+  const oat_review_invocation: ReviewInvocation | undefined =
+    invocationRaw === 'manual' ||
+    invocationRaw === 'auto' ||
+    invocationRaw === 'gate'
+      ? invocationRaw
+      : undefined;
 
   const block: MarkerBlock = {
     oat_provide_remote: true,
     oat_review_head_sha: headSha,
     oat_review_scope: scope,
-    oat_review_invocation,
   };
+  if (oat_review_invocation !== undefined) {
+    block.oat_review_invocation = oat_review_invocation;
+  }
 
   // Project key existence (not a null value) discriminates the rail.
   if ('oat_project' in raw && raw['oat_project'] !== '') {
     block.oat_project = raw['oat_project'];
+  }
+  const gateTarget = raw['oat_gate_target']?.trim();
+  if (gateTarget) {
+    block.oat_gate_target = gateTarget;
   }
 
   const extras: Record<string, string> = {};

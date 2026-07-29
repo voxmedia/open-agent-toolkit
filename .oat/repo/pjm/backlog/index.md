@@ -82,6 +82,12 @@
   creation, and distinct idle-kill versus hard-cap outcomes. Medium-priority
   workflow maintenance tracks project-scoped gate overrides.
 - High-priority review-efficiency work now tracks skipping redundant reviewer dispatches after narrowly classified, deterministically validated bookkeeping-only fixes in both direct/subagent and gate-originated review flows.
+- The broader high-priority review redesign is tracked separately in
+  `BL-260729-implement-reviewplan-first`: enforce artifact-only intake,
+  metadata-only change mapping, an explicit ReviewPlan, selective evidence
+  lanes, economically justified delegation, bounded deadlines, and a narrower
+  primary replay boundary. PR #185 diagnostics and PR #186 guarded narrowing
+  are prerequisites, not substitutes for this work.
 - Explainer Kit follow-ups from the `explainer-authoring-redesign` closeout are
   deliberately split by kind. `BL-260727-ship-mit-notices-inside` (high) is a
   contained packaging and compliance fix: adapted MIT code ships without its
@@ -108,6 +114,7 @@
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
 | BL-260718-harden-full-surface-gate       | Harden full-surface gate reviews against budget and recursive dispatch | open   | high     | feature | M        |
+| BL-260729-implement-reviewplan-first     | Implement ReviewPlan-first reviewer workflow                           | open   | high     | feature | L        |
 | BL-260727-make-explainer-run-durability  | Make explainer run durability survive ephemeral environments           | open   | high     | task    | M        |
 | BL-260718-mandatory-skill-load-clause    | Mandatory skill-load clause for lifecycle steps that name skills       | open   | high     | task    | S        |
 | BL-260712-serialize-cli-asset-bundling   | Serialize CLI asset bundling with atomic staging                       | open   | high     | task    | S        |

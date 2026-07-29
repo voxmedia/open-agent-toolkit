@@ -41,6 +41,14 @@ copying their content here. -->
   runtime reviewer resolution also disclose effective terminal Fable targets;
   organizations remain responsible for confirming model access and applicable
   retention-policy eligibility.
+- CLI `0.2.25` narrows lifecycle and gate re-reviews by default from a
+  lineage-qualified prior reviewed head; `false` is the explicit full-scope
+  opt-out. Review artifacts and the tracked Reviews ledger preserve validated
+  full-SHA provenance across archival, clones, and worktrees. Missing,
+  conflicting, non-existent, or non-ancestor provenance fails open to full
+  scope, and every re-review reports its resolved range plus
+  empty/bookkeeping-only/substantive classification without using that
+  classification to skip review.
 - CLI `0.2.21` rebuilds Explainer Kit authoring on two per-artifact paths,
   replacing slot-filling that produced structurally thin output. A narrative
   path promotes Markdown from provenance to actual renderer input, so tables,

@@ -54,6 +54,7 @@ You will be given a "Review Scope" block including:
 - **tasks_in_scope**: Task IDs being reviewed (if task/phase scope)
 - **oat_output_mode**: Optional output-sink selector. Absent (or any value other than `structured`) means **artifact mode** — write the review artifact to disk per Step 8. `structured` means **structured-output mode** — return a `StructuredFindings` object in-memory and write NO artifact file (see **Structured-Output Mode**). This key parallels the existing `oat_review_invocation` dispatch-payload naming.
 - **oat_review_invocation**: Optional provenance selector for artifact-mode reviews. Use `manual`, `auto`, or `gate`; default to `manual` when absent.
+- **Code-review provenance**: For artifact-mode code reviews, resolve the authoritative range head with `git rev-parse <authoritative-range-head>^{commit}` and record the resulting full 40-character commit SHA as `oat_review_head_sha`. If the review is narrowed, also record the resolved range, prior artifact path, and prior reviewed head supplied by the caller.
 - **Gate invocation fields**: For `oat_review_invocation: gate`, the prompt supplies exact `oat_gate_run_id`, `oat_gate_target`, `oat_gate_runtime`, `oat_invocation_model`, `oat_invocation_reasoning_effort`, and `oat_invocation_source` values. Copy them verbatim into artifact frontmatter. They describe OAT's configured invocation, not model self-identification.
 - **model_axis**: Optional model dispatch state selected by the orchestrator (`selected:<value>`, `inherited`, `not-applicable`, or `host-auto`)
 - **effort_axis**: Optional effort dispatch state selected by the orchestrator (`selected:<value>`, `provider-default`, `inherited`, `not-applicable`, or `host-auto`)
@@ -356,6 +357,12 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact|analysis }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { project-path }
+# Code-review only: required full 40-character SHA.
+oat_review_head_sha: { authoritative range head commit SHA }
+# Narrowed code-review only: copy the complete resolved provenance chain.
+oat_review_range: { prior reviewed head }..{ authoritative range head }
+oat_prior_review_artifact: { prior artifact path }
+oat_prior_review_head_sha: { prior artifact's full reviewed head commit SHA }
 # Gate-only: copy the exact prompt-provided fields below.
 oat_gate_run_id: { gate run id }
 oat_gate_target: { configured target id }
@@ -456,6 +463,10 @@ Run the `oat-project-review-receive` skill to convert findings into plan tasks.
 ```
 
 Gate parsing contract: artifact-mode reviews, including reviews spawned by `oat gate review`, MUST include either the complete `Findings: {N} critical, {N} important, {N} medium, {N} minor` count line or the standard `## Findings` sections shown above with every severity subsection present.
+
+For every artifact-mode code review, `oat_review_head_sha` is required and must be the full 40-character commit SHA at the head of the authoritative review range. Resolve it with `git rev-parse <authoritative-range-head>^{commit}`. An abbreviated SHA, symbolic ref, or range string is invalid. When the review narrowed, `oat_review_range`, `oat_prior_review_artifact`, and `oat_prior_review_head_sha` are also required; the prior head must likewise be a full 40-character SHA. These code-review fields are independent of the gate-only block and do not apply to artifact, analysis, or structured-output reviews.
+
+For a narrowed review, do not restate requirements-coverage claims that this pass did not itself verify. Reference the prior artifact's coverage or mark inherited coverage rows as inherited so the union of passes remains auditable.
 
 For gate-originated artifacts, all six gate-only fields are required when the prompt supplies gate context. Copy the values exactly. Do not parse the provider command, infer values from the target id, or replace configured values with observed/self-reported identity. Any optional self-report belongs in review prose and is non-authoritative; the gate validates the copied frontmatter against its immutable configured invocation record before applying severity thresholds.
 

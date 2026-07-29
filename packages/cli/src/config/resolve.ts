@@ -109,7 +109,7 @@ const DEFAULT_WORKFLOW_CONFIG = {
     postImplementSequence: null,
     reviewExecutionModel: null,
     autoReviewAtHillCheckpoints: null,
-    autoNarrowReReviewScope: null,
+    autoNarrowReReviewScope: true,
     autoArtifactReview: {
       plan: true,
       analysis: true,

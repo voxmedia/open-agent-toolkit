@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide
-version: 1.3.22
+version: 1.4.0
 description: Use when the user explicitly asks to review an OAT project — e.g. "review project", "review the project", "run project review", or confirms a previously offered review. Do NOT auto-invoke on completed work alone. Resolves a project review scope and offers before running.
 disable-model-invocation: false
 user-invocable: true
@@ -309,35 +309,74 @@ If review type is `code`, use the scope resolution below.
 
 **Step 3a: Detect Re-Review Context**
 
-Before resolving scope, check if this is a re-review of fixes from a prior review cycle:
+After parsing the requested scope, distinguish an explicit range override from a
+nominal project scope. An explicitly supplied `base_sha=<sha>` or
+`<sha1>..<sha2>` range takes priority and skips automatic narrowing. Nominal
+scope identifiers (`pNN`, `pNN-pMM`, `final`, and task IDs) identify the review
+scope but do not override re-review narrowing.
 
-1. Scan `plan.md` for tasks tagged with `(review)` in the scope being reviewed (e.g., `(p02-review)` fix tasks for a `p02` phase review or `(p02-p03-review)` for a contiguous phase-range review).
-2. If `(review)` fix tasks exist **and** their status is `completed`:
-   - This is a re-review. Before prompting, check the workflow preference:
+For every code review, detect re-review context independently from deciding
+whether to narrow:
 
-     ```bash
-     AUTO_NARROW=$(oat config get workflow.autoNarrowReReviewScope 2>/dev/null || true)
-     ```
+1. Set `REVIEW_HEAD` to the full commit from
+   `git rev-parse HEAD^{commit}`. Resolve the current lineage:
+   - `manual` and `auto` invocations use lifecycle lineage.
+   - A `gate` invocation uses gate lineage qualified by its exact
+     `oat_gate_target`.
+2. Resolve `workflow.autoNarrowReReviewScope` before any prior-review lookup or
+   Git guard. Unset and `true` enable automatic narrowing; `false` disables it.
+   Do not perform candidate work yet.
+3. Find the newest prior completed code review for the same project, exact
+   nominal scope, and lineage. Do this even when an explicit range override was
+   supplied. If one exists, set `IS_RE_REVIEW=true`. Lifecycle lineage treats
+   `manual` and `auto` as interchangeable. Gate lineage matches only a prior
+   `gate` review with the same exact gate target; it never matches a lifecycle
+   review or another gate target.
+4. If an explicit range override was supplied, resolve that exact range through
+   the explicit-input rules below, set the resolution reason to
+   `explicit base/range override`, and skip automatic narrowing.
+5. Otherwise, when the resolved preference is `false`, set the resolution
+   reason to `narrowing disabled`, skip all prior-head candidate lookup and
+   guards, and continue to normal full-scope resolution. Do not replace that
+   reason with a provenance or guard reason.
+6. Only when automatic narrowing is enabled, resolve `PRIOR_REVIEWED_HEAD` from
+   these provenance sources:
+   - First inspect the matching prior review artifact at its active path or
+     locally archived counterpart and read its full `oat_review_head_sha`.
+   - Then inspect the matching append-ordered event row in the tracked
+     `plan.md` Reviews table and read its `Reviewed Head`. Match row provenance
+     by `Scope`, `Type=code`, and invocation lineage: `manual` and `auto` are
+     interchangeable lifecycle values; `gate` matches only `gate` with the same
+     exact `Gate Target`. Legacy rows without a usable lineage qualifier are
+     ineligible.
+   - When both matching sources exist, they must name the same reviewed head.
+     If they disagree, do not prefer either source.
+   - When the artifact is absent (for example, after receive/archive), use the
+     matching tracked row. When neither source yields a candidate, this is an
+     initial review or provenance is unavailable.
+7. Accept a candidate only when it is exactly 40 hexadecimal characters and
+   both guards pass:
 
-     - **If `AUTO_NARROW` is `true`:** Auto-narrow. Print `Re-review scope: narrowed to fix commits (from workflow.autoNarrowReReviewScope).` Gather only the commits for completed `(review)` fix tasks (see below). Skip the prompt.
-     - **If `AUTO_NARROW` is `false`:** Use full scope. Print `Re-review scope: full (from workflow.autoNarrowReReviewScope).` Skip the prompt and proceed with full scope resolution below.
-     - **If unset:** Fall through to the standard prompt.
+   ```bash
+   git cat-file -e "${PRIOR_REVIEWED_HEAD}^{commit}" &&
+     git merge-base --is-ancestor "$PRIOR_REVIEWED_HEAD" "$REVIEW_HEAD"
+   ```
 
-   - Standard prompt (when preference is unset):
+   If accepted, the narrowed range is exactly
+   `SCOPE_RANGE="$PRIOR_REVIEWED_HEAD..$REVIEW_HEAD"`. Mark the range resolved
+   and skip the normal scope-resolution rules below.
 
-     ```
-     Detected completed review fix tasks for this scope:
-     - {task IDs and descriptions}
+8. Fail open to normal full-scope resolution when this is an initial review,
+   neither provenance source yields a valid candidate, the sources disagree,
+   the commit does not exist, or the ancestry guard fails. State the specific
+   fallback reason; never infer narrowing from ambiguous or legacy lineage.
 
-     Scope to fix task commits only? (Y/n)
-     ```
+If no valid guarded range was resolved, continue with normal full-scope
+resolution automatically. The re-review path has no interactive narrowing
+decision.
 
-   - **If yes (default):** gather only the commits associated with those fix tasks using commit convention grep (e.g., `git log --oneline --grep="\(pNN-tNN\)" HEAD~50..HEAD` for each fix task ID). Set `SCOPE_RANGE` to cover only those commits.
-   - **If no:** proceed with full scope resolution below (re-review everything).
-
-3. If no `(review)` fix tasks exist, or they are not yet completed, proceed with normal scope resolution.
-
-**Priority order for scope resolution:**
+**Priority order for scope resolution (only when Step 3a did not resolve a
+narrowed range):**
 
 1. **Explicit user input (preferred):**
    - `base_sha=<sha>` → review range is `<sha>..HEAD`
@@ -386,6 +425,32 @@ Before resolving scope, check if this is a re-review of fixes from a prior revie
    MERGE_BASE=$(git merge-base origin/main HEAD 2>/dev/null || git merge-base main HEAD 2>/dev/null)
    SCOPE_RANGE="$MERGE_BASE..HEAD"
    ```
+
+**Step 3b: Classify and Report Re-Review Resolution**
+
+After `SCOPE_RANGE` is final, classify it for reporting whenever
+`IS_RE_REVIEW=true`, including when an explicit base or SHA-range override
+supplied the exact final range:
+
+- `empty`: `git diff --name-only "$SCOPE_RANGE"` returns no files.
+- `bookkeeping-only`: every changed path is inside the exact active project
+  prefix `"$PROJECT_RELATIVE/"`, where `PROJECT_RELATIVE` is the path from
+  `git rev-parse --show-toplevel` to `PROJECT_PATH`.
+- `substantive`: any changed path is outside that project prefix. If changed
+  files cannot be enumerated, conservatively use `substantive` and include
+  `changed-files-unavailable` in the reason.
+
+Classification is reporting-only; all three classifications still dispatch the
+review over the resolved range.
+
+Print exactly one re-review resolution line:
+
+```
+Re-review scope: range={SCOPE_RANGE}; classification={empty|bookkeeping-only|substantive}; reason={explicit base/range override | narrowing disabled | no usable prior reviewed head | provenance disagreement | prior commit missing | prior commit not an ancestor | narrowed from guarded prior reviewed head | changed-files-unavailable plus the applicable resolution reason}.
+```
+
+The reason must state why narrowing applied or why full scope was selected. Do
+not print a second narrowing-decision line elsewhere.
 
 ### Step 4: Get Files Changed
 
@@ -509,6 +574,17 @@ Build the "Review Scope" metadata for the reviewer:
 
 **Commits (code review only):**
 {git log --oneline for SCOPE_RANGE}
+
+**Narrowed Review Provenance (code re-reviews only):**
+
+- Narrowing applied: {yes|no}
+- Prior review artifact: {artifact path from the matching event}
+- Prior reviewed head: {full PRIOR_REVIEWED_HEAD, or unavailable}
+- Resolved range: {SCOPE_RANGE}
+- When narrowing applied, the resulting review artifact must name the prior
+  review artifact and reviewed head it builds on. Treat requirements coverage
+  outside the narrowed range as inherited from that artifact, not re-verified
+  by this pass.
 
 **Deferred Findings Ledger (final scope only):**
 
@@ -766,7 +842,8 @@ When inline is allowed:
 
 - Run "reset protocol":
   1. Re-read required artifacts for current workflow mode from scratch
-  2. Read all files in FILES_CHANGED
+  2. Read all files in `FILES_CHANGED`. For a narrowed re-review, do not expand
+     this back to every file in the nominal full scope.
   3. Apply oat-reviewer checklist inline
   4. Write review artifact
 
@@ -826,6 +903,12 @@ oat_review_scope: { scope }
 oat_review_type: { code|artifact }
 oat_review_invocation: { manual|auto|gate }
 oat_project: { PROJECT_PATH }
+# Code-review only: full 40-character SHA from `git rev-parse <range-head>^{commit}`.
+oat_review_head_sha: { authoritative range head commit SHA }
+# Narrowed code-review only: copy the complete resolved provenance chain.
+oat_review_range: { prior reviewed head }..{ authoritative range head }
+oat_prior_review_artifact: { prior artifact path }
+oat_prior_review_head_sha: { prior artifact's full reviewed head commit SHA }
 # Gate-only: copy the exact prompt-provided fields below.
 oat_gate_run_id: { gate run id }
 oat_gate_target: { configured target id }
@@ -955,11 +1038,26 @@ Record this artifact as one append-ordered review event:
 - `Status`: `received` (receive-review will decide `fixes_added` vs `passed`; `passed` now requires no unresolved Critical/Important/Medium and final deferred-medium disposition when applicable)
 - `Date`: `{today}`
 - `Artifact`: `reviews/{filename}.md`
+- `Reviewed Head`: for code reviews, the full 40-character SHA from
+  `git rev-parse <authoritative-range-head>^{commit}`; `-` for non-code reviews.
+  Never record an abbreviation, symbolic ref, or range string.
+- `Invocation`: for code reviews, the artifact's `oat_review_invocation`
+  (`manual`, `auto`, or `gate`); `-` for non-code reviews.
+- `Gate Target`: for gate code reviews, the exact gate-context
+  `oat_gate_target`; `-` otherwise.
 
 For the first event with this Scope + Type, claim an unbound `pending`
 placeholder only when its Artifact is `-`. Otherwise append a new row for the
 new artifact. Never replace or regress a bound event merely because Scope +
 Type matches; distinct artifact filenames are distinct review events.
+
+Before writing, inspect the table header. A legacy five-column ledger is valid:
+widen its header and separator with `Reviewed Head`, `Invocation`, and
+`Gate Target`, and pad existing rows with `-` in those three cells. For an
+already widened ledger, mutate cells by header name rather than rebuilding the
+row. Preserve every existing row and every trailing cell, including columns
+this skill does not recognize; never rewrite a widened row back to five or
+eight columns.
 
 If plan.md is missing (e.g., spec/design review before planning), skip this update and rely on the review artifact + next-step routing.
 

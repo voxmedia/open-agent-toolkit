@@ -237,6 +237,33 @@ Gate retry rounds use the same orchestration retry limit. Gate independence,
 configured provenance, liveness telemetry, and fail-closed behavior are
 unchanged.
 
+#### Reviews Ledger Mutation Contract
+
+Apply this contract whenever the implementation workflow directly dispositions
+a `## Reviews` event or re-points its artifact during archival or receive
+reconciliation. This includes Step 7 phase/fix outcomes and every checkpoint,
+final-review, gate-receive, and closeout path that mutates a Reviews row:
+
+- Parse the table header and resolve `Scope`, `Type`, `Status`, `Date`,
+  `Artifact`, `Reviewed Head`, `Invocation`, and `Gate Target` by header name;
+  never address a known cell by a fixed position.
+- For a legacy five-column table, append the provenance columns (`Reviewed
+Head`, `Invocation`, and `Gate Target`) to the header and separator, then pad
+  every existing row with `-`. For any shorter row in an already widened table,
+  pad missing cells with `-` through the current header width before mutation.
+- Preserve every unknown column in its original position and preserve every
+  existing known value unless the current operation explicitly advances that
+  cell. Never truncate a row to five, eight, or any other assumed width.
+- Populate missing provenance from the event's validated review artifact:
+  accept `oat_review_head_sha` only as a full 40-character hexadecimal commit
+  SHA, preserve `oat_review_invocation`, and preserve `oat_gate_target` only
+  for a gate invocation. Use `-` when validated provenance is unavailable;
+  never infer it from the current HEAD, reviewer identity, scope, or target.
+- An archive re-point changes only the bound event's `Artifact` cell (and a
+  monotonic status transition when required). It must preserve existing
+  provenance and unknown cells, while filling missing provenance when the
+  source artifact supplies validated values.
+
 ### Parallel Group Execution
 
 For a multi-phase schedule entry:
@@ -278,6 +305,8 @@ After each phase or parallel group:
   `fixes_completed` / `passed` as appropriate;
 - never select review bookkeeping by scope alone, replace an earlier event, or
   move an event status backward;
+- apply the Reviews Ledger Mutation Contract above before every disposition or
+  archive re-point;
 - update `state.md` current task, last commit, and timestamp;
 - remove legacy `oat_execution_mode: subagent-driven`; and
 - preserve any configured retry override.

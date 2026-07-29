@@ -3020,6 +3020,49 @@ describe('oat config', () => {
       expect(process.exitCode).toBe(0);
     });
 
+    it.each([
+      [
+        'workflow.hillCheckpointDefault',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.archiveOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.createPrOnComplete',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.postImplementSequence',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.reviewExecutionModel',
+        'Resolution: local > shared > user > default.',
+      ],
+      [
+        'workflow.autoReviewAtHillCheckpoints',
+        'Resolution: local > shared > user > legacy autoReviewAtCheckpoints > default.',
+      ],
+      [
+        'workflow.autoNarrowReReviewScope',
+        'Resolution: local > shared > user > default.',
+      ],
+    ] as const)(
+      'describe %s reports actual workflow precedence without an env layer',
+      async (key, expectedResolution) => {
+        const root = await createRepoRoot();
+        const { command, capture } = createHarness({ cwd: root });
+
+        await runCommand(command, ['describe', key]);
+
+        expect(capture.info[0]).toContain(expectedResolution);
+        expect(capture.info[0]).not.toContain('Resolution: env >');
+        expect(process.exitCode).toBe(0);
+      },
+    );
+
     it('describe workflow.hillCheckpointDefault shows enum metadata', async () => {
       const root = await createRepoRoot();
       const { command, capture } = createHarness({ cwd: root });
@@ -3044,6 +3087,26 @@ describe('oat config', () => {
       expect(capture.info[0]).toContain('Key: workflow.archiveOnComplete');
       expect(capture.info[0]).toContain('Type: boolean');
       expect(capture.info[0]).toContain('Default: unset');
+      expect(process.exitCode).toBe(0);
+    });
+
+    it('describe workflow.autoNarrowReReviewScope shows enabled-by-default metadata', async () => {
+      const root = await createRepoRoot();
+      const { command, capture } = createHarness({ cwd: root });
+
+      await runCommand(command, [
+        'describe',
+        'workflow.autoNarrowReReviewScope',
+      ]);
+
+      expect(capture.info[0]).toContain(
+        'Key: workflow.autoNarrowReReviewScope',
+      );
+      expect(capture.info[0]).toContain('Type: boolean');
+      expect(capture.info[0]).toContain('Default: true');
+      expect(capture.info[0]).toContain('Narrowing is enabled by default');
+      expect(capture.info[0]).toContain('false opts out');
+      expect(capture.info[0]).not.toContain('When unset, the skill prompts');
       expect(process.exitCode).toBe(0);
     });
 

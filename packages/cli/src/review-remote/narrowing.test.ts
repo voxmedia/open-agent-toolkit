@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
+import { parseMarkerBlock } from './marker-parser';
 import {
   pickNarrowingTarget,
+  priorReviewFromLedger,
+  priorReviewFromMarker,
   type GitInvoker,
   type PriorReview,
+  type ReviewLedgerProvenance,
 } from './narrowing';
 
 const SHA_A = 'a'.repeat(40);
@@ -18,6 +22,7 @@ function review(
     headSha: SHA_A,
     scope: 'ad-hoc',
     invocation: 'manual',
+    lineage: { kind: 'lifecycle' },
     ...overrides,
   };
 }
@@ -27,15 +32,31 @@ function stubGit(opts: {
   exists?: boolean;
   ancestor?: boolean;
   fetch?: boolean;
+  files?: string[];
 }): GitInvoker {
   return {
     objectExists: async () => opts.exists ?? true,
     isAncestor: async () => opts.ancestor ?? true,
     fetchRef: async () => opts.fetch ?? true,
+    changedFiles: async () => opts.files ?? ['src/default.ts'],
   };
 }
 
 const PASSING_GIT = stubGit({ exists: true, ancestor: true });
+
+function ledgerReview(
+  overrides: Partial<ReviewLedgerProvenance> = {},
+): PriorReview {
+  return priorReviewFromLedger({
+    reviewedHead: SHA_A,
+    scope: 'p02',
+    project: '.oat/projects/shared/x',
+    invocation: 'manual',
+    artifact: 'reviews/archived/p02-review.md',
+    submittedAt: '2026-05-01T00:00:00Z',
+    ...overrides,
+  });
+}
 
 describe('pickNarrowingTarget — matching', () => {
   it('returns full-scope-fallback (no-prior) when no prior review matches', async () => {
@@ -44,6 +65,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -68,6 +90,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -105,6 +128,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'project',
       project: '.oat/projects/shared/x',
       scope: 'p02',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -124,6 +148,7 @@ describe('pickNarrowingTarget — matching', () => {
       rail: 'ad-hoc',
       project: null,
       scope: 'ad-hoc',
+      lineage: { kind: 'lifecycle' },
       headSha: HEAD,
       git: PASSING_GIT,
     });
@@ -131,6 +156,403 @@ describe('pickNarrowingTarget — matching', () => {
     if (result.kind === 'narrow-range') {
       expect(result.priorSha).toBe(SHA_B);
     }
+  });
+
+  it('matches a gate review from the same gate target and scope', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'codex-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result.kind).toBe('narrow-range');
+  });
+
+  it('rejects a gate review from a different gate target', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'claude-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('rejects a lifecycle review for a gate invocation', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'gate', target: 'codex-default' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('rejects a gate review for a lifecycle invocation', async () => {
+    const result = await pickNarrowingTarget({
+      reviews: [
+        review({
+          submittedAt: '2026-05-01T00:00:00Z',
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          lineage: { kind: 'gate', target: 'codex-default' },
+        }),
+      ],
+      rail: 'project',
+      project: '.oat/projects/shared/x',
+      scope: 'p02',
+      lineage: { kind: 'lifecycle' },
+      headSha: HEAD,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+});
+
+describe('pickNarrowingTarget — parsed marker lineage composition', () => {
+  function markerReview(lines: string[]): PriorReview {
+    const marker = parseMarkerBlock(
+      `<!-- oat-review-metadata\n${[
+        'oat_provide_remote: true',
+        `oat_review_head_sha: ${SHA_A}`,
+        'oat_review_scope: p02',
+        'oat_project: .oat/projects/shared/x',
+        ...lines,
+      ].join('\n')}\n-->`,
+    );
+    expect(marker).not.toBeNull();
+    if (marker === null) {
+      throw new Error('test marker must parse');
+    }
+    return priorReviewFromMarker(marker, '2026-05-01T00:00:00Z');
+  }
+
+  const base = {
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    headSha: HEAD,
+    git: PASSING_GIT,
+  };
+
+  it('narrows a gate re-review from a parsed same-target gate marker', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-xhigh',
+        ]),
+      ],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(result.kind).toBe('narrow-range');
+  });
+
+  it('rejects parsed gate markers from another target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-high',
+        ]),
+      ],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('keeps parsed gate and lifecycle markers isolated', async () => {
+    const gateForLifecycle = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        markerReview([
+          'oat_review_invocation: gate',
+          'oat_gate_target: cursor-fable-5-xhigh',
+        ]),
+      ],
+      lineage: { kind: 'lifecycle' },
+    });
+    const lifecycleForGate = await pickNarrowingTarget({
+      ...base,
+      reviews: [markerReview(['oat_review_invocation: manual'])],
+      lineage: { kind: 'gate', target: 'cursor-fable-5-xhigh' },
+    });
+
+    expect(gateForLifecycle).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+    expect(lifecycleForGate).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it.each([
+    {
+      name: 'an invocation-less legacy marker',
+      lines: [],
+    },
+    {
+      name: 'an unknown invocation marker',
+      lines: ['oat_review_invocation: future-mode'],
+    },
+    {
+      name: 'a target-less gate marker',
+      lines: ['oat_review_invocation: gate'],
+    },
+  ])('fails open for $name', async ({ lines }) => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [markerReview(lines)],
+      lineage: { kind: 'lifecycle' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+});
+
+describe('pickNarrowingTarget — durable ledger lineage', () => {
+  const base = {
+    reviews: [] as PriorReview[],
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    headSha: HEAD,
+    git: PASSING_GIT,
+  };
+
+  it('fails open when a lifecycle row is the only baseline for a gate invocation', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [ledgerReview()],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('fails open when a gate row belongs to a different target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'claude-default',
+        }),
+      ],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('narrows from a gate row with the same target', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'codex-default',
+        }),
+      ],
+      lineage: { kind: 'gate', target: 'codex-default' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+    });
+  });
+
+  it('fails open when a gate row is the only baseline for a lifecycle invocation', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        ledgerReview({
+          invocation: 'gate',
+          gateTarget: 'codex-default',
+        }),
+      ],
+      lineage: { kind: 'lifecycle' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('fails open for a legacy row with a head but no lineage qualifier', async () => {
+    const legacyRow = priorReviewFromLedger({
+      reviewedHead: SHA_A,
+      scope: 'p02',
+      project: '.oat/projects/shared/x',
+      artifact: 'reviews/archived/p02-review.md',
+      submittedAt: '2026-05-01T00:00:00Z',
+    });
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [legacyRow],
+      lineage: { kind: 'lifecycle' },
+    });
+
+    expect(result).toMatchObject({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+});
+
+describe('pickNarrowingTarget — candidate head validation', () => {
+  const base = {
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    lineage: { kind: 'lifecycle' as const },
+    headSha: HEAD,
+  };
+
+  const guardMustNotRun: GitInvoker = {
+    objectExists: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    isAncestor: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    fetchRef: async () => {
+      throw new Error('invalid candidate must not reach the Git guard');
+    },
+    changedFiles: async () => {
+      throw new Error('invalid candidate must not reach range classification');
+    },
+  };
+
+  it.each([
+    {
+      name: 'an abbreviated artifact-sourced head',
+      candidate: review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: 'abc1234',
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    },
+    {
+      name: 'a symbolic row-sourced head',
+      candidate: priorReviewFromLedger({
+        reviewedHead: 'HEAD',
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+        invocation: 'manual',
+        artifact: 'reviews/archived/p02-review.md',
+        submittedAt: '2026-05-01T00:00:00Z',
+      }),
+    },
+    {
+      name: 'a non-hex artifact-sourced head',
+      candidate: review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: 'z'.repeat(40),
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    },
+  ])('fails open before Git guards for $name', async ({ candidate }) => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [candidate],
+      git: guardMustNotRun,
+    });
+
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'no-prior-review',
+    });
+  });
+
+  it('accepts a valid full 40-character hexadecimal row-sourced head', async () => {
+    const validHead = 'A'.repeat(40);
+    const result = await pickNarrowingTarget({
+      ...base,
+      reviews: [
+        priorReviewFromLedger({
+          reviewedHead: validHead,
+          scope: 'p02',
+          project: '.oat/projects/shared/x',
+          invocation: 'manual',
+          artifact: 'reviews/archived/p02-review.md',
+          submittedAt: '2026-05-01T00:00:00Z',
+        }),
+      ],
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: validHead,
+      headSha: HEAD,
+    });
   });
 });
 
@@ -140,6 +562,7 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
     rail: 'ad-hoc' as const,
     project: null,
     scope: 'ad-hoc',
+    lineage: { kind: 'lifecycle' as const },
     headSha: HEAD,
   };
 
@@ -185,29 +608,96 @@ describe('pickNarrowingTarget — stale-SHA guard', () => {
     }
   });
 
-  it('auto-narrow config never prompts and still falls back on guard failure', async () => {
+  it('narrows without prompting when the preference is unset', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+    });
+
+    expect(result).toMatchObject({ kind: 'narrow-range' });
+    expect(result).not.toHaveProperty('prompted');
+  });
+
+  it('narrows without prompting when the preference is true', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+      narrowingPreference: true,
+    });
+
+    expect(result).toMatchObject({ kind: 'narrow-range' });
+    expect(result).not.toHaveProperty('prompted');
+  });
+
+  it('uses full scope without consulting a prior review when the preference is false', async () => {
+    const git: GitInvoker = {
+      objectExists: async () => {
+        throw new Error('guard must not run');
+      },
+      isAncestor: async () => {
+        throw new Error('guard must not run');
+      },
+      fetchRef: async () => {
+        throw new Error('guard must not run');
+      },
+      changedFiles: async () => {
+        throw new Error('guard must not run');
+      },
+    };
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      git,
+      narrowingPreference: false,
+    });
+
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'narrowing-disabled',
+    });
+  });
+
+  it('force-narrows when the preference is false and the guard passes', async () => {
+    const result = await pickNarrowingTarget({
+      ...base,
+      git: PASSING_GIT,
+      forceNarrow: true,
+      narrowingPreference: false,
+    });
+
+    expect(result).toMatchObject({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+    });
+  });
+
+  it('hard-errors when force-narrow overrides false and the guard fails', async () => {
     const result = await pickNarrowingTarget({
       ...base,
       git: stubGit({ exists: true, ancestor: false }),
-      autoNarrow: true,
+      forceNarrow: true,
+      narrowingPreference: false,
     });
-    expect(result.kind).toBe('full-scope-fallback');
-    if (result.kind === 'full-scope-fallback') {
-      expect(result.reason).toBe('stale-sha');
-      expect(result.prompted).toBe(false);
-    }
+
+    expect(result).toEqual({
+      kind: 'hard-error',
+      reason: 'stale-sha',
+      priorSha: SHA_A,
+    });
   });
 
-  it('auto-narrow config never prompts on a successful narrow', async () => {
+  it('preserves the guard failure reason in the full-scope fallback', async () => {
     const result = await pickNarrowingTarget({
       ...base,
-      git: stubGit({ exists: true, ancestor: true }),
-      autoNarrow: true,
+      git: stubGit({ exists: true, ancestor: false }),
     });
-    expect(result.kind).toBe('narrow-range');
-    if (result.kind === 'narrow-range') {
-      expect(result.prompted).toBe(false);
-    }
+
+    expect(result).toEqual({
+      kind: 'full-scope-fallback',
+      reason: 'stale-sha',
+      priorSha: SHA_A,
+    });
   });
 });
 
@@ -217,6 +707,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
     rail: 'ad-hoc' as const,
     project: null,
     scope: 'ad-hoc',
+    lineage: { kind: 'lifecycle' as const },
     headSha: HEAD,
   };
 
@@ -230,6 +721,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
         fetched = true;
         return true;
       },
+      changedFiles: async () => ['src/default.ts'],
     };
     const result = await pickNarrowingTarget({
       ...base,
@@ -244,6 +736,7 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
       objectExists: async () => false,
       isAncestor: async () => true,
       fetchRef: async () => false,
+      changedFiles: async () => ['src/default.ts'],
     };
     const result = await pickNarrowingTarget({
       ...base,
@@ -254,5 +747,89 @@ describe('pickNarrowingTarget — diff-only fetch path', () => {
     if (result.kind === 'full-scope-fallback') {
       expect(result.reason).toBe('stale-sha');
     }
+  });
+});
+
+describe('pickNarrowingTarget — range classification', () => {
+  const base = {
+    reviews: [
+      review({
+        submittedAt: '2026-05-01T00:00:00Z',
+        headSha: SHA_A,
+        scope: 'p02',
+        project: '.oat/projects/shared/x',
+      }),
+    ],
+    rail: 'project' as const,
+    project: '.oat/projects/shared/x',
+    scope: 'p02',
+    lineage: { kind: 'lifecycle' as const },
+    headSha: HEAD,
+  };
+
+  it.each([
+    {
+      name: 'a range with no commits',
+      files: [],
+      expected: 'empty',
+    },
+    {
+      name: "a range touching only the project's tracking directory",
+      files: [
+        '.oat/projects/shared/x/state.md',
+        '.oat/projects/shared/x/reviews/review.md',
+      ],
+      expected: 'bookkeeping-only',
+    },
+    {
+      name: 'a range touching a bundled template',
+      files: ['.oat/templates/plan.md'],
+      expected: 'substantive',
+    },
+    {
+      name: 'a range touching a durable repository reference',
+      files: ['.oat/repo/references/current.md'],
+      expected: 'substantive',
+    },
+    {
+      name: 'a range mixing project tracking and source files',
+      files: ['.oat/projects/shared/x/state.md', 'packages/cli/src/index.ts'],
+      expected: 'substantive',
+    },
+  ])(
+    'classifies $name and keeps it dispatchable',
+    async ({ files, expected }) => {
+      const result = await pickNarrowingTarget({
+        ...base,
+        git: stubGit({ files }),
+      });
+
+      expect(result).toMatchObject({
+        kind: 'narrow-range',
+        classification: expected,
+        priorSha: SHA_A,
+        headSha: HEAD,
+      });
+    },
+  );
+
+  it('keeps the range dispatchable when changed-file classification fails', async () => {
+    const git = stubGit({});
+    git.changedFiles = async () => {
+      throw new Error('diff unavailable');
+    };
+
+    const result = await pickNarrowingTarget({
+      ...base,
+      git,
+    });
+
+    expect(result).toEqual({
+      kind: 'narrow-range',
+      priorSha: SHA_A,
+      headSha: HEAD,
+      classification: 'substantive',
+      classificationReason: 'changed-files-unavailable',
+    });
   });
 });

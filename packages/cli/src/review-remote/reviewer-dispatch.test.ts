@@ -101,7 +101,6 @@ describe('buildDispatchPayload', () => {
           kind: 'narrow-range',
           priorSha: '0'.repeat(40),
           headSha: HEAD_SHA,
-          prompted: false,
         },
       }),
     );
