@@ -1170,6 +1170,14 @@ test(
   },
 );
 
+test(
+  'non-linear golden benchmark preserves branches, fan-in, and cycles through the rebuilt artistic runtime',
+  { timeout: 120_000 },
+  async () => {
+    await runGoldenBenchmark('non-linear');
+  },
+);
+
 test('loads all three portable golden fixture descriptors', async () => {
   const fixtures = await Promise.all(
     caseIds.map((caseId) => loadGoldenFixture(caseId)),

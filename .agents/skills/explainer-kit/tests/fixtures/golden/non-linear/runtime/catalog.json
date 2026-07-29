@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.initiative-catalog/v1",
+  "runId": "run-605a9930-e435-4c63-b70e-ade5188ab99f",
+  "slug": "non-linear",
+  "recipe": {
+    "id": "project-recap",
+    "version": "1"
+  },
+  "createdAt": "2026-07-29T16:00:00.000Z",
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "status": "built",
+      "renderedPath": "site/initiatives/non-linear/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:861a1dc54da38877f5c0566cfb0cc4ab7f8627168fa345600cac7b59c5fe3d16",
+      "url": "https://example.com/golden/initiatives/non-linear/index.html"
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "status": "built",
+      "renderedPath": "site/diagrams/non-linear/architecture/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:9b32ea854d15b253edd88ff546318ee2cb932accea8c383b40156cc63a4f2657",
+      "url": "https://example.com/golden/diagrams/non-linear/architecture/index.html"
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "status": "built",
+      "renderedPath": "site/decks/non-linear/deck/index.html",
+      "mediaType": "text/html",
+      "hash": "sha256:618995ec9e9e6c4943549c474bdbf3363fdd6b1198260f25e6fa934d3c00067e",
+      "url": "https://example.com/golden/decks/non-linear/deck/index.html"
+    }
+  ],
+  "sourceBacklinks": [
+    {
+      "sourceId": "architecture-record",
+      "url": "https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/evidence/source-record.json#L1-L200"
+    }
+  ]
+}

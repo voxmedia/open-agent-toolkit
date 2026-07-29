@@ -1,0 +1,45 @@
+{
+  "schemaVersion": "explainer-kit.manifest/v1",
+  "outcome": "built-not-durable",
+  "source": {
+    "factBasePath": "source/fact-base.json",
+    "factBaseHash": "sha256:13a494d36efac9898fe6eafc379b7ef2a2d6b548eeec8a2d62f2cc5cd80524a4",
+    "inputHashes": {
+      "inputs/architecture-record": "sha256:2271d9b8bd7735c9aee938ad16f275f4d823677f9f135df58539bd28f55cd5f2"
+    },
+    "backlinks": [
+      {
+        "sourceId": "architecture-record",
+        "url": "https://github.com/open-agent-toolkit/golden-fixtures/blob/5175cf26ca7d586eac79bbe4f472bc90d75dde9f/.agents/skills/explainer-kit/tests/fixtures/golden/non-linear/evidence/source-record.json#L1-L200"
+      }
+    ],
+    "authorResultPaths": [
+      "source/author/project-recap.json",
+      "source/author/architecture.json",
+      "source/author/deck.json"
+    ]
+  },
+  "artifacts": [
+    {
+      "id": "project-recap",
+      "type": "hub",
+      "renderedPath": "site/initiatives/non-linear/index.html",
+      "hash": "sha256:861a1dc54da38877f5c0566cfb0cc4ab7f8627168fa345600cac7b59c5fe3d16",
+      "status": "built"
+    },
+    {
+      "id": "architecture",
+      "type": "diagram",
+      "renderedPath": "site/diagrams/non-linear/architecture/index.html",
+      "hash": "sha256:9b32ea854d15b253edd88ff546318ee2cb932accea8c383b40156cc63a4f2657",
+      "status": "built"
+    },
+    {
+      "id": "deck",
+      "type": "deck",
+      "renderedPath": "site/decks/non-linear/deck/index.html",
+      "hash": "sha256:618995ec9e9e6c4943549c474bdbf3363fdd6b1198260f25e6fa934d3c00067e",
+      "status": "built"
+    }
+  ]
+}

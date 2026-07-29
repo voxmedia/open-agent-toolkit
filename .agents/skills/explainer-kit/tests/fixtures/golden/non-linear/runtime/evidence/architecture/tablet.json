@@ -1,0 +1,30 @@
+{
+  "schemaVersion": "explainer-kit.browser-evidence/v1",
+  "artifactId": "architecture",
+  "viewport": "tablet",
+  "viewportSize": {
+    "width": 768,
+    "height": 1024
+  },
+  "scenario": "default",
+  "capture": {
+    "format": "png",
+    "fullPage": false,
+    "reducedMotion": "reduce",
+    "animationsDisabled": true
+  },
+  "screenshotPath": "qa/browser/architecture/tablet.png",
+  "metrics": {
+    "pageOverflowX": false,
+    "clippedX": [],
+    "viewportClipped": [],
+    "unreadableHeadings": [],
+    "animationsDisabled": true,
+    "reducedMotion": true,
+    "deckLayout": null,
+    "themeToggle": null,
+    "keyboard": {
+      "tab": true
+    }
+  }
+}
