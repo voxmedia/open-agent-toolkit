@@ -88,6 +88,10 @@ Final review passed; artifact: reviews/code-final-review-2026-07-29T150100Z.md; 
 
 target=cursor-fable-5-xhigh threshold=important findings=critical:0,important:0,medium:1,minor:1 exit=0 status=ok artifact=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md
 
+### 2026-07-29 · structural · oat-project-review-receive · final-gate
+
+Configured exit gate received and allowed; M1 deferred with a durable follow-up trigger, m1 corrected, artifact archived at reviews/archived/final-review-2026-07-29T152853Z.md.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

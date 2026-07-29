@@ -36,9 +36,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -59,23 +59,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=1). Run oat-project-review-receive for .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=ade10742-63f4-4884-9133-a9dac76d5449; handoff=Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=1). Run oat-project-review-receive for .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md to disposition them before marking the final review row passed.; source=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md; scope=final; type=code; filename=final-review-2026-07-29T152853Z.md'
   receive_source_artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T152853Z.md
   receive_archived_artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/archived/final-review-2026-07-29T152853Z.md
   receive_event_identity: 'final|code|final-review-2026-07-29T152853Z.md'
   receive_pre_head: 477b5b5b2cbabb097a46cbcc5604aa14443bb244
-  receive_commit: null
+  receive_commit: 9fd85f4d0e684110f9ac3b731aba746afd883e24
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-07-29T15:32:00Z'
+  updated_at: '2026-07-29T15:33:00Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T15:32:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T15:33:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Final review passed; configured exit gate pending
+Implementation - Exit gate allowed; closeout sequence pending
 
 ## Artifacts
 
@@ -141,7 +141,10 @@ Implementation - Final review passed; configured exit gate pending
 - ✓ Minor archived-reference and PJM doctor status records aligned
 - ✓ Mandatory final review passed with one non-blocking Medium test-matrix
   follow-up
-- → Awaiting configured exit gate and HiLL closeout
+- ✓ Configured cross-family exit gate passed at the Important threshold
+- ✓ Gate review received; Medium deferral recorded and Minor artifact drift
+  corrected
+- → Awaiting stored pre-approval sequence and HiLL closeout
 
 ## Blockers
 
@@ -149,5 +152,5 @@ None
 
 ## Next Milestone
 
-Resolve and run the configured implementation exit gate, then complete the HiLL
+Snapshot and run the configured pre-approval sequence, then complete the HiLL
 closeout

@@ -868,6 +868,17 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Pre-receive head:** `477b5b5b2cbabb097a46cbcc5604aa14443bb244`
 - **State:** receive intent persisted before judgment-sweep disposition
 
+#### Configured Exit Gate — receive completed
+
+- **Run:** `ade10742-63f4-4884-9133-a9dac76d5449`
+- **Receive commit:** `9fd85f4d0e684110f9ac3b731aba746afd883e24`
+- **Archived artifact:**
+  `reviews/archived/final-review-2026-07-29T152853Z.md`
+- **Review event:** exact gate event advanced from `received` to `passed`
+- **Disposition:** M1 explicitly deferred with a durable trigger; m1 addressed
+  by removing contradictory template placeholders
+- **Gate state:** allowed / passed
+
 <!-- orchestration-runs-end -->
 
 ---
