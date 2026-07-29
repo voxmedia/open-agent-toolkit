@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t12
+oat_current_task_id: p04-review
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |    12 |     11/12 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |    12 |     12/12 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 52/57 tasks completed
+**Total:** 53/57 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -263,7 +263,7 @@ oat_generated: false
 - [x] p04-t09 — Preserve the resolved output root across resume (`0158516b`)
 - [x] p04-t10 — Verify complete artistic graph semantics (`995c38a9`)
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
-- [ ] p04-t12 — Bind resume identity to the original canonical output root
+- [x] p04-t12 — Bind resume identity to the original canonical output root (`3b7b43b2`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -793,7 +793,29 @@ oat_generated: false
 - Review-remediation attempt: 3/3
 - Scope: bind resume identity to the original persisted canonical output root
   before retained package adoption
+- Outcome: `DONE`
+- Commit: `3b7b43b24e6d14813963bdc97e17d6b6175a00ef`
+- Verification: focused 2/2, resume invariants 6/6, core integration 62/62,
+  p03/p04 union 429/429, CLI contracts 77/77, and explainer smoke 8/8
+- Exact I4-R2 probe rejected configured-root retargeting with
+  `E_APPROVAL_RESUME` before durability while stable roots and changed-CWD
+  compatibility remained green
+- Repository and five-package/65-measurement release gates passed
+- Worktree: clean; tracking and review artifacts untouched
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 25 — Phase p04 final remediation re-review
+
+- Request: `explainer-improvements-p04-review-r3-20260729T073000Z`
+- Launch intent: persisted
+- Base: `f2d3ecc775fd9f85cfe8568afab8212da12305b3`
+- Reviewed head: `3b7b43b24e6d14813963bdc97e17d6b6175a00ef`
+- Source artifact: `reviews/20260729-p04-code-review-r2.md`
+- Planned artifact: `reviews/20260729-p04-code-review-r3.md`
+- Review-remediation attempt: 3/3
+- Scope: I4-R2, p04-t12, and regression checks for every previously resolved
+  Phase p04 finding
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
