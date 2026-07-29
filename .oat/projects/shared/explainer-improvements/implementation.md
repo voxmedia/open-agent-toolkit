@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t01
+oat_current_task_id: p03-t21
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | review_pending |    20 |     20/20 |
-| p04   | pending        |     3 |       0/3 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | fixes_pending |    21 |     20/21 |
+| p04   | pending       |     3 |       0/3 |
+| p05   | pending       |     4 |       0/4 |
 
-**Total:** 40/47 tasks completed
+**Total:** 40/48 tasks completed
 
 ---
 
@@ -176,6 +176,7 @@ oat_generated: false
 - [x] p03-t18 — Complete the review-gate failure matrix (`eea0172f`)
 - [x] p03-t19 — Align explainer and public release versions (`acdc8109`)
 - [x] p03-t20 — Align rebuildability with the canonical coverage release (`8317ed30`)
+- [ ] p03-t21 — Bind decoded image geometry through visual review
 
 ### Phase Implementation Summary
 
@@ -238,6 +239,9 @@ oat_generated: false
 - p03-t20 aligned the rebuildability fixture with the released core and
   mode-aware coverage contract. The expanded Phase p03 union and all
   repository, smoke, and release gates pass.
+- Fresh re-review attempt 2/3 resolved the canonical package-coverage and
+  failure-matrix findings, but found that the decoded screenshot identity
+  omitted geometry. The final remediation attempt 3/3 is bounded as p03-t21.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -543,7 +547,26 @@ oat_generated: false
 - Source artifact: `reviews/20260728-p03-code-review-r1.md`
 - Planned artifact: `reviews/20260728-p03-code-review-r2.md`
 - Scope: C1-R1, I3-R1, M1-R1, and p03-t16 through p03-t20
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260728-p03-code-review-r2.md`
+- Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
+- Resolved: full PNG decoding, canonical package coverage, partial-handoff
+  truth table, untouched cross-consumer package, failure matrix, and release
+  alignment
+- Blocking: decoded screenshot identity hashes reconstructed pixels but omits
+  dimensions/profile, permitting a geometry reshape with identical flat bytes
 - Dispatch: scope=p03 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+
+### Run 13 — Phase p03 review remediation attempt 3
+
+- Request: `explainer-improvements-p03-fix-r3-20260729T012500Z`
+- Launch intent: pending root tracking commit
+- Task: p03-t21
+- Source artifact: `reviews/20260728-p03-code-review-r2.md`
+- Review-remediation attempt: 3/3
+- Scope: bind decoded geometry/profile and reconstructed pixels across QA and
+  pre-critic re-decoding
+- Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 
@@ -577,6 +600,7 @@ oat_generated: false
 | p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                 | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers | core integration tests                 | p03-t14          |
 | p03-t14 verification  | plan p03-t14    | Canonical adapter 1.0.4 is aligned across validation    | Add bounded p03-t15                 | The smoke wrapper retained an independent 1.0.3 assertion                                                          | full repository test                   | p03-t15          |
 | p03 re-review R1      | p03 re-review   | Remediation closes all original blocking findings       | Add p03-t16 through p03-t19         | Pseudo-PNGs remain accepted and package coverage is duplicated/inconsistent outside success                        | p03 re-review artifact                 | p03-t16–p03-t19  |
+| p03 re-review R2      | p03 re-review   | Full decoding binds the screenshot through review       | Add bounded p03-t21                 | Pixel-only decoded hash permits geometry changes with identical flat bytes                                         | p03 re-review artifact                 | p03-t21          |
 
 ## Test Results
 
@@ -590,7 +614,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 47 tasks and the final review._
+_Fill from implementation evidence after all 48 tasks and the final review._
 
 ## References
 

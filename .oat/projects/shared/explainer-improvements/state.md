@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p03-t21
 oat_last_commit: 8317ed30f02b6aac567db1975c6f8bbc2e3b9b93
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -82,7 +82,7 @@ oat_generated: false
 
 ## Current Phase
 
-Phase p03 remediation re-review attempt 2 of 3 pending
+Phase p03 review remediation attempt 3 of 3 pending
 
 ## Artifacts
 
@@ -98,7 +98,7 @@ Phase p03 remediation re-review attempt 2 of 3 pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 47 tasks currently tracked
+- ✓ Five phases / 48 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -182,7 +182,10 @@ Phase p03 remediation re-review attempt 2 of 3 pending
 - ✓ CLI validation passed 192/192 and smoke tests passed 7/7
 - ✓ Repository check, lint, format, type-check, build, full test, and release
   validation gates passed
-- ⧗ Fresh narrowed Phase p03 re-review attempt 2/3 is ready to launch
+- ✓ Fresh narrowed Phase p03 re-review attempt 2/3 completed
+- ✓ Package coverage and failure-matrix findings are resolved
+- ⧗ Re-review remained blocked on one Critical decoded-geometry binding gap
+- ⧗ p03-t21 is bounded as the final remediation attempt 3/3
 
 ## Blockers
 
@@ -190,5 +193,5 @@ None
 
 ## Next Milestone
 
-Run the fresh narrowed Phase p03 re-review. If it passes, close Phase p03 and
-continue directly to p04-t01.
+Execute p03-t21 as remediation attempt 3/3, rerun root verification, and
+perform the final narrowed Phase p03 re-review.

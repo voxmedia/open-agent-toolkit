@@ -1336,6 +1336,38 @@ the same mode-aware canonical package contract as production consumers.
 
 ---
 
+### Task p03-t21: Bind decoded image geometry through visual review
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/png.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/png.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED regression that validates a `320x640` PNG during QA, replaces it
+   before visual review with a valid `640x320` PNG containing identical flat
+   pixel bytes, and requires rejection before critic invocation.
+2. Define the decoded screenshot identity over canonical width, height, bit
+   depth, color type/channels, and reconstructed pixel bytes rather than pixels
+   alone.
+3. Carry that complete decoded identity from browser QA and compare it after
+   re-decoding immediately before critic invocation; preserve the independent
+   raw-byte request and immutable-package hashes.
+4. Run focused PNG, QA, visual-review/core integration tests, the expanded
+   Phase p03 union, and all repository/release gates.
+5. Commit as `fix(p03-t21): bind decoded image geometry`.
+
+**Acceptance:** A screenshot cannot change decoded geometry or supported image
+profile between QA and visual review while preserving its authenticated
+identity, even when flat pixel bytes are identical.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams
