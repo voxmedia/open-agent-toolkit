@@ -2069,24 +2069,24 @@ archive, and visual-review bindings; fixture or forged identities fail closed.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                               |
-| ------ | -------- | --------------- | ---------- | -------------------------------------- |
-| p01    | code     | passed          | 2026-07-28 | reviews/20260728-p01-code-review.md    |
-| p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review.md    |
-| p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review-r1.md |
-| p02    | code     | passed          | 2026-07-28 | reviews/20260728-p02-code-review-r2.md |
-| p03    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p03-code-review.md    |
-| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260728-p04-code-review.md    |
-| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r1.md |
-| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r2.md |
-| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
-| p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r4.md |
-| p04    | code     | passed          | 2026-07-29 | reviews/20260729-p04-code-review-r5.md |
-| p05    | code     | fixes_completed | 2026-07-29 | reviews/20260729-final-code-review.md  |
-| final  | code     | fixes_completed | 2026-07-29 | reviews/20260729-final-code-review.md  |
-| spec   | artifact | pending         | -          | -                                      |
-| design | artifact | pending         | -          | -                                      |
-| plan   | artifact | passed          | 2026-07-28 | -                                      |
+| Scope  | Type     | Status          | Date       | Artifact                                        |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------- |
+| p01    | code     | passed          | 2026-07-28 | reviews/archived/20260728-p01-code-review.md    |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/archived/20260728-p02-code-review.md    |
+| p02    | code     | fixes_completed | 2026-07-28 | reviews/archived/20260728-p02-code-review-r1.md |
+| p02    | code     | passed          | 2026-07-28 | reviews/archived/20260728-p02-code-review-r2.md |
+| p03    | code     | fixes_added     | 2026-07-28 | reviews/archived/20260728-p03-code-review.md    |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260728-p04-code-review.md    |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-p04-code-review-r1.md |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-p04-code-review-r2.md |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-p04-code-review-r3.md |
+| p04    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-p04-code-review-r4.md |
+| p04    | code     | passed          | 2026-07-29 | reviews/archived/20260729-p04-code-review-r5.md |
+| p05    | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-final-code-review.md  |
+| final  | code     | fixes_completed | 2026-07-29 | reviews/archived/20260729-final-code-review.md  |
+| spec   | artifact | pending         | -          | -                                               |
+| design | artifact | pending         | -          | -                                               |
+| plan   | artifact | passed          | 2026-07-28 | -                                               |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`.

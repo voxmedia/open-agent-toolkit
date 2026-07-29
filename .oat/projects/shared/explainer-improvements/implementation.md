@@ -67,7 +67,7 @@ oat_generated: false
 ### Phase Review
 
 - Request: `explainer-improvements-p01-review-20260728T030636Z`
-- Artifact: `reviews/20260728-p01-code-review.md`
+- Artifact: `reviews/archived/20260728-p01-code-review.md`
 - Initial verdict: `BLOCKED` — 0 Critical, 2 Important, 3 Medium, 0 Minor
 - Remediation verdict: `PASS` — 0 Critical, 0 Important, 1 Medium, 0 Minor
 - Verified remediation range: `d2a2af8c1291d46174a72c16cce925129e5252f6..16d314f691572ea9f5eadea0802429ea5513d8a1`
@@ -130,7 +130,7 @@ oat_generated: false
 ### Phase Review
 
 - Request: `explainer-improvements-p02-review-20260728T053500Z`
-- Artifact: `reviews/20260728-p02-code-review.md`
+- Artifact: `reviews/archived/20260728-p02-code-review.md`
 - Verdict: `BLOCKED` — 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Blocking fixes: p02-t08 through p02-t12
 - Operator override permits up to three bounded phase/code review remediation
@@ -139,7 +139,7 @@ oat_generated: false
   `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
 - Root verification: complete Phase p02 union 138/138 and release validation
   passed with a clean worktree.
-- Fresh re-review artifact: `reviews/20260728-p02-code-review-r1.md`
+- Fresh re-review artifact: `reviews/archived/20260728-p02-code-review-r1.md`
 - Re-review verdict: `BLOCKED` — 0 Critical, 1 Important, 0 Medium, 0 Minor.
   Four original findings are resolved; coordinated cross-record set-plan
   mutation remains accepted because no immutable value crosses the approval
@@ -148,7 +148,7 @@ oat_generated: false
   attempt 2/3.
 - Root verification passed the complete Phase p02 union (141/141) and
   `pnpm release:validate`.
-- Final re-review artifact: `reviews/20260728-p02-code-review-r2.md`
+- Final re-review artifact: `reviews/archived/20260728-p02-code-review-r2.md`
 - Final verdict: `PASS` — 0 Critical, 0 Important, 0 Medium, 0 Minor. Phase
   p02 is closed.
 
@@ -204,7 +204,7 @@ oat_generated: false
 ### Phase Review
 
 - Request: `explainer-improvements-p03-review-20260728T172200Z`
-- Artifact: `reviews/20260728-p03-code-review.md`
+- Artifact: `reviews/archived/20260728-p03-code-review.md`
 - Verdict: `BLOCKED` — 4 Critical, 3 Important, 1 Medium, 1 Minor
 - Direct probes showed that green tests did not bind review results to evidence
   bytes, authenticate screenshots, retain review evidence immutably, or
@@ -344,7 +344,7 @@ oat_generated: false
 - Outcome: `BLOCKED`
 - Review range: `b54863f19d5db6df47b1538e791adadaf76f0306..86fc4b6acc737a995783210699cee055e7860a45`
 - Tracking baseline: `a732eac3ddf410709643344809f33e281ed0bbc2`
-- Artifact: `reviews/20260728-p02-code-review.md`
+- Artifact: `reviews/archived/20260728-p02-code-review.md`
 - Findings: 0 Critical, 5 Important, 0 Medium, 0 Minor
 - Reconnaissance: `not-attempted`
 - Review-remediation attempt: 1/3 implemented; re-review pending
@@ -358,12 +358,12 @@ oat_generated: false
 - Launch intent: persisted
 - Review range: `5f973c8685d34add573f79695c2fc9d2060d34d2..4c469ea8eda39971c742e29a6a33b84db41607b6`
 - Tracking baseline: `c4f5f68e86c46356fb079087158176e376a3a240`
-- Planned artifact: `reviews/20260728-p02-code-review-r1.md`
+- Planned artifact: `reviews/archived/20260728-p02-code-review-r1.md`
 - Scope: verify the five original Important findings and detect regressions in
   their fix surfaces
 - Review-remediation attempt: 1/3
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260728-p02-code-review-r1.md`
+- Artifact: `reviews/archived/20260728-p02-code-review-r1.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Resolution: I1, I2, I4, and I5 resolved; I3 remains open as I3-R1
 - Verification: 138/138 focused tests passed; coordinated-tamper probe exposed
@@ -377,7 +377,7 @@ oat_generated: false
 - Launch intent: persisted
 - Clean base: `3e493364d29e12b46782dc719dd1bdba3dd27601`
 - Task: p02-t13 only
-- Source finding: I3-R1 in `reviews/20260728-p02-code-review-r1.md`
+- Source finding: I3-R1 in `reviews/archived/20260728-p02-code-review-r1.md`
 - Review-remediation attempt: 2/3
 - Context reference: Node.js 22.17 `crypto.createHash` and fixed-length
   `crypto.timingSafeEqual` contracts verified through Context7
@@ -395,12 +395,12 @@ oat_generated: false
 - Launch intent: persisted
 - Review range: `e40c6a31e15460624bf4451aca73f449be45f3b7..995468f31f9ff39f16be910abe26693a214afd28`
 - Tracking baseline: `f607c1b431f57e4932c2395b4305da35778779ff`
-- Planned artifact: `reviews/20260728-p02-code-review-r2.md`
+- Planned artifact: `reviews/archived/20260728-p02-code-review-r2.md`
 - Scope: verify I3-R1 and detect regressions in the external resume-token
   boundary
 - Review-remediation attempt: 2/3
 - Outcome: `PASS`
-- Artifact: `reviews/20260728-p02-code-review-r2.md`
+- Artifact: `reviews/archived/20260728-p02-code-review-r2.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Verification: focused 56/56 and Phase p02 union 141/141
 - Phase disposition: complete; continue with p03-t01
@@ -456,11 +456,11 @@ oat_generated: false
 - Authoritative task commits: `5c10fdc3`, `8f0a6708`, `3343ea1a`,
   `9b9570d1`, `73469c56`
 - Tracking baseline: `7ba59f6337b48f8596696aaeed918fe166402886`
-- Planned artifact: `reviews/20260728-p03-code-review.md`
+- Planned artifact: `reviews/archived/20260728-p03-code-review.md`
 - Scope: Phase p03 acceptance, correction-loop cap, evidence completeness, and
   fail-closed lifecycle propagation
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260728-p03-code-review.md`
+- Artifact: `reviews/archived/20260728-p03-code-review.md`
 - Findings: 4 Critical, 3 Important, 1 Medium, 1 Minor
 - Verification: Phase p03 365/365 and repository gates passed; direct lifecycle
   probes exposed the blocking evidence-chain gaps
@@ -473,7 +473,7 @@ oat_generated: false
 - Launch intent: persisted
 - Clean base: `fc47e1f26255ca0e9fedc868622e145f07ccf221`
 - Tasks: p03-t06 through p03-t11, sequentially
-- Source artifact: `reviews/20260728-p03-code-review.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review.md`
 - Review-remediation attempt: 1/3
 - Context references: Playwright 1.51 screenshot/viewport APIs and Node.js
   22.17 Buffer signature/big-endian parsing APIs verified through Context7
@@ -513,11 +513,11 @@ oat_generated: false
 - Review-remediation attempt: 1/3
 - Base: `4184b97c76de0fc1d3012ab91793b90e633839de`
 - Reviewed head: `681369ac9cab9004494468b61b914f82bee2fc23`
-- Source artifact: `reviews/20260728-p03-code-review.md`
-- Planned artifact: `reviews/20260728-p03-code-review-r1.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review.md`
+- Planned artifact: `reviews/archived/20260728-p03-code-review-r1.md`
 - Scope: original Phase p03 blocking findings and p03-t06 through p03-t15
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260728-p03-code-review-r1.md`
+- Artifact: `reviews/archived/20260728-p03-code-review-r1.md`
 - Findings: 1 Critical, 1 Important, 1 Medium, 0 Minor
 - Resolved: exact review-byte binding, observed cohesion, immutable successful
   evidence, bounded exercised handoffs, first-class OAT providers, interactive
@@ -532,7 +532,7 @@ oat_generated: false
 - Request: `explainer-improvements-p03-fix-r2-20260728T231500Z`
 - Launch intent: pending root tracking commit
 - Tasks: p03-t16 through p03-t19, sequentially
-- Source artifact: `reviews/20260728-p03-code-review-r1.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review-r1.md`
 - Review-remediation attempt: 2/3
 - Context references: Node.js 22.17 `zlib.inflateSync` and bounded output
   behavior verified through Context7; local runtime confirms `zlib.crc32`
@@ -563,11 +563,11 @@ oat_generated: false
 - Review-remediation attempt: 2/3
 - Base: `16395d2cdc22426f943b5c2fb9a87c81eed83490`
 - Reviewed head: `8317ed30f02b6aac567db1975c6f8bbc2e3b9b93`
-- Source artifact: `reviews/20260728-p03-code-review-r1.md`
-- Planned artifact: `reviews/20260728-p03-code-review-r2.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review-r1.md`
+- Planned artifact: `reviews/archived/20260728-p03-code-review-r2.md`
 - Scope: C1-R1, I3-R1, M1-R1, and p03-t16 through p03-t20
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260728-p03-code-review-r2.md`
+- Artifact: `reviews/archived/20260728-p03-code-review-r2.md`
 - Findings: 1 Critical, 0 Important, 0 Medium, 0 Minor
 - Resolved: full PNG decoding, canonical package coverage, partial-handoff
   truth table, untouched cross-consumer package, failure matrix, and release
@@ -581,7 +581,7 @@ oat_generated: false
 - Request: `explainer-improvements-p03-fix-r3-20260729T012500Z`
 - Launch intent: pending root tracking commit
 - Task: p03-t21
-- Source artifact: `reviews/20260728-p03-code-review-r2.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review-r2.md`
 - Review-remediation attempt: 3/3
 - Scope: bind decoded geometry/profile and reconstructed pixels across QA and
   pre-critic re-decoding
@@ -599,12 +599,12 @@ oat_generated: false
 - Review-remediation attempt: 3/3
 - Base: `08565a93`
 - Reviewed head: `df75722873638a957a24983974f9ce6087ae512c`
-- Source artifact: `reviews/20260728-p03-code-review-r2.md`
-- Planned artifact: `reviews/20260728-p03-code-review-r3.md`
+- Source artifact: `reviews/archived/20260728-p03-code-review-r2.md`
+- Planned artifact: `reviews/archived/20260728-p03-code-review-r3.md`
 - Scope: C1-R2 and p03-t21 with regression checks for previously resolved Phase
   p03 findings
 - Outcome: `PASS`
-- Artifact: `reviews/20260728-p03-code-review-r3.md`
+- Artifact: `reviews/archived/20260728-p03-code-review-r3.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Independent probe: a valid `320x640` to `640x320` identical-pixel reshape
   failed with `E_VISUAL_REVIEW` before critic invocation
@@ -672,11 +672,11 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `dda6ff61a2845614f87b81ac2dbee77261c1c175`
 - Reviewed head: `cf579ca39ba6b0bc7b22e2adb70287dc1e77049f`
-- Planned artifact: `reviews/20260728-p04-code-review.md`
+- Planned artifact: `reviews/archived/20260728-p04-code-review.md`
 - Scope: p04-t01 through p04-t04 acceptance, regression safety, and phase
   integration
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260728-p04-code-review.md`
+- Artifact: `reviews/archived/20260728-p04-code-review.md`
 - Findings: 2 Critical, 3 Important, 0 Medium, 0 Minor
 - Verified strengths: focused p04 105/105, CLI archive 55/55, packaged consumer
   smoke 5/5, normal generated backlinks/catalogs, and packaged Git provenance
@@ -691,7 +691,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-r1-20260729T042000Z`
 - Launch intent: persisted
 - Tasks: p04-t05 through p04-t09, sequentially
-- Source artifact: `reviews/20260728-p04-code-review.md`
+- Source artifact: `reviews/archived/20260728-p04-code-review.md`
 - Review-remediation attempt: 1/3
 - Scope: graph semantic binding, canonical reviewed backlinks, exact catalog
   roots, completion provenance regression coverage, and canonical resume paths
@@ -708,7 +708,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-r1-resume-20260729T045500Z`
 - Launch intent: persisted
 - Tasks: p04-t06 through p04-t09, sequentially
-- Source artifact: `reviews/20260728-p04-code-review.md`
+- Source artifact: `reviews/archived/20260728-p04-code-review.md`
 - Review-remediation attempt: 1/3 continuation
 - Base: `dbb2378e7680e636df546af94802d7f562305ae4`
 - Scope: canonical reviewed backlinks, exact catalog roots, completion provenance
@@ -732,13 +732,13 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `cf579ca39ba6b0bc7b22e2adb70287dc1e77049f`
 - Reviewed head: `0158516be8f7dd844466295a2982a18bfebfee42`
-- Source artifact: `reviews/20260728-p04-code-review.md`
-- Planned artifact: `reviews/20260729-p04-code-review-r1.md`
+- Source artifact: `reviews/archived/20260728-p04-code-review.md`
+- Planned artifact: `reviews/archived/20260729-p04-code-review-r1.md`
 - Review-remediation attempt: 1/3
 - Scope: C1, C2, I1-I3, p04-t05 through p04-t09, and regression checks for
   previously accepted Phase p04 behavior
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260729-p04-code-review-r1.md`
+- Artifact: `reviews/archived/20260729-p04-code-review-r1.md`
 - Findings: 1 Critical, 1 Important, 0 Medium, 0 Minor
 - Resolved: canonical backlink normalization, reviewed Git blob binding, exact
   catalog-root validation, completion provenance fixtures, and normal
@@ -753,7 +753,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-r2-20260729T063000Z`
 - Launch intent: persisted
 - Tasks: p04-t10 and p04-t11, sequentially
-- Source artifact: `reviews/20260729-p04-code-review-r1.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r1.md`
 - Review-remediation attempt: 2/3
 - Scope: complete artistic graph tuple validation and resume-time canonical-root
   confinement
@@ -775,13 +775,13 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `0158516be8f7dd844466295a2982a18bfebfee42`
 - Reviewed head: `f2d3ecc775fd9f85cfe8568afab8212da12305b3`
-- Source artifact: `reviews/20260729-p04-code-review-r1.md`
-- Planned artifact: `reviews/20260729-p04-code-review-r2.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r1.md`
+- Planned artifact: `reviews/archived/20260729-p04-code-review-r2.md`
 - Review-remediation attempt: 2/3
 - Scope: C1-R1, I4-R1, p04-t10, p04-t11, and regressions for all previously
   resolved Phase p04 findings
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260729-p04-code-review-r2.md`
+- Artifact: `reviews/archived/20260729-p04-code-review-r2.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Resolved: complete artistic graph semantics; all earlier backlink, Git blob,
   catalog, completion, and run-root symlink findings remain resolved
@@ -794,7 +794,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-r3-20260729T071500Z`
 - Launch intent: persisted
 - Task: p04-t12
-- Source artifact: `reviews/20260729-p04-code-review-r2.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r2.md`
 - Review-remediation attempt: 3/3
 - Scope: bind resume identity to the original persisted canonical output root
   before retained package adoption
@@ -815,13 +815,13 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `f2d3ecc775fd9f85cfe8568afab8212da12305b3`
 - Reviewed head: `3b7b43b24e6d14813963bdc97e17d6b6175a00ef`
-- Source artifact: `reviews/20260729-p04-code-review-r2.md`
-- Planned artifact: `reviews/20260729-p04-code-review-r3.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r2.md`
+- Planned artifact: `reviews/archived/20260729-p04-code-review-r3.md`
 - Review-remediation attempt: 3/3
 - Scope: I4-R2, p04-t12, and regression checks for every previously resolved
   Phase p04 finding
 - Outcome: `BLOCKED`; retry cap exhausted
-- Artifact: `reviews/20260729-p04-code-review-r3.md`
+- Artifact: `reviews/archived/20260729-p04-code-review-r3.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Resolved: exact configured-root retarget attack; all earlier Phase p04
   findings remain resolved and all repository/release gates pass
@@ -838,7 +838,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-r4-20260729T120000Z`
 - Launch intent: persisted
 - Task: p04-t13
-- Source artifact: `reviews/20260729-p04-code-review-r3.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r3.md`
 - Review-remediation attempt: 4/4 by explicit operator override
 - Scope: externally authenticate the original canonical resume root and reject
   coordinated filesystem plus retained-request mutation
@@ -860,13 +860,13 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `3b7b43b24e6d14813963bdc97e17d6b6175a00ef`
 - Reviewed head: `996229cfad5392a45681e91e0084b4684acbcb47`
-- Source artifact: `reviews/20260729-p04-code-review-r3.md`
-- Planned artifact: `reviews/20260729-p04-code-review-r4.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r3.md`
+- Planned artifact: `reviews/archived/20260729-p04-code-review-r4.md`
 - Review-remediation attempt: 4/4 by explicit operator override
 - Scope: I4-R3, p04-t13, and regression checks for every previously resolved
   Phase p04 finding
 - Outcome: `BLOCKED`; operator-authorized cap exhausted
-- Artifact: `reviews/20260729-p04-code-review-r4.md`
+- Artifact: `reviews/archived/20260729-p04-code-review-r4.md`
 - Findings: 0 Critical, 1 Important, 0 Medium, 0 Minor
 - Resolved: authenticated deterministic `ekrt2`, exact I4-R3 attack, and all
   prior Phase p04 findings remain resolved; all verification gates pass
@@ -882,7 +882,7 @@ oat_generated: false
 - Request: `explainer-improvements-p04-fix-v1-removal-20260729T143000Z`
 - Launch intent: persisted
 - Task: p04-t14
-- Source artifact: `reviews/20260729-p04-code-review-r4.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r4.md`
 - Scope: remove transparent legacy resume-token acceptance and require
   authenticated current tokens
 - Operator disposition: legacy paused-run compatibility is not required; reject
@@ -902,14 +902,14 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `996229cfad5392a45681e91e0084b4684acbcb47`
 - Reviewed head: `9d7d650172fe40e5ddd8590ac2ea3078cc700ed4`
-- Source artifact: `reviews/20260729-p04-code-review-r4.md`
-- Planned artifact: `reviews/20260729-p04-code-review-r5.md`
+- Source artifact: `reviews/archived/20260729-p04-code-review-r4.md`
+- Planned artifact: `reviews/archived/20260729-p04-code-review-r5.md`
 - Scope: I4-R4, p04-t14, and regressions for every previously resolved Phase
   p04 finding
 - Authorization: explicit operator-selected secure closure outside the exhausted
   automatic cap
 - Outcome: `PASS`
-- Artifact: `reviews/20260729-p04-code-review-r5.md`
+- Artifact: `reviews/archived/20260729-p04-code-review-r5.md`
 - Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
 - Verification: 309 focused tests passed; adversarial legacy-token rejection,
   authenticated changed-CWD resume, and every prior Phase p04 finding passed
@@ -957,13 +957,13 @@ oat_generated: false
 - Launch intent: persisted
 - Base: `1151a0d7`
 - Reviewed head: `508da0b898e1a1e5f6545554b7d0715aa1f9ebd4`
-- Planned artifact: `reviews/20260729-final-code-review.md`
+- Planned artifact: `reviews/archived/20260729-final-code-review.md`
 - Scope: all 60 tasks, requirements traceability, generated benchmarks,
   security/resume closure, release payload, and repository readiness
 - Review policy: single bounded post-benchmark final review from the imported
   plan
 - Outcome: `BLOCKED`
-- Artifact: `reviews/20260729-final-code-review.md`
+- Artifact: `reviews/archived/20260729-final-code-review.md`
 - Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
 - Blocking: resume accepts changed current side-effect policy; production
   immutable browser evidence omits trusted Chromium engine/version identity
@@ -974,7 +974,7 @@ oat_generated: false
 - Request: `explainer-improvements-final-fix-20260729T180000Z`
 - Launch intent: persisted
 - Tasks: p05-t06 and p05-t07, sequentially
-- Source artifact: `reviews/20260729-final-code-review.md`
+- Source artifact: `reviews/archived/20260729-final-code-review.md`
 - Scope: complete authenticated resume-request equality and trusted Chromium
   identity through immutable evidence consumers
 - Review policy: one Critical/Important fix pass; no open-ended re-review
