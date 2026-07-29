@@ -488,7 +488,7 @@ Dispatch: scope=p01 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Outcome:** accepted once; artifact validated; `PASS`
 - **Reconnaissance:** not attempted; no review-orchestration evidence required
 - **Artifact:**
-  `reviews/code-p01-review-2026-07-29T043611Z.md`
+  `reviews/archived/code-p01-review-2026-07-29T043611Z.md`
 
 **Dispatch stamp:**
 
@@ -544,7 +544,7 @@ Dispatch: scope=p02 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Reconnaissance:** not attempted; no review-orchestration evidence required
 - **Findings:** 0 Critical, 2 Important, 0 Medium, 0 Minor
 - **Artifact:**
-  `reviews/code-p02-review-2026-07-29T120024Z.md`
+  `reviews/archived/code-p02-review-2026-07-29T120024Z.md`
 
 **Dispatch stamp:**
 
@@ -578,7 +578,7 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
   disclosure resolved
 - **Findings:** 0 Critical, 1 Important, 0 Medium, 0 Minor
 - **Artifact:**
-  `reviews/code-p02-review-2026-07-29T121857Z.md`
+  `reviews/archived/code-p02-review-2026-07-29T121857Z.md`
 
 **Dispatch stamp:**
 
@@ -612,7 +612,7 @@ Dispatch: scope=p02 action=review role=reviewer producer=gpt-5.6-sol-high proven
 - **Prior findings:** both round-1 findings and the round-2 residual resolved
 - **Findings:** 0 Critical, 0 Important, 0 Medium, 0 Minor
 - **Artifact:**
-  `reviews/code-p02-review-2026-07-29T123104Z.md`
+  `reviews/archived/code-p02-review-2026-07-29T123104Z.md`
 
 **Dispatch stamp:**
 
@@ -770,7 +770,7 @@ Dispatch: scope=p03 action=implementation role=implementer producer=gpt-5.6-sol-
 - **Findings:** 0 Critical, 0 Important, 0 Medium, 2 Minor
 - **Reconnaissance:** not attempted; no review-orchestration evidence required
 - **Artifact:**
-  `reviews/code-p03-review-2026-07-29T145300Z.md`
+  `reviews/archived/code-p03-review-2026-07-29T145300Z.md`
 
 **Dispatch stamp:**
 
@@ -804,7 +804,7 @@ Dispatch: scope=p03 action=review role=reviewer producer=gpt-5.6-sol-high proven
 - **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
 - **Reconnaissance:** not attempted; no review-orchestration evidence required
 - **Artifact:**
-  `reviews/code-final-review-2026-07-29T150100Z.md`
+  `reviews/archived/code-final-review-2026-07-29T150100Z.md`
 - **Non-blocking follow-up:** expand command-level report-context coverage for
   lower-tier exact candidates, at-cap legacy preference, managed Claude/Cursor,
   and inherit/uncapped/unresolved suppression; retained as an explicit future
