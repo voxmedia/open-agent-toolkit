@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: prev1-t01
+oat_current_task_id: prev1-t02
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1    | completed   | 2     | 2/2       |
 | Phase 2    | completed   | 2     | 2/2       |
 | Phase 3    | completed   | 2     | 2/2       |
-| Revision 1 | in_progress | 2     | 0/2       |
+| Revision 1 | in_progress | 2     | 1/2       |
 
-**Total:** 6/8 tasks completed
+**Total:** 7/8 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -448,6 +448,53 @@ oat_generated: false
 - Three records carried `oat_template: false`; the doctor treats the field
   itself as template metadata, so both template keys were removed as required
   by the updated plan.
+
+---
+
+## Phase p-rev1: Revision 1
+
+**Status:** in_progress
+**Started:** 2026-07-29
+
+### Task prev1-t01: (revision) Merge current origin/main
+
+**Status:** completed
+**Commit:** `4cb09c4cf53f86ecc1a03dac8325d0adc1e0e531`
+
+**Outcome (required when completed):**
+
+- Merged `origin/main` at `4c065877d19f7e84a2771f0cbdb16e1808e4134f`
+  without rebasing or rewriting project history.
+- Preserved both projects' PJM records and skill validation contracts across
+  four content conflicts.
+
+**Files changed:**
+
+- `.oat/repo/pjm/backlog/index.md` - retained the archived dispatch item state
+  and accepted the incoming ReviewPlan backlog item.
+- `.oat/repo/pjm/current-state.md` and
+  `.oat/repo/reference/decisions/index.md` - retained both projects' release
+  summaries and decisions.
+- `packages/cli/src/validation/skills.test.ts` - retained dispatch-notice
+  coverage and incoming review-ledger coverage with current skill versions.
+
+**Verification:**
+
+- Run: merged skill validation test, PJM doctor, conflict-marker sweep, and
+  `git diff --check`.
+- Result: 118 skill tests passed; no unmerged paths or whitespace errors. PJM
+  doctor retained its four accepted warning classes with no failing checks.
+
+**Notes / Decisions:**
+
+- The merge included two upstream Markdown hard breaks that failed
+  `git diff --check`; their trailing spaces were removed without changing text.
+
+---
+
+### Task prev1-t02: (revision) Bump lockstep public packages after merge
+
+**Status:** pending
 
 ---
 
