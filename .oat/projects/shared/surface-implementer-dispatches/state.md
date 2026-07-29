@@ -36,9 +36,9 @@ oat_dispatch_policy:
 oat_workflow_mode: quick # spec-driven | quick | import
 oat_workflow_origin: native # native | imported
 oat_implement_exit_gate:
-  status: pending
+  status: allowed
   resolution: configured
-  disposition: null
+  disposition: passed
   config_fingerprint: 'sha256:bab3a74fc851ca974017112f07440aee9f6eca4a014c52cb460b003eb7e05b20'
   resolved_command: 'oat --json gate review --project "$PROJECT_PATH" --review-type code --review-scope final --exit-nonzero-on important "Use the oat-project-review-provide skill to review the current project. Use project state to determine the most appropriate review scope. If the project is complete, provide a final independent code review of the entire project. Return blocking findings clearly, or say no blocking findings."'
   resolved_description: 'Semantic cross-family final implementation review before oat-project-implement exits.'
@@ -48,8 +48,8 @@ oat_implement_exit_gate:
   reviewed_head: 24d4ebec49068886a5046b8f789c35a9a7f92311
   implementation_base_ref: refs/remotes/origin/main
   implementation_fingerprint: 'sha256:effective-delta-v1:9afc11aee41094aec92d470cb461c780314a35bda1a187b04ee768fdde625153'
-  freshness_head: 5370e982a7469b07dbb826537f19a54176f5e82c
-  freshness_fingerprint: 'sha256:effective-delta-v1:9c20a2aed004e3a795d9795caa008bee4128148b603d381d853fe142b191e55f'
+  freshness_head: eb6e7660718bc0d2ded0f35e6fcf1c334c45e716
+  freshness_fingerprint: 'sha256:effective-delta-v1:b1bf5f7fb1e63e4138278c1976cbb40282ed418ce335914750f703dccf5f3e58'
   launch_state: result_persisted
   launch_attempt_id: implement-exit-20260729T182852Z-fcbad6e3-f79d-4502-8d20-f165407791a6
   launch_started_at: '2026-07-29T18:28:52Z'
@@ -59,17 +59,17 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md
   handoff: 'Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=1). Run oat-project-review-receive for .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md to disposition them before marking the final review row passed.'
-  receive_state: intent_persisted
+  receive_state: completed
   receive_correlation: 'run=1bcc4ae6-563d-4df1-966d-04c7ef6cee0c; handoff=Gate passed at the important threshold, but the final review still contains non-blocking findings (medium=1, minor=1). Run oat-project-review-receive for .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md to disposition them before marking the final review row passed.; source=.oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md; scope=final; type=code; filename=final-review-2026-07-29T183546Z.md'
   receive_source_artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/final-review-2026-07-29T183546Z.md
   receive_archived_artifact: .oat/projects/shared/surface-implementer-dispatches/reviews/archived/final-review-2026-07-29T183546Z.md
   receive_event_identity: 'final|code|final-review-2026-07-29T183546Z.md'
   receive_pre_head: e26dd547ed95c0d36ae7702f4b43652513e98320
-  receive_commit: null
+  receive_commit: eb6e7660718bc0d2ded0f35e6fcf1c334c45e716
   receive_eligible: true
-  receive_completed: false
+  receive_completed: true
   failure: null
-  updated_at: '2026-07-29T18:44:09Z'
+  updated_at: '2026-07-29T18:46:49Z'
 oat_post_implement_sequence:
   status: awaiting_approval
   source: configured
@@ -86,7 +86,7 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/187' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T18:44:09Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T18:46:49Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation — Final re-review passed; configured exit-gate refresh pending.
+Implementation — Final configured exit gate passed; awaiting human review.
 
 ## Artifacts
 
@@ -106,8 +106,8 @@ Implementation — Final re-review passed; configured exit-gate refresh pending.
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (11/11 tasks complete; final re-review
-  and gate refresh pending)
+- **Implementation:** `implementation.md` (11/11 tasks complete; final review
+  and configured exit gate passed)
 
 ## Progress
 
@@ -173,7 +173,7 @@ Implementation — Final re-review passed; configured exit-gate refresh pending.
 - ✓ `prev1-t04` cleaned archived review whitespace and finalized summary
   freshness
 - ✓ Mandatory final re-review passed with the existing deferred Medium retained
-- → Refresh configured cross-family exit gate
+- ✓ Refreshed configured cross-family exit gate passed and was received
 - ⧗ Awaiting human review
 
 ## Blockers
@@ -182,6 +182,6 @@ None
 
 ## Next Milestone
 
-Execute Revision 1, refresh final verification and review, then return to the
-final HiLL checkpoint. The PR remains open at
+Final verification and configured review gates have passed. Await explicit
+human approval at the final HiLL checkpoint. The PR remains open at
 https://github.com/voxmedia/open-agent-toolkit/pull/187.
