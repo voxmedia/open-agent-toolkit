@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T04:24:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T04:43:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -119,7 +119,8 @@ Implementation - Phase 2 (`p02-t01`)
   preferred-selection, and notice fields
 - ✓ `p01-t02` added classification inputs and managed-cap warnings
 - ✓ Phase 1 implementation completed
-- → Next task is `p02-t01` after the root-owned Phase 1 review
+- ✓ Phase 1 root-owned review passed with no blocking findings
+- → Next task is `p02-t01`
 
 ## Blockers
 
@@ -127,4 +128,4 @@ None
 
 ## Next Milestone
 
-Complete the Phase 1 review, then start Phase 2 at `p02-t01`
+Start Phase 2 at `p02-t01`

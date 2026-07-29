@@ -285,6 +285,39 @@ _Orchestration runs from `oat-project-implement` are appended here, most-recent-
 Dispatch: scope=p01 action=implementation role=implementer producer=gpt-5.6-sol-medium provenance=declared model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium
 ```
 
+#### Dispatch Acceptance — p01 reviewer
+
+- **Request:** `review-p01-r1-20260729T043611Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Selection reason:** exact matrix-pinned review target at the configured High
+  ceiling
+- **Range:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5` →
+  `c18933689be4c19da60f7f7f44edd260e63f4786`
+- **Outcome:** accepted once; artifact validated; `PASS`
+- **Reconnaissance:** not attempted; no review-orchestration evidence required
+- **Artifact:**
+  `reviews/code-p01-review-2026-07-29T043611Z.md`
+
+**Dispatch stamp:**
+
+```text
+Dispatch: scope=p01 action=review role=reviewer producer=gpt-5.6-sol-high provenance=declared model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
+```
+
+#### Phase Outcome — p01
+
+| Phase | Tasks | Implementation | Root Review | Fix Loops | Result |
+| ----- | ----- | -------------- | ----------- | --------- | ------ |
+| p01   | 2/2   | `DONE`         | `PASS`      | 0         | passed |
+
+- **Findings:** 0 Critical, 0 Important, 1 Medium, 0 Minor
+- **Non-blocking follow-up:** expand table-driven warning/suppression coverage
+  across exact-candidate, legacy-preferred, provider, inherit, uncapped, and
+  unresolved paths
+- **Phase gate:** disabled
+- **Parallel groups:** none
+- **Outstanding blocking items:** none
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -342,7 +375,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
-| 1     | 214       | 214    | 0      | Focused  |
+| 1     | 412       | 412    | 0      | Focused  |
 | 2     | -         | -      | -      | -        |
 
 ## Final Summary (for PR/docs)
