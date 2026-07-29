@@ -2,6 +2,8 @@
 oat_current_task: null
 oat_last_commit: 1281755dc316c8415e8af20e6390ba111e2282d1
 oat_blockers: []
+oat_docs_updated: complete
+oat_project_state_updated: '2026-07-29T22:37:30Z'
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
