@@ -2,30 +2,30 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-28
-oat_current_task_id: p04-t04
+oat_last_updated: 2026-07-29
+oat_current_task_id: p04-review
 oat_generated: false
 ---
 
 # Implementation: explainer-improvements
 
 **Started:** 2026-07-28
-**Last Updated:** 2026-07-28
+**Last Updated:** 2026-07-29
 
 > Resume from `oat_current_task_id`, which always points to the next plan task.
 > Reviews are tracked in `plan.md`, not as implementation tasks.
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |     4 |       3/4 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |     4 |       4/4 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 44/49 tasks completed
+**Total:** 45/49 tasks completed
 
 ---
 
@@ -250,12 +250,12 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
 - [x] p04-t03 — Generate and publish a manifest-derived initiative catalog (`2ecd3923`)
-- [ ] p04-t04 — Align archive and packaged-layout consumers
+- [x] p04-t04 — Align archive and packaged-layout consumers (`cf579ca3`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -644,6 +644,11 @@ oat_generated: false
 - Task: p04-t04
 - Scope: strict CLI source-backlink parsing and real packaged-layout reviewed
   repository provenance
+- Outcome: `DONE`
+- Commit: `cf579ca39ba6b0bc7b22e2adb70287dc1e77049f`
+- Verification: focused archive tests passed 55/55, complete explainer-kit smoke
+  passed 7/7, expanded Phase p04 union passed 105/105, and all repository and
+  release gates passed
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->

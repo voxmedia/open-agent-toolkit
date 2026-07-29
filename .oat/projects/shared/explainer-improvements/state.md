@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t04
-oat_last_commit: 2ecd39230acaafe3c651014063793ead8d5f630f
+oat_current_task: p04-review
+oat_last_commit: cf579ca39ba6b0bc7b22e2adb70287dc1e77049f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -204,7 +204,12 @@ Phase p04 implementation in progress
 - ⧗ Full tests passed smoke 128/130 and exposed two consumer compatibility gaps
 - ✓ p04-t04 bounds strict CLI backlink parsing and real packaged-layout Git
   provenance without consuming a review-remediation attempt
-- ⧗ Phase p04 consumer-alignment follow-up is prepared from a clean worktree
+- ✓ p04-t04 implemented in atomic commit `cf579ca3`
+- ✓ Focused archive tests passed 55/55, complete explainer-kit smoke passed 7/7,
+  and the expanded Phase p04 union passed 105/105
+- ✓ Repository check, lint, format, type-check, build, full test, release
+  validation, and `git diff --check` gates passed
+- ⧗ Fresh Phase p04 review is pending
 
 ## Blockers
 
@@ -212,4 +217,5 @@ None
 
 ## Next Milestone
 
-Execute p04-t04, rerun Phase p04 and repository/release gates, then review.
+Run a fresh Phase p04 review, remediate within the configured cap if needed,
+then continue to the Phase p05 HiLL checkpoint.
