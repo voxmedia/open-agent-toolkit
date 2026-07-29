@@ -1,6 +1,6 @@
 ---
 oat_current_task: null
-oat_last_commit: 6f807da68f1c822ebe34885410ba41bb2dbed2d8
+oat_last_commit: fc9239b77524a89db6dfd45820c60f71d82cc786
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -11,10 +11,10 @@ oat_siblings: [] # optional child-only sibling slugs
 oat_depends_on: [] # optional child-only sibling dependencies
 oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [p03] # Configured: which phases require human-in-the-loop lifecycle approval
-oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
+oat_hill_completed: [p03] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -86,19 +86,19 @@ oat_pr_status: open # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: 'https://github.com/voxmedia/open-agent-toolkit/pull/187' # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T19:14:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T19:15:57Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: surface-implementer-dispatches
 
-**Status:** Implementation In Progress
+**Status:** Implementation complete — PR open
 **Started:** 2026-07-28
 **Last Updated:** 2026-07-29
 
 ## Current Phase
 
-Implementation — Final configured exit gate passed; awaiting human review.
+Implementation complete; PR #187 is open for review.
 
 ## Artifacts
 
@@ -174,7 +174,9 @@ Implementation — Final configured exit gate passed; awaiting human review.
   freshness
 - ✓ Mandatory final re-review passed with the existing deferred Medium retained
 - ✓ Refreshed configured cross-family exit gate passed and was received
-- ⧗ Awaiting human review
+- ✓ Final `p03` HiLL checkpoint approved
+- ✓ Post-implementation sequence complete
+- ⧗ Awaiting PR review and merge
 
 ## Blockers
 
@@ -182,6 +184,7 @@ None
 
 ## Next Milestone
 
-Final verification and configured review gates have passed. Await explicit
-human approval at the final HiLL checkpoint. The PR remains open at
-https://github.com/voxmedia/open-agent-toolkit/pull/187.
+PR #187 is open for review.
+
+- To incorporate feedback: run `oat-project-revise`.
+- Project completion can run before or after merge.
