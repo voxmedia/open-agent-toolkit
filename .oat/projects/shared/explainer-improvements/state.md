@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t16
-oat_last_commit: 681369ac9cab9004494468b61b914f82bee2fc23
+oat_current_task: p03-t20
+oat_last_commit: acdc81092ebeb37992997a1fabccaa6b49e298ed
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -98,7 +98,7 @@ Phase p03 review remediation attempt 2 of 3 pending
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 46 tasks currently tracked
+- ✓ Five phases / 47 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -173,6 +173,10 @@ Phase p03 review remediation attempt 2 of 3 pending
   remediation attempt 2/3
 - ✓ Attempt-2 preflight found and corrected p03-t16's missing adapter
   completion-fixture boundary before edits; no retry was consumed
+- ✓ p03-t16 through p03-t19 implemented in four atomic commits
+- ✓ All four focused task gates passed
+- ⧗ Expanded Phase p03 verification passed 383/385; two stale rebuildability
+  assertions are bounded as p03-t20
 
 ## Blockers
 
@@ -180,5 +184,5 @@ None
 
 ## Next Milestone
 
-Execute p03-t16 through p03-t19 as remediation attempt 2/3, rerun root
-verification, and perform a fresh narrowed Phase p03 re-review.
+Execute p03-t20 within remediation attempt 2/3, resume root verification, and
+perform a fresh narrowed Phase p03 re-review.

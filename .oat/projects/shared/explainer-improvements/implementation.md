@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-28
-oat_current_task_id: p03-t16
+oat_current_task_id: p03-t20
 oat_generated: false
 ---
 
@@ -21,11 +21,11 @@ oat_generated: false
 | ----- | ------------- | ----: | --------: |
 | p01   | complete      |     7 |       7/7 |
 | p02   | complete      |    13 |     13/13 |
-| p03   | fixes_pending |    19 |     15/19 |
+| p03   | fixes_pending |    20 |     19/20 |
 | p04   | pending       |     3 |       0/3 |
 | p05   | pending       |     4 |       0/4 |
 
-**Total:** 35/46 tasks completed
+**Total:** 39/47 tasks completed
 
 ---
 
@@ -171,10 +171,11 @@ oat_generated: false
 - [x] p03-t13 — Align the OAT explainer skill version assertion (`b2e1904c`)
 - [x] p03-t14 — Preserve incomplete visual-review handoff manifests (`339810fe`)
 - [x] p03-t15 — Align the explainer smoke version assertion (`681369ac`)
-- [ ] p03-t16 — Require fully decoded browser PNG evidence
-- [ ] p03-t17 — Share one canonical recap package-coverage contract
-- [ ] p03-t18 — Complete the review-gate failure matrix
-- [ ] p03-t19 — Align explainer and public release versions
+- [x] p03-t16 — Require fully decoded browser PNG evidence (`7dd0637f`)
+- [x] p03-t17 — Share one canonical recap package-coverage contract (`f0c3543e`)
+- [x] p03-t18 — Complete the review-gate failure matrix (`eea0172f`)
+- [x] p03-t19 — Align explainer and public release versions (`acdc8109`)
+- [ ] p03-t20 — Align rebuildability with the canonical coverage release
 
 ### Phase Implementation Summary
 
@@ -231,6 +232,9 @@ oat_generated: false
   remained blocked on undecodable pseudo-PNG acceptance and duplicated,
   outcome-inconsistent package coverage. Remediation attempt 2/3 is bounded as
   p03-t16 through p03-t19.
+- p03-t16 through p03-t19 are committed. Focused verification passed; the
+  expanded Phase p03 union passed 383/385 and exposed two stale rebuildability
+  assertions, now bounded as p03-t20 before re-review.
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
@@ -511,6 +515,13 @@ oat_generated: false
 - Preflight correction: p03-t16 now includes
   `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`,
   which creates the same pseudo-PNG while executing the canonical core
+- Task commits:
+  `7dd0637f` (p03-t16), `f0c3543e` (p03-t17), `eea0172f` (p03-t18), and
+  `acdc8109` (p03-t19)
+- Verification result: all four focused task gates passed; expanded Phase p03
+  union stopped at 383/385 on two stale rebuildability assertions
+- Follow-up boundary: p03-t20 aligns the core version and supplies verified
+  unattended mode to the shared package-coverage contract
 - Dispatch: scope=p03 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -558,7 +569,7 @@ oat_generated: false
 
 ## Final Summary (for PR/docs)
 
-_Fill from implementation evidence after all 46 tasks and the final review._
+_Fill from implementation evidence after all 47 tasks and the final review._
 
 ## References
 

@@ -1317,6 +1317,25 @@ release validation passes.
 
 ---
 
+### Task p03-t20: Align rebuildability with the canonical coverage release
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/tests/rebuildability.test.mjs`
+
+**Steps:**
+
+1. Update the canonical skill-version assertion from `2.0.2` to `2.0.3`.
+2. Invoke the shared package-coverage contract with verified unattended mode
+   in the successful recap completeness assertion.
+3. Run the complete rebuildability test and expanded Phase p03 union.
+4. Commit as `test(p03-t20): align rebuildability coverage`.
+
+**Acceptance:** Rebuildability coverage exercises the released core version and
+the same mode-aware canonical package contract as production consumers.
+
+---
+
 ## Phase 4: Topology, backlinks, and catalog integrity
 
 ### Task p04-t01: Detect and reroute non-linear diagrams
