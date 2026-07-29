@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-review
+oat_current_task: p04-t05
 oat_last_commit: cf579ca39ba6b0bc7b22e2adb70287dc1e77049f
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T03:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T04:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -98,7 +98,7 @@ Phase p04 implementation in progress
 - ✓ Import-mode project scaffolded
 - ✓ Execution artifacts scaffolded
 - ✓ External provider plan preserved verbatim
-- ✓ Five phases / 49 tasks currently tracked
+- ✓ Five phases / 53 tasks currently tracked
 - ✓ Managed High dispatch policy selected
 - ✓ Additional phase-gate review declined
 - ✓ Bounded automated plan review completed with one remediation pass
@@ -209,7 +209,11 @@ Phase p04 implementation in progress
   and the expanded Phase p04 union passed 105/105
 - ✓ Repository check, lint, format, type-check, build, full test, release
   validation, and `git diff --check` gates passed
-- ⧗ Fresh Phase p04 review is pending
+- ✓ Fresh Phase p04 review completed with two Critical and three Important
+  findings
+- ⧗ p04-t05 through p04-t08 are bounded as review-remediation attempt 1/3
+- ⧗ Phase p04 remains blocked until graph semantics, backlink canonicalization,
+  reviewed Git bytes, exact catalog roots, and completion regressions are fixed
 
 ## Blockers
 
@@ -217,5 +221,5 @@ None
 
 ## Next Milestone
 
-Run a fresh Phase p04 review, remediate within the configured cap if needed,
-then continue to the Phase p05 HiLL checkpoint.
+Execute p04-t05 through p04-t08, verify Phase p04 and p03 regressions, and run a
+fresh remediation re-review.

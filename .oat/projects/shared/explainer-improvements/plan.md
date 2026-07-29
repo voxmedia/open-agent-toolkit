@@ -1492,6 +1492,147 @@ packaged-layout smoke, and malformed or moving source backlinks remain rejected.
 
 ---
 
+### Task p04-t05: Bind artistic output to parsed graph semantics
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/schemas/author-request.v2.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+
+**Steps:**
+
+1. Add RED branch, fan-in, and cycle cases whose artistic author drops, adds,
+   duplicates, or rewires a node/edge; require failure before visual review can
+   authorize the artifact while retaining the linear inline case.
+2. Parse non-linear graph semantics from the planner-owned draft before artistic
+   author invocation and include the exact direction, node, edge, and topology
+   data as an immutable closed author-request input.
+3. Extract graph observations from authored HTML and compare canonical node and
+   edge multisets with the planned graph. Reject missing, extra, duplicate,
+   rewired, or ambiguous semantics with `E_DIAGRAM_TOPOLOGY`; never infer
+   success from the visual critic alone.
+4. If graph semantics cannot be represented and validated exactly, reject the
+   artifact instead of flattening or degrading it.
+5. Run the focused schema, contract, diagram, core integration, and recap e2e
+   tests.
+6. Commit as `fix(p04-t05): bind artistic graph semantics`.
+
+**Acceptance:** Every routed non-linear graph is an immutable artistic-author
+input and the resulting HTML preserves the exact original nodes and edges or
+fails before review; linear flows continue through the inline renderer.
+
+---
+
+### Task p04-t06: Canonicalize backlinks and bind reviewed Git bytes
+
+**Files:**
+
+- Create: `.agents/skills/explainer-kit/scripts/lib/source-backlinks.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/fact-base.schema.json`
+- Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/fact-base.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/fact-base.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/schemas.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Create: `packages/cli/src/commands/project/archive/explainer-source-backlinks.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/release/public-package-contract.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs`
+
+**Steps:**
+
+1. Add RED core and CLI cases for literal and percent-encoded dot segments,
+   empty/decoded-empty path segments, non-canonical encoding, moving refs,
+   malformed line ranges, partial provenance tuples, and a URL that disagrees
+   with repository/revision/path/line-range fields.
+2. Define one versioned dependency-free canonical GitHub blob backlink module.
+   Parse and normalize repository identity, require the exact full 40-hex blob
+   segment after URL normalization, reject unsafe path segments, derive the
+   canonical encoded URL, and compare the complete provenance tuple rather than
+   trusting a supplied URL.
+3. Use the canonical module in core fact-base/manifest validation and load the
+   bundled contract from CLI assets for archive validation; require the module
+   in packed public-package tests and cross-consumer smoke coverage.
+4. Resolve each approved OAT artifact from `<reviewed-sha>:<repo-relative-path>`
+   and derive claims, line ranges, and hashes from those Git blob bytes. Reject
+   untracked files and any working-tree/blob mismatch before composition.
+5. Preserve repository confinement, closed contracts, encoded Unicode/space
+   paths, supplied fact-base support, and exact immutable manifest coverage.
+6. Run focused fact-base, schema, contract, adapter, archive, smoke, and packed
+   package tests.
+7. Commit as `fix(p04-t06): bind canonical reviewed backlinks`.
+
+**Acceptance:** No normalized or encoded path can escape the pinned blob URL,
+every backlink tuple derives canonically from one reviewed Git blob, and core
+plus CLI consume the same shipped backlink contract.
+
+---
+
+### Task p04-t07: Validate catalog URLs against the publish root
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/catalog.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
+
+**Steps:**
+
+1. Add RED wrong-origin, wrong-base-path, duplicate-field, unknown-field, and
+   encoded-path mutation cases for otherwise matching catalog entries.
+2. Require catalog validation to receive the normalized configured public base
+   URL and derive every expected artifact URL from that base plus the manifest
+   `renderedPath`; never use the catalog entry's URL as expected evidence.
+3. Compare complete canonical URLs, including scheme, origin, base path, encoded
+   artifact path, and absence of credentials/query/fragment.
+4. Keep exact manifest artifact/source parity and publish-receipt coverage.
+5. Run focused contract and S3 static connector tests.
+6. Commit as `fix(p04-t07): bind catalog urls to publish root`.
+
+**Acceptance:** Catalog validation rejects any artifact URL not exactly derived
+from the finalized manifest and configured publish root.
+
+---
+
+### Task p04-t08: Restore completion provenance regression coverage
+
+**Files:**
+
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+
+**Steps:**
+
+1. Preserve the three RED completion integration failures caused by non-Git
+   temporary fixtures at the reviewed provenance boundary.
+2. Initialize and commit the fixture as a real Git repository with a canonical
+   GitHub origin, without injecting reviewed provenance.
+3. Assert adapter-owned repository and full commit identity while retaining all
+   existing author, browser, critic, completion, and fail-closed assertions.
+4. Run the complete completion integration file, expanded Phase p03 regression
+   union, complete Phase p04 union, and all repository/release gates.
+5. Commit as `test(p04-t08): restore completion provenance coverage`.
+
+**Acceptance:** Completion integration exercises real reviewed Git provenance
+and all p03 browser/critic behavior passes under the Phase p04 adapter boundary.
+
+---
+
 ## Phase 5: Golden conformance and release closure
 
 ### Task p05-t01: Pass the simple-project golden benchmark
@@ -1623,7 +1764,7 @@ another review cycle.
 | p02    | code     | fixes_completed | 2026-07-28 | reviews/20260728-p02-code-review-r1.md |
 | p02    | code     | passed          | 2026-07-28 | reviews/20260728-p02-code-review-r2.md |
 | p03    | code     | fixes_added     | 2026-07-28 | reviews/20260728-p03-code-review.md    |
-| p04    | code     | pending         | -          | -                                      |
+| p04    | code     | fixes_added     | 2026-07-29 | reviews/20260728-p04-code-review.md    |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |
@@ -1650,10 +1791,10 @@ additional unrelated review cycles.
 - Phase 1: 7 tasks — compliance, bounded outcomes, quality oracle, generated parity, and review fixes
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
-- Phase 4: 4 tasks — topology routing, pinned backlinks, generated catalog, and consumer alignment
+- Phase 4: 8 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
 - Phase 5: 4 tasks — three benchmark cases and release closure
 
-**Total: 49 tasks**
+**Total: 53 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.
