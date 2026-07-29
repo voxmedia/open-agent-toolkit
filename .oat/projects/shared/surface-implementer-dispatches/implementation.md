@@ -2,8 +2,8 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-28
-oat_current_task_id: p02-t01
+oat_last_updated: 2026-07-29
+oat_current_task_id: p02-t02
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | pending   | 2     | 0/2       |
-| Phase 3 | pending   | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | in_progress | 2     | 1/2       |
+| Phase 3 | pending     | 2     | 0/2       |
 
-**Total:** 2/6 tasks completed
+**Total:** 3/6 tasks completed
 
 ### Review Received: design
 
@@ -208,20 +208,54 @@ oat_generated: false
 
 ## Phase 2: Expose Terminal Reviewer Constraints
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-29
 
 ### Task p02-t01: Add shared terminal-reviewer disclosures
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e37a044a3a5afd9b8a65c3ffb2b47d0461ab94f5`
+
+**Outcome (required when completed):**
+
+- Centralized structured terminal-reviewer eligibility notices for policy
+  choices, effective post-adoption configuration, and runtime resolution.
+- Preserved explicit Frontier cells and derived disclosures from effective
+  Fable targets without inferring model access or organizational retention
+  policy.
+
+**Files changed:**
+
+- `packages/cli/src/config/dispatch-notices.ts` - shared Fable target matching,
+  notice metadata, and human formatting.
+- `packages/cli/src/config/dispatch-policy-options.ts` - bundled recommendation
+  disclosure in canonical choices.
+- Config adoption and dispatch-ceiling commands - effective post-adoption and
+  runtime disclosures in human and JSON output.
+- Focused tests - recommendation/effective distinctions, preserved cells, and
+  Fable/non-Fable runtime behavior.
+
+**Verification:**
+
+- Run: focused disclosure Vitest suite and CLI type-check.
+- Result: pass (269 tests; type-check clean).
+
+**Notes / Decisions:**
+
+- Runtime notices are emitted only for reviewer or preflight resolution and
+  match the effective target, not recommendation-version provenance.
 
 ---
 
 ### Task p02-t02: Update implementation guidance and documentation
 
-**Status:** pending
+**Status:** in_progress
 **Commit:** -
+
+**Approval boundary:**
+
+- Read-only documentation delta analysis is in progress. No task files may be
+  edited until the user approves the substantive proposal.
 
 ---
 
@@ -376,7 +410,7 @@ Track test execution during implementation.
 | Phase | Tests Run | Passed | Failed | Coverage |
 | ----- | --------- | ------ | ------ | -------- |
 | 1     | 412       | 412    | 0      | Focused  |
-| 2     | -         | -      | -      | -        |
+| 2     | 269       | 269    | 0      | Focused  |
 
 ## Final Summary (for PR/docs)
 

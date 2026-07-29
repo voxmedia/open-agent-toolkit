@@ -1,6 +1,6 @@
 ---
-oat_current_task: p02-t01
-oat_last_commit: d3ce4975068e10640858fc831822607e3e09f9cd
+oat_current_task: p02-t02
+oat_last_commit: e37a044a3a5afd9b8a65c3ffb2b47d0461ab94f5
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T19:23:43.402Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T04:43:36Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T04:53:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 2 (`p02-t01`)
+Implementation - Phase 2 (`p02-t02`)
 
 ## Artifacts
 
@@ -95,8 +95,8 @@ Implementation - Phase 2 (`p02-t01`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (2/6 tasks complete; current
-  `p02-t01`)
+- **Implementation:** `implementation.md` (3/6 tasks complete; current
+  `p02-t02`)
 
 ## Progress
 
@@ -120,7 +120,9 @@ Implementation - Phase 2 (`p02-t01`)
 - ✓ `p01-t02` added classification inputs and managed-cap warnings
 - ✓ Phase 1 implementation completed
 - ✓ Phase 1 root-owned review passed with no blocking findings
-- → Next task is `p02-t01`
+- ✓ `p02-t01` added shared terminal-reviewer disclosures for policy choices,
+  effective adoption, and runtime resolution
+- → `p02-t02` awaits approval of the substantive documentation delta
 
 ## Blockers
 
@@ -128,4 +130,4 @@ None
 
 ## Next Milestone
 
-Start Phase 2 at `p02-t01`
+Approve the `p02-t02` documentation delta, then continue Phase 2
