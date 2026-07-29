@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p04-t13
+oat_current_task_id: p04-review
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status        | Tasks | Completed |
-| ----- | ------------- | ----: | --------: |
-| p01   | complete      |     7 |       7/7 |
-| p02   | complete      |    13 |     13/13 |
-| p03   | complete      |    21 |     21/21 |
-| p04   | fixes_pending |    13 |     12/13 |
-| p05   | pending       |     4 |       0/4 |
+| Phase | Status         | Tasks | Completed |
+| ----- | -------------- | ----: | --------: |
+| p01   | complete       |     7 |       7/7 |
+| p02   | complete       |    13 |     13/13 |
+| p03   | complete       |    21 |     21/21 |
+| p04   | review_pending |    13 |     13/13 |
+| p05   | pending        |     4 |       0/4 |
 
-**Total:** 53/58 tasks completed
+**Total:** 54/58 tasks completed
 
 ---
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** fixes_pending
+**Status:** review_pending
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -264,7 +264,7 @@ oat_generated: false
 - [x] p04-t10 — Verify complete artistic graph semantics (`995c38a9`)
 - [x] p04-t11 — Confine resumed runs to the configured output root (`f2d3ecc7`)
 - [x] p04-t12 — Bind resume identity to the original canonical output root (`3b7b43b2`)
-- [ ] p04-t13 — Authenticate the canonical resume root externally
+- [x] p04-t13 — Authenticate the canonical resume root externally (`996229cf`)
 
 ## Phase 5: Golden conformance and release closure
 
@@ -839,7 +839,29 @@ oat_generated: false
 - Scope: externally authenticate the original canonical resume root and reject
   coordinated filesystem plus retained-request mutation
 - Operator authorization: “approve final recommended fix and review”
+- Outcome: `DONE`
+- Commit: `996229cfad5392a45681e91e0084b4684acbcb47`
+- Verification: records 24/24, core 63/63, resume invariants 8/8, tamper probes
+  3/3, p03/p04 union 431/431, CLI contracts 77/77, and explainer smoke 8/8
+- Exact I4-R3 attack rejected the original `ekrt2` token with
+  `E_APPROVAL_RESUME` before planner, author, or durability callbacks; legacy
+  relative `ekrt1` and stable-root `ekrt2` paths remain green
+- Repository and five-package/65-measurement release gates passed
+- Worktree: clean; tracking and review artifacts untouched
 - Dispatch: scope=p04 action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 27 — Phase p04 operator-authorized final re-review
+
+- Request: `explainer-improvements-p04-review-r4-20260729T122000Z`
+- Launch intent: persisted
+- Base: `3b7b43b24e6d14813963bdc97e17d6b6175a00ef`
+- Reviewed head: `996229cfad5392a45681e91e0084b4684acbcb47`
+- Source artifact: `reviews/20260729-p04-code-review-r3.md`
+- Planned artifact: `reviews/20260729-p04-code-review-r4.md`
+- Review-remediation attempt: 4/4 by explicit operator override
+- Scope: I4-R3, p04-t13, and regression checks for every previously resolved
+  Phase p04 finding
+- Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
 

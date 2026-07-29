@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t13
-oat_last_commit: 3b7b43b24e6d14813963bdc97e17d6b6175a00ef
+oat_current_task: p04-review
+oat_last_commit: 996229cfad5392a45681e91e0084b4684acbcb47
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -70,7 +70,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-28T01:01:08.566Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T12:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-29T12:20:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -247,6 +247,11 @@ Phase p04 implementation in progress
   root comparison while preserving the valid external resume token
 - ✓ Operator explicitly authorized one final recommended fix and review
 - ⧗ p04-t13 is bounded as Phase p04 remediation attempt 4/4
+- ✓ p04-t13 implemented in atomic commit `996229cf`
+- ✓ Exact I4-R3 coordinated retarget plus retained-root mutation now fails
+  before planner, author, or durability callbacks
+- ✓ Complete p03/p04 union passed 431/431 and all repository/release gates passed
+- ⧗ Operator-authorized final Phase p04 re-review attempt 4/4 is pending
 
 ## Blockers
 
@@ -254,5 +259,5 @@ None
 
 ## Next Milestone
 
-Execute p04-t13, rerun all Phase p04 and repository/release gates, then perform
-the operator-authorized final re-review.
+Perform the operator-authorized final Phase p04 re-review; if it passes, stop at
+the p05 HiLL checkpoint for explicit approval.
