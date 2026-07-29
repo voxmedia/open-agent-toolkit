@@ -330,10 +330,14 @@ Successful JSON reports:
   `selection.requestedCandidate`
 - the exact provider-specific `dispatchArgs`
 
-The resolver rejects a missing candidate, an above-ceiling candidate, an
-ambiguous route, malformed ordering, a reviewer candidate request, or controls
-that cannot compile exactly. The root blocks instead of reusing its own target,
-a base role, or a provider default.
+The resolver rejects an above-ceiling candidate, an ambiguous route, malformed
+ordering, a reviewer candidate request, or controls that cannot compile
+exactly. For compatibility, omitting an exact candidate from a managed
+named-cap implementation or fix still resolves successfully at the cap. When
+report context is present, that path emits the coded
+`managed-capped-selection-skipped` warning in human and JSON output. The root
+must treat the warning as a dispatch-policy violation and select an exact
+candidate before launch even though the command retains exit code `0`.
 
 Implementer and fix resolution has two mutually exclusive selection branches:
 
@@ -435,20 +439,38 @@ write authority. See
 
 Resolver calls that pass `--report-scope` and `--report-action` include a
 `dispatchReport` object in JSON output. Consumers must require
-`dispatchReport.schemaVersion: 1` before dispatch. The report keeps four
-different decisions separate:
+`dispatchReport.schemaVersion: 1` before dispatch. The report keeps these
+concerns separate:
 
-| Report area                                                         | What it means                                                        |
-| ------------------------------------------------------------------- | -------------------------------------------------------------------- |
-| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source    |
-| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                     |
-| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position |
-| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route             |
+| Report area                                                         | What it means                                                                                 |
+| ------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| `policy`                                                            | The resolved managed/inherit policy, its status, name, and source                             |
+| `selection.ceilingTier` / `selection.ceilingTarget`                 | The maximum allowed tier and its boundary target                                              |
+| `selection.requestedCandidate` / `candidateTier` / `candidateIndex` | The exact candidate requested for this bounded task and its position                          |
+| `selection.preferredValue`                                          | The legacy `--preferred` selection value, or `null` when that compatibility path was not used |
+| `selection.exactSelectedTarget` / `route.target`                    | The compiled provider target and actual invocation route                                      |
+| `classification`                                                    | Caller-reported task class, applicable Codex preferred effort, and provenance source          |
+| `notices`                                                           | Ordered coded warnings and advisories derived from the effective dispatch context             |
 
 A named policy or ceiling is never a substitute for the requested candidate or
-exact selected target. `requestedControls` records what OAT put into the host
-payload. `configuredDefaults` records fallback configuration and is explicitly
-not a runtime observation.
+exact selected target. Classification is provenance only: it records the
+root's judgment but does not participate in candidate normalization or let OAT
+judge whether that classification was correct. `requestedControls` records
+what OAT put into the host payload. `configuredDefaults` records fallback
+configuration and is explicitly not a runtime observation.
+
+Managed named-cap implementation and fix reports can include two warning codes:
+
+- `managed-capped-selection-skipped` means no exact candidate or legacy
+  preferred value was supplied, so compatibility behavior selected the cap.
+- `managed-capped-classification-missing` means an exact candidate was supplied
+  without `--task-class`.
+
+Both warnings preserve resolved status and exit code `0`. They do not apply to
+policy-only preflight, reviewer, inherit, uncapped, unresolved, or
+legacy-preferred routes. `terminal-reviewer-eligibility` is an advisory tied to
+an effective Fable reviewer target, not proof of model access or organizational
+retention eligibility.
 
 `gateInvocation` is an immutable copy of configured gate controls.
 `runtimeIdentity` is separate and stays `not-reported` until independently

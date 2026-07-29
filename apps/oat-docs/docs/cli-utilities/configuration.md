@@ -481,10 +481,15 @@ writes user, shared, local, or project configuration. JSON reports top-level
 `source: invocation`; `providers.<provider>.cellSource` still identifies the
 config layer that owns the selected candidate.
 
-The resolver fails closed when a candidate is missing, above the maximum,
-ambiguous, malformed, or cannot compile exact provider controls. `--preferred`
-remains compatibility behavior for legacy scalar ceilings and managed
-`Uncapped`; it is not the exact managed phase-agent path.
+The resolver fails closed when a requested candidate is above the maximum,
+ambiguous, malformed, or cannot compile exact provider controls. Omitting an
+exact candidate from a managed named-cap implementation or fix currently
+preserves compatibility by resolving successfully at the cap; with report
+context, human and JSON output include the
+`managed-capped-selection-skipped` warning. Callers must surface that warning
+and select an exact candidate before launch. `--preferred` remains
+compatibility behavior for legacy scalar ceilings and managed `Uncapped`; it is
+not the exact managed phase-agent path.
 
 ### Provider enforcement and materialization
 
