@@ -664,21 +664,103 @@ git commit -m "chore(release): bump public packages after main merge"
 
 ---
 
+### Task prev1-t03: (review) Refresh revision summary lineage
+
+**Files:**
+
+- Modify: `.oat/projects/shared/surface-implementer-dispatches/summary.md`
+
+**Step 1: Understand the issue**
+
+Review finding: the summary's freshness metadata and narrative do not include
+Revision 1 even though `prev1-t02` is complete.
+Location:
+`.oat/projects/shared/surface-implementer-dispatches/summary.md:7`
+
+**Step 2: Implement fix**
+
+Refresh the summary through the `oat-project-summary` contract. Record
+`prev1-t02` as the latest task, one included revision (`p-rev1`), and a concise
+Revision History entry covering the main merge, conflict resolution, and
+`0.2.26` release bump.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+pnpm exec oxfmt --check \
+  ".oat/projects/shared/surface-implementer-dispatches/summary.md"
+git diff --check
+```
+
+Expected: summary metadata matches the completed revision and formatting passes.
+
+**Step 4: Commit**
+
+```bash
+git add .oat/projects/shared/surface-implementer-dispatches/summary.md
+git commit -m "docs(summary): record post-merge revision"
+```
+
+---
+
+### Task prev1-t04: (review) Clean archived review whitespace
+
+**Files:**
+
+- Modify:
+  `.oat/projects/shared/surface-implementer-dispatches/reviews/archived/code-final-review-2026-07-29T150100Z.md`
+
+**Step 1: Understand the issue**
+
+Review finding: Markdown hard-break trailing spaces in the archived prior review
+make both the guarded re-review range and effective branch delta fail
+`git diff --check`.
+Location:
+`.oat/projects/shared/surface-implementer-dispatches/reviews/archived/code-final-review-2026-07-29T150100Z.md:17`
+
+**Step 2: Implement fix**
+
+Remove the trailing spaces without changing the review artifact's meaning.
+
+**Step 3: Verify**
+
+Run:
+
+```bash
+git diff --check 79feab7f0b2fd23165f9dcea06bf04a70d645b62..HEAD
+git diff --check origin/main...HEAD
+```
+
+Expected: both authoritative ranges pass whitespace validation.
+
+**Step 4: Commit**
+
+```bash
+git add \
+  .oat/projects/shared/surface-implementer-dispatches/reviews/archived/code-final-review-2026-07-29T150100Z.md
+git commit -m "chore(review): clean archived final review formatting"
+```
+
+---
+
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                      |
-| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- |
-| p01    | code     | passed          | 2026-07-29 | reviews/archived/code-p01-review-2026-07-29T043611Z.md        |
-| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T120024Z.md        |
-| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T121857Z.md        |
-| p02    | code     | passed          | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T123104Z.md        |
-| p03    | code     | passed          | 2026-07-29 | reviews/archived/code-p03-review-2026-07-29T145300Z.md        |
-| final  | code     | passed          | 2026-07-29 | reviews/archived/code-final-review-2026-07-29T150100Z.md      |
-| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T152853Z.md           |
-| spec   | artifact | pending         | -          | -                                                             |
-| design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md |
-| plan   | artifact | passed          | 2026-07-29 | -                                                             |
-| plan   | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-plan-review-2026-07-29T034646Z.md   |
+| Scope  | Type     | Status          | Date       | Artifact                                                      | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ------------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | passed          | 2026-07-29 | reviews/archived/code-p01-review-2026-07-29T043611Z.md        | -                                        | -          | -           |
+| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T120024Z.md        | -                                        | -          | -           |
+| p02    | code     | fixes_completed | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T121857Z.md        | -                                        | -          | -           |
+| p02    | code     | passed          | 2026-07-29 | reviews/archived/code-p02-review-2026-07-29T123104Z.md        | -                                        | -          | -           |
+| p03    | code     | passed          | 2026-07-29 | reviews/archived/code-p03-review-2026-07-29T145300Z.md        | -                                        | -          | -           |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/code-final-review-2026-07-29T150100Z.md      | -                                        | -          | -           |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T152853Z.md           | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                             | -                                        | -          | -           |
+| design | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-design-review-2026-07-28T235619Z.md | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-07-29 | -                                                             | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-07-29 | reviews/archived/artifact-plan-review-2026-07-29T034646Z.md   | -                                        | -          | -           |
+| final  | code     | fixes_added     | 2026-07-29 | reviews/archived/final-review-2026-07-29T165043Z.md           | 06f0777ba7145406fe406490c2630a945c2858c2 | manual     | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -693,9 +775,10 @@ review; no review artifact was produced for that event.
 - Phase 1: 2 tasks - Dispatch report schema, classification inputs, and warnings
 - Phase 2: 2 tasks - Terminal reviewer disclosures, skills, and docs
 - Phase 3: 2 tasks - Public release metadata and backlog closeout
-- Revision 1: 2 tasks - Merge current main and refresh lockstep release metadata
+- Revision 1: 4 tasks - Merge current main, refresh release metadata, and close
+  final review findings
 
-**Total: 8 tasks**
+**Total: 10 tasks**
 
 Ready for implementation after plan review and dispatch setup.
 

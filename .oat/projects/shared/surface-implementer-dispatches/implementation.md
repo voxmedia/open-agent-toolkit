@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: prev1-t03
 oat_generated: false
 ---
 
@@ -24,14 +24,14 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase      | Status    | Tasks | Completed |
-| ---------- | --------- | ----- | --------- |
-| Phase 1    | completed | 2     | 2/2       |
-| Phase 2    | completed | 2     | 2/2       |
-| Phase 3    | completed | 2     | 2/2       |
-| Revision 1 | completed | 2     | 2/2       |
+| Phase      | Status      | Tasks | Completed |
+| ---------- | ----------- | ----- | --------- |
+| Phase 1    | completed   | 2     | 2/2       |
+| Phase 2    | completed   | 2     | 2/2       |
+| Phase 3    | completed   | 2     | 2/2       |
+| Revision 1 | in_progress | 4     | 2/4       |
 
-**Total:** 8/8 tasks completed
+**Total:** 8/10 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -453,7 +453,7 @@ oat_generated: false
 
 ## Phase p-rev1: Revision 1
 
-**Status:** completed
+**Status:** in_progress
 **Started:** 2026-07-29
 
 ### Phase Summary (fill when phase is complete)
@@ -534,6 +534,18 @@ oat_generated: false
   sequence from the revision plan.
 - Result: all nine commands passed; release validation confirmed five
   `0.2.26` packages and 65 visual measurements.
+
+---
+
+### Task prev1-t03: (review) Refresh revision summary lineage
+
+**Status:** pending
+
+---
+
+### Task prev1-t04: (review) Clean archived review whitespace
+
+**Status:** pending
 
 ---
 
@@ -1032,6 +1044,22 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Post-approval:** none
 - **PR:** https://github.com/voxmedia/open-agent-toolkit/pull/187
 
+#### Dispatch Acceptance — Revision 1 final reviewer
+
+- **Request:** `final-review-rev1-20260729T165043Z`
+- **Accepted target:** `oat-reviewer-gpt-5-6-sol-high`
+- **Model / effort axes:** `selected:gpt-5.6-sol-high` /
+  `not-applicable`
+- **Mode:** background; required for an interactive multi-minute reviewer
+- **Range:** `79feab7f0b2fd23165f9dcea06bf04a70d645b62` →
+  `06f0777ba7145406fe406490c2630a945c2858c2`
+- **Outcome:** accepted once; artifact validated; `BLOCKED`
+- **Findings:** 0 Critical, 1 Important, 1 Medium, 1 Minor
+- **Reconnaissance:** attempted; nested consequential floor unsatisfied, so no
+  below-floor worker launched and the primary reviewer covered both lanes
+- **Artifact:**
+  `reviews/archived/final-review-2026-07-29T165043Z.md`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -1064,6 +1092,32 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 deferral durably and addresses the Minor artifact hygiene item directly.
 
 **Next:** Complete receive bookkeeping and allow the configured exit gate.
+
+### Review Received: Revision 1 final review
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T165043Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 1
+- Medium: 1
+- Minor: 1
+
+**Dispositions:**
+
+- I1: `convert_to_task` — refresh stale summary lineage and Revision History
+  through `prev1-t03`.
+- M1: `explicit_deferral` — retain the existing cross-provider report-context
+  matrix deferral because Revision 1 did not change its recorded trigger.
+- m1: `convert_to_task` — remove range-level trailing whitespace from the
+  archived prior review through `prev1-t04`.
+
+**New tasks added:** `prev1-t03`, `prev1-t04`
+
+**Next:** Execute the two bounded review-fix tasks, then rerun the final review.
 
 ## Implementation Log
 
