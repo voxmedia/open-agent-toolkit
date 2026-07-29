@@ -1,5 +1,5 @@
 ---
-oat_current_task: p04-closure-review
+oat_current_task: p05-hill-checkpoint
 oat_last_commit: 9d7d650172fe40e5ddd8590ac2ea3078cc700ed4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -263,7 +263,8 @@ Phase p04 implementation in progress
 - ✓ p04-t14 implemented in atomic commit `9d7d6501`
 - ✓ Legacy downgrade regressions, focused resume tests, complete p03/p04 union,
   repository tests, and release validation passed
-- ⧗ Explicitly authorized Phase p04 closure review is pending
+- ✓ Explicitly authorized Phase p04 closure review passed with zero findings
+- ⧗ Phase p05 HiLL checkpoint reached; user approval is required before p05-t01
 
 ## Blockers
 
@@ -271,5 +272,5 @@ None.
 
 ## Next Milestone
 
-Run the explicitly authorized Phase p04 closure review, then stop at the p05
-HiLL checkpoint if it passes.
+Obtain user approval at the Phase p05 HiLL checkpoint, then execute the three
+golden benchmarks and release closure tasks.

@@ -1960,7 +1960,7 @@ another review cycle.
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r2.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r4.md |
-| p04    | code     | pending         | -          | reviews/20260729-p04-code-review-r5.md |
+| p04    | code     | passed          | 2026-07-29 | reviews/20260729-p04-code-review-r5.md |
 | p05    | code     | pending         | -          | -                                      |
 | final  | code     | pending         | -          | -                                      |
 | spec   | artifact | pending         | -          | -                                      |

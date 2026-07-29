@@ -17,13 +17,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | review_pending |    14 |     14/14 |
-| p05   | pending        |     4 |       0/4 |
+| Phase | Status   | Tasks | Completed |
+| ----- | -------- | ----: | --------: |
+| p01   | complete |     7 |       7/7 |
+| p02   | complete |    13 |     13/13 |
+| p03   | complete |    21 |     21/21 |
+| p04   | complete |    14 |     14/14 |
+| p05   | pending  |     4 |       0/4 |
 
 **Total:** 55/59 tasks completed
 
@@ -250,7 +250,7 @@ oat_generated: false
 
 ## Phase 4: Topology, backlinks, and catalog integrity
 
-**Status:** review_pending
+**Status:** complete
 
 - [x] p04-t01 — Detect and reroute non-linear diagrams (`0360c481`)
 - [x] p04-t02 — Emit commit-pinned source backlinks (`6f6c42eb`)
@@ -905,6 +905,11 @@ oat_generated: false
   p04 finding
 - Authorization: explicit operator-selected secure closure outside the exhausted
   automatic cap
+- Outcome: `PASS`
+- Artifact: `reviews/20260729-p04-code-review-r5.md`
+- Findings: 0 Critical, 0 Important, 0 Medium, 0 Minor
+- Verification: 309 focused tests passed; adversarial legacy-token rejection,
+  authenticated changed-CWD resume, and every prior Phase p04 finding passed
 - Dispatch: scope=p04 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
