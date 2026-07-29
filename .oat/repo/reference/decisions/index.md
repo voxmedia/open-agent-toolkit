@@ -10,6 +10,11 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260729-classification-reports-but     | 2026-07-29 | accepted | Classification reports but does not skip                                | -      |
+| DR-260729-default-narrowing              | 2026-07-29 | accepted | Default narrowing with explicit opt-out                                 | -      |
+| DR-260729-dual-durable-review-provenance | 2026-07-29 | accepted | Dual durable review provenance                                          | -      |
+| DR-260729-lineage-qualified-guarded      | 2026-07-29 | accepted | Lineage-qualified guarded ranges                                        | -      |
+| DR-260729-narrowed-coverage-is-inherited | 2026-07-29 | accepted | Narrowed coverage is inherited explicitly                               | -      |
 | DR-260724-canonical-project-asset        | 2026-07-24 | accepted | Canonical project asset reconciliation                                  | -      |
 | DR-260724-project-state-and-runtime      | 2026-07-24 | accepted | Project state and runtime availability separation                       | -      |
 | DR-260724-provider-path-safety-boundary  | 2026-07-24 | accepted | Provider path safety boundary                                           | -      |

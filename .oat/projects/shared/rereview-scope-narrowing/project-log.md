@@ -76,6 +76,10 @@ The Phase 3 boundary cleanup reverted a generated prompt-inventory update that t
 
 Phase passed after one bounded release-consistency fix; passing review: reviews/archived/p06-review-2026-07-28T233714Z.md
 
+### 2026-07-29 · general · friction · Generated autonomy inventory coupling
+
+Promotes the original entry "2026-07-28 · project · friction · Phase 3 autonomy inventory boundary": prompt-path edits that change autonomy gates must preserve or regenerate the associated inventory evidence, with focused inventory tests run before cleanup.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
