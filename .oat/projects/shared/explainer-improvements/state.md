@@ -1,5 +1,5 @@
 ---
-oat_current_task: final-review
+oat_current_task: p05-t06
 oat_last_commit: 508da0b898e1a1e5f6545554b7d0715aa1f9ebd4
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
@@ -275,7 +275,10 @@ Phase p04 implementation in progress
 - ✓ p05-t05 corrected the shared substitution boundary and regenerated all
   retained runtime evidence without trailing whitespace
 - ✓ All 60 implementation tasks and all repository/docs/release gates pass
-- ⧗ The single bounded final project review is pending
+- ✓ The single bounded final project review completed with two Important
+  integrity findings
+- ⧗ p05-t06 and p05-t07 are bounded as the imported plan's single authorized
+  Critical/Important fix pass
 
 ## Blockers
 
@@ -283,4 +286,5 @@ None.
 
 ## Next Milestone
 
-Run the single bounded final project review and disposition any findings.
+Execute p05-t06 and p05-t07, run focused and full gates once, then mechanically
+close the project without opening another review cycle.

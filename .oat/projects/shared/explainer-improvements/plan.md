@@ -1974,6 +1974,99 @@ another review cycle.
 
 ---
 
+### Task p05-t06: Bind resume to the complete canonical request
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/records.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+
+**Steps:**
+
+1. Add a RED table-driven resume matrix mutating every semantic request field,
+   including theme, render strategy, privacy, public base URL, durability, and
+   publish destination; require `E_APPROVAL_RESUME` before hydration or any
+   planner, author, durability, or publish callback.
+2. Share the initialization path's canonical privacy-safe persisted-request
+   projection with resume validation.
+3. Compare the complete normalized current request against the authenticated
+   retained request before installing current request state or hydrating the
+   package. Preserve only explicitly redacted non-semantic input behavior.
+4. Update the resume contract and run focused records/core integration tests.
+5. Commit as `fix(p05-t06): bind complete resume request`.
+
+**Acceptance:** A valid resume token cannot authorize any request whose
+side-effect, rendering, privacy, source, recipe, or destination policy differs
+from the authenticated retained request.
+
+---
+
+### Task p05-t07: Retain trusted Chromium runtime identity
+
+**Files:**
+
+- Modify: `.agents/skills/explainer-kit/scripts/lib/browser-runtime.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/qa.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/visual-review.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/records.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/package-coverage.mjs`
+- Modify: `.agents/skills/explainer-kit/schemas/visual-review-request.v1.schema.json`
+- Modify: `.agents/skills/explainer-kit/references/contracts.md`
+- Modify: `.agents/skills/explainer-kit/tests/browser-runtime.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/qa.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/explainer-kit/tests/golden-conformance.test.mjs`
+- Regenerate via rebuilt runtime: outputs under `.agents/skills/explainer-kit/tests/fixtures/golden/*/runtime/`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/finalize-tracked-run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/references/visual-review-callback.md`
+- Modify: `.agents/skills/oat-explainer-kit/references/lifecycle-contract.md`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/completion.integration.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/finalize-tracked-run.test.mjs`
+- Modify: `packages/cli/src/commands/project/archive/explainer-package-coverage.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.ts`
+- Modify: `packages/cli/src/commands/project/archive/archive-utils.test.ts`
+- Modify: `packages/cli/src/release/public-package-contract.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `tools/smoke/explainer-kit/package-coverage-consumers.test.mjs`
+
+**Steps:**
+
+1. Add RED production-path cases proving browser evidence without trusted
+   engine/version identity, forged callback assertions, fixture sessions in
+   production, and cross-record runtime mismatches fail closed.
+2. Promote the browser seam from a bare callback to a validated session
+   descriptor branded by `createBrowserProbeSession()`. Keep deterministic
+   fixture sessions explicitly marked and disallowed in production unattended
+   recap paths.
+3. Carry trusted Chromium name/version/capture identity through QA metrics,
+   visual-review request binding, retained attempts, immutable hashes, package
+   coverage, finalization, and archive validation.
+4. Keep one canonical shipped evidence-content contract across core, finalizer,
+   CLI archive, packed-package validation, and smoke consumers. Do not trust a
+   caller-supplied `{name, version}` object.
+5. Regenerate all three golden fixtures through real Chromium and assert
+   production evidence—not only benchmark summaries—retains matching runtime
+   identity.
+6. Sync provider views from canonical skills, preserve the existing PR-scoped
+   skill/public-package version bumps, and run focused browser/QA/contracts,
+   adapter/finalizer/archive, golden, smoke, full repository/docs/release, and
+   `git diff --check` gates.
+7. Commit as `fix(p05-t07): retain trusted chromium identity`.
+
+**Acceptance:** Every successful production browser evidence chain proves the
+trusted launched Chromium engine/version through immutable package, finalizer,
+archive, and visual-review bindings; fixture or forged identities fail closed.
+
+---
+
 ## Reviews
 
 | Scope  | Type     | Status          | Date       | Artifact                               |
@@ -1989,8 +2082,8 @@ another review cycle.
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r4.md |
 | p04    | code     | passed          | 2026-07-29 | reviews/20260729-p04-code-review-r5.md |
-| p05    | code     | pending         | -          | reviews/20260729-final-code-review.md  |
-| final  | code     | pending         | -          | reviews/20260729-final-code-review.md  |
+| p05    | code     | fixes_added     | 2026-07-29 | reviews/20260729-final-code-review.md  |
+| final  | code     | fixes_added     | 2026-07-29 | reviews/20260729-final-code-review.md  |
 | spec   | artifact | pending         | -          | -                                      |
 | design | artifact | pending         | -          | -                                      |
 | plan   | artifact | passed          | 2026-07-28 | -                                      |
@@ -2016,9 +2109,9 @@ additional unrelated review cycles.
 - Phase 2: 13 tasks — bundled guidance, contracts, adaptive runtime, verification fixes, and review remediation
 - Phase 3: 21 tasks — browser evidence, independent critic, loop cap, lifecycle gate, integration alignment, and review remediation
 - Phase 4: 14 tasks — topology routing, pinned backlinks, generated catalog, consumer alignment, and review remediation
-- Phase 5: 5 tasks — three benchmark cases, release closure, and generated-output hygiene
+- Phase 5: 7 tasks — three benchmark cases, release closure, generated-output hygiene, and final integrity fixes
 
-**Total: 60 tasks**
+**Total: 62 tasks**
 
 Implementation is not complete. This section records the completion target and
 must be updated with evidence when all tasks and reviews pass.

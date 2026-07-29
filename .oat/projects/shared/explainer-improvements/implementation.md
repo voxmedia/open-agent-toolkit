@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: null
+oat_current_task_id: p05-t06
 oat_generated: false
 ---
 
@@ -17,15 +17,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase | Status         | Tasks | Completed |
-| ----- | -------------- | ----: | --------: |
-| p01   | complete       |     7 |       7/7 |
-| p02   | complete       |    13 |     13/13 |
-| p03   | complete       |    21 |     21/21 |
-| p04   | complete       |    14 |     14/14 |
-| p05   | review_pending |     5 |       5/5 |
+| Phase | Status        | Tasks | Completed |
+| ----- | ------------- | ----: | --------: |
+| p01   | complete      |     7 |       7/7 |
+| p02   | complete      |    13 |     13/13 |
+| p03   | complete      |    21 |     21/21 |
+| p04   | complete      |    14 |     14/14 |
+| p05   | fixes_pending |     7 |       5/7 |
 
-**Total:** 60/60 tasks completed
+**Total:** 60/62 tasks completed
 
 ---
 
@@ -269,13 +269,15 @@ oat_generated: false
 
 ## Phase 5: Golden conformance and release closure
 
-**Status:** review_pending
+**Status:** fixes_pending
 
 - [x] p05-t01 — Pass the simple-project golden benchmark (`1d9b884e`)
 - [x] p05-t02 — Pass the non-linear architecture golden benchmark (`9d234d88`)
 - [x] p05-t03 — Pass the archived project golden benchmark (`b47a79a9`)
 - [x] p05-t04 — Close versions, documentation, and release validation (`e309ef7e`)
 - [x] p05-t05 — Normalize generated HTML whitespace (`508da0b8`)
+- [ ] p05-t06 — Bind resume to the complete canonical request
+- [ ] p05-t07 — Retain trusted Chromium runtime identity
 
 ---
 
@@ -960,7 +962,23 @@ oat_generated: false
   security/resume closure, release payload, and repository readiness
 - Review policy: single bounded post-benchmark final review from the imported
   plan
+- Outcome: `BLOCKED`
+- Artifact: `reviews/20260729-final-code-review.md`
+- Findings: 0 Critical, 2 Important, 0 Medium, 0 Minor
+- Blocking: resume accepts changed current side-effect policy; production
+  immutable browser evidence omits trusted Chromium engine/version identity
 - Dispatch: scope=final action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=oat-reviewer-gpt-5-6-sol-xhigh
+
+### Run 33 — Single authorized final fix pass
+
+- Request: `explainer-improvements-final-fix-20260729T180000Z`
+- Launch intent: persisted
+- Tasks: p05-t06 and p05-t07, sequentially
+- Source artifact: `reviews/20260729-final-code-review.md`
+- Scope: complete authenticated resume-request equality and trusted Chromium
+  identity through immutable evidence consumers
+- Review policy: one Critical/Important fix pass; no open-ended re-review
+- Dispatch: scope=final action=fix role=fix producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-xhigh effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-xhigh target=oat-phase-implementer-gpt-5-6-sol-xhigh
 
 <!-- orchestration-runs-end -->
 
