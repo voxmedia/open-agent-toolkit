@@ -16,7 +16,10 @@ export function decodeBrowserPng(bytes) {
   if (!Buffer.isBuffer(bytes)) {
     throw pngError('PNG input must be a Buffer.');
   }
-  if (bytes.length < PNG_SIGNATURE.length + 12 || bytes.length > MAX_PNG_INPUT_BYTES) {
+  if (
+    bytes.length < PNG_SIGNATURE.length + 12 ||
+    bytes.length > MAX_PNG_INPUT_BYTES
+  ) {
     throw pngError(
       `PNG input must be between ${PNG_SIGNATURE.length + 12} and ${MAX_PNG_INPUT_BYTES} bytes.`,
     );
@@ -48,11 +51,7 @@ export function decodeBrowserPng(bytes) {
     const typeBytes = bytes.subarray(offset + 4, offset + 8);
     if (
       typeBytes.some(
-        (byte) =>
-          !(
-            (byte >= 65 && byte <= 90) ||
-            (byte >= 97 && byte <= 122)
-          ),
+        (byte) => !((byte >= 65 && byte <= 90) || (byte >= 97 && byte <= 122)),
       ) ||
       (typeBytes[2] & 0x20) !== 0
     ) {
@@ -100,10 +99,12 @@ export function decodeBrowserPng(bytes) {
   }
 
   if (ihdr === null || !sawIdat || idatLength === 0 || !sawIend) {
-    throw pngError('PNG requires IHDR, non-empty contiguous IDAT, and IEND chunks.');
+    throw pngError(
+      'PNG requires IHDR, non-empty contiguous IDAT, and IEND chunks.',
+    );
   }
 
-  const { width, height, channels, colorType } = ihdr;
+  const { width, height, bitDepth, channels, colorType } = ihdr;
   const rowBytes = boundedMultiply(width, channels, MAX_PNG_DECODED_BYTES);
   const scanlineBytes = boundedMultiply(
     height,
@@ -136,14 +137,24 @@ export function decodeBrowserPng(bytes) {
     channels,
     rowBytes,
   });
-  return {
+  const pixelHash = hashBytes(pixels);
+  const decodedHash = hashDecodedIdentity({
     width,
     height,
-    bitDepth: 8,
+    bitDepth,
     colorType,
     channels,
     pixels,
-    pixelHash: `sha256:${createHash('sha256').update(pixels).digest('hex')}`,
+  });
+  return {
+    width,
+    height,
+    bitDepth,
+    colorType,
+    channels,
+    pixels,
+    pixelHash,
+    decodedHash,
   };
 }
 
@@ -172,7 +183,32 @@ function parseIhdr(data) {
       'PNG browser profile must be non-interlaced 8-bit RGB or RGBA.',
     );
   }
-  return { width, height, channels, colorType };
+  return { width, height, bitDepth, channels, colorType };
+}
+
+function hashDecodedIdentity({
+  width,
+  height,
+  bitDepth,
+  colorType,
+  channels,
+  pixels,
+}) {
+  const descriptor = Buffer.alloc(11);
+  descriptor.writeUInt32BE(width, 0);
+  descriptor.writeUInt32BE(height, 4);
+  descriptor[8] = bitDepth;
+  descriptor[9] = colorType;
+  descriptor[10] = channels;
+  return `sha256:${createHash('sha256')
+    .update('explainer-kit.decoded-png/v1\0', 'utf8')
+    .update(descriptor)
+    .update(pixels)
+    .digest('hex')}`;
+}
+
+function hashBytes(bytes) {
+  return `sha256:${createHash('sha256').update(bytes).digest('hex')}`;
 }
 
 function reconstructScanlines(inflated, { height, channels, rowBytes }) {
@@ -187,7 +223,8 @@ function reconstructScanlines(inflated, { height, channels, rowBytes }) {
     const rowOffset = row * rowBytes;
     for (let column = 0; column < rowBytes; column += 1) {
       const encoded = inflated[inputOffset + column];
-      const left = column >= channels ? pixels[rowOffset + column - channels] : 0;
+      const left =
+        column >= channels ? pixels[rowOffset + column - channels] : 0;
       const up = row > 0 ? pixels[rowOffset - rowBytes + column] : 0;
       const upLeft =
         row > 0 && column >= channels

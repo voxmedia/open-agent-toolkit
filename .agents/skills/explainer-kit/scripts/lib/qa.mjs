@@ -842,7 +842,7 @@ async function retainBrowserEvidence({
       width: viewportSize.width,
       height: viewportSize.height,
       screenshotPath,
-      decodedScreenshotHash: decoded.pixelHash,
+      decodedScreenshotHash: decoded.decodedHash,
       metricsPath,
     },
   };

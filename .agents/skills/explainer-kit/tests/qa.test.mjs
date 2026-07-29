@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -548,8 +549,7 @@ test('rejects partial required recap browser evidence while lower tiers remain e
   assert.equal(required.valid, false);
   assert.ok(
     required.issues.some(
-      ({ code, width }) =>
-        code === 'browser-evidence-missing' && width === 768,
+      ({ code, width }) => code === 'browser-evidence-missing' && width === 768,
     ),
   );
 
@@ -943,9 +943,7 @@ test('rejects recap QA when applicable ledger claims are empty or unobserved', a
     setPlan,
   });
   assert.equal(report.valid, false);
-  assert.ok(
-    report.issues.some(({ code }) => code === 'cohesion-ledger-empty'),
-  );
+  assert.ok(report.issues.some(({ code }) => code === 'cohesion-ledger-empty'));
   assert.ok(
     report.issues.some(({ code }) => code === 'cohesion-claim-unobserved'),
   );
@@ -1011,7 +1009,7 @@ test('independent visual review binds the full rendered set and actionable rubri
         artifactId,
         viewport,
         screenshotPath: `qa/browser/${artifactId}/${viewport}.png`,
-        decodedScreenshotHash: decodeBrowserPng(bytes).pixelHash,
+        decodedScreenshotHash: decodeBrowserPng(bytes).decodedHash,
         metricsPath: `qa/browser/${artifactId}/${viewport}.json`,
       };
     }),
@@ -1053,8 +1051,14 @@ test('independent visual review binds the full rendered set and actionable rubri
     ],
   }));
 
-  const decodedHash = evidence[0].decodedScreenshotHash;
-  evidence[0].decodedScreenshotHash = `sha256:${'0'.repeat(64)}`;
+  const originalMobile = png(...viewportSizes.mobile);
+  const decodedMobile = decodeBrowserPng(originalMobile);
+  const reshapedMobile = png(640, 320, { pixels: decodedMobile.pixels });
+  assert.equal(
+    decodeBrowserPng(reshapedMobile).pixelHash,
+    decodedMobile.pixelHash,
+  );
+  await writeFile(join(runRoot, evidence[0].screenshotPath), reshapedMobile);
   await assert.rejects(
     runVisualReview({
       plan,
@@ -1066,7 +1070,7 @@ test('independent visual review binds the full rendered set and actionable rubri
     /decoded screenshot hash/i,
   );
   assert.equal(visualCritic.mock.callCount(), 0);
-  evidence[0].decodedScreenshotHash = decodedHash;
+  await writeFile(join(runRoot, evidence[0].screenshotPath), originalMobile);
 
   const review = await runVisualReview({
     plan,
@@ -1086,6 +1090,13 @@ test('independent visual review binds the full rendered set and actionable rubri
       ({ evidence: artifactEvidence }) => artifactEvidence.length === 3,
     ),
   );
+  const retainedMobile = review.request.renderedArtifacts[0].evidence[0];
+  assert.equal(
+    retainedMobile.screenshotHash,
+    `sha256:${createHash('sha256').update(originalMobile).digest('hex')}`,
+  );
+  assert.notEqual(retainedMobile.screenshotHash, decodedMobile.decodedHash);
+  assert.equal('decodedScreenshotHash' in retainedMobile, false);
   assert.equal(review.result.disposition, 'fail');
   assert.equal(review.result.findings[0].artifactId, 'hub');
 });

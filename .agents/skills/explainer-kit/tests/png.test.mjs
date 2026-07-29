@@ -1,18 +1,18 @@
 import assert from 'node:assert/strict';
-import { deflateSync } from 'node:zlib';
 import { test } from 'node:test';
+import { deflateSync } from 'node:zlib';
 
-import {
-  MAX_PNG_INPUT_BYTES,
-  decodeBrowserPng,
-} from '../scripts/lib/png.mjs';
+import { MAX_PNG_INPUT_BYTES, decodeBrowserPng } from '../scripts/lib/png.mjs';
 import { png, pngChunk, pngFromChunks } from './fixtures/png.mjs';
 
 test('decodes non-interlaced 8-bit RGB and RGBA scanlines with filters 0-4', () => {
   for (const colorType of [2, 6]) {
     const channels = colorType === 2 ? 3 : 4;
     const pixels = Buffer.from(
-      Array.from({ length: 3 * 2 * channels }, (_, index) => (index * 37) & 0xff),
+      Array.from(
+        { length: 3 * 2 * channels },
+        (_, index) => (index * 37) & 0xff,
+      ),
     );
     for (let filter = 0; filter <= 4; filter += 1) {
       const decoded = decodeBrowserPng(
@@ -25,6 +25,21 @@ test('decodes non-interlaced 8-bit RGB and RGBA scanlines with filters 0-4', () 
       assert.match(decoded.pixelHash, /^sha256:[a-f0-9]{64}$/);
     }
   }
+});
+
+test('binds decoded identity to geometry, profile, and reconstructed pixels', () => {
+  const pixels = Buffer.alloc(2 * 1 * 4, 0x7f);
+  const wide = decodeBrowserPng(png(2, 1, { pixels }));
+  const tall = decodeBrowserPng(png(1, 2, { pixels }));
+
+  assert.equal(wide.pixelHash, tall.pixelHash);
+  assert.notEqual(wide.decodedHash, tall.decodedHash);
+  assert.match(wide.decodedHash, /^sha256:[a-f0-9]{64}$/);
+
+  const reencoded = decodeBrowserPng(
+    png(2, 1, { pixels, filter: 4, splitIdat: true }),
+  );
+  assert.equal(reencoded.decodedHash, wide.decodedHash);
 });
 
 test('rejects pseudo-PNGs, bad signatures, chunk boundaries, and CRC failures', () => {
@@ -40,7 +55,10 @@ test('rejects pseudo-PNGs, bad signatures, chunk boundaries, and CRC failures', 
   badSignature[0] ^= 0xff;
   assert.throws(() => decodeBrowserPng(badSignature), /signature/i);
 
-  assert.throws(() => decodeBrowserPng(valid.subarray(0, -2)), /boundary|IEND/i);
+  assert.throws(
+    () => decodeBrowserPng(valid.subarray(0, -2)),
+    /boundary|IEND/i,
+  );
   const badLength = Buffer.from(valid);
   badLength.writeUInt32BE(0xffff_ffff, 8);
   assert.throws(() => decodeBrowserPng(badLength), /boundary/i);
@@ -56,10 +74,7 @@ test('requires one IHDR, contiguous non-empty IDAT, and exactly one final IEND',
   const idat = pngChunk('IDAT', compressed);
   const iend = pngChunk('IEND');
 
-  assert.throws(
-    () => decodeBrowserPng(pngFromChunks([ihdr, iend])),
-    /IDAT/i,
-  );
+  assert.throws(() => decodeBrowserPng(pngFromChunks([ihdr, iend])), /IDAT/i);
   assert.throws(
     () => decodeBrowserPng(pngFromChunks([ihdr, pngChunk('IDAT'), iend])),
     /non-empty/i,
@@ -81,16 +96,19 @@ test('requires one IHDR, contiguous non-empty IDAT, and exactly one final IEND',
     () => decodeBrowserPng(pngFromChunks([ihdr, ihdr, idat, iend])),
     /exactly one/i,
   );
+  assert.throws(() => decodeBrowserPng(pngFromChunks([ihdr, idat])), /IEND/i);
   assert.throws(
-    () => decodeBrowserPng(pngFromChunks([ihdr, idat])),
-    /IEND/i,
-  );
-  assert.throws(
-    () => decodeBrowserPng(pngFromChunks([ihdr, idat, pngChunk('IEND', Buffer.of(1))])),
+    () =>
+      decodeBrowserPng(
+        pngFromChunks([ihdr, idat, pngChunk('IEND', Buffer.of(1))]),
+      ),
     /empty IEND/i,
   );
   assert.throws(
-    () => decodeBrowserPng(Buffer.concat([pngFromChunks([ihdr, idat, iend]), Buffer.of(0)])),
+    () =>
+      decodeBrowserPng(
+        Buffer.concat([pngFromChunks([ihdr, idat, iend]), Buffer.of(0)]),
+      ),
     /trailing bytes/i,
   );
 });
@@ -101,7 +119,10 @@ test('requires an exact bounded zlib stream and valid inflated scanlines', () =>
   const image = (compressed) =>
     pngFromChunks([ihdr, pngChunk('IDAT', compressed), iend]);
 
-  assert.throws(() => decodeBrowserPng(image(Buffer.from('not-zlib'))), /zlib/i);
+  assert.throws(
+    () => decodeBrowserPng(image(Buffer.from('not-zlib'))),
+    /zlib/i,
+  );
   const validStream = deflateSync(Buffer.from([0, 1, 2, 3, 255]));
   assert.throws(
     () => decodeBrowserPng(image(Buffer.concat([validStream, Buffer.of(0)]))),

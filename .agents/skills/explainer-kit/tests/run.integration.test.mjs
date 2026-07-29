@@ -1111,6 +1111,76 @@ test('invokes an independent critic once with the complete rendered recap set', 
   assert.equal(sharedCallback.mock.callCount(), 3);
 });
 
+test('rejects a decoded geometry reshape after browser QA before critic invocation', async () => {
+  const fixture = await suppliedFixture('project-recap');
+  const pixels = Buffer.alloc(320 * 640 * 4, 0x7f);
+  let mobileScreenshotPath;
+  let reshaped = false;
+  const browserProbe = mock.fn(async (probeRequest) => {
+    const isTargetArtifact =
+      probeRequest.artifact.id === 'project-recap' &&
+      probeRequest.scenario === 'default';
+    if (isTargetArtifact && probeRequest.viewport.width === 320) {
+      mobileScreenshotPath = probeRequest.screenshotPath;
+      await mkdir(dirname(mobileScreenshotPath), { recursive: true });
+      await writeFile(mobileScreenshotPath, png(320, 640, { pixels }));
+      const { screenshotPath: _retained, ...requestWithoutScreenshot } =
+        probeRequest;
+      return retainingBrowserProbe(requestWithoutScreenshot);
+    }
+
+    const result = await retainingBrowserProbe(probeRequest);
+    if (
+      isTargetArtifact &&
+      probeRequest.viewport.width === 768 &&
+      mobileScreenshotPath &&
+      !reshaped
+    ) {
+      await writeFile(mobileScreenshotPath, png(640, 320, { pixels }));
+      reshaped = true;
+    }
+    return result;
+  });
+  const visualCritic = mock.fn(async () => {
+    throw new Error('critic must not inspect reshaped screenshot evidence');
+  });
+
+  const result = await runExplainerCore(fixture.request, {
+    author: async (authorRequest) => authorResult(authorRequest),
+    planSet: async (plannerRequest) => plannedSet(plannerRequest),
+    browserProbe,
+    visualCritic,
+    now: () => NOW,
+  });
+
+  assert.equal(result.outcome, 'built-needs-review');
+  assert.equal(reshaped, true);
+  assert.equal(visualCritic.mock.callCount(), 0);
+  assert.ok(
+    result.warnings.some((warning) =>
+      warning.startsWith('visual-review-required:review-chain-failed:'),
+    ),
+  );
+  const reshapedBytes = await readFile(mobileScreenshotPath);
+  const reshapedDecoded = decodeBrowserPng(reshapedBytes);
+  assert.deepEqual(
+    { width: reshapedDecoded.width, height: reshapedDecoded.height },
+    { width: 640, height: 320 },
+  );
+  const manifest = JSON.parse(await readFile(result.manifestPath, 'utf8'));
+  assert.equal(
+    manifest.immutableHashes['qa/browser/project-recap/mobile.png'],
+    `sha256:${createHash('sha256').update(reshapedBytes).digest('hex')}`,
+  );
+  const retainedError = JSON.parse(
+    await readFile(
+      join(result.runRoot, 'qa/review-gate/attempt-1-error.json'),
+      'utf8',
+    ),
+  );
+  assert.equal(retainedError.code, 'E_VISUAL_REVIEW');
+});
+
 test('runs a complete recap review with installed Chromium PNG evidence', async (t) => {
   const session = await createBrowserProbeSession();
   if (!session.available) {

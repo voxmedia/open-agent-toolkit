@@ -97,7 +97,7 @@ export async function buildVisualReviewRequest({
     }
     if (
       typeof item.decodedScreenshotHash !== 'string' ||
-      decoded.pixelHash !== item.decodedScreenshotHash
+      decoded.decodedHash !== item.decodedScreenshotHash
     ) {
       throw visualReviewError(
         `Visual review screenshot ${item.screenshotPath} does not match its decoded screenshot hash.`,
@@ -141,7 +141,9 @@ export async function buildVisualReviewRequest({
     );
   }
   for (const artifact of request.renderedArtifacts) {
-    const viewports = new Set(artifact.evidence.map(({ viewport }) => viewport));
+    const viewports = new Set(
+      artifact.evidence.map(({ viewport }) => viewport),
+    );
     if (
       viewports.size !== REQUIRED_VIEWPORTS.length ||
       REQUIRED_VIEWPORTS.some((viewport) => !viewports.has(viewport))
@@ -190,7 +192,9 @@ export function cohesionObservationsFromLedger({
   contentHash,
   ledger,
 }) {
-  const text = visibleText(Buffer.isBuffer(content) ? content.toString() : content);
+  const text = visibleText(
+    Buffer.isBuffer(content) ? content.toString() : content,
+  );
   return [
     ...observedEntries(
       ledger?.terminology,
@@ -290,7 +294,9 @@ function confinedPath(runRoot, path) {
     relativePath.startsWith(`..${process.platform === 'win32' ? '\\' : '/'}`) ||
     isAbsolute(relativePath)
   ) {
-    throw visualReviewError(`Visual review evidence path is not confined: ${path}.`);
+    throw visualReviewError(
+      `Visual review evidence path is not confined: ${path}.`,
+    );
   }
   return absolutePath;
 }
