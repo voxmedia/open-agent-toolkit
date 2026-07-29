@@ -839,6 +839,14 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
   `reviews/gate-receipts/implement-exit-20260729T151500Z-cbaf545f-05ef-46fe-be6e-97bdd3b6a420.json`
 - **State:** intent persisted before launch
 
+#### Configured Exit Gate — launch accepted
+
+- **Run:** `ade10742-63f4-4884-9133-a9dac76d5449`
+- **Runtime / target:** Cursor / `cursor-fable-5-xhigh`
+- **Marker:**
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/ade10742-63f4-4884-9133-a9dac76d5449.json`
+- **State:** accepted; awaiting the correlated structured envelope
+
 <!-- orchestration-runs-end -->
 
 ---
