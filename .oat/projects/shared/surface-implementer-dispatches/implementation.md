@@ -896,6 +896,15 @@ Dispatch: scope=final action=review role=reviewer producer=gpt-5.6-sol-high prov
 - **Decision promotion:** four canonical records created
 - **Snapshot progress:** `[summary]`
 
+#### Post-Implementation Sequence — documentation completed
+
+- **Commits:** `463b5ae14`, `1b34bf3d5`
+- **Updates:** dispatch-policy reference, configuration guide, and PJM current
+  state
+- **Generated index:** 9 entries; no tracked change
+- **Verification:** docs check/build and release validation passed
+- **Snapshot progress:** `[summary, document]`
+
 <!-- orchestration-runs-end -->
 
 ---
