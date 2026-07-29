@@ -1288,7 +1288,7 @@ fresh configured exit-gate generation.
 
 ### Task prev1-t05 Complete: Synchronize implementation skill contract pins
 
-- **Commit:** `6f807da6a`
+- **Commit:** `6f807da68`
 - **Change:** re-verified the six `oat-project-implement` contract assertions
   and advanced each expected version from `2.2.2` to `2.2.3`.
 - **Verification:** focused skill validation passed 118/118, canonical
@@ -1340,6 +1340,33 @@ was corrected; proceed to the final configured exit-gate attempt.
   archive destination `reviews/archived/final-review-2026-07-29T183546Z.md`,
   and event `final|code|final-review-2026-07-29T183546Z.md` bound to
   pre-receive head `e26dd547ed95c0d36ae7702f4b43652513e98320`
+
+### Review Received: Final configured exit gate
+
+**Date:** 2026-07-29
+**Review artifact:**
+`reviews/archived/final-review-2026-07-29T183546Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 0
+- Medium: 1
+- Minor: 1
+
+**Judgment-sweep disposition:**
+
+- M1: `explicit_deferral` — retain the existing cross-provider report-context
+  matrix deferral. The contract-pin correction did not touch the managed-cap
+  warning predicates or command-level Dispatch Report context tests, so its
+  trigger remains un-fired.
+- m1: `address_now` — correct the non-resolving `prev1-t05` commit abbreviation
+  from `6f807da6a` to `6f807da68` in this implementation record.
+
+**New tasks added:** None.
+
+**Outcome:** Passing-gate receive sweep completed with every finding explicitly
+dispositioned; archive the review and allow the configured exit gate.
 
 ## Implementation Log
 

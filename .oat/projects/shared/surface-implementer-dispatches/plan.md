@@ -810,7 +810,7 @@ git commit -m "test(skills): align implementation contract version"
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T175311Z.md           | b977847a59124948e07a3a759f5fe304835127cc | manual     | -                    |
 | final  | code     | fixes_completed | 2026-07-29 | reviews/archived/final-review-2026-07-29T180703Z.md           | a49a785b877c9f1e8d4022b011d6dba632744760 | gate       | cursor-fable-5-xhigh |
 | final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T182307Z.md           | 24d4ebec49068886a5046b8f789c35a9a7f92311 | manual     | -                    |
-| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T183546Z.md                    | 977ae6391cbc141bf5f2f1f07b9ef2874667ca81 | gate       | cursor-fable-5-xhigh |
+| final  | code     | passed          | 2026-07-29 | reviews/archived/final-review-2026-07-29T183546Z.md           | 977ae6391cbc141bf5f2f1f07b9ef2874667ca81 | gate       | cursor-fable-5-xhigh |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
