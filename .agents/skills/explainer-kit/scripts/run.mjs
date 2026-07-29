@@ -264,6 +264,7 @@ async function executeRenderStage(state, options) {
               content: state.contentModels.find(
                 ({ artifactId }) => artifactId === artifact.id,
               ),
+              factBase: state.factBase,
               theme: state.theme,
               renderStrategy: state.renderStrategy,
               ...(state.run.request.publicBaseUrl && {
@@ -646,6 +647,7 @@ async function applyVisualCorrection(state, options, now) {
             content: state.contentModels.find(
               ({ artifactId: id }) => id === artifactId,
             ),
+            factBase: state.factBase,
             theme: state.theme,
             renderStrategy: state.renderStrategy,
             ...(state.run.request.publicBaseUrl && {
@@ -943,6 +945,7 @@ async function hydrateRenderedState(state) {
             content: state.contentModels.find(
               ({ artifactId }) => artifactId === artifact.id,
             ),
+          factBase: state.factBase,
             theme: state.theme,
             renderStrategy: state.renderStrategy,
             ...(state.run.request.publicBaseUrl && {
@@ -1071,6 +1074,7 @@ async function buildFactBase(binding, options, now) {
       return {
         source: {
           ...source,
+          ...(options.sourceProvenance?.[source.id] ?? {}),
           hash: hashBytes(serialized),
           observedAt: raw.observedAt ?? now(),
         },

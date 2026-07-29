@@ -87,6 +87,7 @@ export async function runOatExplainer({
   const projectRoot = resolve(repoRoot, activeProject);
   const bound = await bindProjectSources({
     projectRoot,
+    repoRoot,
     recipe,
     suppliedFactBasePath,
   });
@@ -168,6 +169,9 @@ export async function runOatExplainer({
     ...(lifecycleBrowserProbe && { browserProbe: lifecycleBrowserProbe }),
     ...(lifecycleVisualCritic && { visualCritic: lifecycleVisualCritic }),
     ...(bound.sourceLoader && { sourceLoader: bound.sourceLoader }),
+    ...(bound.sourceProvenance && {
+      sourceProvenance: bound.sourceProvenance,
+    }),
     reviewedSource: bound.reviewedSource,
   });
   const criticContractError = result?.errors?.find(

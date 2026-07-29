@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { execFile as execFileCallback } from 'node:child_process';
 import {
   mkdir,
   mkdtemp,
@@ -11,8 +12,12 @@ import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
 import { afterEach, test } from 'node:test';
 import { fileURLToPath, pathToFileURL } from 'node:url';
+import { promisify } from 'node:util';
 
-import { bindProjectSources } from '../scripts/bind-project-sources.mjs';
+import {
+  bindProjectSources,
+  resolveReviewedRepository,
+} from '../scripts/bind-project-sources.mjs';
 import { explainerModeForIntent } from '../scripts/resolve-intent.mjs';
 import { runOatExplainer } from '../scripts/run.mjs';
 import { png } from '../../explainer-kit/tests/fixtures/png.mjs';
@@ -26,6 +31,7 @@ const SOURCE_SKILLS_ROOT = resolve(
 );
 const SOURCE_REPO_ROOT = resolve(SOURCE_SKILLS_ROOT, '..', '..');
 const SOURCE_ADAPTER_ROOT = join(SOURCE_SKILLS_ROOT, 'oat-explainer-kit');
+const execFile = promisify(execFileCallback);
 
 afterEach(async () => {
   await Promise.all(
@@ -134,6 +140,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
                 : 'human-approved',
             warnings: ['core-warning'],
             reviewedSource: options.reviewedSource,
+            sourceProvenance: options.sourceProvenance,
             authored,
             providerSeams: {
               browserProbe: typeof options.browserProbe === 'function',
@@ -144,6 +151,37 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
       `,
     );
   }
+  await execFile('git', ['init', '--quiet'], { cwd: repoRoot });
+  await execFile(
+    'git',
+    [
+      'remote',
+      'add',
+      'origin',
+      'git@github.com:acme/project-recaps.git',
+    ],
+    { cwd: repoRoot },
+  );
+  await execFile('git', ['add', '.'], { cwd: repoRoot });
+  await execFile(
+    'git',
+    [
+      '-c',
+      'user.name=Explainer Test',
+      '-c',
+      'user.email=explainer@example.com',
+      'commit',
+      '--quiet',
+      '-m',
+      'fixture',
+    ],
+    { cwd: repoRoot },
+  );
+  const { stdout: reviewedCommitOutput } = await execFile(
+    'git',
+    ['rev-parse', 'HEAD'],
+    { cwd: repoRoot },
+  );
 
   return {
     root,
@@ -153,6 +191,7 @@ async function createFixture({ coreVersion = '2.0.3' } = {}) {
     userSkillsRoot,
     coreRoot,
     coreInvocationMarker,
+    reviewedCommit: reviewedCommitOutput.trim(),
   };
 }
 
@@ -252,11 +291,51 @@ function getConfig(key) {
   });
 }
 
+test('resolves a full reviewed commit and canonical GitHub repository identity', async () => {
+  const calls = [];
+  const command = async (file, args, options) => {
+    calls.push({ file, args, options });
+    return {
+      stdout:
+        args[0] === 'rev-parse'
+          ? '0123456789abcdef0123456789abcdef01234567\n'
+          : 'git@github.com:acme/project-recaps.git\n',
+      stderr: '',
+    };
+  };
+
+  assert.deepEqual(await resolveReviewedRepository('/repo', { command }), {
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: '0123456789abcdef0123456789abcdef01234567',
+  });
+  assert.deepEqual(
+    calls.map(({ file, args, options }) => [file, args, options.cwd]),
+    [
+      ['git', ['rev-parse', 'HEAD'], '/repo'],
+      ['git', ['config', '--get', 'remote.origin.url'], '/repo'],
+    ],
+  );
+
+  await assert.rejects(
+    resolveReviewedRepository('/repo', {
+      command: async (_file, args) => ({
+        stdout:
+          args[0] === 'rev-parse'
+            ? 'main\n'
+            : 'https://github.com/acme/project-recaps.git\n',
+      }),
+    }),
+    /full commit sha/i,
+  );
+});
+
 test('binds approved OAT artifacts to one project source role', async () => {
   const fixture = await createFixture();
 
   const bound = await bindProjectSources({
     projectRoot: fixture.projectRoot,
+    repoRoot: fixture.repoRoot,
     recipe: 'project-recap',
   });
   const canonicalProjectRoot = await realpath(fixture.projectRoot);
@@ -275,7 +354,16 @@ test('binds approved OAT artifacts to one project source role', async () => {
   );
   assert.deepEqual(bound.reviewedSource, {
     kind: 'approved-oat-artifacts',
-    locator: canonicalProjectRoot,
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+  assert.deepEqual(bound.sourceProvenance.implementation, {
+    repository: 'acme/project-recaps',
+    revision: fixture.reviewedCommit,
+    path: '.oat/projects/shared/demo/implementation.md',
+    lineRange: { start: 1, end: 3 },
   });
   const loaded = await bound.sourceLoader(bound.factBase.sources[3]);
   assert.deepEqual(loaded.claims, [
@@ -283,6 +371,7 @@ test('binds approved OAT artifacts to one project source role', async () => {
       id: 'implementation',
       text: '# Implementation\n\nCore integration passed.',
       locator: join(canonicalProjectRoot, 'implementation.md'),
+      lineRange: { start: 1, end: 3 },
     },
   ]);
 });
@@ -344,8 +433,6 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
     ...REQUIRED_REVIEW_PROVIDERS,
     mode: 'unattended',
   });
-  const canonicalProjectRoot = await realpath(fixture.projectRoot);
-
   assert.equal(
     adapterResult.request.schemaVersion,
     'explainer-kit.run-request/v1',
@@ -363,7 +450,16 @@ test('normalizes one request, invokes a cross-scope installed core, and propagat
   assert.deepEqual(adapterResult.result.warnings, ['core-warning']);
   assert.deepEqual(adapterResult.result.reviewedSource, {
     kind: 'approved-oat-artifacts',
-    locator: canonicalProjectRoot,
+    locator: 'https://github.com/acme/project-recaps',
+    repository: 'acme/project-recaps',
+    repositoryUrl: 'https://github.com/acme/project-recaps',
+    revision: fixture.reviewedCommit,
+  });
+  assert.deepEqual(adapterResult.result.sourceProvenance.plan, {
+    repository: 'acme/project-recaps',
+    revision: fixture.reviewedCommit,
+    path: '.oat/projects/shared/demo/plan.md',
+    lineRange: { start: 1, end: 3 },
   });
   assert.equal(basename(adapterResult.compatibility.coreRoot), 'explainer-kit');
 });
@@ -372,7 +468,6 @@ test('resolves curated style through the real CLI-backed config path', async () 
   const fixture = await createFixture();
   const binRoot = join(fixture.root, 'bin');
   await mkdir(binRoot, { recursive: true });
-  await mkdir(join(fixture.repoRoot, '.git'));
   await writeFile(
     join(fixture.repoRoot, '.oat', 'config.json'),
     `${JSON.stringify({

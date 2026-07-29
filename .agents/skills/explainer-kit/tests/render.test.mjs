@@ -44,6 +44,52 @@ function projectExplainerDescriptor() {
   return { id, type, template, required };
 }
 
+function factBaseWithBacklink() {
+  const revision = '0123456789abcdef0123456789abcdef01234567';
+  const url = `https://github.com/acme/project-recaps/blob/${revision}/docs/Project%20plans/phase%20%234.md#L17-L19`;
+  return {
+    schemaVersion: 'explainer-kit.fact-base/v1',
+    generatedAt: '2026-07-17T20:00:00Z',
+    mode: 'federated',
+    freshnessPolicy: 'live-wins',
+    sources: [
+      {
+        id: 'plan',
+        kind: 'github',
+        locator: url,
+        repository: 'acme/project-recaps',
+        revision,
+        path: 'docs/Project plans/phase #4.md',
+        lineRange: { start: 17, end: 19 },
+        url,
+        hash: `sha256:${'a'.repeat(64)}`,
+        observedAt: '2026-07-17T20:00:00Z',
+      },
+    ],
+    claims: [
+      {
+        id: 'phase-status',
+        text: 'Phase four is complete.',
+        status: 'confirmed',
+        sections: ['overview'],
+        citations: [
+          {
+            sourceId: 'plan',
+            locator: url,
+            repository: 'acme/project-recaps',
+            revision,
+            path: 'docs/Project plans/phase #4.md',
+            lineRange: { start: 17, end: 19 },
+            url,
+          },
+        ],
+      },
+    ],
+    unresolvedClaims: [],
+    overrides: [],
+  };
+}
+
 test('renders escaped content through every documented house template token', async () => {
   const recipeArtifact = projectExplainerDescriptor();
   const { theme } = await resolveTheme();
@@ -64,6 +110,30 @@ test('renders escaped content through every documented house template token', as
     /Never trust &lt;script&gt;alert\(&quot;x&quot;\)&lt;\/script&gt; &amp; raw markup\./,
   );
   assert.doesNotMatch(rendered.html, /{{[A-Z_]+}}/);
+});
+
+test('renders claim and source backlinks as archive-safe absolute URLs', async () => {
+  const recipeArtifact = projectExplainerDescriptor();
+  const { theme } = await resolveTheme();
+  const factBase = factBaseWithBacklink();
+  const rendered = await renderArtifact({
+    recipeArtifact,
+    content: content(recipeArtifact.id),
+    factBase,
+    theme,
+    renderStrategy: 'default-only',
+  });
+
+  assert.match(rendered.html, /class="source-backlinks"/);
+  assert.match(rendered.html, /Phase four is complete\./);
+  assert.match(
+    rendered.html,
+    /href="https:\/\/github\.com\/acme\/project-recaps\/blob\/0123456789abcdef0123456789abcdef01234567\/docs\/Project%20plans\/phase%20%234\.md#L17-L19"/,
+  );
+  const sourceBacklinks = rendered.html.match(
+    /<aside class="source-backlinks"[\s\S]*?<\/aside>/,
+  )[0];
+  assert.doesNotMatch(sourceBacklinks, /href="(?:\.\.?\/|file:|\/Users\/)/);
 });
 
 test('keeps runtime assets local and theme assets inline', async () => {

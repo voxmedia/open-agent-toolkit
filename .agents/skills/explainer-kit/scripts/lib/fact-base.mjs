@@ -31,7 +31,9 @@ export async function processFactBase(binding, options = {}) {
 }
 
 function processSupplied(binding, { now, maxAgeMs }) {
-  const factBase = structuredClone(binding.factBase);
+  const factBase = normalizeFactBaseBacklinks(
+    structuredClone(binding.factBase),
+  );
   if (!factBase || typeof factBase !== 'object') {
     throw new Error('Supplied mode requires a factBase object.');
   }
@@ -87,7 +89,9 @@ async function processFederated(binding, { critic, now }) {
     );
   }
 
-  const sources = documents.map(({ source }) => structuredClone(source));
+  const sources = documents.map(({ source }) =>
+    normalizeSourceBacklink(structuredClone(source)),
+  );
   assertUniqueNonEmptyIds(sources, 'source');
   const sourceById = new Map(sources.map((source) => [source.id, source]));
   const observations = collectObservations(documents, sourceById);
@@ -266,6 +270,7 @@ function collectObservations(documents, sourceById) {
         text: claim.text,
         source: sourceById.get(document.source.id),
         locator: claim.locator ?? document.source.locator,
+        ...(claim.lineRange && { lineRange: structuredClone(claim.lineRange) }),
         ...(claim.sections && { sections: [...claim.sections] }),
       });
       observations.set(claim.id, entries);
@@ -366,10 +371,9 @@ function resolveObservations(claimId, entries) {
 }
 
 function citationsFor(entries) {
-  const citations = entries.map(({ source, locator }) => ({
-    sourceId: source.id,
-    locator,
-  }));
+  const citations = entries.map(({ source, locator, lineRange }) =>
+    citationForSource(source, { locator, lineRange }),
+  );
   return uniqueCitations(citations);
 }
 
@@ -432,8 +436,7 @@ function integrateCriticFindings({
         locator: `critic-finding:${finding.claimId}`,
       },
       ...finding.sourceIds.map((sourceId) => ({
-        sourceId,
-        locator: sourceById.get(sourceId).locator,
+        ...citationForSource(sourceById.get(sourceId)),
       })),
     ]);
     const existingUnresolved = unresolvedClaims.find(
@@ -498,6 +501,139 @@ function uniqueCitations(citations) {
         ]),
     ).values(),
   ];
+}
+
+function normalizeFactBaseBacklinks(factBase) {
+  if (!factBase || typeof factBase !== 'object') return factBase;
+  if (
+    !Array.isArray(factBase.sources) ||
+    !Array.isArray(factBase.claims) ||
+    !Array.isArray(factBase.unresolvedClaims)
+  ) {
+    return factBase;
+  }
+  factBase.sources = factBase.sources.map((source) =>
+    source && typeof source === 'object'
+      ? normalizeSourceBacklink(source)
+      : source,
+  );
+  const sourceById = new Map(
+    factBase.sources
+      .filter((source) => source && typeof source === 'object')
+      .map((source) => [source.id, source]),
+  );
+  for (const claim of [...factBase.claims, ...factBase.unresolvedClaims]) {
+    if (!claim || typeof claim !== 'object' || !Array.isArray(claim.citations)) {
+      continue;
+    }
+    claim.citations = claim.citations.map((citation) => {
+      if (!citation || typeof citation !== 'object') return citation;
+      const source = sourceById.get(citation.sourceId);
+      return source
+        ? citationForSource(source, {
+            locator: citation.locator,
+            lineRange: citation.lineRange,
+          })
+        : citation;
+    });
+  }
+  return factBase;
+}
+
+function normalizeSourceBacklink(source) {
+  const declaresBacklink =
+    source.repository !== undefined ||
+    source.path !== undefined ||
+    source.lineRange !== undefined ||
+    source.url !== undefined;
+  if (!declaresBacklink) return source;
+  assertBacklinkProvenance(source);
+  const url = githubBlobUrl(source, source.lineRange);
+  return {
+    ...source,
+    kind: 'github',
+    locator: url,
+    url,
+  };
+}
+
+function citationForSource(source, { locator, lineRange } = {}) {
+  if (source.url === undefined) {
+    return {
+      sourceId: source.id,
+      locator: locator ?? source.locator,
+    };
+  }
+  const range = lineRange ?? source.lineRange;
+  assertLineRange(range);
+  const url = githubBlobUrl(source, range);
+  return {
+    sourceId: source.id,
+    locator: url,
+    repository: source.repository,
+    revision: source.revision,
+    path: source.path,
+    lineRange: structuredClone(range),
+    url,
+  };
+}
+
+function assertBacklinkProvenance(source) {
+  if (
+    typeof source.repository !== 'string' ||
+    !/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(source.repository)
+  ) {
+    throw new Error(
+      'GitHub backlink provenance requires an owner/repository identity.',
+    );
+  }
+  if (
+    typeof source.revision !== 'string' ||
+    !/^[a-f0-9]{40}$/.test(source.revision)
+  ) {
+    throw new Error(
+      'GitHub backlink provenance requires a full reviewed commit SHA.',
+    );
+  }
+  if (
+    typeof source.path !== 'string' ||
+    source.path.length === 0 ||
+    source.path.startsWith('/') ||
+    source.path.includes('\\') ||
+    /(?:^|\/)\.\.(?:\/|$)/.test(source.path) ||
+    /^[A-Za-z]:/.test(source.path)
+  ) {
+    throw new Error(
+      'GitHub backlink provenance requires a repository-relative path.',
+    );
+  }
+  assertLineRange(source.lineRange);
+}
+
+function assertLineRange(range) {
+  if (
+    !range ||
+    !Number.isInteger(range.start) ||
+    !Number.isInteger(range.end) ||
+    range.start < 1 ||
+    range.end < range.start
+  ) {
+    throw new Error(
+      'GitHub backlink provenance requires a valid inclusive line range.',
+    );
+  }
+}
+
+function githubBlobUrl(source, range) {
+  const encodedPath = source.path
+    .split('/')
+    .map((segment) => encodeURIComponent(segment))
+    .join('/');
+  const fragment =
+    range.start === range.end
+      ? `#L${range.start}`
+      : `#L${range.start}-L${range.end}`;
+  return `https://github.com/${source.repository}/blob/${source.revision}/${encodedPath}${fragment}`;
 }
 
 function validSections(sections) {
