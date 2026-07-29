@@ -711,6 +711,7 @@ git commit -m "docs(summary): record post-merge revision"
 
 - Modify:
   `.oat/projects/shared/surface-implementer-dispatches/reviews/archived/code-final-review-2026-07-29T150100Z.md`
+- Modify: `.oat/projects/shared/surface-implementer-dispatches/summary.md`
 
 **Step 1: Understand the issue**
 
@@ -723,6 +724,8 @@ Location:
 **Step 2: Implement fix**
 
 Remove the trailing spaces without changing the review artifact's meaning.
+After the task is complete, advance `oat_summary_last_task` to `prev1-t04` so
+the summary remains fresh after its own review-fix tasks finish.
 
 **Step 3: Verify**
 

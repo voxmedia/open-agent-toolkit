@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: prev1-t03
+oat_current_task_id: prev1-t04
 oat_generated: false
 ---
 
@@ -29,9 +29,9 @@ oat_generated: false
 | Phase 1    | completed   | 2     | 2/2       |
 | Phase 2    | completed   | 2     | 2/2       |
 | Phase 3    | completed   | 2     | 2/2       |
-| Revision 1 | in_progress | 4     | 2/4       |
+| Revision 1 | in_progress | 4     | 3/4       |
 
-**Total:** 8/10 tasks completed
+**Total:** 9/10 tasks completed
 
 ### Revision Received: Inline Feedback
 
@@ -539,7 +539,21 @@ oat_generated: false
 
 ### Task prev1-t03: (review) Refresh revision summary lineage
 
-**Status:** pending
+**Status:** completed
+**Commit:** `b25a3877a7774100378fa330ad69bff8191d24d7`
+
+**Outcome (required when completed):**
+
+- Refreshed summary frontmatter to include Revision 1 and the latest
+  pre-fix task, then added grounded merge/release narrative and Revision
+  History.
+- Rolled all 14 project-log observations into the summary; the repository
+  ledger was already deduplicated.
+
+**Verification:**
+
+- Run: summary-scoped oxfmt check and `git diff --check`.
+- Result: pass.
 
 ---
 
