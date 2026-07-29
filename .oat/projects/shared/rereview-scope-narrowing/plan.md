@@ -797,6 +797,7 @@ create an empty commit when sync and build produce no tracked changes.
 | p04    | code     | passed          | 2026-07-28 | reviews/archived/p04-review-2026-07-28T225031Z.md           | 6fed0cf0bc8e225dcb137795b3aed4fdb871014b | auto       | -                    |
 | p05    | code     | passed          | 2026-07-28 | reviews/archived/p05-review-2026-07-28T230930Z.md           | d1e3cd6fef90227c9e1ddaf2c7d5cdd938e548ff | gate       | cursor-fable-5-xhigh |
 | p06    | code     | passed          | 2026-07-28 | reviews/archived/p06-review-2026-07-28T233714Z.md           | 87455b33c5b338ac717d10ebe5862924c538aeef | auto       | -                    |
+| final  | code     | received        | 2026-07-29 | reviews/final-review-2026-07-29T012157Z.md                  | 66ff93add752f5eee2dd912395bc9ae48a9d5846 | auto       | -                    |
 
 `spec` and `design` are `n/a` because this is a quick-mode project that produces neither artifact. The rows are retained rather than deleted, per the plan template's preservation rule.
 
