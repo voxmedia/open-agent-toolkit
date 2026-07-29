@@ -63,6 +63,10 @@ Adoption fills missing provider/tier cells and records
 existing cells. Planning shows the complete recommendation before asking which
 scope should own it. If the resulting ladder is still missing or incomplete,
 planning remains blocked rather than replacing the user's explicit values.
+The recommendation version describes only the bundled recommendation. After
+preserving existing cells, OAT resolves the effective ladder and uses that
+effective result—not the recommendation version—for dispatch targets and
+runtime disclosure.
 
 ### Upgrading to a newer recommendation version
 
@@ -90,6 +94,12 @@ the cheaper one absent a comparison favoring xhigh. The evidence record above
 does not compare the two rungs. Both models remain in the pin catalog and stay
 available to a hand-edited ladder. An adopter still on the prior version keeps their existing
 Cursor tiers untouched until they take one of the actions above.
+
+The terminal Fable target may require model access from the executing provider.
+The adopting organization is responsible for confirming its applicable
+retention policy. OAT does not determine model access or organizational
+retention eligibility; recommendation membership and catalogue presence are
+configuration data, not an eligibility decision.
 
 The terminal entries in that version are chosen, not incidental. Because the
 final candidate in a tier is the target its implementation-phase self-review
@@ -274,6 +284,10 @@ oat project dispatch-ceiling resolve \
   --ceiling-tier high \
   --candidate-model gpt-5.6-terra \
   --candidate-effort medium \
+  --task-class default-implementation \
+  --task-effort medium \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 # Claude: exact model argument
@@ -282,6 +296,9 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model sonnet \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 
 # Cursor: exact opaque configured string
@@ -290,8 +307,15 @@ oat project dispatch-ceiling resolve \
   --role implementer \
   --ceiling-tier high \
   --candidate-model gpt-5.6-sol-high \
+  --task-class default-implementation \
+  --report-scope p02 \
+  --report-action implementation \
   --json
 ```
+
+Use the same classification flags and `--report-action fix` for a bounded fix.
+Reviewer routes use neither `--task-class` nor `--task-effort`; the CLI rejects
+classification flags for reviewers.
 
 `--ceiling-tier` accepts `economy`, `balanced`, `high`, or `frontier`. It
 overrides a layered active-policy ceiling for that resolver invocation only. It
@@ -445,6 +469,11 @@ names, candidate strings, or target names. `producer` is the runtime model slug
 when OAT can establish it; otherwise it is `unknown`. `provenance` is
 `declared`, `observed`, `inferred`, or `unknown`. Selected model and effort axes
 can remain exact even when runtime producer identity is not reported.
+
+Before launching an implementation, fix, or reviewer, surface the structured
+notices in `dispatchReport.notices` and render the report. Structured notices
+and runtime disclosure use the effective target returned by that resolver call,
+never a target inferred from the bundled recommendation version.
 
 ## Legacy Compatibility
 
