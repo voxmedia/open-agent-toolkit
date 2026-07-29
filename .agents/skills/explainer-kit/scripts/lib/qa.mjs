@@ -531,6 +531,7 @@ export async function runBrowserProbes({
   widths = REPRESENTATIVE_WIDTHS,
   evidenceRoot,
   requireEvidence = false,
+  onProbeResult,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
     throw new TypeError('Browser QA requires at least one artifact.');
@@ -552,6 +553,9 @@ export async function runBrowserProbes({
     throw new TypeError(
       'A trusted browser session is required for retained evidence.',
     );
+  }
+  if (onProbeResult !== undefined && typeof onProbeResult !== 'function') {
+    throw new TypeError('Browser QA probe observer must be a callback.');
   }
   if (
     !Array.isArray(widths) ||
@@ -626,6 +630,26 @@ export async function runBrowserProbes({
         }
         probes += 1;
         validateProbeResult(result, artifact.id, width, request);
+        if (onProbeResult) {
+          try {
+            await onProbeResult(
+              structuredClone({
+                artifactId: artifact.id,
+                artifactType: artifact.type,
+                scenario,
+                viewport: request.viewport,
+                result,
+              }),
+            );
+          } catch (cause) {
+            const error = new Error(
+              `Browser evidence observer failed: ${cause?.message ?? String(cause)}`,
+              { cause },
+            );
+            error.code = 'E_VISUAL_REVIEW';
+            throw error;
+          }
+        }
 
         const context = { artifactId: artifact.id, width, scenario };
         if (screenshotPath && metricsPath) {
@@ -765,6 +789,7 @@ export async function auditArtifactSet({
   widths,
   evidenceRoot,
   requireBrowserEvidence = false,
+  onProbeResult,
   setPlan,
 }) {
   if (!Array.isArray(artifacts) || artifacts.length === 0) {
@@ -792,6 +817,7 @@ export async function auditArtifactSet({
         ...(widths && { widths }),
         ...(evidenceRoot && { evidenceRoot }),
         ...(requireBrowserEvidence && { requireEvidence: true }),
+        ...(onProbeResult !== undefined && { onProbeResult }),
       })
     : null;
   const issues = [

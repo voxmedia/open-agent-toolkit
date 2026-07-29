@@ -425,6 +425,7 @@ test('accepts representative output from every bundled renderer', async () => {
 
 test('runs browser probe contract at representative widths with reduced motion', async () => {
   const calls = [];
+  const observations = [];
   const report = await runBrowserProbes({
     artifacts: [{ id: 'page', type: 'hub', html: fixture() }],
     probe: async (request) => {
@@ -436,6 +437,11 @@ test('runs browser probe contract at representative widths with reduced motion',
         keyboard: { tab: true },
       };
     },
+    onProbeResult: (observation) => {
+      observations.push(structuredClone(observation));
+      observation.viewport.width = 0;
+      observation.result.pageOverflowX = true;
+    },
   });
 
   assert.deepEqual(
@@ -444,6 +450,18 @@ test('runs browser probe contract at representative widths with reduced motion',
   );
   assert.ok(calls.every(({ reducedMotion }) => reducedMotion === 'reduce'));
   assert.ok(calls.every(({ evaluate }) => typeof evaluate === 'string'));
+  assert.deepEqual(
+    observations.map(({ artifactId, artifactType, viewport }) => ({
+      artifactId,
+      artifactType,
+      width: viewport.width,
+    })),
+    REPRESENTATIVE_WIDTHS.map((width) => ({
+      artifactId: 'page',
+      artifactType: 'hub',
+      width,
+    })),
+  );
   assert.deepEqual(report, { valid: true, issues: [], probes: calls.length });
 });
 

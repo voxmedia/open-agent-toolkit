@@ -190,13 +190,25 @@ export function selectReleaseVisualMatrix() {
 export async function runReleaseVisualMatrix({
   matrix = selectReleaseVisualMatrix(),
   browserProbe,
+  browserSession,
   evidenceRoot,
+  onProbeResult,
 } = {}) {
   if (!Array.isArray(matrix) || matrix.length === 0) {
     throw new TypeError('Release visual QA requires a non-empty matrix.');
   }
-  if (typeof browserProbe !== 'function') {
-    throw new TypeError('Release visual QA requires a browser probe callback.');
+  if (browserSession !== undefined && browserProbe !== undefined) {
+    throw new TypeError(
+      'Release visual QA accepts either a trusted browser session or a bare non-retaining probe, not both.',
+    );
+  }
+  if (browserSession === undefined && typeof browserProbe !== 'function') {
+    throw new TypeError(
+      'Release visual QA requires a trusted browser session or browser probe callback.',
+    );
+  }
+  if (onProbeResult !== undefined && typeof onProbeResult !== 'function') {
+    throw new TypeError('Release visual QA probe observer must be a callback.');
   }
 
   const issues = [];
@@ -224,22 +236,22 @@ export async function runReleaseVisualMatrix({
         },
       ],
       widths: entry.viewports,
-      browserProbe: async (request) => {
-        const result = await browserProbe(request);
+      ...(browserSession === undefined ? { browserProbe } : { browserSession }),
+      onProbeResult: async (observation) => {
         if (
           entry.artifact.type === 'deck' &&
-          request.scenario === 'default' &&
-          result?.deckLayout?.flow !== 'horizontal'
+          observation.scenario === 'default' &&
+          observation.result?.deckLayout?.flow !== 'horizontal'
         ) {
           issues.push({
             artifactId: entry.id,
-            width: request.viewport.width,
+            width: observation.viewport.width,
             scenario: 'default',
             code: 'deck-horizontal-layout',
             message: 'Interactive deck must page horizontally by default.',
           });
         }
-        return result;
+        await onProbeResult?.(observation);
       },
       ...(evidenceRoot && {
         evidenceRoot,
