@@ -4,7 +4,7 @@ oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
 oat_generated: true
-oat_summary_last_task: prev1-t02
+oat_summary_last_task: prev1-t04
 oat_summary_revision_count: 1
 oat_summary_includes_revisions: [p-rev1]
 ---
@@ -117,8 +117,8 @@ eligibility.
 Merged `origin/main`, reconciled four overlapping aggregate/contract files, and
 bumped all five public packages plus bundled inventory from the merged `0.2.25`
 baseline to `0.2.26`. The refreshed final review confirmed integration and
-release correctness while routing stale summary lineage and archived-review
-whitespace into bounded follow-up tasks.
+release correctness; its bounded follow-ups refreshed this revision lineage and
+cleaned range-level whitespace from the archived prior review.
 
 ## Follow-up Items
 

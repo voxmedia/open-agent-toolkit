@@ -14,14 +14,14 @@ oat_review_verdict: PASS
 
 # Code Review: final
 
-**Reviewed:** 2026-07-29T15:01:00Z  
-**Request:** `review-final-r1-20260729T150100Z`  
-**Verdict:** PASS  
-**Scope:** Complete implementation range for `surface-implementer-dispatches`  
-**Files reviewed:** 48 changed files, plus the quick-workflow artifacts and applicable repository instructions  
-**Commits:** 28  
-**Base:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5`  
-**Head:** `79feab7f0b2fd23165f9dcea06bf04a70d645b62`  
+**Reviewed:** 2026-07-29T15:01:00Z
+**Request:** `review-final-r1-20260729T150100Z`
+**Verdict:** PASS
+**Scope:** Complete implementation range for `surface-implementer-dispatches`
+**Files reviewed:** 48 changed files, plus the quick-workflow artifacts and applicable repository instructions
+**Commits:** 28
+**Base:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5`
+**Head:** `79feab7f0b2fd23165f9dcea06bf04a70d645b62`
 **Range:** `46fdec97d385f1b72525ceabdfb0be4b94f995a5..79feab7f0b2fd23165f9dcea06bf04a70d645b62`
 
 ## Summary
