@@ -1,7 +1,7 @@
 ---
 id: BL-260727-close-the-explainer-kit-visual
 title: Close the Explainer Kit visual authoring capability gap
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: XL
@@ -11,7 +11,7 @@ labels:
   - recipes
 assignee: null
 created: 2026-07-27T04:19:56.434Z
-updated: 2026-07-28T02:30:13.000Z
+updated: '2026-07-29T21:56:56Z'
 associated_issues: []
 external_plans: []
 ---
