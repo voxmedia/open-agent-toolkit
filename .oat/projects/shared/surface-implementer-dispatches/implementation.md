@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p03-t02
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 2     | 2/2       |
-| Phase 2 | completed   | 2     | 2/2       |
-| Phase 3 | in_progress | 2     | 1/2       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 2     | 2/2       |
+| Phase 2 | completed | 2     | 2/2       |
+| Phase 3 | completed | 2     | 2/2       |
 
-**Total:** 5/6 tasks completed
+**Total:** 6/6 tasks completed
 
 ### Review Received: design
 
@@ -331,8 +331,47 @@ oat_generated: false
 
 ## Phase 3: Release and Backlog Closeout
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-29
+
+### Phase Summary (fill when phase is complete)
+
+**Outcome (what changed):**
+
+- Bumped all five lockstep public packages and bundled inventory to `0.2.25`.
+- Repaired the two failing PJM doctor checks, refreshed the derived autonomy
+  inventory, and archived BL-260727 with its completed-ledger/index updates.
+
+**Key files touched:**
+
+- Five public package manifests and
+  `packages/cli/assets/public-package-versions.json` - lockstep release metadata.
+- `.agents/docs/autonomy-contract.md` - removed the stale implementation-skill
+  prompt-site mapping.
+- Canonical PJM guidance and bounded backlog records - restored passing doctor
+  checks and archived BL-260727.
+
+**Verification:**
+
+- `pnpm check`: pass.
+- `pnpm type-check`: pass.
+- `pnpm test`: pass.
+- `pnpm build`: pass.
+- `pnpm lint`: pass.
+- `pnpm format`: pass.
+- `pnpm build:docs`: pass.
+- `pnpm release:validate`: pass (five public packages; 65 visual measurements).
+- `pnpm run cli:source -- pjm doctor`: no failing checks; approved warnings
+  retained for top-level layout, legacy monoliths, loose reference files, and
+  duplicate active references.
+- `git diff --check`: pass.
+- Focused autonomy inventory: pass (4 tests).
+
+**Notes / Decisions:**
+
+- Existing non-failing PJM warnings remain outside the approved task boundary.
+- Phase 3 implementation is complete; root-owned Phase 3/final review and HiLL
+  closeout remain pending.
 
 ### Task p03-t01: Bump lockstep public package versions
 
@@ -364,25 +403,34 @@ oat_generated: false
 
 ### Task p03-t02: Archive the completed backlog item and run final verification
 
-**Status:** in_progress
-**Commit:** -
+**Status:** completed
+**Commit:** `c6f1dd2665598569fb07dcfe10faf1def7a6d4fa`
 
-**Blocker:**
+**Outcome (required when completed):**
 
-- `pnpm test` reports stale autonomy gate-inventory mapping
-  `ffb3af0ba8ef` for `oat-project-implement/SKILL.md`.
-- The direct cause is the Phase 2 skill wording change; the derived contract
-  file `.agents/docs/autonomy-contract.md` is outside the current Phase 3 task
-  boundary.
-- Backlog archive changes were reverted; the worktree is clean.
-- **Resolution:** user approved adding the derived autonomy-contract refresh to
-  p03-t02; `plan.md` is now the source of truth for the expanded file boundary.
-- **Run 2 blocker:** `oat pjm doctor` reports two pre-existing failing checks:
-  missing `reference/decisions/AGENTS.md` and template frontmatter in nine
-  unrelated backlog files. The approved task mutations were restored and the
-  worktree is clean.
-- **Resolution:** user approved bounded repair of those ten PJM files; warnings
-  outside the two failing checks remain non-blocking and out of scope.
+- Created canonical decisions guidance, removed template markers from the nine
+  approved instantiated records, and cleared all failing PJM doctor checks.
+- Removed stale autonomy prompt-site mapping `ffb3af0ba8ef` and archived
+  BL-260727 with the exact approved completion summary.
+
+**Files changed:**
+
+- `.agents/docs/autonomy-contract.md` - refreshed derived inventory.
+- `.oat/repo/reference/decisions/AGENTS.md` - canonical decisions guidance.
+- Nine approved PJM records - removed template-only frontmatter.
+- BL-260727 archived record, completed ledger, and active backlog index.
+
+**Verification:**
+
+- Run: focused autonomy inventory test and all ten definition-of-done gates.
+- Result: pass; PJM doctor retained only the four approved non-blocking warning
+  classes.
+
+**Notes / Decisions:**
+
+- Three records carried `oat_template: false`; the doctor treats the field
+  itself as template metadata, so both template keys were removed as required
+  by the updated plan.
 
 ---
 
@@ -742,10 +790,11 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase | Tests Run | Passed | Failed | Coverage |
-| ----- | --------- | ------ | ------ | -------- |
-| 1     | 412       | 412    | 0      | Focused  |
-| 2     | 386       | 386    | 0      | Focused  |
+| Phase | Tests Run | Passed | Failed | Coverage                                 |
+| ----- | --------- | ------ | ------ | ---------------------------------------- |
+| 1     | 412       | 412    | 0      | Focused                                  |
+| 2     | 386       | 386    | 0      | Focused                                  |
+| 3     | 4         | 4      | 0      | Focused autonomy inventory plus full DoD |
 
 ## Final Summary (for PR/docs)
 

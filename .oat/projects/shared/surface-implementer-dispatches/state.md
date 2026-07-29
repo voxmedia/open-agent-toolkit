@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t02
-oat_last_commit: fadf2cc418ac8e3012c056ddd457e8561d0b801f
+oat_current_task: null
+oat_last_commit: c6f1dd2665598569fb07dcfe10faf1def7a6d4fa
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 (`p03-t02`)
+Implementation - Phase 3 complete; root review and HiLL closeout pending
 
 ## Artifacts
 
@@ -95,8 +95,8 @@ Implementation - Phase 3 (`p03-t02`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (5/6 tasks complete; current
-  `p03-t02`)
+- **Implementation:** `implementation.md` (6/6 tasks complete; review and
+  closeout pending)
 
 ## Progress
 
@@ -133,7 +133,10 @@ Implementation - Phase 3 (`p03-t02`)
   `0.2.25`
 - ✓ User approved adding the derived autonomy-contract refresh to p03-t02
 - ✓ User approved bounded repair of the two failing PJM doctor checks
-- → `p03-t02` resumes in Run 3 with the updated plan boundary
+- ✓ `p03-t02` repaired PJM checks, refreshed autonomy inventory, and archived
+  BL-260727
+- ✓ Phase 3 implementation completed with all definition-of-done gates passing
+- → Awaiting root-owned Phase 3/final review and HiLL closeout
 
 ## Blockers
 
@@ -141,4 +144,4 @@ None
 
 ## Next Milestone
 
-Resume `p03-t02` with the approved PJM remediation
+Run root-owned Phase 3/final review, then complete the configured HiLL closeout
