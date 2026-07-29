@@ -1,7 +1,7 @@
 ---
 id: BL-260728-cohesive-adaptive-recap-set
 title: Cohesive adaptive recap set
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: L
@@ -11,7 +11,7 @@ labels:
   - visual-quality
 assignee: null
 created: 2026-07-28T02:30:11.108Z
-updated: 2026-07-28T02:30:11.108Z
+updated: '2026-07-29T16:16:25Z'
 associated_issues: []
 external_plans: []
 ---

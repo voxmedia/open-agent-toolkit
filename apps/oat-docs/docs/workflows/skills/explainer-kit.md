@@ -25,16 +25,16 @@ schema. Each recipe's own `version` selector remains `"1"`, so `{id, version}`
 callers and manifest cross-checks are unaffected by the schema move.
 
 A v2 recipe declares a **floor** — the artifacts every run must produce — plus
-a licensed **expansion** set, instead of one exact artifact list. The floor is
-identical to the artifact set each recipe produced before, so no published URL
-changes:
+a licensed **expansion** set. Most recipes retain one floor artifact.
+Unattended `project-recap` is the exception: it plans and composes an adaptive
+minimum set before any artifact author runs.
 
-| Recipe              | Use                                                    | Floor artifact                | Required narrative                                                                                                    |
-| ------------------- | ------------------------------------------------------ | ----------------------------- | --------------------------------------------------------------------------------------------------------------------- |
-| `project-explainer` | Working explanation after project planning             | one Markdown `hub`            | planned architecture, decisions, risks, phases, and validation approach                                               |
-| `project-recap`     | Final record after implementation and final review     | one Markdown `hub`            | original request, key agent decisions, as-built architecture, implementation record, validation evidence, and outcome |
-| `program-recap`     | Bird's-eye record of a multi-wave delivery program     | one Markdown `hub`            | program overview, wave map and outcomes, convention evolution, aggregate numbers, and follow-up ledger                |
-| `engineer-tour`     | Engineer-facing orientation to a codebase and its flow | one HTML-composed `explainer` | orientation, architecture, execution flow, key code, and validation                                                   |
+| Recipe              | Use                                                    | Required floor                                                                                                    |
+| ------------------- | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------- |
+| `project-explainer` | Working explanation after project planning             | one Markdown `hub` covering architecture, decisions, risks, phases, and validation                                |
+| `project-recap`     | Final record after implementation and final review     | HTML visual hub, architecture/system diagram, and deck governed by one set plan                                   |
+| `program-recap`     | Bird's-eye record of a multi-wave delivery program     | one Markdown `hub` covering the wave map, outcomes, convention evolution, aggregate numbers, and follow-up ledger |
+| `engineer-tour`     | Engineer-facing orientation to a codebase and its flow | one HTML-composed `explainer` covering orientation, architecture, execution flow, key code, and validation        |
 
 The OAT project lifecycle owns `project-explainer` and `project-recap`. Both
 bind one project source set. The adapter binds `plan.md`, `design.md`, and
@@ -51,18 +51,17 @@ artifact `type`, authoring path, brief, optional shell, and a mandatory
 `maxCount`. Every recipe also carries a mandatory `expansion.limits.maxArtifacts`
 that caps the whole expansion set; floor artifacts do not count against it.
 
-| Recipe              | Profiles (max per profile)                                  | `maxArtifacts` |
-| ------------------- | ----------------------------------------------------------- | -------------- |
-| `project-recap`     | `supporting-diagram` 4, `deep-dive` 3, `walkthrough-deck` 1 | 6              |
-| `program-recap`     | `supporting-diagram` 3, `project-page` 12                   | 12             |
-| `project-explainer` | `supporting-diagram` 4                                      | 4              |
-| `engineer-tour`     | `supporting-diagram` 4                                      | 4              |
+| Recipe              | Profiles (max per profile)                       | `maxArtifacts` |
+| ------------------- | ------------------------------------------------ | -------------- |
+| `project-recap`     | `status-view` 1, `rollout-view` 1, `deep-dive` 3 | 5              |
+| `program-recap`     | `supporting-diagram` 3, `project-page` 12        | 12             |
+| `project-explainer` | `supporting-diagram` 4                           | 4              |
+| `engineer-tour`     | `supporting-diagram` 4                           | 4              |
 
-`supporting-diagram` produces an HTML-composed `diagram` on the diagram shell,
-`walkthrough-deck` an HTML-composed `deck` on the deck shell, and `deep-dive`
-and `project-page` Markdown `explainer` pages. Every declared type stays inside
-the frozen `manifest/v1` enum — narrative sub-pages use `explainer` rather than
-introducing a new type.
+For project recaps, optional status and rollout views require matching
+source-backed justifications, while `deep-dive` remains a Markdown
+`explainer`. Other recipes retain their recipe-owned diagram and project-page
+profiles. Every declared type stays inside the frozen `manifest/v1` enum.
 
 ## Content authoring and review
 
@@ -105,11 +104,13 @@ author request, so an unattended author receives everything it needs in one
 payload. Changing a brief changes output expectations with no contract
 migration.
 
-### The author seam
+### The planning and author seams
 
-Every run requires one provider-neutral author callback, in **both** modes —
-there is no synthetic content model to fall back on. A run without one fails
-with `E_AUTHOR_REQUIRED`.
+Before authoring, one provider-neutral `planSet` callback produces the complete
+shared terminology, status, and number ledger plus the adaptive artifact
+portfolio. Every run also requires one provider-neutral author callback, in
+**both** modes — there is no synthetic content model to fall back on. A run
+without one fails with `E_AUTHOR_REQUIRED`.
 
 In-process core callers supply `options.author`; core CLI callers use
 `--author-module`. The OAT adapter accepts either an in-process `author` or an
@@ -119,36 +120,36 @@ Validated results are retained under `source/author/` and authored content under
 `source/content/<artifact>.md` or `.html`; both are covered by the run's
 immutable hashes.
 
-The core invokes the author once per artifact with an
+The OAT adapter exposes planner and author callbacks, or their validated module
+entry points, as first-class seams. Executable callbacks and paths remain
+transient and never enter retained request contracts.
+
+The core invokes the author once per planned artifact with an
 `explainer-kit.author-request/v2` payload carrying the artifact identity and
 type, its authoring path, the inlined brief, the reconciled fact base, the
-resolved theme, the shell source for artistic artifacts, and — for narrative
-floor artifacts — the required narrative section IDs. It accepts only a
-schema-valid `explainer-kit.author-result/v2` containing exactly one of
+resolved theme, the shell source for artistic artifacts, the immutable set
+context, the matching planned artifact, and bundled medium-specific authoring
+guidance. The installed skill is the complete unattended baseline; optional
+provider capabilities can enhance composition but are not required. The core
+accepts only a schema-valid `explainer-kit.author-result/v2` containing exactly one of
 `content.markdown` or `content.html` plus non-secret provenance. Authored
 content is still checked for excessive verbatim overlap with the fact base.
 
-### Content-driven expansion
+### Planner-owned adaptive sets
 
-An author that judges the material to warrant more than the floor may return
-`proposedArtifacts` on the floor result, where each entry is only
-`{id, profileId, rationale}`. Proposals deliberately cannot carry an authoring
-path, brief, or shell — those are read from the referenced profile, so policy
-stays recipe-owned.
+The set planner finalizes required and optional artifacts before authoring.
+Project recaps always contain a hub, architecture/system diagram, and deck;
+the planner may add only recipe-licensed optional views with a source-backed
+justification. Recipe and per-profile limits still bound the portfolio.
+Undeclared sources, conflicting ledger values, duplicate IDs, and unjustified
+optionals fail validation. Author results cannot add, remove, or replace
+artifacts.
 
-The pipeline validates each proposal, enforces the per-profile and recipe-level
-caps, then issues one author request per accepted proposal. The two outcomes are
-distinct on purpose:
-
-- A **malformed** proposal — unknown `profileId`, unsafe or duplicate `id`, or a
-  collision with a floor artifact ID — is a hard error, because it signals a
-  broken author rather than thin content.
-- An **over-limit** proposal is rejected with a stable warning and the run
-  continues.
-
-Accepted expansion artifacts render to ID-bearing paths
-(`site/{directory}/{slug}/{artifactId}/index.html`) and are linked from the floor
-hub, while floor artifacts keep their existing paths unchanged.
+When the plan contains a non-linear graph, artistic output must preserve its
+closed semantics exactly: direction, every node and label, every edge and
+label, branching, fan-in, and cycles. Missing, extra, duplicated, rewired, or
+semantically drifting observations fail topology validation before browser or
+critic review.
 
 ### Approval and marking
 
@@ -167,12 +168,20 @@ re-renders and re-runs QA against the edited sources before approval is
 processed rather than publishing the stale render.
 
 Unattended runs — including recaps triggered by automated project completion —
-flow through end-to-end and auto-approve. The approval record distinguishes the
-two honestly: `explainer-kit.content-approval/v2` carries
-`marking: human-approved` for an interactive approval and `auto-drafted` for an
-unattended run, and the marking is surfaced in the core and adapter run results.
-It is deliberately **not** written to the manifest, which stays frozen on
-`manifest/v1`.
+flow through end-to-end and auto-approve content. The approval record
+distinguishes the two honestly: `explainer-kit.content-approval/v2` carries
+`marking: human-approved` for interactive approval and `auto-drafted` for an
+unattended run.
+
+Unattended project recaps also require a separate whole-set visual review.
+The browser provider captures each rendered artifact at exact 320, 768, and
+1440 viewports in real Chromium. The core validates those screenshots, binds
+them and their metrics by byte hash, and sends only that confined evidence to
+an independent critic. A `correct` disposition permits one bounded correction
+and exactly one final review; there is no second correction or third review.
+Missing or invalid evidence, a failed critic, or an unresolved correction ends
+as `built-needs-review`. Such output is retained for diagnosis but cannot
+become durable or publish.
 
 The approval record is also the durable source of truth for the resolved
 artifact set. It records every floor and accepted expansion artifact for all
@@ -211,15 +220,16 @@ succeed in both modes.
 | `render-qa-deck-print-layout`            | A deck degrades incorrectly in print layout                     |
 | `render-qa-skipped-no-probe`             | Render QA was skipped because no browser probe was supplied     |
 
-Render QA is opt-in. When a caller supplies a browser probe, the stage serves
-the built site directory, loads each artifact with animations disabled, and runs
-the layout-probe battery at representative widths. Viewport clipping
-deliberately exempts content inside a horizontally scrollable ancestor, so
-intentionally paged deck slides are not reported as clipped while genuinely
-unreachable content still is. The core never launches a browser on its own:
-without an injected probe the stage records the single
-`render-qa-skipped-no-probe` warning and the run continues rather than failing
-closed.
+When a caller supplies a browser probe, the stage serves the built site
+directory, loads each artifact with animations disabled, and runs the
+layout-probe battery. Viewport clipping deliberately exempts content inside a
+horizontally scrollable ancestor, so intentionally paged deck slides are not
+reported as clipped while genuinely unreachable content still is. The core
+never launches a browser on its own. For ordinary runs, omitting the injected
+probe records `render-qa-skipped-no-probe` and continues. For unattended
+project recaps, however, the OAT adapter requires first-class browser-probe and
+visual-critic seams, and missing evidence fails closed as
+`built-needs-review`.
 
 ## Curated styles and themes
 
@@ -250,6 +260,14 @@ content, resolved theme, `manifest.json`, `build-record.json`, and the rendered
 `site/` tree. Rendering or publishing failures preserve successful
 intermediates and recovery information.
 
+Reviewed source and citation backlinks are absolute canonical GitHub blob URLs
+pinned to the exact 40-character commit revision and line range, so they
+survive project archival without resolving through a mutable branch or local
+checkout. Each recap also emits
+`site/initiatives/<slug>/catalog.json` from the finalized manifest. Its
+artifact IDs, types, paths, URLs, and source backlinks must remain in exact
+manifest parity; authors do not hand-maintain the catalog.
+
 `manifest.immutableHashes` covers the exact retained bytes for
 `run-request.json`, content approval, fact-base JSON and Markdown, declared
 author results, authored content, the resolved theme, and every built
@@ -264,6 +282,8 @@ Build success and durability are separate:
 
 - `built-not-durable` means artifacts exist but verified commit or publish
   evidence is absent.
+- `built-needs-review` means the required unattended visual-review chain did
+  not finish with a pass; durability and publishing remain blocked.
 - `built-durable` requires verified evidence for every required
   non-rebuildable artifact.
 - `failed` records a failed run without treating partial output as success.

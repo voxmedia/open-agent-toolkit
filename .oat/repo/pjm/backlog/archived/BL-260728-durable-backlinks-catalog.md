@@ -1,7 +1,7 @@
 ---
 id: BL-260728-durable-backlinks-catalog
 title: Durable backlinks catalog
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: L
@@ -11,7 +11,7 @@ labels:
   - publishing
 assignee: null
 created: 2026-07-28T02:30:12.332Z
-updated: 2026-07-28T02:30:12.332Z
+updated: '2026-07-29T16:16:27Z'
 associated_issues: []
 external_plans: []
 ---

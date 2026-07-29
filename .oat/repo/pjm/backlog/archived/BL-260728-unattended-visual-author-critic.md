@@ -1,7 +1,7 @@
 ---
 id: BL-260728-unattended-visual-author-critic
 title: Unattended visual author and critic
-status: open
+status: closed
 priority: high
 scope: feature
 scope_estimate: L
@@ -11,7 +11,7 @@ labels:
   - review
 assignee: null
 created: 2026-07-28T02:30:10.437Z
-updated: 2026-07-28T02:30:10.437Z
+updated: '2026-07-29T16:16:24Z'
 associated_issues: []
 external_plans: []
 ---

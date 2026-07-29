@@ -1,7 +1,7 @@
 ---
 id: BL-260728-non-linear-diagram-routing
 title: Non-linear diagram routing
-status: open
+status: closed
 priority: medium
 scope: feature
 scope_estimate: M
@@ -11,7 +11,7 @@ labels:
   - visual-quality
 assignee: null
 created: 2026-07-28T02:30:11.713Z
-updated: 2026-07-28T02:30:11.713Z
+updated: '2026-07-29T16:16:26Z'
 associated_issues: []
 external_plans: []
 ---
