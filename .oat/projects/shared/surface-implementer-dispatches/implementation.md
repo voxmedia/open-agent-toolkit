@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-29
-oat_current_task_id: p03-t01
+oat_current_task_id: p03-t02
 oat_generated: false
 ---
 
@@ -24,13 +24,13 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 2     | 2/2       |
-| Phase 2 | completed | 2     | 2/2       |
-| Phase 3 | pending   | 2     | 0/2       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 2     | 2/2       |
+| Phase 2 | completed   | 2     | 2/2       |
+| Phase 3 | in_progress | 2     | 1/2       |
 
-**Total:** 4/6 tasks completed
+**Total:** 5/6 tasks completed
 
 ### Review Received: design
 
@@ -331,13 +331,34 @@ oat_generated: false
 
 ## Phase 3: Release and Backlog Closeout
 
-**Status:** pending
-**Started:** -
+**Status:** in_progress
+**Started:** 2026-07-29
 
 ### Task p03-t01: Bump lockstep public package versions
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `fadf2cc418ac8e3012c056ddd457e8561d0b801f`
+
+**Outcome (required when completed):**
+
+- Bumped all five lockstep public packages and the bundled public-package
+  inventory from `0.2.24` to `0.2.25`.
+
+**Files changed:**
+
+- Five public package manifests under `packages/` - lockstep release versions.
+- `packages/cli/assets/public-package-versions.json` - bundled package-version
+  inventory.
+
+**Verification:**
+
+- Run: `pnpm release:validate`.
+- Result: pass (five public packages validated at `0.2.25`; visual validation
+  passed with 65 measurements).
+
+**Notes / Decisions:**
+
+- No lockfile or generated tracked files changed.
 
 ---
 

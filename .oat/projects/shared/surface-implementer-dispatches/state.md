@@ -1,6 +1,6 @@
 ---
-oat_current_task: p03-t01
-oat_last_commit: 48944e9fb9bf2fc76849e4c89958b53e10d98967
+oat_current_task: p03-t02
+oat_last_commit: fadf2cc418ac8e3012c056ddd457e8561d0b801f
 oat_blockers: []
 associated_issues: [
     { type: backlog, ref: 'BL-260727-surface-implementer-dispatches' },
@@ -87,7 +87,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - Phase 3 (`p03-t01`)
+Implementation - Phase 3 (`p03-t02`)
 
 ## Artifacts
 
@@ -95,8 +95,8 @@ Implementation - Phase 3 (`p03-t01`)
 - **Spec:** N/A (quick mode)
 - **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (complete)
-- **Implementation:** `implementation.md` (4/6 tasks complete; current
-  `p03-t01`)
+- **Implementation:** `implementation.md` (5/6 tasks complete; current
+  `p03-t02`)
 
 ## Progress
 
@@ -129,7 +129,9 @@ Implementation - Phase 3 (`p03-t01`)
 - ! Phase 2 re-review left one Important bare-provider adoption gap
 - ✓ Phase 2 fix iteration 2 resolved the bare-provider adoption gap
 - ✓ Phase 2 final root-owned review passed with no findings
-- → `p03-t01` bumps lockstep public package versions
+- ✓ `p03-t01` bumped all five lockstep public packages and bundled inventory to
+  `0.2.25`
+- → `p03-t02` archives the completed backlog item and runs final verification
 
 ## Blockers
 
@@ -137,4 +139,5 @@ None
 
 ## Next Milestone
 
-Execute `p03-t01` to bump lockstep public package versions
+Execute `p03-t02` to archive the completed backlog item and run final
+verification
