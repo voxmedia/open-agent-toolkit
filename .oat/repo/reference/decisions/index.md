@@ -10,6 +10,10 @@
 
 | ID                                       | Date       | Status   | Title                                                                   | Legacy |
 | ---------------------------------------- | ---------- | -------- | ----------------------------------------------------------------------- | ------ |
+| DR-260729-additive-dispatch-reports      | 2026-07-29 | accepted | Additive dispatch reports                                               | -      |
+| DR-260729-classification-only-provenance | 2026-07-29 | accepted | Classification-only provenance                                          | -      |
+| DR-260729-effective-target-reviewer      | 2026-07-29 | accepted | Effective-target reviewer notices                                       | -      |
+| DR-260729-provider-neutral-selection     | 2026-07-29 | accepted | Provider-neutral selection warnings                                     | -      |
 | DR-260726-core-shell-scripts-are-hash    | 2026-07-26 | accepted | Core shell scripts are hash-pinned                                      | -      |
 | DR-260726-expansion-artifacts-get-id     | 2026-07-26 | accepted | Expansion artifacts get ID-bearing paths                                | -      |
 | DR-260726-explainer-authoring-is-two     | 2026-07-26 | accepted | Explainer authoring is two-path with a caller-owned author seam         | -      |
