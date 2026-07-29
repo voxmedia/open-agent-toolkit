@@ -1374,6 +1374,7 @@ identity, even when flat pixel bytes are identical.
 
 **Files:**
 
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/diagram.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/recipes.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/diagram.test.mjs`
@@ -1401,11 +1402,14 @@ composition or rejected; none are silently serialized.
 **Files:**
 
 - Modify: `.agents/skills/explainer-kit/schemas/fact-base.schema.json`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/fact-base.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/render.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/fact-base.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/render.test.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/scripts/bind-project-sources.mjs`
 - Modify: `.agents/skills/oat-explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/oat-explainer-kit/tests/run.integration.test.mjs`
 
 **Steps:**
 
@@ -1430,8 +1434,11 @@ source after project archival.
 **Files:**
 
 - Create: `.agents/skills/explainer-kit/scripts/lib/catalog.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/run.mjs`
+- Modify: `.agents/skills/explainer-kit/scripts/lib/contracts.mjs`
 - Modify: `.agents/skills/explainer-kit/scripts/lib/s3-static.mjs`
 - Modify: `.agents/skills/explainer-kit/schemas/manifest.schema.json`
+- Modify: `.agents/skills/explainer-kit/tests/contracts.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/s3-static.test.mjs`
 - Modify: `.agents/skills/explainer-kit/tests/e2e-recap.test.mjs`
 

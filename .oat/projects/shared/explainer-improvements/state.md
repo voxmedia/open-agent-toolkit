@@ -194,6 +194,11 @@ Phase p04 implementation in progress
 - ✓ Final narrowed Phase p03 re-review passed with zero findings
 - ✓ Phase p03 closed after remediation attempt 3/3
 - ⧗ Phase p04 begins at p04-t01
+- ✓ Phase p04 implementation preflight aborted before edits on incomplete task
+  ownership boundaries; no retry was consumed
+- ✓ p04-t01 through p04-t03 file boundaries now include the core orchestration,
+  adapter source binding, and contract validation owners required by acceptance
+- ⧗ Phase p04 implementation relaunch is prepared from a clean worktree
 
 ## Blockers
 

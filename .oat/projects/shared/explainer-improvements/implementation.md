@@ -603,6 +603,24 @@ oat_generated: false
 - Tasks: p04-t01 through p04-t03, sequentially
 - Scope: topology preservation, commit-pinned source backlinks, and
   manifest-derived initiative catalog
+- Outcome: `INVALID_RUN_ABORT` before edits; no implementation or remediation
+  retry consumed
+- Preflight correction: p04-t01 now includes the core orchestrator that owns
+  render routing; p04-t02 includes the core orchestrator, adapter source binder,
+  and adapter integration test that own reviewed repository/commit provenance;
+  p04-t03 includes the core orchestrator and contract validator/tests that own
+  finalized-manifest construction and receipt validation
+- Final HEAD: `65b95624a6c2f4805bded843af9eff02d2f4155f`
+- Worktree: clean; no tracking or review artifacts changed by the implementer
+- Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
+
+### Run 16 — Phase p04 implementation retry after preflight correction
+
+- Request: `explainer-improvements-p04-20260729T021500Z`
+- Launch intent: persisted
+- Tasks: p04-t01 through p04-t03, sequentially
+- Scope: corrected topology-routing, reviewed-source, manifest-construction, and
+  catalog-validation ownership boundaries
 - Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high
 
 <!-- orchestration-runs-end -->
@@ -624,20 +642,21 @@ oat_generated: false
 
 ## Deviations from Plan / Design
 
-| Task / Review         | Source Artifact | Planned / Documented                                    | Actual / Accepted                   | Reason                                                                                                             | Source of Truth                        | Follow-up        |
-| --------------------- | --------------- | ------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------- | ---------------- |
-| import                | imported plan   | Fix notices before PR #179 merges                       | Fix notices immediately after merge | PR #179 was already merged when import began                                                                       | `1151a0d7` and `plan.md`               | p01-t01          |
-| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata      | Added bounded p01-t04 before review | Clean CLI build exposed a tracked generated-asset delta                                                            | package manifests and bundle script    | p01-t04          |
-| p01 code review       | p01 review      | Phase passes after four tasks                           | Added bounded p01-t05 and p01-t06   | Review found two Important acceptance gaps                                                                         | p01 review artifact                    | p01-t05, p01-t06 |
-| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green         | Added bounded p01-t07               | Version-contract test still expected `2.0.0`                                                                       | root focused test                      | p01-t07          |
-| p02 retry policy      | project state   | One review-remediation retry                            | Up to three bounded retries         | Operator override on 2026-07-28                                                                                    | user instruction and `state.md`        | p02-t08–p02-t12  |
-| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                       | Corrected one path; removed one     | Recipe validation has no standalone schema file                                                                    | repository file inventory              | p02-t12          |
-| p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other                  | Add an external resume token        | A coordinated edit can recompute every mutable projection and hash                                                 | p02 re-review artifact                 | p02-t13          |
-| p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral               | Add bounded p03-t12 and p03-t13     | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3                   | focused phase and CLI validation tests | p03-t12, p03-t13 |
-| p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                 | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers | core integration tests                 | p03-t14          |
-| p03-t14 verification  | plan p03-t14    | Canonical adapter 1.0.4 is aligned across validation    | Add bounded p03-t15                 | The smoke wrapper retained an independent 1.0.3 assertion                                                          | full repository test                   | p03-t15          |
-| p03 re-review R1      | p03 re-review   | Remediation closes all original blocking findings       | Add p03-t16 through p03-t19         | Pseudo-PNGs remain accepted and package coverage is duplicated/inconsistent outside success                        | p03 re-review artifact                 | p03-t16–p03-t19  |
-| p03 re-review R2      | p03 re-review   | Full decoding binds the screenshot through review       | Add bounded p03-t21                 | Pixel-only decoded hash permits geometry changes with identical flat bytes                                         | p03 re-review artifact                 | p03-t21          |
+| Task / Review         | Source Artifact | Planned / Documented                                    | Actual / Accepted                    | Reason                                                                                                                        | Source of Truth                        | Follow-up        |
+| --------------------- | --------------- | ------------------------------------------------------- | ------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- | ---------------- |
+| import                | imported plan   | Fix notices before PR #179 merges                       | Fix notices immediately after merge  | PR #179 was already merged when import began                                                                                  | `1151a0d7` and `plan.md`               | p01-t01          |
+| p01 root verification | plan p01-t01    | Manifest bumps regenerate bundled version metadata      | Added bounded p01-t04 before review  | Clean CLI build exposed a tracked generated-asset delta                                                                       | package manifests and bundle script    | p01-t04          |
+| p01 code review       | p01 review      | Phase passes after four tasks                           | Added bounded p01-t05 and p01-t06    | Review found two Important acceptance gaps                                                                                    | p01 review artifact                    | p01-t05, p01-t06 |
+| p01 fix verification  | plan p01-t06    | Required skill bump leaves the full suite green         | Added bounded p01-t07                | Version-contract test still expected `2.0.0`                                                                                  | root focused test                      | p01-t07          |
+| p02 retry policy      | project state   | One review-remediation retry                            | Up to three bounded retries          | Operator override on 2026-07-28                                                                                               | user instruction and `state.md`        | p02-t08–p02-t12  |
+| p02-t12 preflight     | plan p02-t12    | Modify two versioned schema paths                       | Corrected one path; removed one      | Recipe validation has no standalone schema file                                                                               | repository file inventory              | p02-t12          |
+| p02 re-review I3-R1   | p02 re-review   | Mutable records cross-check each other                  | Add an external resume token         | A coordinated edit can recompute every mutable projection and hash                                                            | p02 re-review artifact                 | p02-t13          |
+| p03 fix verification  | plan p03-t11    | Successful recap coverage is mode-neutral               | Add bounded p03-t12 and p03-t13      | Interactive recaps inherited unattended evidence requirements; skill assertion remained at 1.0.3                              | focused phase and CLI validation tests | p03-t12, p03-t13 |
+| p03-t12 verification  | plan p03-t12    | Partial retained evidence is always a malformed package | Add bounded p03-t14                  | `built-needs-review` intentionally retains partial evidence for manual handoff and is already blocked by consumers            | core integration tests                 | p03-t14          |
+| p03-t14 verification  | plan p03-t14    | Canonical adapter 1.0.4 is aligned across validation    | Add bounded p03-t15                  | The smoke wrapper retained an independent 1.0.3 assertion                                                                     | full repository test                   | p03-t15          |
+| p03 re-review R1      | p03 re-review   | Remediation closes all original blocking findings       | Add p03-t16 through p03-t19          | Pseudo-PNGs remain accepted and package coverage is duplicated/inconsistent outside success                                   | p03 re-review artifact                 | p03-t16–p03-t19  |
+| p03 re-review R2      | p03 re-review   | Full decoding binds the screenshot through review       | Add bounded p03-t21                  | Pixel-only decoded hash permits geometry changes with identical flat bytes                                                    | p03 re-review artifact                 | p03-t21          |
+| p04 preflight         | plan p04        | Declared files contain all task ownership boundaries    | Expand p04-t01 through p04-t03 files | Render routing, reviewed source binding, manifest construction, and receipt validation have owners outside the original lists | repository preflight at `65b95624`     | p04-t01–p04-t03  |
 
 ## Test Results
 
