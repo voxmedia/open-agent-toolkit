@@ -1,7 +1,7 @@
 ---
 id: BL-260727-surface-implementer-dispatches
 title: Surface implementer dispatches that sit at the ceiling without classification
-status: open
+status: closed
 priority: medium
 scope: task
 scope_estimate: S
@@ -10,7 +10,7 @@ labels:
   - observability
 assignee: null
 created: 2026-07-27T22:27:24.550Z
-updated: 2026-07-27T22:27:24.550Z
+updated: '2026-07-29T14:48:40Z'
 associated_issues: []
 external_plans: []
 ---

@@ -10,8 +10,6 @@ assignee: null
 created: '2026-07-07T05:18:56Z'
 updated: '2026-07-10T18:15:14Z'
 associated_issues: [BL-260707-record-gate-review-model]
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description

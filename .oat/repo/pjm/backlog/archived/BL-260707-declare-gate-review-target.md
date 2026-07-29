@@ -11,8 +11,6 @@ created: '2026-07-07T11:47:53Z'
 updated: '2026-07-10T18:15:13Z'
 associated_issues:
   [BL-260707-record-gate-review-model, BL-260707-ask-to-enable-phase-review]
-oat_template: true
-oat_template_name: backlog-item
 ---
 
 ## Description
