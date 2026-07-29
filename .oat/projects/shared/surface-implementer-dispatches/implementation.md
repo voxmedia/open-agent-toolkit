@@ -1201,6 +1201,10 @@ implementation exit gate refresh.
 - **Artifact:** `reviews/final-review-2026-07-29T173359Z.md`
 - **Disposition:** gate passed at the Important threshold; receive required
   before the generation becomes allowed
+- **Receive intent:** source `reviews/final-review-2026-07-29T173359Z.md`,
+  archive destination `reviews/archived/final-review-2026-07-29T173359Z.md`,
+  and event `final|code|final-review-2026-07-29T173359Z.md` bound to
+  pre-receive head `f5f9fdd0b11ffccdee9f1d3023d4615ccbf054f7`
 
 ## Implementation Log
 
