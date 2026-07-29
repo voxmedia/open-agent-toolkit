@@ -2082,8 +2082,8 @@ archive, and visual-review bindings; fixture or forged identities fail closed.
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r3.md |
 | p04    | code     | fixes_completed | 2026-07-29 | reviews/20260729-p04-code-review-r4.md |
 | p04    | code     | passed          | 2026-07-29 | reviews/20260729-p04-code-review-r5.md |
-| p05    | code     | fixes_added     | 2026-07-29 | reviews/20260729-final-code-review.md  |
-| final  | code     | fixes_added     | 2026-07-29 | reviews/20260729-final-code-review.md  |
+| p05    | code     | fixes_completed | 2026-07-29 | reviews/20260729-final-code-review.md  |
+| final  | code     | fixes_completed | 2026-07-29 | reviews/20260729-final-code-review.md  |
 | spec   | artifact | pending         | -          | -                                      |
 | design | artifact | pending         | -          | -                                      |
 | plan   | artifact | passed          | 2026-07-28 | -                                      |
@@ -2113,8 +2113,11 @@ additional unrelated review cycles.
 
 **Total: 62 tasks**
 
-Implementation is not complete. This section records the completion target and
-must be updated with evidence when all tasks and reviews pass.
+Implementation completed on 2026-07-29. All 62 tasks are committed; the final
+review's two Important findings were resolved in the single authorized fix
+pass. Focused integrity suites, the three real-Chromium goldens, full workspace
+tests, build, lint, format, docs, five public package payloads, 65 release visual
+measurements, and `git diff --check` passed at the final implementation head.
 
 ---
 

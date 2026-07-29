@@ -1,6 +1,6 @@
 ---
-oat_current_task: p05-t07
-oat_last_commit: a29cfc87d1f1e7e539576df3cd654567d6928c0
+oat_current_task: null
+oat_last_commit: 1281755dc316c8415e8af20e6390ba111e2282d1
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -12,7 +12,7 @@ oat_hill_checkpoints: ['p05'] # Configured: which phases require human-in-the-lo
 oat_hill_completed: ['p05'] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: implement # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 oat_orchestration_retry_limit: 4
 oat_dispatch_policy:
   mode: managed
@@ -278,8 +278,11 @@ Phase p04 implementation in progress
 - ✓ The single bounded final project review completed with two Important
   integrity findings
 - ✓ p05-t06 binds resume to the complete canonical privacy-safe request
-- ⧗ p05-t07 must retain trusted Chromium identity through immutable package,
-  finalizer, and archive evidence
+- ✓ p05-t07 retains trusted Chromium identity through immutable package,
+  finalizer, archive, and release evidence
+- ✓ All 62 tasks and the single authorized final fix pass are complete
+- ✓ Focused suites, full workspace tests, build, lint, format, docs, release
+  payload validation, 65 visual measurements, and `git diff --check` pass
 
 ## Blockers
 
@@ -287,5 +290,5 @@ None.
 
 ## Next Milestone
 
-Execute p05-t06 and p05-t07, run focused and full gates once, then mechanically
-close the project without opening another review cycle.
+Implementation is complete. Optional lifecycle follow-ups are project summary,
+documentation reconciliation, and final PR creation when requested.
