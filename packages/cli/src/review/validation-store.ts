@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { constants } from 'node:fs';
 import {
   chmod,
@@ -6,11 +7,13 @@ import {
   open,
   readFile,
   realpath,
+  rename,
   rm,
   stat,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { setTimeout as delay } from 'node:timers/promises';
 
 import type {
   HostTelemetryEvidenceV1,
@@ -100,6 +103,52 @@ export class ValidationStore {
     await chmod(this.root, 0o700);
   }
 
+  private async withLock<T>(operation: () => Promise<T>): Promise<T> {
+    await this.ensureRoot();
+    const lockPath = join(this.root, '.store.lock');
+    let handle;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      try {
+        handle = await open(lockPath, EXCLUSIVE_WRITE, 0o600);
+        break;
+      } catch (error) {
+        if (
+          typeof error !== 'object' ||
+          error === null ||
+          !('code' in error) ||
+          error.code !== 'EEXIST'
+        ) {
+          throw error;
+        }
+        await delay(10);
+      }
+    }
+    if (!handle) throw new Error('validation store lock timeout');
+    try {
+      return await operation();
+    } finally {
+      await handle.close();
+      await rm(lockPath, { force: true });
+    }
+  }
+
+  private runDirectory(runId: string): string {
+    if (!/^[A-Za-z0-9_-]{16,128}$/.test(runId)) {
+      throw new Error('validation run ID is malformed');
+    }
+    return join(this.root, `run-${runId}`);
+  }
+
+  private correlationPath(gateRunId: string, launchAttemptId: string): string {
+    if (
+      !/^[A-Za-z0-9_-]{1,128}$/.test(gateRunId) ||
+      !/^[A-Za-z0-9_-]{1,128}$/.test(launchAttemptId)
+    ) {
+      throw new Error('gate correlation IDs are malformed');
+    }
+    return join(this.root, `correlation-${gateRunId}-${launchAttemptId}.json`);
+  }
+
   async createRun(input: {
     preparation: ReviewPreparationV1;
     artifactDraft: boolean;
@@ -108,7 +157,7 @@ export class ValidationStore {
     if (!/^[A-Za-z0-9_-]{16,128}$/.test(input.preparation.runId)) {
       throw new Error('validation run ID is malformed');
     }
-    const runDirectory = join(this.root, `run-${input.preparation.runId}`);
+    const runDirectory = this.runDirectory(input.preparation.runId);
     await mkdir(runDirectory, { mode: 0o700 });
     await chmod(runDirectory, 0o700);
     const resolvedRoot = await realpath(this.root);
@@ -165,7 +214,142 @@ export class ValidationStore {
 
   async unsafeReadStateForTesting(runId: string): Promise<unknown> {
     return JSON.parse(
-      await readFile(join(this.root, `run-${runId}`, 'state.json'), 'utf8'),
+      await readFile(join(this.runDirectory(runId), 'state.json'), 'utf8'),
     ) as unknown;
+  }
+
+  async readRun(runId: string, now = new Date()): Promise<StoredValidationRun> {
+    const runDirectory = this.runDirectory(runId);
+    const statePath = join(runDirectory, 'state.json');
+    const handle = await open(statePath, constants.O_RDONLY | NOFOLLOW);
+    let source: string;
+    try {
+      const info = await handle.stat();
+      if (!info.isFile() || info.nlink !== 1 || info.mode & 0o077) {
+        throw new Error('validation state identity or permissions are unsafe');
+      }
+      source = await handle.readFile('utf8');
+    } finally {
+      await handle.close();
+    }
+    const state = JSON.parse(source) as ValidationRunState;
+    if (
+      state.schemaVersion !== 1 ||
+      state.preparation?.schemaVersion !== 1 ||
+      state.preparation.runId !== runId
+    ) {
+      throw new Error('validation state schema or identity mismatch');
+    }
+    if (Date.parse(state.preparation.expiresAt) <= now.getTime()) {
+      throw new Error('validation state has expired');
+    }
+    if (state.draft !== null) {
+      const draftInfo = await lstat(state.draft.path);
+      if (
+        !draftInfo.isFile() ||
+        draftInfo.isSymbolicLink() ||
+        draftInfo.nlink !== 1 ||
+        draftInfo.dev !== state.draft.device ||
+        draftInfo.ino !== state.draft.inode ||
+        draftInfo.mode & 0o077
+      ) {
+        throw new Error('artifact draft identity mismatch');
+      }
+    }
+    return {
+      runId,
+      runDirectory,
+      statePath,
+      artifactDraftPath: state.draft?.path ?? null,
+      draftDevice: state.draft?.device ?? null,
+      draftInode: state.draft?.inode ?? null,
+      state,
+    };
+  }
+
+  async updateRun(
+    runId: string,
+    update: (state: ValidationRunState) => ValidationRunState,
+  ): Promise<StoredValidationRun> {
+    return this.withLock(async () => {
+      const current = await this.readRun(runId);
+      const next = update(structuredClone(current.state));
+      if (
+        next.schemaVersion !== 1 ||
+        next.preparation.runId !== runId ||
+        next.preparation.expiresAt !== current.state.preparation.expiresAt
+      ) {
+        throw new Error('validation update changed immutable identity');
+      }
+      const temporaryPath = join(
+        current.runDirectory,
+        `.state-${randomUUID()}.tmp`,
+      );
+      await writeExclusive(temporaryPath, `${JSON.stringify(next)}\n`);
+      await rename(temporaryPath, current.statePath);
+      return this.readRun(runId);
+    });
+  }
+
+  async bindGateCorrelation(
+    gateRunId: string,
+    launchAttemptId: string,
+    runId: string,
+  ): Promise<void> {
+    await this.withLock(async () => {
+      const run = await this.readRun(runId);
+      if (
+        run.state.preparation.correlation.gateRunId !== gateRunId ||
+        run.state.preparation.correlation.launchAttemptId !== launchAttemptId
+      ) {
+        throw new Error('gate correlation does not match validation state');
+      }
+      await writeExclusive(
+        this.correlationPath(gateRunId, launchAttemptId),
+        `${JSON.stringify({ schemaVersion: 1, runId })}\n`,
+      );
+    });
+  }
+
+  async resolveGateCorrelation(
+    gateRunId: string,
+    launchAttemptId: string,
+  ): Promise<string> {
+    const path = this.correlationPath(gateRunId, launchAttemptId);
+    const handle = await open(path, constants.O_RDONLY | NOFOLLOW);
+    try {
+      const info = await handle.stat();
+      if (!info.isFile() || info.nlink !== 1 || info.mode & 0o077) {
+        throw new Error('gate correlation identity is unsafe');
+      }
+      const record = JSON.parse(await handle.readFile('utf8')) as {
+        schemaVersion?: unknown;
+        runId?: unknown;
+      };
+      if (record.schemaVersion !== 1 || typeof record.runId !== 'string') {
+        throw new Error('gate correlation schema is invalid');
+      }
+      await this.readRun(record.runId);
+      return record.runId;
+    } finally {
+      await handle.close();
+    }
+  }
+
+  async deleteRun(runId: string): Promise<void> {
+    await this.withLock(async () => {
+      const run = await this.readRun(runId);
+      const correlation = run.state.preparation.correlation;
+      if (correlation.gateRunId !== null) {
+        await rm(
+          this.correlationPath(
+            correlation.gateRunId,
+            correlation.launchAttemptId,
+          ),
+          { force: true },
+        );
+      }
+      await rm(run.runDirectory, { recursive: true, force: true });
+    });
   }
 }

@@ -1,4 +1,14 @@
-import { lstat, mkdir, mkdtemp, rm, stat, symlink } from 'node:fs/promises';
+import {
+  lstat,
+  link,
+  mkdir,
+  mkdtemp,
+  readFile,
+  rm,
+  stat,
+  symlink,
+  writeFile,
+} from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -106,5 +116,95 @@ describe('ValidationStore.createRun', () => {
       }),
     ).rejects.toThrow(/real directory/);
     expect((await lstat(root)).isSymbolicLink()).toBe(true);
+  });
+});
+
+describe('validation state and gate correlation', () => {
+  it('reads and atomically updates valid state', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    await store.createRun({
+      preparation: preparation(),
+      artifactDraft: false,
+    });
+    const updated = await store.updateRun('abcdefghijklmnop', (state) => ({
+      ...state,
+      phase: 'artifacts_loaded',
+    }));
+    expect(updated.state.phase).toBe('artifacts_loaded');
+  });
+
+  it('rejects schema corruption, expiry, and changed draft identity', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const created = await store.createRun({
+      preparation: preparation(),
+      artifactDraft: true,
+    });
+    const raw = JSON.parse(await readFile(created.statePath, 'utf8')) as {
+      schemaVersion: number;
+    };
+    raw.schemaVersion = 2;
+    await writeFile(created.statePath, JSON.stringify(raw));
+    await expect(store.readRun(created.runId)).rejects.toThrow(/schema/);
+
+    const expired = preparation('expiredvalidation');
+    expired.expiresAt = '2020-01-01T00:00:00.000Z';
+    await store.createRun({ preparation: expired, artifactDraft: false });
+    await expect(store.readRun(expired.runId)).rejects.toThrow(/expired/);
+
+    const replacement = preparation('replacementdraft');
+    const replaced = await store.createRun({
+      preparation: replacement,
+      artifactDraft: true,
+    });
+    await rm(replaced.artifactDraftPath!);
+    await writeFile(replaced.artifactDraftPath!, '');
+    await expect(store.readRun(replacement.runId)).rejects.toThrow(/identity/);
+  });
+
+  it('rejects linked drafts', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const created = await store.createRun({
+      preparation: preparation('hardlinkvalidation'),
+      artifactDraft: true,
+    });
+    await link(created.artifactDraftPath!, join(parent, 'second-link'));
+    await expect(store.readRun(created.runId)).rejects.toThrow(/identity/);
+  });
+
+  it('binds, resolves, and deletes exact gate-attempt pairs', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    const gatePreparation = preparation('gatevalidationrun');
+    gatePreparation.invocation = 'gate';
+    gatePreparation.correlation = {
+      gateRunId: 'gate-1',
+      launchAttemptId: 'attempt-1',
+    };
+    await store.createRun({
+      preparation: gatePreparation,
+      artifactDraft: false,
+    });
+    await store.bindGateCorrelation(
+      'gate-1',
+      'attempt-1',
+      gatePreparation.runId,
+    );
+    await expect(
+      store.resolveGateCorrelation('gate-1', 'attempt-1'),
+    ).resolves.toBe(gatePreparation.runId);
+    await expect(
+      store.resolveGateCorrelation('gate-1', 'attempt-2'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
+    await store.deleteRun(gatePreparation.runId);
+    await expect(
+      store.resolveGateCorrelation('gate-1', 'attempt-1'),
+    ).rejects.toMatchObject({ code: 'ENOENT' });
   });
 });
