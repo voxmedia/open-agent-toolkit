@@ -2026,19 +2026,20 @@ B post-publication bookkeeping PR.
 
 ## Reviews
 
-| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation           | Gate Target |
-| ------ | -------- | ------- | ---------- | -------- | ------------- | -------------------- | ----------- |
-| p01    | code     | pending | -          | -        | -             | -                    | -           |
-| p02    | code     | pending | -          | -        | -             | -                    | -           |
-| p03    | code     | pending | -          | -        | -             | -                    | -           |
-| p04    | code     | pending | -          | -        | -             | -                    | -           |
-| p05    | code     | pending | -          | -        | -             | -                    | -           |
-| p06    | code     | pending | -          | -        | -             | -                    | -           |
-| p07    | code     | pending | -          | -        | -             | -                    | -           |
-| final  | code     | pending | -          | -        | -             | -                    | -           |
-| spec   | artifact | pending | -          | -        | -             | -                    | -           |
-| design | artifact | pending | -          | -        | -             | -                    | -           |
-| plan   | artifact | passed  | 2026-07-30 | -        | -             | auto-artifact-review | -           |
+| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation           | Gate Target |
+| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | -------------------- | ----------- |
+| p01    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p02    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p03    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p04    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p05    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p06    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| p07    | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| final  | code     | pending  | -          | -                                                  | -             | -                    | -           |
+| spec   | artifact | pending  | -          | -                                                  | -             | -                    | -           |
+| design | artifact | pending  | -          | -                                                  | -             | -                    | -           |
+| plan   | artifact | passed   | 2026-07-30 | -                                                  | -             | auto-artifact-review | -           |
+| plan   | artifact | received | 2026-07-30 | reviews/artifact-plan-review-2026-07-30T161239Z.md | -             | -                    | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
