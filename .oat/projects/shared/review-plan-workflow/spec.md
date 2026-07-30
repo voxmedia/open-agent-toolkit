@@ -423,24 +423,24 @@ _Design-related open questions are tracked in the [Open Questions](#open-questio
 
 ## Requirement Index
 
-| ID   | Description                                      | Priority | Verification                                       | Planned Tasks     |
-| ---- | ------------------------------------------------ | -------- | -------------------------------------------------- | ----------------- |
-| FR1  | Plan before content-level evidence intake        | P0       | integration: ordered review intake fixture         | TBD - see plan.md |
-| FR2  | Build a provenance-bearing metadata change map   | P0       | unit + integration: change-map collection          | TBD - see plan.md |
-| FR3  | Account for every file and review obligation     | P0       | unit: ReviewPlan validation                        | TBD - see plan.md |
-| FR4  | Load evidence selectively by risk and lane       | P0       | integration: evidence strategy selection           | TBD - see plan.md |
-| FR5  | Couple economic delegation to non-replayed lanes | P0       | unit: delegation decision matrix                   | TBD - see plan.md |
-| FR6  | Return bounded complete or partial lane dossiers | P0       | integration: lane timeout and dossier behavior     | TBD - see plan.md |
-| FR7  | Preserve risk-based primary verification         | P0       | contract + integration: verification boundary      | TBD - see plan.md |
-| FR8  | Propagate and allocate resolved review budgets   | P1       | unit + integration: budget context and cutoffs     | TBD - see plan.md |
-| FR9  | Emit auditable strategy and coverage output      | P0       | contract + integration: artifact/structured parity | TBD - see plan.md |
-| FR10 | Use prior evidence without verdict substitution  | P0       | integration: lineage and independence              | TBD - see plan.md |
-| FR11 | Keep small-scope reviews low-ceremony            | P1       | unit + integration: compact inline fast path       | TBD - see plan.md |
-| NFR1 | Preserve review rigor and severity semantics     | P0       | contract + integration: review quality boundaries  | TBD - see plan.md |
-| NFR2 | Remain provider-portable                         | P0       | contract: canonical and provider-view parity       | TBD - see plan.md |
-| NFR3 | Preserve artifact and ledger compatibility       | P0       | integration: actionability and parsing regressions | TBD - see plan.md |
-| NFR4 | Bound broad-review content and replay cost       | P0       | perf: large-scope operation-count fixture          | TBD - see plan.md |
-| NFR5 | Preserve maintainability and release integrity   | P0       | e2e: sync and release validation                   | TBD - see plan.md |
+| ID   | Description                                      | Priority | Verification                                       | Planned Tasks   |
+| ---- | ------------------------------------------------ | -------- | -------------------------------------------------- | --------------- |
+| FR1  | Plan before content-level evidence intake        | P0       | integration: ordered review intake fixture         | Pending plan.md |
+| FR2  | Build a provenance-bearing metadata change map   | P0       | unit + integration: change-map collection          | Pending plan.md |
+| FR3  | Account for every file and review obligation     | P0       | unit: ReviewPlan validation                        | Pending plan.md |
+| FR4  | Load evidence selectively by risk and lane       | P0       | integration: evidence strategy selection           | Pending plan.md |
+| FR5  | Couple economic delegation to non-replayed lanes | P0       | unit: delegation decision matrix                   | Pending plan.md |
+| FR6  | Return bounded complete or partial lane dossiers | P0       | integration: lane timeout and dossier behavior     | Pending plan.md |
+| FR7  | Preserve risk-based primary verification         | P0       | contract + integration: verification boundary      | Pending plan.md |
+| FR8  | Propagate and allocate resolved review budgets   | P1       | unit + integration: budget context and cutoffs     | Pending plan.md |
+| FR9  | Emit auditable strategy and coverage output      | P0       | contract + integration: artifact/structured parity | Pending plan.md |
+| FR10 | Use prior evidence without verdict substitution  | P0       | integration: lineage and independence              | Pending plan.md |
+| FR11 | Keep small-scope reviews low-ceremony            | P1       | unit + integration: compact inline fast path       | Pending plan.md |
+| NFR1 | Preserve review rigor and severity semantics     | P0       | contract + integration: review quality boundaries  | Pending plan.md |
+| NFR2 | Remain provider-portable                         | P0       | contract: canonical and provider-view parity       | Pending plan.md |
+| NFR3 | Preserve artifact and ledger compatibility       | P0       | integration: actionability and parsing regressions | Pending plan.md |
+| NFR4 | Bound broad-review content and replay cost       | P0       | perf: large-scope operation-count fixture          | Pending plan.md |
+| NFR5 | Preserve maintainability and release integrity   | P0       | e2e: sync and release validation                   | Pending plan.md |
 
 ## Open Questions
 

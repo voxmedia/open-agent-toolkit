@@ -13,8 +13,8 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: discovery # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -71,26 +71,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-29T21:59:19Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T00:31:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-plan-workflow
 
-**Status:** Discovery complete — ready for design
+**Status:** Full design draft prepared — awaiting holistic review
 **Started:** 2026-07-29
-**Last Updated:** 2026-07-29
+**Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Discovery complete. The integrated contract slice is confirmed and the project
-has been promoted to spec-driven workflow for requirements and design.
+Design is in progress. Requirements are confirmed in `spec.md`, and the complete
+`design.md` draft is ready for holistic feedback.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
-- **Spec:** pending (produced by `oat-project-design`)
-- **Design:** pending (produced by `oat-project-design`)
+- **Spec:** `spec.md` (complete)
+- **Design:** `design.md` (draft awaiting review)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** original slow-review proposal and current-state handoff
@@ -105,7 +105,9 @@ has been promoted to spec-driven workflow for requirements and design.
 - ✓ Discovery populated from incident evidence and repository contracts
 - ✓ Fresh-thread baseline and first implementation slice revalidated
 - ✓ Promoted to spec-driven workflow
-- ⧗ Awaiting requirements confirmation and design
+- ✓ Requirements confirmed and written to `spec.md`
+- ✓ Complete design draft prepared
+- ⧗ Awaiting holistic design feedback
 
 ## Blockers
 
@@ -113,5 +115,4 @@ None
 
 ## Next Milestone
 
-Run `oat-project-design` to confirm requirements and produce `spec.md` and
-`design.md`.
+Incorporate holistic feedback, confirm `design.md`, and complete the design phase.
