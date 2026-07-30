@@ -6,6 +6,11 @@ export {
   parseReviewPreparationV1,
   ReviewSchemaError,
 } from './schemas';
+export {
+  type HostContextTelemetryAdapter,
+  type ObserveHostTelemetryInput,
+  observeHostTelemetry,
+} from './telemetry';
 export type {
   JsonValue,
   ReviewCliEnvelope,
