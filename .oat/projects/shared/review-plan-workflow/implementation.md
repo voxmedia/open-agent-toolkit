@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p02-t03 lint failure requires an explicitly authorized recovery path
+oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t03
+oat_current_task_id: p02-t04
 oat_generated: false
 ---
 
@@ -25,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status    | Tasks | Completed |
-| ------- | --------- | ----- | --------- |
-| Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | blocked   | 29    | 2/29      |
-| Phase 3 | pending   | 5     | 0/5       |
-| Phase 4 | pending   | 8     | 0/8       |
-| Phase 5 | pending   | 7     | 0/7       |
-| Phase 6 | pending   | 7     | 0/7       |
-| Phase 7 | pending   | 6     | 0/6       |
+| Phase   | Status      | Tasks | Completed |
+| ------- | ----------- | ----- | --------- |
+| Phase 1 | completed   | 13    | 13/13     |
+| Phase 2 | in_progress | 29    | 3/29      |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 15/75 tasks completed
+**Total:** 16/75 tasks completed
 
 ## Execution Configuration
 
@@ -176,7 +175,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** blocked
+**Status:** in_progress
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -193,13 +192,11 @@ fix commit `40fa861f`.
 
 ### Task p02-t03: Parse and merge numstat metadata
 
-**Status:** blocked
+**Status:** completed
 **Commit:** `29dcf1db`
-**Outcome:** Task tests pass, but the committed test fixture fails
-`eslint(no-useless-concat)` at `git-metadata.test.ts:86`.
-**Recovery boundary:** The accepted phase attempt is terminal and append-only
-task rules prohibit amend or an unplanned repair commit without explicit
-operator authorization.
+**Outcome:** Added deterministic numstat merging and hints. The operator
+authorized append-only recovery commit `ad398b47` to clear the post-commit lint
+failure; the focused tests and package lint pass.
 
 ---
 

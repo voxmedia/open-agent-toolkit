@@ -52,6 +52,10 @@ Phase p01 passed after one bounded fix iteration; terminal review: reviews/archi
 
 Phase p02 stopped at p02-t03 after committed task tests passed but lint failed; append-only recovery requires explicit operator authorization.
 
+### 2026-07-30 · structural · oat-project-implement · p02-recovery
+
+Operator authorized one append-only p02-t03 lint-repair commit ad398b47 and continuation through the original Phase 2 handle.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
