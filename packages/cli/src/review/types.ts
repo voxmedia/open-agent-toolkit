@@ -500,3 +500,28 @@ export type ReviewerTerminalV1 =
     };
 
 export type ReviewOutput = ReviewerTerminalV1;
+
+export interface ReviewPlanCapabilities {
+  schemaVersion: 1;
+  provider: string;
+  supportsAcceptedContinuation: boolean;
+  supportsArtifactCheckpoint: boolean;
+  supportsSameHandleRepair: boolean;
+  supportsReviewerTerminalV1: boolean;
+  supportsStructuredBlockedStatus: boolean;
+  supportsPrivateArtifactStaging: boolean;
+  contextTelemetry: 'host-observed' | 'unavailable';
+  telemetryAdapterId: string | null;
+}
+
+export interface ReviewPlanPreflightInput {
+  invocation: ReviewInvocation;
+  sink: ReviewSink;
+  mode: 'legacy' | 'enforce';
+}
+
+export interface ReviewPlanPreflightResult {
+  ok: boolean;
+  capabilities: ReviewPlanCapabilities;
+  errors: Array<{ code: string; message: string }>;
+}

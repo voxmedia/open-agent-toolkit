@@ -1,5 +1,6 @@
 export const REVIEW_CONTRACT_VERSION = 1 as const;
 
+export { preflightReviewPlan } from './preflight';
 export {
   parsePreparedReviewContextV1,
   parseReviewPreparationV1,
@@ -11,6 +12,9 @@ export type {
   ReviewCliError,
   ReviewErrorCategory,
   ReviewInvocation,
+  ReviewPlanCapabilities,
+  ReviewPlanPreflightInput,
+  ReviewPlanPreflightResult,
   ReviewProgress,
   ReviewSink,
 } from './types';
