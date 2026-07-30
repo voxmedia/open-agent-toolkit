@@ -13,6 +13,11 @@ export {
   parsePlanTaskObligations,
   parseRequirementObligations,
 } from './obligations';
+export {
+  prepareReviewContext,
+  type PrepareReviewContextDependencies,
+  type PrepareReviewContextInput,
+} from './prepare-context';
 export { preflightReviewPlan } from './preflight';
 export {
   parsePreparedReviewContextV1,
