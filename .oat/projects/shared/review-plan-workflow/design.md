@@ -1,8 +1,8 @@
 ---
 oat_status: complete
-oat_ready_for: plan
+oat_ready_for: oat-project-plan
 oat_blockers: []
-oat_last_updated: 2026-07-29
+oat_last_updated: 2026-07-30
 oat_generated: false
 oat_template: false
 ---
@@ -123,39 +123,48 @@ unwired reference implementation, not an additional coordinator.
 ### Data Flow
 
 1. The coordinator resolves review mode, project, range, sink, invocation, and
-   optional outer time/context budgets.
+   optional outer time/context budgets. Gate invocations also bind the gate run
+   ID and launch-attempt ID before preparation.
 2. If mode is `legacy`, the coordinator runs the pre-project contract, marks
    output `legacy-unvalidated`, and exits this lifecycle. It creates no
    validation context or receipt and performs no accounting validation.
-3. In `enforce`, preparation runs bounded Git metadata operations and artifact
+3. Capability preflight verifies the validator CLI, schema version, reviewer
+   tools, accepted-continuation support, host telemetry ownership, and
+   sink-specific output validator.
+4. In `enforce`, preparation runs bounded Git metadata operations and artifact
    parsers. The Prior Evidence Adapter enforces project/target/gate lineage and
    removes prior verdict/severity disposition.
    Missing telemetry or an obviously oversized numstat estimate denies
    whole-diff without starting a diff child. Otherwise a capped child counts
    and discards diff bytes; cap or timeout produces a lower-bound estimate.
-4. Preparation creates `ReviewPreparationV1` and writes private run state.
-5. Capability preflight verifies the validator CLI, schema version, reviewer
-   tools, continuation support, and sink-specific output validator.
-6. The reviewer reads required current lifecycle artifacts, consumes normalized
+5. Preparation creates `ReviewPreparationV1`, writes private run state, and
+   returns launcher-owned checkpoint/validation command strings. Opaque
+   checkpoint state is not embedded in reviewer-readable context.
+6. The provider/skill runtime launches the reviewer. On acceptance, it binds
+   the opaque handle ID to the run before any mutation command is accepted and
+   retains that continuation for checkpoint and repair.
+7. The reviewer reads required current lifecycle artifacts, consumes normalized
    prior evidence from preparation, then records the artifact checkpoint. The
    coordinator queries host telemetry and returns immutable
    `PreparedReviewContextV1`; absent post-artifact telemetry leaves context
    budget null.
-7. The reviewer constructs `ReviewPlanV1`.
-8. The reviewer submits the complete plan through
+8. The reviewer constructs `ReviewPlanV1`.
+9. The reviewer submits the complete plan through
    `oat review validate-plan --run-id <id> --stdin`.
-9. The validator loads the coordinator-owned context, validates the plan, stores
-   a receipt record, and returns an opaque token.
-10. The reviewer records `evidence_started` and loads evidence according to the
-    plan. Inline and delegated paths use the same sequence.
-11. The reviewer returns findings plus compact `ReviewAccountingV1`.
-12. The coordinator validates the output. On failure, it sends precise errors
+10. The validator loads the coordinator-owned context, validates the plan, stores
+    a receipt record, and returns an opaque token.
+11. The reviewer invokes the launcher-owned begin-evidence command with that
+    receipt. The coordinator atomically records `evidence_started`; only then
+    may the reviewer load evidence according to the plan. Inline and delegated
+    paths use the same sequence.
+12. The reviewer returns findings plus compact `ReviewAccountingV1`.
+13. The coordinator validates the output. On failure, it sends precise errors
     through the same accepted continuation for at most two accounting-only
     repairs.
-13. Valid complete output proceeds to the rail's existing artifact, GitHub
+14. Valid complete output proceeds to the rail's existing artifact, GitHub
     posting, ledger, gate, or receive flow. Valid blocked-incomplete accounting
     proceeds only through the existing non-actionable `BLOCKED` path.
-14. The coordinator cleans up accepted and ordinary terminal runs after sink
+15. The coordinator cleans up accepted and ordinary terminal runs after sink
     translation. Accounting-invalid runs are reduced to a private diagnostic
     receipt retained until TTL. The gate parent and expired-context reaper cover
     killed-child and process-crash paths.
@@ -181,7 +190,9 @@ preserving rail-specific output and bookkeeping.
 ```typescript
 interface ReviewerContinuation {
   kind: 'accepted-child' | 'inline';
+  handleId: string;
   checkpointArtifactsLoaded(): Promise<PreparedReviewContextV1>;
+  beginEvidence(receipt: string): Promise<void>;
   requestAccountingRepair(
     errors: AccountingValidationError[],
   ): Promise<ReviewOutput>;
@@ -195,8 +206,16 @@ interface ReviewExecutionSession {
 }
 
 interface ReviewCoordinator {
-  prepare(input: PrepareReviewContextInput): Promise<ReviewPreparationV1>;
-  launch(preparation: ReviewPreparationV1): Promise<ReviewExecutionSession>;
+  preflight(
+    input: ReviewPlanPreflightInput,
+  ): Promise<ReviewPlanPreflightResult>;
+  prepare(
+    input: PrepareReviewContextInput,
+  ): Promise<PrepareReviewContextResultV1>;
+  launch(
+    prepared: PrepareReviewContextResultV1,
+  ): Promise<ReviewExecutionSession>;
+  bindAcceptedContinuation(session: ReviewExecutionSession): Promise<void>;
   validateAndRepair(
     session: ReviewExecutionSession,
     output: ReviewOutput,
@@ -218,13 +237,37 @@ interface ReviewCoordinator {
 **Design Decisions:**
 
 - The interface has no replacement-launch method. Repair can only use the
-  accepted continuation.
+  accepted continuation object whose opaque `handleId` was recorded at launch.
+- `bindAcceptedContinuation` hashes and stores that handle ID before any
+  checkpoint command is accepted. Inline adapters create a random
+  invocation-local handle ID and bind it before model execution.
 - `checkpointArtifactsLoaded` is launcher-owned and accepts no reviewer-supplied
   token counts. It queries independently observed host telemetry and seals the
   planning context once.
+- `beginEvidence` validates the plan receipt and advances the breadcrumb; it
+  rejects evidence start before a valid plan or after terminal state.
 - Indirect gates and aliases do not create duplicate authoritative contexts.
 - `enforce` remains the target default for migrated project code-review
   coordinators after the bounded compatibility rollout.
+
+The TypeScript interface is a shared facade, not the owner of provider process
+handles. Skill/provider runtimes adapt their already-accepted child/session or
+inline continuation into `ReviewerContinuation`; validators return repair
+errors to that same adapter. The current `reviewer-dispatch.ts` remains an
+unwired dispatch reference that calls `dispatcher.spawn`; it must not become
+the production accepted-continuation owner. Only payload builders and validators
+proven pure by parity tests may move into the shared runtime. Gate parents
+consume terminal receipts from the child coordinator rather than attempting to
+continue the reviewer themselves.
+
+CLI authorization uses opaque launch-attempt capabilities, not a false claim of
+process identity: each generated command token is bound to the run and launch
+attempt, supplied only in the accepted reviewer's payload, and invalidated on
+cleanup. The skill/provider runtime separately guarantees same-handle
+checkpoint and repair by retaining the `ReviewerContinuation` object. Calls
+without the capability, from a sibling attempt, or after cleanup are rejected;
+token exfiltration is outside the same-handle proof boundary and is mitigated
+by private state, redaction, short TTL, and one-shot use.
 
 ### ChangeMap and Obligation Collector
 
@@ -237,7 +280,7 @@ returning content diffs to the reviewer.
   `numstat`, directory grouping, and aggregate totals.
 - Before patch counting, deny whole-diff eligibility without starting a diff
   child when context telemetry is absent or when the denial-only numstat
-  estimate already exceeds preparation's `availableTokensUpperBound`.
+  estimate already exceeds preparation telemetry's `remainingTokens`.
 - Otherwise stream the patch to a byte counter with a 64 MiB read cap and a
   preparation deadline of
   `min(30 seconds, max(5 seconds, 10% of outer budget))`; use 30 seconds when
@@ -269,6 +312,100 @@ returning content diffs to the reviewer.
   child, and forbids whole-diff loading. It does not weaken the authoritative
   path set collected by bounded metadata commands.
 
+#### Obligation Source Grammar
+
+Obligation parsing is versioned as `obligation-grammar/v1` and fail-closed for
+the selected scope.
+
+**Common lexical rules:**
+
+- Read the canonical project artifact as strict UTF-8, reject NUL bytes, and
+  normalize CRLF/CR to LF before parsing.
+- Recognize structural headings and labels only outside fenced code blocks.
+- Structural lines are byte-exact after newline normalization; trailing
+  whitespace is not trimmed. Table cells alone trim surrounding ASCII spaces.
+- Markdown table rows begin and end with `|`; split on unescaped `|`, treat
+  `\|` as a literal pipe, and require every row to have the header's cell count.
+- Duplicate headings, requirement/task IDs, selected tasks, paths within a
+  task, or malformed selected structures fail preparation rather than being
+  skipped. Deferred IDs are the sole exception: they may repeat across distinct
+  deferred blocks for latest-entry supersession, but not within one block.
+
+**Source and selection rules:**
+
+- Task scope reads canonical `plan.md` and selects exactly the named task.
+- Phase scope reads canonical `plan.md` and selects every task whose ID has the
+  selected `pNN-` prefix.
+- Final spec-driven scope reads every `FR`/`NFR` row from canonical `spec.md`.
+- Final quick/import scope reads every task heading from canonical `plan.md`,
+  including review-added tasks. There is no inferred superseded state: a task
+  remains current until removed from the canonical plan.
+- When `implementation.md` exists, accepted deviations and current deferred
+  findings are additive obligations for every implementation-stage scope.
+
+**Requirement Index:**
+
+- Require exactly one line `## Requirement Index`.
+- The next non-empty line is the table header and its first cell is exactly
+  `ID`; the following line is a valid Markdown separator row.
+- Data rows continue until the first empty line; only empty lines may then
+  appear before the next level-two heading or EOF. Non-table, wrong-width, or
+  malformed rows in that interval fail.
+- Every first cell matches `^(FR|NFR)\d+$`; header/separator rows are not data.
+
+**Plan tasks and allowed files:**
+
+- A task heading matches `^### Task (p\d{2}-t\d{2}): ([^\r\n]+)$`.
+- Before the next level-two or level-three heading, require exactly one
+  `**Files:**` line. After optional blank lines, consume one or more exact file
+  lines. The block ends at a heading or at one or more empty lines followed by
+  a line matching `^\*\*Step \d+: [^*]+\*\*$`; any other non-empty line in the
+  block is malformed.
+- Paths must pass repository-relative POSIX normalization and remain inside the
+  resolved repository root.
+
+**Accepted deviations:**
+
+- Require at most one `## Deviations from Plan / Design` table in
+  `implementation.md`, with the canonical seven header cells from the
+  implementation template.
+- Ignore the one all-`-` placeholder row. A row becomes an obligation only when
+  `Task / Review`, `Actual / Accepted`, and `Source of Truth` are all populated
+  and not `-`. Every other non-placeholder row is malformed and fails; it is
+  never silently ignored.
+- Its stable ID is
+  `deviation:<task-or-review>:<one-based-nonheader-row>`.
+
+**Deferred findings:**
+
+- Each exact `**Deferred Findings:**` label starts a block ending at the next
+  heading, exact `---` horizontal-rule line, or other bold label.
+- Every top-level bullet in the block must contain one backtick-delimited ID
+  and non-empty summary. Before the next top-level bullet, require exactly one
+  two-space-indented disposition bullet whose value is `deferred`, `resolved`,
+  or `dismissed`, with optional trailing rationale text; other nested rationale
+  bullets are ignored.
+- Process entries in file order. Repeated IDs in one block fail. Across blocks,
+  the latest entry supersedes earlier entries: `deferred` creates the one
+  current obligation, while `resolved` or `dismissed` removes it. Its stable
+  obligation ID is `deferred-finding:<id>`.
+
+The v1 line productions are:
+
+```text
+backtick         = U+0060
+file-line        = "- " ("Create" | "Modify" | "Delete") ": " backtick path backtick
+deferred-line    = "- " backtick id backtick " " non-empty-summary
+disposition-line = "  - Disposition: " ("deferred" | "resolved" | "dismissed") [" " non-empty-text]
+```
+
+`path` and `id` are non-empty and may not contain a backtick or newline.
+
+Parser tests use the canonical templates plus archived real-project fixtures.
+All implementations consume the same byte-for-byte fixture corpus and expected
+normalized JSON. No parser infers obligations from free prose outside these
+shapes.
+
 ### Post-Artifact Budget Refresher
 
 **Purpose:** Prevent preparation-time telemetry from authorizing evidence after
@@ -278,8 +415,8 @@ artifact intake has consumed additional context.
 
 - Accept a one-shot `artifacts_loaded` checkpoint through the accepted reviewer
   continuation.
-- Query the launcher/host telemetry adapter; never accept reviewer-estimated
-  token counts.
+- Query `HostContextTelemetryAdapter.observe(runId, 'post_artifact')`; never
+  accept reviewer-estimated token counts.
 - Seal `PreparedReviewContextV1` with post-artifact `ReviewBudgetV1` and a new
   context digest before plan validation.
 - Return null context budget when telemetry is unavailable or stale, thereby
@@ -287,9 +424,10 @@ artifact intake has consumed additional context.
 - Reject repeated checkpoints, checkpoints after plan validation, and plans
   submitted before the checkpoint.
 
-Preparation-time telemetry is denial-only: it may skip patch counting when
-whole-diff cannot plausibly fit, but it cannot authorize whole-diff. Only the
-sealed post-artifact snapshot can authorize it.
+Preparation calls `observe(runId, 'pre_artifact')`. That telemetry is
+denial-only: it may skip patch counting when whole-diff cannot plausibly fit,
+but it cannot authorize whole-diff. Only the sealed post-artifact snapshot can
+authorize it.
 
 ### Validation Context Store and Reaper
 
@@ -299,8 +437,15 @@ across processes.
 **Responsibilities:**
 
 - Store context, nonce, schema version, digests, a normalized validated
-  assignment projection, receipts, progress phase, validation attempts, and
-  optional rejected-output diagnostics.
+  assignment projection, accepted-handle digest, launch command capabilities,
+  receipts, progress phase, validation attempts, and optional rejected-output
+  diagnostics.
+- Store the `(gateRunId, launchAttemptId) → validationRunId` correlation index
+  separately from random validation run directories and update/delete both
+  under the same store lock.
+- Validate the opaque plan receipt and atomically transition
+  `plan_validated → evidence_started`; the reviewer never writes breadcrumbs
+  directly.
 - Use a private run directory with directory mode `0700` and files `0600`.
 - Reject expired contexts.
 - Clean up through three mechanisms:
@@ -438,9 +583,21 @@ across both sinks.
 
 **Sink Representation:**
 
-- Artifact: versioned fenced JSON under `## Review Accounting`.
-- Structured broad code review: optional `reviewAccounting` field on
-  `StructuredFindings`, required when mode is `enforce`.
+- Artifact: apply `accounting-grammar/v1`. Decode strict UTF-8, reject NUL, and
+  normalize CRLF/CR to LF. While tracking Markdown fence state, require exactly
+  one exact `## Review Accounting` line outside other fences. Its next line is
+  exactly three backticks plus `json`; the first following line of exactly
+  three backticks closes it. The UTF-8 block is at most
+  `MAX_REVIEW_ACCOUNTING_BYTES = 1_048_576`. Between the closing fence and the
+  next level-two heading or EOF, only empty lines are allowed. Duplicate
+  headings, alternate fence characters/lengths, indentation, intervening
+  lines, extra blocks, or an unclosed fence invalidate the output. Heading-like
+  text inside unrelated fences is ignored.
+- The block parser rejects duplicate JSON object keys and trailing JSON values,
+  then applies a strict `ReviewAccountingV1` schema requiring
+  `schemaVersion: 1`.
+- Structured broad code review: `reviewAccounting` is required on both
+  `ReviewerTerminalV1` variants in `enforce`.
 - Artifact and analysis structured reviews keep their existing schema.
 
 ### Output Validator and Repair Coordinator
@@ -455,7 +612,8 @@ preserving completed review work.
   and obligation sets, claim-addressable verification, and sink schema.
 - Enforce completion/coverage/verdict coherence so incomplete coverage can only
   produce a non-actionable reviewer `BLOCKED` result.
-- Freeze findings, evidence, severity, and verdict before repair.
+- Freeze the complete review-substance digest and permit changes only at the
+  closed accounting-encoding pointer allowlist.
 - Return path-specific machine-readable errors.
 - Permit at most two same-handle accounting repairs before output deadline.
 - Retain rejected output only in the private diagnostic store.
@@ -472,17 +630,30 @@ or correlation failure.
 
 **Responsibilities:**
 
-- Read terminal validation receipts by gate run ID.
+- Receive the expected gate run ID and launch-attempt ID from the gate parent
+  and read the terminal validation receipt through that exact pair.
+- Resolve only the private
+  `(gateRunId, launchAttemptId) → validationRunId` entry; reject missing,
+  duplicate, or mismatched correlation instead of scanning artifacts or run
+  directories.
 - Emit existing compatible top-level `status: review_failed` with subtype
   `review_complete_accounting_invalid`.
 - Materialize a minimal terminal diagnostic receipt, then include separate
-  validation/repair attempt counts and a safe diagnostic pointer.
+  validation/repair attempt counts, all three correlation IDs, and a safe
+  diagnostic pointer.
 - Set `artifactPath: null`, `receiveEligible: false`, and `handoff: null`.
 - Preserve existing timeout/activity diagnostics when no accounting-invalid
   receipt exists.
 - Request `retain-terminal-diagnostic` cleanup only after translation. The
   pointer therefore remains live until TTL without retaining the full review
   output or plan.
+
+The gate parent retains its existing gate run ID. Before each provider launch,
+it creates a cryptographically random launch-attempt ID and passes both IDs to
+the child coordinator. A pre-start role/launch rejection terminalizes and
+deletes that pair before a fresh attempt receives a new launch-attempt ID. Once
+a reviewer is accepted, replacement is prohibited and the pair remains fixed
+through translation.
 
 ### Capability and Compatibility Preflight
 
@@ -517,6 +688,18 @@ post-artifact planning context.
 **Schema:**
 
 ```typescript
+interface HostTelemetryEvidenceV1 {
+  schemaVersion: 1;
+  validationRunId: string;
+  phase: 'pre_artifact' | 'post_artifact';
+  adapterId: string | null;
+  requestStartedAt: string;
+  requestCompletedAt: string;
+  observation: ContextBudgetTelemetry | null;
+  disposition: 'accepted' | 'missing' | 'invalid';
+  rejectionReason: string | null;
+}
+
 interface ReviewPreparationV1 {
   schemaVersion: 1;
   runId: string;
@@ -525,6 +708,10 @@ interface ReviewPreparationV1 {
   scope: string;
   invocation: 'manual' | 'auto' | 'gate';
   sink: 'artifact' | 'structured';
+  correlation: {
+    gateRunId: string | null;
+    launchAttemptId: string;
+  };
   range: {
     baseSha: string;
     headSha: string;
@@ -533,12 +720,8 @@ interface ReviewPreparationV1 {
   obligations: ReviewObligationV1[];
   priorEvidence: PriorReviewEvidenceV1[];
   timeBudget: ReviewBudgetV1['time'];
-  prepareContextTelemetry: {
-    totalTokens: number;
-    consumedAtPrepareTokens: number;
-    availableTokensUpperBound: number;
-    source: string;
-  } | null;
+  prepareContextTelemetry: ContextBudgetTelemetry | null;
+  prepareTelemetryEvidenceDigest: string;
   preparationDigest: string;
   createdAt: string;
   expiresAt: string;
@@ -546,23 +729,55 @@ interface ReviewPreparationV1 {
 
 type PreparedReviewContextV1 = Omit<ReviewPreparationV1, 'timeBudget'> & {
   budget: ReviewBudgetV1;
+  postArtifactTelemetryEvidenceDigest: string;
   artifactCheckpointAt: string;
   contextDigest: string;
 };
+
+interface PrepareReviewContextResultV1 {
+  preparation: ReviewPreparationV1;
+  artifactDraftPath: string | null;
+  commands: {
+    checkpointArtifacts: string;
+    validatePlan: string;
+    beginEvidence: string;
+  };
+}
 ```
 
 **Validation Rules:**
 
+- `ReviewPreparationV1.runId` and every review CLI `--run-id` denote the random
+  validation run ID, never the outer gate run ID.
+- `artifactDraftPath` is a private-store path for artifact sink and null for
+  structured sink.
 - Full 40-character lowercase hexadecimal SHAs.
 - Repository-relative normalized paths only.
 - Unique obligation IDs and unique changed paths.
 - Preparation and context digests are computed from canonical JSON excluding
-  timestamps and their own digest field.
+  their top-level lifecycle timestamps and own digest field, but including the
+  telemetry-evidence digests.
 - Final `budget.time` must exactly equal the stored preparation `timeBudget`;
   post-artifact refresh may replace only context-budget telemetry.
+- `invocation: gate` requires a caller-supplied gate run ID and launch-attempt
+  ID. For non-gate invocation, gate run ID is null and preparation generates a
+  random launch-attempt ID. The private store maintains a
+  `(gateRunId, launchAttemptId) → validationRunId` index, rejects a duplicate
+  live pair, and deletes the index with run state.
+- Preparation creates distinct checkpoint and plan-validation command
+  capabilities bound to validation run and launch-attempt IDs; begin-evidence
+  later uses the one-shot plan receipt as its capability. These secrets appear
+  only inside launcher-owned command strings, are enabled only after
+  accepted-handle binding, and are excluded from preparation/context digests,
+  logs, and reviewer-authored JSON.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
 - Legacy runs do not create preparation/context records or receipts.
+- The private store retains one `HostTelemetryEvidenceV1` per phase. Its
+  canonical digest covers the adapter identity, request interval, observation,
+  disposition, and rejection reason. Preparation and sealed context expose only
+  the corresponding digest plus accepted numeric observation; missing/invalid
+  evidence exposes no numeric budget.
 
 **Storage:**
 
@@ -633,6 +848,15 @@ Expected paths are hints, not a substitute for reviewer lane assignment.
 ### ReviewBudgetV1
 
 ```typescript
+interface ContextBudgetTelemetry {
+  observedAt: string;
+  contextWindowTokens: number;
+  consumedTokens: number;
+  remainingTokens: number;
+  adapterId: string;
+  source: string;
+}
+
 interface ReviewBudgetV1 {
   time: {
     totalMs: number;
@@ -728,6 +952,16 @@ interface WorkerDossierV1 {
 
 These types belong to worker return and final-accounting contracts; they are
 not fields on `ReviewPlanV1`.
+
+Within final accounting, command IDs are globally unique across lane,
+primary-completion, and classification command arrays. Top-level evidence IDs,
+verification claim IDs, and assigned output finding IDs are each globally
+unique in their namespace. Each ephemeral worker dossier separately requires
+unique candidate-finding IDs within that dossier; those IDs are not a final
+accounting namespace. Final validation first walks arrays in schema order,
+builds one map per final namespace, and rejects any duplicate; only then may
+`commandId`, `evidenceRefIds`, `claimId`, or final `findingId` resolve through
+those maps. No nearest-scope or first-match lookup is permitted.
 
 ### ReviewPlanV1
 
@@ -913,7 +1147,10 @@ deadline guarantees are not claimed.
 ```typescript
 interface PlanValidationReceiptV1 {
   token: string;
-  runId: string;
+  validationRunId: string;
+  gateRunId: string | null;
+  launchAttemptId: string;
+  acceptedHandleDigest: string;
   contractVersion: 1;
   contextDigest: string;
   planDigest: string;
@@ -924,7 +1161,10 @@ interface PlanValidationReceiptV1 {
 ```
 
 The token is opaque random state backed by store lookup. A reviewer cannot
-authorize itself by reproducing a digest.
+authorize itself by reproducing a digest. `acceptedHandleDigest` is the
+canonical SHA-256 digest of the provider adapter's opaque accepted handle ID;
+the raw ID is retained only by the adapter and never logged or passed in
+reviewer-authored JSON. Receipt issuance requires that binding to exist.
 
 ### ReviewAccountingV1
 
@@ -1003,6 +1243,26 @@ interface ReviewAccountingV1 {
 }
 ```
 
+Before offering repair, the coordinator computes
+`immutableReviewSubstanceDigest` over the normalized review summary/verdict,
+all finding IDs/content/severity/locations, terminal status/reason, and every
+`ReviewAccountingV1` field except this closed repair allowlist:
+
+- receipt/context/plan/assignment digest fields;
+- lane path and obligation assignment arrays and uncovered/index arrays;
+- primary-completion path and obligation arrays; and
+- classification path and uninspected-index arrays.
+
+Strategy, completion, evidence records, command/provenance/results, dossier
+digests, lane/classification/primary outcomes, uncertainty, classification
+reasons and checks, verification claim identity/kind/mode/disposition, budget
+disposition, every evidence-reference relationship, findings, severity, and
+verdict are immutable. The coordinator
+offers repair only when the initial output is parseable enough to compute this
+digest and every validation error points into the allowlist. Each repair must
+preserve the digest byte-for-byte; otherwise it terminalizes immediately as
+accounting invalid.
+
 Paths are sorted and stored once. Partial lane coverage references indexes into
 the lane path array instead of repeating path strings. The validator compares
 the complete assignment shape with the stored normalized projection, not only
@@ -1056,19 +1316,57 @@ blocked-incomplete accounting. The coordinator may surface the validated
 accounting as non-actionable diagnostics, but cannot publish an actionable
 artifact, post a passing structured review, or allow a gate to pass.
 
-### StructuredFindings Extension
+### Provider-Neutral Reviewer Terminal
 
 ```typescript
 interface StructuredFindings {
   summary: string;
   findings: StructuredFinding[];
   verification_commands: string[];
-  reviewAccounting?: ReviewAccountingV1;
 }
+
+type ReviewCandidateV1 =
+  | {
+      kind: 'artifact-draft';
+      privateDraftPath: string;
+    }
+  | {
+      kind: 'structured';
+      review: StructuredFindings;
+    };
+
+type ReviewerTerminalV1 =
+  | {
+      schemaVersion: 1;
+      status: 'complete';
+      candidate: ReviewCandidateV1;
+      reviewAccounting: ReviewAccountingV1;
+    }
+  | {
+      schemaVersion: 1;
+      status: 'blocked';
+      reason: string;
+      diagnostics: string[];
+      reviewAccounting: ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      };
+    };
+
+type ReviewOutput = ReviewerTerminalV1;
 ```
 
-The field is optional for backward compatibility and non-code review types. It
-is required by coordinators for broad code review in `enforce`.
+Every accepted child and inline adapter returns `ReviewerTerminalV1` in
+`enforce` before sink translation; legacy mode and non-code review types keep
+their existing schemas. The structured sink projects a complete candidate to
+its existing `StructuredFindings` flow only after validation. The artifact sink
+writes complete candidates under the private validation-run staging directory,
+validates the embedded accounting against the envelope copy, and atomically
+publishes to the project review tree only after acceptance.
+
+A blocked variant contains no candidate, actionable findings, or verdict. Any
+provider-created draft associated with it is deleted after private diagnostics
+are recorded, so the result exposes no discoverable review artifact path,
+GitHub post, passing ledger entry, or receive-eligible handoff.
 
 ### AccountingValidationError
 
@@ -1112,13 +1410,12 @@ injection from untrusted source content.
 --mode <enforce>
 --budget-ms <number>             # optional
 --budget-source <string>         # required with budget
---context-tokens <number>        # optional observed telemetry
---consumed-context-tokens <number>
---context-source <string>
+--gate-run-id <id>               # required only for gate invocation
+--launch-attempt-id <id>         # required only for gate invocation
 --json
 ```
 
-**Output:** `ReviewPreparationV1`.
+**Output:** `PrepareReviewContextResultV1`.
 
 **Errors:**
 
@@ -1126,15 +1423,15 @@ injection from untrusted source content.
 - Exit 2: Git, artifact parsing, or store failure.
 
 This command sweeps expired contexts before creating a new one.
-`--budget-ms` and `--budget-source` must appear together. The three context
-options must either all be present or all be absent; consumed tokens must be
-non-negative and no greater than total tokens. `--context-source` identifies
-the independently observed host telemetry source and cannot be reviewer
-estimated.
+`--budget-ms` and `--budget-source` must appear together. Numeric context
+telemetry is never CLI input. `--gate-run-id` and
+`--launch-attempt-id` are required when `--invocation gate` and prohibited for
+manual/auto invocation. The store creates a random validation run ID distinct
+from the gate run ID and writes the private correlation index atomically.
 
 Preparation-time context telemetry supplies only
-`availableTokensUpperBound` for early denial. It cannot populate the final
-evidence budget or authorize whole-diff.
+`remainingTokens` as an upper bound for early denial. It cannot populate the
+final evidence budget or authorize whole-diff.
 
 ### `oat review checkpoint-artifacts`
 
@@ -1160,7 +1457,11 @@ replay, post-plan invocation, or an invalid checkpoint token.
 **Method:** JSON-only CLI command with plan on stdin.
 
 ```text
-oat review validate-plan --run-id <id> --stdin --json
+oat review validate-plan \
+  --run-id <id> \
+  --command-token <opaque> \
+  --stdin \
+  --json
 ```
 
 **Output:** `PlanValidationReceiptV1`.
@@ -1172,17 +1473,40 @@ oat review validate-plan --run-id <id> --stdin --json
 - Validation errors return a structured list and no receipt.
 - Expired, missing, unsealed, or already-terminal contexts are rejected.
 
+### `oat review begin-evidence`
+
+**Method:** Launcher-owned JSON CLI command invoked after successful plan
+validation and before any content evidence is loaded.
+
+```text
+oat review begin-evidence \
+  --run-id <id> \
+  --receipt <opaque> \
+  --json
+```
+
+The command resolves the private receipt, verifies its
+validation-run/gate/launch-attempt/context/plan tuple and stored
+accepted-handle digest, and atomically moves the breadcrumb from
+`plan_validated` to `evidence_started`. Receipt possession is the CLI
+capability; provider same-handle ownership is enforced separately by the
+retained continuation. Replays, mismatched receipts, and calls before
+checkpoint/validation or after terminal state are rejected.
+
 ### `oat review validate-output`
 
 **Method:** JSON-only CLI command.
 
 ```text
-oat review validate-output --run-id <id> --artifact <path> --json
 oat review validate-output --run-id <id> --stdin --json
 ```
 
-Exactly one sink input is required. Artifact mode extracts the versioned
-accounting block; structured mode validates the returned object.
+Stdin is the complete `ReviewerTerminalV1`. For an artifact candidate, the
+validator requires `privateDraftPath` to equal the stored draft path, extracts
+the versioned accounting block from its immutable snapshot, and requires
+canonical equality with `reviewAccounting` in the terminal. For a structured
+candidate or blocked terminal, it validates the in-band object directly.
+Input size is bounded before strict JSON parsing.
 
 **Output:**
 
@@ -1191,6 +1515,53 @@ type OutputValidationResult =
   | { valid: true; outputDigest: string }
   | { valid: false; errors: AccountingValidationError[] };
 ```
+
+### Review CLI Exit Semantics
+
+Every output type above is carried in `result` by this common envelope:
+
+```typescript
+type JsonValue =
+  | null
+  | boolean
+  | number
+  | string
+  | JsonValue[]
+  | { [key: string]: JsonValue };
+
+type ReviewCliEnvelope<T> =
+  | {
+      ok: true;
+      result: T;
+    }
+  | {
+      ok: false;
+      error: {
+        category: 'input' | 'contract' | 'validation' | 'system';
+        code: string;
+        message: string;
+        details: JsonValue;
+      };
+      result?: T;
+    };
+```
+
+`begin-evidence` success returns
+`{ validationRunId, phase: 'evidence_started' }`. Validation rejection carries
+the typed `{ valid: false }` value in `result` where that command defines one.
+Every invocation with `--json` writes exactly one JSON document plus one final
+newline to stdout; no progress or human prose appears there. Stable safe error
+codes and details carry machine diagnostics. Human-readable diagnostics may
+also go to stderr.
+
+- Exit `0`: command completed and the contract result is valid/successful.
+- Exit `1`: user input, lifecycle contract, or validation rejection, including
+  every `{ valid: false }` result.
+- Exit `2`: Git, filesystem/I/O, private-store corruption, or other system
+  failure.
+
+Exit `1` and exit `2` both emit the `ok: false` envelope; serialization failure
+is the only case where the process may be unable to honor that guarantee.
 
 ### `workflow.reviewPlanMode`
 
@@ -1205,6 +1576,74 @@ workflow:
 - Explicit `enforce` is never downgraded after resolution, including for gates.
 - After the default flips, `legacy` becomes a temporary explicit opt-out.
 
+### Capability Preflight and Telemetry Ownership
+
+Before preparation, the provider/skill coordinator runs the shared TypeScript
+preflight. Capability evidence comes from the adapter that will own the
+accepted continuation, not from reviewer self-report:
+
+```typescript
+interface ReviewPlanCapabilities {
+  schemaVersion: 1;
+  provider: string;
+  supportsAcceptedContinuation: boolean;
+  supportsArtifactCheckpoint: boolean;
+  supportsSameHandleRepair: boolean;
+  supportsReviewerTerminalV1: boolean;
+  supportsStructuredBlockedStatus: boolean;
+  supportsPrivateArtifactStaging: boolean;
+  contextTelemetry: 'host-observed' | 'unavailable';
+  telemetryAdapterId: string | null;
+}
+
+interface ReviewPlanPreflightInput {
+  invocation: 'manual' | 'auto' | 'gate';
+  sink: 'artifact' | 'structured';
+  mode: 'legacy' | 'enforce';
+}
+
+interface ReviewPlanPreflightResult {
+  ok: boolean;
+  capabilities: ReviewPlanCapabilities;
+  errors: Array<{ code: string; message: string }>;
+}
+
+interface HostContextTelemetryAdapter {
+  observe(
+    runId: string,
+    phase: 'pre_artifact' | 'post_artifact',
+  ): Promise<ContextBudgetTelemetry | null>;
+}
+```
+
+All enforce-mode rows require accepted continuation, artifact checkpoint,
+same-handle repair, and `ReviewerTerminalV1`. Additional requirements are
+sink-aware:
+
+| Sink         | Additional required capability    |
+| ------------ | --------------------------------- |
+| `artifact`   | `supportsPrivateArtifactStaging`  |
+| `structured` | `supportsStructuredBlockedStatus` |
+
+Manual, auto, and gate invocation use the same row for a given sink; invocation
+changes correlation/timeout ownership, not sink capability. Extra capabilities
+do not compensate for a missing required cell. `contextTelemetry: unavailable`
+is allowed but can never authorize whole-diff loading. Reviewer-authored
+payloads have no numeric telemetry fields; observations are read directly by
+the coordinator and stored as launcher evidence.
+
+Each `observe` call is synchronous with its checkpoint: the coordinator records
+request start/end timestamps, and accepts telemetry only when `observedAt`
+falls within that interval, is not future-dated, and is not older than the
+prior accepted observation for the run. Token fields are safe integers,
+`contextWindowTokens > 0`, `0 <= consumedTokens <= contextWindowTokens`, and
+`remainingTokens === contextWindowTokens - consumedTokens`. `adapterId` must
+equal the non-null preflight-selected `telemetryAdapterId`; `source` is a
+non-empty diagnostic label. Missing telemetry returns null. Stale,
+future-dated, arithmetically inconsistent, or wrong-adapter telemetry is
+recorded as `invalid-host-telemetry`, treated as null for budgeting, and can
+never authorize whole-diff.
+
 ### Reviewer Dispatch Payload
 
 Broad code-review payloads add:
@@ -1213,13 +1652,36 @@ Broad code-review payloads add:
 interface ReviewPlanningPayload {
   review_plan_contract: 1;
   review_preparation: ReviewPreparationV1;
+  artifact_draft_path: string | null;
   artifact_checkpoint_command: string;
   validate_plan_command: string;
+  begin_evidence_command: string;
 }
 ```
 
-The command is launcher-owned and points to the correct branch-local CLI when a
-gate supplies one.
+All commands come from `PrepareReviewContextResultV1.commands`, are
+launcher-owned, and point to the correct branch-local CLI when a gate supplies
+one. The checkpoint command contains the opaque preparation token. The
+validation command contains the run ID and a distinct opaque command token; it
+loads the sealed context digest from private state. The begin-evidence command
+contains a receipt placeholder; the reviewer may substitute only the opaque
+receipt returned by successful validation. Exact argv fixtures verify all three
+commands.
+
+The trusted `prepare-context` JSON result and accepted-reviewer planning payload
+necessarily carry the generated command strings and their tokens. The launcher
+captures that stdout without logging it. Tokens are prohibited from
+`ReviewPreparationV1`, reviewer-authored plan/output JSON, canonical digests,
+diagnostics, and logs.
+
+`artifactDraftPath` is non-null only for the artifact sink, resolves under the
+private run directory, and is the only permitted reviewer write target before
+acceptance. It is not returned by review resolvers or gate envelopes.
+
+The provider adapter binds the accepted handle before enabling the command
+capabilities. If its runtime cannot guarantee that acceptance callback ordering,
+preflight reports accepted-continuation support as false and `enforce` blocks
+before launch. A pre-start rejection destroys the unbound capabilities.
 
 ### Gate Failure Envelope
 
@@ -1228,7 +1690,9 @@ interface ReviewAccountingInvalidFailure {
   status: 'review_failed';
   failure: {
     kind: 'review_complete_accounting_invalid';
-    runId: string;
+    gateRunId: string;
+    launchAttemptId: string;
+    validationRunId: string;
     validationAttempts: number;
     repairAttempts: number;
     diagnosticPath: string;
@@ -1253,8 +1717,9 @@ existing provider authentication and branch-local CLI route.
 
 - Only the invocation coordinator creates validation contexts.
 - The reviewer may invoke the one-shot launcher-owned artifact checkpoint,
-  submit plans, and submit repaired output, but cannot supply host telemetry or
-  mark any state valid.
+  submit plans, invoke the launcher-owned begin-evidence command with a valid
+  receipt, and submit repaired output, but cannot supply host telemetry or mark
+  any state valid directly.
 - The output validator and gate parent load contexts by run ID plus opaque
   receipt state.
 - Workers never receive validation-store mutation authority.
@@ -1273,12 +1738,22 @@ existing provider authentication and branch-local CLI route.
 
 - **Receipt fabrication:** Receipt tokens are random store-backed capabilities,
   not reviewer-computable hashes.
-- **Path traversal:** Context and artifact paths are repository-relative,
-  normalized, and checked against the resolved root.
-- **Command injection:** Validator commands are launcher-owned argument arrays,
-  not reviewer-constructed shell strings.
+- **Path traversal:** Source/context paths are repository-relative, normalized,
+  and checked against the resolved repository root. `artifactDraftPath` is a
+  distinct absolute path checked under the private validation root and must
+  equal the path stored for the run.
+- **Command injection:** Validator commands are rendered from launcher-owned
+  argument arrays with platform-safe quoting; reviewer substitutions are
+  restricted to validated opaque placeholders, never arbitrary shell text.
 - **Symlink attacks:** Temporary store creation rejects pre-existing unsafe
-  symlinks and uses exclusive file creation.
+  symlinks and uses exclusive file creation. The launcher pre-creates the draft
+  as a regular `0600` file with no-follow/exclusive flags and stores its
+  device/inode. Validation reopens with no-follow, requires matching
+  device/inode and link count one, then validates bytes read from that file
+  descriptor. Publication copies those validated bytes into an exclusive
+  project-local temporary file, rechecks its digest, and atomically renames
+  within the destination directory; it never renames or rereads the
+  reviewer-controlled private path.
 - **Prompt injection through filenames/errors:** Machine errors use safe codes
   and JSON pointers; raw path content is encoded, never interpolated into shell
   commands.
@@ -1292,7 +1767,7 @@ existing provider authentication and branch-local CLI route.
 ### Metadata Cost
 
 Preparation uses bounded Git metadata commands. Missing context telemetry or a
-denial-only numstat estimate above preparation's `availableTokensUpperBound`
+denial-only numstat estimate above preparation telemetry's `remainingTokens`
 skips patch counting entirely. The final post-artifact evidence budget does not
 exist yet and is never consulted by this pre-check. Otherwise counting stops at
 64 MiB or its preparation deadline and the child is terminated, so model
@@ -1430,7 +1905,7 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
 | FR6  | Integration            | Typed complete/partial dossier, accepted timeout, no replacement, validated inline contingency                   |
 | FR7  | Contract + integration | Claim-addressable direct verification, kind-specific rejected semantics, sampling, provenance acceptance         |
 | FR8  | Unit + integration     | Gate budget propagation, 120-second minimum, absent budget, cutoffs, output reserve                              |
-| FR9  | Contract + integration | Artifact block, structured field, stored assignment projection, incomplete-blocked coherence, bounded repair     |
+| FR9  | Contract + integration | Artifact block, structured terminal, stored assignment projection, incomplete-blocked coherence, bounded repair  |
 | FR10 | Integration            | Prior-evidence adapter, verdict omission, navigation-only use, same-target gate lineage                          |
 | FR11 | Unit + integration     | Compact inline plan, no unnecessary delegation, same accounting guarantees                                       |
 | NFR1 | Contract + integration | Unchanged severity semantics and reviewer authority                                                              |
@@ -1447,6 +1922,11 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
 - **Coverage Target:** Every validator branch and error code; no new global
   percentage threshold.
 - **Key Test Cases:**
+  - Canonical spec, plan, deviation, and deferred-finding fixtures produce the
+    exact obligation set; final quick/import unions every current task; CRLF,
+    duplicate, escaped-pipe, termination, and malformed grammar cases fail or
+    normalize exactly as specified. Later resolved/dismissed deferred entries
+    remove earlier obligations.
   - Every path and obligation has exactly one primary owner; seam references do
     not create contradictory ownership.
   - Receipt cannot cross run/context/plan/assignment/sink.
@@ -1465,12 +1945,21 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
     findings, samples, and deterministic results are invalid.
   - Evidence/command scope indexes resolve and command terminal results include
     provenance.
+  - Duplicate command, evidence, claim, and finding IDs reject before reference
+    lookup.
   - Deterministic claims resolve through command evidence to the exact command
     result digest.
   - Contradictory lane/classification outcome combinations are rejected.
   - Partial classification coverage identifies uninspected path indexes.
   - Incomplete coverage cannot pair with a passing/no-findings verdict.
   - Context telemetry flags require a complete, valid provenance tuple.
+  - Preflight capability evidence comes from the accepted-continuation adapter;
+    reviewer JSON cannot provide capabilities or numeric telemetry.
+  - Sink/capability matrix rejects only the missing capability required by that
+    sink.
+  - Host telemetry rejects stale, future, non-monotonic, wrong-adapter, and
+    arithmetically inconsistent observations without authorizing whole-diff;
+    private evidence and exposed digests bind the full request interval.
   - 119,999 ms fails with `review-budget-below-minimum`; 120,000 ms preserves
     every named floor.
   - FR5-FR7 fields required even for inline.
@@ -1483,9 +1972,24 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
 - **Test Environment:** Real temporary Git repositories, fake reviewer
   continuations, branch-local CLI fixtures, and deterministic clocks.
 - **Key Test Cases:**
-  - Plan receipt issued before evidence sentinel.
+  - Plan receipt issued before evidence sentinel; direct breadcrumb mutation,
+    receipt replay, and evidence start before validation are rejected.
+  - Mutation commands reject before accepted-handle binding and on a sibling
+    run/launch-attempt capability; repair reaches only the recorded continuation.
   - Plan submission before the one-shot artifact checkpoint is rejected;
     post-artifact telemetry alone supplies whole-diff budget.
+  - Gate preparation creates a distinct validation run ID, requires gate and
+    launch-attempt correlation, and cannot resolve a sibling attempt.
+  - Every review CLI emits JSON and uses exit 0/1/2 for success, contract
+    rejection, and system failure respectively; stdout contains exactly one
+    schema-valid envelope in each case.
+  - Trusted preparation JSON/payload contains usable command tokens while
+    preparation objects, reviewer JSON, diagnostics, digests, and logs do not.
+  - Artifact accounting accepts exactly one immediately-following fenced JSON
+    block and rejects duplicate headings/keys/blocks, alternate fences,
+    trailing section content, oversize blocks, or malformed JSON.
+  - Artifact terminal accounting must canonically equal the embedded block;
+    draft path/inode replacement and symlink attempts reject before publication.
   - Artifact and structured outputs validate identically.
   - One rejected plan may be corrected once; a second rejection blocks before
     evidence.
@@ -1496,7 +2000,15 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   - Gate parent distinguishes accounting invalid from timeout, materializes a
     live terminal diagnostic pointer, and removes the full child context.
   - Valid blocked-incomplete accounting follows reviewer `BLOCKED` handling and
-    cannot create an actionable artifact, structured pass, or gate pass.
+    returns explicit structured `status: blocked` without creating a
+    discoverable artifact, structured pass, or gate pass.
+  - Accounting repair uses the already-accepted provider handle; the TypeScript
+    validator and reference dispatcher cannot spawn a replacement.
+  - Repair accepts allowlisted identity/assignment corrections and rejects
+    every mutation to findings, verdict, evidence, evidence references,
+    commands, verification disposition, outcomes, or budget.
+  - Complete and blocked `ReviewerTerminalV1` values project correctly for both
+    sinks; blocked artifact staging never reaches a discoverable path.
   - Process-crash fixture leaves state that next prepare reaps.
   - Prior artifacts can change navigation/sample order but cannot supply the
     current verdict or cross gate lineage/target.
@@ -1600,7 +2112,8 @@ consumer rollout.
 
 ### Migration Steps
 
-1. Add optional structured accounting and additive artifact accounting syntax.
+1. Add the internal provider-neutral terminal envelope and additive artifact
+   accounting syntax while preserving accepted external sink schemas.
 2. Add validation context/receipt commands and production APIs.
 3. Add coordinator adapters while preserving current sink behavior.
 4. Update reviewer canonical source and all provider views.
@@ -1619,15 +2132,17 @@ consumer rollout.
 
 ### Rollback Strategy
 
-The optional structured field and artifact section are ignored by old
-consumers. Explicit legacy mode bypasses receipt requirements. No accepted
-review artifact is rewritten or removed.
+The terminal envelope is internal to enforce-mode adapters, and the artifact
+section is ignored by old consumers. Explicit legacy mode bypasses receipt
+requirements. No accepted review artifact is rewritten or removed.
 
 ### Data Validation
 
 - Existing artifact and widened-ledger fixtures remain readable.
 - Review latest, gate correlation, and receive continue to select only accepted
   review artifacts.
+- Gate fixtures resolve only the expected
+  `(gateRunId, launchAttemptId) → validationRunId` terminal receipt.
 - Diagnostics and validation manifests never appear in resolver scans.
 - Provider views match canonical sources after sync.
 
@@ -1649,7 +2164,8 @@ updating config migration guidance and boundary tests.
 - Record the fixed large-scope evidence-operation baseline.
 - Add coordinator inventory/parity fixtures.
 - Audit `reviewer-dispatch.ts`; extract proven pure pieces or replace it.
-- Define versioned shared types and strict validators.
+- Define versioned shared types, capability preflight/telemetry interfaces, and
+  strict validators without transferring accepted-handle ownership.
 
 **Verification:** Existing behavior fixtures pass; reference-helper gaps are
 covered by failing production tests before implementation.
@@ -1660,13 +2176,15 @@ covered by failing production tests before implementation.
 
 **Tasks:**
 
-- Implement ChangeMap/obligation collection, denial-only numstat pre-check, and
-  capped patch-byte estimation.
-- Implement context hashing, private store, receipts, breadcrumbs, and reaper.
-- Add prepare, one-shot post-artifact checkpoint, and validate-plan JSON
-  commands.
+- Implement ChangeMap and exact-grammar obligation collection, denial-only
+  numstat pre-check, and capped patch-byte estimation.
+- Implement context hashing, private store, gate/run correlation index,
+  launch-attempt command capabilities, accepted-handle binding, receipts,
+  atomic breadcrumbs, and reaper.
+- Add prepare, one-shot post-artifact checkpoint, validate-plan, and
+  begin-evidence JSON commands with common 0/1/2 exit semantics.
 - Add the launcher/host telemetry adapter; preparation telemetry remains
-  denial-only.
+  denial-only and both observations produce private digested evidence records.
 - Add budget/context models and whole-diff eligibility.
 
 **Verification:** Unit and temporary-repository integration tests cover metadata,
@@ -1679,6 +2197,7 @@ receipts, TTL, crash reaping, and budget boundaries.
 **Tasks:**
 
 - Update canonical reviewer intake and ReviewPlan contract.
+- Require the receipt-bound begin-evidence transition before content reads.
 - Require unconditional FR5-FR7 fields and structural delegation gates.
 - Replace Tier 3 read-all behavior.
 - Add plan validation/correction, typed dossier/claim contracts, delegation
@@ -1694,9 +2213,11 @@ validation; large/small fixtures select intended strategies.
 
 **Tasks:**
 
-- Implement compact `ReviewAccountingV1` with stored assignment-projection and
-  claim validation.
-- Extend structured findings additively.
+- Implement compact `ReviewAccountingV1`, exact artifact block grammar, stored
+  assignment-projection, globally unique reference registries, and claim
+  validation.
+- Add provider-neutral `ReviewerTerminalV1`, private artifact staging, and
+  symlink-safe complete/blocked sink projections.
 - Implement output validator and same-handle repair.
 - Wire local, remote structured, Tier 3, and direct phase coordinators.
 - Preserve indirect gate/checkpoint ownership.
@@ -1710,9 +2231,10 @@ inventory, and no-action-before-validation tests pass.
 
 **Tasks:**
 
-- Add capability preflight and `workflow.reviewPlanMode`.
+- Wire capability preflight and `workflow.reviewPlanMode` at every coordinator.
 - Add the 120-second enforced-review budget preflight and migration diagnostic.
-- Add gate accounting-invalid failure translation.
+- Add gate/validation run correlation and accounting-invalid failure
+  translation.
 - Add parent cleanup and diagnostic pointers.
 - Implement initial legacy-default rollout behavior and create the tracked
   default-flip item.
@@ -1782,8 +2304,8 @@ No new third-party library or external service is required.
   - **Contingency:** Promote evidence loading into a mechanically mediated
     runtime boundary in a follow-up project.
 - **Accounting repair mutates findings:** Probability Low | Impact High
-  - **Mitigation:** Freeze output digest excluding accounting and reject changes
-    to findings/severity/verdict during repair.
+  - **Mitigation:** Freeze the normalized immutable-review-substance digest and
+    reject changes outside the closed repair-field allowlist.
   - **Contingency:** Retain diagnostic, fail non-actionably, and require a fresh
     review.
 - **Validation state leaks after kill:** Probability Medium | Impact Medium
@@ -1821,6 +2343,16 @@ No new third-party library or external service is required.
 - **Reference helper hides production gaps:** Probability Medium | Impact High
   - **Mitigation:** Rewrite-first audit and parity fixtures before wiring.
   - **Contingency:** Replace rather than reuse the helper.
+- **Gate and validation runs cross-correlate:** Probability Low | Impact High
+  - **Mitigation:** Separate random IDs, required gate/attempt inputs, private
+    one-to-one index, and terminal lookup tests.
+  - **Contingency:** Return correlation failure with no receive-eligible
+    artifact.
+- **Markdown obligation/accounting grammar drifts:** Probability Medium | Impact High
+  - **Mitigation:** Versioned exact grammar, canonical and archived fixtures,
+    duplicate detection, and fail-closed parsing.
+  - **Contingency:** Update grammar and fixtures in the same compatibility
+    release; retain explicit legacy while producers migrate.
 - **Compatibility mode becomes permanent:** Probability Medium | Impact Medium
   - **Mitigation:** Two-stage rollout targeting consecutive releases, mandatory
     tracked default-flip item, seven-day minimum soak, 14-day escalation

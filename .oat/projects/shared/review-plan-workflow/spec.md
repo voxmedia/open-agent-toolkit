@@ -2,7 +2,7 @@
 oat_status: complete
 oat_ready_for: oat-project-design
 oat_blockers: []
-oat_last_updated: 2026-07-29
+oat_last_updated: 2026-07-30
 oat_generated: false
 oat_template: false
 ---
@@ -63,7 +63,10 @@ and artifact correlation remain prerequisites.
 
 ## Non-Goals
 
-- Runtime-enforced review phase transitions or a durable ReviewPlan manifest.
+- A general-purpose or durable runtime review-phase state machine, or a durable
+  ReviewPlan manifest. The private short-TTL receipt/breadcrumb lifecycle
+  required to enforce FR1's validation boundary is in scope and is not a
+  project artifact.
 - Transactional in-progress or partial review artifacts.
 - Adaptive or work-derived outer timeout calculation.
 - Manual prior-verdict reuse or bookkeeping-only review skipping.

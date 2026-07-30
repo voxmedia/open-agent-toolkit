@@ -71,8 +71,12 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T01:12:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T02:52:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
+oat_project_explainer:
+  decision: skip
+  source: interactive
+  decided_at: '2026-07-30T01:47:30.151Z'
 ---
 
 # Project State: review-plan-workflow
@@ -84,8 +88,8 @@ oat_generated: false
 ## Current Phase
 
 Design is complete. Requirements are confirmed in `spec.md`; `design.md`
-incorporates holistic feedback and passes independent cross-section consistency
-review.
+incorporates holistic feedback, planning-readiness contracts, and independent
+cross-section consistency review.
 
 ## Artifacts
 
@@ -111,6 +115,7 @@ review.
 - ✓ First holistic design feedback incorporated
 - ✓ Final summary-list correction incorporated
 - ✓ Independent cross-section consistency review passed
+- ✓ Planning-readiness contract gaps resolved and re-review passed
 - ✓ Design gate resolved (no configured gate)
 - ✓ Design completed
 
