@@ -1,0 +1,18 @@
+[
+  {
+    "id": "p02-t01",
+    "kind": "task",
+    "source": "plan-v1.md",
+    "summary": "Normalize paths",
+    "expectedPaths": ["src/index.ts", "src/review-paths.ts"],
+    "expectedChecks": []
+  },
+  {
+    "id": "p02-t02",
+    "kind": "task",
+    "source": "plan-v1.md",
+    "summary": "Parse metadata",
+    "expectedPaths": ["src/git-metadata.ts"],
+    "expectedChecks": []
+  }
+]
