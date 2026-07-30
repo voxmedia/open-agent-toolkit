@@ -14,10 +14,16 @@ import type {
   PlanValidationReceiptV1,
   PreparedReviewContextV1,
   PrepareReviewContextResultV1,
+  ReviewAccountingV1,
+  ReviewCandidateV1,
+  ReviewCommandEvidenceV1,
+  ReviewEvidenceRefV1,
   ReviewLaneV1,
   ReviewPlanV1,
   ReviewPreparationV1,
+  ReviewerTerminalV1,
   ValidatedAssignmentProjectionV1,
+  WorkerDossierV1,
 } from './types';
 
 describe('common review contracts', () => {
@@ -336,5 +342,138 @@ describe('review plan contracts', () => {
 
     expect(projection.lanes[0]?.paths).toEqual(['src/review.ts']);
     expect(receipt.validationRunId).toBe(inlinePlan.runId);
+  });
+});
+
+const command = {
+  id: 'command-1',
+  command: 'pnpm test',
+  cwd: '.',
+  scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+  provenance: {
+    runner: 'host',
+    invocationDigest: 'invocation-digest',
+    capturedAt: '2026-07-30T20:03:00.000Z',
+  },
+  result: { status: 'completed', exitCode: 0, outputDigest: 'output-digest' },
+} satisfies ReviewCommandEvidenceV1;
+
+const evidence = {
+  id: 'evidence-1',
+  kind: 'command',
+  locator: 'pnpm test',
+  scopeRefs: command.scopeRefs,
+  provenance: 'host',
+  digest: 'evidence-digest',
+  commandId: command.id,
+  commandResultDigest: 'command-result-digest',
+} satisfies ReviewEvidenceRefV1;
+
+const accounting = {
+  schemaVersion: 1,
+  receipt: 'opaque-token',
+  contextDigest: 'context-digest',
+  planDigest: 'plan-digest',
+  assignmentDigest: 'assignment-digest',
+  strategy: 'selective-inline',
+  completion: 'complete',
+  evidence: [evidence],
+  lanes: [
+    {
+      id: 'semantic',
+      paths: ['src/review.ts'],
+      primaryObligationIds: ['task:p01-t01'],
+      seamObligationIds: [],
+      workerOutcome: 'not-delegated',
+      dossierDigest: null,
+      inspectionCoverage: 'all',
+      uninspectedPathIndexes: [],
+      uncoveredObligationIds: [],
+      commands: [command],
+      evidenceRefIds: [evidence.id],
+      uncertainty: [],
+      primaryCompletion: {
+        outcome: 'not-needed',
+        completedPathIndexes: [],
+        completedObligationIds: [],
+        commands: [],
+        evidenceRefIds: [],
+      },
+    },
+  ],
+  classifications: [],
+  verification: [
+    {
+      claimId: 'claim-1',
+      kind: 'deterministic-result',
+      findingId: null,
+      laneIds: ['semantic'],
+      mode: 'provenance',
+      disposition: 'verified',
+      evidenceRefIds: [evidence.id],
+    },
+  ],
+  budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+} satisfies ReviewAccountingV1;
+
+describe('review output contracts', () => {
+  it('represents complete and partial worker dossiers with typed evidence registries', () => {
+    const complete = {
+      schemaVersion: 1,
+      runId: preparation.runId,
+      planDigest: 'plan-digest',
+      laneId: 'semantic',
+      outcome: 'complete',
+      inspectedPaths: ['src/review.ts'],
+      inspectedObligationIds: ['task:p01-t01'],
+      commands: [command],
+      evidence: [evidence],
+      candidateFindings: [],
+      uncoveredObligationIds: [],
+      uncertainty: [],
+    } satisfies WorkerDossierV1;
+    const partial = {
+      ...complete,
+      outcome: 'partial',
+      uncoveredObligationIds: ['task:p01-t01'],
+      uncertainty: ['The command timed out.'],
+    } satisfies WorkerDossierV1;
+
+    expect(complete.evidence[0]?.kind).toBe('command');
+    expect(partial.outcome).toBe('partial');
+  });
+
+  it('keeps private candidates separate from complete and blocked terminals', () => {
+    const candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: '/private/review-draft.md',
+    } satisfies ReviewCandidateV1;
+    const complete = {
+      schemaVersion: 1,
+      status: 'complete',
+      candidate,
+      reviewAccounting: accounting,
+    } satisfies ReviewerTerminalV1;
+    const blockedAccounting = {
+      ...accounting,
+      completion: 'blocked-incomplete',
+      lanes: accounting.lanes.map((lane) => ({
+        ...lane,
+        inspectionCoverage: 'partial' as const,
+        uninspectedPathIndexes: [0],
+        uncoveredObligationIds: ['task:p01-t01'],
+      })),
+    } satisfies ReviewAccountingV1;
+    const blocked = {
+      schemaVersion: 1,
+      status: 'blocked',
+      reason: 'Coverage could not complete.',
+      diagnostics: ['task:p01-t01 remains uncovered'],
+      reviewAccounting: blockedAccounting,
+    } satisfies ReviewerTerminalV1;
+
+    expect(complete.candidate.kind).toBe('artifact-draft');
+    expect('candidate' in blocked).toBe(false);
+    expect(blocked.reviewAccounting.completion).toBe('blocked-incomplete');
   });
 });

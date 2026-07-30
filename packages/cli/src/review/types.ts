@@ -313,3 +313,190 @@ export interface PlanValidationReceiptV1 {
   validatedAt: string;
   expiresAt: string;
 }
+
+export interface ReviewScopeRefV1 {
+  bucket: 'lane' | 'classification';
+  bucketId: string;
+  pathIndexes: number[];
+}
+
+export interface ReviewCommandEvidenceV1 {
+  id: string;
+  command: string;
+  cwd: string;
+  scopeRefs: ReviewScopeRefV1[];
+  provenance: {
+    runner: string;
+    invocationDigest: string;
+    capturedAt: string;
+  };
+  result:
+    | {
+        status: 'completed';
+        exitCode: number;
+        outputDigest: string;
+      }
+    | {
+        status: 'interrupted';
+        signal: string;
+        outputDigest: string;
+      };
+}
+
+export interface ReviewEvidenceRefBaseV1 {
+  id: string;
+  locator: string;
+  scopeRefs: ReviewScopeRefV1[];
+  provenance: string;
+  digest: string;
+}
+
+export type ReviewEvidenceRefV1 =
+  | (ReviewEvidenceRefBaseV1 & {
+      kind: 'command';
+      commandId: string;
+      commandResultDigest: string;
+    })
+  | (ReviewEvidenceRefBaseV1 & {
+      kind: 'source' | 'diff' | 'artifact' | 'inventory';
+      commandId: null;
+      commandResultDigest: null;
+    });
+
+export interface WorkerDossierV1 {
+  schemaVersion: 1;
+  runId: string;
+  planDigest: string;
+  laneId: string;
+  outcome: 'complete' | 'partial';
+  inspectedPaths: string[];
+  inspectedObligationIds: string[];
+  commands: ReviewCommandEvidenceV1[];
+  evidence: ReviewEvidenceRefV1[];
+  candidateFindings: Array<{
+    id: string;
+    summary: string;
+    locations: string[];
+    evidenceRefIds: string[];
+  }>;
+  uncoveredObligationIds: string[];
+  uncertainty: string[];
+}
+
+export interface ReviewClaimVerificationV1 {
+  claimId: string;
+  kind:
+    | 'promoted-finding'
+    | 'consequential-absence'
+    | 'worker-conflict'
+    | 'cross-lane-gap'
+    | 'positive-coverage-sample'
+    | 'deterministic-result';
+  findingId: string | null;
+  laneIds: string[];
+  mode: 'direct' | 'sample' | 'provenance';
+  disposition: 'verified' | 'rejected' | 'unresolved';
+  evidenceRefIds: string[];
+}
+
+export interface ReviewAccountingV1 {
+  schemaVersion: 1;
+  receipt: string;
+  contextDigest: string;
+  planDigest: string;
+  assignmentDigest: string;
+  strategy: ReviewStrategy;
+  completion: 'complete' | 'blocked-incomplete';
+  evidence: ReviewEvidenceRefV1[];
+  lanes: Array<{
+    id: string;
+    paths: string[];
+    primaryObligationIds: string[];
+    seamObligationIds: string[];
+    workerOutcome: 'not-delegated' | 'complete' | 'partial' | 'uncovered';
+    dossierDigest: string | null;
+    inspectionCoverage: 'all' | 'partial' | 'none';
+    uninspectedPathIndexes: number[];
+    uncoveredObligationIds: string[];
+    commands: ReviewCommandEvidenceV1[];
+    evidenceRefIds: string[];
+    uncertainty: string[];
+    primaryCompletion: {
+      outcome:
+        | 'not-needed'
+        | 'not-attempted'
+        | 'complete'
+        | 'partial'
+        | 'not-permitted';
+      completedPathIndexes: number[];
+      completedObligationIds: string[];
+      commands: ReviewCommandEvidenceV1[];
+      evidenceRefIds: string[];
+    };
+  }>;
+  classifications: Array<{
+    id: string;
+    kind: 'generated' | 'bookkeeping' | 'excluded';
+    reason: string;
+    paths: string[];
+    planDisposition: 'inspect' | 'justified-exclusion';
+    strategy: 'path-diff' | 'inventory' | 'manifest-check' | 'none';
+    plannedChecks: string[];
+    exclusionAuthority: string | null;
+    outcome: 'complete' | 'partial' | 'uncovered' | 'excluded';
+    inspectionCoverage: 'all' | 'partial' | 'none' | 'excluded';
+    uninspectedPathIndexes: number[];
+    commands: ReviewCommandEvidenceV1[];
+    uncertainty: string[];
+  }>;
+  verification: ReviewClaimVerificationV1[];
+  budget: {
+    evidenceStoppedAt: string | null;
+    outputReservePreserved: boolean | null;
+  };
+}
+
+export interface StructuredFinding {
+  id: string;
+  severity: 'critical' | 'important' | 'medium' | 'minor';
+  title: string;
+  file: string | null;
+  line: number | null;
+  body: string;
+  fix_guidance: string | null;
+}
+
+export interface StructuredFindings {
+  summary: string;
+  findings: StructuredFinding[];
+  verification_commands: string[];
+}
+
+export type ReviewCandidateV1 =
+  | {
+      kind: 'artifact-draft';
+      privateDraftPath: string;
+    }
+  | {
+      kind: 'structured';
+      review: StructuredFindings;
+    };
+
+export type ReviewerTerminalV1 =
+  | {
+      schemaVersion: 1;
+      status: 'complete';
+      candidate: ReviewCandidateV1;
+      reviewAccounting: ReviewAccountingV1 & { completion: 'complete' };
+    }
+  | {
+      schemaVersion: 1;
+      status: 'blocked';
+      reason: string;
+      diagnostics: string[];
+      reviewAccounting: ReviewAccountingV1 & {
+        completion: 'blocked-incomplete';
+      };
+    };
+
+export type ReviewOutput = ReviewerTerminalV1;
