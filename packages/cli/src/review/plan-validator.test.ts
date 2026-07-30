@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  projectValidatedAssignments,
   validatePlanObligationAccounting,
   validatePlanPathAccounting,
+  validateReviewPlan,
 } from './plan-validator';
 import type { PreparedReviewContextV1, ReviewPlanV1 } from './types';
 
@@ -29,8 +31,24 @@ function context(): PreparedReviewContextV1 {
           bookkeepingHint: false,
         },
       ],
+      totals: {
+        files: 2,
+        additions: 2,
+        deletions: 1,
+        binaryFiles: 0,
+        numstatChangedLines: 3,
+        numstatTokenDenialEstimate: 1,
+        patchBytes: 30,
+        patchByteLowerBound: null,
+        patchEstimateState: 'exact',
+        patchCountingSkippedReason: null,
+        estimatedPatchTokens: 10,
+      },
     },
     obligations: [{ id: 'FR1' }, { id: 'FR2' }],
+    runId: 'run',
+    contextDigest: 'context',
+    budget: { time: null, context: null },
   } as PreparedReviewContextV1;
 }
 
@@ -145,5 +163,78 @@ describe('exact review assignment accounting', () => {
         }),
       ]),
     );
+  });
+});
+
+describe('review plan policy and projection', () => {
+  function policyPlan(): ReviewPlanV1 {
+    const candidate = plan();
+    candidate.wholeDiff = {
+      allowed: false,
+      estimatedTokens: 10,
+      evidenceBudgetTokens: null,
+      reason: 'missing post-artifact context telemetry',
+    };
+    return candidate;
+  }
+
+  it('accepts matching sealed policy', () => {
+    expect(validateReviewPlan(context(), policyPlan())).toEqual([]);
+  });
+
+  it('rejects generated skips, unauthorized exclusions, and policy drift', () => {
+    const candidate = policyPlan();
+    candidate.lanes[0]!.paths = [];
+    candidate.classifications = [
+      {
+        id: 'generated',
+        kind: 'generated',
+        reason: 'generated',
+        paths: ['a.ts'],
+        disposition: 'justified-exclusion',
+        strategy: 'none',
+        checks: [],
+        exclusionAuthority: null,
+      },
+      {
+        id: 'excluded',
+        kind: 'excluded',
+        reason: 'excluded',
+        paths: ['b.ts'],
+        disposition: 'justified-exclusion',
+        strategy: 'none',
+        checks: [],
+        exclusionAuthority: null,
+      },
+    ];
+    candidate.wholeDiff.reason = 'reviewer says yes';
+    candidate.timeAllocation = {
+      planningDeadlineMs: 1,
+      evidenceDeadlineMs: 2,
+      reconciliationDeadlineMs: 3,
+      outputDeadlineMs: 4,
+      outputReserveMs: 1,
+      reconciliationReserveMs: 1,
+    };
+    expect(validateReviewPlan(context(), candidate)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'classification-cannot-skip-inspection',
+        }),
+        expect.objectContaining({ code: 'invalid-exclusion-authority' }),
+        expect.objectContaining({ code: 'whole-diff-policy-drift' }),
+        expect.objectContaining({ code: 'time-allocation-policy-drift' }),
+      ]),
+    );
+  });
+
+  it('sorts assignment projections deterministically', () => {
+    const candidate = policyPlan();
+    candidate.lanes[0]!.paths = ['b.ts', 'a.ts'];
+    candidate.lanes[0]!.primaryObligationIds = ['FR2', 'FR1'];
+    expect(projectValidatedAssignments(candidate).lanes[0]).toMatchObject({
+      paths: ['a.ts', 'b.ts'],
+      primaryObligationIds: ['FR1', 'FR2'],
+    });
   });
 });
