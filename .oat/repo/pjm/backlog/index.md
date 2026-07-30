@@ -109,7 +109,7 @@
 
 | ID                                       | Title                                                                  | Status | Priority | Scope   | Estimate |
 | ---------------------------------------- | ---------------------------------------------------------------------- | ------ | -------- | ------- | -------- |
-| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | M        |
+| BL-260711-add-activity-aware-gate        | Add activity-aware gate timeouts                                       | open   | high     | feature | L        |
 | BL-260718-add-oat-wave-lifecycle-cli     | Add oat wave lifecycle CLI command family                              | open   | high     | feature | L        |
 | BL-260720-add-oat-project-complete-auto  | Add oat-project-complete-auto companion skill for autonomous closeouts | open   | high     | task    | M        |
 | BL-260711-add-root-owned-dispatch-broker | Add root-owned dispatch broker for exact OAT subagent launches         | open   | high     | feature | M        |
