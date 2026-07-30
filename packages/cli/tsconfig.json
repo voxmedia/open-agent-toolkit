@@ -19,6 +19,7 @@
       "@fs/*": ["./src/fs/*"],
       "@errors/*": ["./src/errors/*"],
       "@app/*": ["./src/app/*"],
+      "@review/*": ["./src/review/*"],
       "@validation/*": ["./src/validation/*"]
     }
   },
