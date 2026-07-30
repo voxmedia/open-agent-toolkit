@@ -1,8 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
+  parseReviewerTerminalV1,
   parseReviewPreparationV1,
+  parseReviewPlanV1,
   ReviewSchemaError,
 } from './schemas';
 
@@ -160,5 +163,186 @@ describe('preparation schemas', () => {
     const value = context();
     (value['budget'] as Record<string, unknown>)['reviewerEstimate'] = 10;
     expect(() => parsePreparedReviewContextV1(value)).toThrow('unknown field');
+  });
+});
+
+function plan(): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    runId: 'validation-run-1',
+    contextDigest: 'context-digest',
+    strategy: 'selective-inline',
+    lanes: [
+      {
+        id: 'semantic',
+        paths: ['src/review.ts'],
+        primaryObligationIds: ['task:p01-t01'],
+        seamObligationIds: [],
+        risk: 'high',
+        evidenceClass: 'semantic',
+        strategy: 'path-diff',
+        checks: ['Inspect behavior'],
+        delegated: false,
+        independenceRationale: null,
+        substantial: false,
+        substantialityRationale: null,
+        deadlineMs: null,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'direct-verify',
+        primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+      },
+    ],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: [],
+      nonReplayedLaneIds: [],
+      expectedSavings: [],
+      coordinationCosts: [],
+      decisionRationale: 'One semantic lane remains inline.',
+      decision: 'inline',
+    },
+    verificationBoundary: {
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['semantic'],
+        rationale: 'Sample positive coverage.',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: {
+      allowed: false,
+      estimatedTokens: 30,
+      evidenceBudgetTokens: null,
+      reason: 'No sealed context budget.',
+    },
+    timeAllocation: null,
+  };
+}
+
+function receipt(): Record<string, unknown> {
+  return {
+    token: 'opaque-token',
+    validationRunId: 'validation-run-1',
+    gateRunId: null,
+    launchAttemptId: 'launch-1',
+    acceptedHandleDigest: 'handle-digest',
+    contractVersion: 1,
+    contextDigest: 'context-digest',
+    planDigest: 'plan-digest',
+    assignmentDigest: 'assignment-digest',
+    validatedAt: '2026-07-30T20:02:00.000Z',
+    expiresAt: '2026-07-30T22:00:00.000Z',
+  };
+}
+
+function accounting(
+  completion: 'complete' | 'blocked-incomplete',
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    receipt: 'opaque-token',
+    contextDigest: 'context-digest',
+    planDigest: 'plan-digest',
+    assignmentDigest: 'assignment-digest',
+    strategy: 'selective-inline',
+    completion,
+    evidence: [],
+    lanes: [],
+    classifications: [],
+    verification: [],
+    budget: { evidenceStoppedAt: null, outputReservePreserved: null },
+  };
+}
+
+describe('plan, receipt, and terminal schemas', () => {
+  it('parses valid plan, receipt, complete, and blocked branches', () => {
+    expect(parseReviewPlanV1(plan()).strategy).toBe('selective-inline');
+    expect(parsePlanValidationReceiptV1(receipt()).contractVersion).toBe(1);
+    expect(
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'complete',
+        candidate: {
+          kind: 'structured',
+          review: {
+            summary: 'No issues.',
+            findings: [],
+            verification_commands: [],
+          },
+        },
+        reviewAccounting: accounting('complete'),
+      }).status,
+    ).toBe('complete');
+    expect(
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'blocked',
+        reason: 'Coverage incomplete.',
+        diagnostics: ['One obligation remains.'],
+        reviewAccounting: accounting('blocked-incomplete'),
+      }).status,
+    ).toBe('blocked');
+  });
+
+  it('rejects missing delegation and verification fields', () => {
+    const missingEconomics = plan();
+    delete missingEconomics['delegationEconomics'];
+    expect(() => parseReviewPlanV1(missingEconomics)).toThrow(
+      'missing delegationEconomics',
+    );
+
+    const missingBoundary = plan();
+    delete missingBoundary['verificationBoundary'];
+    expect(() => parseReviewPlanV1(missingBoundary)).toThrow(
+      'missing verificationBoundary',
+    );
+  });
+
+  it('rejects unknown plan enums and malformed receipts', () => {
+    const invalidPlan = plan();
+    invalidPlan['strategy'] = 'read-everything';
+    expect(() => parseReviewPlanV1(invalidPlan)).toThrow('invalid value');
+
+    const invalidReceipt = receipt();
+    invalidReceipt['contractVersion'] = 2;
+    expect(() => parsePlanValidationReceiptV1(invalidReceipt)).toThrow(
+      'must be 1',
+    );
+  });
+
+  it('rejects complete terminals without candidates', () => {
+    expect(() =>
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'complete',
+        reviewAccounting: accounting('complete'),
+      }),
+    ).toThrow('missing candidate');
+  });
+
+  it('rejects blocked terminals with candidates', () => {
+    expect(() =>
+      parseReviewerTerminalV1({
+        schemaVersion: 1,
+        status: 'blocked',
+        reason: 'Coverage incomplete.',
+        diagnostics: [],
+        candidate: {
+          kind: 'artifact-draft',
+          privateDraftPath: '/private/draft.md',
+        },
+        reviewAccounting: accounting('blocked-incomplete'),
+      }),
+    ).toThrow('unknown field candidate');
   });
 });

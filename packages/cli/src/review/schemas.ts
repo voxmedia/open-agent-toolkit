@@ -2,10 +2,13 @@ import type {
   ChangeMapV1,
   ContextBudgetTelemetry,
   PreparedReviewContextV1,
+  PlanValidationReceiptV1,
   PriorReviewEvidenceV1,
   ReviewBudgetV1,
   ReviewObligationV1,
+  ReviewPlanV1,
   ReviewPreparationV1,
+  ReviewerTerminalV1,
 } from './types';
 
 export class ReviewSchemaError extends Error {
@@ -497,4 +500,516 @@ export function parsePreparedReviewContextV1(
   isoDate(context['artifactCheckpointAt'], '$/artifactCheckpointAt');
   string(context['contextDigest'], '$/contextDigest');
   return context as unknown as PreparedReviewContextV1;
+}
+
+function parseReviewLane(value: unknown, pointer: string): void {
+  const lane = object(value, pointer);
+  keys(
+    lane,
+    [
+      'id',
+      'paths',
+      'primaryObligationIds',
+      'seamObligationIds',
+      'risk',
+      'evidenceClass',
+      'strategy',
+      'checks',
+      'delegated',
+      'independenceRationale',
+      'substantial',
+      'substantialityRationale',
+      'deadlineMs',
+      'dossier',
+      'replay',
+      'primaryContingency',
+    ],
+    pointer,
+  );
+  string(lane['id'], `${pointer}/id`);
+  stringArray(lane['paths'], `${pointer}/paths`).forEach((entry, index) =>
+    path(entry, `${pointer}/paths/${index}`),
+  );
+  stringArray(lane['primaryObligationIds'], `${pointer}/primaryObligationIds`);
+  stringArray(lane['seamObligationIds'], `${pointer}/seamObligationIds`);
+  enumValue(
+    lane['risk'],
+    ['low', 'medium', 'high', 'consequential'],
+    `${pointer}/risk`,
+  );
+  enumValue(
+    lane['evidenceClass'],
+    ['deterministic', 'semantic', 'mixed'],
+    `${pointer}/evidenceClass`,
+  );
+  enumValue(
+    lane['strategy'],
+    ['path-diff', 'full-file', 'command', 'inventory'],
+    `${pointer}/strategy`,
+  );
+  stringArray(lane['checks'], `${pointer}/checks`);
+  if (
+    typeof lane['delegated'] !== 'boolean' ||
+    typeof lane['substantial'] !== 'boolean'
+  ) {
+    throw new ReviewSchemaError(`${pointer} has invalid delegation booleans`);
+  }
+  nullableString(
+    lane['independenceRationale'],
+    `${pointer}/independenceRationale`,
+  );
+  nullableString(
+    lane['substantialityRationale'],
+    `${pointer}/substantialityRationale`,
+  );
+  if (lane['deadlineMs'] !== null)
+    safeNumber(lane['deadlineMs'], `${pointer}/deadlineMs`);
+  const dossier = object(lane['dossier'], `${pointer}/dossier`);
+  keys(dossier, ['contractVersion', 'partialAllowed'], `${pointer}/dossier`);
+  if (dossier['contractVersion'] !== 1 || dossier['partialAllowed'] !== true) {
+    throw new ReviewSchemaError(
+      `${pointer}/dossier has invalid contract fields`,
+    );
+  }
+  enumValue(
+    lane['replay'],
+    ['accept-provenance', 'sample', 'direct-verify'],
+    `${pointer}/replay`,
+  );
+  const contingency = object(
+    lane['primaryContingency'],
+    `${pointer}/primaryContingency`,
+  );
+  keys(
+    contingency,
+    ['allowed', 'paths', 'obligationIds'],
+    `${pointer}/primaryContingency`,
+  );
+  if (typeof contingency['allowed'] !== 'boolean') {
+    throw new ReviewSchemaError(
+      `${pointer}/primaryContingency/allowed must be boolean`,
+    );
+  }
+  stringArray(
+    contingency['paths'],
+    `${pointer}/primaryContingency/paths`,
+  ).forEach((entry, index) =>
+    path(entry, `${pointer}/primaryContingency/paths/${index}`),
+  );
+  stringArray(
+    contingency['obligationIds'],
+    `${pointer}/primaryContingency/obligationIds`,
+  );
+}
+
+function parseClassification(value: unknown, pointer: string): void {
+  const classification = object(value, pointer);
+  keys(
+    classification,
+    [
+      'id',
+      'kind',
+      'reason',
+      'paths',
+      'disposition',
+      'strategy',
+      'checks',
+      'exclusionAuthority',
+    ],
+    pointer,
+  );
+  string(classification['id'], `${pointer}/id`);
+  enumValue(
+    classification['kind'],
+    ['generated', 'bookkeeping', 'excluded'],
+    `${pointer}/kind`,
+  );
+  string(classification['reason'], `${pointer}/reason`);
+  stringArray(classification['paths'], `${pointer}/paths`).forEach(
+    (entry, index) => path(entry, `${pointer}/paths/${index}`),
+  );
+  enumValue(
+    classification['disposition'],
+    ['inspect', 'justified-exclusion'],
+    `${pointer}/disposition`,
+  );
+  enumValue(
+    classification['strategy'],
+    ['path-diff', 'inventory', 'manifest-check', 'none'],
+    `${pointer}/strategy`,
+  );
+  stringArray(classification['checks'], `${pointer}/checks`);
+  nullableString(
+    classification['exclusionAuthority'],
+    `${pointer}/exclusionAuthority`,
+  );
+}
+
+export function parseReviewPlanV1(value: unknown): ReviewPlanV1 {
+  const plan = object(value, '$');
+  keys(
+    plan,
+    [
+      'schemaVersion',
+      'runId',
+      'contextDigest',
+      'strategy',
+      'lanes',
+      'classifications',
+      'crossLaneInvariants',
+      'delegationEconomics',
+      'verificationBoundary',
+      'wholeDiff',
+      'timeAllocation',
+    ],
+    '$',
+  );
+  if (plan['schemaVersion'] !== 1)
+    throw new ReviewSchemaError('$/schemaVersion must be 1');
+  string(plan['runId'], '$/runId');
+  string(plan['contextDigest'], '$/contextDigest');
+  enumValue(
+    plan['strategy'],
+    ['whole-diff-inline', 'selective-inline', 'delegated'],
+    '$/strategy',
+  );
+  array(plan['lanes'], '$/lanes').forEach((lane, index) =>
+    parseReviewLane(lane, `$/lanes/${index}`),
+  );
+  array(plan['classifications'], '$/classifications').forEach(
+    (classification, index) =>
+      parseClassification(classification, `$/classifications/${index}`),
+  );
+  stringArray(plan['crossLaneInvariants'], '$/crossLaneInvariants');
+  const economics = object(
+    plan['delegationEconomics'],
+    '$/delegationEconomics',
+  );
+  keys(
+    economics,
+    [
+      'independentLaneIds',
+      'nonReplayedLaneIds',
+      'expectedSavings',
+      'coordinationCosts',
+      'decisionRationale',
+      'decision',
+    ],
+    '$/delegationEconomics',
+  );
+  stringArray(
+    economics['independentLaneIds'],
+    '$/delegationEconomics/independentLaneIds',
+  );
+  stringArray(
+    economics['nonReplayedLaneIds'],
+    '$/delegationEconomics/nonReplayedLaneIds',
+  );
+  stringArray(
+    economics['expectedSavings'],
+    '$/delegationEconomics/expectedSavings',
+  );
+  stringArray(
+    economics['coordinationCosts'],
+    '$/delegationEconomics/coordinationCosts',
+  );
+  string(
+    economics['decisionRationale'],
+    '$/delegationEconomics/decisionRationale',
+  );
+  enumValue(
+    economics['decision'],
+    ['inline', 'delegate'],
+    '$/delegationEconomics/decision',
+  );
+  const boundary = object(
+    plan['verificationBoundary'],
+    '$/verificationBoundary',
+  );
+  keys(
+    boundary,
+    ['requiredClaims', 'positiveCoverage', 'deterministicAcceptance'],
+    '$/verificationBoundary',
+  );
+  array(
+    boundary['requiredClaims'],
+    '$/verificationBoundary/requiredClaims',
+  ).forEach((claim, index) => {
+    const item = object(
+      claim,
+      `$/verificationBoundary/requiredClaims/${index}`,
+    );
+    keys(
+      item,
+      ['kind', 'mode'],
+      `$/verificationBoundary/requiredClaims/${index}`,
+    );
+    enumValue(
+      item['kind'],
+      [
+        'promoted-finding',
+        'consequential-absence',
+        'worker-conflict',
+        'cross-lane-gap',
+      ],
+      `$/verificationBoundary/requiredClaims/${index}/kind`,
+    );
+    if (item['mode'] !== 'direct')
+      throw new ReviewSchemaError('required claim mode must be direct');
+  });
+  const positive = object(
+    boundary['positiveCoverage'],
+    '$/verificationBoundary/positiveCoverage',
+  );
+  keys(
+    positive,
+    ['mode', 'laneIds', 'rationale'],
+    '$/verificationBoundary/positiveCoverage',
+  );
+  if (positive['mode'] !== 'sample')
+    throw new ReviewSchemaError('positive coverage mode must be sample');
+  stringArray(
+    positive['laneIds'],
+    '$/verificationBoundary/positiveCoverage/laneIds',
+  );
+  string(
+    positive['rationale'],
+    '$/verificationBoundary/positiveCoverage/rationale',
+  );
+  const deterministic = object(
+    boundary['deterministicAcceptance'],
+    '$/verificationBoundary/deterministicAcceptance',
+  );
+  keys(
+    deterministic,
+    ['mode', 'requiredFields'],
+    '$/verificationBoundary/deterministicAcceptance',
+  );
+  if (deterministic['mode'] !== 'provenance') {
+    throw new ReviewSchemaError(
+      'deterministic acceptance mode must be provenance',
+    );
+  }
+  const requiredFields = stringArray(
+    deterministic['requiredFields'],
+    '$/verificationBoundary/deterministicAcceptance/requiredFields',
+  );
+  const expectedFields = [
+    'command',
+    'cwd',
+    'scopeRefs',
+    'provenance',
+    'result',
+  ];
+  if (
+    requiredFields.length !== expectedFields.length ||
+    expectedFields.some((field) => !requiredFields.includes(field))
+  ) {
+    throw new ReviewSchemaError(
+      'deterministic acceptance fields are incomplete',
+    );
+  }
+  const wholeDiff = object(plan['wholeDiff'], '$/wholeDiff');
+  keys(
+    wholeDiff,
+    ['allowed', 'estimatedTokens', 'evidenceBudgetTokens', 'reason'],
+    '$/wholeDiff',
+  );
+  if (typeof wholeDiff['allowed'] !== 'boolean')
+    throw new ReviewSchemaError('$/wholeDiff/allowed must be boolean');
+  if (wholeDiff['estimatedTokens'] !== null)
+    safeNumber(wholeDiff['estimatedTokens'], '$/wholeDiff/estimatedTokens');
+  if (wholeDiff['evidenceBudgetTokens'] !== null)
+    safeNumber(
+      wholeDiff['evidenceBudgetTokens'],
+      '$/wholeDiff/evidenceBudgetTokens',
+    );
+  string(wholeDiff['reason'], '$/wholeDiff/reason');
+  if (plan['timeAllocation'] !== null) {
+    const allocation = object(plan['timeAllocation'], '$/timeAllocation');
+    keys(
+      allocation,
+      [
+        'planningDeadlineMs',
+        'evidenceDeadlineMs',
+        'reconciliationDeadlineMs',
+        'outputDeadlineMs',
+        'outputReserveMs',
+        'reconciliationReserveMs',
+      ],
+      '$/timeAllocation',
+    );
+    Object.entries(allocation).forEach(([field, entry]) =>
+      safeNumber(entry, `$/timeAllocation/${field}`),
+    );
+  }
+  return plan as unknown as ReviewPlanV1;
+}
+
+export function parsePlanValidationReceiptV1(
+  value: unknown,
+): PlanValidationReceiptV1 {
+  const receipt = object(value, '$');
+  keys(
+    receipt,
+    [
+      'token',
+      'validationRunId',
+      'gateRunId',
+      'launchAttemptId',
+      'acceptedHandleDigest',
+      'contractVersion',
+      'contextDigest',
+      'planDigest',
+      'assignmentDigest',
+      'validatedAt',
+      'expiresAt',
+    ],
+    '$',
+  );
+  for (const field of [
+    'token',
+    'validationRunId',
+    'launchAttemptId',
+    'acceptedHandleDigest',
+    'contextDigest',
+    'planDigest',
+    'assignmentDigest',
+  ] as const) {
+    string(receipt[field], `$/${field}`);
+  }
+  nullableString(receipt['gateRunId'], '$/gateRunId');
+  if (receipt['contractVersion'] !== 1)
+    throw new ReviewSchemaError('$/contractVersion must be 1');
+  isoDate(receipt['validatedAt'], '$/validatedAt');
+  isoDate(receipt['expiresAt'], '$/expiresAt');
+  return receipt as unknown as PlanValidationReceiptV1;
+}
+
+function parseAccountingIdentity(
+  value: unknown,
+  pointer: string,
+  expectedCompletion: string,
+): void {
+  const accounting = object(value, pointer);
+  keys(
+    accounting,
+    [
+      'schemaVersion',
+      'receipt',
+      'contextDigest',
+      'planDigest',
+      'assignmentDigest',
+      'strategy',
+      'completion',
+      'evidence',
+      'lanes',
+      'classifications',
+      'verification',
+      'budget',
+    ],
+    pointer,
+  );
+  if (accounting['schemaVersion'] !== 1)
+    throw new ReviewSchemaError(`${pointer}/schemaVersion must be 1`);
+  for (const field of [
+    'receipt',
+    'contextDigest',
+    'planDigest',
+    'assignmentDigest',
+  ] as const) {
+    string(accounting[field], `${pointer}/${field}`);
+  }
+  enumValue(
+    accounting['strategy'],
+    ['whole-diff-inline', 'selective-inline', 'delegated'],
+    `${pointer}/strategy`,
+  );
+  if (accounting['completion'] !== expectedCompletion) {
+    throw new ReviewSchemaError(
+      `${pointer}/completion contradicts terminal status`,
+    );
+  }
+  array(accounting['evidence'], `${pointer}/evidence`);
+  array(accounting['lanes'], `${pointer}/lanes`);
+  array(accounting['classifications'], `${pointer}/classifications`);
+  array(accounting['verification'], `${pointer}/verification`);
+  const budget = object(accounting['budget'], `${pointer}/budget`);
+  keys(
+    budget,
+    ['evidenceStoppedAt', 'outputReservePreserved'],
+    `${pointer}/budget`,
+  );
+  if (budget['evidenceStoppedAt'] !== null)
+    isoDate(budget['evidenceStoppedAt'], `${pointer}/budget/evidenceStoppedAt`);
+  if (
+    budget['outputReservePreserved'] !== null &&
+    typeof budget['outputReservePreserved'] !== 'boolean'
+  ) {
+    throw new ReviewSchemaError(
+      `${pointer}/budget/outputReservePreserved must be boolean or null`,
+    );
+  }
+}
+
+export function parseReviewerTerminalV1(value: unknown): ReviewerTerminalV1 {
+  const terminal = object(value, '$');
+  if (terminal['status'] === 'complete') {
+    keys(
+      terminal,
+      ['schemaVersion', 'status', 'candidate', 'reviewAccounting'],
+      '$',
+    );
+    if (terminal['schemaVersion'] !== 1)
+      throw new ReviewSchemaError('$/schemaVersion must be 1');
+    const candidate = object(terminal['candidate'], '$/candidate');
+    if (candidate['kind'] === 'artifact-draft') {
+      keys(candidate, ['kind', 'privateDraftPath'], '$/candidate');
+      string(candidate['privateDraftPath'], '$/candidate/privateDraftPath');
+      if (!candidate['privateDraftPath'].startsWith('/')) {
+        throw new ReviewSchemaError(
+          '$/candidate/privateDraftPath must be absolute',
+        );
+      }
+    } else if (candidate['kind'] === 'structured') {
+      keys(candidate, ['kind', 'review'], '$/candidate');
+      const review = object(candidate['review'], '$/candidate/review');
+      keys(
+        review,
+        ['summary', 'findings', 'verification_commands'],
+        '$/candidate/review',
+      );
+      string(review['summary'], '$/candidate/review/summary');
+      array(review['findings'], '$/candidate/review/findings');
+      stringArray(
+        review['verification_commands'],
+        '$/candidate/review/verification_commands',
+      );
+    } else {
+      throw new ReviewSchemaError('$/candidate/kind has an invalid value');
+    }
+    parseAccountingIdentity(
+      terminal['reviewAccounting'],
+      '$/reviewAccounting',
+      'complete',
+    );
+  } else if (terminal['status'] === 'blocked') {
+    keys(
+      terminal,
+      ['schemaVersion', 'status', 'reason', 'diagnostics', 'reviewAccounting'],
+      '$',
+    );
+    if (terminal['schemaVersion'] !== 1)
+      throw new ReviewSchemaError('$/schemaVersion must be 1');
+    string(terminal['reason'], '$/reason');
+    stringArray(terminal['diagnostics'], '$/diagnostics');
+    parseAccountingIdentity(
+      terminal['reviewAccounting'],
+      '$/reviewAccounting',
+      'blocked-incomplete',
+    );
+  } else {
+    throw new ReviewSchemaError('$/status has an invalid value');
+  }
+  return terminal as unknown as ReviewerTerminalV1;
 }
