@@ -213,10 +213,19 @@ Chronological log of implementation progress.
 - Added normal implementation task `p05-t07` and updated spec/design/docs/test
   coverage and plan totals. No review-fix tasks were created.
 
-**Gate status:** This manual artifact review does not replace or clear
-configured gate run `21b68483-5f01-498c-bfb7-60fd79a8504c`. Planning remains
-blocked until the changed artifacts pass a fresh artifact review and configured
-gate.
+**Gate status:** This manual artifact review does not replace configured gate
+run `21b68483-5f01-498c-bfb7-60fd79a8504c`.
+
+### 2026-07-30 — Operator manually unblocked planning
+
+- Instruction: proceed without a fresh artifact re-review or configured gate.
+- Disposition: accept the residual planning-review risk and authorize
+  `oat-project-implement`.
+- Preserved history: the configured run remains `review_failed`, and the latest
+  manual artifact event remains `fixes_completed`; neither is rewritten as a
+  passing review.
+- Timeout scope: the universal 20-minute artifact default is planned in
+  `p05-t07` and is not active until that implementation task ships.
 
 ---
 

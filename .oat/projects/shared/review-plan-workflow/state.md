@@ -1,8 +1,7 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers:
-  - Configured plan gate run 21b68483-5f01-498c-bfb7-60fd79a8504c timed out after 900000ms with status review_failed and no output.
+oat_blockers: []
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -15,7 +14,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 oat_dispatch_policy:
   mode: managed
@@ -76,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T16:45:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T16:53:10Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -86,22 +85,23 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Planning in progress
+**Status:** Planning complete
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Planning is in progress. The confirmed 75-task plan incorporates the manually
-dispatched artifact review and the approved 20-minute built-in artifact-review
-default, but the configured cross-family plan gate timed out without output.
+Planning is complete by explicit operator override. The confirmed 75-task plan
+incorporates the manually dispatched artifact review and the approved 20-minute
+built-in artifact-review default. The configured cross-family plan gate's
+timeout remains recorded as a failed historical result rather than a pass.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (in-progress draft)
+- **Plan:** `plan.md` (complete)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** original slow-review proposal and current-state handoff
 
@@ -128,14 +128,14 @@ default, but the configured cross-family plan gate timed out without output.
 - ✓ Manual plan artifact review received and resolved
 - ✓ Universal 20-minute artifact-review default added to the project scope
 - ⚠ Configured cross-family plan gate timed out without output
+- ✓ Operator manually accepted the residual planning-gate risk and unblocked
+  implementation
 
 ## Blockers
 
-- Configured plan gate run `21b68483-5f01-498c-bfb7-60fd79a8504c` timed out
-  without a valid artifact or receive eligibility. The manual review does not
-  replace that configured gate.
+None.
 
 ## Next Milestone
 
-Re-review the changed plan artifact, then run a fresh configured plan gate with
-the approved 20-minute artifact-review budget.
+Run `oat-project-implement`, beginning with HiLL checkpoint selection and task
+`p01-t01`.
