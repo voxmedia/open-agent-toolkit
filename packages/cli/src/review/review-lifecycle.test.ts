@@ -8,8 +8,17 @@ import {
   bindAcceptedHandle,
   issueCommandCapabilities,
 } from './command-capabilities';
-import { checkpointArtifactsLoaded } from './review-lifecycle';
-import type { ContextBudgetTelemetry, ReviewPreparationV1 } from './types';
+import {
+  beginEvidence,
+  checkpointArtifactsLoaded,
+  validateAndReceiptPlan,
+} from './review-lifecycle';
+import type {
+  ContextBudgetTelemetry,
+  PreparedReviewContextV1,
+  ReviewPlanV1,
+  ReviewPreparationV1,
+} from './types';
 import { ValidationStore } from './validation-store';
 
 const roots: string[] = [];
@@ -82,6 +91,75 @@ const observation: ContextBudgetTelemetry = {
   adapterId: 'host',
   source: 'host',
 };
+
+function validPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
+  return {
+    schemaVersion: 1,
+    runId: context.runId,
+    contextDigest: context.contextDigest,
+    strategy: 'whole-diff-inline',
+    lanes: [
+      {
+        id: 'lane',
+        paths: [],
+        primaryObligationIds: [],
+        seamObligationIds: [],
+        risk: 'low',
+        evidenceClass: 'semantic',
+        strategy: 'path-diff',
+        checks: ['inspect'],
+        delegated: false,
+        independenceRationale: null,
+        substantial: false,
+        substantialityRationale: null,
+        deadlineMs: null,
+        dossier: { contractVersion: 1, partialAllowed: true },
+        replay: 'sample',
+        primaryContingency: {
+          allowed: false,
+          paths: [],
+          obligationIds: [],
+        },
+      },
+    ],
+    classifications: [],
+    crossLaneInvariants: [],
+    delegationEconomics: {
+      independentLaneIds: [],
+      nonReplayedLaneIds: [],
+      expectedSavings: [],
+      coordinationCosts: [],
+      decisionRationale: 'inline',
+      decision: 'inline',
+    },
+    verificationBoundary: {
+      requiredClaims: [],
+      positiveCoverage: {
+        mode: 'sample',
+        laneIds: ['lane'],
+        rationale: 'small coherent review',
+      },
+      deterministicAcceptance: {
+        mode: 'provenance',
+        requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+      },
+    },
+    wholeDiff: {
+      allowed: true,
+      estimatedTokens: 10,
+      evidenceBudgetTokens: 48_000,
+      reason: 'whole diff is eligible',
+    },
+    timeAllocation: {
+      planningDeadlineMs: 5_000,
+      evidenceDeadlineMs: 20_000,
+      reconciliationDeadlineMs: 30_000,
+      outputDeadlineMs: 120_000,
+      outputReserveMs: 90_000,
+      reconciliationReserveMs: 10_000,
+    },
+  };
+}
 
 describe('post-artifact review checkpoint', () => {
   it('seals immutable telemetry and preserves the time budget', async () => {
@@ -166,5 +244,127 @@ describe('post-artifact review checkpoint', () => {
         },
       ),
     ).rejects.toThrow(/current phase/);
+  });
+});
+
+describe('receipt-bound evidence authorization', () => {
+  async function sealed(runId: string) {
+    const setupResult = await setup(runId);
+    await bindAcceptedHandle(setupResult.store, runId, `handle-${runId}`);
+    const lifecycleClock = clock();
+    const context = await checkpointArtifactsLoaded(
+      {
+        runId,
+        checkpointToken: setupResult.tokens.checkpointToken,
+      },
+      {
+        store: setupResult.store,
+        telemetryAdapter: { observe: async () => observation },
+        telemetryAdapterId: 'host',
+        clock: lifecycleClock,
+      },
+    );
+    return { ...setupResult, context, lifecycleClock };
+  }
+
+  it('permits one correction, issues a bound receipt, and starts once', async () => {
+    const { store, tokens, context, lifecycleClock } =
+      await sealed('receiptrun000001');
+    const invalid = validPlan(context);
+    invalid.contextDigest = 'wrong';
+    await expect(
+      validateAndReceiptPlan(
+        {
+          runId: context.runId,
+          commandToken: tokens.planToken,
+          plan: invalid,
+        },
+        { store, clock: lifecycleClock },
+      ),
+    ).resolves.toMatchObject({ valid: false });
+    const accepted = await validateAndReceiptPlan(
+      {
+        runId: context.runId,
+        commandToken: tokens.planToken,
+        plan: validPlan(context),
+      },
+      { store, clock: lifecycleClock },
+    );
+    expect(accepted.valid).toBe(true);
+    if (!accepted.valid) throw new Error('expected receipt');
+    expect(accepted.receipt).toMatchObject({
+      validationRunId: context.runId,
+      contextDigest: context.contextDigest,
+    });
+    await expect(
+      beginEvidence(
+        { runId: context.runId, receipt: accepted.receipt.token },
+        { store, clock: lifecycleClock },
+      ),
+    ).resolves.toEqual({
+      validationRunId: context.runId,
+      phase: 'evidence_started',
+    });
+    await expect(
+      beginEvidence(
+        { runId: context.runId, receipt: accepted.receipt.token },
+        { store, clock: lifecycleClock },
+      ),
+    ).rejects.toThrow(/validated plan/);
+  });
+
+  it('rejects mismatched, pre-validation, and exhausted attempts', async () => {
+    const first = await sealed('receiptrun000002');
+    await expect(
+      beginEvidence(
+        { runId: first.context.runId, receipt: 'fabricated' },
+        { store: first.store },
+      ),
+    ).rejects.toThrow(/validated plan/);
+    const invalid = validPlan(first.context);
+    invalid.runId = 'wrong';
+    await validateAndReceiptPlan(
+      {
+        runId: first.context.runId,
+        commandToken: first.tokens.planToken,
+        plan: invalid,
+      },
+      { store: first.store },
+    );
+    await validateAndReceiptPlan(
+      {
+        runId: first.context.runId,
+        commandToken: first.tokens.planToken,
+        plan: invalid,
+      },
+      { store: first.store },
+    );
+    await expect(
+      validateAndReceiptPlan(
+        {
+          runId: first.context.runId,
+          commandToken: first.tokens.planToken,
+          plan: validPlan(first.context),
+        },
+        { store: first.store },
+      ),
+    ).rejects.toThrow(/limit/);
+
+    const second = await sealed('receiptrun000003');
+    const accepted = await validateAndReceiptPlan(
+      {
+        runId: second.context.runId,
+        commandToken: second.tokens.planToken,
+        plan: validPlan(second.context),
+      },
+      { store: second.store },
+    );
+    if (!accepted.valid) throw new Error('expected receipt');
+    await expect(
+      beginEvidence(
+        { runId: second.context.runId, receipt: 'mismatch' },
+        { store: second.store },
+      ),
+    ).rejects.toThrow(/mismatch/);
   });
 });

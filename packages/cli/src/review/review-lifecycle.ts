@@ -1,11 +1,22 @@
+import { randomBytes } from 'node:crypto';
+
 import { buildContextBudget } from './budget';
 import { hashCanonicalJson } from './canonical-json';
 import { consumeCommandCapability } from './command-capabilities';
 import {
+  projectValidatedAssignments,
+  type PlanValidationError,
+  validateReviewPlan,
+} from './plan-validator';
+import {
   type HostContextTelemetryAdapter,
   observeHostTelemetry,
 } from './telemetry';
-import type { PreparedReviewContextV1 } from './types';
+import type {
+  PlanValidationReceiptV1,
+  PreparedReviewContextV1,
+  ReviewPlanV1,
+} from './types';
 import { ValidationStore } from './validation-store';
 
 export interface ReviewLifecycleDependencies {
@@ -75,4 +86,110 @@ export async function checkpointArtifactsLoaded(
     return state;
   });
   return structuredClone(context);
+}
+
+export async function validateAndReceiptPlan(
+  input: { runId: string; commandToken: string; plan: ReviewPlanV1 },
+  dependencies: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>,
+): Promise<
+  | { valid: true; receipt: PlanValidationReceiptV1 }
+  | { valid: false; errors: PlanValidationError[] }
+> {
+  const run = await dependencies.store.readRun(input.runId);
+  if (run.state.phase !== 'artifacts_loaded' || run.state.context === null) {
+    throw new Error('plan validation requires a sealed artifact checkpoint');
+  }
+  if (run.state.planValidationAttempts >= 2) {
+    throw new Error('plan validation attempt limit exceeded');
+  }
+  const errors = validateReviewPlan(run.state.context, input.plan);
+  if (errors.length > 0) {
+    await dependencies.store.updateRun(input.runId, (state) => {
+      if (
+        state.phase !== 'artifacts_loaded' ||
+        state.planValidationAttempts >= 2
+      ) {
+        throw new Error('plan validation attempt race');
+      }
+      state.planValidationAttempts++;
+      return state;
+    });
+    return { valid: false, errors };
+  }
+
+  await consumeCommandCapability(
+    dependencies.store,
+    input.runId,
+    'plan',
+    input.commandToken,
+  );
+  const acceptedRun = await dependencies.store.readRun(input.runId);
+  const projection = projectValidatedAssignments(input.plan);
+  const now = (dependencies.clock ?? (() => new Date()))().toISOString();
+  const receipt: PlanValidationReceiptV1 = {
+    token: randomBytes(32).toString('base64url'),
+    validationRunId: input.runId,
+    gateRunId: acceptedRun.state.preparation.correlation.gateRunId,
+    launchAttemptId: acceptedRun.state.preparation.correlation.launchAttemptId,
+    acceptedHandleDigest: acceptedRun.state.acceptedHandleDigest!,
+    contractVersion: 1,
+    contextDigest: acceptedRun.state.context!.contextDigest,
+    planDigest: hashCanonicalJson(input.plan),
+    assignmentDigest: hashCanonicalJson(projection),
+    validatedAt: now,
+    expiresAt: acceptedRun.state.preparation.expiresAt,
+  };
+  await dependencies.store.updateRun(input.runId, (state) => {
+    if (
+      state.phase !== 'artifacts_loaded' ||
+      state.context === null ||
+      state.planValidationAttempts >= 2
+    ) {
+      throw new Error('plan validation state changed before receipt issuance');
+    }
+    state.planValidationAttempts++;
+    state.plan = structuredClone(input.plan);
+    state.assignment = structuredClone(projection);
+    state.receipt = structuredClone(receipt);
+    state.phase = 'plan_validated';
+    return state;
+  });
+  return { valid: true, receipt: structuredClone(receipt) };
+}
+
+export async function beginEvidence(
+  input: { runId: string; receipt: string },
+  dependencies: Pick<ReviewLifecycleDependencies, 'store' | 'clock'>,
+): Promise<{ validationRunId: string; phase: 'evidence_started' }> {
+  const now = (dependencies.clock ?? (() => new Date()))();
+  await dependencies.store.updateRun(input.runId, (state) => {
+    if (
+      state.phase !== 'plan_validated' ||
+      state.context === null ||
+      state.plan === null ||
+      state.assignment === null ||
+      state.receipt === null
+    ) {
+      throw new Error('evidence start requires a validated plan');
+    }
+    if (
+      state.receipt.token !== input.receipt ||
+      state.receipt.validationRunId !== input.runId ||
+      state.receipt.contextDigest !== state.context.contextDigest ||
+      state.receipt.planDigest !== hashCanonicalJson(state.plan) ||
+      state.receipt.assignmentDigest !== hashCanonicalJson(state.assignment) ||
+      state.receipt.acceptedHandleDigest !== state.acceptedHandleDigest ||
+      state.receipt.gateRunId !== state.preparation.correlation.gateRunId ||
+      state.receipt.launchAttemptId !==
+        state.preparation.correlation.launchAttemptId
+    ) {
+      throw new Error('plan receipt identity mismatch');
+    }
+    if (Date.parse(state.receipt.expiresAt) <= now.getTime()) {
+      throw new Error('plan receipt has expired');
+    }
+    state.phase = 'evidence_started';
+    return state;
+  });
+  return { validationRunId: input.runId, phase: 'evidence_started' };
 }
