@@ -1135,8 +1135,13 @@ only the enforced review contract adds the 120-second preflight.
 The 120-second value is a safety floor, not a claim that every review is useful
 within that budget. A broad review with only 15 seconds of evidence time is
 expected to return non-actionable `BLOCKED` when it cannot establish coverage.
-Keeping the floor low minimizes newly invalid existing configs; the current
-15/30-minute scope defaults remain the operationally recommended budgets.
+Keeping the floor low minimizes newly invalid existing configs. The built-in
+artifact-review default increases from 15 to 20 minutes across all artifact
+scopes and providers because transcript liveness can show useful work continuing
+at the former hard boundary. Task-scoped code reviews remain at 15 minutes, and
+phase, phase-range, and final code reviews remain at 30 minutes. CLI, target,
+review-type config, and environment overrides retain their existing precedence;
+the timeout remains a hard ceiling rather than an activity-aware extension.
 
 With no outer time budget, `ReviewBudgetV1.time` and
 `ReviewPlanV1.timeAllocation` are null. The ordering contract remains, but
@@ -2236,11 +2241,14 @@ inventory, and no-action-before-validation tests pass.
 - Add gate/validation run correlation and accounting-invalid failure
   translation.
 - Add parent cleanup and diagnostic pointers.
+- Raise only the built-in artifact-review timeout to 20 minutes while
+  preserving code-review defaults and timeout override precedence.
 - Implement initial legacy-default rollout behavior and create the tracked
   default-flip item.
 
 **Verification:** Gate distinguishes every terminal class, blocks before launch
-on capability failure, never silently downgrades, and reaps killed-child state.
+on capability failure, never silently downgrades, reaps killed-child state, and
+resolves the new artifact default without changing code defaults or overrides.
 
 ### Phase 6: Documentation, Provider Sync, and Compatibility Release
 

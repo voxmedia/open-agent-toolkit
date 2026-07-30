@@ -75,6 +75,9 @@ be file-disjoint and explicitly confirmed before this frontmatter changes.
 strict versioned shapes, provider-neutral preflight seams, and pinned baseline
 behavior without promoting the reference dispatcher.
 
+**Verification:** Run
+`pnpm --filter @open-agent-toolkit/cli test && pnpm type-check`.
+
 ### Task p01-t01: Establish the review runtime import boundary
 
 **Files:**
@@ -389,6 +392,9 @@ Expected: the reference helper cannot become an authoritative coordinator.
 **Milestone:** An invocation can prepare authoritative metadata, seal
 post-artifact budget evidence, validate an exact ReviewPlan, issue a receipt,
 and atomically authorize evidence through thin JSON commands.
+
+**Verification:** Run
+`pnpm --filter @open-agent-toolkit/cli test && pnpm type-check`.
 
 ### Task p02-t01: Normalize authoritative review paths
 
@@ -1075,6 +1081,9 @@ Expected: receipt precedes the evidence sentinel and abandoned state is reaped.
 delegate only when economics justify it, preserve partial dossier coverage, and
 use selective evidence for both delegated and inline paths.
 
+**Verification:** Run
+`pnpm --filter @open-agent-toolkit/cli test && pnpm type-check`.
+
 ### Task p03-t01: Define the canonical plan-first reviewer contract
 
 **Files:**
@@ -1083,14 +1092,17 @@ use selective evidence for both delegated and inline paths.
 - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 - Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Write test (RED)** Require the exact
-artifacts → checkpoint → plan → validation receipt → begin-evidence → evidence
-sequence, mandatory FR5-FR7 fields, no replacement, typed terminal output, and
-no unconditional source read.
+**Step 1: Write test (RED)** Require the exact artifacts → checkpoint → plan →
+validation receipt → begin-evidence → evidence sequence, mandatory FR5-FR7
+fields, no replacement, typed terminal output, no unconditional source read,
+and exactly one canonical `## Review Accounting` heading followed by a fenced
+`ReviewAccountingV1` JSON block. Preserve the existing `Findings:` count line
+and four severity subsections used by gate parsing.
 
-**Step 2: Implement (GREEN)** Update only the canonical reviewer contract;
-launcher-owned commands and validators remain authoritative. Defer its one
-PR-scoped version bump to p06-t03.
+**Step 2: Implement (GREEN)** Update only the canonical reviewer contract,
+including the artifact accounting block emitted for completed and blocked
+artifact reviews. Launcher-owned commands and validators remain authoritative.
+Defer its one PR-scoped version bump to p06-t03.
 
 **Step 3: Format** Run the documented repository formatter:
 `pnpm format:fix`
@@ -1207,6 +1219,9 @@ Expected: large scopes improve measured operations and small scopes stay inline.
 repairs cannot mutate review substance; every direct broad-review rail uses the
 same accepted-continuation coordinator.
 
+**Verification:** Run
+`pnpm --filter @open-agent-toolkit/cli test && pnpm type-check`.
+
 ### Task p04-t01: Parse exact artifact accounting grammar
 
 **Files:**
@@ -1216,7 +1231,9 @@ same accepted-continuation coordinator.
 
 **Step 1: Write test (RED)** Cover strict encoding/newlines, fence tracking,
 the exact heading/fence, 1 MiB cap, blank-only tail, duplicate headings/keys,
-alternate fences, trailing JSON, and schema mismatch.
+alternate fences, trailing JSON, and schema mismatch. Add a producer/consumer
+round-trip assertion proving the canonical reviewer template's accounting block
+parses while its existing severity-count contract remains intact.
 
 **Step 2: Implement (GREEN)** Add `extractReviewAccounting` and
 `parseStrictReviewAccountingJson`.
@@ -1414,8 +1431,12 @@ Expected: every in-scope rail resolves exactly one coordinator.
 ## Phase 5: Gate Diagnostics and Compatibility
 
 **Milestone:** Explicit enforce mode fails closed with actionable diagnostics,
-legacy remains the initial default, and gates preserve exact launch correlation
-without changing existing timeout/BLOCKED/receive semantics.
+legacy remains the initial default, and gates preserve exact launch correlation,
+override/BLOCKED/receive semantics, and a 20-minute built-in artifact-review
+budget.
+
+**Verification:** Run
+`pnpm --filter @open-agent-toolkit/cli test && pnpm type-check`.
 
 ### Task p05-t01: Add reviewPlanMode configuration
 
@@ -1428,10 +1449,9 @@ without changing existing timeout/BLOCKED/receive semantics.
 - Modify: `packages/cli/src/commands/config/index.ts`
 - Modify: `packages/cli/src/commands/config/index.test.ts`
 
-**Step 1: Write test (RED)** Unset resolves to `legacy`; local > shared > user
-
-> default; invalid values fail; explicit enforce persists; existing config is
-> not rewritten.
+**Step 1: Write test (RED)** Unset resolves to `legacy`; resolution order is
+local, then shared, then user, then default; invalid values fail; explicit
+enforce persists; existing config is not rewritten.
 
 **Step 2: Implement (GREEN)** Add `workflow.reviewPlanMode` to schema,
 resolution, and config CLI without changing `MIN_GATE_TIMEOUT_MS`.
@@ -1456,10 +1476,12 @@ Expected: compatibility mode resolves through normal precedence.
 
 **Step 1: Write test (RED)** Enforce rejects missing capability and 119,999 ms
 before launch, accepts 120,000 ms/null budget, names both migration remedies,
-and never silently downgrades; legacy creates no state.
+and never silently downgrades; legacy creates no state and marks its output
+`legacy-unvalidated`.
 
 **Step 2: Implement (GREEN)** Resolve mode into preflight and add
 `review-budget-below-minimum` diagnostics with source/value/floor/remedies.
+Project `legacy-unvalidated` on legacy output without creating validation state.
 
 **Step 3: Format** Run the documented package formatter:
 `pnpm --filter @open-agent-toolkit/cli format:fix`
@@ -1572,6 +1594,33 @@ Expected: Stage A and Stage B are separately tracked with no PJM error.
 
 **Step 5: Commit** `chore(p05-t06): track review plan default flip`
 
+### Task p05-t07: Raise the built-in artifact review timeout
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+
+**Step 1: Write test (RED)** With no CLI, target, config, or environment
+override, require every artifact review scope to resolve 1,200,000 ms with
+source `scope-default`. Pin task-scoped code reviews at 900,000 ms and
+phase/range/final code reviews at 1,800,000 ms. Preserve the existing timeout
+precedence and accepted bounds.
+
+**Step 2: Implement (GREEN)** Raise only the built-in artifact-review default
+from 900,000 to 1,200,000 ms. Do not change code-review defaults,
+`MIN_GATE_TIMEOUT_MS`, `MAX_GATE_TIMEOUT_MS`, or any configured override.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/index.test.ts`
+Expected: artifact reviews receive 20 minutes universally while all precedence
+and code-scope budgets remain unchanged.
+
+**Step 5: Commit** `fix(p05-t07): extend artifact review timeout`
+
 ---
 
 ## Phase 6: Documentation, Provider Sync, and Compatibility Release
@@ -1579,6 +1628,9 @@ Expected: Stage A and Stage B are separately tracked with no PJM error.
 **Milestone:** Stage A ships the complete explicit-enforce path with `legacy`
 as the initial default, synchronized assets, lockstep public packages, complete
 validation, and a recorded publication timestamp that starts the soak.
+
+**Verification:** Run
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate`.
 
 ### Task p06-t01: Document review workflow behavior
 
@@ -1620,9 +1672,10 @@ Expected: authored workflow docs pass local checks.
 
 **Step 1: Write check (RED)** Produce a documentation delta analysis for the
 listed pages covering missing review commands, JSON exits, `reviewPlanMode`,
-120-second enforce floor, terminal subtype, temporary store, legacy default,
-remedies, and rollback guidance. Present the proposed substantive changes and
-obtain explicit user approval before editing.
+120-second enforce floor, 20-minute built-in artifact-review default, unchanged
+code-review defaults and timeout precedence, terminal subtype, temporary store,
+legacy default, remedies, and rollback guidance. Present the proposed
+substantive changes and obtain explicit user approval before editing.
 
 **Step 2: Implement (GREEN)** After approval, update authored pages, then
 regenerate (never hand-edit) the index with:
@@ -1838,6 +1891,9 @@ clock used by p07-t01.
 release makes enforce the default, retains explicit temporary legacy opt-out,
 revalidates all boundaries, and closes rollout tracking.
 
+**Verification:** Run
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate`.
+
 ### Task p07-t01: Evaluate the rollout gate
 
 **Files:**
@@ -2026,20 +2082,20 @@ B post-publication bookkeeping PR.
 
 ## Reviews
 
-| Scope  | Type     | Status   | Date       | Artifact                                           | Reviewed Head | Invocation           | Gate Target |
-| ------ | -------- | -------- | ---------- | -------------------------------------------------- | ------------- | -------------------- | ----------- |
-| p01    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p02    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p03    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p04    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p05    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p06    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| p07    | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| final  | code     | pending  | -          | -                                                  | -             | -                    | -           |
-| spec   | artifact | pending  | -          | -                                                  | -             | -                    | -           |
-| design | artifact | pending  | -          | -                                                  | -             | -                    | -           |
-| plan   | artifact | passed   | 2026-07-30 | -                                                  | -             | auto-artifact-review | -           |
-| plan   | artifact | received | 2026-07-30 | reviews/artifact-plan-review-2026-07-30T161239Z.md | -             | -                    | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p02    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p05    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p06    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| p07    | code     | pending         | -          | -                                                           | -             | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
+| plan   | artifact | passed          | 2026-07-30 | -                                                           | -             | -          | -           |
+| plan   | artifact | fixes_completed | 2026-07-30 | reviews/archived/artifact-plan-review-2026-07-30T161239Z.md | -             | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
@@ -2054,11 +2110,11 @@ B post-publication bookkeeping PR.
 - Phase 2: 29 tasks - authoritative metadata and validation runtime
 - Phase 3: 5 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
-- Phase 5: 6 tasks - gate diagnostics and compatibility mode
+- Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 74 tasks**
+**Total: 75 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

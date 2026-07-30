@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T14:39:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T16:45:33Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,8 +92,9 @@ oat_project_explainer:
 
 ## Current Phase
 
-Planning is in progress. The confirmed 74-task plan passed its managed artifact
-review, but the configured cross-family plan gate timed out without output.
+Planning is in progress. The confirmed 75-task plan incorporates the manually
+dispatched artifact review and the approved 20-minute built-in artifact-review
+default, but the configured cross-family plan gate timed out without output.
 
 ## Artifacts
 
@@ -124,13 +125,17 @@ review, but the configured cross-family plan gate timed out without output.
 - ✓ Design completed
 - ✓ Implementation plan confirmed
 - ✓ Managed plan artifact review passed after bounded fixes
+- ✓ Manual plan artifact review received and resolved
+- ✓ Universal 20-minute artifact-review default added to the project scope
 - ⚠ Configured cross-family plan gate timed out without output
 
 ## Blockers
 
-None
+- Configured plan gate run `21b68483-5f01-498c-bfb7-60fd79a8504c` timed out
+  without a valid artifact or receive eligibility. The manual review does not
+  replace that configured gate.
 
 ## Next Milestone
 
-Choose whether to authorize a fresh plan-gate recovery run or leave planning
-blocked for later resumption.
+Re-review the changed plan artifact, then run a fresh configured plan gate with
+the approved 20-minute artifact-review budget.

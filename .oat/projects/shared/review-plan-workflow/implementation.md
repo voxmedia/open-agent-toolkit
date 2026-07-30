@@ -177,6 +177,49 @@ Chronological log of implementation progress.
 
 ---
 
+### Review Received: plan
+
+**Date:** 2026-07-30
+**Review artifact:**
+`reviews/archived/artifact-plan-review-2026-07-30T161239Z.md`
+
+**Findings:**
+
+- Critical: 0
+- Important: 2
+- Medium: 2
+- Minor: 1
+
+**Artifact resolutions:**
+
+- I1 (`resolve_in_artifact`): added executable phase-wide verification to all
+  seven phase preambles.
+- I2 (`resolve_in_artifact`): made `p03-t01` emit the canonical Review
+  Accounting block, added producer/parser round-trip coverage to `p04-t01`, and
+  mapped `p03-t01` to FR9.
+- M1 (`resolve_in_artifact`): required legacy output to be marked
+  `legacy-unvalidated` without creating validation state.
+- M2 (`resolve_in_artifact`): replaced the non-contract artifact-review
+  invocation value with `-`.
+- m1 (`resolve_in_artifact`): rewrote the precedence sentence so Markdown no
+  longer renders part of it as a blockquote.
+
+**User-directed scope update:**
+
+- Raised the planned built-in artifact-review default from 900,000 to 1,200,000
+  ms across artifact scopes and providers.
+- Preserved task-code and broad-code defaults, timeout precedence, and accepted
+  bounds.
+- Added normal implementation task `p05-t07` and updated spec/design/docs/test
+  coverage and plan totals. No review-fix tasks were created.
+
+**Gate status:** This manual artifact review does not replace or clear
+configured gate run `21b68483-5f01-498c-bfb7-60fd79a8504c`. Planning remains
+blocked until the changed artifacts pass a fresh artifact review and configured
+gate.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
