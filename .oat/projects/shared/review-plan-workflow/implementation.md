@@ -2,7 +2,7 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
-oat_last_updated: 2026-07-29
+oat_last_updated: 2026-07-30
 oat_current_task_id: p01-t01
 oat_generated: false
 ---
@@ -10,7 +10,7 @@ oat_generated: false
 # Implementation: review-plan-workflow
 
 **Started:** 2026-07-29
-**Last Updated:** 2026-07-29
+**Last Updated:** 2026-07-30
 
 > This document is used to resume interrupted implementation sessions.
 >
@@ -26,10 +26,24 @@ oat_generated: false
 
 | Phase   | Status      | Tasks | Completed |
 | ------- | ----------- | ----- | --------- |
-| Phase 1 | in_progress | N     | 0/N       |
-| Phase 2 | pending     | N     | 0/N       |
+| Phase 1 | in_progress | 13    | 0/13      |
+| Phase 2 | pending     | 29    | 0/29      |
+| Phase 3 | pending     | 5     | 0/5       |
+| Phase 4 | pending     | 8     | 0/8       |
+| Phase 5 | pending     | 7     | 0/7       |
+| Phase 6 | pending     | 7     | 0/7       |
+| Phase 7 | pending     | 6     | 0/6       |
 
-**Total:** 0/{N} tasks completed
+**Total:** 0/75 tasks completed
+
+## Execution Configuration
+
+- Schedule: `p01 → p02 → p03 → p04 → p05 → p06 → p07` (sequential)
+- HiLL checkpoints: final phase only (`p07`)
+- Auto-review at HiLL checkpoints: enabled
+- Dispatch tier: Tier 1 (Cursor native subagents)
+- Dispatch policy: managed `high` from project state
+- Phase 1 target: `oat-phase-implementer-gpt-5-6-sol-medium`
 
 ---
 
