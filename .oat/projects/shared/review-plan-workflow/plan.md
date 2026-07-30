@@ -2083,20 +2083,21 @@ B post-publication bookkeeping PR.
 
 ## Reviews
 
-| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p02    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p03    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p04    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p05    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p06    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| p07    | code     | pending         | -          | -                                                           | -             | -          | -           |
-| final  | code     | pending         | -          | -                                                           | -             | -          | -           |
-| spec   | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| design | artifact | pending         | -          | -                                                           | -             | -          | -           |
-| plan   | artifact | passed          | 2026-07-30 | -                                                           | -             | -          | -           |
-| plan   | artifact | fixes_completed | 2026-07-30 | reviews/archived/artifact-plan-review-2026-07-30T161239Z.md | -             | -          | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                                    | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ----------------------------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_completed | 2026-07-30 | reviews/archived/p01-review-2026-07-30T213813Z.md           | 6f119c18ed8aa2c5aa12a4184206fdad0db16321 | auto       | -           |
+| p01    | code     | passed          | 2026-07-30 | reviews/archived/p01-review-2026-07-30T215327Z.md           | 40fa861fe199f755f66cce784feafbc1e0ff68c1 | auto       | -           |
+| p02    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| p07    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                                           | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| design | artifact | pending         | -          | -                                                           | -                                        | -          | -           |
+| plan   | artifact | passed          | 2026-07-30 | -                                                           | -                                        | -          | -           |
+| plan   | artifact | fixes_completed | 2026-07-30 | reviews/archived/artifact-plan-review-2026-07-30T161239Z.md | -                                        | -          | -           |
 
 **Status values:** `pending` → `received` → `fixes_added` →
 `fixes_completed` → `passed`
