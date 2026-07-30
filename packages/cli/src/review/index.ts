@@ -1,5 +1,10 @@
 export const REVIEW_CONTRACT_VERSION = 1 as const;
 
+export {
+  collectChangeMap,
+  DefaultGitChangeMapAdapter,
+  type GitChangeMapAdapter,
+} from './change-map';
 export { preflightReviewPlan } from './preflight';
 export {
   parsePreparedReviewContextV1,
