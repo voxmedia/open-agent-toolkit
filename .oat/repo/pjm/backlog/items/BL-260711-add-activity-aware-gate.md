@@ -8,7 +8,7 @@ scope_estimate: M # XS | S | M | L | XL | XXL
 labels: [gates, timeout, reliability, dispatch]
 assignee: null
 created: '2026-07-11T16:55:00Z'
-updated: '2026-07-16T19:39:00Z'
+updated: '2026-07-30T16:55:00Z'
 associated_issues: []
 ---
 
@@ -53,6 +53,36 @@ headless completion-safe routing, and deterministic timeout fixtures. This item
 remains open for the behavior not yet implemented: an adaptive idle-kill timer,
 early correlated artifact-template creation, and distinct structured
 idle-kill versus hard-cap outcomes.
+
+## Recurrence (2026-07-30)
+
+Another instance, and the first where the killed reviewer was demonstrably
+productive at the boundary. A `plan` artifact gate run
+(`21b68483-5f01-498c-bfb7-60fd79a8504c`) was SIGTERMed at the 15-minute
+artifact scope default with no artifact written. All review work was lost, and
+the project was left holding a `plan`-phase gate blocker that no later review
+artifact can retire — the blocker is project-level state, so an inline
+replacement review closes the review need without clearing the blocker. The
+plan under review was large by design (7 phases, 74 tasks, ~2,000 lines),
+which is exactly the shape of artifact review that legitimately exceeds 15
+minutes.
+
+This recurrence sharpens the case for the idle timer specifically. The
+liveness and post-mortem evidence shipped in `0.1.72` (see
+`cli-utilities/workflow-gates.md`, "Liveness and post-mortem evidence") did
+its job: after the fact, transcript evidence showed useful work in progress at
+the moment of the kill. But evidence that arrives post-mortem only improves
+diagnosis. The wrapper still sends SIGTERM at the fixed boundary regardless of
+what that evidence says. A fixed timeout cannot distinguish "18 minutes of
+steady progress" from "18 minutes hung", and no improvement in telemetry
+changes that — only feeding activity back into the kill decision does.
+
+**Interim mitigation is owned elsewhere.** Raising the built-in artifact scope
+default from 900,000 to 1,200,000 ms is task `p05-t07` ("Raise the built-in
+artifact review timeout") of the `review-plan-workflow` project, not part of
+this item. That buys headroom for large-plan reviews without adaptive
+machinery. This item stays scoped to the activity-aware behavior, which
+remains necessary at any fixed value.
 
 ## Acceptance Criteria
 
