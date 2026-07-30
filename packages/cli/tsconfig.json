@@ -23,6 +23,7 @@
       "@validation/*": ["./src/validation/*"]
     }
   },
+  "files": ["src/review/types.test.ts"],
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "src/**/*.test.ts"]
 }

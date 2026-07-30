@@ -264,6 +264,146 @@ function accounting(
   };
 }
 
+function commandEvidence(): Record<string, unknown> {
+  return {
+    id: 'command-1',
+    command: 'pnpm test',
+    cwd: '.',
+    scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+    provenance: {
+      runner: 'host',
+      invocationDigest: 'invocation-digest',
+      capturedAt: '2026-07-30T20:03:00.000Z',
+    },
+    result: {
+      status: 'completed',
+      exitCode: 0,
+      outputDigest: 'output-digest',
+    },
+  };
+}
+
+function interruptedCommandEvidence(): Record<string, unknown> {
+  return {
+    ...commandEvidence(),
+    id: 'command-2',
+    result: {
+      status: 'interrupted',
+      signal: 'SIGTERM',
+      outputDigest: 'interrupted-output-digest',
+    },
+  };
+}
+
+function richAccounting(
+  completion: 'complete' | 'blocked-incomplete' = 'complete',
+): Record<string, unknown> {
+  return {
+    ...accounting(completion),
+    evidence: [
+      {
+        id: 'evidence-1',
+        kind: 'command',
+        locator: 'pnpm test',
+        scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+        provenance: 'host',
+        digest: 'evidence-digest',
+        commandId: 'command-1',
+        commandResultDigest: 'command-result-digest',
+      },
+      {
+        id: 'evidence-2',
+        kind: 'source',
+        locator: 'src/review.ts:1',
+        scopeRefs: [{ bucket: 'lane', bucketId: 'semantic', pathIndexes: [0] }],
+        provenance: 'host',
+        digest: 'source-digest',
+        commandId: null,
+        commandResultDigest: null,
+      },
+    ],
+    lanes: [
+      {
+        id: 'semantic',
+        paths: ['src/review.ts'],
+        primaryObligationIds: ['task:p01-t01'],
+        seamObligationIds: [],
+        workerOutcome: 'not-delegated',
+        dossierDigest: null,
+        inspectionCoverage: 'all',
+        uninspectedPathIndexes: [],
+        uncoveredObligationIds: [],
+        commands: [commandEvidence()],
+        evidenceRefIds: ['evidence-1'],
+        uncertainty: [],
+        primaryCompletion: {
+          outcome: 'not-needed',
+          completedPathIndexes: [],
+          completedObligationIds: [],
+          commands: [interruptedCommandEvidence()],
+          evidenceRefIds: ['evidence-1'],
+        },
+      },
+    ],
+    classifications: [
+      {
+        id: 'generated',
+        kind: 'generated',
+        reason: 'Generated output requires a manifest check.',
+        paths: ['dist/review.js'],
+        planDisposition: 'inspect',
+        strategy: 'manifest-check',
+        plannedChecks: ['Verify generated manifest'],
+        exclusionAuthority: null,
+        outcome: 'complete',
+        inspectionCoverage: 'all',
+        uninspectedPathIndexes: [],
+        commands: [commandEvidence()],
+        uncertainty: [],
+      },
+    ],
+    verification: [
+      {
+        claimId: 'claim-1',
+        kind: 'deterministic-result',
+        findingId: null,
+        laneIds: ['semantic'],
+        mode: 'provenance',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+    ],
+  };
+}
+
+function structuredTerminal(
+  reviewAccounting: Record<string, unknown> = richAccounting(),
+): Record<string, unknown> {
+  return {
+    schemaVersion: 1,
+    status: 'complete',
+    candidate: {
+      kind: 'structured',
+      review: {
+        summary: 'One issue found.',
+        findings: [
+          {
+            id: 'I1',
+            severity: 'important',
+            title: 'Missing validation',
+            file: 'src/review.ts',
+            line: 42,
+            body: 'The nested value is not validated.',
+            fix_guidance: 'Validate it strictly.',
+          },
+        ],
+        verification_commands: ['pnpm test'],
+      },
+    },
+    reviewAccounting,
+  };
+}
+
 describe('plan, receipt, and terminal schemas', () => {
   it('parses valid plan, receipt, complete, and blocked branches', () => {
     expect(parseReviewPlanV1(plan()).strategy).toBe('selective-inline');
@@ -344,5 +484,233 @@ describe('plan, receipt, and terminal schemas', () => {
         reviewAccounting: accounting('blocked-incomplete'),
       }),
     ).toThrow('unknown field candidate');
+  });
+
+  it('strictly parses every nested terminal and accounting branch', () => {
+    expect(parseReviewerTerminalV1(structuredTerminal())).toMatchObject({
+      status: 'complete',
+      reviewAccounting: { completion: 'complete' },
+    });
+  });
+
+  it.each([
+    [
+      'structured finding',
+      (terminal: Record<string, unknown>) => {
+        const review = (
+          terminal['candidate'] as Record<string, Record<string, unknown>>
+        )['review']!;
+        review['findings'] = [42];
+      },
+    ],
+    [
+      'evidence',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['evidence'] =
+          [42];
+      },
+    ],
+    [
+      'evidence scope reference',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown>;
+        evidence['scopeRefs'] = [null];
+      },
+    ],
+    [
+      'command',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['commands'] = ['invalid'];
+      },
+    ],
+    [
+      'command provenance',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['provenance'] = null;
+      },
+    ],
+    [
+      'command result',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['result'] = { status: 'unknown' };
+      },
+    ],
+    [
+      'lane',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['lanes'] = [
+          null,
+        ];
+      },
+    ],
+    [
+      'primary completion',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['primaryCompletion'] = {};
+      },
+    ],
+    [
+      'classification',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)[
+          'classifications'
+        ] = ['invalid'];
+      },
+    ],
+    [
+      'claim verification',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)[
+          'verification'
+        ] = [{}];
+      },
+    ],
+    [
+      'budget',
+      (terminal: Record<string, unknown>) => {
+        (terminal['reviewAccounting'] as Record<string, unknown>)['budget'] =
+          null;
+      },
+    ],
+  ])('rejects malformed nested %s entries', (_name, mutate) => {
+    const terminal = structuredTerminal();
+    mutate(terminal);
+    expect(() => parseReviewerTerminalV1(terminal)).toThrow(ReviewSchemaError);
+  });
+
+  it.each([
+    [
+      'structured finding',
+      (terminal: Record<string, unknown>) => {
+        const review = (
+          terminal['candidate'] as Record<string, Record<string, unknown>>
+        )['review']!;
+        const finding = (review['findings'] as Record<string, unknown>[])[0]!;
+        finding['garbage'] = true;
+      },
+    ],
+    [
+      'evidence',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown>;
+        evidence['garbage'] = true;
+      },
+    ],
+    [
+      'scope reference',
+      (terminal: Record<string, unknown>) => {
+        const evidence = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['evidence']![0] as Record<string, unknown[]>;
+        const scopeRef = evidence['scopeRefs']![0] as Record<string, unknown>;
+        scopeRef['garbage'] = true;
+      },
+    ],
+    [
+      'command',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<string, unknown>;
+        command['garbage'] = true;
+      },
+    ],
+    [
+      'command provenance',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<
+          string,
+          Record<string, unknown>
+        >;
+        command['provenance']!['garbage'] = true;
+      },
+    ],
+    [
+      'command result',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown[]>;
+        const command = lane['commands']![0] as Record<
+          string,
+          Record<string, unknown>
+        >;
+        command['result']!['garbage'] = true;
+      },
+    ],
+    [
+      'lane',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, unknown>;
+        lane['garbage'] = true;
+      },
+    ],
+    [
+      'primary completion',
+      (terminal: Record<string, unknown>) => {
+        const lane = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['lanes']![0] as Record<string, Record<string, unknown>>;
+        lane['primaryCompletion']!['garbage'] = true;
+      },
+    ],
+    [
+      'classification',
+      (terminal: Record<string, unknown>) => {
+        const classification = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['classifications']![0] as Record<string, unknown>;
+        classification['garbage'] = true;
+      },
+    ],
+    [
+      'claim verification',
+      (terminal: Record<string, unknown>) => {
+        const claim = (
+          terminal['reviewAccounting'] as Record<string, unknown[]>
+        )['verification']![0] as Record<string, unknown>;
+        claim['garbage'] = true;
+      },
+    ],
+    [
+      'budget',
+      (terminal: Record<string, unknown>) => {
+        const budget = (
+          terminal['reviewAccounting'] as Record<
+            string,
+            Record<string, unknown>
+          >
+        )['budget']!;
+        budget['garbage'] = true;
+      },
+    ],
+  ])('rejects unknown fields in nested %s branches', (_name, mutate) => {
+    const terminal = structuredTerminal();
+    mutate(terminal);
+    expect(() => parseReviewerTerminalV1(terminal)).toThrow('unknown field');
   });
 });

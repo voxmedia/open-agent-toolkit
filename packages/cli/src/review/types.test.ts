@@ -41,9 +41,15 @@ describe('common review contracts', () => {
         details: { pointers: ['/lanes/0'] },
       },
     } satisfies ReviewCliEnvelope<JsonValue>;
+    const incompatible = {
+      ok: true,
+      // @ts-expect-error -- numeric results must not satisfy a string envelope.
+      result: 42,
+    } satisfies ReviewCliEnvelope<string>;
 
     expect(success.result.phase).toBe('evidence_started');
     expect(failure.error.code).toBe('invalid-plan');
+    expect(incompatible.result).toBe(42);
   });
 
   it('pins invocation, sink, progress, and error-category unions', () => {
