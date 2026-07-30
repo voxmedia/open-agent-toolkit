@@ -338,7 +338,7 @@ export class ValidationStore {
 
   async deleteRun(runId: string): Promise<void> {
     await this.withLock(async () => {
-      const run = await this.readRun(runId);
+      const run = await this.readRun(runId, new Date(0));
       const correlation = run.state.preparation.correlation;
       if (correlation.gateRunId !== null) {
         await rm(
