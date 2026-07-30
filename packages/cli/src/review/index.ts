@@ -7,6 +7,13 @@ export {
   ReviewSchemaError,
 } from './schemas';
 export {
+  type FindingSeverity,
+  type StructuredFinding,
+  type StructuredFindings,
+  StructuredFindingsError,
+  validateStructuredFindings,
+} from './structured-findings';
+export {
   type HostContextTelemetryAdapter,
   type ObserveHostTelemetryInput,
   observeHostTelemetry,
