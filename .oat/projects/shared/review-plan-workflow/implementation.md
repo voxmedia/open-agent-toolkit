@@ -163,6 +163,20 @@ Chronological log of implementation progress.
 
 ---
 
+## Planning Gate Log
+
+### 2026-07-30 — Configured plan gate timed out
+
+- Run: `21b68483-5f01-498c-bfb7-60fd79a8504c`
+- Target: `cursor-fable-5-xhigh`
+- Result: `review_failed` / `review_did_not_complete`
+- Budget: 900000 ms (`scope-default`)
+- Output: none; no artifact, handoff, or receive eligibility
+- Disposition: planning remains in progress pending explicit operator recovery
+  or later resumption; no automatic replacement launch was authorized.
+
+---
+
 ## Deviations from Plan / Design
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.

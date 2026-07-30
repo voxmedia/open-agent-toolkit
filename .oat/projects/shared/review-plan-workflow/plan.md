@@ -1,193 +1,2047 @@
 ---
+oat_plan_source: spec-driven
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
-oat_last_updated: 2026-07-29
+oat_blockers:
+  - Configured plan gate run 21b68483-5f01-498c-bfb7-60fd79a8504c timed out after 900000ms with status review_failed and no output.
+oat_last_updated: 2026-07-30
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
-oat_import_reference: null # e.g., references/imported-plan.md
-oat_import_source_path: null # original source path provided by user
-oat_import_provider: null # codex | cursor | claude | null
+oat_plan_parallel_groups: []
+oat_import_reference: null
+oat_import_source_path: null
+oat_import_provider: null
 oat_generated: false
+oat_template: false
+oat_template_name: plan
 ---
 
 # Implementation Plan: review-plan-workflow
 
-> Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
+> Execute this plan using `oat-project-implement` — sequential by default,
+> parallel only when `oat_plan_parallel_groups` is explicitly confirmed.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Make broad project code reviews create and validate an authoritative
+ReviewPlan before evidence work, load evidence selectively, and expose exact,
+non-actionable-aware coverage accounting across artifact and structured sinks.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** A shared CLI review runtime owns metadata preparation,
+short-TTL validation state, plan/output validation, and sink projection.
+Canonical reviewer and lifecycle skills retain provider handles and adopt that
+runtime without transferring reviewer judgment or weakening gate independence.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** TypeScript ESM, Commander, Vitest, Node.js standard-library
+Git/process/crypto/fs primitives, Markdown skill contracts, Fumadocs, pnpm, and
+Turborepo.
 
-**Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
+**Commit Convention:** `{type}(pNN-tNN): {description}`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Defer HiLL checkpoint confirmation to oat-project-implement
+- [x] Preserve absence of `oat_phase_review_gate` until shared setup runs
+- [x] Resolve complete dispatch ladder and project named ceiling
+- [x] Confirm task breakdown with user
+- [x] Evaluate adjacent phases for confirmed parallel groups
+- [x] Set `oat_plan_parallel_groups: []` as the unconfirmed sequential default
+- [x] Configure optional Phase gate review
+- [ ] Pass plan artifact review and configured plan gate
+
+## Task Execution Boundaries
+
+Every task starts from a clean task boundary. Before its format step, run
+`git status --short` and require every existing changed or untracked path to
+appear in that task's `Files` list. After the documented formatter runs, compare
+`git diff --name-only` plus `git ls-files --others --exclude-standard` with the
+same list. If any formatter-created path falls outside the declared boundary,
+stop, report the paths, and do not stage or commit. Never use `git add .` or
+`git add -A`; stage only the task's declared paths. A task whose format step
+uses the required no-command warning still applies the same before/after
+boundary checks.
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+No parallel group is declared. Adjacent phases intentionally share canonical
+runtime, skill, config, gate, docs, and release files. Any candidate group must
+be file-disjoint and explicitly confirmed before this frontmatter changes.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Baseline and Production Contract Foundations
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
+**Milestone:** The CLI has one production-owned review contract boundary,
+strict versioned shapes, provider-neutral preflight seams, and pinned baseline
+behavior without promoting the reference dispatcher.
 
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Establish the review runtime import boundary
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Create: `packages/cli/src/review/index.ts`
+- Create: `packages/cli/src/review/index.test.ts`
+- Modify: `packages/cli/tsconfig.json`
+- Modify: `packages/cli/vitest.config.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write test (RED)** Add an alias import test for
+`REVIEW_CONTRACT_VERSION`; verify it fails before `@review/*` resolves.
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+**Step 2: Implement (GREEN)** Export
+`REVIEW_CONTRACT_VERSION = 1 as const` and add matching TypeScript/Vitest
+aliases.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
 
-**Step 2: Implement (GREEN)**
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/index.test.ts`
+Expected: alias and contract-version assertions pass.
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+**Step 5: Commit** `feat(p01-t01): establish review runtime boundary`
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test passes (GREEN)
-
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
-
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
-
-**Step 4: Verify**
-
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
-
-**Step 5: Commit**
-
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
-
----
-
-### Task p01-t02: {Task Name}
+### Task p01-t02: Record the deterministic large-review baseline
 
 **Files:**
 
-- {File list}
+- Create: `packages/cli/src/review/__fixtures__/large-scope-baseline.v1.json`
+- Create: `packages/cli/src/review/baseline.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Write test (RED)** Require a 237-file deterministic ledger with
+content-diff operations, full-file reads, semantic replay, tool steps,
+completion outcome, and accounting bytes; reject approximate prose values.
 
-{Test code}
+**Step 2: Implement (GREEN)** Add `ReviewCostBaselineV1` fixture data grounded
+in the fixed synthetic operation ledger.
 
-**Step 2: Implement (GREEN)**
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
 
-{Implementation code or signatures}
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/baseline.test.ts`
+Expected: all six baseline metrics are exact and stable.
 
-**Step 3: Refactor**
+**Step 5: Commit** `test(p01-t02): record large review operation baseline`
 
-{Optional cleanup}
+### Task p01-t03: Freeze the coordinator inventory
 
-**Step 4: Verify**
+**Files:**
 
-Run: `{verification command}`
-Expected: {output}
+- Create: `packages/cli/src/review/coordinator-inventory.ts`
+- Create: `packages/cli/src/review/coordinator-inventory.test.ts`
 
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+**Step 1: Write test (RED)** Require the five direct and two indirect
+coordinator rows from the design, plus explicit exclusions for ad-hoc and
+non-code rails.
 
-**Step 5: Commit**
+**Step 2: Implement (GREEN)** Define `ReviewCoordinatorInventoryEntry` and
+`REVIEW_COORDINATOR_INVENTORY` with owner, tier, sink, and authority.
 
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/coordinator-inventory.test.ts`
+Expected: every broad code-review rail has exactly one declared owner.
+
+**Step 5: Commit** `test(p01-t03): freeze review coordinator inventory`
+
+### Task p01-t04: Define common review and CLI envelope types
+
+**Files:**
+
+- Create: `packages/cli/src/review/types.ts`
+- Create: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Assert exact invocation, sink, progress,
+error-category, JSON-value, and `ReviewCliEnvelope<T>` unions.
+
+**Step 2: Implement (GREEN)** Add the common types and safe error-code shape;
+export them through `@review/index`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts`
+Expected: exact success/error envelope fixtures type-check.
+
+**Step 5: Commit** `feat(p01-t04): define common review contracts`
+
+### Task p01-t05: Define preparation and telemetry contracts
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+
+**Step 1: Write test (RED)** Add representative `ChangeMapV1`,
+`HostTelemetryEvidenceV1`, `ReviewPreparationV1`,
+`PreparedReviewContextV1`, and `PrepareReviewContextResultV1` fixtures.
+
+**Step 2: Implement (GREEN)** Add exact schema-version, correlation, budget,
+telemetry-digest, command-template, and private draft-path fields.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts`
+Expected: pre/post-artifact contexts remain distinct and complete.
+
+**Step 5: Commit** `feat(p01-t05): define review preparation contracts`
+
+### Task p01-t06: Define ReviewPlan and receipt contracts
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+
+**Step 1: Write test (RED)** Require compact-inline and delegated fixtures with
+lanes, classifications, seams, whole-diff policy, time allocation, contingency,
+assignment projection, and full receipt identity.
+
+**Step 2: Implement (GREEN)** Add `ReviewPlanV1`,
+`ValidatedAssignmentProjectionV1`, and `PlanValidationReceiptV1`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts`
+Expected: FR5-FR7 fields are structurally present in both strategies.
+
+**Step 5: Commit** `feat(p01-t06): define review plan contracts`
+
+### Task p01-t07: Define dossier, accounting, and terminal contracts
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+
+**Step 1: Write test (RED)** Cover complete/partial dossiers, typed evidence
+registries, claim dispositions, `ReviewAccountingV1`, private artifact
+candidates, and complete/blocked `ReviewerTerminalV1`.
+
+**Step 2: Implement (GREEN)** Add the versioned worker, evidence, accounting,
+candidate, and provider-neutral terminal types.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts`
+Expected: blocked terminals cannot carry a candidate or actionable verdict.
+
+**Step 5: Commit** `feat(p01-t07): define review output contracts`
+
+### Task p01-t08: Validate preparation schemas strictly
+
+**Files:**
+
+- Create: `packages/cli/src/review/schemas.ts`
+- Create: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Reject wrong versions, unknown fields, malformed
+SHAs, duplicate paths/obligations, non-normalized paths, and invalid
+correlation/draft-path combinations.
+
+**Step 2: Implement (GREEN)** Add
+`parseReviewPreparationV1(value)` and
+`parsePreparedReviewContextV1(value)` with strict keys.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/schemas.test.ts`
+Expected: valid fixtures parse and every malformed boundary rejects.
+
+**Step 5: Commit** `feat(p01-t08): validate preparation schemas`
+
+### Task p01-t09: Validate plan and terminal schemas strictly
+
+**Files:**
+
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+
+**Step 1: Write test (RED)** Reject missing delegation/verification fields,
+unknown enums, malformed receipts, complete terminals without candidates, and
+blocked terminals with candidates.
+
+**Step 2: Implement (GREEN)** Add `parseReviewPlanV1`,
+`parsePlanValidationReceiptV1`, and `parseReviewerTerminalV1`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/schemas.test.ts`
+Expected: all plan/receipt/terminal schema branches pass.
+
+**Step 5: Commit** `feat(p01-t09): validate review plan and terminal schemas`
+
+### Task p01-t10: Add sink-aware capability preflight
+
+**Files:**
+
+- Create: `packages/cli/src/review/preflight.ts`
+- Create: `packages/cli/src/review/preflight.test.ts`
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Verify artifact and structured sinks reject only
+their missing sink-specific capability while unavailable telemetry remains
+allowed and reviewer self-report is ignored.
+
+**Step 2: Implement (GREEN)** Add `ReviewPlanCapabilities`,
+`ReviewPlanPreflightInput`, and `preflightReviewPlan`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/preflight.test.ts`
+Expected: the full sink × capability matrix passes.
+
+**Step 5: Commit** `feat(p01-t10): add review capability preflight`
+
+### Task p01-t11: Define the host telemetry seam
+
+**Files:**
+
+- Create: `packages/cli/src/review/telemetry.ts`
+- Create: `packages/cli/src/review/telemetry.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Cover missing, stale, future, non-monotonic,
+wrong-adapter, and arithmetically inconsistent observations.
+
+**Step 2: Implement (GREEN)** Add `HostContextTelemetryAdapter.observe` and
+`observeHostTelemetry` returning private `HostTelemetryEvidenceV1`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/telemetry.test.ts`
+Expected: only synchronous adapter-bound observations expose numeric budget.
+
+**Step 5: Commit** `feat(p01-t11): define host telemetry boundary`
+
+### Task p01-t12: Extract the pure structured-findings validator
+
+**Files:**
+
+- Create: `packages/cli/src/review/structured-findings.ts`
+- Create: `packages/cli/src/review/structured-findings.test.ts`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.ts`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Reproduce every valid and malformed current
+structured-findings case through a pure validator before changing imports.
+
+**Step 2: Implement (GREEN)** Move only
+`validateStructuredFindings(value)`; leave `dispatchStructuredReview` unwired
+and provider-handle ownership unchanged.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/structured-findings.test.ts src/review-remote/reviewer-dispatch.test.ts`
+Expected: parity is exact and dispatch behavior is unchanged.
+
+**Step 5: Commit** `refactor(p01-t12): extract structured findings validator`
+
+### Task p01-t13: Guard reference-dispatch ownership
+
+**Files:**
+
+- Create: `packages/cli/src/review/dispatch-ownership.test.ts`
+
+**Step 1: Write test (RED)** Reject coordinator/store imports,
+replacement/retry APIs, or accepted-continuation ownership in
+`reviewer-dispatch.ts`.
+
+**Step 2: Implement (GREEN)** Add a source-contract assertion that permits
+payload building, one spawn wrapper, and pure validation only.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/dispatch-ownership.test.ts src/review-remote/reviewer-dispatch.test.ts`
+Expected: the reference helper cannot become an authoritative coordinator.
+
+**Step 5: Commit** `test(p01-t13): guard reference dispatch ownership`
 
 ---
 
-## Phase 2: {Phase Name}
+## Phase 2: ChangeMap and Validation Runtime
 
-### Task p02-t01: {Task Name}
+**Milestone:** An invocation can prepare authoritative metadata, seal
+post-artifact budget evidence, validate an exact ReviewPlan, issue a receipt,
+and atomically authorize evidence through thin JSON commands.
 
-{Continue TDD pattern...}
+### Task p02-t01: Normalize authoritative review paths
+
+**Files:**
+
+- Create: `packages/cli/src/review/review-paths.ts`
+- Create: `packages/cli/src/review/review-paths.test.ts`
+
+**Step 1: Write test (RED)** Cover separator normalization and rejection of
+absolute, escaping, empty, NUL, and duplicate normalized paths.
+
+**Step 2: Implement (GREEN)** Add `normalizeReviewPath` and
+`normalizeReviewPaths` returning sorted repository-relative POSIX paths.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/review-paths.test.ts`
+Expected: every traversal and normalization boundary passes.
+
+**Step 5: Commit** `feat(p02-t01): normalize authoritative review paths`
+
+### Task p02-t02: Parse Git name-status metadata
+
+**Files:**
+
+- Create: `packages/cli/src/review/git-metadata.ts`
+- Create: `packages/cli/src/review/git-metadata.test.ts`
+
+**Step 1: Write test (RED)** Parse NUL-delimited add/modify/delete/rename rows,
+including previous paths; reject malformed and duplicate entries.
+
+**Step 2: Implement (GREEN)** Add
+`parseNameStatusZ(output: Buffer): ChangeFileV1[]`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/git-metadata.test.ts`
+Expected: all four statuses preserve exact path provenance.
+
+**Step 5: Commit** `feat(p02-t02): parse change status metadata`
+
+### Task p02-t03: Parse and merge numstat metadata
+
+**Files:**
+
+- Modify: `packages/cli/src/review/git-metadata.ts`
+- Modify: `packages/cli/src/review/git-metadata.test.ts`
+
+**Step 1: Write test (RED)** Cover numeric, binary, rename, missing-path, and
+conflicting numstat rows plus deterministic totals and generated/bookkeeping
+hints.
+
+**Step 2: Implement (GREEN)** Add `parseNumstatZ` and
+`mergeChangeMetadata(status, numstat)`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/git-metadata.test.ts`
+Expected: merged metadata is sorted and hints never authorize skips.
+
+**Step 5: Commit** `feat(p02-t03): merge change numstat metadata`
+
+### Task p02-t04: Apply the denial-only numstat precheck
+
+**Files:**
+
+- Create: `packages/cli/src/review/patch-estimate.ts`
+- Create: `packages/cli/src/review/patch-estimate.test.ts`
+
+**Step 1: Write test (RED)** Missing telemetry or a line estimate above
+remaining tokens must return `coarse-denied` without invoking a patch counter.
+
+**Step 2: Implement (GREEN)** Add `decidePatchCounting` with
+`NUMSTAT_LINES_PER_TOKEN_DENIAL_FACTOR = 4`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/patch-estimate.test.ts`
+Expected: denial remains conservative and cannot authorize whole-diff.
+
+**Step 5: Commit** `feat(p02-t04): deny oversized patch counting early`
+
+### Task p02-t05: Count and cap patch bytes
+
+**Files:**
+
+- Modify: `packages/cli/src/review/patch-estimate.ts`
+- Modify: `packages/cli/src/review/patch-estimate.test.ts`
+
+**Step 1: Write test (RED)** Assert exact byte/token estimation and
+lower-bound outcomes when the 64 MiB or preparation deadline cap terminates the
+stream.
+
+**Step 2: Implement (GREEN)** Add `countPatchBytes`,
+`computePreparationDeadline`, and `PATCH_BYTES_PER_TOKEN = 3`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/patch-estimate.test.ts`
+Expected: only a completed stream produces an exact estimate.
+
+**Step 5: Commit** `feat(p02-t05): cap patch estimation work`
+
+### Task p02-t06: Collect ChangeMapV1 from Git
+
+**Files:**
+
+- Create: `packages/cli/src/review/change-map.ts`
+- Create: `packages/cli/src/review/change-map.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Use a temporary repository with
+add/modify/delete/rename/binary changes and explicit Git failures.
+
+**Step 2: Implement (GREEN)** Add `GitChangeMapAdapter` and
+`collectChangeMap(input, adapter): Promise<ChangeMapV1>`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/change-map.test.ts`
+Expected: metadata is authoritative and collection failures are explicit.
+
+**Step 5: Commit** `feat(p02-t06): collect authoritative change maps`
+
+### Task p02-t07: Add the obligation grammar fixture corpus
+
+**Files:**
+
+- Create: `packages/cli/src/review/__fixtures__/obligations/spec-v1.md`
+- Create: `packages/cli/src/review/__fixtures__/obligations/spec-v1.json`
+- Create: `packages/cli/src/review/__fixtures__/obligations/plan-v1.md`
+- Create: `packages/cli/src/review/__fixtures__/obligations/plan-v1.json`
+- Create: `packages/cli/src/review/__fixtures__/obligations/implementation-v1.md`
+- Create: `packages/cli/src/review/__fixtures__/obligations/implementation-v1.json`
+- Create: `packages/cli/src/review/obligation-fixtures.test.ts`
+
+**Step 1: Write test (RED)** Require each fixture source/expectation pair to
+load, preserve byte-for-byte source bytes, and expose parser-dependent
+normalization cases as explicit `it.todo` entries.
+
+**Step 2: Implement (GREEN)** Add v1 source/expectation fixtures without parser
+logic.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligation-fixtures.test.ts`
+Expected: fixture integrity assertions pass and parser-dependent cases remain
+visible as todo until their owning parser tasks.
+
+**Step 5: Commit** `test(p02-t07): add obligation grammar fixtures`
+
+### Task p02-t08: Implement common Markdown lexical grammar
+
+**Files:**
+
+- Create: `packages/cli/src/review/markdown-grammar.ts`
+- Create: `packages/cli/src/review/markdown-grammar.test.ts`
+
+**Step 1: Write test (RED)** Cover strict UTF-8/NUL handling, CRLF/CR
+normalization, fenced-region masking, escaped pipes, exact structural lines,
+and strict table widths.
+
+**Step 2: Implement (GREEN)** Add `normalizeMarkdownSource`,
+`scanStructuralLines`, and `parseStrictMarkdownTable`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/markdown-grammar.test.ts`
+Expected: exact lexical and table boundaries pass.
+
+**Step 5: Commit** `feat(p02-t08): implement obligation markdown grammar`
+
+### Task p02-t09: Parse Requirement Index obligations
+
+**Files:**
+
+- Create: `packages/cli/src/review/obligations.ts`
+- Create: `packages/cli/src/review/obligations.test.ts`
+
+**Step 1: Write test (RED)** Parse canonical FR/NFR rows and reject duplicate
+headings/IDs, wrong headers/widths, malformed intervals, or trailing content.
+
+**Step 2: Implement (GREEN)** Add
+`parseRequirementObligations(source, sourcePath)`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts`
+Expected: the exact Requirement Index set is returned.
+
+**Step 5: Commit** `feat(p02-t09): parse requirement obligations`
+
+### Task p02-t10: Parse plan-task obligations
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/obligations.test.ts`
+
+**Step 1: Write test (RED)** Cover exact task headings, one Files block,
+create/modify/delete lines, path normalization, duplicates, and malformed block
+termination.
+
+**Step 2: Implement (GREEN)** Add
+`parsePlanTaskObligations(source, sourcePath)`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts`
+Expected: task IDs and allowed files match the canonical plan exactly.
+
+**Step 5: Commit** `feat(p02-t10): parse plan task obligations`
+
+### Task p02-t11: Parse deviations and deferred findings
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/obligations.test.ts`
+
+**Step 1: Write test (RED)** Validate fully populated deviation rows,
+placeholder handling, malformed partial rows, deferred-block duplicates, and
+latest deferred/resolved/dismissed supersession.
+
+**Step 2: Implement (GREEN)** Add `parseDeviationObligations` and
+`parseDeferredFindingObligations`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts`
+Expected: only current accepted/deferred obligations remain.
+
+**Step 5: Commit** `feat(p02-t11): parse implementation obligations`
+
+### Task p02-t12: Select exact scope obligations
+
+**Files:**
+
+- Modify: `packages/cli/src/review/obligations.ts`
+- Modify: `packages/cli/src/review/obligations.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Cover named task, phase prefix, spec-driven final,
+and quick/import final unions with additive deviations/deferred findings.
+
+**Step 2: Implement (GREEN)** Add
+`collectReviewObligations(input): Promise<ReviewObligationV1[]>`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/obligations.test.ts src/review/obligation-fixtures.test.ts`
+Expected: every scope returns an exact, sorted obligation set.
+
+**Step 5: Commit** `feat(p02-t12): collect scope obligations exactly`
+
+### Task p02-t13: Adapt prior evidence without verdict authority
+
+**Files:**
+
+- Create: `packages/cli/src/review/prior-evidence.ts`
+- Create: `packages/cli/src/review/prior-evidence.test.ts`
+
+**Step 1: Write test (RED)** Same-project/target and same-gate-lineage evidence
+may retain navigation/history/deferred IDs but never severity, validity, or
+verdict disposition.
+
+**Step 2: Implement (GREEN)** Add
+`adaptPriorReviewEvidence(input): PriorReviewEvidenceV1[]`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/prior-evidence.test.ts`
+Expected: lineage failures reject and prior verdict data is absent.
+
+**Step 5: Commit** `feat(p02-t13): sanitize prior review evidence`
+
+### Task p02-t14: Canonicalize and hash review state
+
+**Files:**
+
+- Create: `packages/cli/src/review/canonical-json.ts`
+- Create: `packages/cli/src/review/canonical-json.test.ts`
+
+**Step 1: Write test (RED)** Assert key-order independence, own-digest and
+lifecycle-timestamp exclusion, telemetry-evidence inclusion, duplicate-key
+rejection, and stable SHA-256 output.
+
+**Step 2: Implement (GREEN)** Add `canonicalizeJson` and `hashCanonicalJson`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/canonical-json.test.ts`
+Expected: semantically identical values hash identically.
+
+**Step 5: Commit** `feat(p02-t14): hash review state canonically`
+
+### Task p02-t15: Allocate outer review time budgets
+
+**Files:**
+
+- Create: `packages/cli/src/review/budget.ts`
+- Create: `packages/cli/src/review/budget.test.ts`
+
+**Step 1: Write test (RED)** Assert null-budget semantics, rejection at 119,999
+ms, and all named planning/evidence/reconciliation/output floors at 120,000 ms.
+
+**Step 2: Implement (GREEN)** Add `allocateReviewTimeBudget` and named policy
+constants without changing the general gate timeout minimum.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/budget.test.ts`
+Expected: deadlines and reserves obey the design matrix.
+
+**Step 5: Commit** `feat(p02-t15): allocate review time budgets`
+
+### Task p02-t16: Derive context budget and whole-diff eligibility
+
+**Files:**
+
+- Modify: `packages/cli/src/review/budget.ts`
+- Modify: `packages/cli/src/review/budget.test.ts`
+
+**Step 1: Write test (RED)** Missing/invalid telemetry yields null; whole-diff
+requires exact size, sufficient evidence budget, one coherent lane, and no
+consequential seam.
+
+**Step 2: Implement (GREEN)** Add `buildContextBudget` and
+`evaluateWholeDiffEligibility`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/budget.test.ts`
+Expected: file count alone never authorizes whole-diff.
+
+**Step 5: Commit** `feat(p02-t16): derive sealed evidence budgets`
+
+### Task p02-t17: Create private validation runs
+
+**Files:**
+
+- Create: `packages/cli/src/review/validation-store.ts`
+- Create: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Write test (RED)** Require random run directories at `0700`, state
+and precreated draft files at `0600`, exclusive/no-follow creation, and stored
+draft inode/device.
+
+**Step 2: Implement (GREEN)** Add
+`ValidationStore.createRun(input): Promise<StoredValidationRun>`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts`
+Expected: unsafe pre-existing paths and symlinks reject.
+
+**Step 5: Commit** `feat(p02-t17): create private validation runs`
+
+### Task p02-t18: Read state and correlate gate attempts safely
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Write test (RED)** Reject wrong inode/link/schema/expiry; require
+atomic `(gateRunId, launchAttemptId) → validationRunId` bind/resolve/delete and
+sibling isolation.
+
+**Step 2: Implement (GREEN)** Add `readRun`, `updateRun`,
+`bindGateCorrelation`, `resolveGateCorrelation`, and locked deletion.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts`
+Expected: store and correlation index remain one atomic authority.
+
+**Step 5: Commit** `feat(p02-t18): correlate validation state safely`
+
+### Task p02-t19: Apply TTL and bounded reaping
+
+**Files:**
+
+- Create: `packages/cli/src/review/validation-reaper.ts`
+- Create: `packages/cli/src/review/validation-reaper.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+
+**Step 1: Write test (RED)** Cover exact budget-derived TTLs, live
+preservation, expired run/terminal receipt deletion, and bounded entry scans.
+
+**Step 2: Implement (GREEN)** Add `computeValidationTtlMs` and
+`reapExpiredValidationState`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-reaper.test.ts src/review/validation-store.test.ts`
+Expected: reaping never scans project review trees.
+
+**Step 5: Commit** `feat(p02-t19): reap expired validation state`
+
+### Task p02-t20: Issue command capabilities and bind accepted handles
+
+**Files:**
+
+- Create: `packages/cli/src/review/command-capabilities.ts`
+- Create: `packages/cli/src/review/command-capabilities.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Write test (RED)** Require distinct one-shot checkpoint/plan tokens,
+safe argv rendering, rejection before handle binding/rebinding, sibling
+isolation, and digest-only handle storage.
+
+**Step 2: Implement (GREEN)** Add `issueCommandCapabilities`,
+`renderReviewCommands`, and `bindAcceptedHandle`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/command-capabilities.test.ts src/review/validation-store.test.ts`
+Expected: trusted payloads work while logs/digests/reviewer JSON redact tokens.
+
+**Step 5: Commit** `feat(p02-t20): bind review command capabilities`
+
+### Task p02-t21: Seal the post-artifact checkpoint
+
+**Files:**
+
+- Create: `packages/cli/src/review/review-lifecycle.ts`
+- Create: `packages/cli/src/review/review-lifecycle.test.ts`
+
+**Step 1: Write test (RED)** Checkpoint succeeds once after handle binding,
+records post-artifact telemetry evidence/digest, preserves time budget, and
+rejects replay or post-plan calls.
+
+**Step 2: Implement (GREEN)** Add
+`checkpointArtifactsLoaded(input, deps): Promise<PreparedReviewContextV1>`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/review-lifecycle.test.ts`
+Expected: sealed context and telemetry evidence remain immutable.
+
+**Step 5: Commit** `feat(p02-t21): seal post artifact context`
+
+### Task p02-t22: Validate exact path and obligation ownership
+
+**Files:**
+
+- Create: `packages/cli/src/review/plan-validator.ts`
+- Create: `packages/cli/src/review/plan-validator.test.ts`
+
+**Step 1: Write test (RED)** Return precise pointers for missing, duplicate,
+fabricated, contradictory path/obligation owners and invalid seam references.
+
+**Step 2: Implement (GREEN)** Add `validatePlanPathAccounting` and
+`validatePlanObligationAccounting`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/plan-validator.test.ts`
+Expected: authoritative sets are covered exactly once.
+
+**Step 5: Commit** `feat(p02-t22): validate exact review assignments`
+
+### Task p02-t23: Validate classifications, budgets, and projection
+
+**Files:**
+
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/review/plan-validator.test.ts`
+
+**Step 1: Write test (RED)** Generated/bookkeeping cannot skip inspection;
+exclusions require authority; whole-diff/time fields must equal sealed policy;
+projection sorting is deterministic.
+
+**Step 2: Implement (GREEN)** Add classification/whole-diff/time validators and
+`projectValidatedAssignments(plan)`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/plan-validator.test.ts`
+Expected: policy drift and invalid cutoffs reject.
+
+**Step 5: Commit** `feat(p02-t23): validate plan policy and projection`
+
+### Task p02-t24: Issue receipts and begin evidence atomically
+
+**Files:**
+
+- Modify: `packages/cli/src/review/review-lifecycle.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.test.ts`
+
+**Step 1: Write test (RED)** Permit initial plan plus one correction, bind the
+receipt to run/attempt/handle/context/plan/assignment, then reject replay,
+mismatch, expiry, pre-validation, or terminal evidence starts.
+
+**Step 2: Implement (GREEN)** Add `validateAndReceiptPlan` and
+`beginEvidence`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/review-lifecycle.test.ts`
+Expected: `plan_validated → evidence_started` occurs once.
+
+**Step 5: Commit** `feat(p02-t24): authorize receipt bound evidence`
+
+### Task p02-t25: Prepare authoritative review context
+
+**Files:**
+
+- Create: `packages/cli/src/review/prepare-context.ts`
+- Create: `packages/cli/src/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/index.ts`
+
+**Step 1: Write test (RED)** Preparation must reap first, validate
+range/correlation, collect ChangeMap/obligations/prior evidence, observe
+denial-only telemetry, create private state/draft, and return trusted commands.
+
+**Step 2: Implement (GREEN)** Add
+`prepareReviewContext(input, deps): Promise<PrepareReviewContextResultV1>`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/prepare-context.test.ts`
+Expected: preparation exposes metadata but no content diff.
+
+**Step 5: Commit** `feat(p02-t25): prepare authoritative review context`
+
+### Task p02-t26: Standardize review JSON command behavior
+
+**Files:**
+
+- Create: `packages/cli/src/commands/review/review-json.ts`
+- Create: `packages/cli/src/commands/review/review-json.test.ts`
+
+**Step 1: Write test (RED)** Assert bounded stdin, exactly one JSON document
+plus newline, no stdout prose, and deterministic exit 0/1/2 mapping for
+success/contract/system outcomes.
+
+**Step 2: Implement (GREEN)** Add `readBoundedJsonStdin` and
+`runReviewJsonCommand`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/review-json.test.ts`
+Expected: every envelope/exit branch passes.
+
+**Step 5: Commit** `feat(p02-t26): standardize review JSON commands`
+
+### Task p02-t27: Add prepare and checkpoint commands
+
+**Files:**
+
+- Create: `packages/cli/src/commands/review/prepare-context.ts`
+- Create: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Create: `packages/cli/src/commands/review/checkpoint-artifacts.ts`
+- Create: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+
+**Step 1: Write test (RED)** Enforce budget pairing and gate-only correlation
+options; prohibit numeric telemetry input; require run plus opaque checkpoint
+token and one sealed-context result.
+
+**Step 2: Implement (GREEN)** Add
+`createPrepareContextCommand` and `createCheckpointArtifactsCommand` as thin
+factories.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/prepare-context.test.ts src/commands/review/checkpoint-artifacts.test.ts`
+Expected: both commands delegate all business logic.
+
+**Step 5: Commit** `feat(p02-t27): add review preparation commands`
+
+### Task p02-t28: Add plan-validation and evidence-start commands
+
+**Files:**
+
+- Create: `packages/cli/src/commands/review/validate-plan.ts`
+- Create: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Create: `packages/cli/src/commands/review/begin-evidence.ts`
+- Create: `packages/cli/src/commands/review/begin-evidence.test.ts`
+- Modify: `packages/cli/src/commands/review/index.ts`
+
+**Step 1: Write test (RED)** Validate bounded strict plan stdin, receipt
+success, structured exit-1 rejection, one-shot begin success, replay errors,
+and command-tree help registration.
+
+**Step 2: Implement (GREEN)** Add both thin command factories and register all
+four new review commands beside `latest`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts`
+Expected: successful and rejected paths emit one valid envelope.
+
+**Step 5: Commit** `feat(p02-t28): add review plan boundary commands`
+
+### Task p02-t29: Verify lifecycle and recovery end to end
+
+**Files:**
+
+- Create: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+- Create: `packages/cli/src/review/validation-recovery.integration.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Write test (RED)** Execute
+prepare → bind → checkpoint → validate → begin in a temporary repository;
+simulate crash reaping and sibling gate-attempt isolation; verify CLI help.
+
+**Step 2: Implement (GREEN)** Add only integration harnesses and any missing
+thin registration glue.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/review-lifecycle.integration.test.ts src/review/validation-recovery.integration.test.ts src/commands/help-snapshots.test.ts src/commands/commands.integration.test.ts`
+Expected: receipt precedes the evidence sentinel and abandoned state is reaped.
+
+**Step 5: Commit** `test(p02-t29): verify review validation lifecycle`
+
+---
+
+## Phase 3: Reviewer Plan and Evidence Contract
+
+**Milestone:** Canonical reviewers create validated plans before evidence,
+delegate only when economics justify it, preserve partial dossier coverage, and
+use selective evidence for both delegated and inline paths.
+
+### Task p03-t01: Define the canonical plan-first reviewer contract
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)** Require the exact
+artifacts → checkpoint → plan → validation receipt → begin-evidence → evidence
+sequence, mandatory FR5-FR7 fields, no replacement, typed terminal output, and
+no unconditional source read.
+
+**Step 2: Implement (GREEN)** Update only the canonical reviewer contract;
+launcher-owned commands and validators remain authoritative. Defer its one
+PR-scoped version bump to p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`
+Expected: canonical sequence and authority boundaries are pinned.
+
+**Step 5: Commit** `feat(p03-t01): define plan first reviewer contract`
+
+### Task p03-t02: Enforce delegation gates and dossier contracts
+
+**Files:**
+
+- Create: `packages/cli/src/review/worker-dossier.ts`
+- Create: `packages/cli/src/review/worker-dossier.test.ts`
+- Modify: `packages/cli/src/review/plan-validator.ts`
+- Modify: `packages/cli/src/review/plan-validator.test.ts`
+
+**Step 1: Write test (RED)** Reject fewer than two independent substantial
+lanes, missing economics, semantic-only delegation, and invalid contingency;
+accept bounded complete/partial dossiers with globally valid IDs.
+
+**Step 2: Implement (GREEN)** Add `validateWorkerDossier`,
+`validatePrimaryContingency`, and structural delegation checks to
+`validateReviewPlan`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/worker-dossier.test.ts src/review/plan-validator.test.ts`
+Expected: delegation, replay, and primary-contingency matrices pass.
+
+**Step 5: Commit** `feat(p03-t02): enforce reviewer delegation gates`
+
+### Task p03-t03: Pin accepted-handle evidence ordering
+
+**Files:**
+
+- Create: `packages/cli/src/review/reviewer-boundary.integration.test.ts`
+
+**Step 1: Write test (RED)** Assert mutation rejection before handle binding,
+sibling capability rejection, receipt replay rejection, the atomic evidence
+transition, and absence of a replacement-launch API.
+
+**Step 2: Implement (GREEN)** Add an integration harness over the Phase 2
+runtime; do not add a second coordinator.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/reviewer-boundary.integration.test.ts`
+Expected: only the retained continuation crosses every mutation boundary.
+
+**Step 5: Commit** `test(p03-t03): enforce receipt bound evidence ordering`
+
+### Task p03-t04: Replace local Tier 3 read-all behavior
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)** Require Tier 3 to use preparation, checkpoint,
+validated plan, begin-evidence, selective evidence, and `ReviewerTerminalV1`;
+forbid `read all FILES_CHANGED`.
+
+**Step 2: Implement (GREEN)** Make the current planning parent the accepted
+inline continuation and adopt validated whole-diff eligibility. Defer the one
+PR-scoped skill version bump to p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`
+Expected: inline review shares the plan-first contract.
+
+**Step 5: Commit** `feat(p03-t04): replace inline read all review`
+
+### Task p03-t05: Prove selective evidence reduces broad operations
+
+**Files:**
+
+- Create: `packages/cli/src/review/operation-metrics.ts`
+- Create: `packages/cli/src/review/operation-metrics.test.ts`
+- Create: `packages/cli/src/review/__fixtures__/large-scope-selective.v1.json`
+- Create: `packages/cli/src/review/__fixtures__/small-scope-inline.v1.json`
+
+**Step 1: Write test (RED)** Compare the Phase 1 baseline with large selective
+and small compact fixtures; require fewer broad reads/replay without a
+wall-clock claim.
+
+**Step 2: Implement (GREEN)** Add `compareOperationMetrics` and deterministic
+candidate fixtures.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/operation-metrics.test.ts`
+Expected: large scopes improve measured operations and small scopes stay inline.
+
+**Step 5: Commit** `test(p03-t05): pin selective review operation savings`
+
+---
+
+## Phase 4: Output Accounting and Coordinator Integration
+
+**Milestone:** Both sinks accept only exact, claim-addressable accounting;
+repairs cannot mutate review substance; every direct broad-review rail uses the
+same accepted-continuation coordinator.
+
+### Task p04-t01: Parse exact artifact accounting grammar
+
+**Files:**
+
+- Create: `packages/cli/src/review/artifact-accounting.ts`
+- Create: `packages/cli/src/review/artifact-accounting.test.ts`
+
+**Step 1: Write test (RED)** Cover strict encoding/newlines, fence tracking,
+the exact heading/fence, 1 MiB cap, blank-only tail, duplicate headings/keys,
+alternate fences, trailing JSON, and schema mismatch.
+
+**Step 2: Implement (GREEN)** Add `extractReviewAccounting` and
+`parseStrictReviewAccountingJson`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-accounting.test.ts`
+Expected: only `accounting-grammar/v1` parses.
+
+**Step 5: Commit** `feat(p04-t01): parse canonical review accounting`
+
+### Task p04-t02: Validate terminal accounting and ID registries
+
+**Files:**
+
+- Create: `packages/cli/src/review/output-validator.ts`
+- Create: `packages/cli/src/review/output-validator.test.ts`
+
+**Step 1: Write test (RED)** Reject receipt/digest/projection drift, duplicate
+command/evidence/claim/finding IDs, broken references, invalid claim
+dispositions, contradictory outcomes, and passing incomplete coverage.
+
+**Step 2: Implement (GREEN)** Add
+`validateReviewOutput(context, terminal): OutputValidationResult` using one map
+per global final namespace.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/output-validator.test.ts`
+Expected: incomplete state requires blocked-incomplete accounting and terminal.
+
+**Step 5: Commit** `feat(p04-t02): validate reviewer terminal accounting`
+
+### Task p04-t03: Stage and publish artifact snapshots safely
+
+**Files:**
+
+- Create: `packages/cli/src/review/artifact-staging.ts`
+- Create: `packages/cli/src/review/artifact-staging.test.ts`
+
+**Step 1: Write test (RED)** Cover no-follow/exclusive draft creation,
+inode/link replacement rejection, immutable descriptor snapshot, embedded versus
+envelope accounting equality, digest recheck, atomic publication, and blocked
+draft deletion.
+
+**Step 2: Implement (GREEN)** Add `createArtifactDraft`,
+`snapshotArtifactDraft`, and `publishAcceptedArtifact`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-staging.test.ts`
+Expected: only validated snapshot bytes reach a discoverable path.
+
+**Step 5: Commit** `feat(p04-t03): stage review artifacts privately`
+
+### Task p04-t04: Constrain immutable same-handle repair
+
+**Files:**
+
+- Create: `packages/cli/src/review/coordinator-contract.ts`
+- Create: `packages/cli/src/review/coordinator-contract.test.ts`
+- Modify: `packages/cli/src/review/output-validator.ts`
+- Modify: `packages/cli/src/review/output-validator.test.ts`
+
+**Step 1: Write test (RED)** Accept only identity/assignment allowlist fixes;
+reject mutations to findings, severity, verdict, evidence/references, commands,
+claims, outcomes, uncertainty, strategy, or budget; cap repairs at two.
+
+**Step 2: Implement (GREEN)** Add `immutableReviewSubstanceDigest` and
+`validateAndRepair(session, output)` with no replacement-launch method.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/coordinator-contract.test.ts src/review/output-validator.test.ts`
+Expected: repair uses only the recorded continuation and frozen substance.
+
+**Step 5: Commit** `feat(p04-t04): constrain accounting repair`
+
+### Task p04-t05: Add the validate-output JSON command
+
+**Files:**
+
+- Create: `packages/cli/src/commands/review/validate-output.ts`
+- Create: `packages/cli/src/commands/review/validate-output.test.ts`
+- Modify: `packages/cli/src/commands/review/index.ts`
+
+**Step 1: Write test (RED)** Submit complete `ReviewerTerminalV1` on bounded
+stdin; compare artifact accounting copies; assert exit 0/1/2 and one JSON
+envelope for success, validation rejection, and system failure.
+
+**Step 2: Implement (GREEN)** Add
+`createValidateOutputCommand(deps)` as a thin adapter and register it.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/review/validate-output.test.ts`
+Expected: no invalid terminal becomes actionable.
+
+**Step 5: Commit** `feat(p04-t05): add review output validation command`
+
+### Task p04-t06: Wire local artifact Tier 1 and Tier 3
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Create: `packages/cli/src/review/local-coordinator.integration.test.ts`
+
+**Step 1: Write test (RED)** Require both tiers to
+prepare → bind → checkpoint → validate plan → begin evidence → validate/repair
+terminal → publish/bookkeep; blocked output must stay non-actionable.
+
+**Step 2: Implement (GREEN)** Update canonical local orchestration and retain
+the inline host as Tier 3's accepted continuation. Defer its version bump to
+p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/review/local-coordinator.integration.test.ts`
+Expected: local publication and ledgers occur after acceptance only.
+
+**Step 5: Commit** `feat(p04-t06): validate local review coordinators`
+
+### Task p04-t07: Wire remote structured Tier 1 and Tier 3
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.ts`
+- Modify: `packages/cli/src/review-remote/reviewer-dispatch.test.ts`
+- Modify: `packages/cli/src/review-remote/__integration__/project/project-rail.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Write test (RED)** Ensure accepted remote handles return terminal
+envelopes; no finding mapping, fallback tier, or GitHub post occurs before
+validation or after accepted timeout/blocked/malformed output.
+
+**Step 2: Implement (GREEN)** Adapt both tiers to the shared coordinator while
+keeping spawn ownership in the provider/skill runtime. Defer the canonical
+skill version bump to p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/reviewer-dispatch.test.ts src/review-remote/__integration__/project/project-rail.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/validation/skills.test.ts`
+Expected: remote structured output validates before posting.
+
+**Step 5: Commit** `feat(p04-t07): validate remote structured reviews`
+
+### Task p04-t08: Wire direct phase review and close inventory
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/review/coordinator-inventory.ts`
+- Modify: `packages/cli/src/review/coordinator-inventory.test.ts`
+- Create: `packages/cli/src/review/direct-phase-coordinator.integration.test.ts`
+
+**Step 1: Write test (RED)** Require direct phase review to adopt shared
+preparation/acceptance and prove all five direct/two indirect owners, with no
+duplicate context for gate or checkpoint/final aliases.
+
+**Step 2: Implement (GREEN)** Update canonical implementation execution and
+inventory only; defer the skill's one version bump to p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/init/tools/shared/review-skill-contracts.test.ts src/commands/init/tools/shared/post-implement-sequence-contracts.test.ts src/validation/skills.test.ts src/review/coordinator-inventory.test.ts src/review/direct-phase-coordinator.integration.test.ts`
+Expected: every in-scope rail resolves exactly one coordinator.
+
+**Step 5: Commit** `feat(p04-t08): adopt validated direct phase reviews`
+
+---
+
+## Phase 5: Gate Diagnostics and Compatibility
+
+**Milestone:** Explicit enforce mode fails closed with actionable diagnostics,
+legacy remains the initial default, and gates preserve exact launch correlation
+without changing existing timeout/BLOCKED/receive semantics.
+
+### Task p05-t01: Add reviewPlanMode configuration
+
+**Files:**
+
+- Modify: `packages/cli/src/config/oat-config.ts`
+- Modify: `packages/cli/src/config/oat-config.test.ts`
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Write test (RED)** Unset resolves to `legacy`; local > shared > user
+
+> default; invalid values fail; explicit enforce persists; existing config is
+> not rewritten.
+
+**Step 2: Implement (GREEN)** Add `workflow.reviewPlanMode` to schema,
+resolution, and config CLI without changing `MIN_GATE_TIMEOUT_MS`.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/oat-config.test.ts src/config/resolve.test.ts src/commands/config/index.test.ts`
+Expected: compatibility mode resolves through normal precedence.
+
+**Step 5: Commit** `feat(p05-t01): add review plan compatibility mode`
+
+### Task p05-t02: Enforce capability and 120-second preflight
+
+**Files:**
+
+- Modify: `packages/cli/src/review/preflight.ts`
+- Modify: `packages/cli/src/review/preflight.test.ts`
+- Modify: `packages/cli/src/review/budget.ts`
+- Modify: `packages/cli/src/review/budget.test.ts`
+
+**Step 1: Write test (RED)** Enforce rejects missing capability and 119,999 ms
+before launch, accepts 120,000 ms/null budget, names both migration remedies,
+and never silently downgrades; legacy creates no state.
+
+**Step 2: Implement (GREEN)** Resolve mode into preflight and add
+`review-budget-below-minimum` diagnostics with source/value/floor/remedies.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/preflight.test.ts src/review/budget.test.ts`
+Expected: enforce and legacy boundaries are exact.
+
+**Step 5: Commit** `feat(p05-t02): enforce review launch preflight`
+
+### Task p05-t03: Wire mode resolution through every coordinator
+
+**Files:**
+
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+- Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
+
+**Step 1: Write test (RED)** Every direct rail preflights enforce before model
+launch, legacy uses the current path without validation state, explicit enforce
+cannot fall back, and indirect aliases create no duplicate context.
+
+**Step 2: Implement (GREEN)** Add mode/preflight branches to canonical owners;
+defer all one-time version increments to p06-t03.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: inventory-wide mode behavior is pinned.
+
+**Step 5: Commit** `feat(p05-t03): wire review mode across coordinators`
+
+### Task p05-t04: Bind gate and validation runs by exact tuple
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Write test (RED)** Generate a random launch-attempt ID before each
+provider launch; exact pairs resolve once; sibling/mismatched/duplicate pairs
+reject; pre-start rejection deletes and regenerates; acceptance forbids
+replacement.
+
+**Step 2: Implement (GREEN)** Thread the gate/attempt tuple through child launch
+context, markers, private index, and cleanup.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+Expected: translation never scans run directories or crosses attempts.
+
+**Step 5: Commit** `feat(p05-t04): correlate gate validation attempts`
+
+### Task p05-t05: Translate accounting-invalid gate completion
+
+**Files:**
+
+- Create: `packages/cli/src/commands/gate/review-plan-failure.ts`
+- Create: `packages/cli/src/commands/gate/review-plan-failure.test.ts`
+- Modify: `packages/cli/src/commands/gate/index.ts`
+- Modify: `packages/cli/src/commands/gate/index.test.ts`
+- Modify: `packages/cli/src/commands/gate/gate-hardening.integration.test.ts`
+
+**Step 1: Write test (RED)** Exact receipts yield
+`review_complete_accounting_invalid` with all three IDs, attempt counts, safe
+pointer, null artifact/handoff, and false eligibility; preserve timeout,
+BLOCKED, correlation, and artifact-validation envelopes.
+
+**Step 2: Implement (GREEN)** Add tuple-based terminal resolver, minimal
+diagnostic materialization, parent cleanup, and typed translation.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/review-plan-failure.test.ts src/commands/gate/index.test.ts src/commands/gate/gate-hardening.integration.test.ts`
+Expected: every terminal class remains distinguishable and non-actionable.
+
+**Step 5: Commit** `fix(p05-t05): translate accounting invalid gates`
+
+### Task p05-t06: Create tracked enforce-default rollout item
+
+**Files:**
+
+- Create: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
+
+**Step 1: Write test (RED)** Define checklist evidence for coordinator parity,
+the explicit-enforce matrix, terminal fixtures, seven-day soak, zero unresolved
+P0/P1, release validation, day-14 disposition, owner, and next review.
+
+**Step 2: Implement (GREEN)** Create the fixed-ID backlog item, then run:
+`pnpm run cli:source -- backlog regenerate-index`.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Run:
+`pnpm run cli:source -- --json pjm doctor`
+Expected: Stage A and Stage B are separately tracked with no PJM error.
+
+**Step 5: Commit** `chore(p05-t06): track review plan default flip`
+
+---
+
+## Phase 6: Documentation, Provider Sync, and Compatibility Release
+
+**Milestone:** Stage A ships the complete explicit-enforce path with `legacy`
+as the initial default, synchronized assets, lockstep public packages, complete
+validation, and a recorded publication timestamp that starts the soak.
+
+### Task p06-t01: Document review workflow behavior
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/hill-checkpoints.md`
+
+**Step 1: Write check (RED)** Produce a documentation delta analysis for the
+listed pages covering missing plan-first sequence, selective evidence,
+accepted-handle repair, blocked semantics, direct phase-review adoption, and
+independence from HiLL/Phase gate review. Present the proposed substantive
+changes and obtain explicit user approval before editing.
+
+**Step 2: Implement (GREEN)** After approval, update existing pages only; do
+not create a new navigation page or hand-edit the generated index. If approval
+is withheld, stop with the delta analysis intact and leave the pages unchanged.
+
+**Step 3: Format** Run the documented docs formatter:
+`pnpm --filter oat-docs docs:format`
+
+**Step 4: Verify** Run:
+`pnpm --filter oat-docs docs:format:check && pnpm --filter oat-docs docs:lint`
+Expected: authored workflow docs pass local checks.
+
+**Step 5: Commit** `docs(p06-t01): document plan first reviews`
+
+### Task p06-t02: Document CLI, config, gate, and directory contracts
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Modify: `apps/oat-docs/index.md`
+
+**Step 1: Write check (RED)** Produce a documentation delta analysis for the
+listed pages covering missing review commands, JSON exits, `reviewPlanMode`,
+120-second enforce floor, terminal subtype, temporary store, legacy default,
+remedies, and rollback guidance. Present the proposed substantive changes and
+obtain explicit user approval before editing.
+
+**Step 2: Implement (GREEN)** After approval, update authored pages, then
+regenerate (never hand-edit) the index with:
+`pnpm run cli:source -- docs generate-index --docs-dir apps/oat-docs/docs --output apps/oat-docs/index.md`.
+If approval is withheld, stop with the delta analysis intact and leave the
+pages and generated index unchanged.
+
+**Step 3: Format** Run the documented docs formatter:
+`pnpm --filter oat-docs docs:format`
+
+**Step 4: Verify** Run:
+`pnpm docs:check-links && pnpm build:docs`
+Expected: generated index, links, and docs build pass.
+
+**Step 5: Commit** `docs(p06-t02): document review runtime rollout`
+
+### Task p06-t03: Bump changed canonical asset versions once
+
+**Files:**
+
+- Modify: `.agents/agents/oat-reviewer.md`
+- Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
+- Modify: `.agents/skills/oat-project-review-provide-remote/SKILL.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+
+**Step 1: Write check (RED)** Diff each canonical asset against the merge base;
+require exactly one frontmatter version increment for every changed agent/skill
+and no generated-view version edits.
+
+**Step 2: Implement (GREEN)** Increment each changed canonical owner once,
+regardless of how many earlier tasks edited it.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts`
+Expected: canonical versions and contracts validate.
+
+**Step 5: Commit** `chore(p06-t03): version review plan assets`
+
+### Task p06-t04: Synchronize provider views and bundled assets
+
+**Files:**
+
+- Modify: `.oat/sync/manifest.json`
+- Modify: `.codex/agents/oat-reviewer.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-luna-low.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-luna-medium.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-luna-high.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-luna-xhigh.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-terra-low.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-terra-medium.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-terra-high.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-terra-xhigh.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-sol-low.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-sol-medium.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-sol-high.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-sol-xhigh.toml`
+- Modify: `.codex/agents/oat-reviewer-gpt-5-6-sol-max.toml`
+- Modify: `.cursor/agents/oat-reviewer-composer-2-5.md`
+- Modify: `.cursor/agents/oat-reviewer-cursor-grok-4-5-high.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-luna-high.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-luna-xhigh.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-terra-high.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-sol-high.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-sol-medium.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-sol-xhigh.md`
+- Modify: `.cursor/agents/oat-reviewer-gpt-5-6-sol-max.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-sonnet-5-high.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-fable-5-thinking-high.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-fable-5-thinking-xhigh.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-4-8-thinking-xhigh.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-5-thinking-low.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-5-thinking-medium.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-5-thinking-high.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-5-thinking-xhigh.md`
+- Modify: `.cursor/agents/oat-reviewer-claude-opus-5-thinking-max.md`
+
+**Step 1: Write check (RED)** Run `oat sync --scope all`; capture the exact
+manifest-owned generated paths and reject any hand-edited provider mirror.
+
+**Step 2: Implement (GREEN)** Stage only sync-reported provider views and
+bundled assets; then run `oat --json sync --scope all --dry-run`.
+
+**Step 3: Format** Run the generator-owned sync only; do not reformat generated
+provider files independently.
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/providers/shared/markdown-agent-codec.test.ts src/providers/cursor/codec/sync-extension.test.ts src/providers/codex/codec/sync-extension.test.ts src/commands/sync/index.test.ts src/commands/init/tools/shared/bundle-consistency.test.ts`
+Expected: dry run is clean and provider/bundle parity passes.
+
+**Step 5: Commit** `chore(p06-t04): sync review plan provider views`
+
+### Task p06-t05: Advance the Stage A lockstep package version
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Write check (RED)** Resolve the next common unpublished version at
+execution time; reject unequal versions or unrelated lockfile drift.
+
+**Step 2: Implement (GREEN)** Apply one version to all five packages, run
+`pnpm install --lockfile-only`, and regenerate bundled assets with
+`bash packages/cli/scripts/bundle-assets.sh`.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run: `pnpm release:check-versions`
+Expected: all public package versions are lockstep.
+
+**Step 5: Commit** `chore(p06-t05): bump compatibility packages`
+
+### Task p06-t06: Validate and dogfood explicit enforce
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Write check (RED)** Run the focused config/review/gate/skill/bundle
+test matrix and record any failing cell before live dogfood.
+
+**Step 2: Implement (GREEN)** Create an isolated local fixture with
+`DOGFOOD_ROOT="$(mktemp -d "${TMPDIR:-/tmp}/oat-review-plan-dogfood.XXXXXX")" && git worktree add --detach "$DOGFOOD_ROOT/repo" HEAD`,
+set `DOGFOOD_PROJECT="$DOGFOOD_ROOT/repo/.oat/projects/shared/review-plan-workflow"`,
+then run
+`pnpm --dir "$DOGFOOD_ROOT/repo" run cli:source -- config set workflow.reviewPlanMode enforce --local`.
+Resolve the fixture value with
+`MODE_JSON="$(pnpm --dir "$DOGFOOD_ROOT/repo" --silent run cli:source -- --json config get workflow.reviewPlanMode)"`,
+and fail unless
+`node -e 'const d=JSON.parse(process.argv[1]); if(d.value!=="enforce" || d.source!=="local") process.exit(1)' "$MODE_JSON"`
+passes.
+
+Before remote rows, push the candidate branch and open its draft release PR:
+`git push -u origin HEAD && STAGE_A_PR_URL="$(gh pr create --draft --title "ReviewPlan Stage A compatibility release" --body "Stage A release candidate; dogfood evidence will be added before ready-for-review.")" && STAGE_A_PR_NUMBER="$(gh pr view "$STAGE_A_PR_URL" --json number --jq .number)"`.
+Obtain the remote skill's explicit posting approval separately for each remote
+row; one approval does not carry to another. Then run this matrix:
+
+| Rail                               | Exact invocation                                                                                                                                                                                                 | Fixture and scope                             | Required sink and terminal result                                                    | Evidence and cleanup                                                                   |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- | ------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------- |
+| Local artifact Tier 1              | Invoke `oat-project-review-provide code p06` with exact Tier 1 dispatch                                                                                                                                          | `$DOGFOOD_PROJECT`; reviewed HEAD through p06 | Published local review artifact from a `complete` terminal                           | Record run ID, reviewed HEAD, artifact digest, and verdict in `implementation.md`      |
+| Remote structured Tier 1           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with exact Tier 1 dispatch                                                 | Stage A draft PR; full PR range               | One posted structured GitHub PR review from a `complete` terminal                    | Record PR review URL and dispatch report; remote skill removes its ephemeral worktree  |
+| Local artifact Tier 3              | Invoke `oat-project-review-provide code p06` with an explicit inline/Tier 3 request                                                                                                                              | `$DOGFOOD_PROJECT`; reviewed HEAD through p06 | Published local review artifact from a validated `complete` inline terminal          | Record artifact digest and verdict; retain no untracked fixture edits                  |
+| Remote structured Tier 3           | Invoke `oat-project-review-provide-remote code final --pr "$STAGE_A_PR_NUMBER" --project ".oat/projects/shared/review-plan-workflow"` with an explicit inline/Tier 3 request                                     | Stage A draft PR; full PR range               | One posted validated inline GitHub PR review from a `complete` terminal              | Record PR review URL and terminal subtype; remote skill removes its ephemeral worktree |
+| Direct implementation phase review | Invoke the root-owned `oat-project-implement` phase-review contract for `p06`                                                                                                                                    | `$DOGFOOD_PROJECT`; p06 commit range          | Published local artifact and exact p06 code-review event from a `complete` terminal  | Record artifact digest, event identity, and verdict in `implementation.md`             |
+| Gate review                        | From `$DOGFOOD_ROOT/repo`, run `pnpm run cli:source -- --json gate review --project "$DOGFOOD_PROJECT" --review-type code --review-scope p06 --exit-nonzero-on important '$oat-project-review-provide code p06'` | `$DOGFOOD_PROJECT`; p06 commit range          | Corroborated `ok`, `receiveEligible: true`, non-null artifact, and non-null handoff  | Record gate run ID, target, handoff, artifact digest, and disposition                  |
+| Checkpoint alias                   | Invoke `oat-project-review-provide code p01-p06` through the implementation checkpoint path                                                                                                                      | `$DOGFOOD_PROJECT`; contiguous p01-p06 range  | Published local artifact with exact `p01-p06` scope from a `complete` terminal       | Record invocation alias, event identity, reviewed range, and verdict                   |
+| Final alias                        | Invoke `oat-project-review-provide code final` through the implementation final path                                                                                                                             | `$DOGFOOD_PROJECT`; full implementation range | Published local artifact with exact `final` scope from a `complete` terminal         | Record invocation alias, event identity, reviewed range, and verdict                   |
+| Injected local `BLOCKED`           | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/local-coordinator.integration.test.ts`                                                                                                     | Fake accepted local continuation              | `blocked-incomplete`; no discoverable artifact, actionable verdict, or passing event | Record the blocked-case test name and result                                           |
+| Injected remote `BLOCKED`          | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/review-remote/__integration__/project/project-rail.test.ts`                                                                                       | Fake accepted remote continuation             | `blocked-incomplete`; no GitHub post or structured pass                              | Record the blocked-case test name and result                                           |
+| Injected gate `BLOCKED`            | Run `pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/gate-hardening.integration.test.ts`                                                                                                 | Correlated fake gate attempt                  | `status: blocked`, `receiveEligible: false`, null artifact, and null handoff         | Record the gate fixture name and envelope                                              |
+
+Copy the evidence rows into `implementation.md`, then run
+`git worktree remove --force "$DOGFOOD_ROOT/repo" && rm -rf "$DOGFOOD_ROOT"`.
+An actionable-findings gate envelope with `status: blocked` and
+`receiveEligible: true` is not a reviewer `BLOCKED` terminal and does not
+satisfy the injected gate row. Any missing required sink, unexpected sink on an
+injected blocked row, uncorroborated envelope, cleanup failure, or terminal
+outside the declared set blocks release.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Run:
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format && pnpm build:docs && pnpm release:validate`
+Expected: every repository/release gate and dogfood cell passes.
+
+**Step 5: Commit** `test(p06-t06): record enforced review matrix`; push the
+evidence commit to the existing Stage A draft PR, run
+`gh pr ready "$STAGE_A_PR_NUMBER"`, and stop until its merge is externally
+confirmed.
+
+### Task p06-t07: Publish Stage A and start the soak
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Write check (RED)** Confirm the Stage A release PR is merged, Stage A
+packages are publishable, and p06-t06 evidence is complete.
+
+**Step 2: Implement (GREEN)** Refresh the merged base and create the dedicated
+`review-plan-stage-a-publication-record` bookkeeping branch. Through the
+authorized release pipeline, publish the lockstep Stage A version, record
+release links/timestamp, start the seven-calendar-day soak, and reserve the
+immediate next release for Stage B. Do not reuse or amend the merged Stage A
+release branch.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Expected: publication is externally confirmed and the soak
+start is durable. This is a real cross-release blocker; Phase 7 must not begin
+early.
+
+**Step 5: Commit** `chore(p06-t07): record compatibility release`; open and
+merge the Stage A post-publication bookkeeping PR before starting the soak
+clock used by p07-t01.
+
+---
+
+## Phase 7: Enforce-Default Flip
+
+**Milestone:** After the mandatory soak and rollout gate, a separate Stage B
+release makes enforce the default, retains explicit temporary legacy opt-out,
+revalidates all boundaries, and closes rollout tracking.
+
+### Task p07-t01: Evaluate the rollout gate
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+
+**Step 1: Write check (RED)** Require exhaustive coordinator parity, complete
+dogfood, at least seven calendar days since Stage A, no unresolved P0/P1,
+distinct terminal fixtures, and green release validation.
+
+**Step 2: Implement (GREEN)** Record evidence and disposition. If any criterion
+fails, stop before code changes; at day 14 record owner, dated fix/rollback or
+time-bounded extension, and next review.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Expected: every rollout checkbox has durable evidence or
+Phase 7 remains blocked.
+
+**Step 5: Commit** `chore(p07-t01): record enforce rollout evidence`
+
+### Task p07-t02: Flip the default and retain legacy opt-out
+
+**Files:**
+
+- Modify: `packages/cli/src/config/resolve.ts`
+- Modify: `packages/cli/src/config/resolve.test.ts`
+- Modify: `packages/cli/src/commands/config/index.ts`
+- Modify: `packages/cli/src/commands/config/index.test.ts`
+
+**Step 1: Write test (RED)** Unset now resolves to enforce; explicit
+local/shared/user legacy still wins; configs are not rewritten; failed enforce
+preflight never falls back.
+
+**Step 2: Implement (GREEN)** Change only the resolved default and associated
+catalog/help text.
+
+**Step 3: Format** Run the documented package formatter:
+`pnpm --filter @open-agent-toolkit/cli format:fix`
+
+**Step 4: Verify** Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/commands/config/index.test.ts src/review/preflight.test.ts`
+Expected: enforce is default and legacy remains explicit.
+
+**Step 5: Commit** `feat(p07-t02): enable review plan enforcement`
+
+### Task p07-t03: Document enforce-default behavior
+
+**Files:**
+
+- Modify: `apps/oat-docs/docs/workflows/projects/reviews.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/lifecycle.md`
+- Modify: `apps/oat-docs/docs/workflows/projects/hill-checkpoints.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/workflow-gates.md`
+- Modify: `apps/oat-docs/docs/cli-utilities/configuration.md`
+- Modify: `apps/oat-docs/docs/reference/cli-reference.md`
+- Modify: `apps/oat-docs/docs/reference/oat-directory-structure.md`
+- Modify: `apps/oat-docs/index.md`
+
+**Step 1: Write check (RED)** Produce a documentation delta analysis that
+locates every Stage A statement calling legacy the default and every missing
+temporary-opt-out/removal-criteria note. Present the proposed substantive
+changes and obtain explicit user approval before editing.
+
+**Step 2: Implement (GREEN)** After approval, update authored pages, then
+regenerate the index with the same p06-t02 command; do not hand-edit it. If
+approval is withheld, stop with the delta analysis intact and leave the pages
+and generated index unchanged.
+
+**Step 3: Format** Run the documented docs formatter:
+`pnpm --filter oat-docs docs:format`
+
+**Step 4: Verify** Run:
+`pnpm --filter oat-docs docs:format:check && pnpm --filter oat-docs docs:lint && pnpm docs:check-links && pnpm build:docs`
+Expected: docs consistently describe enforce default.
+
+**Step 5: Commit** `docs(p07-t03): document enforce default reviews`
+
+### Task p07-t04: Advance the Stage B lockstep package version
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+- Modify: `pnpm-lock.yaml`
+
+**Step 1: Write check (RED)** Resolve the next common unpublished Stage B
+version and reject unequal manifests or unrelated lockfile drift.
+
+**Step 2: Implement (GREEN)** Apply the lockstep version, then run
+`pnpm install --lockfile-only` and
+`bash packages/cli/scripts/bundle-assets.sh`. Reject unrelated lockfile drift
+and verify the generated public-package version asset before release checks.
+
+**Step 3: Format** Run the documented repository formatter:
+`pnpm format:fix`
+
+**Step 4: Verify** Run:
+`pnpm release:check-versions && pnpm release:validate`
+Expected: Stage B package and bundled versions agree.
+
+**Step 5: Commit** `chore(p07-t04): bump enforce default packages`
+
+### Task p07-t05: Revalidate and dogfood the Stage B release candidate
+
+**Files:**
+
+- Modify: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Write check (RED)** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/config/resolve.test.ts src/commands/config/index.test.ts`
+and require the Stage B assertions that an unset setting resolves to enforce
+without rewriting config. Record failures before release.
+
+**Step 2: Implement (GREEN)** Reuse the p06-t06 fixture setup. Before adding a
+fixture-local override, create `"$DOGFOOD_ROOT/home"` and resolve with no user
+config:
+`MODE_JSON="$(HOME="$DOGFOOD_ROOT/home" pnpm --dir "$DOGFOOD_ROOT/repo" --silent run cli:source -- --json config get workflow.reviewPlanMode)"`.
+Require
+`node -e 'const d=JSON.parse(process.argv[1]); if(d.value!=="enforce" || d.source!=="default") process.exit(1)' "$MODE_JSON"`
+to pass, proving neither tracked config nor the isolated home overrides the
+Stage B default. Then set and assert a fixture-local enforce override exactly
+as in p06-t06 so live rails cannot be contaminated by an operator's user-level
+legacy setting.
+
+Push the candidate branch and open its draft release PR before remote rows:
+`git push -u origin HEAD && STAGE_B_PR_URL="$(gh pr create --draft --title "ReviewPlan Stage B enforce-default release" --body "Stage B release candidate; dogfood evidence will be added before ready-for-review.")" && STAGE_B_PR_NUMBER="$(gh pr view "$STAGE_B_PR_URL" --json number --jq .number)"`.
+Obtain separate explicit posting approval for each remote row. Run the p06-t06
+matrix with `$STAGE_B_PR_NUMBER`, the Stage B candidate, the same evidence
+schema, and the same cleanup. Record each result. This task ends at the
+pre-publication merge boundary; do not publish or write post-publication
+records on the release branch.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Run:
+`pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm lint && pnpm format && pnpm build:docs && pnpm release:validate`
+Expected: the Stage B release candidate and every dogfood cell pass with no
+unresolved P0/P1 regression.
+
+**Step 5: Commit** `test(p07-t05): validate enforce default release`; push the
+evidence commit to the existing Stage B draft PR, run
+`gh pr ready "$STAGE_B_PR_NUMBER"`, and stop until its merge is externally
+confirmed.
+
+### Task p07-t06: Publish Stage B and close rollout tracking
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+- Delete: `.oat/repo/pjm/backlog/items/BL-260730-flip-reviewplan-enforcement.md`
+- Delete: `.oat/repo/pjm/backlog/items/BL-260729-implement-reviewplan-first.md`
+- Create: `.oat/repo/pjm/backlog/archived/BL-260730-flip-reviewplan-enforcement.md`
+- Create: `.oat/repo/pjm/backlog/archived/BL-260729-implement-reviewplan-first.md`
+- Modify: `.oat/repo/pjm/backlog/completed.md`
+- Modify: `.oat/repo/pjm/backlog/index.md`
+
+**Step 1: Write check (RED)** Confirm the Stage B release PR is merged and both
+backlog items' acceptance criteria pass; keep legacy removal open until two
+enforce-default releases and 30 days.
+
+**Step 2: Implement (GREEN)** Refresh the merged base and create the dedicated
+`review-plan-stage-b-publication-record` bookkeeping branch. Publish Stage B
+through the authorized release pipeline, record release links/results in
+`implementation.md`, archive both items with
+`oat backlog archive <id> --summary "<release outcome>"`, and regenerate
+backlog indexes. Do not reuse or amend the merged Stage B release branch.
+
+**Step 3: Format** No documented write/fix command covers the declared files. Warn once with `no format command discovered in repo instructions; skipping`, then continue without formatting.
+
+**Step 4: Verify** Run:
+`pnpm run cli:source -- backlog regenerate-index && pnpm run cli:source -- --json pjm doctor`
+Expected: Stage B publication is externally confirmed, both shipped items are
+archived, and PJM reports no drift.
+
+**Step 5: Commit** `chore(p07-t06): close review plan rollout`; open the Stage
+B post-publication bookkeeping PR.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
+| Scope  | Type     | Status  | Date       | Artifact | Reviewed Head | Invocation           | Gate Target |
+| ------ | -------- | ------- | ---------- | -------- | ------------- | -------------------- | ----------- |
+| p01    | code     | pending | -          | -        | -             | -                    | -           |
+| p02    | code     | pending | -          | -        | -             | -                    | -           |
+| p03    | code     | pending | -          | -        | -             | -                    | -           |
+| p04    | code     | pending | -          | -        | -             | -                    | -           |
+| p05    | code     | pending | -          | -        | -             | -                    | -           |
+| p06    | code     | pending | -          | -        | -             | -                    | -           |
+| p07    | code     | pending | -          | -        | -             | -                    | -           |
+| final  | code     | pending | -          | -        | -             | -                    | -           |
+| spec   | artifact | pending | -          | -        | -             | -                    | -           |
+| design | artifact | pending | -          | -        | -             | -                    | -           |
+| plan   | artifact | passed  | 2026-07-30 | -        | -             | auto-artifact-review | -           |
 
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
-
-For code-review events, `Reviewed Head` is the full 40-character SHA at the
-head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
-`Gate Target` is populated only for gate events. Legacy five-column rows remain
-valid. Writers must preserve every existing row and every unknown trailing
-cell; never truncate a widened row back to five columns.
-
-**Status values:** `pending` → `received` → `fixes_added` → `fixes_completed` → `passed`
-
-**Meaning:**
-
-- `received`: review artifact exists (not yet converted into fix tasks)
-- `fixes_added`: fix tasks were added to the plan (work queued)
-- `fixes_completed`: fix tasks implemented, awaiting re-review
-- `passed`: re-review run and recorded as passing (no Critical/Important)
+**Status values:** `pending` → `received` → `fixes_added` →
+`fixes_completed` → `passed`
 
 ---
 
@@ -195,18 +2049,25 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 13 tasks - baseline, contracts, portability seams
+- Phase 2: 29 tasks - authoritative metadata and validation runtime
+- Phase 3: 5 tasks - reviewer planning and selective evidence
+- Phase 4: 8 tasks - accounting, repair, and coordinator adoption
+- Phase 5: 6 tasks - gate diagnostics and compatibility mode
+- Phase 6: 7 tasks - docs, sync, Stage A release and soak
+- Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: {N} tasks**
+**Total: 74 tasks**
 
-Ready for code review and merge.
+Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
+must not begin until its rollout gate passes.
 
 ---
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
+- Design: `design.md`
+- Spec: `spec.md`
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Implementation log: `implementation.md`
+- Source backlog: `.oat/repo/pjm/backlog/items/BL-260729-implement-reviewplan-first.md`

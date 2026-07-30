@@ -1,7 +1,8 @@
 ---
 oat_current_task: null
 oat_last_commit: null
-oat_blockers: []
+oat_blockers:
+  - Configured plan gate run 21b68483-5f01-498c-bfb7-60fd79a8504c timed out after 900000ms with status review_failed and no output.
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -13,9 +14,13 @@ oat_children: [] # optional coordination-parent child slugs
 oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop lifecycle approval
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
-oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: complete # Status: in_progress | complete | pr_open
+oat_phase: plan # Current phase: discovery | spec | design | plan | implement | decomposition
+oat_phase_status: in_progress # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
+oat_dispatch_policy:
+  mode: managed
+  policy: high
+  source: project-state
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
 #   policy: balanced # economy | balanced | high | frontier | uncapped; omit when mode: inherit
@@ -71,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T02:52:48Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T14:39:26Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -81,22 +86,21 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Design complete — ready for planning
+**Status:** Planning in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Design is complete. Requirements are confirmed in `spec.md`; `design.md`
-incorporates holistic feedback, planning-readiness contracts, and independent
-cross-section consistency review.
+Planning is in progress. The confirmed 74-task plan passed its managed artifact
+review, but the configured cross-family plan gate timed out without output.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
 - **Design:** `design.md` (complete)
-- **Plan:** `plan.md` (scaffolded template — not started)
+- **Plan:** `plan.md` (in-progress draft)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** original slow-review proposal and current-state handoff
 
@@ -118,6 +122,9 @@ cross-section consistency review.
 - ✓ Planning-readiness contract gaps resolved and re-review passed
 - ✓ Design gate resolved (no configured gate)
 - ✓ Design completed
+- ✓ Implementation plan confirmed
+- ✓ Managed plan artifact review passed after bounded fixes
+- ⚠ Configured cross-family plan gate timed out without output
 
 ## Blockers
 
@@ -125,4 +132,5 @@ None
 
 ## Next Milestone
 
-Run `oat-project-plan` to produce the implementation plan.
+Choose whether to authorize a fresh plan-gate recovery run or leave planning
+blocked for later resumption.
