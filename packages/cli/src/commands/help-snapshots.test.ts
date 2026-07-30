@@ -624,17 +624,22 @@ describe('help output snapshots', () => {
       OAT review artifact commands
 
       Options:
-        -h, --help        display help for command
+        -h, --help                      display help for command
 
       Global Options:
-        -V, --version     output the version number
-        --json            Output a single JSON document
-        --verbose         Enable verbose debug output
-        --cwd <path>      Override working directory
+        -V, --version                   output the version number
+        --json                          Output a single JSON document
+        --verbose                       Enable verbose debug output
+        --cwd <path>                    Override working directory
 
       Commands:
-        latest [options]  Find the most recent OAT review artifact
-        help [command]    display help for command
+        latest [options]                Find the most recent OAT review artifact
+        prepare-context                 Prepare authoritative review context from
+                                        JSON stdin
+        checkpoint-artifacts [options]  Seal loaded review artifacts
+        validate-plan [options]         Validate a review plan from JSON stdin
+        begin-evidence [options]        Begin receipt-authorized review evidence
+        help [command]                  display help for command
       "
     `);
   });

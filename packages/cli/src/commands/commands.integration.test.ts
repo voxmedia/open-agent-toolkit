@@ -525,6 +525,22 @@ describe('CLI command integration', () => {
     });
   });
 
+  it('registers the complete review validation command lifecycle', () => {
+    const program = createProgram();
+    registerCommands(program);
+    const review = program.commands.find(
+      (command) => command.name() === 'review',
+    );
+
+    expect(review?.commands.map((command) => command.name())).toEqual([
+      'latest',
+      'prepare-context',
+      'checkpoint-artifacts',
+      'validate-plan',
+      'begin-evidence',
+    ]);
+  });
+
   it('providers set writes provider enablement to sync config', async () => {
     const root = await createWorkspace();
     tempDirs.push(root);
