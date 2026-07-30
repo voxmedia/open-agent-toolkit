@@ -5,6 +5,14 @@ export {
   DefaultGitChangeMapAdapter,
   type GitChangeMapAdapter,
 } from './change-map';
+export {
+  collectReviewObligations,
+  type CollectReviewObligationsInput,
+  parseDeferredFindingObligations,
+  parseDeviationObligations,
+  parsePlanTaskObligations,
+  parseRequirementObligations,
+} from './obligations';
 export { preflightReviewPlan } from './preflight';
 export {
   parsePreparedReviewContextV1,

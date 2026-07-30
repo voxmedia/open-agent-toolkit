@@ -256,3 +256,70 @@ export function parseDeferredFindingObligations(
     }))
     .sort((left, right) => left.id.localeCompare(right.id));
 }
+
+export interface CollectReviewObligationsInput {
+  workflowMode: 'spec-driven' | 'quick' | 'import';
+  scope: string;
+  plan: { source: Buffer | string; path: string };
+  spec?: { source: Buffer | string; path: string };
+  implementation?: { source: Buffer | string; path: string } | null;
+}
+
+export async function collectReviewObligations(
+  input: CollectReviewObligationsInput,
+): Promise<ReviewObligationV1[]> {
+  const planTasks = parsePlanTaskObligations(
+    input.plan.source,
+    input.plan.path,
+  );
+  let selected: ReviewObligationV1[];
+  if (/^p\d{2}-t\d{2}$/.test(input.scope)) {
+    selected = planTasks.filter((task) => task.id === input.scope);
+    if (selected.length !== 1) {
+      throw new Error(`unknown review task scope: ${input.scope}`);
+    }
+  } else if (/^p\d{2}$/.test(input.scope)) {
+    selected = planTasks.filter((task) =>
+      task.id.startsWith(`${input.scope}-`),
+    );
+    if (selected.length === 0) {
+      throw new Error(`unknown review phase scope: ${input.scope}`);
+    }
+  } else if (input.scope === 'final') {
+    if (input.workflowMode === 'spec-driven') {
+      if (!input.spec) {
+        throw new Error('spec-driven final scope requires spec source');
+      }
+      selected = parseRequirementObligations(
+        input.spec.source,
+        input.spec.path,
+      );
+    } else {
+      selected = planTasks;
+    }
+  } else {
+    throw new Error(`unsupported review scope: ${input.scope}`);
+  }
+
+  if (input.implementation) {
+    selected = [
+      ...selected,
+      ...parseDeviationObligations(
+        input.implementation.source,
+        input.implementation.path,
+      ),
+      ...parseDeferredFindingObligations(
+        input.implementation.source,
+        input.implementation.path,
+      ),
+    ];
+  }
+  const ids = new Set<string>();
+  for (const obligation of selected) {
+    if (ids.has(obligation.id)) {
+      throw new Error(`duplicate selected obligation: ${obligation.id}`);
+    }
+    ids.add(obligation.id);
+  }
+  return selected.sort((left, right) => left.id.localeCompare(right.id));
+}

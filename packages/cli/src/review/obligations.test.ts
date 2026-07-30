@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 import {
+  collectReviewObligations,
   parseDeferredFindingObligations,
   parseDeviationObligations,
   parsePlanTaskObligations,
@@ -126,4 +127,73 @@ describe('implementation obligations', () => {
       parseDeferredFindingObligations(source, 'implementation.md'),
     ).toEqual([]);
   });
+});
+
+describe('exact scope obligation collection', () => {
+  async function sources() {
+    return {
+      plan: {
+        source: await readFile(fixture('plan-v1.md')),
+        path: 'plan-v1.md',
+      },
+      spec: {
+        source: await readFile(fixture('spec-v1.md')),
+        path: 'spec-v1.md',
+      },
+      implementation: {
+        source: await readFile(fixture('implementation-v1.md')),
+        path: 'implementation-v1.md',
+      },
+    };
+  }
+
+  it('selects a named task plus additive implementation obligations', async () => {
+    const input = await sources();
+    const result = await collectReviewObligations({
+      workflowMode: 'spec-driven',
+      scope: 'p02-t01',
+      ...input,
+    });
+    expect(result.map(({ id }) => id)).toEqual([
+      'deferred-finding:REV-2',
+      'deviation:p02-t01:2',
+      'p02-t01',
+    ]);
+  });
+
+  it('selects a phase prefix exactly', async () => {
+    const input = await sources();
+    const result = await collectReviewObligations({
+      workflowMode: 'spec-driven',
+      scope: 'p02',
+      ...input,
+      implementation: null,
+    });
+    expect(result.map(({ id }) => id)).toEqual(['p02-t01', 'p02-t02']);
+  });
+
+  it('selects Requirement Index rows for spec-driven final', async () => {
+    const input = await sources();
+    const result = await collectReviewObligations({
+      workflowMode: 'spec-driven',
+      scope: 'final',
+      ...input,
+      implementation: null,
+    });
+    expect(result.map(({ id }) => id)).toEqual(['FR1', 'NFR1']);
+  });
+
+  it.each(['quick', 'import'] as const)(
+    'selects all plan tasks for %s final',
+    async (workflowMode) => {
+      const input = await sources();
+      const result = await collectReviewObligations({
+        workflowMode,
+        scope: 'final',
+        ...input,
+        implementation: null,
+      });
+      expect(result.map(({ id }) => id)).toEqual(['p02-t01', 'p02-t02']);
+    },
+  );
 });
