@@ -11,9 +11,13 @@ import { describe, expect, it } from 'vitest';
 import type {
   ChangeMapV1,
   HostTelemetryEvidenceV1,
+  PlanValidationReceiptV1,
   PreparedReviewContextV1,
   PrepareReviewContextResultV1,
+  ReviewLaneV1,
+  ReviewPlanV1,
   ReviewPreparationV1,
+  ValidatedAssignmentProjectionV1,
 } from './types';
 
 describe('common review contracts', () => {
@@ -184,5 +188,153 @@ describe('review preparation contracts', () => {
     expect(context.budget.context?.evidenceBudgetTokens).toBe(130_000);
     expect(result.artifactDraftPath).toContain('review-draft');
     expect(telemetry.validationRunId).toBe(preparation.runId);
+  });
+});
+
+const semanticLane = {
+  id: 'semantic',
+  paths: ['src/review.ts'],
+  primaryObligationIds: ['task:p01-t01'],
+  seamObligationIds: [],
+  risk: 'high',
+  evidenceClass: 'semantic',
+  strategy: 'path-diff',
+  checks: ['Inspect contract behavior'],
+  delegated: false,
+  independenceRationale: null,
+  substantial: false,
+  substantialityRationale: null,
+  deadlineMs: null,
+  dossier: { contractVersion: 1, partialAllowed: true },
+  replay: 'direct-verify',
+  primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+} satisfies ReviewLaneV1;
+
+const inlinePlan = {
+  schemaVersion: 1,
+  runId: preparation.runId,
+  contextDigest: 'context-digest',
+  strategy: 'whole-diff-inline',
+  lanes: [semanticLane],
+  classifications: [],
+  crossLaneInvariants: [],
+  delegationEconomics: {
+    independentLaneIds: [],
+    nonReplayedLaneIds: [],
+    expectedSavings: [],
+    coordinationCosts: [],
+    decisionRationale: 'One coherent semantic lane is cheaper inline.',
+    decision: 'inline',
+  },
+  verificationBoundary: {
+    requiredClaims: [
+      { kind: 'promoted-finding', mode: 'direct' },
+      { kind: 'consequential-absence', mode: 'direct' },
+      { kind: 'worker-conflict', mode: 'direct' },
+      { kind: 'cross-lane-gap', mode: 'direct' },
+    ],
+    positiveCoverage: {
+      mode: 'sample',
+      laneIds: ['semantic'],
+      rationale: 'Sample positive coverage directly.',
+    },
+    deterministicAcceptance: {
+      mode: 'provenance',
+      requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+    },
+  },
+  wholeDiff: {
+    allowed: true,
+    estimatedTokens: 300,
+    evidenceBudgetTokens: 130_000,
+    reason: 'The exact estimate fits the sealed budget.',
+  },
+  timeAllocation: null,
+} satisfies ReviewPlanV1;
+
+describe('review plan contracts', () => {
+  it('represents compact-inline and delegated strategies with FR5-FR7 fields', () => {
+    const deterministicLane = {
+      ...semanticLane,
+      id: 'deterministic',
+      paths: ['src/review.test.ts'],
+      primaryObligationIds: ['task:p01-t02'],
+      evidenceClass: 'deterministic',
+      strategy: 'command',
+      delegated: true,
+      independenceRationale: 'The command lane is independently executable.',
+      substantial: true,
+      substantialityRationale: 'It covers the complete verification matrix.',
+      replay: 'accept-provenance',
+      primaryContingency: {
+        allowed: true,
+        paths: ['src/review.test.ts'],
+        obligationIds: ['task:p01-t02'],
+      },
+    } satisfies ReviewLaneV1;
+    const delegated = {
+      ...inlinePlan,
+      strategy: 'delegated',
+      lanes: [
+        {
+          ...semanticLane,
+          delegated: true,
+          substantial: true,
+          independenceRationale: 'Independent semantics.',
+          substantialityRationale: 'Broad contract surface.',
+        },
+        deterministicLane,
+      ],
+      crossLaneInvariants: ['Runtime and tests use the same contract version.'],
+      delegationEconomics: {
+        independentLaneIds: ['semantic', 'deterministic'],
+        nonReplayedLaneIds: ['deterministic'],
+        expectedSavings: ['Command evidence avoids semantic replay.'],
+        coordinationCosts: ['Two bounded dossier reconciliations.'],
+        decisionRationale: 'Expected savings exceed bounded coordination.',
+        decision: 'delegate',
+      },
+      wholeDiff: {
+        allowed: false,
+        estimatedTokens: 300,
+        evidenceBudgetTokens: 130_000,
+        reason: 'Multiple consequential lanes require selective evidence.',
+      },
+    } satisfies ReviewPlanV1;
+
+    expect(inlinePlan.delegationEconomics.decision).toBe('inline');
+    expect(delegated.delegationEconomics.nonReplayedLaneIds).toEqual([
+      'deterministic',
+    ]);
+    expect(delegated.verificationBoundary.requiredClaims).toHaveLength(4);
+  });
+
+  it('binds assignment projection and receipt identity', () => {
+    const projection = {
+      lanes: inlinePlan.lanes.map((lane) => ({
+        id: lane.id,
+        paths: lane.paths,
+        primaryObligationIds: lane.primaryObligationIds,
+        seamObligationIds: lane.seamObligationIds,
+        primaryContingency: lane.primaryContingency,
+      })),
+      classifications: inlinePlan.classifications,
+    } satisfies ValidatedAssignmentProjectionV1;
+    const receipt = {
+      token: 'opaque-token',
+      validationRunId: preparation.runId,
+      gateRunId: null,
+      launchAttemptId: preparation.correlation.launchAttemptId,
+      acceptedHandleDigest: 'handle-digest',
+      contractVersion: 1,
+      contextDigest: inlinePlan.contextDigest,
+      planDigest: 'plan-digest',
+      assignmentDigest: 'assignment-digest',
+      validatedAt: '2026-07-30T20:02:00.000Z',
+      expiresAt: preparation.expiresAt,
+    } satisfies PlanValidationReceiptV1;
+
+    expect(projection.lanes[0]?.paths).toEqual(['src/review.ts']);
+    expect(receipt.validationRunId).toBe(inlinePlan.runId);
   });
 });

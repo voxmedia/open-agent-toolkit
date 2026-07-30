@@ -186,3 +186,130 @@ export interface PrepareReviewContextResultV1 {
     beginEvidence: string;
   };
 }
+
+export type ReviewStrategy =
+  | 'whole-diff-inline'
+  | 'selective-inline'
+  | 'delegated';
+export type EvidenceStrategy =
+  | 'path-diff'
+  | 'full-file'
+  | 'command'
+  | 'inventory';
+
+export interface ReviewLaneV1 {
+  id: string;
+  paths: string[];
+  primaryObligationIds: string[];
+  seamObligationIds: string[];
+  risk: 'low' | 'medium' | 'high' | 'consequential';
+  evidenceClass: 'deterministic' | 'semantic' | 'mixed';
+  strategy: EvidenceStrategy;
+  checks: string[];
+  delegated: boolean;
+  independenceRationale: string | null;
+  substantial: boolean;
+  substantialityRationale: string | null;
+  deadlineMs: number | null;
+  dossier: {
+    contractVersion: 1;
+    partialAllowed: true;
+  };
+  replay: 'accept-provenance' | 'sample' | 'direct-verify';
+  primaryContingency: {
+    allowed: boolean;
+    paths: string[];
+    obligationIds: string[];
+  };
+}
+
+export interface ReviewClassificationV1 {
+  id: string;
+  kind: 'generated' | 'bookkeeping' | 'excluded';
+  reason: string;
+  paths: string[];
+  disposition: 'inspect' | 'justified-exclusion';
+  strategy: 'path-diff' | 'inventory' | 'manifest-check' | 'none';
+  checks: string[];
+  exclusionAuthority: string | null;
+}
+
+export interface ReviewTimeAllocationV1 {
+  planningDeadlineMs: number;
+  evidenceDeadlineMs: number;
+  reconciliationDeadlineMs: number;
+  outputDeadlineMs: number;
+  outputReserveMs: number;
+  reconciliationReserveMs: number;
+}
+
+export interface ReviewPlanV1 {
+  schemaVersion: 1;
+  runId: string;
+  contextDigest: string;
+  strategy: ReviewStrategy;
+  lanes: ReviewLaneV1[];
+  classifications: ReviewClassificationV1[];
+  crossLaneInvariants: string[];
+  delegationEconomics: {
+    independentLaneIds: string[];
+    nonReplayedLaneIds: string[];
+    expectedSavings: string[];
+    coordinationCosts: string[];
+    decisionRationale: string;
+    decision: 'inline' | 'delegate';
+  };
+  verificationBoundary: {
+    requiredClaims: Array<{
+      kind:
+        | 'promoted-finding'
+        | 'consequential-absence'
+        | 'worker-conflict'
+        | 'cross-lane-gap';
+      mode: 'direct';
+    }>;
+    positiveCoverage: {
+      mode: 'sample';
+      laneIds: string[];
+      rationale: string;
+    };
+    deterministicAcceptance: {
+      mode: 'provenance';
+      requiredFields: Array<
+        'command' | 'cwd' | 'scopeRefs' | 'provenance' | 'result'
+      >;
+    };
+  };
+  wholeDiff: {
+    allowed: boolean;
+    estimatedTokens: number | null;
+    evidenceBudgetTokens: number | null;
+    reason: string;
+  };
+  timeAllocation: ReviewTimeAllocationV1 | null;
+}
+
+export interface ValidatedAssignmentProjectionV1 {
+  lanes: Array<{
+    id: string;
+    paths: string[];
+    primaryObligationIds: string[];
+    seamObligationIds: string[];
+    primaryContingency: ReviewLaneV1['primaryContingency'];
+  }>;
+  classifications: ReviewClassificationV1[];
+}
+
+export interface PlanValidationReceiptV1 {
+  token: string;
+  validationRunId: string;
+  gateRunId: string | null;
+  launchAttemptId: string;
+  acceptedHandleDigest: string;
+  contractVersion: 1;
+  contextDigest: string;
+  planDigest: string;
+  assignmentDigest: string;
+  validatedAt: string;
+  expiresAt: string;
+}
