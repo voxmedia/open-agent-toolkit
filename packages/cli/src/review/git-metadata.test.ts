@@ -83,7 +83,7 @@ describe('numstat metadata', () => {
       statuses,
       parseNumstatZ(
         Buffer.from(
-          '3\t1\tdist/a.js\0' + '5\t2\tpnpm-lock.yaml\0-\t-\timage.bin\0',
+          '3\t1\tdist/a.js\x005\t2\tpnpm-lock.yaml\x00-\t-\timage.bin\x00',
         ),
       ),
     );
