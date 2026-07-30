@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - p02-t03 lint failure requires an explicitly authorized recovery path
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t01
+oat_current_task_id: p02-t03
 oat_generated: false
 ---
 
@@ -27,14 +28,14 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | pending   | 29    | 0/29      |
+| Phase 2 | blocked   | 29    | 2/29      |
 | Phase 3 | pending   | 5     | 0/5       |
 | Phase 4 | pending   | 8     | 0/8       |
 | Phase 5 | pending   | 7     | 0/7       |
 | Phase 6 | pending   | 7     | 0/7       |
 | Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 13/75 tasks completed
+**Total:** 15/75 tasks completed
 
 ## Execution Configuration
 
@@ -44,6 +45,7 @@ oat_generated: false
 - Dispatch tier: Tier 1 (Cursor native subagents)
 - Dispatch policy: managed `high` from project state
 - Phase 1 target: `oat-phase-implementer-gpt-5-6-sol-medium`
+- Phase 2 target: `oat-phase-implementer-gpt-5-6-sol-high`
 
 ---
 
@@ -174,13 +176,30 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** pending
-**Started:** -
+**Status:** blocked
+**Started:** 2026-07-30
 
-### Task p02-t01: {Task Name}
+### Task p02-t01: Normalize authoritative review paths
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `0d3f99d2`
+**Outcome:** Added strict repository-relative review path normalization.
+
+### Task p02-t02: Parse Git name-status metadata
+
+**Status:** completed
+**Commit:** `287dff14`
+**Outcome:** Added strict NUL-delimited Git status parsing.
+
+### Task p02-t03: Parse and merge numstat metadata
+
+**Status:** blocked
+**Commit:** `29dcf1db`
+**Outcome:** Task tests pass, but the committed test fixture fails
+`eslint(no-useless-concat)` at `git-metadata.test.ts:86`.
+**Recovery boundary:** The accepted phase attempt is terminal and append-only
+task rules prohibit amend or an unplanned repair commit without explicit
+operator authorization.
 
 ---
 
@@ -233,6 +252,41 @@ None in this run entry.
 #### Outstanding Items
 
 None for Phase 1.
+
+### Run 2 — 2026-07-30T22:09:00Z {#run-2}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits                       | Review  | Fixes |
+| ----- | ------- | ---------------------------------- | ------- | ----- |
+| p02   | blocked | `0d3f99d2`, `287dff14`, `29dcf1db` | not run | none  |
+
+#### Dispatch Notes
+
+- Implementation request `b4e8a534-746a-4018-85b3-6e91ba1886fd` was classified
+  `consequential` because Phase 2 owns security-sensitive validation state,
+  capability tokens, filesystem defenses, and gate correlation.
+- Managed `high` selected `oat-phase-implementer-gpt-5-6-sol-high`, the
+  strongest allowed candidate, from `gpt-5.6-sol-medium` then
+  `gpt-5.6-sol-high`.
+- The accepted attempt completed p02-t01 and p02-t02, then stopped after the
+  committed p02-t03 task failed the between-task lint gate.
+- Dispatch stamp:
+  - `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- p02-t03 requires removal of one useless literal concatenation before Phase 2
+  can continue. Recovery requires explicit authorization because the original
+  accepted attempt is terminal and task commits are append-only.
 
 <!-- orchestration-runs-end -->
 
