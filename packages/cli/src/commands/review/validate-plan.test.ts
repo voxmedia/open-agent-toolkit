@@ -15,20 +15,24 @@ describe('createReviewValidatePlanCommand', () => {
       receipt: { token: 'receipt-1' },
     }));
     const command = createReviewValidatePlanCommand({
-      stdin: Readable.from([
-        JSON.stringify({
-          validationRunId: 'run-1',
-          commandToken: 'plan-token',
-          plan,
-        }),
-      ]),
+      stdin: Readable.from([JSON.stringify(plan)]),
       write,
       setExitCode: vi.fn(),
       validate: validate as never,
       lifecycle: {} as never,
     });
 
-    await command.parseAsync(['node', 'oat', 'validate-plan']);
+    await command.parseAsync([
+      'node',
+      'oat',
+      'validate-plan',
+      '--run-id',
+      'run-1',
+      '--command-token',
+      'plan-token',
+      '--stdin',
+      '--json',
+    ]);
 
     expect(validate).toHaveBeenCalledWith(
       { runId: 'run-1', commandToken: 'plan-token', plan },
@@ -44,13 +48,7 @@ describe('createReviewValidatePlanCommand', () => {
     const write = vi.fn();
     const setExitCode = vi.fn();
     const command = createReviewValidatePlanCommand({
-      stdin: Readable.from([
-        JSON.stringify({
-          validationRunId: 'run-1',
-          commandToken: 'plan-token',
-          plan,
-        }),
-      ]),
+      stdin: Readable.from([JSON.stringify(plan)]),
       write,
       setExitCode,
       validate: vi.fn(async () => ({
@@ -62,13 +60,72 @@ describe('createReviewValidatePlanCommand', () => {
       lifecycle: {} as never,
     });
 
-    await command.parseAsync(['node', 'oat', 'validate-plan']);
+    await command.parseAsync([
+      'node',
+      'oat',
+      'validate-plan',
+      '--run-id',
+      'run-1',
+      '--command-token',
+      'plan-token',
+      '--stdin',
+      '--json',
+    ]);
 
     expect(setExitCode).toHaveBeenCalledWith(1);
     expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
       ok: false,
       error: { category: 'validation', code: 'invalid-review-plan' },
       result: { valid: false, errors: [{ code: 'missing-path-owner' }] },
+    });
+  });
+
+  it('requires stdin mode and rejects a non-plan JSON document', async () => {
+    const missingStdin = createReviewValidatePlanCommand({
+      stdin: Readable.from([JSON.stringify(plan)]),
+      write: vi.fn(),
+      setExitCode: vi.fn(),
+      validate: vi.fn(),
+      lifecycle: {} as never,
+    }).exitOverride();
+    await expect(
+      missingStdin.parseAsync([
+        'node',
+        'oat',
+        'validate-plan',
+        '--run-id',
+        'run-1',
+        '--command-token',
+        'plan-token',
+        '--json',
+      ]),
+    ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
+
+    const write = vi.fn();
+    const validate = vi.fn();
+    const invalidPlan = createReviewValidatePlanCommand({
+      stdin: Readable.from(['null']),
+      write,
+      setExitCode: vi.fn(),
+      validate,
+      lifecycle: {} as never,
+    });
+    await invalidPlan.parseAsync([
+      'node',
+      'oat',
+      'validate-plan',
+      '--run-id',
+      'run-1',
+      '--command-token',
+      'plan-token',
+      '--stdin',
+      '--json',
+    ]);
+
+    expect(validate).not.toHaveBeenCalled();
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+      ok: false,
+      error: { category: 'input', code: 'invalid-validate-plan-input' },
     });
   });
 });

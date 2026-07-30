@@ -1,5 +1,3 @@
-import { Readable } from 'node:stream';
-
 import { describe, expect, it, vi } from 'vitest';
 
 import { createReviewBeginEvidenceCommand } from './begin-evidence';
@@ -13,16 +11,22 @@ describe('createReviewBeginEvidenceCommand', () => {
     }));
     const setExitCode = vi.fn();
     const command = createReviewBeginEvidenceCommand({
-      stdin: Readable.from([
-        JSON.stringify({ validationRunId: 'run-1', receipt: 'receipt-1' }),
-      ]),
       write,
       setExitCode,
       begin,
       lifecycle: {} as never,
     });
 
-    await command.parseAsync(['node', 'oat', 'begin-evidence']);
+    await command.parseAsync([
+      'node',
+      'oat',
+      'begin-evidence',
+      '--run-id',
+      'run-1',
+      '--receipt',
+      'receipt-1',
+      '--json',
+    ]);
 
     expect(begin).toHaveBeenCalledWith(
       { runId: 'run-1', receipt: 'receipt-1' },
@@ -35,23 +39,26 @@ describe('createReviewBeginEvidenceCommand', () => {
     });
   });
 
-  it('rejects missing receipt before the lifecycle boundary', async () => {
-    const write = vi.fn();
+  it('requires the exact trusted argv contract', async () => {
     const begin = vi.fn();
     const command = createReviewBeginEvidenceCommand({
-      stdin: Readable.from([JSON.stringify({ validationRunId: 'run-1' })]),
-      write,
+      write: vi.fn(),
       setExitCode: vi.fn(),
       begin,
       lifecycle: {} as never,
-    });
+    }).exitOverride();
 
-    await command.parseAsync(['node', 'oat', 'begin-evidence']);
+    await expect(
+      command.parseAsync([
+        'node',
+        'oat',
+        'begin-evidence',
+        '--run-id',
+        'run-1',
+        '--json',
+      ]),
+    ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
     expect(begin).not.toHaveBeenCalled();
-    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
-      ok: false,
-      error: { category: 'input', code: 'invalid-begin-evidence-input' },
-    });
   });
 });

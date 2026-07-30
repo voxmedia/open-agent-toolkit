@@ -14,12 +14,6 @@ import {
   runReviewJsonCommand,
 } from './review-json';
 
-interface ValidatePlanInput {
-  validationRunId: string;
-  commandToken: string;
-  plan: ReviewPlanV1;
-}
-
 interface ValidatePlanCommandDependencies {
   stdin: AsyncIterable<Uint8Array | string>;
   write: (output: string) => void;
@@ -42,21 +36,12 @@ const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
   },
 };
 
-function assertValidatePlanInput(
-  value: unknown,
-): asserts value is ValidatePlanInput {
-  if (
-    typeof value !== 'object' ||
-    value === null ||
-    typeof (value as Record<string, unknown>).validationRunId !== 'string' ||
-    typeof (value as Record<string, unknown>).commandToken !== 'string' ||
-    typeof (value as Record<string, unknown>).plan !== 'object' ||
-    (value as Record<string, unknown>).plan === null
-  ) {
+function assertReviewPlan(value: unknown): asserts value is ReviewPlanV1 {
+  if (typeof value !== 'object' || value === null) {
     throw new ReviewJsonCommandError({
       category: 'input',
       code: 'invalid-validate-plan-input',
-      message: 'validate-plan requires validationRunId, commandToken, and plan',
+      message: 'validate-plan stdin must be a ReviewPlanV1 JSON object',
     });
   }
 }
@@ -67,17 +52,21 @@ export function createReviewValidatePlanCommand(
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
   return new Command('validate-plan')
     .description('Validate a review plan from JSON stdin')
-    .action(async () => {
+    .requiredOption('--run-id <id>', 'Validation run identifier')
+    .requiredOption('--command-token <token>', 'Plan validation capability')
+    .requiredOption('--stdin', 'Read the complete review plan from stdin')
+    .requiredOption('--json', 'Emit one JSON envelope')
+    .action(async (options: { runId: string; commandToken: string }) => {
       const exitCode = await runReviewJsonCommand({
         write: dependencies.write,
         operation: async () => {
-          const input = await readBoundedJsonStdin(dependencies.stdin);
-          assertValidatePlanInput(input);
+          const plan = await readBoundedJsonStdin(dependencies.stdin);
+          assertReviewPlan(plan);
           const result = await dependencies.validate(
             {
-              runId: input.validationRunId,
-              commandToken: input.commandToken,
-              plan: input.plan,
+              runId: options.runId,
+              commandToken: options.commandToken,
+              plan,
             },
             dependencies.lifecycle,
           );

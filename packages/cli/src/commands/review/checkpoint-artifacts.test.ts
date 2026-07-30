@@ -1,5 +1,3 @@
-import { Readable } from 'node:stream';
-
 import type { PreparedReviewContextV1 } from '@review/types';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -18,19 +16,22 @@ describe('createReviewCheckpointArtifactsCommand', () => {
     });
     const setExitCode = vi.fn();
     const command = createReviewCheckpointArtifactsCommand({
-      stdin: Readable.from([
-        JSON.stringify({
-          validationRunId: 'run-1',
-          checkpointToken: 'secret-token',
-        }),
-      ]),
       write,
       setExitCode,
       checkpoint,
       lifecycle: {} as never,
     });
 
-    await command.parseAsync(['node', 'oat', 'checkpoint-artifacts']);
+    await command.parseAsync([
+      'node',
+      'oat',
+      'checkpoint-artifacts',
+      '--run-id',
+      'run-1',
+      '--checkpoint-token',
+      'secret-token',
+      '--json',
+    ]);
 
     expect(checkpoint).toHaveBeenCalledWith(
       { runId: 'run-1', checkpointToken: 'secret-token' },
@@ -50,23 +51,26 @@ describe('createReviewCheckpointArtifactsCommand', () => {
     expect(output).not.toContain('remainingTokens');
   });
 
-  it('rejects incomplete checkpoint input without calling the lifecycle', async () => {
-    const write = vi.fn();
+  it('requires the exact trusted argv contract', async () => {
     const checkpoint = vi.fn();
     const command = createReviewCheckpointArtifactsCommand({
-      stdin: Readable.from([JSON.stringify({ validationRunId: 'run-1' })]),
-      write,
+      write: vi.fn(),
       setExitCode: vi.fn(),
       checkpoint,
       lifecycle: {} as never,
-    });
+    }).exitOverride();
 
-    await command.parseAsync(['node', 'oat', 'checkpoint-artifacts']);
+    await expect(
+      command.parseAsync([
+        'node',
+        'oat',
+        'checkpoint-artifacts',
+        '--run-id',
+        'run-1',
+        '--json',
+      ]),
+    ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
     expect(checkpoint).not.toHaveBeenCalled();
-    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
-      ok: false,
-      error: { category: 'input', code: 'invalid-checkpoint-input' },
-    });
   });
 });
