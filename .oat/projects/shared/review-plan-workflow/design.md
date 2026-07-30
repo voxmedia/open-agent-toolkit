@@ -60,12 +60,18 @@ unwired reference implementation, not an additional coordinator.
   continuation, final validation, accounting repair, and cleanup.
 - **ChangeMap and Obligation Collector:** Produces metadata-only path and
   requirement inputs.
+- **Post-Artifact Budget Refresher:** Seals independently observed context
+  telemetry after artifact intake; preparation telemetry can deny but never
+  authorize whole-diff loading.
 - **Validation Context Store:** Holds short-TTL run state, receipts, progress,
   and diagnostics outside resolver paths.
 - **ReviewPlan Validator:** Checks exact-set accounting and policy invariants
   before declared evidence.
 - **Reviewer Contract:** Owns interpretation, strategy, evidence, findings, and
   final accounting.
+- **Prior Evidence Adapter:** Applies project/target/gate-lineage filtering and
+  removes prior verdict/severity authority before prior evidence reaches the
+  reviewer.
 - **Output Validator:** Checks receipt identity and exact-set output, then
   coordinates bounded same-handle repair.
 - **Gate Failure Translator:** Exposes accounting-invalid completion distinctly
@@ -76,25 +82,37 @@ unwired reference implementation, not an additional coordinator.
 ### Component Diagram
 
 ```text
-                           coordinator-owned
 ┌────────────────────────────────────────────────────────────────────┐
+│ coordinator-owned                                                  │
 │ resolve mode ── legacy ──► current unvalidated review path         │
 │          │ enforce                                                 │
 │          ▼                                                         │
-│ ChangeMap + obligation collector ──► validation context store      │
-│          │ ReviewPreparationV1              ▲                      │
-└──────────┼──────────────────────────────────┼──────────────────────┘
-           ▼                                  │
-┌──────────────── reviewer-owned ─────────────┴──────────────────────┐
-│ lifecycle artifacts → artifact checkpoint → sealed context         │
-│                          │                 → in-memory ReviewPlanV1 │
-│                          ├─ validate-plan --stdin ─► opaque receipt │
+│ ChangeMap collector + Prior Evidence Adapter                       │
+│          │ ReviewPreparationV1 ──► validation context store        │
+└──────────┼─────────────────────────────────────────────────────────┘
+           ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ reviewer-owned                                                     │
+│ current lifecycle artifacts + normalized prior evidence            │
+│          │ artifact-checkpoint request                             │
+└──────────┼─────────────────────────────────────────────────────────┘
+           ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ coordinator-owned                                                  │
+│ Post-Artifact Budget Refresher ──► sealed context/store             │
+│          │ PreparedReviewContextV1                                 │
+└──────────┼─────────────────────────────────────────────────────────┘
+           ▼
+┌────────────────────────────────────────────────────────────────────┐
+│ reviewer-owned                                                     │
+│ in-memory ReviewPlanV1 ── validate-plan ──► opaque receipt          │
+│                          │                                         │
 │                          ▼                                         │
 │ selective evidence → reconciliation → findings + accounting        │
 └──────────────────────────┬─────────────────────────────────────────┘
                            ▼
 ┌────────────────────────────────────────────────────────────────────┐
-│ coordinator output validation                                     │
+│ coordinator-owned output validation                               │
 │ receipt + digests + exact path/obligation sets                     │
 │          │ invalid: same-handle accounting repair, max 2           │
 │          ▼ valid                                                   │
@@ -110,17 +128,19 @@ unwired reference implementation, not an additional coordinator.
    output `legacy-unvalidated`, and exits this lifecycle. It creates no
    validation context or receipt and performs no accounting validation.
 3. In `enforce`, preparation runs bounded Git metadata operations and artifact
-   parsers.
+   parsers. The Prior Evidence Adapter enforces project/target/gate lineage and
+   removes prior verdict/severity disposition.
    Missing telemetry or an obviously oversized numstat estimate denies
    whole-diff without starting a diff child. Otherwise a capped child counts
    and discards diff bytes; cap or timeout produces a lower-bound estimate.
 4. Preparation creates `ReviewPreparationV1` and writes private run state.
 5. Capability preflight verifies the validator CLI, schema version, reviewer
    tools, continuation support, and sink-specific output validator.
-6. The reviewer reads required lifecycle/prior-review artifacts, then records
-   the artifact checkpoint. The coordinator queries host telemetry and returns
-   immutable `PreparedReviewContextV1`; absent post-artifact telemetry leaves
-   context budget null.
+6. The reviewer reads required current lifecycle artifacts, consumes normalized
+   prior evidence from preparation, then records the artifact checkpoint. The
+   coordinator queries host telemetry and returns immutable
+   `PreparedReviewContextV1`; absent post-artifact telemetry leaves context
+   budget null.
 7. The reviewer constructs `ReviewPlanV1`.
 8. The reviewer submits the complete plan through
    `oat review validate-plan --run-id <id> --stdin`.
@@ -455,8 +475,8 @@ or correlation failure.
 - Read terminal validation receipts by gate run ID.
 - Emit existing compatible top-level `status: review_failed` with subtype
   `review_complete_accounting_invalid`.
-- Materialize a minimal terminal diagnostic receipt, then include its attempt
-  count and safe diagnostic pointer.
+- Materialize a minimal terminal diagnostic receipt, then include separate
+  validation/repair attempt counts and a safe diagnostic pointer.
 - Set `artifactPath: null`, `receiveEligible: false`, and `handoff: null`.
 - Preserve existing timeout/activity diagnostics when no accounting-invalid
   receipt exists.
@@ -524,11 +544,11 @@ interface ReviewPreparationV1 {
   expiresAt: string;
 }
 
-interface PreparedReviewContextV1 extends ReviewPreparationV1 {
+type PreparedReviewContextV1 = Omit<ReviewPreparationV1, 'timeBudget'> & {
   budget: ReviewBudgetV1;
   artifactCheckpointAt: string;
   contextDigest: string;
-}
+};
 ```
 
 **Validation Rules:**
@@ -538,6 +558,8 @@ interface PreparedReviewContextV1 extends ReviewPreparationV1 {
 - Unique obligation IDs and unique changed paths.
 - Preparation and context digests are computed from canonical JSON excluding
   timestamps and their own digest field.
+- Final `budget.time` must exactly equal the stored preparation `timeBudget`;
+  post-artifact refresh may replace only context-budget telemetry.
 - `PreparedReviewContextV1` is created exactly once after artifact intake;
   plan validation requires it.
 - Legacy runs do not create preparation/context records or receipts.
@@ -876,8 +898,15 @@ This is an intentional enforce-mode compatibility boundary:
 `MIN_GATE_TIMEOUT_MS = 1_000`. The general config minimum remains unchanged;
 only the enforced review contract adds the 120-second preflight.
 
-With no outer time budget, fields are null and the ordering contract remains,
-but deadline guarantees are not claimed.
+The 120-second value is a safety floor, not a claim that every review is useful
+within that budget. A broad review with only 15 seconds of evidence time is
+expected to return non-actionable `BLOCKED` when it cannot establish coverage.
+Keeping the floor low minimizes newly invalid existing configs; the current
+15/30-minute scope defaults remain the operationally recommended budgets.
+
+With no outer time budget, `ReviewBudgetV1.time` and
+`ReviewPlanV1.timeAllocation` are null. The ordering contract remains, but
+deadline guarantees are not claimed.
 
 ### PlanValidationReceiptV1
 
