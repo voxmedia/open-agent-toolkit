@@ -78,17 +78,16 @@ unwired reference implementation, not an additional coordinator.
 ```text
                            coordinator-owned
 ┌────────────────────────────────────────────────────────────────────┐
-│ scope/range/sink/budget                                            │
-│          │                                                         │
+│ resolve mode ── legacy ──► current unvalidated review path         │
+│          │ enforce                                                 │
 │          ▼                                                         │
 │ ChangeMap + obligation collector ──► validation context store      │
-│          │                                  ▲                      │
-│          │ PreparedReviewContextV1          │ receipt/progress     │
+│          │ ReviewPreparationV1              ▲                      │
 └──────────┼──────────────────────────────────┼──────────────────────┘
            ▼                                  │
 ┌──────────────── reviewer-owned ─────────────┴──────────────────────┐
-│ lifecycle artifacts → in-memory ReviewPlanV1                      │
-│                          │                                         │
+│ lifecycle artifacts → artifact checkpoint → sealed context         │
+│                          │                 → in-memory ReviewPlanV1 │
 │                          ├─ validate-plan --stdin ─► opaque receipt │
 │                          ▼                                         │
 │ selective evidence → reconciliation → findings + accounting        │
@@ -107,30 +106,36 @@ unwired reference implementation, not an additional coordinator.
 
 1. The coordinator resolves review mode, project, range, sink, invocation, and
    optional outer time/context budgets.
-2. Preparation runs bounded Git metadata operations and artifact parsers. A
-   capped child process counts diff bytes and discards them; cap or timeout
-   produces a lower-bound estimate that forbids whole-diff loading rather than
-   failing authoritative path collection.
-3. Preparation creates `PreparedReviewContextV1`, writes a private validation
-   manifest, and returns its run ID and context digest.
-4. Capability preflight verifies the validator CLI, schema version, reviewer
+2. If mode is `legacy`, the coordinator runs the pre-project contract, marks
+   output `legacy-unvalidated`, and exits this lifecycle. It creates no
+   validation context or receipt and performs no accounting validation.
+3. In `enforce`, preparation runs bounded Git metadata operations and artifact
+   parsers.
+   Missing telemetry or an obviously oversized numstat estimate denies
+   whole-diff without starting a diff child. Otherwise a capped child counts
+   and discards diff bytes; cap or timeout produces a lower-bound estimate.
+4. Preparation creates `ReviewPreparationV1` and writes private run state.
+5. Capability preflight verifies the validator CLI, schema version, reviewer
    tools, continuation support, and sink-specific output validator.
-5. The reviewer reads required lifecycle/prior-review artifacts and constructs
-   `ReviewPlanV1`.
-6. The reviewer submits the complete plan through
+6. The reviewer reads required lifecycle/prior-review artifacts, then records
+   the artifact checkpoint. The coordinator queries host telemetry and returns
+   immutable `PreparedReviewContextV1`; absent post-artifact telemetry leaves
+   context budget null.
+7. The reviewer constructs `ReviewPlanV1`.
+8. The reviewer submits the complete plan through
    `oat review validate-plan --run-id <id> --stdin`.
-7. The validator loads the coordinator-owned context, validates the plan, stores
+9. The validator loads the coordinator-owned context, validates the plan, stores
    a receipt record, and returns an opaque token.
-8. The reviewer records `evidence_started` and loads evidence according to the
-   plan. Inline and delegated paths use the same sequence.
-9. The reviewer returns findings plus compact `ReviewAccountingV1`.
-10. The coordinator validates the output. On failure, it sends precise errors
+10. The reviewer records `evidence_started` and loads evidence according to the
+    plan. Inline and delegated paths use the same sequence.
+11. The reviewer returns findings plus compact `ReviewAccountingV1`.
+12. The coordinator validates the output. On failure, it sends precise errors
     through the same accepted continuation for at most two accounting-only
     repairs.
-11. Valid complete output proceeds to the rail's existing artifact, GitHub
+13. Valid complete output proceeds to the rail's existing artifact, GitHub
     posting, ledger, gate, or receive flow. Valid blocked-incomplete accounting
     proceeds only through the existing non-actionable `BLOCKED` path.
-12. The coordinator cleans up accepted and ordinary terminal runs after sink
+14. The coordinator cleans up accepted and ordinary terminal runs after sink
     translation. Accounting-invalid runs are reduced to a private diagnostic
     receipt retained until TTL. The gate parent and expired-context reaper cover
     killed-child and process-crash paths.
@@ -144,7 +149,7 @@ preserving rail-specific output and bookkeeping.
 
 **Responsibilities:**
 
-- Resolve `enforce` or explicit `legacy`.
+- Resolve `enforce` or `legacy`, including the current rollout-stage default.
 - Prepare authoritative context before reviewer launch.
 - Hold the accepted reviewer continuation needed for repair.
 - Validate and repair output before exposing it.
@@ -156,6 +161,7 @@ preserving rail-specific output and bookkeeping.
 ```typescript
 interface ReviewerContinuation {
   kind: 'accepted-child' | 'inline';
+  checkpointArtifactsLoaded(): Promise<PreparedReviewContextV1>;
   requestAccountingRepair(
     errors: AccountingValidationError[],
   ): Promise<ReviewOutput>;
@@ -163,14 +169,14 @@ interface ReviewerContinuation {
 
 interface ReviewExecutionSession {
   runId: string;
-  context: PreparedReviewContextV1;
+  preparation: ReviewPreparationV1;
   continuation: ReviewerContinuation;
   outputDeadlineMs: number | null;
 }
 
 interface ReviewCoordinator {
-  prepare(input: PrepareReviewContextInput): Promise<PreparedReviewContextV1>;
-  launch(context: PreparedReviewContextV1): Promise<ReviewExecutionSession>;
+  prepare(input: PrepareReviewContextInput): Promise<ReviewPreparationV1>;
+  launch(preparation: ReviewPreparationV1): Promise<ReviewExecutionSession>;
   validateAndRepair(
     session: ReviewExecutionSession,
     output: ReviewOutput,
@@ -193,8 +199,12 @@ interface ReviewCoordinator {
 
 - The interface has no replacement-launch method. Repair can only use the
   accepted continuation.
+- `checkpointArtifactsLoaded` is launcher-owned and accepts no reviewer-supplied
+  token counts. It queries independently observed host telemetry and seals the
+  planning context once.
 - Indirect gates and aliases do not create duplicate authoritative contexts.
-- `enforce` remains the default for migrated project code-review coordinators.
+- `enforce` remains the target default for migrated project code-review
+  coordinators after the bounded compatibility rollout.
 
 ### ChangeMap and Obligation Collector
 
@@ -205,9 +215,13 @@ returning content diffs to the reviewer.
 
 - Collect full base/head SHAs, `name-status`, rename/deletion metadata,
   `numstat`, directory grouping, and aggregate totals.
-- Stream the patch to a byte counter with a 64 MiB read cap and a preparation
-  deadline of `min(30 seconds, max(5 seconds, 10% of outer budget))`; use
-  30 seconds when no outer budget exists.
+- Before patch counting, deny whole-diff eligibility without starting a diff
+  child when context telemetry is absent or when the denial-only numstat
+  estimate already exceeds preparation's `availableTokensUpperBound`.
+- Otherwise stream the patch to a byte counter with a 64 MiB read cap and a
+  preparation deadline of
+  `min(30 seconds, max(5 seconds, 10% of outer budget))`; use 30 seconds when
+  no outer time budget exists.
 - Apply deterministic generated/bookkeeping hints without making review-skip
   decisions.
 - Parse stable obligations:
@@ -224,9 +238,38 @@ returning content diffs to the reviewer.
 - Collection failure blocks `enforce` before launch; it never silently emits an
   incomplete authoritative set.
 - Patch bytes may be counted but never surfaced as content during preparation.
+- The denial-only estimate is
+  `ceil((additions + deletions) / NUMSTAT_LINES_PER_TOKEN_DENIAL_FACTOR)`, with
+  `NUMSTAT_LINES_PER_TOKEN_DENIAL_FACTOR = 4`. It is intentionally
+  conservative and may choose path-scoped review early; it can never authorize
+  whole-diff loading.
+- A skipped counter records `coarse-denied` plus its reason. This avoids
+  content-diff I/O in the common obviously-large or no-context-telemetry case.
 - Reaching the byte or time cap records a lower bound, terminates the counting
   child, and forbids whole-diff loading. It does not weaken the authoritative
   path set collected by bounded metadata commands.
+
+### Post-Artifact Budget Refresher
+
+**Purpose:** Prevent preparation-time telemetry from authorizing evidence after
+artifact intake has consumed additional context.
+
+**Responsibilities:**
+
+- Accept a one-shot `artifacts_loaded` checkpoint through the accepted reviewer
+  continuation.
+- Query the launcher/host telemetry adapter; never accept reviewer-estimated
+  token counts.
+- Seal `PreparedReviewContextV1` with post-artifact `ReviewBudgetV1` and a new
+  context digest before plan validation.
+- Return null context budget when telemetry is unavailable or stale, thereby
+  denying whole-diff eligibility.
+- Reject repeated checkpoints, checkpoints after plan validation, and plans
+  submitted before the checkpoint.
+
+Preparation-time telemetry is denial-only: it may skip patch counting when
+whole-diff cannot plausibly fit, but it cannot authorize whole-diff. Only the
+sealed post-artifact snapshot can authorize it.
 
 ### Validation Context Store and Reaper
 
@@ -258,6 +301,7 @@ across processes.
 **Progress Breadcrumbs:**
 
 - `prepared`
+- `artifacts_loaded`
 - `plan_validated`
 - `evidence_started`
 - `accounting_repair`
@@ -279,7 +323,8 @@ evidence work.
 - Validate cross-lane seams and primary verification boundaries.
 - Validate whole-diff budget eligibility.
 - Require FR5-FR7 fields regardless of inline/delegate outcome.
-- Reject semantic-only delegation economics and non-positive operation savings.
+- Require complete delegation reasoning and reject plans that miss any
+  structural delegation gate.
 - Require inspection strategy and outcome shape for generated/bookkeeping
   classifications.
 - Persist the normalized assignment projection used by output validation.
@@ -288,7 +333,8 @@ evidence work.
 **Plan Validation Repair:**
 
 - The reviewer may correct a rejected plan before evidence.
-- At most two plan-validation attempts are allowed.
+- Plan validation allows two submissions total: the initial submission plus one
+  corrected resubmission.
 - Plan correction does not consume the later output-accounting repair budget.
 - Evidence must not begin without a valid receipt in `enforce`.
 
@@ -350,6 +396,12 @@ omits prior verdict and severity disposition entirely. The reviewer may use the
 remaining fields to prioritize navigation, select positive samples, and restore
 deferred obligations, but the current plan, claims, findings, severity, and
 verdict are independently produced and validated.
+
+`deferredFindingIds` are a deliberate narrow exception to verdict-free prior
+intake: they carry forward the historical judgment that a surface still needs
+attention, but only by creating a current `deferred-finding` obligation. They
+do not preserve prior validity, severity, or disposition; the current reviewer
+must independently inspect and resolve each obligation.
 
 ### Canonical Review Accounting
 
@@ -422,8 +474,8 @@ or correlation failure.
   accepted-continuation support, and sink validator.
 - Enforce `workflow.reviewPlanMode`.
 - Fail before launch in `enforce` when capability is incomplete.
-- Permit `legacy` only when explicitly configured or on an enumerated
-  out-of-scope rail.
+- Permit `legacy` as the initial rollout default, when explicitly configured,
+  or on an enumerated out-of-scope rail.
 - Mark legacy output `legacy-unvalidated`.
 - Contract-test the complete coordinator inventory.
 
@@ -437,17 +489,18 @@ state, and strict schema validation before any caller is wired.
 
 ## Data Models
 
-### PreparedReviewContextV1
+### ReviewPreparationV1 and PreparedReviewContextV1
 
-**Purpose:** Coordinator-owned immutable input for one broad code review.
+**Purpose:** Separate denial-only pre-launch metadata from the immutable
+post-artifact planning context.
 
 **Schema:**
 
 ```typescript
-interface PreparedReviewContextV1 {
+interface ReviewPreparationV1 {
   schemaVersion: 1;
   runId: string;
-  mode: 'enforce' | 'legacy';
+  mode: 'enforce';
   project: string;
   scope: string;
   invocation: 'manual' | 'auto' | 'gate';
@@ -459,10 +512,22 @@ interface PreparedReviewContextV1 {
   changeMap: ChangeMapV1;
   obligations: ReviewObligationV1[];
   priorEvidence: PriorReviewEvidenceV1[];
-  budget: ReviewBudgetV1 | null;
-  contextDigest: string;
+  timeBudget: ReviewBudgetV1['time'];
+  prepareContextTelemetry: {
+    totalTokens: number;
+    consumedAtPrepareTokens: number;
+    availableTokensUpperBound: number;
+    source: string;
+  } | null;
+  preparationDigest: string;
   createdAt: string;
   expiresAt: string;
+}
+
+interface PreparedReviewContextV1 extends ReviewPreparationV1 {
+  budget: ReviewBudgetV1;
+  artifactCheckpointAt: string;
+  contextDigest: string;
 }
 ```
 
@@ -471,8 +536,11 @@ interface PreparedReviewContextV1 {
 - Full 40-character lowercase hexadecimal SHAs.
 - Repository-relative normalized paths only.
 - Unique obligation IDs and unique changed paths.
-- Digest is computed from canonical JSON excluding timestamps and digest field.
-- `legacy` contexts do not create receipts.
+- Preparation and context digests are computed from canonical JSON excluding
+  timestamps and their own digest field.
+- `PreparedReviewContextV1` is created exactly once after artifact intake;
+  plan validation requires it.
+- Legacy runs do not create preparation/context records or receipts.
 
 **Storage:**
 
@@ -502,9 +570,15 @@ interface ChangeMapV1 {
     additions: number;
     deletions: number;
     binaryFiles: number;
+    numstatChangedLines: number;
+    numstatTokenDenialEstimate: number;
     patchBytes: number | null;
-    patchByteLowerBound: number;
-    patchEstimateState: 'exact' | 'lower-bound';
+    patchByteLowerBound: number | null;
+    patchEstimateState: 'exact' | 'coarse-denied' | 'lower-bound';
+    patchCountingSkippedReason:
+      | 'missing-context-telemetry'
+      | 'numstat-denial'
+      | null;
     estimatedPatchTokens: number | null;
   };
 }
@@ -512,10 +586,12 @@ interface ChangeMapV1 {
 
 For an exact count, `estimatedPatchTokens = ceil(patchBytes / 3)`. The factor is
 deliberately conservative for code and is a named policy constant covered by
-boundary tests; it is not a claim about provider tokenization. If counting
-reaches the 64 MiB or preparation-time cap, `patchBytes` and
-`estimatedPatchTokens` are null, `patchByteLowerBound` retains the observed
-count, and whole-diff loading is ineligible.
+boundary tests; it is not a claim about provider tokenization. If the pre-check
+denies counting, byte fields are null and `patchEstimateState` is
+`coarse-denied`. If counting reaches the 64 MiB or preparation-time cap,
+`patchBytes` and `estimatedPatchTokens` are null, `patchByteLowerBound` retains
+the observed count, and state is `lower-bound`. Only `exact` can authorize
+whole-diff loading.
 
 ### ReviewObligationV1
 
@@ -555,12 +631,9 @@ interface ReviewBudgetV1 {
 Context budget is populated only from independently observed host telemetry.
 When unavailable, whole-diff loading is not authorized for broad reviews.
 
-### ReviewPlanV1
+### Evidence and Worker Dossier Types
 
 ```typescript
-type ReviewStrategy = 'whole-diff-inline' | 'selective-inline' | 'delegated';
-type EvidenceStrategy = 'path-diff' | 'full-file' | 'command' | 'inventory';
-
 interface ReviewScopeRefV1 {
   bucket: 'lane' | 'classification';
   bucketId: string;
@@ -629,6 +702,16 @@ interface WorkerDossierV1 {
   uncoveredObligationIds: string[];
   uncertainty: string[];
 }
+```
+
+These types belong to worker return and final-accounting contracts; they are
+not fields on `ReviewPlanV1`.
+
+### ReviewPlanV1
+
+```typescript
+type ReviewStrategy = 'whole-diff-inline' | 'selective-inline' | 'delegated';
+type EvidenceStrategy = 'path-diff' | 'full-file' | 'command' | 'inventory';
 
 interface ReviewLaneV1 {
   id: string;
@@ -641,8 +724,6 @@ interface ReviewLaneV1 {
   checks: string[];
   delegated: boolean;
   independenceRationale: string | null;
-  estimatedEvidenceOperations: number;
-  estimatedPrimaryOperationsAvoided: number;
   substantial: boolean;
   substantialityRationale: string | null;
   deadlineMs: number | null;
@@ -680,11 +761,9 @@ interface ReviewPlanV1 {
   delegationEconomics: {
     independentLaneIds: string[];
     nonReplayedLaneIds: string[];
-    expectedPrimaryOperationsAvoided: number;
-    launchCoordinationOperations: number;
-    reconciliationOperations: number;
-    netPrimaryOperationsSaved: number;
-    rationale: string;
+    expectedSavings: string[];
+    coordinationCosts: string[];
+    decisionRationale: string;
     decision: 'inline' | 'delegate';
   };
   verificationBoundary: {
@@ -727,17 +806,15 @@ must name an `exclusionAuthority`.
 
 Delegated plans require at least two lanes that are both listed in
 `independentLaneIds` and marked `substantial`, with non-empty independence and
-substantiality rationales. A lane is substantial when it has at least three
-planned evidence operations or an isolated consequential obligation. At least
-one delegated lane must be deterministic/provenance-accepted. Operation units
-are planned primary evidence/tool steps. Each lane's
-`estimatedPrimaryOperationsAvoided` must be between zero and its
-`estimatedEvidenceOperations`; `direct-verify` requires zero. The economics
-aggregate must equal the sum for delegated lanes, so it cannot claim savings
-unrelated to lane estimates. The validator recomputes
-`netPrimaryOperationsSaved = expectedPrimaryOperationsAvoided -
-launchCoordinationOperations - reconciliationOperations` and permits delegation
-only when the result is positive. Semantic-only plans remain inline.
+substantiality rationales. The reviewer must record expected savings,
+coordination costs, and why savings outweigh costs, but substantiality and the
+economic comparison are explicitly reviewer judgments rather than
+mechanically-proven quantities. The validator checks completeness and
+cross-field consistency, not truth by self-certified arithmetic. The binding
+delegation gates are structural: at least two independent substantial lanes,
+enough reconciliation/output budget, and at least one delegated
+deterministic/provenance-accepted lane that the primary is not required to
+replay semantically. Semantic-only plans remain inline.
 
 For delegated lanes, primary contingency paths and obligations must be subsets
 of that lane's validated assignments. `allowed: false` requires empty subsets.
@@ -763,6 +840,12 @@ reviewer's final output. `assignmentDigest` is its canonical digest.
 ### ReviewTimeAllocationV1
 
 ```typescript
+const MIN_ENFORCED_REVIEW_BUDGET_MS = 120_000;
+const MIN_PLANNING_MS = 5_000;
+const MIN_EVIDENCE_MS = 15_000;
+const MIN_RECONCILIATION_MS = 10_000;
+const MIN_OUTPUT_RESERVE_MS = 90_000;
+
 interface ReviewTimeAllocationV1 {
   planningDeadlineMs: number;
   evidenceDeadlineMs: number;
@@ -775,12 +858,23 @@ interface ReviewTimeAllocationV1 {
 
 When an outer budget exists:
 
-- Planning receives up to 20% of total time, capped at 5 minutes.
+- `enforce` requires at least `MIN_ENFORCED_REVIEW_BUDGET_MS` (120 seconds).
+- Planning receives at least 5 seconds and up to 20% of total time, capped at
+  5 minutes.
+- Evidence receives at least 15 seconds and reconciliation at least 10 seconds.
 - Reconciliation plus output reserve at least 25% of total time.
 - Output reserve is at least 90 seconds.
 - Evidence ends before both reserves.
 - No lane launches after the evidence deadline.
-- A budget too short to preserve minimum output time fails preflight.
+- A shorter resolved budget fails before reviewer launch with
+  `review-budget-below-minimum`, reporting the configured/resolved value,
+  120-second minimum, and the two remedies: raise the timeout or select
+  temporary `legacy` mode explicitly. There is no silent downgrade.
+
+This is an intentional enforce-mode compatibility boundary:
+`packages/cli/src/config/oat-config.ts` currently accepts gate timeouts down to
+`MIN_GATE_TIMEOUT_MS = 1_000`. The general config minimum remains unchanged;
+only the enforced review contract adds the 120-second preflight.
 
 With no outer time budget, fields are null and the ordering contract remains,
 but deadline guarantees are not claimed.
@@ -889,9 +983,14 @@ dossiers remain ephemeral; dossier/evidence digests preserve provenance.
 Sink adapters assign stable output-local finding IDs before validation. Every
 promoted finding must have one `promoted-finding` claim with direct verified
 evidence. Consequential absence claims, worker conflicts, and cross-lane gaps
-must each have direct claim records even when their disposition is rejected or
-unresolved. Positive samples and deterministic results use sample/provenance
-records, respectively. Missing required claims invalidate accounting.
+must each have direct claim records even when their disposition is `rejected`
+or `unresolved`. `rejected` means direct verification disproved the candidate
+claim; it is a resolved and completion-compatible result for those three claim
+kinds. A promoted finding, positive sample, or deterministic result must be
+`verified`; `rejected` is invalid for those kinds. `unresolved` always requires
+blocked-incomplete completion. Positive samples and deterministic results use
+sample/provenance records, respectively. Missing required claims invalidate
+accounting.
 For `kind: command`, the evidence record's `commandId` must resolve to a command
 record and `commandResultDigest` must equal the canonical digest of that
 record's scope, provenance, and terminal result. Every
@@ -918,9 +1017,10 @@ top-level evidence registry; every command carries its own scope, provenance,
 and terminal result.
 
 `completion: complete` is valid only when every lane and inspected
-classification has full coverage, every required claim is verified, and no
-obligation remains uncovered. Any partial/none/uncovered state, unresolved
-required claim, or uncovered obligation requires
+classification has full coverage, every required claim is resolved under the
+kind-specific rules above, and no obligation remains uncovered. Any
+partial/none/uncovered state, unresolved required claim, or uncovered obligation
+requires
 `completion: blocked-incomplete` and the sink's existing reviewer `BLOCKED`
 outcome. Output validation rejects a passing/no-findings verdict paired with
 blocked-incomplete accounting. The coordinator may surface the validated
@@ -980,7 +1080,7 @@ injection from untrusted source content.
 --range <base..head>
 --sink <artifact|structured>
 --invocation <manual|auto|gate>
---mode <enforce|legacy>
+--mode <enforce>
 --budget-ms <number>             # optional
 --budget-source <string>         # required with budget
 --context-tokens <number>        # optional observed telemetry
@@ -989,7 +1089,7 @@ injection from untrusted source content.
 --json
 ```
 
-**Output:** `PreparedReviewContextV1`.
+**Output:** `ReviewPreparationV1`.
 
 **Errors:**
 
@@ -1002,6 +1102,29 @@ options must either all be present or all be absent; consumed tokens must be
 non-negative and no greater than total tokens. `--context-source` identifies
 the independently observed host telemetry source and cannot be reviewer
 estimated.
+
+Preparation-time context telemetry supplies only
+`availableTokensUpperBound` for early denial. It cannot populate the final
+evidence budget or authorize whole-diff.
+
+### `oat review checkpoint-artifacts`
+
+**Method:** Launcher-owned JSON CLI command invoked once after required artifact
+intake.
+
+```text
+oat review checkpoint-artifacts \
+  --run-id <id> \
+  --checkpoint-token <opaque> \
+  --json
+```
+
+**Output:** `PreparedReviewContextV1`.
+
+The command queries the configured host telemetry adapter after artifact intake;
+it accepts no token-count arguments. Missing or stale telemetry produces
+`budget.context: null`. It atomically seals the context digest and rejects
+replay, post-plan invocation, or an invalid checkpoint token.
 
 ### `oat review validate-plan`
 
@@ -1018,7 +1141,7 @@ oat review validate-plan --run-id <id> --stdin --json
 - Maximum stdin size is bounded.
 - Input is parsed as strict JSON with schema version 1.
 - Validation errors return a structured list and no receipt.
-- Expired, missing, or legacy contexts are rejected.
+- Expired, missing, unsealed, or already-terminal contexts are rejected.
 
 ### `oat review validate-output`
 
@@ -1044,13 +1167,14 @@ type OutputValidationResult =
 
 ```yaml
 workflow:
-  reviewPlanMode: enforce # enforce | legacy
+  reviewPlanMode: legacy # enforce | legacy; initial rollout default
 ```
 
-- Default: `enforce`.
+- Initial compatibility release default: `legacy`.
+- Target default after the rollout exit gate: `enforce`.
 - Resolution follows normal local > shared > user > default precedence.
-- `legacy` is a temporary explicit opt-out.
-- Gates refuse silent downgrade.
+- Explicit `enforce` is never downgraded after resolution, including for gates.
+- After the default flips, `legacy` becomes a temporary explicit opt-out.
 
 ### Reviewer Dispatch Payload
 
@@ -1059,7 +1183,8 @@ Broad code-review payloads add:
 ```typescript
 interface ReviewPlanningPayload {
   review_plan_contract: 1;
-  prepared_context: PreparedReviewContextV1;
+  review_preparation: ReviewPreparationV1;
+  artifact_checkpoint_command: string;
   validate_plan_command: string;
 }
 ```
@@ -1075,7 +1200,8 @@ interface ReviewAccountingInvalidFailure {
   failure: {
     kind: 'review_complete_accounting_invalid';
     runId: string;
-    attempts: number;
+    validationAttempts: number;
+    repairAttempts: number;
     diagnosticPath: string;
   };
   artifactPath: null;
@@ -1097,7 +1223,9 @@ existing provider authentication and branch-local CLI route.
 ### Authorization
 
 - Only the invocation coordinator creates validation contexts.
-- The reviewer may submit plans and repaired output but cannot mark them valid.
+- The reviewer may invoke the one-shot launcher-owned artifact checkpoint,
+  submit plans, and submit repaired output, but cannot supply host telemetry or
+  mark any state valid.
 - The output validator and gate parent load contexts by run ID plus opaque
   receipt state.
 - Workers never receive validation-store mutation authority.
@@ -1127,15 +1255,21 @@ existing provider authentication and branch-local CLI route.
   commands.
 - **Stale receipt reuse:** Run ID, context digest, plan digest, assignment
   digest, TTL, invocation, and sink must match.
+- **Telemetry self-report:** Artifact checkpoint accepts no numeric telemetry;
+  only the host adapter may populate the sealed budget snapshot.
 
 ## Performance Considerations
 
 ### Metadata Cost
 
-Preparation uses bounded Git metadata commands. Patch counting stops at 64 MiB
-or its preparation deadline and the child is terminated, so model context
-receives totals or a lower bound rather than content. The collector performs one
-sorted pass over changed paths and obligations: `O(files + obligations)`.
+Preparation uses bounded Git metadata commands. Missing context telemetry or a
+denial-only numstat estimate above preparation's `availableTokensUpperBound`
+skips patch counting entirely. The final post-artifact evidence budget does not
+exist yet and is never consulted by this pre-check. Otherwise counting stops at
+64 MiB or its preparation deadline and the child is terminated, so model
+context receives totals or a lower bound rather than content. The collector
+performs one sorted pass over changed paths and obligations:
+`O(files + obligations)`.
 
 ### Whole-Diff Eligibility
 
@@ -1150,16 +1284,19 @@ Whole-diff loading is not authorized by file count. It requires:
 5. one coherent review lane with no unresolved high-consequence cross-lane
    seam.
 
-If context telemetry is absent, the patch estimate is capped/uncertain, or the
-evidence budget is insufficient, broad reviews use path-scoped evidence. Small
-reviews may still stay inline; inline does not imply whole-diff.
+If context telemetry is absent, the numstat pre-check denies, the patch estimate
+is capped/uncertain, or the evidence budget is insufficient, broad reviews use
+path-scoped evidence. Small reviews may still stay inline; inline does not imply
+whole-diff.
 
 ### Time Budget
 
 The reviewer consumes the coordinator-resolved outer budget; it does not
-recalculate gate timeout. Planning uses at most 20%/5 minutes. Reconciliation
-plus output retain at least 25%, and output retains at least 90 seconds. Lane
-deadlines cannot exceed the evidence cutoff.
+recalculate gate timeout. Enforced review requires 120 seconds. Planning retains
+at least 5 seconds and uses at most 20%/5 minutes; evidence retains at least
+15 seconds; reconciliation retains at least 10 seconds; and output retains at
+least 90 seconds. Reconciliation plus output retain at least 25%. Lane deadlines
+cannot exceed the evidence cutoff.
 
 ### Accounting Size
 
@@ -1193,10 +1330,13 @@ a universal wall-clock improvement.
 ### Error Categories
 
 - **Preflight capability failure:** Block before reviewer launch in `enforce`.
+- **Review budget below minimum:** Block before launch with
+  `review-budget-below-minimum`, resolved/configured milliseconds, required
+  120,000 milliseconds, and migration remedies.
 - **Context preparation failure:** Block before launch with exact Git/artifact
   diagnostic.
 - **Plan validation failure:** Return structured errors to the reviewer; allow
-  at most two corrections before evidence.
+  one corrected resubmission after the initial submission.
 - **Reviewer `BLOCKED`:** Authoritative, non-actionable review outcome; valid
   incomplete accounting may accompany it, but no fallback launch or gate pass
   is allowed.
@@ -1227,8 +1367,12 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
 
 ### Retry Logic
 
-- Plan correction: maximum two attempts, before evidence.
-- Output accounting repair: maximum two attempts, same accepted continuation.
+- Plan validation: maximum two submissions total, before evidence (initial plus
+  one correction).
+- Output accounting: maximum three validation submissions total (initial output
+  plus at most two same-continuation repair submissions).
+- Accounting-invalid gate diagnostics report both
+  `validationAttempts` (1–3) and `repairAttempts` (0–2).
 - No reviewer relaunch after acceptance.
 - No automatic lane replacement after acceptance.
 - Existing implementation fix/re-review loops remain separate.
@@ -1247,24 +1391,24 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
 
 ### Requirement-to-Test Mapping
 
-| ID   | Verification           | Key Scenarios                                                                                                   |
-| ---- | ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| FR1  | Integration            | Prepared context, discrete plan receipt, exact-set final validation, no unconditional pre-plan read instruction |
-| FR2  | Unit + integration     | Add/modify/delete/rename/binary paths, numstat, exact/capped patch estimate, collection failure                 |
-| FR3  | Unit                   | One primary owner, seam references, missing/duplicate/unknown paths and obligations                             |
-| FR4  | Integration            | Path-scoped broad review, inspected classifications, uncertain budget/estimate, Tier 3 no read-all reset        |
-| FR5  | Unit                   | Two independent substantial lanes, positive operation savings, semantic-only rejection, non-replayed lane       |
-| FR6  | Integration            | Typed complete/partial dossier, accepted timeout, no replacement, validated inline contingency                  |
-| FR7  | Contract + integration | Claim-addressable direct findings/absence/conflict verification, sampling, provenance acceptance                |
-| FR8  | Unit + integration     | Gate budget propagation, absent budget, cutoffs, output reserve                                                 |
-| FR9  | Contract + integration | Artifact block, structured field, stored assignment projection, incomplete-blocked coherence, bounded repair    |
-| FR10 | Integration            | Prior-evidence adapter, verdict omission, navigation-only use, same-target gate lineage                         |
-| FR11 | Unit + integration     | Compact inline plan, no unnecessary delegation, same accounting guarantees                                      |
-| NFR1 | Contract + integration | Unchanged severity semantics and reviewer authority                                                             |
-| NFR2 | Contract               | Canonical/provider parity, capability preflight, no below-floor fallback                                        |
-| NFR3 | Integration            | Existing artifact/ledger/gate/receive fixtures, legacy mode, unknown field compatibility                        |
-| NFR4 | Performance fixture    | Recorded baseline versus new evidence/replay operation counts                                                   |
-| NFR5 | End-to-end             | Sync, package checks, lockstep versions, release validation                                                     |
+| ID   | Verification           | Key Scenarios                                                                                                    |
+| ---- | ---------------------- | ---------------------------------------------------------------------------------------------------------------- |
+| FR1  | Integration            | Post-artifact sealed context, discrete plan receipt, exact-set validation, no unconditional pre-plan source read |
+| FR2  | Unit + integration     | Add/modify/delete/rename/binary paths, numstat early denial, exact/capped estimate, collection failure           |
+| FR3  | Unit                   | One primary owner, seam references, missing/duplicate/unknown paths and obligations                              |
+| FR4  | Integration            | Path-scoped broad review, inspected classifications, uncertain budget/estimate, Tier 3 no read-all reset         |
+| FR5  | Unit                   | Two independent substantial lanes, recorded cost/benefit judgment, semantic-only rejection, non-replayed lane    |
+| FR6  | Integration            | Typed complete/partial dossier, accepted timeout, no replacement, validated inline contingency                   |
+| FR7  | Contract + integration | Claim-addressable direct verification, kind-specific rejected semantics, sampling, provenance acceptance         |
+| FR8  | Unit + integration     | Gate budget propagation, 120-second minimum, absent budget, cutoffs, output reserve                              |
+| FR9  | Contract + integration | Artifact block, structured field, stored assignment projection, incomplete-blocked coherence, bounded repair     |
+| FR10 | Integration            | Prior-evidence adapter, verdict omission, navigation-only use, same-target gate lineage                          |
+| FR11 | Unit + integration     | Compact inline plan, no unnecessary delegation, same accounting guarantees                                       |
+| NFR1 | Contract + integration | Unchanged severity semantics and reviewer authority                                                              |
+| NFR2 | Contract               | Canonical/provider parity, capability preflight, no below-floor fallback                                         |
+| NFR3 | Integration            | Existing artifact/ledger/gate/receive fixtures, legacy mode, unknown field compatibility                         |
+| NFR4 | Performance fixture    | Recorded baseline versus new evidence/replay operation counts                                                    |
+| NFR5 | End-to-end             | Sync, package checks, lockstep versions, release validation                                                      |
 
 ### Unit Tests
 
@@ -1280,12 +1424,16 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   - Output lanes cannot diverge from the stored assignment projection while
     echoing a valid plan digest.
   - Expired and symlinked contexts are rejected.
-  - Whole-diff denied without observed context budget or after byte/time cap.
+  - Missing telemetry and obviously oversized numstat skip the patch counter;
+    whole-diff is also denied after byte/time cap.
   - Generated/bookkeeping classification cannot select no inspection.
-  - Delegation rejects non-positive savings, lane-unbound savings, and
-    unsubstantiated substantiality.
+  - Delegation rejects missing cost/benefit rationale, fewer than two
+    independent substantial lanes, and absent non-replayed deterministic
+    evidence.
   - Dossier partial coverage and primary contingency subsets validate.
   - Required direct verification claims cross-check against output findings.
+  - Rejected absence/conflict/gap claims count as resolved; rejected promoted
+    findings, samples, and deterministic results are invalid.
   - Evidence/command scope indexes resolve and command terminal results include
     provenance.
   - Deterministic claims resolve through command evidence to the exact command
@@ -1294,6 +1442,8 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   - Partial classification coverage identifies uninspected path indexes.
   - Incomplete coverage cannot pair with a passing/no-findings verdict.
   - Context telemetry flags require a complete, valid provenance tuple.
+  - 119,999 ms fails with `review-budget-below-minimum`; 120,000 ms preserves
+    every named floor.
   - FR5-FR7 fields required even for inline.
   - Findings are immutable across accounting repair.
 
@@ -1305,9 +1455,15 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   continuations, branch-local CLI fixtures, and deterministic clocks.
 - **Key Test Cases:**
   - Plan receipt issued before evidence sentinel.
+  - Plan submission before the one-shot artifact checkpoint is rejected;
+    post-artifact telemetry alone supplies whole-diff budget.
   - Artifact and structured outputs validate identically.
+  - One rejected plan may be corrected once; a second rejection blocks before
+    evidence.
   - First malformed accounting repairs successfully without rerunning review.
-  - Two failed repairs emit typed terminal failure and no actionable artifact.
+  - Two failed repair submissions after the initial output emit typed terminal
+    failure with `validationAttempts: 3`, `repairAttempts: 2`, and no actionable
+    artifact.
   - Gate parent distinguishes accounting invalid from timeout, materializes a
     live terminal diagnostic pointer, and removes the full child context.
   - Valid blocked-incomplete accounting follows reviewer `BLOCKED` handling and
@@ -1316,7 +1472,8 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   - Prior artifacts can change navigation/sample order but cannot supply the
     current verdict or cross gate lineage/target.
   - Coordinator inventory test fails on an undeclared broad code-review rail.
-  - Explicit legacy preserves current behavior; gate never downgrades.
+  - Initial legacy default preserves current behavior without creating
+    preparation/receipt/accounting state; explicit enforce never downgrades.
 
 ### End-to-End Tests
 
@@ -1328,6 +1485,8 @@ are absent, the lane remains uncovered and the review returns `BLOCKED`.
   - Tier 3 inline review does not execute read-all behavior.
   - Gate passes accepted output and emits non-receivable accounting-invalid
     envelope on terminal repair failure.
+  - Compatibility release dogfood runs every in-scope rail under explicit
+    enforce before the default-flip release.
 
 ## Deployment Strategy
 
@@ -1339,24 +1498,64 @@ Node.js standard libraries and current repository utilities.
 
 ### Deployment Steps
 
-1. Land production modules and focused tests behind the new config key.
+1. Land production modules and focused tests behind the new config key with
+   initial default `legacy`.
 2. Update all enumerated coordinators and canonical reviewer contracts.
 3. Update docs and provider-linked views with `oat sync --scope all`.
 4. Bump all five public packages in lockstep.
 5. Run build, test, lint, type-check, format, and `pnpm release:validate`.
-6. Dogfood local artifact, remote structured, Tier 3, implementation-phase, and
-   gate paths before merge.
+6. Dogfood explicit `enforce` across local artifact, remote structured, Tier 3,
+   implementation-phase, and gate paths.
+7. Publish the compatibility release and soak for at least seven calendar days.
+8. In the next release, flip the default to `enforce` only after the exit
+   criteria below pass; repeat lockstep versioning and release validation.
+
+### Rollout Decision and Exit Criteria
+
+The project uses a two-stage rollout that targets two consecutive releases.
+This deliberately accepts one release in which new validation is available but
+not default, because a same-release seven-coordinator cutover has higher
+compatibility and unwind risk. Failed exit criteria may extend Stage A; the
+design does not mislabel that case as a two-release bound. The target behavior
+remains enforce-by-default.
+
+The default-flip release is blocked until:
+
+1. the exhaustive coordinator inventory/parity suite covers every direct and
+   indirect in-scope rail;
+2. the explicit-enforce dogfood matrix passes for both sinks, Tier 1/Tier 3,
+   direct implementation review, and gate aliases;
+3. no unresolved P0/P1 compatibility regression remains after the minimum
+   seven-day soak;
+4. accounting-invalid, `BLOCKED`, timeout, and correlation failure envelopes
+   are distinguished in fixtures; and
+5. full release validation passes again.
+
+Stage A must create a tracked default-flip item with these criteria and the
+target next release. Fourteen calendar days after the compatibility release is
+the escalation deadline. If criteria still fail, maintainers must record one
+explicit disposition on the item: a dated fix plan, rollback of the new
+contract, or a time-bounded extension with owner and next review date. The
+default does not silently remain legacy without an owner, and the project
+cannot close before the flip or an explicit rollback decision.
+
+Legacy-mode removal is a separate post-flip criterion. Removal is eligible only
+after enforce has been the default for at least two published releases and
+30 calendar days, no unresolved P0/P1 compatibility issue requires legacy, and
+the removal has been announced in configuration docs and release notes.
 
 ### Rollback Plan
 
-Set `workflow.reviewPlanMode: legacy` as an explicit temporary rollback while
+Before the flip, rollback requires no setting change because `legacy` is the
+default. After the flip, set `workflow.reviewPlanMode: legacy` explicitly while
 retaining diagnostics. Reverting the release restores the prior contract; no
 project artifact migration is required because accepted accounting is additive.
 
 ### Configuration
 
 - **Environment Variables:** None added.
-- **Workflow setting:** `workflow.reviewPlanMode`, default `enforce`.
+- **Workflow setting:** `workflow.reviewPlanMode`; initial default `legacy`,
+  target default `enforce` after the rollout exit gate.
 - **Gate behavior:** No implicit target or mode injection; configured gate
   independence remains unchanged.
 
@@ -1377,11 +1576,17 @@ consumer rollout.
 3. Add coordinator adapters while preserving current sink behavior.
 4. Update reviewer canonical source and all provider views.
 5. Update gate envelope parser with additive failure subtype.
-6. Default migrated project code-review paths to `enforce`.
-7. Leave enumerated ad-hoc and non-code structured rails explicitly outside the
+6. Inventory resolved gate budgets below 120 seconds and document that
+   `enforce` will return `review-budget-below-minimum`; users must raise the
+   timeout or retain explicit `legacy`.
+7. Ship all migrated project code-review paths with initial default `legacy`
+   while dogfooding explicit `enforce`.
+8. Flip the default to `enforce` in the next release only after the rollout exit
+   criteria pass.
+9. Leave enumerated ad-hoc and non-code structured rails explicitly outside the
    contract.
-8. Document temporary `legacy` opt-out and create a follow-up removal criterion
-   after compatibility evidence is collected.
+10. After the flip, document temporary `legacy` opt-out and its removal
+    criterion.
 
 ### Rollback Strategy
 
@@ -1399,10 +1604,10 @@ review artifact is rewritten or removed.
 
 ## Open Questions
 
-No blocking design questions remain. The initial token-estimation factor and
-time-allocation constants are named policy values and may be tuned during
-fixture calibration without changing component boundaries or acceptance
-semantics.
+No blocking design questions remain. The byte/token and denial-only numstat
+factors are named policy values and may be tuned during fixture calibration.
+The 120-second minimum is a compatibility contract and cannot change without
+updating config migration guidance and boundary tests.
 
 ## Implementation Phases
 
@@ -1426,9 +1631,13 @@ covered by failing production tests before implementation.
 
 **Tasks:**
 
-- Implement ChangeMap/obligation collection and capped patch-byte estimation.
+- Implement ChangeMap/obligation collection, denial-only numstat pre-check, and
+  capped patch-byte estimation.
 - Implement context hashing, private store, receipts, breadcrumbs, and reaper.
-- Add prepare and validate-plan JSON commands.
+- Add prepare, one-shot post-artifact checkpoint, and validate-plan JSON
+  commands.
+- Add the launcher/host telemetry adapter; preparation telemetry remains
+  denial-only.
 - Add budget/context models and whole-diff eligibility.
 
 **Verification:** Unit and temporary-repository integration tests cover metadata,
@@ -1441,7 +1650,7 @@ receipts, TTL, crash reaping, and budget boundaries.
 **Tasks:**
 
 - Update canonical reviewer intake and ReviewPlan contract.
-- Require unconditional FR5-FR7 fields and deterministic lane economics.
+- Require unconditional FR5-FR7 fields and structural delegation gates.
 - Replace Tier 3 read-all behavior.
 - Add plan validation/correction, typed dossier/claim contracts, delegation
   economics, and selective evidence rules.
@@ -1473,16 +1682,19 @@ inventory, and no-action-before-validation tests pass.
 **Tasks:**
 
 - Add capability preflight and `workflow.reviewPlanMode`.
+- Add the 120-second enforced-review budget preflight and migration diagnostic.
 - Add gate accounting-invalid failure translation.
 - Add parent cleanup and diagnostic pointers.
-- Document explicit legacy behavior and removal follow-up.
+- Implement initial legacy-default rollout behavior and create the tracked
+  default-flip item.
 
 **Verification:** Gate distinguishes every terminal class, blocks before launch
 on capability failure, never silently downgrades, and reaps killed-child state.
 
-### Phase 6: Documentation, Provider Sync, and Release
+### Phase 6: Documentation, Provider Sync, and Compatibility Release
 
-**Goal:** Ship consistent canonical and provider behavior.
+**Goal:** Ship consistent canonical/provider behavior with legacy as the bounded
+initial default.
 
 **Tasks:**
 
@@ -1490,10 +1702,28 @@ on capability failure, never silently downgrades, and reaps killed-child state.
 - Bump changed canonical skill/agent versions once.
 - Sync all provider views.
 - Bump all five public packages in lockstep.
-- Run full validation and dogfood representative rails.
+- Run full validation and the complete explicit-enforce dogfood matrix.
+- Publish the compatibility release and begin the seven-day minimum soak.
 
 **Verification:** Build, tests, lint, type-check, format, provider parity, docs,
 and `pnpm release:validate` pass.
+
+### Phase 7: Enforce-Default Flip
+
+**Goal:** Make validated plan-first review the default after compatibility
+evidence satisfies the rollout gate.
+
+**Tasks:**
+
+- Verify every rollout exit criterion and record evidence on the tracked item.
+- Change the default to `enforce`; retain explicit `legacy` as the temporary
+  opt-out.
+- Repeat docs/config updates, lockstep package versioning, full validation, and
+  representative dogfood.
+
+**Verification:** The default-flip release passes every exit criterion and
+`pnpm release:validate`; unresolved P0/P1 compatibility regressions block the
+flip.
 
 ## Dependencies
 
@@ -1532,17 +1762,28 @@ No new third-party library or external service is required.
     prepare-time reaper.
   - **Contingency:** Manual cleanup command scoped to expired validation roots.
 - **Structured coordinator bypasses validation:** Probability Medium | Impact High
-  - **Mitigation:** Exhaustive coordinator inventory test and same-release
-    migration; enforce preflight.
-  - **Contingency:** Explicit legacy marker or block before launch.
+  - **Mitigation:** Exhaustive coordinator inventory test, explicit-enforce
+    dogfood, and bounded legacy-default compatibility release before the default
+    flip.
+  - **Contingency:** Hold the default flip and keep the tracked blocker open.
 - **Delegation economics remain gameable:** Probability Medium | Impact High
-  - **Mitigation:** Require a deterministic/provenance-accepted lane and tie the
-    decision to replay policy.
+  - **Mitigation:** Treat substantiality/cost-benefit as reviewer judgment rather
+    than numeric proof; mechanically require a deterministic/provenance-accepted
+    lane and bind it to replay policy.
   - **Contingency:** Keep review inline.
+- **Short existing gate timeout fails enforced preflight:** Probability Medium | Impact High
+  - **Mitigation:** Named 120-second minimum, exact error/remedies, config
+    inventory, migration note, and legacy-default compatibility release.
+  - **Contingency:** Raise the configured timeout or retain explicit legacy for
+    that gate until it can satisfy the enforced contract.
 - **Whole-diff estimate is miscalibrated:** Probability Medium | Impact Medium
   - **Mitigation:** Derive eligibility from observed context budget and
     conservative byte/token estimate, never file count.
   - **Contingency:** Force path-scoped evidence.
+- **Patch counting wastes I/O on obviously broad reviews:** Probability Medium | Impact Medium
+  - **Mitigation:** Skip the counter when telemetry is absent or the denial-only
+    numstat estimate already exceeds preparation's available-token upper bound.
+  - **Contingency:** Force `coarse-denied` and path-scoped evidence.
 - **Committed accounting becomes noisy:** Probability Medium | Impact Medium
   - **Mitigation:** One sorted path occurrence per lane/classification and no
     verbose ChangeMap metadata.
@@ -1552,9 +1793,11 @@ No new third-party library or external service is required.
   - **Mitigation:** Rewrite-first audit and parity fixtures before wiring.
   - **Contingency:** Replace rather than reuse the helper.
 - **Compatibility mode becomes permanent:** Probability Medium | Impact Medium
-  - **Mitigation:** Enforce default, explicit legacy warnings, and documented
-    removal criterion.
-  - **Contingency:** Open a tracked follow-up before project closeout.
+  - **Mitigation:** Two-stage rollout targeting consecutive releases, mandatory
+    tracked default-flip item, seven-day minimum soak, 14-day escalation
+    deadline, explicit exit/removal criteria, and legacy warnings.
+  - **Contingency:** Record a dated fix, rollback, or time-bounded extension; do
+    not close the project with an unowned default flip.
 
 ## References
 

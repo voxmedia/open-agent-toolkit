@@ -71,26 +71,26 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T00:31:56Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T00:56:23Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-plan-workflow
 
-**Status:** Full design draft prepared — awaiting holistic review
+**Status:** Holistic feedback incorporated — awaiting design confirmation
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
 Design is in progress. Requirements are confirmed in `spec.md`, and the complete
-`design.md` draft is ready for holistic feedback.
+`design.md` revision incorporates the first holistic review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (draft awaiting review)
+- **Design:** `design.md` (revised draft awaiting confirmation)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** original slow-review proposal and current-state handoff
@@ -107,7 +107,8 @@ Design is in progress. Requirements are confirmed in `spec.md`, and the complete
 - ✓ Promoted to spec-driven workflow
 - ✓ Requirements confirmed and written to `spec.md`
 - ✓ Complete design draft prepared
-- ⧗ Awaiting holistic design feedback
+- ✓ First holistic design feedback incorporated
+- ⧗ Awaiting design confirmation
 
 ## Blockers
 
@@ -115,4 +116,4 @@ None
 
 ## Next Milestone
 
-Incorporate holistic feedback, confirm `design.md`, and complete the design phase.
+Confirm `design.md` and complete the design phase.
