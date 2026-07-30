@@ -14,6 +14,7 @@ import { join } from 'node:path';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
+import { bindAcceptedHandle } from './command-capabilities';
 import type { ReviewPreparationV1 } from './types';
 import { ValidationStore } from './validation-store';
 
@@ -120,6 +121,22 @@ describe('ValidationStore.createRun', () => {
 });
 
 describe('validation state and gate correlation', () => {
+  it('stores only the digest of an accepted handle', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    await store.createRun({
+      preparation: preparation(),
+      artifactDraft: false,
+    });
+    await bindAcceptedHandle(store, 'abcdefghijklmnop', 'raw-secret-handle');
+    const serialized = JSON.stringify(
+      await store.unsafeReadStateForTesting('abcdefghijklmnop'),
+    );
+    expect(serialized).not.toContain('raw-secret-handle');
+    expect(serialized).toMatch(/acceptedHandleDigest/);
+  });
+
   it('reads and atomically updates valid state', async () => {
     const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
     roots.push(parent);
