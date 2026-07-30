@@ -14,7 +14,7 @@ oat_hill_checkpoints: [] # Configured: which phases require human-in-the-loop li
 oat_hill_completed: [] # Progress: which HiLL checkpoints have been completed
 oat_parallel_execution: false
 oat_phase: design # Current phase: discovery | spec | design | plan | implement | decomposition
-oat_phase_status: in_progress # Status: in_progress | complete | pr_open
+oat_phase_status: complete # Status: in_progress | complete | pr_open
 # oat_orchestration_retry_limit: 2  # optional; override fix-loop retry limit (range 0-5)
 # oat_dispatch_policy: # optional project dispatch policy; managed keeps OAT selection active, inherit leaves controls to the host
 #   mode: managed # managed | inherit
@@ -71,27 +71,27 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-30T01:11:12Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-30T01:12:27Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
 # Project State: review-plan-workflow
 
-**Status:** Final design feedback incorporated and independently verified
+**Status:** Design complete — ready for planning
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-30
 
 ## Current Phase
 
-Design is in progress. Requirements are confirmed in `spec.md`, and the complete
-`design.md` revision incorporates holistic feedback plus an independent
-cross-section consistency review.
+Design is complete. Requirements are confirmed in `spec.md`; `design.md`
+incorporates holistic feedback and passes independent cross-section consistency
+review.
 
 ## Artifacts
 
 - **Discovery:** `discovery.md` (complete)
 - **Spec:** `spec.md` (complete)
-- **Design:** `design.md` (revised draft awaiting confirmation)
+- **Design:** `design.md` (complete)
 - **Plan:** `plan.md` (scaffolded template — not started)
 - **Implementation:** `implementation.md` (scaffolded template — not started)
 - **References:** original slow-review proposal and current-state handoff
@@ -111,7 +111,8 @@ cross-section consistency review.
 - ✓ First holistic design feedback incorporated
 - ✓ Final summary-list correction incorporated
 - ✓ Independent cross-section consistency review passed
-- ⧗ Awaiting design gate resolution
+- ✓ Design gate resolved (no configured gate)
+- ✓ Design completed
 
 ## Blockers
 
@@ -119,4 +120,4 @@ None
 
 ## Next Milestone
 
-Resolve the design gate and complete the design phase.
+Run `oat-project-plan` to produce the implementation plan.
