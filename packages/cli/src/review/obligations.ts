@@ -125,3 +125,134 @@ export function parsePlanTaskObligations(
   }
   return tasks;
 }
+
+const DEVIATION_HEADERS = [
+  'Task / Review',
+  'Planned / Expected',
+  'Actual / Accepted',
+  'Why',
+  'Impact',
+  'Approval / Source',
+  'Source of Truth',
+] as const;
+
+export function parseDeviationObligations(
+  source: Buffer | string,
+  sourcePath: string,
+): ReviewObligationV1[] {
+  const lines = structuralText(source);
+  const headings = lines
+    .map((line, index) =>
+      line === '## Deviations from Plan / Design' ? index : -1,
+    )
+    .filter((index) => index >= 0);
+  if (headings.length === 0) return [];
+  if (headings.length > 1) throw new Error('duplicate deviations section');
+  let tableStart = headings[0]! + 1;
+  while (lines[tableStart] === '') tableStart++;
+  const table = parseStrictMarkdownTable(lines, tableStart);
+  if (
+    table.headers.length !== DEVIATION_HEADERS.length ||
+    table.headers.some((header, index) => header !== DEVIATION_HEADERS[index])
+  ) {
+    throw new Error('deviations table has the wrong headers');
+  }
+  const obligations: ReviewObligationV1[] = [];
+  table.rows.forEach((cells, index) => {
+    if (cells.every((cell) => cell === '-')) return;
+    const task = cells[0]!;
+    const actual = cells[2]!;
+    const sourceOfTruth = cells[6]!;
+    const complete = [task, actual, sourceOfTruth].every(
+      (cell) => cell.length > 0 && cell !== '-',
+    );
+    if (!complete) throw new Error(`deviation row ${index + 1} is incomplete`);
+    obligations.push({
+      id: `deviation:${task}:${index + 1}`,
+      kind: 'deviation',
+      source: sourceOfTruth || sourcePath,
+      summary: actual,
+      expectedPaths: [],
+      expectedChecks: [],
+    });
+  });
+  return obligations;
+}
+
+const DEFERRED_ENTRY = /^- `([^`\r\n]+)` ([^\r\n]+)$/;
+const DEFERRED_DISPOSITION =
+  /^  - Disposition: (deferred|resolved|dismissed)(?: [^\r\n]+)?$/;
+
+export function parseDeferredFindingObligations(
+  source: Buffer | string,
+  sourcePath: string,
+): ReviewObligationV1[] {
+  const lines = structuralText(source);
+  const latest = new Map<
+    string,
+    { disposition: 'deferred' | 'resolved' | 'dismissed'; summary: string }
+  >();
+  for (let index = 0; index < lines.length; index++) {
+    if (lines[index] !== '**Deferred Findings:**') continue;
+    const seenInBlock = new Set<string>();
+    index++;
+    while (index < lines.length) {
+      const line = lines[index]!;
+      if (
+        line.startsWith('#') ||
+        line === '---' ||
+        (/^\*\*[^*]+\*\*$/.test(line) && line !== '**Deferred Findings:**')
+      ) {
+        index--;
+        break;
+      }
+      if (line === '') {
+        index++;
+        continue;
+      }
+      const entry = DEFERRED_ENTRY.exec(line);
+      if (!entry) throw new Error('malformed deferred finding entry');
+      const [, id = '', summary = ''] = entry;
+      if (seenInBlock.has(id)) {
+        throw new Error(`duplicate deferred finding in block: ${id}`);
+      }
+      seenInBlock.add(id);
+      let cursor = index + 1;
+      let disposition: 'deferred' | 'resolved' | 'dismissed' | undefined;
+      while (cursor < lines.length && !lines[cursor]!.startsWith('- `')) {
+        const match = DEFERRED_DISPOSITION.exec(lines[cursor]!);
+        if (match) {
+          if (disposition !== undefined) {
+            throw new Error(`duplicate disposition for deferred finding ${id}`);
+          }
+          disposition = match[1] as typeof disposition;
+        } else if (
+          lines[cursor]!.startsWith('#') ||
+          lines[cursor] === '---' ||
+          /^\*\*[^*]+\*\*$/.test(lines[cursor]!)
+        ) {
+          break;
+        } else if (lines[cursor] !== '' && !lines[cursor]!.startsWith('  - ')) {
+          throw new Error(`malformed deferred finding ${id}`);
+        }
+        cursor++;
+      }
+      if (disposition === undefined) {
+        throw new Error(`deferred finding ${id} has no disposition`);
+      }
+      latest.set(id, { disposition, summary });
+      index = cursor;
+    }
+  }
+  return [...latest.entries()]
+    .filter(([, entry]) => entry.disposition === 'deferred')
+    .map(([id, entry]) => ({
+      id: `deferred-finding:${id}`,
+      kind: 'deferred-finding' as const,
+      source: sourcePath,
+      summary: entry.summary,
+      expectedPaths: [],
+      expectedChecks: [],
+    }))
+    .sort((left, right) => left.id.localeCompare(right.id));
+}

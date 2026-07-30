@@ -3,6 +3,8 @@ import { readFile } from 'node:fs/promises';
 import { describe, expect, it } from 'vitest';
 
 import {
+  parseDeferredFindingObligations,
+  parseDeviationObligations,
   parsePlanTaskObligations,
   parseRequirementObligations,
 } from './obligations';
@@ -67,5 +69,61 @@ describe('plan task obligations', () => {
     '### Task p01-t01: One\n\n**Files:**\n\n- Create: `a.ts`\n\n**Step 1: Test**\n### Task p01-t01: Two\n\n**Files:**\n\n- Create: `b.ts`\n\n**Step 1: Test**\n',
   ])('rejects malformed task structures', (source) => {
     expect(() => parsePlanTaskObligations(source, 'plan.md')).toThrow();
+  });
+});
+
+describe('implementation obligations', () => {
+  it('parses deviations and latest deferred state', async () => {
+    const source = await readFile(fixture('implementation-v1.md'));
+    const expected = JSON.parse(
+      await readFile(fixture('implementation-v1.json'), 'utf8'),
+    ) as Array<{ kind: string }>;
+    expect([
+      ...parseDeferredFindingObligations(source, 'implementation-v1.md'),
+      ...parseDeviationObligations(source, 'implementation-v1.md'),
+    ]).toEqual(expected);
+  });
+
+  it('rejects a partially populated deviation', () => {
+    const source = `## Deviations from Plan / Design
+
+| Task / Review | Planned / Expected | Actual / Accepted | Why | Impact | Approval / Source | Source of Truth |
+| --- | --- | --- | --- | --- | --- | --- |
+| p01-t01 | planned | - | why | impact | approval | file.ts |
+`;
+    expect(() =>
+      parseDeviationObligations(source, 'implementation.md'),
+    ).toThrow(/incomplete/);
+  });
+
+  it('rejects duplicate IDs within one deferred block', () => {
+    const source = `**Deferred Findings:**
+
+- \`REV-1\` first
+  - Disposition: deferred
+- \`REV-1\` second
+  - Disposition: resolved
+`;
+    expect(() =>
+      parseDeferredFindingObligations(source, 'implementation.md'),
+    ).toThrow(/duplicate/);
+  });
+
+  it('applies deferred, resolved, and dismissed supersession', () => {
+    const source = `**Deferred Findings:**
+- \`A\` first
+  - Disposition: deferred
+- \`B\` second
+  - Disposition: deferred
+---
+**Deferred Findings:**
+- \`A\` first
+  - Disposition: resolved fixed
+- \`B\` second
+  - Disposition: dismissed not applicable
+`;
+    expect(
+      parseDeferredFindingObligations(source, 'implementation.md'),
+    ).toEqual([]);
   });
 });
