@@ -165,7 +165,7 @@ Attempt accounting uses exactly one of these alternatives:
 1. **Pending completion:** a matching `pending_attempt` may continue only after
    complete reconciliation of the authoritative ledger, original request,
    immutable original commit at the same history position, bounded worktree
-   diff, and unchanged exact target. Continue and settle that same reserved
+   diff, and unchanged exact target. Continue and finish that same reserved
    attempt without incrementing `used_attempts` or creating another
    reservation, even when the existing count equals the limit.
 2. **New reservation:** when no `pending_attempt` exists,
@@ -173,7 +173,7 @@ Attempt accounting uses exactly one of these alternatives:
    increment usage and write the new reservation before editing.
 
 For the final-attempt boundary, `limit=1`, `used=1`, and a fully reconciled
-matching `pending_attempt` continue and settle the same reserved attempt
+matching `pending_attempt` continue and finish the same reserved attempt
 without incrementing usage. With `limit=1`, `used=1`, and no `pending_attempt`,
 stop direction-required before edit with no new reservation and no fallback.
 
@@ -242,11 +242,23 @@ or fail and does not receive another reservation.
 
 After the focused and phase checks, atomically mark the pending entry
 `completed` or `failed`. A successful recovery commit includes the bounded code
-change and this ledger transition. If interruption or commit failure leaves the
-ledger reservation uncommitted, preserve the working tree; the root must
-reconcile it before any continuation. The root later clears `pending_attempt`
-only after validating the matching canonical event, while retaining the
-monotonic `used_attempts`.
+change and the `completed` ledger transition. A failed attempt must durably
+commit the matching `failed` transition as terminal ledger evidence without
+claiming a successful recovery commit. If the terminal marker cannot be
+committed, preserve the working tree and report the attempt as unreconciled;
+the root must fail closed without bookkeeping.
+
+The matching committed `completed` or `failed` marker is the committed
+pre-bookkeeping terminal handoff. A recovery report returns with that matching
+committed `completed` or `failed` marker still present; `pending_attempt: null`
+is valid on return only when no recovery attempt was reported. An active,
+mismatched, prematurely cleared, unreconciled, or contradictory marker must
+fail closed before root bookkeeping. Root bookkeeping clears `pending_attempt`
+only after validating the report, immutable original history, exact target and
+axes, canonical event, attempt count, recovery commit when successful, and
+focused plus phase verification. Clearing always retains monotonic
+`used_attempts`; failed attempts also preserve their terminal-stop disposition.
+Only that post-bookkeeping null state is a settled ledger.
 
 ### Canonical Recovery Event
 
@@ -423,9 +435,12 @@ dispatch_stamp: { original formal Dispatch line }
    pending ledger entry completed or failed and emit exactly one Canonical
    Recovery Event.
 6. On success, create one append-only recovery commit containing only
-   `bounded_files` plus the authoritative ledger transition. On failure,
-   preserve the consumed attempt and evidence; do not amend history or launch
-   fallback.
+   `bounded_files` plus the authoritative `completed` ledger transition. On
+   failure, durably commit only the authoritative `failed` ledger transition as
+   terminal evidence, preserve the consumed attempt and stop disposition, and
+   claim no successful recovery commit. If the failed marker cannot be
+   committed, report an unreconciled block that root must reject before
+   bookkeeping. Never amend history or launch fallback.
 7. Return the report below. `DONE` is accepted success;
    `DONE_WITH_CONCERNS` and `BLOCKED` may be accepted terminal stops and must
    still report provenance, accounting, immutable history, and the event.
@@ -442,6 +457,7 @@ dispatch_stamp: { original formal Dispatch line }
 **Attempt:** {phase_recovery_attempts_used}/{phase_recovery_limit}
 **Dispatch target:** {same exact launcher-owned target}
 **Dispatch stamp:** {original formal Dispatch line}
+**Pending handoff:** {completed|failed}
 **Recovery commit:** {sha or -}
 **Verification:** {focused result}; {phase result}
 **Recovery event:** {event-id}

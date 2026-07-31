@@ -2796,6 +2796,132 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('defines an ordered recovery ledger handoff transition matrix', async () => {
+    const agent = await readRawRepoFile(
+      '.agents/agents/oat-phase-implementer.md',
+    );
+    const phase = await readRawRepoFile(
+      '.agents/skills/oat-project-implement/references/phase-execution.md',
+    );
+    const normalizedAgent = agent.replaceAll('`', '').replaceAll(/\s+/g, ' ');
+    const verifier = phase.slice(
+      phase.indexOf('#### Verify the Phase Report'),
+      phase.indexOf('### Per-Phase Review'),
+    );
+    const normalizedVerifier = verifier.replaceAll(/\s+/g, ' ');
+
+    const agentReservation = normalizedAgent.indexOf(
+      'Before the first code edit for a new recovery attempt',
+    );
+    const agentTerminalMark = normalizedAgent.indexOf(
+      'atomically mark the pending entry',
+      agentReservation,
+    );
+    const agentCommittedHandoff = normalizedAgent.indexOf(
+      'committed pre-bookkeeping terminal handoff',
+      agentTerminalMark,
+    );
+    const agentRootClear = normalizedAgent.indexOf(
+      'Root bookkeeping clears pending_attempt',
+      agentCommittedHandoff,
+    );
+    expect(
+      [
+        agentReservation,
+        agentTerminalMark,
+        agentCommittedHandoff,
+        agentRootClear,
+      ],
+      'phase-agent reservation → terminal marker → committed handoff → root clear order',
+    ).toEqual(
+      [
+        ...new Set([
+          agentReservation,
+          agentTerminalMark,
+          agentCommittedHandoff,
+          agentRootClear,
+        ]),
+      ].sort((left, right) => left - right),
+    );
+    expect(agentReservation).toBeGreaterThan(-1);
+
+    const matrixStart = normalizedVerifier.indexOf(
+      'Pre-bookkeeping terminal handoff matrix',
+    );
+    const recoveredValidation = normalizedVerifier.indexOf(
+      '| Recovery reported as `recovered` |',
+      matrixStart,
+    );
+    const failedValidation = normalizedVerifier.indexOf(
+      '| Recovery reported as `failed-attempt` |',
+      recoveredValidation,
+    );
+    const rejectionRows = normalizedVerifier.indexOf(
+      '| Attempt reported with `pending_attempt: null` |',
+      failedValidation,
+    );
+    const validatedClear = normalizedVerifier.indexOf(
+      'Only after the selected row validates completely may root bookkeeping clear `pending_attempt`',
+      rejectionRows,
+    );
+    const settledState = normalizedVerifier.indexOf(
+      'The post-bookkeeping result is the only settled ledger state',
+      validatedClear,
+    );
+    expect(
+      [
+        matrixStart,
+        recoveredValidation,
+        failedValidation,
+        rejectionRows,
+        validatedClear,
+        settledState,
+      ],
+      'root pre-bookkeeping matrix → validation → clear → settled order',
+    ).toEqual(
+      [
+        ...new Set([
+          matrixStart,
+          recoveredValidation,
+          failedValidation,
+          rejectionRows,
+          validatedClear,
+          settledState,
+        ]),
+      ].sort((left, right) => left - right),
+    );
+    expect(matrixStart).toBeGreaterThan(-1);
+
+    expect(verifier).toMatch(
+      /\|\s*No recovery attempt reported\s*\|\s*`pending_attempt: null`[\s\S]{0,360}success may continue/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*Recovery reported as `recovered`\s*\|\s*Matching committed `completed` marker[\s\S]{0,520}immutable original history[\s\S]{0,360}recovery commit[\s\S]{0,360}exact target and axes[\s\S]{0,360}canonical `recovered` event[\s\S]{0,360}attempt count[\s\S]{0,360}verification/i,
+    );
+    expect(verifier).toMatch(
+      /\|\s*Recovery reported as `failed-attempt`\s*\|\s*Matching committed `failed` marker[\s\S]{0,520}terminal-stop report[\s\S]{0,360}event[\s\S]{0,360}immutable history[\s\S]{0,360}accounting[\s\S]{0,360}stop disposition/i,
+    );
+    for (const invalid of [
+      'Attempt reported with `pending_attempt: null`',
+      'Terminal status or identity mismatch',
+      'Marker status `active`',
+      'Any other unreconciled or contradictory state',
+    ]) {
+      expect(verifier, invalid).toMatch(
+        new RegExp(
+          `\\|\\s*${invalid.replaceAll(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\|[\\s\\S]{0,520}fail closed[\\s\\S]{0,240}no bookkeeping`,
+          'i',
+        ),
+      );
+    }
+    expect(normalizedVerifier).toContain(
+      'Only after the selected row validates completely may root bookkeeping clear `pending_attempt`, append the validated canonical event, and preserve monotonic `used_attempts`.',
+    );
+    expect(normalizedVerifier).toContain(
+      'For `failed-attempt`, clearing must also preserve the terminal-stop disposition and then stop.',
+    );
+  });
+
   it('distinguishes a reserved final attempt from a new exhausted attempt', async () => {
     const contracts = [
       [
@@ -2815,7 +2941,7 @@ describe('validateOatSkills', () => {
         contract,
         `${name} completes a reconciled final reservation`,
       ).toMatch(
-        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}(?:fully|complete)[\s-]*reconcil(?:ed|iation)[\s\S]{0,180}matching\s+`?pending_attempt`?[\s\S]{0,260}continue[\s\S]{0,180}settle[\s\S]{0,160}same\s+(?:reserved\s+)?attempt[\s\S]{0,220}(?:without|must not)[\s\S]{0,100}(?:increment|consume)/i,
+        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}(?:fully|complete)[\s-]*reconcil(?:ed|iation)[\s\S]{0,180}matching\s+`?pending_attempt`?[\s\S]{0,260}continue[\s\S]{0,180}finish[\s\S]{0,160}same\s+(?:reserved\s+)?attempt[\s\S]{0,220}(?:without|must not)[\s\S]{0,100}(?:increment|consume)/i,
       );
       expect(contract, `${name} refuses a new exhausted reservation`).toMatch(
         /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}no\s+`?pending_attempt`?[\s\S]{0,260}direction-required[\s\S]{0,180}before\s+edit[\s\S]{0,220}no\s+(?:new\s+)?reservation[\s\S]{0,180}no\s+fallback/i,

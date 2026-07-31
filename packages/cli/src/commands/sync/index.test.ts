@@ -1546,6 +1546,21 @@ describe('createSyncCommand', () => {
       const content = (await readFile(join(repoRoot, relativePath), 'utf8'))
         .replaceAll('`', '')
         .replaceAll(/\s+/g, ' ');
+      const reservation = content.indexOf(
+        'Before the first code edit for a new recovery attempt',
+      );
+      const terminalMark = content.indexOf(
+        'atomically mark the pending entry completed or failed',
+        reservation,
+      );
+      const committedHandoff = content.indexOf(
+        'committed pre-bookkeeping terminal handoff',
+        terminalMark,
+      );
+      const rootClear = content.indexOf(
+        'Root bookkeeping clears pending_attempt',
+        committedHandoff,
+      );
 
       expect(content, relativePath).toContain(
         'Prevention is the first recovery control.',
@@ -1554,7 +1569,7 @@ describe('createSyncCommand', () => {
         'phase_recovery_attempts_used < phase_recovery_limit',
       );
       expect(content, relativePath).toContain(
-        'Continue and settle that same reserved attempt without incrementing used_attempts or creating another reservation, even when the existing count equals the limit.',
+        'Continue and finish that same reserved attempt without incrementing used_attempts or creating another reservation, even when the existing count equals the limit.',
       );
       expect(content, relativePath).toContain(
         'With limit=1, used=1, and no pending_attempt, stop direction-required before edit with no new reservation and no fallback.',
@@ -1568,6 +1583,21 @@ describe('createSyncCommand', () => {
       );
       expect(content, relativePath).toContain(
         'No stop condition authorizes fallback or another model, provider, route, or worker.',
+      );
+      expect(
+        [reservation, terminalMark, committedHandoff, rootClear],
+        `${relativePath} reservation → terminal marker → committed handoff → root clear order`,
+      ).toEqual(
+        [
+          ...new Set([reservation, terminalMark, committedHandoff, rootClear]),
+        ].sort((left, right) => left - right),
+      );
+      expect(reservation, `${relativePath} reservation`).toBeGreaterThan(-1);
+      expect(content, relativePath).toContain(
+        'A recovery report returns with that matching committed completed or failed marker still present; pending_attempt: null is valid on return only when no recovery attempt was reported.',
+      );
+      expect(content, relativePath).toContain(
+        'An active, mismatched, prematurely cleared, unreconciled, or contradictory marker must fail closed before root bookkeeping.',
       );
     }
   });
