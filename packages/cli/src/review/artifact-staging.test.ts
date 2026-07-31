@@ -1,5 +1,6 @@
 import {
   chmod,
+  link,
   lstat,
   mkdir,
   readFile,
@@ -120,6 +121,39 @@ describe('private artifact staging', () => {
         join(root, 'published', 'tampered.md'),
       ),
     ).rejects.toThrow(/digest/);
+  });
+
+  it('rejects publication temporary path replacement and link drift', async () => {
+    const root = await privateRoot();
+    const draft = await createArtifactDraft(root);
+    await writeFile(draft.path, artifact());
+    const snapshot = await snapshotArtifactDraft(draft, accounting());
+    const replacedDestination = join(root, 'published', 'replaced.md');
+    await expect(
+      publishAcceptedArtifact(snapshot, replacedDestination, {
+        beforeCommit: async (temporaryPath) => {
+          await rm(temporaryPath);
+          await writeFile(temporaryPath, 'unverified replacement', {
+            mode: 0o600,
+          });
+        },
+      }),
+    ).rejects.toThrow(/drift|identity/);
+    await expect(lstat(replacedDestination)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
+
+    const linkedDestination = join(root, 'published', 'linked.md');
+    await expect(
+      publishAcceptedArtifact(snapshot, linkedDestination, {
+        beforeCommit: async (temporaryPath) => {
+          await link(temporaryPath, join(root, 'second-publication-link'));
+        },
+      }),
+    ).rejects.toThrow(/link|identity/);
+    await expect(lstat(linkedDestination)).rejects.toMatchObject({
+      code: 'ENOENT',
+    });
   });
 
   it('leaves blocked drafts private and deletable without publication', async () => {

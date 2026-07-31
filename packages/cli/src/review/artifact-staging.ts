@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { constants } from 'node:fs';
-import { lstat, link, mkdir, open, readFile, rm } from 'node:fs/promises';
+import { lstat, mkdir, open, rename, rm } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 
 import { extractReviewAccounting } from './artifact-accounting';
@@ -20,6 +20,10 @@ export interface ArtifactSnapshot {
   bytesBase64: string;
   digest: string;
   accounting: ReviewAccountingV1;
+}
+
+export interface ArtifactPublicationHooks {
+  beforeCommit?: (temporaryPath: string) => Promise<void>;
 }
 
 function digest(bytes: Buffer): string {
@@ -89,6 +93,7 @@ export async function snapshotArtifactDraft(
 export async function publishAcceptedArtifact(
   snapshot: ArtifactSnapshot,
   destination: string,
+  hooks: ArtifactPublicationHooks = {},
 ): Promise<void> {
   const bytes = Buffer.from(snapshot.bytesBase64, 'base64');
   if (digest(bytes) !== snapshot.digest) {
@@ -106,25 +111,89 @@ export async function publishAcceptedArtifact(
     destinationDirectory,
     `.review-${process.pid}-${crypto.randomUUID()}.tmp`,
   );
+  let renamed = false;
   try {
     const handle = await open(
       temporaryPath,
-      constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW,
+      constants.O_CREAT | constants.O_EXCL | constants.O_RDWR | NOFOLLOW,
       0o600,
     );
     try {
       await handle.writeFile(bytes);
       await handle.sync();
+      const initialInfo = await handle.stat();
+      if (
+        !initialInfo.isFile() ||
+        initialInfo.nlink !== 1 ||
+        initialInfo.mode & 0o077
+      ) {
+        throw new Error('artifact publication descriptor identity is unsafe');
+      }
+      const verifiedBytes = Buffer.alloc(initialInfo.size);
+      let offset = 0;
+      while (offset < verifiedBytes.length) {
+        const { bytesRead } = await handle.read(
+          verifiedBytes,
+          offset,
+          verifiedBytes.length - offset,
+          offset,
+        );
+        if (bytesRead === 0) {
+          throw new Error('artifact publication descriptor read was truncated');
+        }
+        offset += bytesRead;
+      }
+      if (digest(verifiedBytes) !== snapshot.digest) {
+        throw new Error('artifact publication digest mismatch');
+      }
+
+      await hooks.beforeCommit?.(temporaryPath);
+      const descriptorInfo = await handle.stat();
+      const pathInfo = await lstat(temporaryPath);
+      if (
+        !descriptorInfo.isFile() ||
+        descriptorInfo.nlink !== 1 ||
+        descriptorInfo.dev !== initialInfo.dev ||
+        descriptorInfo.ino !== initialInfo.ino ||
+        !pathInfo.isFile() ||
+        pathInfo.isSymbolicLink() ||
+        pathInfo.nlink !== 1 ||
+        pathInfo.dev !== descriptorInfo.dev ||
+        pathInfo.ino !== descriptorInfo.ino
+      ) {
+        throw new Error(
+          'artifact publication temporary identity or link drift',
+        );
+      }
+      try {
+        await lstat(destination);
+        throw new Error('artifact publication destination already exists');
+      } catch (error) {
+        if (
+          typeof error !== 'object' ||
+          error === null ||
+          !('code' in error) ||
+          error.code !== 'ENOENT'
+        ) {
+          throw error;
+        }
+      }
+      await rename(temporaryPath, destination);
+      renamed = true;
+      const destinationInfo = await lstat(destination);
+      if (
+        !destinationInfo.isFile() ||
+        destinationInfo.isSymbolicLink() ||
+        destinationInfo.nlink !== 1 ||
+        destinationInfo.dev !== descriptorInfo.dev ||
+        destinationInfo.ino !== descriptorInfo.ino
+      ) {
+        throw new Error('artifact publication destination identity drift');
+      }
     } finally {
       await handle.close();
     }
-
-    const publishedBytes = await readFile(temporaryPath);
-    if (digest(publishedBytes) !== snapshot.digest) {
-      throw new Error('artifact publication digest mismatch');
-    }
-    await link(temporaryPath, destination);
   } finally {
-    await rm(temporaryPath, { force: true });
+    if (!renamed) await rm(temporaryPath, { force: true });
   }
 }
