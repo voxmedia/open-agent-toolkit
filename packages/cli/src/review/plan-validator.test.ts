@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import { evaluateWholeDiffEligibility } from './budget';
 import {
   projectValidatedAssignments,
   validatePlanObligationAccounting,
@@ -224,6 +225,98 @@ describe('review plan policy and projection', () => {
         expect.objectContaining({ code: 'invalid-exclusion-authority' }),
         expect.objectContaining({ code: 'whole-diff-policy-drift' }),
         expect.objectContaining({ code: 'time-allocation-policy-drift' }),
+      ]),
+    );
+  });
+
+  it.each([
+    {
+      name: 'missing telemetry',
+      mutate: () => undefined,
+    },
+    {
+      name: 'inexact patch size',
+      mutate: (sealed: PreparedReviewContextV1) => {
+        sealed.budget.context = {
+          totalTokens: 100,
+          consumedAtPlanTokens: 0,
+          outputReserveTokens: 10,
+          reconciliationReserveTokens: 10,
+          evidenceBudgetTokens: 80,
+          source: 'test',
+        };
+        sealed.changeMap.totals.patchEstimateState = 'lower-bound';
+        sealed.changeMap.totals.estimatedPatchTokens = null;
+      },
+    },
+    {
+      name: 'oversized patch',
+      mutate: (sealed: PreparedReviewContextV1) => {
+        sealed.budget.context = {
+          totalTokens: 20,
+          consumedAtPlanTokens: 0,
+          outputReserveTokens: 5,
+          reconciliationReserveTokens: 5,
+          evidenceBudgetTokens: 5,
+          source: 'test',
+        };
+      },
+    },
+    {
+      name: 'multiple lanes',
+      mutate: (_sealed: PreparedReviewContextV1, candidate: ReviewPlanV1) => {
+        candidate.lanes.push({
+          ...structuredClone(candidate.lanes[0]!),
+          id: 'lane-2',
+          paths: [],
+          primaryObligationIds: [],
+        });
+      },
+    },
+  ])('denies whole-diff execution for $name', ({ mutate }) => {
+    const sealed = context();
+    const candidate = policyPlan();
+    mutate(sealed, candidate);
+    candidate.strategy = 'whole-diff-inline';
+    candidate.wholeDiff = evaluateWholeDiffEligibility({
+      changeMap: sealed.changeMap,
+      contextBudget: sealed.budget.context,
+      coherentLaneCount: candidate.lanes.length,
+      hasConsequentialSeam:
+        candidate.lanes.length > 1 &&
+        candidate.lanes.some((lane) => lane.risk === 'consequential'),
+    });
+
+    expect(validateReviewPlan(sealed, candidate)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'whole-diff-execution-denied' }),
+      ]),
+    );
+  });
+
+  it('requires whole-diff lanes to use inline path-diff evidence', () => {
+    const sealed = context();
+    sealed.budget.context = {
+      totalTokens: 100,
+      consumedAtPlanTokens: 0,
+      outputReserveTokens: 10,
+      reconciliationReserveTokens: 10,
+      evidenceBudgetTokens: 80,
+      source: 'test',
+    };
+    const candidate = policyPlan();
+    candidate.strategy = 'whole-diff-inline';
+    candidate.lanes[0]!.strategy = 'full-file';
+    candidate.wholeDiff = evaluateWholeDiffEligibility({
+      changeMap: sealed.changeMap,
+      contextBudget: sealed.budget.context,
+      coherentLaneCount: 1,
+      hasConsequentialSeam: false,
+    });
+
+    expect(validateReviewPlan(sealed, candidate)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'inconsistent-whole-diff-lane' }),
       ]),
     );
   });

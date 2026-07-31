@@ -239,6 +239,25 @@ export function validateReviewPlan(
       message: 'whole-diff fields differ from sealed policy',
     });
   }
+  if (plan.strategy === 'whole-diff-inline' && !eligibility.allowed) {
+    errors.push({
+      code: 'whole-diff-execution-denied',
+      pointer: '/strategy',
+      message: 'whole-diff execution is denied by the sealed policy',
+    });
+  }
+  if (plan.strategy === 'whole-diff-inline') {
+    plan.lanes.forEach((lane, laneIndex) => {
+      if (lane.strategy !== 'path-diff' || lane.delegated) {
+        errors.push({
+          code: 'inconsistent-whole-diff-lane',
+          pointer: `/lanes/${laneIndex}/strategy`,
+          message:
+            'whole-diff inline execution requires non-delegated path-diff lanes',
+        });
+      }
+    });
+  }
   const time = context.budget.time;
   const expectedAllocation =
     time === null
