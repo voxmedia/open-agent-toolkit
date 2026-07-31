@@ -5,9 +5,9 @@ oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_phase: plan
 oat_phase_status: complete
-oat_plan_hill_phases: ['p04']
+oat_plan_hill_phases: ['p05']
 oat_auto_review_at_hill_checkpoints: true
-oat_plan_parallel_groups: [['p02', 'p03']] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_parallel_groups: [['p03', 'p04']] # groups of phases that run concurrently in worktrees; [] = fully sequential
 oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
@@ -49,11 +49,13 @@ workspace release validation.
 
 ## Parallelism
 
-Phase 1 establishes canonical semantics and must complete first. Phases 2 and 3
-then run in isolated worktrees: provider regeneration/tests modify generated
-agent surfaces and sync tests, while documentation modifies only the authored
-implementation guide. Phase 4 runs after fan-in because the release bump and
-full validation must cover both outputs. No other phases are parallelized.
+Phase 1 establishes canonical semantics. Operator-authorized Phase 2 resolves
+the one attempt-boundary defect retained by the terminal Phase 1 review.
+Phases 3 and 4 then run in isolated worktrees: provider regeneration/tests
+modify generated agent surfaces and sync tests, while documentation modifies
+only the authored implementation guide. Phase 5 runs after fan-in because the
+release bump and full validation must cover both outputs. No other phases are
+parallelized.
 
 ---
 
@@ -214,9 +216,85 @@ stop boundaries, skill versions, and non-consumer default-deny assertions pass.
 
 ---
 
-## Phase 2: Provider Materialization and Parity
+## Phase 2: Final Reserved Attempt Revision
 
-### Task p02-t01: Regenerate and Validate Provider Agents
+### Task p02-t01: Distinguish Pending Completion from New Reservation
+
+**Authorization:** Explicit operator direction after the Phase 1 three-cycle
+review cap was exhausted. This is a new planned revision phase, not a fourth
+Phase 1 review/fix cycle.
+
+**Files:**
+
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify:
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
+
+**Step 1: Add attempt-boundary contract scenarios (RED)**
+
+Add root and isolated phase-agent assertions for:
+
+- `limit=1`, `used=1`, and a fully reconciled matching `pending_attempt`:
+  continue and settle that same reserved attempt without incrementing usage;
+- `limit=1`, `used=1`, and no pending attempt: stop direction-required before
+  edit without reserving a new attempt or launching fallback.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: New boundary assertions fail against the unconditional
+`used_attempts < limit` eligibility predicate.
+
+**Step 2: Split reservation eligibility from pending completion (GREEN)**
+
+Require `used_attempts < limit` only when reserving a new attempt. Permit an
+existing matching pending attempt to finish only after complete ledger,
+original-request, immutable-commit, bounded-diff, and exact-target
+reconciliation. Do not increment usage for that continuation. Preserve the
+direction-required stop when no matching pending attempt exists.
+
+This task changes already-version-bumped canonical assets within the same PR;
+do not bump their versions a second time. Do not read, modify, link, or depend
+on `.oat/projects/shared/review-plan-workflow`.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: Both boundary scenarios and the existing recovery suite pass.
+
+**Step 3: Format**
+
+Run: `pnpm format:fix`
+Expected: Canonical assets and tests are formatted.
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
+Expected: Focused contracts, canonical validation, lint, and format pass.
+
+Run:
+`test -z "$(git diff --name-only "$(git merge-base HEAD main)"...HEAD -- .oat/projects/shared/review-plan-workflow)"`
+Expected: The isolated active project remains unchanged.
+
+**Step 5: Commit**
+
+Commit: `fix(p02-t01): distinguish reserved recovery attempts`
+
+---
+
+**Phase 2 verification**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
+
+Expected: A reconciled final reservation can finish without admitting any new
+over-budget attempt.
+
+---
+
+## Phase 3: Provider Materialization and Parity
+
+### Task p03-t01: Regenerate and Validate Provider Agents
 
 **Files:**
 
@@ -258,13 +336,13 @@ and format pass.
 
 **Step 5: Commit**
 
-Commit: `test(p02-t01): enforce phase recovery provider parity`
+Commit: `test(p03-t01): enforce phase recovery provider parity`
 
 ---
 
-## Phase 3: Public Recovery Documentation
+## Phase 4: Public Recovery Documentation
 
-### Task p03-t01: Explain Prevention, Recovery, and Migration
+### Task p04-t01: Explain Prevention, Recovery, and Migration
 
 **Files:**
 
@@ -305,13 +383,13 @@ Expected: Markdown/docs checks and the production docs build pass.
 
 **Step 5: Commit**
 
-Commit: `docs(p03-t01): explain bounded phase recovery`
+Commit: `docs(p04-t01): explain bounded phase recovery`
 
 ---
 
-## Phase 4: Lockstep Release and Full Verification
+## Phase 5: Lockstep Release and Full Verification
 
-### Task p04-t01: Bump Public Packages and Validate the Release
+### Task p05-t01: Bump Public Packages and Validate the Release
 
 **Files:**
 
@@ -350,11 +428,11 @@ errors.
 
 **Step 6: Commit**
 
-Commit: `chore(p04-t01): bump public packages for bounded recovery`
+Commit: `chore(p05-t01): bump public packages for bounded recovery`
 
 ---
 
-**Phase 4 verification**
+**Phase 5 verification**
 
 Run:
 `pnpm lint && pnpm format && pnpm build:docs && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && git diff --check`
@@ -372,6 +450,7 @@ validation all pass from a clean post-task tree.
 | p02    | code     | pending  | -          | -                                        | -                                        | -          | -           |
 | p03    | code     | pending  | -          | -                                        | -                                        | -          | -           |
 | p04    | code     | pending  | -          | -                                        | -                                        | -          | -           |
+| p05    | code     | pending  | -          | -                                        | -                                        | -          | -           |
 | final  | code     | pending  | -          | -                                        | -                                        | -          | -           |
 | spec   | artifact | pending  | -          | -                                        | -                                        | -          | -           |
 | design | artifact | passed   | 2026-07-31 | user-approved lightweight design         | -                                        | manual     | -           |
@@ -399,11 +478,12 @@ cell; never truncate a widened row back to five columns.
 **Summary:**
 
 - Phase 1: 2 tasks - Canonical dispatch and phase recovery contracts
-- Phase 2: 1 task - Provider regeneration and semantic parity
-- Phase 3: 1 task - Public recovery and migration documentation
-- Phase 4: 1 task - Lockstep release bump and full verification
+- Phase 2: 1 task - Final reserved-attempt boundary revision
+- Phase 3: 1 task - Provider regeneration and semantic parity
+- Phase 4: 1 task - Public recovery and migration documentation
+- Phase 5: 1 task - Lockstep release bump and full verification
 
-**Total: 5 tasks**
+**Total: 6 tasks**
 
 Ready for code review and merge.
 

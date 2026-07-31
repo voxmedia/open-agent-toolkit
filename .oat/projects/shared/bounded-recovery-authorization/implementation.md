@@ -1,8 +1,7 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - 'Phase p01 review cycle 3/3 retained one Important finding: final reserved attempt cannot resume when used equals limit'
+oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_current_task_id: p02-t01
 oat_generated: false
@@ -25,20 +24,21 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status  | Tasks | Completed |
-| ------- | ------- | ----- | --------- |
-| Phase 1 | blocked | 2     | 2/2       |
-| Phase 2 | pending | 1     | 0/1       |
-| Phase 3 | pending | 1     | 0/1       |
-| Phase 4 | pending | 1     | 0/1       |
+| Phase   | Status        | Tasks | Completed |
+| ------- | ------------- | ----- | --------- |
+| Phase 1 | review_failed | 2     | 2/2       |
+| Phase 2 | in_progress   | 1     | 0/1       |
+| Phase 3 | pending       | 1     | 0/1       |
+| Phase 4 | pending       | 1     | 0/1       |
+| Phase 5 | pending       | 1     | 0/1       |
 
-**Total:** 2/5 tasks completed
+**Total:** 2/6 tasks completed
 
 ---
 
 ## Phase 1: Canonical Recovery Contract
 
-**Status:** blocked
+**Status:** review_failed
 **Started:** 2026-07-31
 
 ### Phase Summary
@@ -124,36 +124,48 @@ oat_generated: false
 
 ---
 
-## Phase 2: Provider Materialization and Parity
+## Phase 2: Final Reserved Attempt Revision
+
+**Status:** in_progress
+**Started:** 2026-07-31
+
+### Task p02-t01: Distinguish Pending Completion from New Reservation
+
+**Status:** in_progress
+**Commit:** -
+
+---
+
+## Phase 3: Provider Materialization and Parity
 
 **Status:** pending
 **Started:** -
 
-### Task p02-t01: Regenerate and Validate Provider Agents
+### Task p03-t01: Regenerate and Validate Provider Agents
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-## Phase 3: Public Recovery Documentation
+## Phase 4: Public Recovery Documentation
 
 **Status:** pending
 **Started:** -
 
-### Task p03-t01: Explain Prevention, Recovery, and Migration
+### Task p04-t01: Explain Prevention, Recovery, and Migration
 
 **Status:** pending
 **Commit:** -
 
 ---
 
-## Phase 4: Lockstep Release and Full Verification
+## Phase 5: Lockstep Release and Full Verification
 
 **Status:** pending
 **Started:** -
 
-### Task p04-t01: Bump Public Packages and Validate the Release
+### Task p05-t01: Bump Public Packages and Validate the Release
 
 **Status:** pending
 **Commit:** -
@@ -176,8 +188,9 @@ _- Outstanding Items_
 - Base: `69070269bcdff8a4609dd6cc45c970f66aa7f844`
 - Dispatch: managed High; Cursor phase implementer
   `oat-phase-implementer-gpt-5-6-sol-high`
-- Schedule: `p01` → parallel `p02`/`p03` → `p04`
-- HiLL: final phase `p04`; auto-review enabled
+- Schedule: `p01` → operator-authorized `p02` revision → parallel `p03`/`p04`
+  → `p05`
+- HiLL: final phase `p05`; auto-review enabled
 - Optional phase gate: disabled
 - Started: Phase 1 (`p01-t01`)
 - Phase 1 implementer outcome: done at
@@ -190,6 +203,8 @@ _- Outstanding Items_
   `a2d875bb379941301c3ed811b40cfee7a40148e8`; final review cycle pending
 - Phase 1 review round 3: failed with 1 Important finding; governance cap
   exhausted; operator direction required
+- Operator authorization: add a new explicit Phase 2 for the retained
+  attempt-boundary defect; do not reopen or extend the Phase 1 review cycle
 
 <!-- orchestration-runs-end -->
 
@@ -215,23 +230,26 @@ Chronological log of implementation progress.
 - Completed and root-validated both Phase 1 task commits.
 - Completed and root-validated one append-only Phase 1 review-fix commit.
 - Completed and root-validated the second append-only Phase 1 review-fix commit.
+- Recorded operator authorization for a new explicit revision phase after the
+  terminal Phase 1 review.
 
 **Decisions:**
 
 - Implementation remains isolated from `review-plan-workflow`.
-- Phase 2 provider materialization and Phase 3 docs run in parallel after Phase
-  1 passes.
+- Phase 1 review history and its three-cycle cap remain immutable.
+- Phase 3 provider materialization and Phase 4 docs run in parallel after the
+  operator-authorized Phase 2 revision passes.
 
 **Follow-ups / TODO:**
 
-- Await operator direction; no automatic fix, reviewer, or fallback launch is
-  authorized after the three-cycle cap.
+- Execute and independently review the new Phase 2 revision.
 
 **Blockers:**
 
-- Phase 1 review cap exhausted with one Important attempt-boundary contradiction.
+- None. The operator authorized a new revision phase without extending the
+  Phase 1 review cycle.
 
-**Session End:** Blocked for operator direction
+**Session End:** Phase 2 revision authorized
 
 ---
 
@@ -239,9 +257,9 @@ Chronological log of implementation progress.
 
 Document any intentional deviations from the original plan, spec, or design. Include accepted review findings where the shipped implementation is source of truth and a lifecycle artifact needs alignment.
 
-| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
-| ------------- | --------------- | -------------------- | ----------------- | ------ | --------------- | --------- |
-| -             | -               | -                    | -                 | -      | -               | -         |
+| Task / Review  | Source Artifact | Planned / Documented                        | Actual / Accepted                                              | Reason                                                                                             | Source of Truth | Follow-up                                      |
+| -------------- | --------------- | ------------------------------------------- | -------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- | --------------- | ---------------------------------------------- |
+| p01 review 3/3 | plan.md         | Phase 1 must pass before provider/docs work | Added a new narrow Phase 2; shifted original Phases 2–4 to 3–5 | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md | Implement and review p02 without reopening p01 |
 
 ## Test Results
 
@@ -253,6 +271,7 @@ Track test execution during implementation.
 | 2     | -                                                          | -                     | -      | -                            |
 | 3     | -                                                          | -                     | -      | -                            |
 | 4     | -                                                          | -                     | -      | -                            |
+| 5     | -                                                          | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
 
