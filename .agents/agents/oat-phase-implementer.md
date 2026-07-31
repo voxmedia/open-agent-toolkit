@@ -148,7 +148,7 @@ it before editing. Automatic recovery is allowed only when all conditions hold:
 - the exact target remains unchanged and bindable regardless of handle state
   and stays equal to the launcher-owned dispatch target;
 - handle continuity follows one of the authorized alternatives below;
-- `phase_recovery_attempts_used < phase_recovery_limit`; and
+- attempt accounting follows one of the authorized alternatives below; and
 - focused plus relevant phase verification can establish correctness.
 
 Handle and exact-target continuity use these mutually compatible branches:
@@ -164,14 +164,33 @@ Handle and exact-target continuity use these mutually compatible branches:
 Handle unavailability alone does not make automatic recovery ineligible or
 stop it. It selects the second branch only when all its conditions hold.
 
-Record the eligibility evidence before editing. Starting the edit consumes one
-attempt, even if the edit, commit, or re-verification fails. Preserve the
-accepted task commit as immutable at the same history position. A successful
-attempt creates exactly one append-only recovery commit associated with the
-originating task and phase; never amend, reset, rebase, squash, replace its task
-ID, or conceal it. Mechanically related failures from the same verification
-command may use one atomic attempt and commit. Independent failures require
-separate attempts and commits.
+Attempt accounting uses exactly one of these alternatives:
+
+1. **Pending completion:** a matching `pending_attempt` may continue only after
+   complete reconciliation of the authoritative ledger, original request,
+   immutable original commit at the same history position, bounded worktree
+   diff, and unchanged exact target. Continue and settle that same reserved
+   attempt without incrementing `used_attempts` or creating another
+   reservation, even when the existing count equals the limit.
+2. **New reservation:** when no `pending_attempt` exists,
+   `phase_recovery_attempts_used < phase_recovery_limit` is mandatory. Atomically
+   increment usage and write the new reservation before editing.
+
+For the final-attempt boundary, `limit=1`, `used=1`, and a fully reconciled
+matching `pending_attempt` continue and settle the same reserved attempt
+without incrementing usage. With `limit=1`, `used=1`, and no `pending_attempt`,
+stop direction-required before edit with no new reservation and no fallback.
+
+Record the eligibility evidence before editing. A new reservation consumes one
+attempt before editing. A failed edit, commit, or re-verification leaves that
+attempt consumed and records no successful recovery commit; continuation of a
+reconciled pending attempt does not consume another. Preserve the accepted task
+commit as immutable at the same history position. A successful attempt creates
+exactly one append-only recovery commit associated with the originating task
+and phase; never amend, reset, rebase, squash, replace its task ID, or conceal
+it. Mechanically related failures from the same verification command may use
+one atomic attempt and commit. Independent failures require separate attempts
+and commits.
 
 After a recovery commit, rerun the failing focused command and relevant phase
 verification, then continue without a new authorization prompt. At three
@@ -217,11 +236,13 @@ interruption. Never decrement or reset `used_attempts`.
 
 On same-handle resume or recover mode, reconcile the supplied nonzero
 `used_attempts` and `pending_attempt` against `state.md`, Git history, and the
-bounded worktree diff. Continue the same attempt without consuming another
-attempt. Reject an unreconciled resume before further editing. A new attempt is
-exhausted when `used_attempts` is equal to or greater than
-`phase_recovery_limit`; an already-pending attempt may only finish or fail and
-does not receive another reservation.
+bounded worktree diff. Complete reconciliation includes the ledger identities,
+original request, immutable original commit at the same history position,
+bounded diff, and unchanged exact target. Continue the same attempt without
+consuming another attempt. Reject an unreconciled resume before further
+editing. A new attempt is exhausted when `used_attempts` is equal to or greater
+than `phase_recovery_limit`; an already-pending matching attempt may only finish
+or fail and does not receive another reservation.
 
 After the focused and phase checks, atomically mark the pending entry
 `completed` or `failed`. A successful recovery commit includes the bounded code

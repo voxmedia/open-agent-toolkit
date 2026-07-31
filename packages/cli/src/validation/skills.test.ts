@@ -2796,6 +2796,33 @@ describe('validateOatSkills', () => {
     );
   });
 
+  it('distinguishes a reserved final attempt from a new exhausted attempt', async () => {
+    const contracts = [
+      [
+        'phase root',
+        await readRawRepoFile(
+          '.agents/skills/oat-project-implement/references/phase-execution.md',
+        ),
+      ],
+      [
+        'phase agent',
+        await readRawRepoFile('.agents/agents/oat-phase-implementer.md'),
+      ],
+    ] as const;
+
+    for (const [name, contract] of contracts) {
+      expect(
+        contract,
+        `${name} completes a reconciled final reservation`,
+      ).toMatch(
+        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}(?:fully|complete)[\s-]*reconcil(?:ed|iation)[\s\S]{0,180}matching\s+`?pending_attempt`?[\s\S]{0,260}continue[\s\S]{0,180}settle[\s\S]{0,160}same\s+(?:reserved\s+)?attempt[\s\S]{0,220}(?:without|must not)[\s\S]{0,100}(?:increment|consume)/i,
+      );
+      expect(contract, `${name} refuses a new exhausted reservation`).toMatch(
+        /limit\s*=\s*1[\s\S]{0,120}used\s*=\s*1[\s\S]{0,220}no\s+`?pending_attempt`?[\s\S]{0,260}direction-required[\s\S]{0,180}before\s+edit[\s\S]{0,220}no\s+(?:new\s+)?reservation[\s\S]{0,180}no\s+fallback/i,
+      );
+    }
+  });
+
   it('gives the isolated phase agent the exact canonical recovery event schema', async () => {
     const agent = await readRawRepoFile(
       '.agents/agents/oat-phase-implementer.md',

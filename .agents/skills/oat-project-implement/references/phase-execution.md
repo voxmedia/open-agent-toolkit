@@ -142,6 +142,8 @@ HEAD, bounded diff, report, and canonical event:
   `used_attempts`;
 - a pending attempt continues, after every recorded identity and bounded diff
   reconcile, as the same attempt without consuming another;
+- a nonzero `used_attempts` count with a matching pending attempt continues only
+  after complete reconciliation and does not consume another attempt;
 - an interruption preserves the consumed reservation in the working tree, even
   if no recovery commit exists yet;
 - an unreconciled pending attempt, regressed count, missing reservation, or
@@ -173,7 +175,7 @@ Automatic recovery is eligible only when every condition is true:
   credential, or other consequential boundaries;
 - the exact target remains unchanged and bindable regardless of handle state;
 - handle continuity follows one of the authorized alternatives below;
-- `phase_recovery_attempts_used < phase_recovery_limit`; and
+- attempt accounting follows one of the authorized alternatives below; and
 - focused plus relevant phase verification can establish correctness.
 
 Handle and exact-target continuity use these mutually compatible branches:
@@ -189,13 +191,31 @@ Handle and exact-target continuity use these mutually compatible branches:
 Handle unavailability alone does not make automatic recovery ineligible or
 stop it. It selects the second branch only when all its conditions hold.
 
-The implementer records eligibility before editing. The attempt is consumed
-before editing begins. A failed edit, commit, or re-verification consumes that
-attempt and records a failed-attempt disposition with no successful recovery commit.
-Successful recovery creates one append-only recovery commit per successful
-attempt, reruns the failing focused command and relevant phase verification,
-and continues without a prompt. At three recovery events, require an elevated
-recovery-volume warning and continue if all eligibility conditions still hold.
+Attempt accounting uses exactly one of these alternatives:
+
+1. **Pending completion:** a matching `pending_attempt` may continue only after
+   complete reconciliation of the authoritative ledger, original request,
+   immutable original commit at the same history position, bounded worktree
+   diff, and unchanged exact target. Continue and settle that same reserved
+   attempt without incrementing `used_attempts` or creating another
+   reservation, even when the existing count equals the limit.
+2. **New reservation:** when no `pending_attempt` exists,
+   `phase_recovery_attempts_used < phase_recovery_limit` is mandatory. Atomically
+   increment usage and write the new reservation before editing.
+
+For the final-attempt boundary, `limit=1`, `used=1`, and a fully reconciled
+matching `pending_attempt` continue and settle the same reserved attempt
+without incrementing usage. With `limit=1`, `used=1`, and no `pending_attempt`,
+stop direction-required before edit with no new reservation and no fallback.
+
+The implementer records eligibility before editing. A new reservation consumes
+one attempt before editing begins. A failed edit, commit, or re-verification
+leaves that attempt consumed and records no successful recovery commit.
+Continuing a reconciled pending attempt does not consume another. Successful
+recovery creates one append-only recovery commit per successful attempt, reruns
+the failing focused command and relevant phase verification, and continues
+without a prompt. At three recovery events, require an elevated recovery-volume
+warning and continue if all eligibility conditions still hold.
 
 One no-edit rerun is permitted for evidence-backed infrastructure or flake
 failure without attempt consumption. A repeated unexplained failure is
