@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t18
-oat_last_commit: 055b5b2132de9f4077c2ba52c9aceee421b83805
+oat_current_task: null
+oat_last_commit: 79b90f3a32eb15935309d0879532f6557f960341
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T16:50:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T17:12:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 cycle-2 fix in progress
+**Status:** Phase 4 final automatic re-review in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. Phase 4 cycle-2 re-review resolved six of seven
-prior findings and found one remaining Critical worker-coverage derivation gap.
-The final automatic fix task p04-t18 is queued.
+Phases 1 through 3 are complete. The final automatic Phase 4 fix p04-t18 and
+two bounded recoveries are committed, root-verified, and ready for the
+cycle-3 narrowed independent review.
 
 ## Artifacts
 
@@ -181,7 +181,9 @@ The final automatic fix task p04-t18 is queued.
 - ✓ Full CLI, workspace, smoke, build, and root-focused verification passed
 - ⚠ Phase 4 cycle-2 re-review found one remaining Critical coverage gap
 - ✓ Six prior Phase 4 findings independently confirmed resolved
-- → p04-t18: bind final coverage to validated worker coverage
+- ✓ p04-t18 and two bounded recoveries completed at `79b90f3a`
+- ✓ Root worker-coverage verification passed 63 focused tests
+- → Final automatic Phase 4 narrowed re-review
 
 ## Blockers
 
@@ -189,5 +191,5 @@ None.
 
 ## Next Milestone
 
-Execute p04-t18, verify the exact worker-coverage boundary, and run the final
-automatic narrowed Phase 4 re-review.
+Run the final automatic narrowed Phase 4 re-review over p04-t18 and its bounded
+recoveries.

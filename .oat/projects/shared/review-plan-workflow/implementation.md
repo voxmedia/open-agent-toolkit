@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t18
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 18    | 17/18     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 18    | 18/18     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 95/116 tasks completed
+**Total:** 96/116 tasks completed
 
 ## Execution Configuration
 
@@ -178,8 +178,9 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** in_progress
+**Status:** completed
 **Started:** 2026-07-30
+**Completed:** 2026-07-31
 
 ### Task p02-t01: Normalize authoritative review paths
 
@@ -808,7 +809,7 @@ automatic fix iteration, then independently re-review the updated range.
 
 ## Phase 4: Output Accounting and Coordinator Integration
 
-**Status:** in_progress
+**Status:** in_review
 **Started:** 2026-07-31
 
 ### Task p04-t01: Parse exact artifact accounting grammar
@@ -910,7 +911,11 @@ without changing the launcher-private publication behavior.
 
 ### Task p04-t18: (re-review C1) Bind final coverage to validated worker coverage
 
-**Status:** pending
+**Status:** completed
+**Commit:** `83fc9e24`
+**Recoveries:** `05db25f7` renamed a lint-shadowed local without behavior
+change; `79b90f3a` aligned the coordinator compatibility fixture with the
+required lane-ownership projection.
 
 ### Phase Verification
 
@@ -934,6 +939,11 @@ without changing the launcher-private publication behavior.
   passed.
 - Root independently reran 60 focused output, publication, store, coordinator,
   local-rail, and ownership tests.
+- Final fix verification passed 59 focused tests, 382 Phase 4 adversarial and
+  compatibility tests, all 3,902 CLI tests, repository check, type-check, test,
+  lint, format, build, and exact-range diff-check.
+- Root independently reran 63 worker-coverage, output-validation, validation
+  store, recovery, and coordinator contract tests.
 
 ### Review Received: p04
 
@@ -991,8 +1001,11 @@ without changing the launcher-private publication behavior.
 
 **Task Scope:** Moderate
 
-**Next:** Execute the final automatic Phase 4 fix task, then run the cycle-3
-narrowed re-review.
+**Fix completion:** p04-t18 completed at `83fc9e24` with narrow recoveries
+`05db25f7` and `79b90f3a`. All focused, Phase 4, full CLI, and workspace gates
+passed.
+
+**Next:** Run the cycle-3 narrowed re-review.
 
 ---
 
