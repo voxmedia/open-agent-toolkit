@@ -431,6 +431,17 @@ fresh review loop.
 - Command: exact persisted configured argv; no target injected or rewritten
 - Launch state: `intent_persisted`
 
+### Implementation Exit Gate Acceptance
+
+- Gate run ID: `2985cf13-b9ca-449a-8384-81e0a86f44eb`
+- Marker:
+  `/var/folders/fp/rnl_nlcj5ngfqfh8nb92vktr0000gn/T/oat-gate-runs/2985cf13-b9ca-449a-8384-81e0a86f44eb.json`
+- Selected target: `cursor-fable-5-xhigh`
+- Runtime: Cursor
+- Review scope/type: `final` / `code`
+- Budget: 2,400,000 ms from configuration
+- Launch state: `accepted`; no replacement launch is eligible
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed
