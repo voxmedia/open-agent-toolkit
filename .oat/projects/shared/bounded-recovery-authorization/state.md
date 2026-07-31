@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T22:30:54Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T22:37:17Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implementation - All phases passed; final re-review pending
+Implementation - Final review passed; exit gate pending
 
 ## Artifacts
 
@@ -119,7 +119,9 @@ Implementation - All phases passed; final re-review pending
 - ✗ Final lifecycle review cycle 1 found one Critical ledger handoff conflict
 - ✓ Phase 5 review-fix task `p05-t01` completed and root-validated
 - ✓ Fresh root-owned Phase 5 review passed and closed final-review C1
-- ⧗ Final verification and lifecycle re-review pending
+- ✓ Final verification after Phase 5 passed
+- ✓ Final lifecycle review cycle 2 passed with zero findings
+- ⧗ Configured implementation exit gate pending
 
 ## Blockers
 
@@ -127,4 +129,4 @@ None
 
 ## Next Milestone
 
-Run final verification and lifecycle review cycle 2
+Execute the configured implementation exit gate
