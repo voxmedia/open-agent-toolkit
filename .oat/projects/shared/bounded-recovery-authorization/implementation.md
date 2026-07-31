@@ -1,9 +1,10 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers: []
+oat_blockers:
+  - 'Phase p01 review cycle 3/3 retained one Important finding: final reserved attempt cannot resume when used equals limit'
 oat_last_updated: 2026-07-31
-oat_current_task_id: p01-t01
+oat_current_task_id: p02-t01
 oat_generated: false
 ---
 
@@ -24,12 +25,12 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status         | Tasks | Completed |
-| ------- | -------------- | ----- | --------- |
-| Phase 1 | review_pending | 2     | 2/2       |
-| Phase 2 | pending        | 1     | 0/1       |
-| Phase 3 | pending        | 1     | 0/1       |
-| Phase 4 | pending        | 1     | 0/1       |
+| Phase   | Status  | Tasks | Completed |
+| ------- | ------- | ----- | --------- |
+| Phase 1 | blocked | 2     | 2/2       |
+| Phase 2 | pending | 1     | 0/1       |
+| Phase 3 | pending | 1     | 0/1       |
+| Phase 4 | pending | 1     | 0/1       |
 
 **Total:** 2/5 tasks completed
 
@@ -37,7 +38,7 @@ oat_generated: false
 
 ## Phase 1: Canonical Recovery Contract
 
-**Status:** review_pending
+**Status:** blocked
 **Started:** 2026-07-31
 
 ### Phase Summary
@@ -84,6 +85,16 @@ oat_generated: false
   `bounded-recovery-authorization-p01-review2-fix2`
 - Fix verification: 129 focused tests, 61 skills, lint, format, diff, and
   isolation checks passed
+
+**Review round 3 (terminal):**
+
+- Artifact: `reviews/p01-review-2026-07-31T175303Z.md`
+- Reviewed head: `a2d875bb379941301c3ed811b40cfee7a40148e8`
+- Result: 1 Important finding; phase failed
+- Governance: three-cycle review cap exhausted
+- Reconnaissance: not attempted
+- Finding: a matching already-reserved final attempt must be allowed to finish
+  when `used_attempts == limit`; a new attempt at the same boundary must stop
 
 ### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
@@ -177,6 +188,8 @@ _- Outstanding Items_
 - Phase 1 review round 2: 1 Important finding; fix continuation pending
 - Phase 1 fix round 2: done at
   `a2d875bb379941301c3ed811b40cfee7a40148e8`; final review cycle pending
+- Phase 1 review round 3: failed with 1 Important finding; governance cap
+  exhausted; operator direction required
 
 <!-- orchestration-runs-end -->
 
@@ -211,13 +224,14 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run the third and final root-owned Phase 1 review cycle.
+- Await operator direction; no automatic fix, reviewer, or fallback launch is
+  authorized after the three-cycle cap.
 
 **Blockers:**
 
-- None.
+- Phase 1 review cap exhausted with one Important attempt-boundary contradiction.
 
-**Session End:** Phase 1 final review cycle pending
+**Session End:** Blocked for operator direction
 
 ---
 
