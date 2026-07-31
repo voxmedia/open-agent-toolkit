@@ -8,6 +8,7 @@ import {
   projectValidatedAssignments,
   validatePlanObligationAccounting,
   validatePlanPathAccounting,
+  validatePrimaryContingency,
   validateReviewPlan,
 } from './plan-validator';
 import type { PreparedReviewContextV1, ReviewPlanV1 } from './types';
@@ -184,6 +185,130 @@ describe('review plan policy and projection', () => {
 
   it('accepts matching sealed policy', () => {
     expect(validateReviewPlan(context(), policyPlan())).toEqual([]);
+  });
+
+  function delegatedPlan(): {
+    sealed: PreparedReviewContextV1;
+    candidate: ReviewPlanV1;
+  } {
+    const sealed = context();
+    sealed.budget.time = {
+      totalMs: 120_000,
+      source: 'gate',
+      deadlineMs: 120_000,
+    };
+    const candidate = policyPlan();
+    candidate.strategy = 'delegated';
+    candidate.timeAllocation = allocateReviewTimeBudget({
+      totalMs: 120_000,
+      source: 'gate',
+      startedAtMs: 0,
+    }).allocation;
+    candidate.lanes = [
+      {
+        ...structuredClone(candidate.lanes[0]!),
+        id: 'semantic',
+        paths: ['a.ts'],
+        primaryObligationIds: ['FR1'],
+        delegated: true,
+        independenceRationale: 'Independent semantic inspection.',
+        substantial: true,
+        substantialityRationale: 'Owns a substantial implementation surface.',
+        deadlineMs: candidate.timeAllocation.planningDeadlineMs + 1,
+        replay: 'sample',
+        primaryContingency: {
+          allowed: true,
+          paths: ['a.ts'],
+          obligationIds: ['FR1'],
+        },
+      },
+      {
+        ...structuredClone(candidate.lanes[0]!),
+        id: 'deterministic',
+        paths: ['b.ts'],
+        primaryObligationIds: ['FR2'],
+        evidenceClass: 'deterministic',
+        strategy: 'command',
+        delegated: true,
+        independenceRationale: 'Independent deterministic verification.',
+        substantial: true,
+        substantialityRationale: 'Owns the complete verification matrix.',
+        deadlineMs: candidate.timeAllocation.planningDeadlineMs + 1,
+        replay: 'accept-provenance',
+        primaryContingency: {
+          allowed: false,
+          paths: [],
+          obligationIds: [],
+        },
+      },
+    ];
+    candidate.delegationEconomics = {
+      independentLaneIds: ['semantic', 'deterministic'],
+      nonReplayedLaneIds: ['deterministic'],
+      expectedSavings: ['Verification runs concurrently with inspection.'],
+      coordinationCosts: ['Primary reconciles two bounded dossiers.'],
+      decisionRationale: 'Savings exceed bounded reconciliation cost.',
+      decision: 'delegate',
+    };
+    candidate.verificationBoundary.positiveCoverage.laneIds = [
+      'semantic',
+      'deterministic',
+    ];
+    return { sealed, candidate };
+  }
+
+  it('accepts delegation with two independent substantial lanes and provenance evidence', () => {
+    const { sealed, candidate } = delegatedPlan();
+
+    expect(validateReviewPlan(sealed, candidate)).toEqual([]);
+  });
+
+  it.each([
+    {
+      name: 'fewer than two independent substantial lanes',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.delegationEconomics.independentLaneIds = ['semantic'];
+      },
+      code: 'insufficient-independent-substantial-lanes',
+    },
+    {
+      name: 'missing economics',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.delegationEconomics.expectedSavings = [];
+        candidate.delegationEconomics.coordinationCosts = [];
+        candidate.delegationEconomics.decisionRationale = '';
+      },
+      code: 'missing-delegation-economics',
+    },
+    {
+      name: 'semantic-only delegation',
+      mutate: (candidate: ReviewPlanV1) => {
+        const deterministic = candidate.lanes[1]!;
+        deterministic.evidenceClass = 'semantic';
+        deterministic.replay = 'sample';
+      },
+      code: 'delegation-requires-provenance-lane',
+    },
+  ])('rejects $name', ({ mutate, code }) => {
+    const { sealed, candidate } = delegatedPlan();
+    mutate(candidate);
+
+    expect(validateReviewPlan(sealed, candidate)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code })]),
+    );
+  });
+
+  it('rejects primary contingency outside the lane assignment', () => {
+    const { candidate } = delegatedPlan();
+    candidate.lanes[0]!.primaryContingency.paths = ['b.ts'];
+    candidate.lanes[0]!.primaryContingency.obligationIds = ['FR2'];
+
+    expect(validatePrimaryContingency(candidate)).toEqual([
+      expect.objectContaining({
+        code: 'invalid-primary-contingency',
+        pointer: '/lanes/0/primaryContingency',
+      }),
+    ]);
   });
 
   it('rejects generated skips, unauthorized exclusions, and policy drift', () => {

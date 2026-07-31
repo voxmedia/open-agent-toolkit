@@ -182,7 +182,9 @@ function validateClassificationPolicy(
   return errors;
 }
 
-function validateContingencies(plan: ReviewPlanV1): PlanValidationError[] {
+export function validatePrimaryContingency(
+  plan: ReviewPlanV1,
+): PlanValidationError[] {
   const errors: PlanValidationError[] = [];
   plan.lanes.forEach((lane, index) => {
     const paths = new Set(lane.paths);
@@ -201,6 +203,164 @@ function validateContingencies(plan: ReviewPlanV1): PlanValidationError[] {
       });
     }
   });
+  return errors;
+}
+
+function nonEmpty(values: readonly string[]): boolean {
+  return values.length > 0 && values.every((value) => value.trim().length > 0);
+}
+
+function validateDelegationStructure(
+  plan: ReviewPlanV1,
+): PlanValidationError[] {
+  const errors: PlanValidationError[] = [];
+  const lanesById = new Map<string, ReviewPlanV1['lanes'][number]>();
+  plan.lanes.forEach((lane, index) => {
+    if (lanesById.has(lane.id)) {
+      errors.push({
+        code: 'duplicate-lane-id',
+        pointer: `/lanes/${index}/id`,
+        message: `lane ID ${lane.id} is duplicated`,
+      });
+    } else {
+      lanesById.set(lane.id, lane);
+    }
+  });
+
+  const economics = plan.delegationEconomics;
+  const delegated =
+    plan.strategy === 'delegated' || economics.decision === 'delegate';
+  if ((plan.strategy === 'delegated') !== (economics.decision === 'delegate')) {
+    errors.push({
+      code: 'delegation-decision-mismatch',
+      pointer: '/delegationEconomics/decision',
+      message: 'strategy and delegation decision must agree',
+    });
+  }
+
+  if (!delegated) {
+    plan.lanes.forEach((lane, index) => {
+      if (lane.delegated) {
+        errors.push({
+          code: 'inline-plan-has-delegated-lane',
+          pointer: `/lanes/${index}/delegated`,
+          message: 'inline plans cannot mark lanes as delegated',
+        });
+      }
+    });
+    return errors;
+  }
+
+  if (
+    !nonEmpty(economics.expectedSavings) ||
+    !nonEmpty(economics.coordinationCosts) ||
+    economics.decisionRationale.trim().length === 0
+  ) {
+    errors.push({
+      code: 'missing-delegation-economics',
+      pointer: '/delegationEconomics',
+      message:
+        'delegation requires expected savings, coordination costs, and rationale',
+    });
+  }
+
+  const independentIds = new Set<string>();
+  let independentSubstantialCount = 0;
+  economics.independentLaneIds.forEach((id, index) => {
+    const pointer = `/delegationEconomics/independentLaneIds/${index}`;
+    if (independentIds.has(id)) {
+      errors.push({
+        code: 'duplicate-independent-lane',
+        pointer,
+        message: `independent lane ${id} is duplicated`,
+      });
+      return;
+    }
+    independentIds.add(id);
+    const lane = lanesById.get(id);
+    if (
+      lane === undefined ||
+      !lane.delegated ||
+      !lane.substantial ||
+      !lane.independenceRationale?.trim() ||
+      !lane.substantialityRationale?.trim()
+    ) {
+      errors.push({
+        code: 'invalid-independent-substantial-lane',
+        pointer,
+        message:
+          'independent lanes must exist, be delegated and substantial, and include both rationales',
+      });
+      return;
+    }
+    independentSubstantialCount += 1;
+  });
+  if (independentSubstantialCount < 2) {
+    errors.push({
+      code: 'insufficient-independent-substantial-lanes',
+      pointer: '/delegationEconomics/independentLaneIds',
+      message: 'delegation requires at least two independent substantial lanes',
+    });
+  }
+
+  plan.lanes.forEach((lane, index) => {
+    if (lane.delegated && !independentIds.has(lane.id)) {
+      errors.push({
+        code: 'delegated-lane-not-independent',
+        pointer: `/lanes/${index}/delegated`,
+        message: `delegated lane ${lane.id} is not an independent lane`,
+      });
+    }
+  });
+
+  const nonReplayedIds = new Set<string>();
+  let provenanceLaneCount = 0;
+  economics.nonReplayedLaneIds.forEach((id, index) => {
+    const pointer = `/delegationEconomics/nonReplayedLaneIds/${index}`;
+    if (nonReplayedIds.has(id)) {
+      errors.push({
+        code: 'duplicate-non-replayed-lane',
+        pointer,
+        message: `non-replayed lane ${id} is duplicated`,
+      });
+      return;
+    }
+    nonReplayedIds.add(id);
+    const lane = lanesById.get(id);
+    if (
+      lane === undefined ||
+      !independentIds.has(id) ||
+      !lane.delegated ||
+      lane.evidenceClass !== 'deterministic' ||
+      lane.replay !== 'accept-provenance'
+    ) {
+      errors.push({
+        code: 'invalid-non-replayed-lane',
+        pointer,
+        message:
+          'non-replayed lanes must be independent delegated deterministic lanes accepted by provenance',
+      });
+      return;
+    }
+    provenanceLaneCount += 1;
+  });
+  if (provenanceLaneCount === 0) {
+    errors.push({
+      code: 'delegation-requires-provenance-lane',
+      pointer: '/delegationEconomics/nonReplayedLaneIds',
+      message:
+        'delegation requires a deterministic lane accepted without semantic replay',
+    });
+  }
+
+  if (plan.timeAllocation === null) {
+    errors.push({
+      code: 'insufficient-delegation-budget',
+      pointer: '/timeAllocation',
+      message:
+        'delegation requires sealed reconciliation and output budget allocation',
+    });
+  }
   return errors;
 }
 
@@ -255,7 +415,8 @@ export function validateReviewPlan(
     ...validatePlanPathAccounting(context, plan),
     ...validatePlanObligationAccounting(context, plan),
     ...validateClassificationPolicy(plan),
-    ...validateContingencies(plan),
+    ...validatePrimaryContingency(plan),
+    ...validateDelegationStructure(plan),
   ];
   if (
     plan.runId !== context.runId ||
