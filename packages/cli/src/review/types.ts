@@ -181,10 +181,16 @@ export interface PrepareReviewContextResultV1 {
   preparation: ReviewPreparationV1;
   artifactDraftPath: string | null;
   commands: {
-    checkpointArtifacts: string;
-    validatePlan: string;
-    beginEvidence: string;
+    checkpointArtifacts: ReviewCommandInvocationV1;
+    validatePlan: ReviewCommandInvocationV1;
+    beginEvidence: ReviewCommandInvocationV1;
   };
+}
+
+export interface ReviewCommandInvocationV1 {
+  executable: string;
+  argv: string[];
+  stdin: 'none' | 'review-plan-json';
 }
 
 export type ReviewStrategy =

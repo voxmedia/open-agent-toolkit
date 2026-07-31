@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import {
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
+  parseReviewCommandInvocationV1,
   parseReviewerTerminalV1,
   parseReviewPreparationV1,
   parseReviewPlanV1,
@@ -405,6 +406,28 @@ function structuredTerminal(
 }
 
 describe('plan, receipt, and terminal schemas', () => {
+  it('strictly parses portable command invocations', () => {
+    expect(
+      parseReviewCommandInvocationV1({
+        executable: '/branch/oat',
+        argv: ['review', 'validate-plan', 'a&b'],
+        stdin: 'review-plan-json',
+      }),
+    ).toEqual({
+      executable: '/branch/oat',
+      argv: ['review', 'validate-plan', 'a&b'],
+      stdin: 'review-plan-json',
+    });
+    expect(() =>
+      parseReviewCommandInvocationV1({
+        executable: '/branch/oat',
+        argv: [],
+        stdin: 'none',
+        command: 'shell text',
+      }),
+    ).toThrow(/unknown field/);
+  });
+
   it('parses valid plan, receipt, complete, and blocked branches', () => {
     expect(parseReviewPlanV1(plan()).strategy).toBe('selective-inline');
     expect(parsePlanValidationReceiptV1(receipt()).contractVersion).toBe(1);

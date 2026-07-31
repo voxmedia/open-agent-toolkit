@@ -1,5 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
+import type { ReviewCommandInvocationV1 } from './types';
 import { type ValidationRunState, ValidationStore } from './validation-store';
 
 export interface IssuedCommandCapabilities {
@@ -100,22 +101,28 @@ export function verifyCommandCapability(
   }
 }
 
-function quoteArgument(argument: string): string {
-  return `'${argument.replaceAll("'", "'\"'\"'")}'`;
-}
-
 export function renderReviewCommands(input: {
-  cli: string;
+  cli?: string;
+  executable?: string;
+  argvPrefix?: string[];
   runId: string;
   checkpointToken: string;
   planToken: string;
 }): {
-  checkpointArtifacts: string;
-  validatePlan: string;
-  beginEvidence: string;
+  checkpointArtifacts: ReviewCommandInvocationV1;
+  validatePlan: ReviewCommandInvocationV1;
+  beginEvidence: ReviewCommandInvocationV1;
 } {
-  const command = (args: string[]) =>
-    [input.cli, ...args].map(quoteArgument).join(' ');
+  const executable = input.executable ?? input.cli;
+  if (!executable) throw new Error('review command executable is required');
+  const command = (
+    args: string[],
+    stdin: ReviewCommandInvocationV1['stdin'] = 'none',
+  ): ReviewCommandInvocationV1 => ({
+    executable,
+    argv: [...(input.argvPrefix ?? []), ...args],
+    stdin,
+  });
   return {
     checkpointArtifacts: command([
       'review',
@@ -126,16 +133,19 @@ export function renderReviewCommands(input: {
       input.checkpointToken,
       '--json',
     ]),
-    validatePlan: command([
-      'review',
-      'validate-plan',
-      '--run-id',
-      input.runId,
-      '--command-token',
-      input.planToken,
-      '--stdin',
-      '--json',
-    ]),
+    validatePlan: command(
+      [
+        'review',
+        'validate-plan',
+        '--run-id',
+        input.runId,
+        '--command-token',
+        input.planToken,
+        '--stdin',
+        '--json',
+      ],
+      'review-plan-json',
+    ),
     beginEvidence: command([
       'review',
       'begin-evidence',

@@ -5,6 +5,7 @@ import type {
   PlanValidationReceiptV1,
   PriorReviewEvidenceV1,
   ReviewBudgetV1,
+  ReviewCommandInvocationV1,
   ReviewObligationV1,
   ReviewPlanV1,
   ReviewPreparationV1,
@@ -16,6 +17,21 @@ export class ReviewSchemaError extends Error {
     super(message);
     this.name = 'ReviewSchemaError';
   }
+}
+
+export function parseReviewCommandInvocationV1(
+  value: unknown,
+): ReviewCommandInvocationV1 {
+  const invocation = object(value, '$');
+  keys(invocation, ['executable', 'argv', 'stdin'], '$');
+  string(invocation['executable'], '$/executable');
+  const argv = stringArray(invocation['argv'], '$/argv');
+  enumValue(invocation['stdin'], ['none', 'review-plan-json'], '$/stdin');
+  return {
+    executable: invocation['executable'] as string,
+    argv,
+    stdin: invocation['stdin'] as ReviewCommandInvocationV1['stdin'],
+  };
 }
 
 type JsonObject = Record<string, unknown>;

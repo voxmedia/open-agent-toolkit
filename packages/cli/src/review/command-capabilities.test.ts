@@ -158,16 +158,31 @@ describe('review command capabilities', () => {
     ).resolves.toBeUndefined();
   });
 
-  it('renders launcher-owned arguments with safe quoting', () => {
+  it('preserves launcher-owned executable and arguments without shell quoting', () => {
     const commands = renderReviewCommands({
-      cli: "/tmp/oat'bin",
+      executable: "/tmp/oat'bin",
+      argvPrefix: ['--branch', 'feature & fix'],
       runId: 'run id',
       checkpointToken: "check'token",
       planToken: 'plan-token',
     });
-    expect(commands.checkpointArtifacts).toContain("'/tmp/oat'\"'\"'bin'");
-    expect(commands.checkpointArtifacts).toContain("'run id'");
-    expect(commands.validatePlan).toContain("'plan-token'");
-    expect(commands.beginEvidence).toContain("'__OAT_PLAN_RECEIPT__'");
+    expect(commands.checkpointArtifacts).toEqual({
+      executable: "/tmp/oat'bin",
+      argv: [
+        '--branch',
+        'feature & fix',
+        'review',
+        'checkpoint-artifacts',
+        '--run-id',
+        'run id',
+        '--checkpoint-token',
+        "check'token",
+        '--json',
+      ],
+      stdin: 'none',
+    });
+    expect(commands.validatePlan.argv).toContain('plan-token');
+    expect(commands.validatePlan.stdin).toBe('review-plan-json');
+    expect(commands.beginEvidence.argv).toContain('__OAT_PLAN_RECEIPT__');
   });
 });
