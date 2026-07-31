@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p-rev2-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | passed        | 2     | 2/2       |
-| Phase p-rev2 | pending       | 1     | 0/1       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 1     | 1/1       |
+| Phase 3      | passed         | 2     | 2/2       |
+| Phase p-rev2 | review_pending | 1     | 1/1       |
+| Phase 4      | pending        | 1     | 0/1       |
 
-**Total:** 6/8 tasks completed
+**Total:** 7/8 tasks completed
 
 ---
 
@@ -268,13 +268,24 @@ oat_generated: false
 
 ## Revision Phase 2: Autonomy Gate-Inventory Coverage
 
-**Status:** pending
-**Started:** -
+**Status:** review_pending
+**Started:** 2026-07-31
 
 ### Task p-rev2-t01: (revision) Map Recovery Prompt Sites
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0adcee7f8e143221e14b6f50579ab35e9bc0425a
+
+**Result:**
+
+- Added exact `NG` mappings for prompt-site keys `4d6c519131e5`,
+  `81db07214b06`, and `4aa21120295f` without changing immutable baseline
+  mappings.
+- Focused inventory verification passed. The initial full-suite run hit one
+  unrelated five-second timeout in an existing gate test; the contract's one
+  no-edit flake rerun and the complete post-commit verification both passed.
+- Root verified the one-commit range, file boundary, clean worktree, and focused
+  inventory test. Fresh root-owned review is pending.
 
 ---
 
@@ -491,6 +502,28 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
+#### Dispatch Record: p-rev2 implementation
+
+- Request:
+  `bounded-recovery-authorization-p-rev2-implementation-20260731T2125Z`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- Selection: managed High; candidate `gpt-5.6-sol-medium`; task class
+  `default-implementation`; reason `native-catalog`
+- Model axis: `selected:gpt-5.6-sol-medium`
+- Effort axis: `not-applicable`
+- Base/head:
+  `7f4ef2814d7dcc80f25e61efed9ac5a1a6a751dd..0adcee7f8e143221e14b6f50579ab35e9bc0425a`
+- Task/commit: `p-rev2-t01` /
+  `0adcee7f8e143221e14b6f50579ab35e9bc0425a`
+- Verification: focused inventory passed; initial full suite had one unrelated
+  timeout; the authorized no-edit flake rerun and complete post-commit planned
+  verification passed; root commit-range and focused checks passed
+- Recovery/children: no recovery attempts; no children
+- Dispatch stamp:
+  `Dispatch: scope=p-rev2 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -522,6 +555,7 @@ Chronological log of implementation progress.
 - Completed and root-validated the Phase 3 public documentation task commit.
 - Preserved the blocked Phase 4 evidence and restored its uncommitted version
   edits after operator-authorized revision routing.
+- Completed and root-validated the p-rev2 autonomy inventory mapping commit.
 
 **Decisions:**
 
@@ -567,7 +601,7 @@ Track test execution during implementation.
 | p-rev1 | skills.test.ts; skill validation; lint; format; diff check     | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
 | 2      | sync/index.test.ts; skill validation; lint; format; diff check | 28 tests + 61 skills  | 0      | Provider semantic parity     |
 | 3      | check; docs build; protected-path isolation; diff check        | all                   | 0      | Public recovery docs         |
-| p-rev2 | autonomy gate inventory; full test; format; diff check         | pending               | -      | Prompt-site coverage         |
+| p-rev2 | autonomy gate inventory; full test; format; diff check         | all                   | 0      | Prompt-site coverage         |
 | 4      | -                                                              | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
