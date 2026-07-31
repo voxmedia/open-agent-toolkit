@@ -456,6 +456,19 @@ fresh review loop.
 - Handoff: non-null and receive-eligible
 - Launch state: `result_persisted`
 
+### Implementation Exit Gate Receive Intent
+
+- Correlation:
+  `gate-run:2985cf13-b9ca-449a-8384-81e0a86f44eb`
+- Event identity:
+  `final/code/final-review-2026-07-31T224851Z.md`
+- Source:
+  `reviews/final-review-2026-07-31T224851Z.md`
+- Preselected archive:
+  `reviews/archived/final-review-2026-07-31T224851Z.md`
+- Pre-receive head: `6618a87fc5d73270e83ce4aeb729c1b09b942593`
+- Receive state: `intent_persisted`; archive collision check passed
+
 ### Task p05-t01: Reconcile Recovery Ledger Validation and Clearing
 
 **Status:** completed

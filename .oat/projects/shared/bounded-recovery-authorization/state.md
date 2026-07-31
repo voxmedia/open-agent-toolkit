@@ -30,7 +30,7 @@ oat_implement_exit_gate:
   resolved_description: Semantic cross-family final implementation review before oat-project-implement exits.
   on_failure: block
   max_attempts: 2
-  attempts_completed: 0
+  attempts_completed: 1
   reviewed_head: cd7fd7aef3d39c6c545ac8d4f62017ae710e7b1b
   implementation_base_ref: origin/main
   implementation_fingerprint: sha256:effective-delta-v1:609e85c2b566e739f7ce05022cbc3413cf8a7edd525173ce6c316edadfbd2cd8
@@ -45,23 +45,23 @@ oat_implement_exit_gate:
   envelope_status: ok
   artifact: .oat/projects/shared/bounded-recovery-authorization/reviews/final-review-2026-07-31T224851Z.md
   handoff: Run oat-project-review-receive for .oat/projects/shared/bounded-recovery-authorization/reviews/final-review-2026-07-31T224851Z.md before treating this gate review as consumed.
-  receive_state: not_started
-  receive_correlation: null
-  receive_source_artifact: null
-  receive_archived_artifact: null
-  receive_event_identity: null
-  receive_pre_head: null
+  receive_state: intent_persisted
+  receive_correlation: gate-run:2985cf13-b9ca-449a-8384-81e0a86f44eb
+  receive_source_artifact: .oat/projects/shared/bounded-recovery-authorization/reviews/final-review-2026-07-31T224851Z.md
+  receive_archived_artifact: .oat/projects/shared/bounded-recovery-authorization/reviews/archived/final-review-2026-07-31T224851Z.md
+  receive_event_identity: final/code/final-review-2026-07-31T224851Z.md
+  receive_pre_head: 6618a87fc5d73270e83ce4aeb729c1b09b942593
   receive_commit: null
   receive_eligible: true
   receive_completed: false
   failure: null
-  updated_at: '2026-07-31T22:52:20Z'
+  updated_at: '2026-07-31T22:53:02Z'
 oat_docs_updated: null # null | skipped | complete — documentation sync status
 oat_pr_status: null # null | ready | open | closed | merged — actual PR state for the current project
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T22:52:20Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T22:53:02Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
