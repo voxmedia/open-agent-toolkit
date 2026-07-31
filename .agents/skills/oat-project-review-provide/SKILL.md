@@ -861,10 +861,10 @@ Use this exact contract:
    budget; never supply self-reported token counts.
 4. **Validated plan (`ReviewPlanV1`)** — Build one compact inline plan that
    assigns every authoritative path and obligation, records the mandatory
-   delegation economics and verification boundary, and chooses either
-   selective-inline or eligible whole-diff-inline evidence. Submit it with the
-   supplied plan-validation command. One rejected plan may be corrected once
-   before evidence.
+   delegation economics and verification boundary, and records a
+   selective-inline or eligible whole-diff-inline evidence strategy. Submit it
+   with the supplied plan-validation command. One rejected plan may be
+   corrected once before evidence.
 5. **Validation receipt (`PlanValidationReceiptV1`)** — Retain the opaque
    receipt returned by the launcher-owned validator. Do not infer acceptance
    from reviewer-authored digests.
