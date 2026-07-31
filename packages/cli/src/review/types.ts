@@ -508,6 +508,13 @@ export interface StructuredFindings {
   verification_commands: string[];
 }
 
+export interface ArtifactFindingProjectionV1 {
+  schemaVersion: 1;
+  snapshotDigest: string;
+  accountingDigest: string;
+  findingIds: string[];
+}
+
 export type ReviewCandidateV1 =
   | {
       kind: 'artifact-draft';

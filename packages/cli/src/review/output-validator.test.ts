@@ -78,7 +78,52 @@ function fixture(): {
     classifications: [],
     verification: [
       {
-        claimId: 'claim-1',
+        claimId: 'claim-promoted',
+        kind: 'promoted-finding',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'rejected',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'claim-absence',
+        kind: 'consequential-absence',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'claim-conflict',
+        kind: 'worker-conflict',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'rejected',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'claim-gap',
+        kind: 'cross-lane-gap',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'rejected',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'claim-positive',
+        kind: 'positive-coverage-sample',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'sample',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'claim-deterministic',
         kind: 'deterministic-result',
         findingId: null,
         laneIds: ['lane-1'],
@@ -258,7 +303,7 @@ describe('review output validation', () => {
 
   it('rejects broken references and invalid claim dispositions', () => {
     const { context, terminal } = fixture();
-    const claim = terminal.reviewAccounting.verification[0]!;
+    const claim = terminal.reviewAccounting.verification.at(-1)!;
     claim.laneIds = ['missing'];
     claim.evidenceRefIds = ['missing'];
     claim.mode = 'direct';
@@ -293,5 +338,91 @@ describe('review output validation', () => {
       reviewAccounting: blockedAccounting,
     };
     expect(validateReviewOutput(context, blocked).valid).toBe(true);
+  });
+
+  it('rejects complete output that omits required direct and sample claims', () => {
+    const { context, terminal } = fixture();
+    terminal.reviewAccounting.verification = [];
+    expect(errorCodes(context, terminal)).toEqual(
+      expect.arrayContaining([
+        'missing-required-claim',
+        'missing-positive-coverage',
+      ]),
+    );
+  });
+
+  it('accepts only launcher-bound artifact finding projections', () => {
+    const { context: baseContext, terminal } = fixture();
+    terminal.candidate = {
+      kind: 'artifact-draft',
+      privateDraftPath: '/private/review.md',
+    };
+    terminal.reviewAccounting.verification = [
+      {
+        claimId: 'finding',
+        kind: 'promoted-finding',
+        findingId: 'artifact:critical:1',
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'absence',
+        kind: 'consequential-absence',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'conflict',
+        kind: 'worker-conflict',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'rejected',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'gap',
+        kind: 'cross-lane-gap',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'direct',
+        disposition: 'rejected',
+        evidenceRefIds: ['evidence-1'],
+      },
+      {
+        claimId: 'positive',
+        kind: 'positive-coverage-sample',
+        findingId: null,
+        laneIds: ['lane-1'],
+        mode: 'sample',
+        disposition: 'verified',
+        evidenceRefIds: ['evidence-1'],
+      },
+      terminal.reviewAccounting.verification[0]!,
+    ];
+    const context = {
+      ...baseContext,
+      artifactFindingProjection: {
+        schemaVersion: 1,
+        snapshotDigest: 'a'.repeat(64),
+        accountingDigest: hashCanonicalJson(terminal.reviewAccounting),
+        findingIds: ['artifact:critical:1'],
+      },
+    } as ReviewOutputValidationContext;
+
+    expect(validateReviewOutput(context, terminal).valid).toBe(true);
+    context.artifactFindingProjection!.accountingDigest = 'b'.repeat(64);
+    expect(errorCodes(context, terminal)).toContain(
+      'artifact-projection-mismatch',
+    );
+    delete context.artifactFindingProjection;
+    expect(errorCodes(context, terminal)).toContain(
+      'missing-artifact-projection',
+    );
   });
 });

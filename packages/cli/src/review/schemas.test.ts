@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  parseArtifactFindingProjectionV1,
   parsePrepareReviewContextInputV1,
   parseHostTelemetryEvidenceV1,
   parsePlanValidationReceiptV1,
@@ -512,6 +513,28 @@ function structuredTerminal(
 }
 
 describe('plan, receipt, and terminal schemas', () => {
+  it('strictly parses launcher-derived artifact finding projections', () => {
+    const projection = {
+      schemaVersion: 1,
+      snapshotDigest: 'a'.repeat(64),
+      accountingDigest: 'b'.repeat(64),
+      findingIds: ['artifact:critical:1', 'artifact:important:1'],
+    };
+    expect(parseArtifactFindingProjectionV1(projection)).toEqual(projection);
+    expect(() =>
+      parseArtifactFindingProjectionV1({
+        ...projection,
+        findingIds: ['artifact:critical:1', 'artifact:critical:1'],
+      }),
+    ).toThrow(/duplicate/i);
+    expect(() =>
+      parseArtifactFindingProjectionV1({
+        ...projection,
+        snapshotDigest: 'not-a-digest',
+      }),
+    ).toThrow(/digest/i);
+  });
+
   it('strictly parses portable command invocations', () => {
     expect(
       parseReviewCommandInvocationV1({

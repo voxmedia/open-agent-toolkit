@@ -4,6 +4,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  extractArtifactFindingProjection,
   extractReviewAccounting,
   MAX_REVIEW_ACCOUNTING_BYTES,
   parseStrictReviewAccountingJson,
@@ -145,5 +146,51 @@ describe('artifact accounting grammar', () => {
     expect(reviewer).toMatch(
       /Findings:\s*\{N\} critical,\s*\{N\} important,\s*\{N\} medium,\s*\{N\} minor/,
     );
+  });
+
+  it('derives finding IDs from immutable artifact structure and binds their digests', () => {
+    const source = artifact()
+      .replace(
+        'Findings: 0 critical, 0 important, 0 medium, 0 minor',
+        'Findings: 1 critical, 1 important, 0 medium, 0 minor',
+      )
+      .replace(
+        '## Review Accounting',
+        [
+          '## Findings',
+          '',
+          '### Critical',
+          '',
+          '- **Unsafe publication**',
+          '  - Issue: the destination can drift.',
+          '',
+          '### Important',
+          '',
+          '- **Missing coverage**',
+          '  - Issue: a planned claim is absent.',
+          '',
+          '### Medium',
+          '',
+          'None',
+          '',
+          '### Minor',
+          '',
+          'None',
+          '',
+          '## Review Accounting',
+        ].join('\n'),
+      );
+
+    expect(extractArtifactFindingProjection(source)).toEqual({
+      schemaVersion: 1,
+      snapshotDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
+      accountingDigest: expect.stringMatching(/^[0-9a-f]{64}$/),
+      findingIds: ['artifact:critical:1', 'artifact:important:1'],
+    });
+    expect(() =>
+      extractArtifactFindingProjection(
+        source.replace('Findings: 1 critical', 'Findings: 2 critical'),
+      ),
+    ).toThrow(/finding counts/i);
   });
 });

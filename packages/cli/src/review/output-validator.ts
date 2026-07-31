@@ -1,5 +1,6 @@
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
 import type {
+  ArtifactFindingProjectionV1,
   PlanValidationReceiptV1,
   ReviewAccountingV1,
   ReviewCommandEvidenceV1,
@@ -18,6 +19,7 @@ export interface ReviewOutputValidationContext {
   receipt: PlanValidationReceiptV1;
   plan: Pick<ReviewPlanV1, 'strategy' | 'verificationBoundary'>;
   assignment: ValidatedAssignmentProjectionV1;
+  artifactFindingProjection?: ArtifactFindingProjectionV1;
 }
 
 export type OutputValidationResult =
@@ -236,6 +238,7 @@ function validateScopeRefs(
 }
 
 function validateRegistries(
+  context: ReviewOutputValidationContext,
   terminal: ReviewerTerminalV1,
   errors: AccountingValidationError[],
 ): void {
@@ -333,6 +336,43 @@ function validateRegistries(
       }
       findingIds.add(finding.id);
     });
+  } else if (
+    terminal.status === 'complete' &&
+    terminal.candidate.kind === 'artifact-draft'
+  ) {
+    const projection = context.artifactFindingProjection;
+    if (projection === undefined) {
+      add(
+        errors,
+        'missing-artifact-projection',
+        '/candidate',
+        'artifact output requires a launcher-derived finding projection',
+      );
+    } else {
+      if (
+        projection.schemaVersion !== 1 ||
+        !/^[0-9a-f]{64}$/.test(projection.snapshotDigest) ||
+        projection.accountingDigest !== hashCanonicalJson(accounting)
+      ) {
+        add(
+          errors,
+          'artifact-projection-mismatch',
+          '/artifactFindingProjection',
+          'artifact projection is not bound to the accepted accounting snapshot',
+        );
+      }
+      projection.findingIds.forEach((findingId, index) => {
+        if (findingIds.has(findingId)) {
+          add(
+            errors,
+            'duplicate-finding-id',
+            `/artifactFindingProjection/findingIds/${index}`,
+            `finding ID ${findingId} is duplicated`,
+          );
+        }
+        findingIds.add(findingId);
+      });
+    }
   }
 
   accounting.verification.forEach((claim, index) => {
@@ -378,7 +418,8 @@ function validateRegistries(
           : 'direct';
     const dispositionAllowed =
       claim.disposition === 'verified' ||
-      ((claim.kind === 'consequential-absence' ||
+      ((claim.kind === 'promoted-finding' ||
+        claim.kind === 'consequential-absence' ||
         claim.kind === 'worker-conflict' ||
         claim.kind === 'cross-lane-gap') &&
         claim.disposition === 'rejected') ||
@@ -397,10 +438,14 @@ function validateRegistries(
       );
     }
     if (claim.kind === 'promoted-finding') {
+      const verifiesFinding =
+        claim.findingId !== null &&
+        findingIds.has(claim.findingId) &&
+        claim.disposition === 'verified';
+      const verifiesNoPromotion =
+        claim.findingId === null && claim.disposition === 'rejected';
       if (
-        claim.findingId === null ||
-        !findingIds.has(claim.findingId) ||
-        claim.disposition !== 'verified' ||
+        (!verifiesFinding && !verifiesNoPromotion) ||
         claim.evidenceRefIds.length === 0
       ) {
         add(
@@ -430,6 +475,63 @@ function validateRegistries(
       );
     }
   });
+
+  const requiredDirectKinds = new Set(
+    context.plan.verificationBoundary.requiredClaims.map(
+      (required) => required.kind,
+    ),
+  );
+  for (const requiredKind of requiredDirectKinds) {
+    const matching = accounting.verification.filter(
+      (claim) =>
+        claim.kind === requiredKind &&
+        claim.mode === 'direct' &&
+        claim.evidenceRefIds.length > 0,
+    );
+    if (matching.length === 0) {
+      add(
+        errors,
+        'missing-required-claim',
+        '/reviewAccounting/verification',
+        `required direct claim ${requiredKind} is missing evidence`,
+      );
+    }
+  }
+
+  const plannedSamples = new Set(
+    context.plan.verificationBoundary.positiveCoverage.laneIds,
+  );
+  const sampledLanes = new Set<string>();
+  accounting.verification
+    .filter((claim) => claim.kind === 'positive-coverage-sample')
+    .forEach((claim, index) => {
+      const valid =
+        claim.mode === 'sample' &&
+        claim.disposition === 'verified' &&
+        claim.evidenceRefIds.length > 0 &&
+        claim.laneIds.length > 0 &&
+        claim.laneIds.every((laneId) => plannedSamples.has(laneId));
+      if (!valid) {
+        add(
+          errors,
+          'missing-positive-coverage',
+          `/reviewAccounting/verification/${index}`,
+          'positive coverage claim is not an evidenced planned sample',
+        );
+      }
+      claim.laneIds.forEach((laneId) => sampledLanes.add(laneId));
+    });
+  if (
+    plannedSamples.size !== sampledLanes.size ||
+    [...plannedSamples].some((laneId) => !sampledLanes.has(laneId))
+  ) {
+    add(
+      errors,
+      'missing-positive-coverage',
+      '/reviewAccounting/verification',
+      'positive coverage samples do not match the validated plan',
+    );
+  }
 
   for (const findingId of findingIds) {
     const matching = accounting.verification.filter(
@@ -567,7 +669,7 @@ export function validateReviewOutput(
 ): OutputValidationResult {
   const errors: AccountingValidationError[] = [];
   validateIdentity(context, terminal.reviewAccounting, errors);
-  validateRegistries(terminal, errors);
+  validateRegistries(context, terminal, errors);
   validateOutcomes(terminal, errors);
   return errors.length === 0
     ? { valid: true, outputDigest: hashCanonicalJson(terminal) }

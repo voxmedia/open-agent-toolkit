@@ -13,6 +13,7 @@ import {
   PROVENANCE_EVIDENCE_STRATEGIES,
 } from './types';
 import type {
+  ArtifactFindingProjectionV1,
   ChangeMapV1,
   HostTelemetryEvidenceV1,
   PlanValidationReceiptV1,
@@ -504,6 +505,17 @@ const accounting = {
 } satisfies ReviewAccountingV1;
 
 describe('review output contracts', () => {
+  it('types launcher-derived artifact finding projections', () => {
+    const projection = {
+      schemaVersion: 1,
+      snapshotDigest: 'a'.repeat(64),
+      accountingDigest: 'b'.repeat(64),
+      findingIds: ['artifact:critical:1'],
+    } satisfies ArtifactFindingProjectionV1;
+
+    expect(projection.findingIds).toEqual(['artifact:critical:1']);
+  });
+
   it('represents complete and partial worker dossiers with typed evidence registries', () => {
     const complete = {
       schemaVersion: 1,

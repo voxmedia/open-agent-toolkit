@@ -2,6 +2,7 @@ import { isAbsolute } from 'node:path';
 
 import { DIRECT_REVIEW_CLAIM_KINDS } from './types';
 import type {
+  ArtifactFindingProjectionV1,
   ChangeMapV1,
   ContextBudgetTelemetry,
   HostTelemetryEvidenceV1,
@@ -110,6 +111,14 @@ function sha(value: unknown, pointer: string): void {
   if (typeof value !== 'string' || !/^[0-9a-f]{40}$/.test(value)) {
     throw new ReviewSchemaError(
       `${pointer} must be a lowercase 40-character SHA`,
+    );
+  }
+}
+
+function digest(value: unknown, pointer: string): asserts value is string {
+  if (typeof value !== 'string' || !/^[0-9a-f]{64}$/.test(value)) {
+    throw new ReviewSchemaError(
+      `${pointer} must be a lowercase 64-character digest`,
     );
   }
 }
@@ -1533,6 +1542,50 @@ function parseStructuredFinding(value: unknown, pointer: string): void {
       `${pointer}/fix_guidance must be a string or null`,
     );
   }
+}
+
+export function parseArtifactFindingProjectionV1(
+  value: unknown,
+): ArtifactFindingProjectionV1 {
+  const projection = object(value, '$');
+  keys(
+    projection,
+    ['schemaVersion', 'snapshotDigest', 'accountingDigest', 'findingIds'],
+    '$',
+  );
+  if (projection['schemaVersion'] !== 1) {
+    throw new ReviewSchemaError('$/schemaVersion must be 1');
+  }
+  digest(projection['snapshotDigest'], '$/snapshotDigest');
+  digest(projection['accountingDigest'], '$/accountingDigest');
+  const findingIds = stringArray(projection['findingIds'], '$/findingIds');
+  const seen = new Set<string>();
+  const nextOrdinal = new Map<string, number>();
+  let priorSeverity = -1;
+  const severityOrder = ['critical', 'important', 'medium', 'minor'];
+  findingIds.forEach((findingId, index) => {
+    const match =
+      /^artifact:(critical|important|medium|minor):([1-9]\d*)$/.exec(findingId);
+    if (match === null) {
+      throw new ReviewSchemaError(`$/findingIds/${index} has an invalid value`);
+    }
+    if (seen.has(findingId)) {
+      throw new ReviewSchemaError(`$/findingIds has duplicate ${findingId}`);
+    }
+    seen.add(findingId);
+    const severity = match[1]!;
+    const ordinal = Number(match[2]);
+    const severityIndex = severityOrder.indexOf(severity);
+    if (
+      severityIndex < priorSeverity ||
+      ordinal !== (nextOrdinal.get(severity) ?? 1)
+    ) {
+      throw new ReviewSchemaError('$/findingIds are not in canonical order');
+    }
+    priorSeverity = severityIndex;
+    nextOrdinal.set(severity, ordinal + 1);
+  });
+  return projection as unknown as ArtifactFindingProjectionV1;
 }
 
 export function parseReviewerTerminalV1(value: unknown): ReviewerTerminalV1 {
