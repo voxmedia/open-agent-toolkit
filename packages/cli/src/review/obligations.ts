@@ -126,7 +126,16 @@ export function parsePlanTaskObligations(
   return tasks;
 }
 
-const DEVIATION_HEADERS = [
+const CANONICAL_DEVIATION_HEADERS = [
+  'Task / Review',
+  'Source Artifact',
+  'Planned / Documented',
+  'Actual / Accepted',
+  'Reason',
+  'Source of Truth',
+  'Follow-up',
+] as const;
+const LEGACY_DEVIATION_HEADERS = [
   'Task / Review',
   'Planned / Expected',
   'Actual / Accepted',
@@ -148,24 +157,60 @@ export function parseDeviationObligations(
     .filter((index) => index >= 0);
   if (headings.length === 0) return [];
   if (headings.length > 1) throw new Error('duplicate deviations section');
-  let tableStart = headings[0]! + 1;
-  while (lines[tableStart] === '') tableStart++;
+  let sectionEnd = headings[0]! + 1;
+  while (sectionEnd < lines.length && !lines[sectionEnd]!.startsWith('## ')) {
+    sectionEnd++;
+  }
+  const tableStarts = lines
+    .slice(headings[0]! + 1, sectionEnd)
+    .map((line, index) => {
+      if (!line.startsWith('|') || !line.endsWith('|')) return -1;
+      const headers = line
+        .split('|')
+        .slice(1, -1)
+        .map((cell) => cell.trim());
+      const canonical =
+        headers.length === CANONICAL_DEVIATION_HEADERS.length &&
+        headers.every(
+          (header, headerIndex) =>
+            header === CANONICAL_DEVIATION_HEADERS[headerIndex],
+        );
+      const legacy =
+        headers.length === LEGACY_DEVIATION_HEADERS.length &&
+        headers.every(
+          (header, headerIndex) =>
+            header === LEGACY_DEVIATION_HEADERS[headerIndex],
+        );
+      return canonical || legacy ? headings[0]! + 1 + index : -1;
+    })
+    .filter((index) => index >= 0);
+  if (tableStarts.length !== 1) {
+    throw new Error(
+      'deviations section must contain exactly one deviations table',
+    );
+  }
+  const tableStart = tableStarts[0]!;
   const table = parseStrictMarkdownTable(lines, tableStart);
-  if (
-    table.headers.length !== DEVIATION_HEADERS.length ||
-    table.headers.some((header, index) => header !== DEVIATION_HEADERS[index])
-  ) {
+  const canonical = table.headers.every(
+    (header, index) => header === CANONICAL_DEVIATION_HEADERS[index],
+  );
+  const legacy = table.headers.every(
+    (header, index) => header === LEGACY_DEVIATION_HEADERS[index],
+  );
+  if (!canonical && !legacy) {
     throw new Error('deviations table has the wrong headers');
   }
   const obligations: ReviewObligationV1[] = [];
   table.rows.forEach((cells, index) => {
     if (cells.every((cell) => cell === '-')) return;
     const task = cells[0]!;
-    const actual = cells[2]!;
-    const sourceOfTruth = cells[6]!;
-    const complete = [task, actual, sourceOfTruth].every(
-      (cell) => cell.length > 0 && cell !== '-',
-    );
+    const actual = cells[canonical ? 3 : 2]!;
+    const sourceOfTruth = cells[canonical ? 5 : 6]!;
+    const complete = canonical
+      ? cells.every((cell) => cell.length > 0 && cell !== '-')
+      : [task, actual, sourceOfTruth].every(
+          (cell) => cell.length > 0 && cell !== '-',
+        );
     if (!complete) throw new Error(`deviation row ${index + 1} is incomplete`);
     obligations.push({
       id: `deviation:${task}:${index + 1}`,

@@ -74,6 +74,14 @@ describe('plan task obligations', () => {
 });
 
 describe('implementation obligations', () => {
+  it.each([
+    '../../../../.oat/templates/implementation.md',
+    '../../../../.oat/projects/shared/review-plan-workflow/implementation.md',
+  ])('parses the canonical deviations table in %s', async (relativePath) => {
+    const source = await readFile(new URL(relativePath, import.meta.url));
+    expect(() => parseDeviationObligations(source, relativePath)).not.toThrow();
+  });
+
   it('parses deviations and latest deferred state', async () => {
     const source = await readFile(fixture('implementation-v1.md'));
     const expected = JSON.parse(
@@ -95,6 +103,29 @@ describe('implementation obligations', () => {
     expect(() =>
       parseDeviationObligations(source, 'implementation.md'),
     ).toThrow(/incomplete/);
+  });
+
+  it('skips explanatory prose and rejects duplicate canonical tables', () => {
+    const table = `| Task / Review | Source Artifact | Planned / Documented | Actual / Accepted | Reason | Source of Truth | Follow-up |
+| --- | --- | --- | --- | --- | --- | --- |
+| p02-t10 | design.md | standalone Step line | inline or standalone Step line | canonical plans use inline prose | obligations.ts | align design |
+`;
+    expect(
+      parseDeviationObligations(
+        `## Deviations from Plan / Design
+
+Document intentional deviations before the table.
+
+${table}`,
+        'implementation.md',
+      ),
+    ).toMatchObject([{ id: 'deviation:p02-t10:1' }]);
+    expect(() =>
+      parseDeviationObligations(
+        `## Deviations from Plan / Design\n\n${table}\n${table}`,
+        'implementation.md',
+      ),
+    ).toThrow(/exactly one/);
   });
 
   it('rejects duplicate IDs within one deferred block', () => {
