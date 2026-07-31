@@ -1,10 +1,10 @@
 ---
-oat_status: in_progress
+oat_status: complete
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_generated: false
-oat_template: true
+oat_template: false
 oat_template_name: design
 ---
 
@@ -201,6 +201,11 @@ attempt produces exactly one append-only recovery commit. At three events, the
 phase report flags elevated recovery volume but continues. Review-fix and gate
 loops retain `oat_orchestration_retry_limit`; the three-cycle review governance
 cap remains separate and unchanged.
+
+Boundedness controls authorization, not accounting. A trivial or obvious repair
+still consumes an attempt when it begins after commit. Fixes completed before
+the task commit do not consume recovery budget because they are prevention, not
+recovery.
 
 On exhaustion, operator direction has defined semantics:
 
