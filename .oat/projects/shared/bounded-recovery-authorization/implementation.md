@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p02-t01
+oat_current_task_id: p03-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | pending       | 1     | 0/1       |
-| Phase 3      | pending       | 1     | 0/1       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | review_pending | 1     | 1/1       |
+| Phase 3      | pending        | 1     | 0/1       |
+| Phase 4      | pending        | 1     | 0/1       |
 
-**Total:** 3/6 tasks completed
+**Total:** 4/6 tasks completed
 
 ---
 
@@ -161,13 +161,29 @@ oat_generated: false
 
 ## Phase 2: Provider Materialization and Parity
 
-**Status:** pending
-**Started:** -
+**Status:** review_pending
+**Started:** 2026-07-31
 
 ### Task p02-t01: Regenerate and Validate Provider Agents
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 395fca50e96ec4f895d3b9ad828b0900f67ce95e
+
+**Outcome:**
+
+- Added parity coverage for the pending-attempt/new-reservation boundary across
+  Claude, Codex, base Cursor, and pinned Cursor materializations.
+- Regenerated managed Codex and pinned Cursor phase-implementer agents from
+  canonical sources.
+
+**Verification:**
+
+- Sync tests: 28/28 passed
+- Canonical skill validation: 61 skills passed
+- Sync dry-run: no changes to apply
+- `pnpm lint`, `pnpm format`, isolation, and `git diff --check`: passed
+- `oat status --scope project` reported only ignored local unmanaged Cursor
+  entries; no adoption was performed
 
 ---
 
@@ -246,6 +262,8 @@ _- Outstanding Items_
   `/Users/tstang/orca/workspaces/open-agent-toolkit-worktrees/bounded-recovery-authorization-p02`
   and
   `/Users/tstang/orca/workspaces/open-agent-toolkit-worktrees/bounded-recovery-authorization-p03`
+- Sequential Phase 2 completed at
+  `395fca50e96ec4f895d3b9ad828b0900f67ce95e`; fresh root-owned review pending
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -292,6 +310,26 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p-rev1 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-high`
 
+#### Dispatch Record: p02 sequential run
+
+- Request: `bounded-recovery-authorization-p02-implementation-20260731T1922Z`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- Selection: managed High; candidate `gpt-5.6-sol-medium`; task class
+  `default-implementation`
+- Model axis: `selected:gpt-5.6-sol-medium`
+- Effort axis: `not-applicable`
+- Base/head:
+  `0206334a1ed1d8a21e15b4eb6634f4d6e5ee1716..395fca50e96ec4f895d3b9ad828b0900f67ce95e`
+- Task/commit: `p02-t01` /
+  `395fca50e96ec4f895d3b9ad828b0900f67ce95e`
+- Verification: 28 sync tests, 61 skills, sync dry-run, lint, format, isolation,
+  and diff checks passed
+- Recovery/children: none
+- Dispatch stamp:
+  `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -319,6 +357,7 @@ Chronological log of implementation progress.
 - Recorded operator authorization for a new explicit revision phase after the
   terminal Phase 1 review.
 - Completed and root-validated the corrected p-rev1 task commit.
+- Completed and root-validated the Phase 2 provider parity task commit.
 
 **Decisions:**
 
@@ -331,13 +370,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run Phase 2 sequentially in the root checkout, then Phase 3.
+- Run the fresh root-owned Phase 2 review.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase p-rev1 passed; parallel group pending
+**Session End:** Phase 2 review pending
 
 ---
 
@@ -355,13 +394,13 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 
 Track test execution during implementation.
 
-| Phase  | Tests Run                                                  | Passed                | Failed | Coverage                     |
-| ------ | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
-| 1      | skills.test.ts; skill validation; lint; format; diff check | 129 tests + 61 skills | 0      | Canonical recovery contracts |
-| p-rev1 | skills.test.ts; skill validation; lint; format; diff check | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
-| 2      | -                                                          | -                     | -      | -                            |
-| 3      | -                                                          | -                     | -      | -                            |
-| 4      | -                                                          | -                     | -      | -                            |
+| Phase  | Tests Run                                                      | Passed                | Failed | Coverage                     |
+| ------ | -------------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
+| 1      | skills.test.ts; skill validation; lint; format; diff check     | 129 tests + 61 skills | 0      | Canonical recovery contracts |
+| p-rev1 | skills.test.ts; skill validation; lint; format; diff check     | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
+| 2      | sync/index.test.ts; skill validation; lint; format; diff check | 28 tests + 61 skills  | 0      | Provider semantic parity     |
+| 3      | -                                                              | -                     | -      | -                            |
+| 4      | -                                                              | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
 
