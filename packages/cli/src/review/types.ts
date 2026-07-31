@@ -223,6 +223,17 @@ export type EvidenceStrategy =
   | 'full-file'
   | 'command'
   | 'inventory';
+export const PROVENANCE_EVIDENCE_STRATEGIES = [
+  'command',
+  'inventory',
+] as const satisfies readonly EvidenceStrategy[];
+export const DIRECT_REVIEW_CLAIM_KINDS = [
+  'promoted-finding',
+  'consequential-absence',
+  'worker-conflict',
+  'cross-lane-gap',
+] as const;
+export type DirectReviewClaimKind = (typeof DIRECT_REVIEW_CLAIM_KINDS)[number];
 
 export interface ReviewLaneV1 {
   id: string;
@@ -288,11 +299,7 @@ export interface ReviewPlanV1 {
   };
   verificationBoundary: {
     requiredClaims: Array<{
-      kind:
-        | 'promoted-finding'
-        | 'consequential-absence'
-        | 'worker-conflict'
-        | 'cross-lane-gap';
+      kind: DirectReviewClaimKind;
       mode: 'direct';
     }>;
     positiveCoverage: {

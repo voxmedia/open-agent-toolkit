@@ -577,6 +577,28 @@ describe('plan, receipt, and terminal schemas', () => {
     );
   });
 
+  it('rejects incomplete and duplicate direct verification claim kinds', () => {
+    const incomplete = plan();
+    (
+      (incomplete['verificationBoundary'] as Record<string, unknown>)[
+        'requiredClaims'
+      ] as unknown[]
+    ).pop();
+    expect(() => parseReviewPlanV1(incomplete)).toThrow(
+      'direct claim kinds must be complete and unique',
+    );
+
+    const duplicate = plan();
+    (
+      (duplicate['verificationBoundary'] as Record<string, unknown>)[
+        'requiredClaims'
+      ] as unknown[]
+    ).push({ kind: 'promoted-finding', mode: 'direct' });
+    expect(() => parseReviewPlanV1(duplicate)).toThrow(
+      'direct claim kinds must be complete and unique',
+    );
+  });
+
   it('rejects unknown plan enums and malformed receipts', () => {
     const invalidPlan = plan();
     invalidPlan['strategy'] = 'read-everything';

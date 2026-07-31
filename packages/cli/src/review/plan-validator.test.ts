@@ -98,7 +98,12 @@ function plan(): ReviewPlanV1 {
       decision: 'inline',
     },
     verificationBoundary: {
-      requiredClaims: [],
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
       positiveCoverage: {
         mode: 'sample',
         laneIds: ['lane-1'],
@@ -261,6 +266,174 @@ describe('review plan policy and projection', () => {
     const { sealed, candidate } = delegatedPlan();
 
     expect(validateReviewPlan(sealed, candidate)).toEqual([]);
+  });
+
+  it('rejects duplicate and cross-registry lane or classification IDs', () => {
+    const duplicateLane = policyPlan();
+    duplicateLane.lanes.push({
+      ...structuredClone(duplicateLane.lanes[0]!),
+      paths: [],
+      primaryObligationIds: [],
+    });
+    expect(validateReviewPlan(context(), duplicateLane)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'duplicate-lane-id' }),
+      ]),
+    );
+
+    const duplicateClassification = policyPlan();
+    duplicateClassification.classifications = [
+      {
+        id: 'generated',
+        kind: 'generated',
+        reason: 'generated',
+        paths: [],
+        disposition: 'inspect',
+        strategy: 'inventory',
+        checks: ['inspect'],
+        exclusionAuthority: null,
+      },
+      {
+        id: 'generated',
+        kind: 'bookkeeping',
+        reason: 'bookkeeping',
+        paths: [],
+        disposition: 'inspect',
+        strategy: 'manifest-check',
+        checks: ['inspect'],
+        exclusionAuthority: null,
+      },
+    ];
+    expect(validateReviewPlan(context(), duplicateClassification)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'duplicate-classification-id' }),
+      ]),
+    );
+
+    const crossRegistry = policyPlan();
+    crossRegistry.classifications = [
+      {
+        id: 'lane-1',
+        kind: 'generated',
+        reason: 'generated',
+        paths: [],
+        disposition: 'inspect',
+        strategy: 'inventory',
+        checks: ['inspect'],
+        exclusionAuthority: null,
+      },
+    ];
+    expect(validateReviewPlan(context(), crossRegistry)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'duplicate-plan-bucket-id' }),
+      ]),
+    );
+  });
+
+  it.each([
+    {
+      name: 'empty direct claims',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.verificationBoundary.requiredClaims = [];
+      },
+      code: 'incomplete-direct-claim-kinds',
+    },
+    {
+      name: 'duplicate direct claim kind',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.verificationBoundary.requiredClaims.push({
+          kind: 'promoted-finding',
+          mode: 'direct',
+        });
+      },
+      code: 'duplicate-direct-claim-kind',
+    },
+    {
+      name: 'fabricated positive lane',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.verificationBoundary.positiveCoverage.laneIds = [
+          'fabricated',
+        ];
+      },
+      code: 'invalid-positive-coverage-lane',
+    },
+    {
+      name: 'empty positive lanes',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.verificationBoundary.positiveCoverage.laneIds = [];
+      },
+      code: 'empty-positive-coverage',
+    },
+    {
+      name: 'blank positive rationale',
+      mutate: (candidate: ReviewPlanV1) => {
+        candidate.verificationBoundary.positiveCoverage.rationale = ' ';
+      },
+      code: 'empty-positive-coverage',
+    },
+  ])('rejects $name in the verification boundary', ({ mutate, code }) => {
+    const candidate = policyPlan();
+    mutate(candidate);
+
+    expect(validateReviewPlan(context(), candidate)).toEqual(
+      expect.arrayContaining([expect.objectContaining({ code })]),
+    );
+  });
+
+  it('rejects non-provenance strategies and unregistered accepted lanes', () => {
+    const { sealed, candidate } = delegatedPlan();
+    candidate.lanes[1]!.strategy = 'full-file';
+    expect(validateReviewPlan(sealed, candidate)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          code: 'non-provenance-evidence-strategy',
+        }),
+      ]),
+    );
+
+    const unregistered = delegatedPlan();
+    unregistered.candidate.delegationEconomics.nonReplayedLaneIds = [];
+    expect(
+      validateReviewPlan(unregistered.sealed, unregistered.candidate),
+    ).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'unregistered-provenance-lane' }),
+      ]),
+    );
+
+    const inlineAccepted = policyPlan();
+    inlineAccepted.lanes[0]!.replay = 'accept-provenance';
+    expect(validateReviewPlan(context(), inlineAccepted)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'inline-provenance-acceptance' }),
+      ]),
+    );
+  });
+
+  it('rejects inline and empty enabled primary contingencies', () => {
+    const inline = policyPlan();
+    inline.lanes[0]!.primaryContingency = {
+      allowed: true,
+      paths: ['a.ts'],
+      obligationIds: [],
+    };
+    expect(validatePrimaryContingency(inline)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'invalid-primary-contingency' }),
+      ]),
+    );
+
+    const { candidate } = delegatedPlan();
+    candidate.lanes[0]!.primaryContingency = {
+      allowed: true,
+      paths: [],
+      obligationIds: [],
+    };
+    expect(validatePrimaryContingency(candidate)).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ code: 'invalid-primary-contingency' }),
+      ]),
+    );
   });
 
   it.each([

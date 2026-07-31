@@ -1,5 +1,6 @@
 import { isAbsolute } from 'node:path';
 
+import { DIRECT_REVIEW_CLAIM_KINDS } from './types';
 import type {
   ChangeMapV1,
   ContextBudgetTelemetry,
@@ -943,10 +944,12 @@ export function parseReviewPlanV1(value: unknown): ReviewPlanV1 {
     ['requiredClaims', 'positiveCoverage', 'deterministicAcceptance'],
     '$/verificationBoundary',
   );
-  array(
+  const requiredClaims = array(
     boundary['requiredClaims'],
     '$/verificationBoundary/requiredClaims',
-  ).forEach((claim, index) => {
+  );
+  const directClaimKinds: string[] = [];
+  requiredClaims.forEach((claim, index) => {
     const item = object(
       claim,
       `$/verificationBoundary/requiredClaims/${index}`,
@@ -958,17 +961,22 @@ export function parseReviewPlanV1(value: unknown): ReviewPlanV1 {
     );
     enumValue(
       item['kind'],
-      [
-        'promoted-finding',
-        'consequential-absence',
-        'worker-conflict',
-        'cross-lane-gap',
-      ],
+      DIRECT_REVIEW_CLAIM_KINDS,
       `$/verificationBoundary/requiredClaims/${index}/kind`,
     );
+    directClaimKinds.push(item['kind'] as string);
     if (item['mode'] !== 'direct')
       throw new ReviewSchemaError('required claim mode must be direct');
   });
+  if (
+    directClaimKinds.length !== DIRECT_REVIEW_CLAIM_KINDS.length ||
+    new Set(directClaimKinds).size !== directClaimKinds.length ||
+    DIRECT_REVIEW_CLAIM_KINDS.some((kind) => !directClaimKinds.includes(kind))
+  ) {
+    throw new ReviewSchemaError(
+      'direct claim kinds must be complete and unique',
+    );
+  }
   const positive = object(
     boundary['positiveCoverage'],
     '$/verificationBoundary/positiveCoverage',

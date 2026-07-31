@@ -3,6 +3,10 @@ import {
   evaluateWholeDiffEligibility,
 } from './budget';
 import { canonicalizeJson } from './canonical-json';
+import {
+  DIRECT_REVIEW_CLAIM_KINDS,
+  PROVENANCE_EVIDENCE_STRATEGIES,
+} from './types';
 import type {
   PreparedReviewContextV1,
   ReviewPlanV1,
@@ -190,6 +194,10 @@ export function validatePrimaryContingency(
     const paths = new Set(lane.paths);
     const obligations = new Set(lane.primaryObligationIds);
     if (
+      (lane.primaryContingency.allowed &&
+        (!lane.delegated ||
+          (lane.primaryContingency.paths.length === 0 &&
+            lane.primaryContingency.obligationIds.length === 0))) ||
       (!lane.primaryContingency.allowed &&
         (lane.primaryContingency.paths.length > 0 ||
           lane.primaryContingency.obligationIds.length > 0)) ||
@@ -206,8 +214,125 @@ export function validatePrimaryContingency(
   return errors;
 }
 
+function validatePlanBucketIds(plan: ReviewPlanV1): PlanValidationError[] {
+  const errors: PlanValidationError[] = [];
+  const laneIds = new Set<string>();
+  plan.lanes.forEach((lane, index) => {
+    if (laneIds.has(lane.id)) {
+      errors.push({
+        code: 'duplicate-lane-id',
+        pointer: `/lanes/${index}/id`,
+        message: `lane ID ${lane.id} is duplicated`,
+      });
+    }
+    laneIds.add(lane.id);
+  });
+
+  const classificationIds = new Set<string>();
+  plan.classifications.forEach((classification, index) => {
+    if (classificationIds.has(classification.id)) {
+      errors.push({
+        code: 'duplicate-classification-id',
+        pointer: `/classifications/${index}/id`,
+        message: `classification ID ${classification.id} is duplicated`,
+      });
+    }
+    if (laneIds.has(classification.id)) {
+      errors.push({
+        code: 'duplicate-plan-bucket-id',
+        pointer: `/classifications/${index}/id`,
+        message: `plan bucket ID ${classification.id} is already used by a lane`,
+      });
+    }
+    classificationIds.add(classification.id);
+  });
+  return errors;
+}
+
+function validateVerificationBoundary(
+  plan: ReviewPlanV1,
+): PlanValidationError[] {
+  const errors: PlanValidationError[] = [];
+  const claims = plan.verificationBoundary.requiredClaims;
+  const seenClaims = new Set<string>();
+  claims.forEach((claim, index) => {
+    if (seenClaims.has(claim.kind)) {
+      errors.push({
+        code: 'duplicate-direct-claim-kind',
+        pointer: `/verificationBoundary/requiredClaims/${index}/kind`,
+        message: `direct claim kind ${claim.kind} is duplicated`,
+      });
+    }
+    seenClaims.add(claim.kind);
+  });
+  if (
+    claims.length !== DIRECT_REVIEW_CLAIM_KINDS.length ||
+    DIRECT_REVIEW_CLAIM_KINDS.some((kind) => !seenClaims.has(kind))
+  ) {
+    errors.push({
+      code: 'incomplete-direct-claim-kinds',
+      pointer: '/verificationBoundary/requiredClaims',
+      message:
+        'verification boundary must contain every direct claim kind once',
+    });
+  }
+
+  const positive = plan.verificationBoundary.positiveCoverage;
+  if (positive.laneIds.length === 0 || positive.rationale.trim().length === 0) {
+    errors.push({
+      code: 'empty-positive-coverage',
+      pointer: '/verificationBoundary/positiveCoverage',
+      message: 'positive coverage requires lanes and a non-empty rationale',
+    });
+  }
+  const laneIds = new Set(plan.lanes.map((lane) => lane.id));
+  const positiveIds = new Set<string>();
+  positive.laneIds.forEach((id, index) => {
+    if (!laneIds.has(id)) {
+      errors.push({
+        code: 'invalid-positive-coverage-lane',
+        pointer: `/verificationBoundary/positiveCoverage/laneIds/${index}`,
+        message: `positive coverage lane ${id} does not exist`,
+      });
+    }
+    if (positiveIds.has(id)) {
+      errors.push({
+        code: 'duplicate-positive-coverage-lane',
+        pointer: `/verificationBoundary/positiveCoverage/laneIds/${index}`,
+        message: `positive coverage lane ${id} is duplicated`,
+      });
+    }
+    positiveIds.add(id);
+  });
+
+  const requiredFields =
+    plan.verificationBoundary.deterministicAcceptance.requiredFields;
+  const expectedFields: ReviewPlanV1['verificationBoundary']['deterministicAcceptance']['requiredFields'] =
+    ['command', 'cwd', 'scopeRefs', 'provenance', 'result'];
+  if (
+    requiredFields.length !== expectedFields.length ||
+    new Set(requiredFields).size !== requiredFields.length ||
+    expectedFields.some((field) => !requiredFields.includes(field))
+  ) {
+    errors.push({
+      code: 'invalid-deterministic-acceptance-fields',
+      pointer: '/verificationBoundary/deterministicAcceptance/requiredFields',
+      message: 'deterministic acceptance fields must be complete and unique',
+    });
+  }
+  return errors;
+}
+
 function nonEmpty(values: readonly string[]): boolean {
   return values.length > 0 && values.every((value) => value.trim().length > 0);
+}
+
+function isProvenanceEvidenceStrategy(
+  strategy: ReviewPlanV1['lanes'][number]['strategy'],
+): boolean {
+  return PROVENANCE_EVIDENCE_STRATEGIES.some(
+    (candidate) => candidate === strategy,
+  );
 }
 
 function validateDelegationStructure(
@@ -215,14 +340,8 @@ function validateDelegationStructure(
 ): PlanValidationError[] {
   const errors: PlanValidationError[] = [];
   const lanesById = new Map<string, ReviewPlanV1['lanes'][number]>();
-  plan.lanes.forEach((lane, index) => {
-    if (lanesById.has(lane.id)) {
-      errors.push({
-        code: 'duplicate-lane-id',
-        pointer: `/lanes/${index}/id`,
-        message: `lane ID ${lane.id} is duplicated`,
-      });
-    } else {
+  plan.lanes.forEach((lane) => {
+    if (!lanesById.has(lane.id)) {
       lanesById.set(lane.id, lane);
     }
   });
@@ -245,6 +364,14 @@ function validateDelegationStructure(
           code: 'inline-plan-has-delegated-lane',
           pointer: `/lanes/${index}/delegated`,
           message: 'inline plans cannot mark lanes as delegated',
+        });
+      }
+      if (lane.replay === 'accept-provenance') {
+        errors.push({
+          code: 'inline-provenance-acceptance',
+          pointer: `/lanes/${index}/replay`,
+          message:
+            'inline lanes cannot bypass direct verification by accepting provenance',
         });
       }
     });
@@ -332,17 +459,30 @@ function validateDelegationStructure(
       !independentIds.has(id) ||
       !lane.delegated ||
       lane.evidenceClass !== 'deterministic' ||
-      lane.replay !== 'accept-provenance'
+      lane.replay !== 'accept-provenance' ||
+      !isProvenanceEvidenceStrategy(lane.strategy)
     ) {
       errors.push({
-        code: 'invalid-non-replayed-lane',
+        code: isProvenanceEvidenceStrategy(lane?.strategy ?? 'path-diff')
+          ? 'invalid-non-replayed-lane'
+          : 'non-provenance-evidence-strategy',
         pointer,
         message:
-          'non-replayed lanes must be independent delegated deterministic lanes accepted by provenance',
+          'non-replayed lanes must be independent delegated deterministic lanes using command or inventory evidence',
       });
       return;
     }
     provenanceLaneCount += 1;
+  });
+  plan.lanes.forEach((lane, index) => {
+    if (lane.replay === 'accept-provenance' && !nonReplayedIds.has(lane.id)) {
+      errors.push({
+        code: 'unregistered-provenance-lane',
+        pointer: `/lanes/${index}/replay`,
+        message:
+          'lanes accepted by provenance must be registered as non-replayed',
+      });
+    }
   });
   if (provenanceLaneCount === 0) {
     errors.push({
@@ -415,6 +555,8 @@ export function validateReviewPlan(
     ...validatePlanPathAccounting(context, plan),
     ...validatePlanObligationAccounting(context, plan),
     ...validateClassificationPolicy(plan),
+    ...validatePlanBucketIds(plan),
+    ...validateVerificationBoundary(plan),
     ...validatePrimaryContingency(plan),
     ...validateDelegationStructure(plan),
   ];

@@ -8,6 +8,10 @@ import type {
 } from '@review/index';
 import { describe, expect, it } from 'vitest';
 
+import {
+  DIRECT_REVIEW_CLAIM_KINDS,
+  PROVENANCE_EVIDENCE_STRATEGIES,
+} from './types';
 import type {
   ChangeMapV1,
   HostTelemetryEvidenceV1,
@@ -327,6 +331,16 @@ const inlinePlan = {
 } satisfies ReviewPlanV1;
 
 describe('review plan contracts', () => {
+  it('exports the complete direct-claim and provenance strategy registries', () => {
+    expect(DIRECT_REVIEW_CLAIM_KINDS).toEqual([
+      'promoted-finding',
+      'consequential-absence',
+      'worker-conflict',
+      'cross-lane-gap',
+    ]);
+    expect(PROVENANCE_EVIDENCE_STRATEGIES).toEqual(['command', 'inventory']);
+  });
+
   it('represents compact-inline and delegated strategies with FR5-FR7 fields', () => {
     const deterministicLane = {
       ...semanticLane,
