@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t01
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,16 +24,16 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | passed        | 2     | 2/2       |
-| Phase p-rev2 | passed        | 1     | 1/1       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 1     | 1/1       |
+| Phase 3      | passed         | 2     | 2/2       |
+| Phase p-rev2 | passed         | 1     | 1/1       |
+| Phase 4      | review_pending | 1     | 1/1       |
 
-**Total:** 7/8 tasks completed
+**Total:** 8/8 tasks completed
 
 ---
 
@@ -300,13 +300,24 @@ oat_generated: false
 
 ## Phase 4: Lockstep Release and Full Verification
 
-**Status:** pending
+**Status:** review_pending
 **Started:** 2026-07-31
 
 ### Task p04-t01: Bump Public Packages and Validate the Release
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c
+
+**Result:**
+
+- Advanced all five public package versions and the bundled public-package
+  inventory from `0.2.26` to `0.2.27` in exactly the six authorized files.
+- Surface checks, CI gates, docs build, full tests, builds, release validation,
+  and diff validation passed in planned order before commit and again from the
+  clean post-commit tree.
+- Root verified the one-commit range, exact six-file boundary, lockstep version
+  values, clean worktree, and all five release tarballs. Fresh root-owned review
+  is pending.
 
 **Blocked run:**
 
@@ -552,6 +563,31 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p-rev2 action=review role=reviewer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-reviewer-gpt-5-6-sol-high`
 
+#### Dispatch Record: p04 authorized rerun
+
+- Request: `bounded-recovery-authorization-p04-rerun-20260731T2142Z`
+- Prior stopped request:
+  `bounded-recovery-authorization-p04-implementation-20260731T2007Z`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- Selection: managed High; candidate `gpt-5.6-sol-medium`; task class
+  `default-implementation`; reason `native-catalog`
+- Model axis: `selected:gpt-5.6-sol-medium`
+- Effort axis: `not-applicable`
+- Base/head:
+  `282338dc22fc97fa6510ba9f078c2d6acb89cc05..0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c`
+- Task/commit: `p04-t01` /
+  `0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c`
+- Verification: all planned surface, CI, docs, build, release, and diff checks
+  passed before commit and from the clean post-commit tree; root release
+  validation passed for all five `0.2.27` tarballs
+- Recovery/children: no recovery attempts; no children
+- Operator linkage: rerun explicitly authorized after reviewed p-rev2 at the
+  unchanged exact target; no automatic fallback or replacement
+- Dispatch stamp:
+  `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -585,6 +621,7 @@ Chronological log of implementation progress.
   edits after operator-authorized revision routing.
 - Completed and root-validated the p-rev2 autonomy inventory mapping commit.
 - Fresh root-owned p-rev2 review passed with zero findings; fix-loop count 0.
+- Completed and root-validated the Phase 4 lockstep release commit.
 
 **Decisions:**
 
@@ -631,7 +668,7 @@ Track test execution during implementation.
 | 2      | sync/index.test.ts; skill validation; lint; format; diff check | 28 tests + 61 skills  | 0      | Provider semantic parity     |
 | 3      | check; docs build; protected-path isolation; diff check        | all                   | 0      | Public recovery docs         |
 | p-rev2 | autonomy gate inventory; full test; format; diff check         | all                   | 0      | Prompt-site coverage         |
-| 4      | -                                                              | -                     | -      | -                            |
+| 4      | surface checks; CI gates; docs/build; release; diff validation | all                   | 0      | Lockstep public release      |
 
 ## Final Summary (for PR/docs)
 

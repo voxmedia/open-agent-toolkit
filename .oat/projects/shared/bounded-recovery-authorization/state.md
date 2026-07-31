@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t01
-oat_last_commit: 0adcee7f8e143221e14b6f50579ab35e9bc0425a
+oat_current_task: null
+oat_last_commit: 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c
 oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
@@ -61,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T21:40:59Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T21:49:58Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -73,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 4 ready
+Implement - Phase 4 review pending
 
 ## Artifacts
 
@@ -113,7 +113,8 @@ Implement - Phase 4 ready
 - ✓ Uncommitted Phase 4 version edits restored to the verified baseline
 - ✓ Revision task p-rev2-t01 completed and root-validated
 - ✓ Fresh root-owned p-rev2 review passed with zero findings
-- ⧗ Phase 4 lockstep release and full verification pending
+- ✓ Phase 4 lockstep release and full verification completed
+- ⧗ Fresh root-owned Phase 4 review pending
 
 ## Blockers
 
@@ -121,4 +122,4 @@ None
 
 ## Next Milestone
 
-Rerun Phase 4 from the passing post-revision baseline
+Review Phase 4, then enter final checkpoint closeout
