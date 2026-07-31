@@ -1,6 +1,6 @@
 ---
 name: oat-project-review-provide-remote
-version: 1.1.0
+version: 1.1.1
 description: Use when reviewing a GitHub PR opened on another machine for an active OAT project and posting findings back as a single PR review. Resolves the project from the PR diff, reads project artifacts for mode-aware review, and posts via gh api.
 disable-model-invocation: true
 user-invocable: true
@@ -332,7 +332,12 @@ in structured-output mode. This mirrors the tested wrapper at
   `PlanValidationReceiptV1`, and invokes `begin-evidence` before selective
   content evidence.
 - The accepted handle returns one `ReviewerTerminalV1`, not bare findings.
-  Submit that envelope through launcher-owned `validate-output`. If and only if
+  Before output validation, submit every applicable complete or partial
+  `WorkerDossierV1` through launcher-owned
+  `oat review bind-worker-dossier --run-id <id> --receipt <receipt> --broker-socket <path> --stdin --json`.
+  Identical retries are idempotent; not-delegated inline lanes have no dossier
+  to submit. Then submit the terminal envelope through launcher-owned
+  `validate-output`. If and only if
   every validation error is accounting-allowlisted, perform at most two
   same-handle accounting repair turns with frozen review substance.
 - Only an accepted, validated complete structured terminal may project
@@ -354,8 +359,11 @@ planning parent as the accepted handle. Perform required artifact intake; invoke
 `checkpointArtifacts`; submit `ReviewPlanV1` through `validate-plan`; retain
 `PlanValidationReceiptV1`; and invoke `begin-evidence` before selective,
 path-scoped content evidence. Return one `ReviewerTerminalV1` from this same
-continuation and run `validate-output`. Permit at most two same-handle
-accounting repair turns. Only a validated complete structured terminal may
+continuation. Before `validate-output`, submit every applicable complete or
+partial `WorkerDossierV1` through the launcher-owned receipt-bound
+`bind-worker-dossier` broker command; not-delegated inline lanes remain
+unchanged. Run `validate-output` and permit at most two same-handle accounting
+repair turns. Only a validated complete structured terminal may
 project `StructuredFindings` and proceed to finding mapping, body construction,
 confirmation, or GitHub posting. Accepted timeout, `BLOCKED`, malformed, or
 accounting-invalid output is non-actionable and never launches a replacement or

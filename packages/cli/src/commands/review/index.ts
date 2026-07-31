@@ -2,6 +2,7 @@ import { Command } from 'commander';
 
 import { createReviewAuthorityBrokerCommand } from './authority-broker';
 import { createReviewBeginEvidenceCommand } from './begin-evidence';
+import { createReviewBindWorkerDossierCommand } from './bind-worker-dossier';
 import { createReviewCheckpointArtifactsCommand } from './checkpoint-artifacts';
 import { createReviewLatestCommand } from './latest';
 import { createReviewPrepareContextCommand } from './prepare-context';
@@ -18,6 +19,7 @@ export function createReviewCommand(): Command {
     .addCommand(createReviewCheckpointArtifactsCommand())
     .addCommand(createReviewValidatePlanCommand())
     .addCommand(createReviewBeginEvidenceCommand())
+    .addCommand(createReviewBindWorkerDossierCommand())
     .addCommand(createValidateOutputCommand())
     .addCommand(createPublishOutputCommand());
 }

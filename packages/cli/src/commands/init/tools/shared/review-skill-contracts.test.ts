@@ -163,6 +163,7 @@ describe('review skill contracts', () => {
         'checkpointArtifacts',
         'validate-plan',
         'begin-evidence',
+        'bind-worker-dossier',
         'validate-output',
         'same-handle accounting repair',
         'publish-output',
@@ -215,7 +216,7 @@ describe('review skill contracts', () => {
     for (const rail of rails) {
       const normalized = rail.replace(/\s+/g, ' ');
       expect(normalized).toMatch(
-        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
+        /prepare-context[\s\S]*accepted handle[\s\S]*checkpointArtifacts[\s\S]*validate-plan[\s\S]*begin-evidence[\s\S]*ReviewerTerminalV1[\s\S]*bind-worker-dossier[\s\S]*validate-output[\s\S]*same-handle accounting repair[\s\S]*StructuredFindings[\s\S]*finding mapping[\s\S]*GitHub post/i,
       );
       expect(normalized).toMatch(
         /Accepted timeout,[\s\S]*BLOCKED[\s\S]*malformed[\s\S]*accounting-invalid[\s\S]*non-actionable/i,

@@ -7,10 +7,13 @@ import { promisify } from 'node:util';
 
 import { afterEach, describe, expect, it } from 'vitest';
 
-import { evaluateWholeDiffEligibility } from './budget';
+import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from './budget';
 import { collectChangeMap } from './change-map';
 import { executeCommandInvocation } from './command-invocation';
-import type { ReviewPlanV1 } from './types';
+import type { ReviewPlanV1, WorkerDossierV1 } from './types';
 import {
   requestValidationAuthorityBroker,
   startPreparedValidationAuthorityBroker,
@@ -76,11 +79,14 @@ async function repositoryFixture() {
   };
 }
 
-async function fixture(timings?: {
-  connectionReadTimeoutMs?: number;
-  shutdownTimeoutMs?: number;
-  expiryMs?: number;
-}) {
+async function fixture(
+  timings?: {
+    connectionReadTimeoutMs?: number;
+    shutdownTimeoutMs?: number;
+    expiryMs?: number;
+  },
+  delegated = false,
+) {
   const {
     root,
     validationRoot,
@@ -109,7 +115,7 @@ async function fixture(timings?: {
         range: { baseSha, headSha },
         sink: 'structured',
         invocation: 'manual',
-        budget: null,
+        budget: delegated ? { totalMs: 120_000, source: 'test' } : null,
         obligationSources: {
           plan: { source: planSource, path: 'plan.md' },
           implementation: null,
@@ -143,12 +149,14 @@ function plan(
   runId: string,
   contextDigest: string,
   wholeDiff: ReviewPlanV1['wholeDiff'],
+  delegated = false,
+  timeAllocation: ReviewPlanV1['timeAllocation'] = null,
 ): ReviewPlanV1 {
   return {
     schemaVersion: 1,
     runId,
     contextDigest,
-    strategy: 'selective-inline',
+    strategy: delegated ? 'delegated' : 'selective-inline',
     lanes: [
       {
         id: 'lane-1',
@@ -159,25 +167,61 @@ function plan(
         evidenceClass: 'semantic',
         strategy: 'path-diff',
         checks: ['inspect'],
-        delegated: false,
-        independenceRationale: null,
-        substantial: false,
-        substantialityRationale: null,
-        deadlineMs: null,
+        delegated,
+        independenceRationale: delegated ? 'Independent bounded lane.' : null,
+        substantial: delegated,
+        substantialityRationale: delegated
+          ? 'Owns the complete changed path.'
+          : null,
+        deadlineMs: timeAllocation
+          ? timeAllocation.planningDeadlineMs + 1
+          : null,
         dossier: { contractVersion: 1, partialAllowed: true },
-        replay: 'direct-verify',
-        primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+        replay: delegated ? 'sample' : 'direct-verify',
+        primaryContingency: delegated
+          ? {
+              allowed: true,
+              paths: ['a.ts'],
+              obligationIds: ['p02-t01'],
+            }
+          : { allowed: false, paths: [], obligationIds: [] },
       },
+      ...(delegated
+        ? [
+            {
+              id: 'verification-lane',
+              paths: [],
+              primaryObligationIds: [],
+              seamObligationIds: [],
+              risk: 'low' as const,
+              evidenceClass: 'deterministic' as const,
+              strategy: 'inventory' as const,
+              checks: ['verify'],
+              delegated: true,
+              independenceRationale: 'Independent deterministic verification.',
+              substantial: true,
+              substantialityRationale: 'Owns the verification boundary.',
+              deadlineMs: timeAllocation!.planningDeadlineMs + 1,
+              dossier: { contractVersion: 1 as const, partialAllowed: true },
+              replay: 'accept-provenance' as const,
+              primaryContingency: {
+                allowed: false as const,
+                paths: [],
+                obligationIds: [],
+              },
+            },
+          ]
+        : []),
     ],
     classifications: [],
     crossLaneInvariants: [],
     delegationEconomics: {
-      independentLaneIds: [],
-      nonReplayedLaneIds: [],
-      expectedSavings: [],
-      coordinationCosts: [],
-      decisionRationale: 'inline',
-      decision: 'inline',
+      independentLaneIds: delegated ? ['lane-1', 'verification-lane'] : [],
+      nonReplayedLaneIds: delegated ? ['verification-lane'] : [],
+      expectedSavings: delegated ? ['Bounded concurrent inspection.'] : [],
+      coordinationCosts: delegated ? ['One dossier reconciliation.'] : [],
+      decisionRationale: delegated ? 'Delegation is bounded.' : 'inline',
+      decision: delegated ? 'delegate' : 'inline',
     },
     verificationBoundary: {
       requiredClaims: [
@@ -188,7 +232,7 @@ function plan(
       ],
       positiveCoverage: {
         mode: 'sample',
-        laneIds: ['lane-1'],
+        laneIds: delegated ? ['lane-1', 'verification-lane'] : ['lane-1'],
         rationale: 'sample',
       },
       deterministicAcceptance: {
@@ -197,7 +241,29 @@ function plan(
       },
     },
     wholeDiff,
-    timeAllocation: null,
+    timeAllocation,
+  };
+}
+
+function workerDossier(
+  runId: string,
+  planDigest: string,
+  outcome: 'complete' | 'partial' = 'complete',
+): WorkerDossierV1 {
+  return {
+    schemaVersion: 1,
+    runId,
+    planDigest,
+    laneId: 'lane-1',
+    outcome,
+    inspectedPaths: outcome === 'complete' ? ['a.ts'] : [],
+    inspectedObligationIds: outcome === 'complete' ? ['p02-t01'] : [],
+    commands: [],
+    evidence: [],
+    candidateFindings: [],
+    uncoveredObligationIds: outcome === 'complete' ? [] : ['p02-t01'],
+    uncertainty:
+      outcome === 'complete' ? [] : ['Worker stopped before review.'],
   };
 }
 
@@ -336,6 +402,100 @@ describe('validation authority broker', () => {
       },
     });
     expect(root).not.toContain('OAT_REVIEW_AUTHORITY_KEY');
+  }, 20_000);
+
+  it('binds receipt-correlated delegated dossiers before output validation', async () => {
+    const { broker, store, socketPath } = await fixture(undefined, true);
+    const runId = broker.preparation.preparation.runId;
+    const checkpoint = await executeCommandInvocation(
+      broker.preparation.commands.checkpointArtifacts,
+      { cwd: resolve('..', '..') },
+    );
+    expect(checkpoint.exitCode, checkpoint.stderr).toBe(0);
+    const context = (await store.readRun(runId)).state.context!;
+    const candidate = plan(
+      runId,
+      context.contextDigest,
+      evaluateWholeDiffEligibility({
+        changeMap: context.changeMap,
+        contextBudget: context.budget.context,
+        coherentLaneCount: 1,
+        hasConsequentialSeam: false,
+      }),
+      true,
+      allocateReviewTimeBudget({
+        totalMs: context.budget.time!.totalMs,
+        source: context.budget.time!.source,
+        startedAtMs:
+          context.budget.time!.deadlineMs - context.budget.time!.totalMs,
+      }).allocation,
+    );
+    const validated = await executeCommandInvocation(
+      broker.preparation.commands.validatePlan,
+      { cwd: resolve('..', '..'), stdin: JSON.stringify(candidate) },
+    );
+    expect(validated.exitCode, `${validated.stderr}\n${validated.stdout}`).toBe(
+      0,
+    );
+    const receipt = (
+      JSON.parse(validated.stdout) as {
+        result: { receipt: { token: string; planDigest: string } };
+      }
+    ).result.receipt;
+    const begin = structuredClone(broker.preparation.commands.beginEvidence);
+    begin.argv[begin.argv.indexOf('__OAT_PLAN_RECEIPT__')] = receipt.token;
+    const started = await executeCommandInvocation(begin, {
+      cwd: resolve('..', '..'),
+    });
+    expect(started.exitCode, started.stderr).toBe(0);
+
+    const dossier = workerDossier(runId, receipt.planDigest);
+    const first = await requestValidationAuthorityBroker(socketPath, {
+      action: 'bind-worker-dossier',
+      runId,
+      receipt: receipt.token,
+      dossier,
+    });
+    await expect(
+      requestValidationAuthorityBroker(socketPath, {
+        action: 'bind-worker-dossier',
+        runId,
+        receipt: receipt.token,
+        dossier,
+      }),
+    ).resolves.toEqual(first);
+    await expect(
+      requestValidationAuthorityBroker(socketPath, {
+        action: 'bind-worker-dossier',
+        runId,
+        receipt: 'wrong-receipt-token',
+        dossier,
+      }),
+    ).rejects.toMatchObject({ code: 'worker-dossier-receipt-mismatch' });
+    await expect(
+      requestValidationAuthorityBroker(socketPath, {
+        action: 'bind-worker-dossier',
+        runId,
+        receipt: receipt.token,
+        dossier: workerDossier(runId, receipt.planDigest, 'partial'),
+      }),
+    ).rejects.toMatchObject({ code: 'worker-dossier-replacement-rejected' });
+    expect((await store.readRun(runId)).state.workerCoverage).toEqual([first]);
+
+    await store.updateRun(runId, (state) => {
+      state.phase = 'terminal';
+      state.output = { immutableSubstanceDigest: 'a'.repeat(64), attempts: 1 };
+      return state;
+    });
+    await expect(
+      requestValidationAuthorityBroker(socketPath, {
+        action: 'bind-worker-dossier',
+        runId,
+        receipt: receipt.token,
+        dossier,
+      }),
+    ).rejects.toMatchObject({ code: 'worker-dossier-binding-phase-invalid' });
+    await broker.close();
   }, 20_000);
 
   it('closes partial clients on their read deadline and at run expiry', async () => {
@@ -485,6 +645,13 @@ describe('validation authority broker', () => {
         action: 'checkpoint',
         runId,
         checkpointToken: 'short',
+      }),
+      JSON.stringify({
+        schemaVersion: 1,
+        action: 'bind-worker-dossier',
+        runId,
+        receipt: 'valid-receipt-token',
+        dossier: { schemaVersion: 1 },
       }),
       JSON.stringify({
         schemaVersion: 1,

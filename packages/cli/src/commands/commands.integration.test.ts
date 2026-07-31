@@ -541,6 +541,7 @@ describe('CLI command integration', () => {
       'checkpoint-artifacts',
       'validate-plan',
       'begin-evidence',
+      'bind-worker-dossier',
       'validate-output',
       'publish-output',
     ]);

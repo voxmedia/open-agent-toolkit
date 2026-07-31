@@ -24,7 +24,11 @@ import {
   validateAndReceiptPlan,
 } from './review-lifecycle';
 import { parseReviewPlanV1 } from './schemas';
-import type { PrepareReviewContextResultV1, ReviewPlanV1 } from './types';
+import type {
+  PrepareReviewContextResultV1,
+  ReviewPlanV1,
+  WorkerDossierV1,
+} from './types';
 import { ValidationStore } from './validation-store';
 import {
   consumeLauncherValidationAuthorityKey,
@@ -32,6 +36,7 @@ import {
   reviewerSafeEnvironment,
   ValidationStoreAuthority,
 } from './validation-store-authority';
+import { parseWorkerDossierV1 } from './worker-dossier';
 
 const MAX_BROKER_REQUEST_BYTES = 2 * 1024 * 1024;
 const DEFAULT_CONNECTION_READ_TIMEOUT_MS = 10_000;
@@ -55,6 +60,12 @@ type BrokerRequest =
       action: 'begin';
       runId: string;
       receipt: string;
+    }
+  | {
+      action: 'bind-worker-dossier';
+      runId: string;
+      receipt: string;
+      dossier: WorkerDossierV1;
     };
 
 type VersionedBrokerRequest = BrokerRequest & { schemaVersion: 1 };
@@ -297,12 +308,27 @@ async function startPreparedValidationAuthorityBrokerInternal(
           };
           break;
         case 'begin':
+          {
+            const result = await beginEvidence(request, lifecycle);
+            const run = await store.readRun(request.runId);
+            response = {
+              schemaVersion: 1,
+              ok: true,
+              result,
+            };
+            closeAfterResponse =
+              run.state.plan?.lanes.every((lane) => !lane.delegated) ?? true;
+          }
+          break;
+        case 'bind-worker-dossier':
           response = {
             schemaVersion: 1,
             ok: true,
-            result: await beginEvidence(request, lifecycle),
+            result: await store.bindValidatedWorkerDossier(request.runId, {
+              receipt: request.receipt,
+              dossier: request.dossier,
+            }),
           };
-          closeAfterResponse = true;
           break;
         default:
           throw new Error('validation authority broker action is invalid');
@@ -579,7 +605,11 @@ function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
   if (request.schemaVersion !== 1) {
     throw new Error('broker request schema version is invalid');
   }
-  if (!['checkpoint', 'validate', 'begin'].includes(String(request.action))) {
+  if (
+    !['checkpoint', 'validate', 'begin', 'bind-worker-dossier'].includes(
+      String(request.action),
+    )
+  ) {
     throw new Error('broker request action is invalid');
   }
   const action = request.action as BrokerRequest['action'];
@@ -587,6 +617,7 @@ function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
     checkpoint: 'action,checkpointToken,runId,schemaVersion',
     validate: 'action,commandToken,plan,runId,schemaVersion',
     begin: 'action,receipt,runId,schemaVersion',
+    'bind-worker-dossier': 'action,dossier,receipt,runId,schemaVersion',
   }[action];
   if (Object.keys(request).sort().join(',') !== expectedKeys) {
     throw new Error('broker request fields are invalid');
@@ -609,6 +640,16 @@ function parseBrokerRequest(value: unknown): VersionedBrokerRequest {
       runId: request.runId,
       commandToken: request.commandToken,
       plan: parseReviewPlanV1(request.plan),
+    };
+  }
+  if (action === 'bind-worker-dossier') {
+    assertBrokerToken(request.receipt);
+    return {
+      schemaVersion: 1,
+      action,
+      runId: request.runId,
+      receipt: request.receipt,
+      dossier: parseWorkerDossierV1(request.dossier),
     };
   }
   assertBrokerToken(request.receipt);

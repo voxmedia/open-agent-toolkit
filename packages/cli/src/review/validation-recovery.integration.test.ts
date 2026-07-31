@@ -6,7 +6,10 @@ import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import { validateStoredReviewOutput } from '../commands/review/validate-output';
-import { evaluateWholeDiffEligibility } from './budget';
+import {
+  allocateReviewTimeBudget,
+  evaluateWholeDiffEligibility,
+} from './budget';
 import {
   bindAcceptedHandle,
   issueCommandCapabilities,
@@ -21,6 +24,8 @@ import type {
   ReviewPlanV1,
   ReviewPreparationV1,
   ReviewerTerminalV1,
+  ValidatedWorkerCoverageProjectionV1,
+  WorkerDossierV1,
 } from './types';
 import { reapExpiredValidationState } from './validation-reaper';
 import { type ValidationRunState, ValidationStore } from './validation-store';
@@ -34,7 +39,11 @@ afterEach(async () => {
   );
 });
 
-function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
+function preparation(
+  runId: string,
+  expiresAt: string,
+  delegated = false,
+): ReviewPreparationV1 {
   return {
     schemaVersion: 1,
     runId,
@@ -46,24 +55,70 @@ function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
     correlation: { gateRunId: null, launchAttemptId: `attempt-${runId}` },
     range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
     changeMap: {
-      files: [],
+      files: delegated
+        ? [
+            {
+              path: 'a.ts',
+              status: 'modified',
+              isBinary: false,
+              additions: 1,
+              deletions: 1,
+              generatedHint: false,
+              bookkeepingHint: false,
+            },
+            {
+              path: 'b.ts',
+              status: 'modified',
+              isBinary: false,
+              additions: 1,
+              deletions: 1,
+              generatedHint: false,
+              bookkeepingHint: false,
+            },
+          ]
+        : [],
       totals: {
-        files: 0,
-        additions: 0,
-        deletions: 0,
+        files: delegated ? 2 : 0,
+        additions: delegated ? 2 : 0,
+        deletions: delegated ? 2 : 0,
         binaryFiles: 0,
-        numstatChangedLines: 0,
-        numstatTokenDenialEstimate: 0,
-        patchBytes: 0,
+        numstatChangedLines: delegated ? 4 : 0,
+        numstatTokenDenialEstimate: delegated ? 1 : 0,
+        patchBytes: delegated ? 40 : 0,
         patchByteLowerBound: null,
         patchEstimateState: 'exact',
         patchCountingSkippedReason: null,
-        estimatedPatchTokens: 0,
+        estimatedPatchTokens: delegated ? 10 : 0,
       },
     },
-    obligations: [],
+    obligations: delegated
+      ? [
+          {
+            id: 'FR1',
+            kind: 'requirement',
+            source: 'test',
+            summary: 'Inspect the delegated path.',
+            expectedPaths: ['a.ts'],
+            expectedChecks: ['inspect'],
+          },
+          {
+            id: 'FR2',
+            kind: 'requirement',
+            source: 'test',
+            summary: 'Run deterministic verification.',
+            expectedPaths: ['b.ts'],
+            expectedChecks: ['verify'],
+          },
+        ]
+      : [],
     priorEvidence: [],
-    timeBudget: null,
+    timeBudget: delegated
+      ? allocateReviewTimeBudget({
+          totalMs: 120_000,
+          source: 'test',
+          startedAtMs: Date.now(),
+        }).time
+      : null,
     prepareContextTelemetry: null,
     prepareTelemetryEvidenceDigest: `telemetry-${runId}`,
     preparationDigest: `preparation-${runId}`,
@@ -72,45 +127,87 @@ function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
   };
 }
 
-function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
+function reviewPlan(
+  context: PreparedReviewContextV1,
+  delegated = false,
+): ReviewPlanV1 {
+  const time = context.budget.time;
+  const timeAllocation =
+    time === null
+      ? null
+      : allocateReviewTimeBudget({
+          totalMs: time.totalMs,
+          source: time.source,
+          startedAtMs: time.deadlineMs - time.totalMs,
+        }).allocation;
   return {
     schemaVersion: 1,
     runId: context.runId,
     contextDigest: context.contextDigest,
-    strategy: 'selective-inline',
+    strategy: delegated ? 'delegated' : 'selective-inline',
     lanes: [
       {
         id: 'legacy-lane',
-        paths: [],
-        primaryObligationIds: [],
+        paths: delegated ? ['a.ts'] : [],
+        primaryObligationIds: delegated ? ['FR1'] : [],
         seamObligationIds: [],
         risk: 'low',
         evidenceClass: 'semantic',
         strategy: 'path-diff',
         checks: ['inspect'],
-        delegated: false,
-        independenceRationale: null,
-        substantial: false,
-        substantialityRationale: null,
-        deadlineMs: null,
+        delegated,
+        independenceRationale: delegated ? 'Independent bounded lane.' : null,
+        substantial: delegated,
+        substantialityRationale: delegated
+          ? 'Owns the complete changed path.'
+          : null,
+        deadlineMs: timeAllocation
+          ? timeAllocation.planningDeadlineMs + 1
+          : null,
         dossier: { contractVersion: 1, partialAllowed: true },
-        replay: 'direct-verify',
-        primaryContingency: {
-          allowed: false,
-          paths: [],
-          obligationIds: [],
-        },
+        replay: delegated ? 'sample' : 'direct-verify',
+        primaryContingency: delegated
+          ? { allowed: true, paths: ['a.ts'], obligationIds: ['FR1'] }
+          : { allowed: false, paths: [], obligationIds: [] },
       },
+      ...(delegated
+        ? [
+            {
+              id: 'verification-lane',
+              paths: ['b.ts'],
+              primaryObligationIds: ['FR2'],
+              seamObligationIds: [],
+              risk: 'low' as const,
+              evidenceClass: 'deterministic' as const,
+              strategy: 'inventory' as const,
+              checks: ['verify'],
+              delegated: true,
+              independenceRationale: 'Independent deterministic verification.',
+              substantial: true,
+              substantialityRationale: 'Owns the verification boundary.',
+              deadlineMs: timeAllocation!.planningDeadlineMs + 1,
+              dossier: { contractVersion: 1 as const, partialAllowed: true },
+              replay: 'accept-provenance' as const,
+              primaryContingency: {
+                allowed: false as const,
+                paths: [],
+                obligationIds: [],
+              },
+            },
+          ]
+        : []),
     ],
     classifications: [],
     crossLaneInvariants: [],
     delegationEconomics: {
-      independentLaneIds: [],
-      nonReplayedLaneIds: [],
-      expectedSavings: [],
-      coordinationCosts: [],
-      decisionRationale: 'single coherent lane',
-      decision: 'inline',
+      independentLaneIds: delegated ? ['legacy-lane', 'verification-lane'] : [],
+      nonReplayedLaneIds: delegated ? ['verification-lane'] : [],
+      expectedSavings: delegated ? ['Bounded concurrent inspection.'] : [],
+      coordinationCosts: delegated ? ['One dossier reconciliation.'] : [],
+      decisionRationale: delegated
+        ? 'Delegation is bounded.'
+        : 'single coherent lane',
+      decision: delegated ? 'delegate' : 'inline',
     },
     verificationBoundary: {
       requiredClaims: [
@@ -121,7 +218,9 @@ function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
       ],
       positiveCoverage: {
         mode: 'sample',
-        laneIds: ['legacy-lane'],
+        laneIds: delegated
+          ? ['legacy-lane', 'verification-lane']
+          : ['legacy-lane'],
         rationale: 'legacy compatibility fixture',
       },
       deterministicAcceptance: {
@@ -135,15 +234,19 @@ function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
       coherentLaneCount: 1,
       hasConsequentialSeam: false,
     }),
-    timeAllocation: null,
+    timeAllocation,
   };
 }
 
-async function lifecycleSnapshots(root: string) {
+async function lifecycleSnapshots(root: string, delegated = false) {
   const authority = new ValidationStoreAuthority(Buffer.alloc(32, 19));
   const store = new ValidationStore(join(root, 'private-store'), authority);
   const created = await store.createRun({
-    preparation: preparation('legacytelemetry01', '2098-01-01T02:00:00.000Z'),
+    preparation: preparation(
+      'legacytelemetry01',
+      '2098-01-01T02:00:00.000Z',
+      delegated,
+    ),
     artifactDraft: false,
   });
   const prepared = (await store.unsafeReadStateForTesting(
@@ -162,7 +265,7 @@ async function lifecycleSnapshots(root: string) {
     {
       runId: created.runId,
       commandToken: tokens.planToken,
-      plan: reviewPlan(context),
+      plan: reviewPlan(context, delegated),
     },
     { store },
   );
@@ -285,7 +388,172 @@ function invalidAccountingTerminal(summary = 'reviewed'): ReviewerTerminalV1 {
   };
 }
 
+function delegatedTerminal(
+  state: ValidationRunState,
+  coverage: ValidatedWorkerCoverageProjectionV1,
+  verificationCoverage: ValidatedWorkerCoverageProjectionV1,
+): ReviewerTerminalV1 {
+  const terminal = invalidAccountingTerminal(
+    `${coverage.outcome} delegated review`,
+  );
+  if (terminal.status !== 'complete') throw new Error('invalid test terminal');
+  terminal.reviewAccounting.receipt = state.receipt!.token;
+  terminal.reviewAccounting.contextDigest = state.receipt!.contextDigest;
+  terminal.reviewAccounting.planDigest = state.receipt!.planDigest;
+  terminal.reviewAccounting.assignmentDigest = state.receipt!.assignmentDigest;
+  terminal.reviewAccounting.strategy = 'delegated';
+  terminal.reviewAccounting.lanes[0] = {
+    ...terminal.reviewAccounting.lanes[0]!,
+    paths: ['a.ts'],
+    primaryObligationIds: ['FR1'],
+    workerOutcome: coverage.outcome,
+    dossierDigest: coverage.dossierDigest,
+    inspectionCoverage: 'all',
+    uninspectedPathIndexes: [],
+    uncoveredObligationIds: [],
+    primaryCompletion:
+      coverage.outcome === 'partial'
+        ? {
+            outcome: 'complete',
+            completedPathIndexes: [0],
+            completedObligationIds: ['FR1'],
+            commands: [],
+            evidenceRefIds: ['evidence-1'],
+          }
+        : {
+            outcome: 'not-needed',
+            completedPathIndexes: [],
+            completedObligationIds: [],
+            commands: [],
+            evidenceRefIds: [],
+          },
+  };
+  terminal.reviewAccounting.evidence[0]!.scopeRefs[0]!.pathIndexes = [0];
+  terminal.reviewAccounting.evidence[0]!.scopeRefs.push({
+    bucket: 'lane',
+    bucketId: 'verification-lane',
+    pathIndexes: [0],
+  });
+  terminal.reviewAccounting.lanes.push({
+    id: 'verification-lane',
+    paths: ['b.ts'],
+    primaryObligationIds: ['FR2'],
+    seamObligationIds: [],
+    workerOutcome: 'complete',
+    dossierDigest: verificationCoverage.dossierDigest,
+    inspectionCoverage: 'all',
+    uninspectedPathIndexes: [],
+    uncoveredObligationIds: [],
+    commands: [],
+    evidenceRefIds: ['evidence-1'],
+    uncertainty: [],
+    primaryCompletion: {
+      outcome: 'not-needed',
+      completedPathIndexes: [],
+      completedObligationIds: [],
+      commands: [],
+      evidenceRefIds: [],
+    },
+  });
+  const positive = terminal.reviewAccounting.verification.find(
+    (claim) => claim.kind === 'positive-coverage-sample',
+  )!;
+  positive.laneIds = ['legacy-lane', 'verification-lane'];
+  return terminal;
+}
+
 describe('validation recovery integration', () => {
+  it.each(['complete', 'partial'] as const)(
+    'accepts delegated %s output after real-store dossier binding',
+    async (outcome) => {
+      const root = await mkdtemp(
+        join(tmpdir(), `oat-validation-worker-${outcome}-`),
+      );
+      roots.push(root);
+      const fixture = await lifecycleSnapshots(root, true);
+      const state = fixture.evidenceStarted;
+      const dossier: WorkerDossierV1 = {
+        schemaVersion: 1,
+        runId: fixture.created.runId,
+        planDigest: state.receipt!.planDigest,
+        laneId: 'legacy-lane',
+        outcome,
+        inspectedPaths: outcome === 'complete' ? ['a.ts'] : [],
+        inspectedObligationIds: outcome === 'complete' ? ['FR1'] : [],
+        commands: [],
+        evidence: [],
+        candidateFindings: [],
+        uncoveredObligationIds: outcome === 'complete' ? [] : ['FR1'],
+        uncertainty:
+          outcome === 'complete' ? [] : ['Worker stopped before inspection.'],
+      };
+      const coverage = await fixture.store.bindValidatedWorkerDossier(
+        fixture.created.runId,
+        { receipt: state.receipt!.token, dossier },
+      );
+      const verificationCoverage =
+        await fixture.store.bindValidatedWorkerDossier(fixture.created.runId, {
+          receipt: state.receipt!.token,
+          dossier: {
+            schemaVersion: 1,
+            runId: fixture.created.runId,
+            planDigest: state.receipt!.planDigest,
+            laneId: 'verification-lane',
+            outcome: 'complete',
+            inspectedPaths: ['b.ts'],
+            inspectedObligationIds: ['FR2'],
+            commands: [],
+            evidence: [
+              {
+                id: 'inventory-1',
+                kind: 'inventory',
+                locator: 'inventory:verification-lane',
+                scopeRefs: [
+                  {
+                    bucket: 'lane',
+                    bucketId: 'verification-lane',
+                    pathIndexes: [0],
+                  },
+                ],
+                provenance: 'validated inventory executor',
+                digest: 'inventory-digest',
+                commandId: null,
+                commandResultDigest: null,
+              },
+            ],
+            candidateFindings: [],
+            uncoveredObligationIds: [],
+            uncertainty: [],
+          },
+        });
+
+      const validation = await validateStoredReviewOutput(
+        {
+          runId: fixture.created.runId,
+          terminal: delegatedTerminal(state, coverage, verificationCoverage),
+        },
+        fixture.store,
+      );
+      expect(validation, JSON.stringify(validation)).toMatchObject({
+        valid: true,
+      });
+      await expect(
+        fixture.store.readRun(fixture.created.runId),
+      ).resolves.toMatchObject({
+        state: {
+          phase: 'accepted',
+          workerCoverage: [
+            { outcome, dossierDigest: coverage.dossierDigest },
+            {
+              outcome: 'complete',
+              dossierDigest: verificationCoverage.dossierDigest,
+            },
+          ],
+        },
+      });
+    },
+  );
+
   it('enforces immutable substance and the total-attempt cap through the real store transition', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-output-repair-'));
     roots.push(root);

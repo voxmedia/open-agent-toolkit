@@ -19,6 +19,7 @@ import { setTimeout as delay } from 'node:timers/promises';
 
 import { extractReviewAccounting } from './artifact-accounting';
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
+import { ReviewDomainError } from './errors';
 import { projectValidatedAssignments } from './plan-validator';
 import {
   parseHostTelemetryEvidenceV1,
@@ -846,32 +847,58 @@ export class ValidationStore {
 
   async bindValidatedWorkerDossier(
     runId: string,
-    input: WorkerDossierV1,
+    input: { receipt: string; dossier: WorkerDossierV1 },
   ): Promise<ValidatedWorkerCoverageProjectionV1> {
     let bound: ValidatedWorkerCoverageProjectionV1 | undefined;
     await this.updateRun(runId, (state) => {
       if (
         state.phase !== 'evidence_started' ||
+        state.context === null ||
         state.plan === null ||
+        state.assignment === null ||
         state.receipt === null ||
         state.output.attempts !== 0
       ) {
-        throw new Error(
-          'worker dossier binding requires pre-output evidence-started state',
-        );
+        throw new ReviewDomainError({
+          category: 'contract',
+          code: 'worker-dossier-binding-phase-invalid',
+          message:
+            'worker dossier binding requires pre-output evidence-started state',
+        });
       }
-      const dossier = parseWorkerDossierV1(input);
+      if (
+        state.receipt.token !== input.receipt ||
+        state.receipt.validationRunId !== runId ||
+        state.receipt.contextDigest !== state.context.contextDigest ||
+        state.receipt.planDigest !== hashCanonicalJson(state.plan) ||
+        state.receipt.assignmentDigest !==
+          hashCanonicalJson(state.assignment) ||
+        state.receipt.acceptedHandleDigest !== state.acceptedHandleDigest ||
+        state.receipt.gateRunId !== state.preparation.correlation.gateRunId ||
+        state.receipt.launchAttemptId !==
+          state.preparation.correlation.launchAttemptId
+      ) {
+        throw new ReviewDomainError({
+          category: 'validation',
+          code: 'worker-dossier-receipt-mismatch',
+          message: 'worker dossier receipt identity mismatch',
+        });
+      }
+      const dossier = parseWorkerDossierV1(input.dossier);
       const validationErrors = validateWorkerDossier(
         state.plan,
         state.receipt.planDigest,
         dossier,
       );
       if (validationErrors.length > 0) {
-        throw new Error(
-          `worker dossier validation failed: ${validationErrors
+        throw new ReviewDomainError({
+          category: 'validation',
+          code: 'worker-dossier-validation-failed',
+          message: `worker dossier validation failed: ${validationErrors
             .map((error) => error.code)
             .join(', ')}`,
-        );
+          details: { errorCount: validationErrors.length },
+        });
       }
       const lane = state.plan.lanes.find(
         (candidate) => candidate.id === dossier.laneId,
@@ -905,7 +932,11 @@ export class ValidationStore {
         existing !== undefined &&
         canonicalizeJson(existing) !== canonicalizeJson(projection)
       ) {
-        throw new Error('worker dossier coverage is already bound');
+        throw new ReviewDomainError({
+          category: 'contract',
+          code: 'worker-dossier-replacement-rejected',
+          message: 'worker dossier coverage is already bound',
+        });
       }
       if (existing === undefined) state.workerCoverage.push(projection);
       bound = structuredClone(projection);

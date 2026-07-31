@@ -29,10 +29,12 @@ describe('local review coordinator integration contract', () => {
     ],
   ])('%s validates before publishing or bookkeeping', (_, start, end) => {
     const rail = section(start, end).replace(/\s+/g, ' ');
+    const binding = rail.indexOf('bind-worker-dossier');
     const validation = rail.indexOf('validate-output');
     const publication = rail.indexOf('publish-output');
     const bookkeeping = rail.indexOf('bookkeeping');
-    expect(validation).toBeGreaterThanOrEqual(0);
+    expect(binding).toBeGreaterThanOrEqual(0);
+    expect(validation).toBeGreaterThan(binding);
     expect(publication).toBeGreaterThan(validation);
     expect(bookkeeping).toBeGreaterThan(publication);
     expect(rail).toContain(
