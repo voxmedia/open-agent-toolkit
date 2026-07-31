@@ -72,6 +72,10 @@ Phase outcome PASS after two task commits and review cycle 2/3; prior Important 
 
 Phase p04 full verification exposed three unmapped prompt-site keys introduced by the earlier recovery-contract prose. Focused reproduction shows all three are non-gate occurrences requiring NG mappings in .agents/docs/autonomy-contract.md; p04 stopped without commit because that file is outside its authorized boundary.
 
+### 2026-07-31 · structural · oat-project-implement · p-rev2-authorization
+
+Operator authorized narrow revision phase p-rev2 for autonomy inventory coverage; root restored the six uncommitted p04 version fields to 0.2.26, retained exact NG keys 4d6c519131e5, 81db07214b06, and 4aa21120295f, and preserved p04's release target unchanged.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

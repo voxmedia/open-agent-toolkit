@@ -1,8 +1,7 @@
 ---
-oat_current_task: p04-t01
+oat_current_task: p-rev2-t01
 oat_last_commit: 4f6d934b955b030dfacb06ae91e2e81d92c3b30a
-oat_blockers:
-  - p04 test gate blocked by unmapped autonomy prompt-site coverage from earlier recovery-contract changes
+oat_blockers: []
 associated_issues: [] # [{type: backlog|project|jira|linear, ref: "identifier"}]
 oat_kind: implementation # implementation | coordination; coordination parents may use oat_phase: decomposition
 oat_parent: null # optional child-only coordination parent slug
@@ -62,7 +61,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-31T12:46:10.613Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T20:12:28Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T21:23:45Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 ---
 
@@ -74,7 +73,7 @@ oat_generated: false
 
 ## Current Phase
 
-Implement - Phase 4 blocked
+Implement - Revision Phase p-rev2 pending
 
 ## Artifacts
 
@@ -110,15 +109,14 @@ Implement - Phase 4 blocked
 - ✓ Phase 3 review cycle 1 received with one Important finding
 - ✓ Phase 3 review fix `p03-t02` completed and root-validated
 - ✓ Fresh Phase 3 review cycle 2 passed with zero findings
-- ✗ Phase 4 full test gate found pre-existing autonomy inventory drift
-- ⧗ Operator direction required for narrow scope repair
+- ✓ Operator authorized narrow revision phase p-rev2
+- ✓ Uncommitted Phase 4 version edits restored to the verified baseline
+- ⧗ Revision task p-rev2-t01 pending
 
 ## Blockers
 
-`pnpm test` reports three unmapped prompt-site keys introduced by the earlier
-recovery-contract changes. Repair requires
-`.agents/docs/autonomy-contract.md`, outside p04's authorized file boundary.
+None
 
 ## Next Milestone
 
-Choose a narrow revision phase, p04 scope expansion, or stop
+Implement and review p-rev2, then rerun Phase 4

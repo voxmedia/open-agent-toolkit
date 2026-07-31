@@ -1,10 +1,9 @@
 ---
 oat_status: in_progress
 oat_ready_for: null
-oat_blockers:
-  - p04 test gate blocked by unmapped autonomy prompt-site coverage from earlier recovery-contract changes
+oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t01
+oat_current_task_id: p-rev2-t01
 oat_generated: false
 ---
 
@@ -31,9 +30,10 @@ oat_generated: false
 | Phase p-rev1 | passed        | 1     | 1/1       |
 | Phase 2      | passed        | 1     | 1/1       |
 | Phase 3      | passed        | 2     | 2/2       |
+| Phase p-rev2 | pending       | 1     | 0/1       |
 | Phase 4      | pending       | 1     | 0/1       |
 
-**Total:** 6/7 tasks completed
+**Total:** 6/8 tasks completed
 
 ---
 
@@ -266,14 +266,26 @@ oat_generated: false
 
 ---
 
+## Revision Phase 2: Autonomy Gate-Inventory Coverage
+
+**Status:** pending
+**Started:** -
+
+### Task p-rev2-t01: (revision) Map Recovery Prompt Sites
+
+**Status:** pending
+**Commit:** -
+
+---
+
 ## Phase 4: Lockstep Release and Full Verification
 
-**Status:** blocked
+**Status:** pending
 **Started:** 2026-07-31
 
 ### Task p04-t01: Bump Public Packages and Validate the Release
 
-**Status:** blocked
+**Status:** pending
 **Commit:** -
 
 **Blocked run:**
@@ -290,7 +302,9 @@ oat_generated: false
   `NG` mappings
 - Build and release validation were not run; no task commit or recovery event
   exists
-- Scope expansion or a narrow revision phase requires operator direction
+- Operator authorized narrow revision phase `p-rev2`; root restored the six
+  uncommitted version fields to the verified `0.2.26` baseline so revision work
+  and the eventual p04 rerun start cleanly
 
 ---
 
@@ -311,7 +325,7 @@ _- Outstanding Items_
 - Dispatch: managed High; Cursor phase implementer
   `oat-phase-implementer-gpt-5-6-sol-high`
 - Schedule: `p01` → operator-authorized `p-rev1` → parallel `p02`/`p03` →
-  `p04`
+  operator-authorized `p-rev2` → `p04`
 - HiLL: final phase `p04`; auto-review enabled
 - Optional phase gate: disabled
 - Started: Phase 1 (`p01-t01`)
@@ -352,6 +366,10 @@ _- Outstanding Items_
   `431841fc74e3453a86317366a78f767a2e94186d`; fresh root-owned review pending
 - Phase 3 review cycle 2 passed at the fix head with zero findings; fix-loop
   count 1
+- Initial Phase 4 run stopped without commit when `pnpm test` exposed three
+  unmapped autonomy inventory sites from earlier phase work
+- Operator authorized narrow revision phase `p-rev2`; root restored the six
+  uncommitted version fields to their verified baseline before revision launch
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -451,6 +469,28 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
+#### Dispatch Record: p04 blocked run
+
+- Request: `bounded-recovery-authorization-p04-implementation-20260731T2007Z`
+- Launch state/outcome: accepted / `BLOCKED`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- Selection: managed High; candidate `gpt-5.6-sol-medium`; task class
+  `default-implementation`
+- Model axis: `selected:gpt-5.6-sol-medium`
+- Effort axis: `not-applicable`
+- Base/head:
+  `51c360cbed9ee4f3c07e85f645f97922e59a901e`
+- Task/commit: `p04-t01` / none
+- Verification: lint, format, docs build, check, and type-check passed; test
+  failed on three pre-existing unmapped autonomy inventory sites; remaining
+  release checks not run
+- Recovery/children: none
+- Operator disposition: authorize `p-rev2`, restore uncommitted version edits,
+  then rerun p04 from a clean post-revision base
+- Dispatch stamp:
+  `Dispatch: scope=p04 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -480,6 +520,8 @@ Chronological log of implementation progress.
 - Completed and root-validated the corrected p-rev1 task commit.
 - Completed and root-validated the Phase 2 provider parity task commit.
 - Completed and root-validated the Phase 3 public documentation task commit.
+- Preserved the blocked Phase 4 evidence and restored its uncommitted version
+  edits after operator-authorized revision routing.
 
 **Decisions:**
 
@@ -489,17 +531,18 @@ Chronological log of implementation progress.
   operator-authorized revision phase passes.
 - The planned parallel group degraded to sequential execution after strict
   worktree readiness failed; the phase scopes and targets remain unchanged.
+- The full test blocker receives its own narrow `p-rev2` phase; Phase 4 remains
+  the unchanged lockstep release task.
 
 **Follow-ups / TODO:**
 
-- Run Phase 4 lockstep release and full verification.
+- Implement and review `p-rev2`, then rerun Phase 4.
 
 **Blockers:**
 
-- Phase 4 cannot commit or continue while the full test gate fails on canonical
-  autonomy inventory drift outside the phase's authorized files.
+- None. Operator authorized the narrow revision path.
 
-**Session End:** Phase 4 blocked pending operator direction
+**Session End:** Phase p-rev2 pending
 
 ---
 
@@ -512,6 +555,7 @@ Document any intentional deviations from the original plan, spec, or design. Inc
 | p01 review 3/3    | plan.md            | Phase 1 must pass before provider/docs work    | Added narrow revision phase p-rev1 before Phase 2     | Terminal review found one attempt-boundary defect; operator explicitly authorized a revision phase | Revised plan.md   | Implement and review p-rev1 without reopening p01                   |
 | p-rev1 identity   | plan-and-resume.md | Revision tasks use `prev1-t01`                 | Used executable status-parser identity `p-rev1-t01`   | `oat project status` otherwise omits the revision phase from dispatch state                        | CLI parser        | Preserve scope; do not expand this revision into parser cleanup     |
 | p02/p03 bootstrap | plan.md            | Run p02 and p03 in isolated parallel worktrees | Degraded the whole group to sequential root execution | Strict bootstrap readiness failed on unmanaged local Cursor entries before any phase-agent launch  | implementation.md | Preserve both failed-baseline worktrees; keep original phase scopes |
+| p04 test blocker  | plan.md            | Version bump and full verification in p04      | Added narrow revision phase p-rev2 before p04 rerun   | Full test gate exposed autonomy inventory drift from earlier recovery-contract prose               | Full test gate    | Map only the three non-gate sites, review p-rev2, then rerun p04    |
 
 ## Test Results
 
@@ -523,6 +567,7 @@ Track test execution during implementation.
 | p-rev1 | skills.test.ts; skill validation; lint; format; diff check     | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
 | 2      | sync/index.test.ts; skill validation; lint; format; diff check | 28 tests + 61 skills  | 0      | Provider semantic parity     |
 | 3      | check; docs build; protected-path isolation; diff check        | all                   | 0      | Public recovery docs         |
+| p-rev2 | autonomy gate inventory; full test; format; diff check         | pending               | -      | Prompt-site coverage         |
 | 4      | -                                                              | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)

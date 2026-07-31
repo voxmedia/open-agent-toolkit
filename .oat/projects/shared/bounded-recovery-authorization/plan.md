@@ -43,7 +43,7 @@ workspace release validation.
 - [x] Declared provider-sync and docs phases as file-disjoint parallel work
 - [x] Set project dispatch policy to managed High
 - [x] Disabled optional cross-runtime phase gates; built-in reviews remain
-- [ ] Confirm HiLL checkpoints when implementation starts
+- [x] Confirm HiLL checkpoints when implementation starts
 
 ---
 
@@ -53,9 +53,11 @@ Phase 1 establishes canonical semantics. Operator-authorized revision phase
 `p-rev1` resolves the one attempt-boundary defect retained by the terminal
 Phase 1 review. Phases 2 and 3 then run in isolated worktrees: provider
 regeneration/tests modify generated agent surfaces and sync tests, while
-documentation modifies only the authored implementation guide. Phase 4 runs
-after fan-in because the release bump and full validation must cover both
-outputs. No other phases are parallelized.
+documentation modifies only the authored implementation guide. After fan-in,
+operator-authorized revision phase `p-rev2` repairs autonomy gate-inventory
+coverage exposed by the full test gate. Phase 4 then runs because the release
+bump and full validation must cover all outputs. No other phases are
+parallelized.
 
 ---
 
@@ -423,6 +425,44 @@ Commit: `fix(p03-t02): clarify recovery ledger ownership`
 
 ---
 
+## Revision Phase 2: Autonomy Gate-Inventory Coverage
+
+### Task p-rev2-t01: (revision) Map Recovery Prompt Sites
+
+**Files:**
+
+- Modify: `.agents/docs/autonomy-contract.md`
+
+**Step 1: Reproduce the full-test blocker**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts`
+
+Expected: The repository-HEAD coverage test reports stable keys
+`4d6c519131e5`, `81db07214b06`, and `4aa21120295f` as unmapped.
+
+**Step 2: Add exact non-gate mappings**
+
+Add `4d6c519131e5 -> NG` to the
+`oat-project-implement/references/dispatch-and-dry-run.md` HEAD coverage row.
+Add `81db07214b06 -> NG` and `4aa21120295f -> NG` to the
+`oat-project-implement/references/phase-execution.md` HEAD coverage row. Preserve
+all existing mappings and the immutable line-number baseline.
+
+**Step 3: Format and verify**
+
+Run:
+`pnpm exec oxfmt --write .agents/docs/autonomy-contract.md && pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/autonomy-gate-inventory.test.ts && pnpm test && pnpm format && git diff --check`
+
+Expected: Focused inventory coverage, the full test suite, formatting, and diff
+checks pass.
+
+**Step 4: Commit**
+
+Commit: `test(p-rev2-t01): map recovery prompt sites`
+
+---
+
 ## Phase 4: Lockstep Release and Full Verification
 
 ### Task p04-t01: Bump Public Packages and Validate the Release
@@ -486,6 +526,7 @@ validation all pass from a clean post-task tree.
 | p-rev1 | code     | passed   | 2026-07-31 | reviews/p-rev1-review-2026-07-31T191244Z.md | 53777c7d26db7d93dfd3eaa9bb4b7b781f2256bc | auto       | -           |
 | p02    | code     | passed   | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
 | p03    | code     | passed   | 2026-07-31 | reviews/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -           |
+| p-rev2 | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | p04    | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | spec   | artifact | pending  | -          | -                                           | -                                        | -          | -           |
@@ -517,9 +558,10 @@ cell; never truncate a widened row back to five columns.
 - Phase p-rev1: 1 task - Final reserved-attempt boundary revision
 - Phase 2: 1 task - Provider regeneration and semantic parity
 - Phase 3: 2 tasks - Public recovery and migration documentation
+- Phase p-rev2: 1 task - Autonomy gate-inventory coverage
 - Phase 4: 1 task - Lockstep release bump and full verification
 
-**Total: 7 tasks**
+**Total: 8 tasks**
 
 Ready for code review and merge.
 
