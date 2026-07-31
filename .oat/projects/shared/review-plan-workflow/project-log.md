@@ -72,6 +72,10 @@ Received failed Phase p02 independent review at d6c204514b076d57eaf2ee277d72e6de
 
 Review-fix iteration 1 stopped after p02-t35: focused tests passed, but post-commit package lint rejected unsafe throw control flow in validation-store lock cleanup. Explicit append-only recovery authorization is required.
 
+### 2026-07-31 · structural · oat-project-implement · p02-review-fix-1-recovery-1
+
+All p02 review-fix code tasks completed with focused checks and lint passing, but workspace type-check found three legacy string values in the undeclared compile-time fixture review/types.test.ts. Explicit append-only recovery authorization is required.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

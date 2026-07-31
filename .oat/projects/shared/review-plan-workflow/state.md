@@ -1,8 +1,8 @@
 ---
-oat_current_task: p02-t35
-oat_last_commit: de51125add2d4b8e2dce3b9d328af528a753ff17
+oat_current_task: p02-t39
+oat_last_commit: a2efe68c8bd435ff0da3dbd37ef9fdb2b5fdf332
 oat_blockers:
-  - p02-t35 post-commit lint rejects unsafe control flow in lock cleanup
+  - p02-t39 compile-time fixture still uses legacy string command values
 associated_issues:
   - type: backlog
     ref: BL-260729-implement-reviewplan-first
@@ -76,7 +76,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T00:18:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T00:45:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -92,9 +92,10 @@ oat_project_explainer:
 
 ## Current Phase
 
-Phase 1 is complete and independently reviewed. Phase 2 review-fix tasks
-p02-t30 through p02-t34 are complete. p02-t35 passed its focused tests but is
-blocked by the mandatory post-commit package lint gate.
+Phase 1 is complete and independently reviewed. All Phase 2 review-fix code
+tasks are implemented, focused verification and lint pass, and the full CLI
+suite passes. Workspace type-check is blocked by one omitted compile-time
+fixture migration from p02-t39.
 
 ## Artifacts
 
@@ -139,15 +140,18 @@ blocked by the mandatory post-commit package lint gate.
 - ✓ Phase 2 verification passed
 - ⚠ Independent Phase 2 review failed at reviewed head `d6c20451`
 - ✓ Review fixes p02-t30 through p02-t34 completed
-- ⚠ p02-t35 committed and passed focused tests, then failed package lint
-- → Authorize or decline a narrow append-only p02-t35 lint recovery
+- ✓ p02-t35 append-only lint recovery passed focused tests and lint
+- ✓ Review fixes p02-t36 through p02-t43 completed
+- ✓ Full CLI suite passed 3,756 tests; package lint and diff-check pass
+- ⚠ Workspace type-check found three legacy values in `review/types.test.ts`
+- → Authorize or decline a narrow append-only p02-t39 fixture recovery
 
 ## Blockers
 
-- `p02-t35`: `validation-store.ts` throws from a `finally` cleanup path, which
-  can overwrite the operation's return or original error and violates
-  `no-unsafe-finally`.
+- `p02-t39`: `review/types.test.ts` still assigns three strings where the
+  contract now requires `ReviewCommandInvocationV1` objects.
 
 ## Next Milestone
 
-Resolve the p02-t35 lint recovery boundary, then continue from p02-t36.
+Resolve the p02-t39 compile-time fixture boundary, then re-run Phase 2 gates
+and independent fix-range review.

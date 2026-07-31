@@ -2,9 +2,9 @@
 oat_status: in_progress
 oat_ready_for: null
 oat_blockers:
-  - p02-t35 post-commit lint rejects unsafe control flow in lock cleanup
+  - p02-t39 compile-time fixture still uses legacy string command values
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t35
+oat_current_task_id: p02-t39
 oat_generated: false
 ---
 
@@ -28,14 +28,14 @@ oat_generated: false
 | Phase   | Status    | Tasks | Completed |
 | ------- | --------- | ----- | --------- |
 | Phase 1 | completed | 13    | 13/13     |
-| Phase 2 | blocked   | 43    | 34/43     |
+| Phase 2 | blocked   | 43    | 42/43     |
 | Phase 3 | pending   | 5     | 0/5       |
 | Phase 4 | pending   | 8     | 0/8       |
 | Phase 5 | pending   | 7     | 0/7       |
 | Phase 6 | pending   | 7     | 0/7       |
 | Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 47/89 tasks completed
+**Total:** 55/89 tasks completed
 
 ## Execution Configuration
 
@@ -364,51 +364,53 @@ and CLI help integration passed.
 
 ### Task p02-t35: (review I1) Make lifecycle transitions crash-safe
 
-**Status:** blocked
+**Status:** completed
 **Commit:** `de51125a`
-**Concern:** Focused tests pass, but package lint rejects a throw in the lock
-cleanup `finally` block because it can overwrite the operation's result or
-error.
+**Recovery:** `aa187268` moved lock cleanup error propagation outside
+`finally`; focused tests and package lint pass.
 
 ### Task p02-t36: (review I2) Enforce patch-stream wall-clock deadlines
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `d6baf9a5`
 
 ### Task p02-t37: (review I3) Classify lifecycle command errors safely
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `11145356`
 
 ### Task p02-t38: (review I4) Validate lane evidence cutoffs
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `784c6246`
 
 ### Task p02-t39: (review M3) Represent trusted commands portably
 
-**Status:** pending
-**Commit:** -
+**Status:** blocked
+**Commit:** `f81a6f1d`
+**Concern:** The production and runtime fixtures pass, but workspace type-check
+found three legacy string command values in the compile-time contract fixture
+outside this task's declared boundary.
 
 ### Task p02-t40: (review I5) Preserve branch-local command identity
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `880e097c`
 
 ### Task p02-t41: (review I6) Align the plan-step design grammar
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `cc063065`
 
 ### Task p02-t42: (review M1) Connect the obligation fixture corpus
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `cd0e4a73`
 
 ### Task p02-t43: (review M2) Reject trailing Requirement Index content
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `a2efe68c`
 
 ### Review Received: p02
 
@@ -446,8 +448,8 @@ error.
 
 - I6 found the p02-t10 implementation correctly accepts canonical inline-prose
   Step lines while `design.md` documents only standalone fully-bold lines.
-  Implementation and canonical plan syntax remain authoritative; p02-t41 will
-  align the design and canonical deviations table.
+  Implementation and canonical plan syntax remain authoritative; p02-t41
+  aligned the design and canonical deviations table.
 
 **Next:** Execute the fix tasks and re-review their changes.
 
@@ -679,6 +681,41 @@ None in this run entry.
 - p02-t35 requires explicit authorization for one append-only repair limited to
   `packages/cli/src/review/validation-store.ts`, followed by its focused tests
   and package lint before p02-t36.
+
+### Run 7 — 2026-07-31T00:45:00Z {#run-7}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict | Task Commits                                                                                               | Review  | Fixes          |
+| ----- | ------- | ---------------------------------------------------------------------------------------------------------- | ------- | -------------- |
+| p02   | blocked | `aa187268`, `d6baf9a5`, `11145356`, `784c6246`, `f81a6f1d`, `880e097c`, `cc063065`, `cd0e4a73`, `a2efe68c` | pending | 13 implemented |
+
+#### Dispatch Notes
+
+- The explicitly authorized p02-t35 recovery changed only
+  `validation-store.ts`; 25 focused tests and package lint passed.
+- p02-t36 through p02-t43 each committed within their declared boundaries,
+  passed focused verification, and passed package lint.
+- The phase CLI suite passed 3,756 tests. Workspace type-check then found three
+  legacy string command fixtures in `review/types.test.ts`, which p02-t39 did
+  not declare. The implementer stopped without an unplanned repair commit.
+- Final package lint and diff-check passed; the worktree was clean.
+- Dispatch stamp:
+  - `Dispatch: scope=p02-review-fix1-recovery1 action=fix role=implementer producer=oat-reviewer-gpt-5-6-sol-high provenance=same-accepted-handle model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- p02-t39 requires explicit authorization for one append-only fixture migration
+  limited to `packages/cli/src/review/types.test.ts`, followed by package and
+  workspace type-check before Phase 2 re-review.
 
 <!-- orchestration-runs-end -->
 
