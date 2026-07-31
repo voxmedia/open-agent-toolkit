@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p03-t01
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | pending       | 1     | 0/1       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 1     | 1/1       |
+| Phase 3      | review_pending | 1     | 1/1       |
+| Phase 4      | pending        | 1     | 0/1       |
 
-**Total:** 4/6 tasks completed
+**Total:** 5/6 tasks completed
 
 ---
 
@@ -197,13 +197,26 @@ oat_generated: false
 
 ## Phase 3: Public Recovery Documentation
 
-**Status:** pending
-**Started:** -
+**Status:** review_pending
+**Started:** 2026-07-31
 
 ### Task p03-t01: Explain Prevention, Recovery, and Migration
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 431841fc74e3453a86317366a78f767a2e94186d
+
+**Outcome:**
+
+- Documented prevention checks, bounded same-target post-commit recovery,
+  append-only repair commits, recovery budgets, and stop boundaries.
+- Added the canonical event schema, pre-change baseline, causation finding, and
+  installed-contract migration commands.
+
+**Verification:**
+
+- `pnpm check`: passed
+- `pnpm build:docs`: passed
+- Protected paths, commit integrity, clean tree, and `git diff --check`: passed
 
 ---
 
@@ -273,6 +286,8 @@ _- Outstanding Items_
 - Sequential Phase 2 completed at
   `395fca50e96ec4f895d3b9ad828b0900f67ce95e`; fresh root-owned review pending
 - Phase 2 review passed at the task head with zero findings; fix-loop count 0
+- Sequential Phase 3 completed at
+  `431841fc74e3453a86317366a78f767a2e94186d`; fresh root-owned review pending
 
 #### Dispatch Record: p-rev1 invalid run
 
@@ -339,6 +354,26 @@ _- Outstanding Items_
 - Dispatch stamp:
   `Dispatch: scope=p02 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
+#### Dispatch Record: p03 sequential run
+
+- Request: `bounded-recovery-authorization-p03-implementation-20260731T1940Z`
+- Launch state/outcome: accepted / `DONE`
+- Route: Cursor native materialized role
+  `oat-phase-implementer-gpt-5-6-sol-medium`
+- Selection: managed High; candidate `gpt-5.6-sol-medium`; task class
+  `default-implementation`
+- Model axis: `selected:gpt-5.6-sol-medium`
+- Effort axis: `not-applicable`
+- Base/head:
+  `6babc7bc9a7010f18dd51357ad2dccf1deef3fa5..431841fc74e3453a86317366a78f767a2e94186d`
+- Task/commit: `p03-t01` /
+  `431841fc74e3453a86317366a78f767a2e94186d`
+- Verification: check, docs build, protected-path isolation, clean tree,
+  commit integrity, and diff checks passed
+- Recovery/children: none
+- Dispatch stamp:
+  `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
+
 <!-- orchestration-runs-end -->
 
 ---
@@ -367,6 +402,7 @@ Chronological log of implementation progress.
   terminal Phase 1 review.
 - Completed and root-validated the corrected p-rev1 task commit.
 - Completed and root-validated the Phase 2 provider parity task commit.
+- Completed and root-validated the Phase 3 public documentation task commit.
 
 **Decisions:**
 
@@ -379,13 +415,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Run Phase 3 sequentially in the root checkout.
+- Run the fresh root-owned Phase 3 review.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 2 passed; Phase 3 pending
+**Session End:** Phase 3 review pending
 
 ---
 
@@ -408,7 +444,7 @@ Track test execution during implementation.
 | 1      | skills.test.ts; skill validation; lint; format; diff check     | 129 tests + 61 skills | 0      | Canonical recovery contracts |
 | p-rev1 | skills.test.ts; skill validation; lint; format; diff check     | 130 tests + 61 skills | 0      | Attempt-boundary contracts   |
 | 2      | sync/index.test.ts; skill validation; lint; format; diff check | 28 tests + 61 skills  | 0      | Provider semantic parity     |
-| 3      | -                                                              | -                     | -      | -                            |
+| 3      | check; docs build; protected-path isolation; diff check        | all                   | 0      | Public recovery docs         |
 | 4      | -                                                              | -                     | -      | -                            |
 
 ## Final Summary (for PR/docs)
