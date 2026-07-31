@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  parsePrepareReviewContextInputV1,
   parsePlanValidationReceiptV1,
   parsePreparedReviewContextV1,
   parseReviewCommandInvocationV1,
@@ -9,6 +10,58 @@ import {
   parseReviewPlanV1,
   ReviewSchemaError,
 } from './schemas';
+
+const preparationInput = {
+  schemaVersion: 1,
+  repoRoot: '/repo',
+  project: '.oat/projects/shared/demo',
+  scope: 'p02',
+  workflowMode: 'spec-driven',
+  range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
+  sink: 'structured',
+  invocation: 'manual',
+  budget: { totalMs: 120_000, source: 'outer' },
+  gateRunId: null,
+  launchAttemptId: null,
+  obligationSources: {
+    plan: { source: '# Plan', path: 'plan.md' },
+    spec: null,
+    implementation: null,
+  },
+  priorEvidenceCandidates: [],
+  target: 'reviewer',
+};
+
+describe('prepare review input schema', () => {
+  it('strictly parses the complete versioned command input', () => {
+    expect(parsePrepareReviewContextInputV1(preparationInput)).toEqual(
+      preparationInput,
+    );
+  });
+
+  it.each([
+    { ...preparationInput, unknown: true },
+    { ...preparationInput, schemaVersion: 2 },
+    { ...preparationInput, repoRoot: 'relative' },
+    { ...preparationInput, scope: 'all' },
+    {
+      ...preparationInput,
+      range: { baseSha: 'bad', headSha: 'b'.repeat(40) },
+    },
+    {
+      ...preparationInput,
+      invocation: 'gate',
+    },
+    {
+      ...preparationInput,
+      obligationSources: { ...preparationInput.obligationSources, plan: null },
+    },
+  ])('rejects malformed complete input %#', (candidate) => {
+    expect(() => parsePrepareReviewContextInputV1(candidate)).toThrow(
+      ReviewSchemaError,
+    );
+  });
+});
 
 function preparation(): Record<string, unknown> {
   return {

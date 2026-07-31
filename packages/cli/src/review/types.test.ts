@@ -13,6 +13,7 @@ import type {
   HostTelemetryEvidenceV1,
   PlanValidationReceiptV1,
   PreparedReviewContextV1,
+  PrepareReviewContextInputV1,
   PrepareReviewContextResultV1,
   ReviewAccountingV1,
   ReviewCandidateV1,
@@ -151,6 +152,26 @@ const preparation = {
 
 describe('review preparation contracts', () => {
   it('keeps pre-artifact and post-artifact contexts distinct', () => {
+    const input = {
+      schemaVersion: 1,
+      repoRoot: '/repo',
+      project: '.oat/projects/shared/demo',
+      scope: 'p02',
+      workflowMode: 'spec-driven',
+      range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
+      sink: 'artifact',
+      invocation: 'manual',
+      budget: null,
+      gateRunId: null,
+      launchAttemptId: null,
+      obligationSources: {
+        plan: { source: '# Plan', path: 'plan.md' },
+        spec: null,
+        implementation: null,
+      },
+      priorEvidenceCandidates: [],
+      target: 'reviewer',
+    } satisfies PrepareReviewContextInputV1;
     const { timeBudget: _timeBudget, ...preparationBase } = preparation;
     const telemetry = {
       schemaVersion: 1,
@@ -238,6 +259,7 @@ describe('review preparation contracts', () => {
     } satisfies PrepareReviewContextResultV1;
 
     expect(context.budget.context?.evidenceBudgetTokens).toBe(130_000);
+    expect(input.schemaVersion).toBe(1);
     expect(result.artifactDraftPath).toContain('review-draft');
     expect(telemetry.validationRunId).toBe(preparation.runId);
   });

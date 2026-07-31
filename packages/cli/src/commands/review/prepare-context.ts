@@ -1,8 +1,13 @@
+import { allocateReviewTimeBudget } from '@review/budget';
 import {
   type PrepareReviewContextDependencies,
   type PrepareReviewContextInput,
   prepareReviewContext,
 } from '@review/prepare-context';
+import {
+  parsePrepareReviewContextInputV1,
+  ReviewSchemaError,
+} from '@review/schemas';
 import type { PrepareReviewContextResultV1 } from '@review/types';
 import { launchValidationAuthorityBroker } from '@review/validation-authority-broker';
 import { Command } from 'commander';
@@ -46,43 +51,31 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   brokerPrepare: launchValidationAuthorityBroker,
 };
 
-function assertPrepareInput(
-  value: unknown,
-): asserts value is PrepareReviewContextInput {
-  if (typeof value !== 'object' || value === null) {
+function parsePrepareInput(value: unknown): PrepareReviewContextInput {
+  try {
+    const parsed = parsePrepareReviewContextInputV1(value);
+    allocateReviewTimeBudget({
+      totalMs: parsed.budget?.totalMs ?? null,
+      source: parsed.budget?.source ?? null,
+      startedAtMs: 0,
+    });
+    return {
+      ...parsed,
+      gateRunId: parsed.gateRunId ?? undefined,
+      launchAttemptId: parsed.launchAttemptId ?? undefined,
+      obligationSources: {
+        plan: parsed.obligationSources.plan,
+        spec: parsed.obligationSources.spec ?? undefined,
+        implementation: parsed.obligationSources.implementation,
+      },
+    };
+  } catch (error) {
+    if (!(error instanceof ReviewSchemaError)) throw error;
     throw new ReviewJsonCommandError({
       category: 'input',
       code: 'invalid-prepare-context-input',
-      message: 'prepare-context input must be a JSON object',
-    });
-  }
-  const input = value as Record<string, unknown>;
-  const hasBudget = input.budget !== null && input.budget !== undefined;
-  if (hasBudget) {
-    const budget = input.budget as Record<string, unknown>;
-    if (
-      typeof budget !== 'object' ||
-      budget === null ||
-      typeof budget.totalMs !== 'number' ||
-      typeof budget.source !== 'string'
-    ) {
-      throw new ReviewJsonCommandError({
-        category: 'input',
-        code: 'invalid-budget-pair',
-        message: 'budget totalMs and source must be supplied together',
-      });
-    }
-  }
-  const hasGateRunId = typeof input.gateRunId === 'string';
-  const hasLaunchAttemptId = typeof input.launchAttemptId === 'string';
-  if (
-    (input.invocation === 'gate' && (!hasGateRunId || !hasLaunchAttemptId)) ||
-    (input.invocation !== 'gate' && (hasGateRunId || hasLaunchAttemptId))
-  ) {
-    throw new ReviewJsonCommandError({
-      category: 'contract',
-      code: 'invalid-gate-correlation',
-      message: 'gate correlation IDs must exactly match gate invocation',
+      message:
+        'prepare-context stdin does not match PrepareReviewContextInputV1',
     });
   }
 }
@@ -110,8 +103,9 @@ export function createReviewPrepareContextCommand(
       const exitCode = await runReviewJsonCommand({
         write: dependencies.write,
         operation: async () => {
-          const input = await readBoundedJsonStdin(dependencies.stdin);
-          assertPrepareInput(input);
+          const input = parsePrepareInput(
+            await readBoundedJsonStdin(dependencies.stdin),
+          );
           return projectPrepareResult(
             useBroker
               ? await dependencies.brokerPrepare({

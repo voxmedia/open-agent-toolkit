@@ -1,3 +1,4 @@
+import { ReviewDomainError } from './errors';
 import type {
   ChangeMapV1,
   ContextBudgetTelemetry,
@@ -23,7 +24,11 @@ export function allocateReviewTimeBudget(input: {
 }): AllocatedReviewTimeBudget {
   if (input.totalMs === null) {
     if (input.source !== null) {
-      throw new Error('budget source requires a total budget');
+      throw new ReviewDomainError({
+        category: 'input',
+        code: 'review-budget-source-without-total',
+        message: 'budget source requires a total budget',
+      });
     }
     return { time: null, allocation: null };
   }
@@ -31,9 +36,20 @@ export function allocateReviewTimeBudget(input: {
     !Number.isSafeInteger(input.totalMs) ||
     input.totalMs < MIN_ENFORCED_REVIEW_BUDGET_MS
   ) {
-    throw new Error('review-budget-below-minimum');
+    throw new ReviewDomainError({
+      category: 'input',
+      code: 'review-budget-below-minimum',
+      message: 'review-budget-below-minimum',
+      details: { minimumMs: MIN_ENFORCED_REVIEW_BUDGET_MS },
+    });
   }
-  if (!input.source) throw new Error('time budget requires a source');
+  if (!input.source) {
+    throw new ReviewDomainError({
+      category: 'input',
+      code: 'review-budget-source-missing',
+      message: 'time budget requires a source',
+    });
+  }
   if (!Number.isSafeInteger(input.startedAtMs) || input.startedAtMs < 0) {
     throw new Error('review start must be a non-negative safe integer');
   }

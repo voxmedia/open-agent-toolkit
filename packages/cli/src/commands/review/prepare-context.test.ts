@@ -6,6 +6,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { createReviewPrepareContextCommand } from './prepare-context';
 
 const baseInput = {
+  schemaVersion: 1,
   repoRoot: '/repo',
   project: '.oat/projects/shared/demo',
   scope: 'p02',
@@ -13,9 +14,30 @@ const baseInput = {
   range: { baseSha: 'a'.repeat(40), headSha: 'b'.repeat(40) },
   sink: 'artifact',
   invocation: 'manual',
-  budget: { totalMs: 60_000, source: 'outer' },
-  obligationSources: {},
+  budget: { totalMs: 120_000, source: 'outer' },
+  gateRunId: null,
+  launchAttemptId: null,
+  obligationSources: {
+    plan: {
+      source:
+        '### Task p02-t01: Test\n\n**Files:**\n\n- Modify: `a.ts`\n\n**Step 1: Test** Run.',
+      path: 'plan.md',
+    },
+    spec: null,
+    implementation: null,
+  },
+  priorEvidenceCandidates: [],
   target: 'reviewer',
+};
+
+const normalizedInput = {
+  ...baseInput,
+  gateRunId: undefined,
+  launchAttemptId: undefined,
+  obligationSources: {
+    ...baseInput.obligationSources,
+    spec: undefined,
+  },
 };
 
 const prepared = {
@@ -71,7 +93,7 @@ describe('createReviewPrepareContextCommand', () => {
     await command.parseAsync(['node', 'oat', 'prepare-context']);
 
     expect(brokerPrepare).toHaveBeenCalledWith({
-      preparationInput: baseInput,
+      preparationInput: normalizedInput,
       launcherInvocation: {
         executable: process.execPath,
         argvPrefix: ['/branch/oat.js'],
@@ -101,7 +123,7 @@ describe('createReviewPrepareContextCommand', () => {
     await command.parseAsync(['node', 'oat', 'prepare-context']);
 
     expect(prepare).toHaveBeenCalledOnce();
-    expect(createDependencies).toHaveBeenCalledWith(baseInput, {
+    expect(createDependencies).toHaveBeenCalledWith(normalizedInput, {
       executable: process.execPath,
       argvPrefix: ['/branch/oat.js'],
     });
@@ -119,11 +141,21 @@ describe('createReviewPrepareContextCommand', () => {
     expect(output).not.toContain('remainingTokens');
   });
 
-  it('rejects partial budgets and mismatched gate correlation', async () => {
+  it('rejects malformed nested input and policy failures as exit one', async () => {
     for (const input of [
       { ...baseInput, budget: { totalMs: 1000 } },
       { ...baseInput, invocation: 'gate' },
-      { ...baseInput, gateRunId: 'gate-1' },
+      {
+        ...baseInput,
+        gateRunId: 'gate-1',
+      },
+      { ...baseInput, unknown: true },
+      { ...baseInput, scope: 'everything' },
+      { ...baseInput, range: { baseSha: 'bad', headSha: 'also-bad' } },
+      {
+        ...baseInput,
+        obligationSources: { ...baseInput.obligationSources, plan: null },
+      },
     ]) {
       const write = vi.fn();
       const command = createReviewPrepareContextCommand({
@@ -136,7 +168,10 @@ describe('createReviewPrepareContextCommand', () => {
 
       await command.parseAsync(['node', 'oat', 'prepare-context']);
 
-      expect(JSON.parse(write.mock.calls[0]?.[0] as string).ok).toBe(false);
+      expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+        ok: false,
+        error: { category: 'input' },
+      });
     }
   });
 });

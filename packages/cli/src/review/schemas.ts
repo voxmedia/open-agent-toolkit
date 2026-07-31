@@ -1,8 +1,11 @@
+import { isAbsolute } from 'node:path';
+
 import type {
   ChangeMapV1,
   ContextBudgetTelemetry,
   PreparedReviewContextV1,
   PlanValidationReceiptV1,
+  PrepareReviewContextInputV1,
   PriorReviewEvidenceV1,
   ReviewBudgetV1,
   ReviewCommandInvocationV1,
@@ -373,6 +376,101 @@ function parsePriorEvidence(
     stringArray(item['deferredFindingIds'], `${at}/deferredFindingIds`);
     return item as unknown as PriorReviewEvidenceV1;
   });
+}
+
+function parsePreparationSource(value: unknown, pointer: string) {
+  if (value === null) return null;
+  const source = object(value, pointer);
+  keys(source, ['source', 'path'], pointer);
+  string(source['source'], `${pointer}/source`);
+  path(source['path'], `${pointer}/path`);
+  return source as { source: string; path: string };
+}
+
+export function parsePrepareReviewContextInputV1(
+  value: unknown,
+): PrepareReviewContextInputV1 {
+  const input = object(value, '$');
+  keys(
+    input,
+    [
+      'schemaVersion',
+      'repoRoot',
+      'project',
+      'scope',
+      'workflowMode',
+      'range',
+      'sink',
+      'invocation',
+      'budget',
+      'gateRunId',
+      'launchAttemptId',
+      'obligationSources',
+      'priorEvidenceCandidates',
+      'target',
+    ],
+    '$',
+  );
+  if (input['schemaVersion'] !== 1) {
+    throw new ReviewSchemaError('$/schemaVersion must equal 1');
+  }
+  string(input['repoRoot'], '$/repoRoot');
+  if (!isAbsolute(input['repoRoot'])) {
+    throw new ReviewSchemaError('$/repoRoot must be absolute');
+  }
+  string(input['project'], '$/project');
+  string(input['scope'], '$/scope');
+  if (!/^(?:p\d{2}(?:-t\d{2})?|final)$/.test(input['scope'])) {
+    throw new ReviewSchemaError('$/scope has an invalid value');
+  }
+  enumValue(
+    input['workflowMode'],
+    ['spec-driven', 'quick', 'import'],
+    '$/workflowMode',
+  );
+  const range = object(input['range'], '$/range');
+  keys(range, ['baseSha', 'headSha'], '$/range');
+  sha(range['baseSha'], '$/range/baseSha');
+  sha(range['headSha'], '$/range/headSha');
+  if (range['baseSha'] === range['headSha']) {
+    throw new ReviewSchemaError('$/range must contain distinct SHAs');
+  }
+  enumValue(input['sink'], ['artifact', 'structured'], '$/sink');
+  enumValue(input['invocation'], ['manual', 'auto', 'gate'], '$/invocation');
+  if (input['budget'] !== null) {
+    const budget = object(input['budget'], '$/budget');
+    keys(budget, ['totalMs', 'source'], '$/budget');
+    safeNumber(budget['totalMs'], '$/budget/totalMs');
+    string(budget['source'], '$/budget/source');
+  }
+  nullableString(input['gateRunId'], '$/gateRunId');
+  nullableString(input['launchAttemptId'], '$/launchAttemptId');
+  const isGate = input['invocation'] === 'gate';
+  if (
+    (isGate &&
+      (input['gateRunId'] === null || input['launchAttemptId'] === null)) ||
+    (!isGate &&
+      (input['gateRunId'] !== null || input['launchAttemptId'] !== null))
+  ) {
+    throw new ReviewSchemaError('$/gate correlation does not match invocation');
+  }
+  const sources = object(input['obligationSources'], '$/obligationSources');
+  keys(sources, ['plan', 'spec', 'implementation'], '$/obligationSources');
+  parsePreparationSource(sources['plan'], '$/obligationSources/plan');
+  if (sources['plan'] === null) {
+    throw new ReviewSchemaError('$/obligationSources/plan must be an object');
+  }
+  parsePreparationSource(sources['spec'], '$/obligationSources/spec');
+  parsePreparationSource(
+    sources['implementation'],
+    '$/obligationSources/implementation',
+  );
+  parsePriorEvidence(
+    input['priorEvidenceCandidates'],
+    '$/priorEvidenceCandidates',
+  );
+  string(input['target'], '$/target');
+  return input as unknown as PrepareReviewContextInputV1;
 }
 
 function parseTimeBudget(

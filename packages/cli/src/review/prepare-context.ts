@@ -7,6 +7,7 @@ import {
   issueCommandCapabilities,
   renderReviewCommands,
 } from './command-capabilities';
+import { ReviewDomainError } from './errors';
 import {
   type CollectReviewObligationsInput,
   collectReviewObligations,
@@ -71,19 +72,31 @@ export async function prepareReviewContext(
     !/^[0-9a-f]{40}$/.test(input.range.headSha) ||
     input.range.baseSha === input.range.headSha
   ) {
-    throw new Error('review range must contain distinct full lowercase SHAs');
+    throw new ReviewDomainError({
+      category: 'input',
+      code: 'review-range-invalid',
+      message: 'review range must contain distinct full lowercase SHAs',
+    });
   }
   if (
     input.invocation === 'gate' &&
     (!input.gateRunId || !input.launchAttemptId)
   ) {
-    throw new Error('gate invocation requires exact correlation IDs');
+    throw new ReviewDomainError({
+      category: 'contract',
+      code: 'gate-correlation-missing',
+      message: 'gate invocation requires exact correlation IDs',
+    });
   }
   if (
     input.invocation !== 'gate' &&
     (input.gateRunId !== undefined || input.launchAttemptId !== undefined)
   ) {
-    throw new Error('non-gate invocation cannot supply gate correlation');
+    throw new ReviewDomainError({
+      category: 'contract',
+      code: 'gate-correlation-unexpected',
+      message: 'non-gate invocation cannot supply gate correlation',
+    });
   }
 
   const runId = randomBytes(16).toString('hex');

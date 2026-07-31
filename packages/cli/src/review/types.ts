@@ -128,6 +128,27 @@ export interface PriorReviewEvidenceV1 {
   deferredFindingIds: string[];
 }
 
+export interface PrepareReviewContextInputV1 {
+  schemaVersion: 1;
+  repoRoot: string;
+  project: string;
+  scope: string;
+  workflowMode: 'spec-driven' | 'quick' | 'import';
+  range: { baseSha: string; headSha: string };
+  sink: ReviewSink;
+  invocation: ReviewInvocation;
+  budget: { totalMs: number; source: string } | null;
+  gateRunId: string | null;
+  launchAttemptId: string | null;
+  obligationSources: {
+    plan: { source: string; path: string };
+    spec: { source: string; path: string } | null;
+    implementation: { source: string; path: string } | null;
+  };
+  priorEvidenceCandidates: PriorReviewEvidenceV1[];
+  target: string;
+}
+
 export interface HostTelemetryEvidenceV1 {
   schemaVersion: 1;
   validationRunId: string;
