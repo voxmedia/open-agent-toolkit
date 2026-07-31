@@ -5,174 +5,345 @@ oat_blockers: []
 oat_last_updated: 2026-07-31
 oat_phase: plan
 oat_phase_status: in_progress
-oat_plan_hill_phases: [] # phases to pause AFTER completing (empty = every phase)
-oat_plan_parallel_groups: [] # groups of phases that run concurrently in worktrees; [] = fully sequential
-oat_plan_source: spec-driven # spec-driven | quick | imported
+oat_plan_parallel_groups: [['p02', 'p03']] # groups of phases that run concurrently in worktrees; [] = fully sequential
+oat_plan_source: quick # spec-driven | quick | imported
 oat_import_reference: null # e.g., references/imported-plan.md
 oat_import_source_path: null # original source path provided by user
 oat_import_provider: null # codex | cursor | claude | null
 oat_generated: false
+oat_template: true
 ---
 
 # Implementation Plan: bounded-recovery-authorization
 
 > Execute this plan using `oat-project-implement` — sequential by default, parallel when `oat_plan_parallel_groups` is declared.
 
-**Goal:** {Brief goal statement from spec}
+**Goal:** Prevent avoidable post-commit defects and automatically complete safe,
+same-target append-only phase recovery without weakening fallback, review,
+security, or destructive-action boundaries.
 
-**Architecture:** {1-2 sentence architecture summary from design}
+**Architecture:** The phase implementer runs discoverable proportionate checks
+before commit, then applies a dedicated project-level bounded recovery policy
+when later verification finds a mechanical in-scope defect. The root preserves
+the exact target, validates immutable task plus recovery commits, and appends one
+canonical recovery event for every recovered or stopped disposition.
 
-**Tech Stack:** {Key technologies from design}
+**Tech Stack:** Canonical Markdown agent/skill contracts, TypeScript/Vitest CLI
+contract tests, OAT provider synchronization, Fumadocs documentation, pnpm
+workspace release validation.
 
 **Commit Convention:** `{type}({scope}): {description}` - e.g., `feat(p01-t01): add user auth endpoint`
 
 ## Planning Checklist
 
-- [ ] Confirmed HiLL checkpoints with user
-- [ ] Set `oat_plan_hill_phases` in frontmatter
-- [ ] Evaluated phases for parallelism opportunities
-- [ ] Set `oat_plan_parallel_groups` in frontmatter
+- [x] Quick discovery and lightweight design approved
+- [x] Evaluated phases for parallelism opportunities
+- [x] Declared provider-sync and docs phases as file-disjoint parallel work
+- [x] Set project dispatch policy to managed High
+- [x] Disabled optional cross-runtime phase gates; built-in reviews remain
+- [ ] Confirm HiLL checkpoints when implementation starts
 
 ---
 
 ## Parallelism
 
-Phases that have no overlapping file modifications may run concurrently. To declare parallelism:
-
-```yaml
-oat_plan_parallel_groups: [['p02', 'p03']]
-```
-
-Each inner array is a group of phases that execute in parallel (each in its own worktree) and merge back in plan order after all pass. Groups themselves run sequentially.
-
-Default is `[]` (fully sequential, no worktrees). Only declare parallelism when phases are genuinely file-disjoint — overlap will produce merge conflicts that stop the run.
+Phase 1 establishes canonical semantics and must complete first. Phases 2 and 3
+then run in isolated worktrees: provider regeneration/tests modify generated
+agent surfaces and sync tests, while documentation modifies only the authored
+implementation guide. Phase 4 runs after fan-in because the release bump and
+full validation must cover both outputs. No other phases are parallelized.
 
 ---
 
-## Dispatch Profile
+## Phase 1: Canonical Recovery Contract
 
-_Optional override surface. Use only for explicit user-authored constraints or preferences. Omit this section when runtime selection should choose the lowest confident tier._
-
-Blank or `auto` means there is no explicit constraint for that provider. Do not generate rows by default; a missing phase row uses runtime selection.
-
-| Phase | Claude model                     | Codex effort                   | Rationale                     |
-| ----- | -------------------------------- | ------------------------------ | ----------------------------- |
-| pNN   | haiku\|sonnet\|opus\|fable\|auto | low\|medium\|high\|xhigh\|auto | why this constraint is needed |
-
-Codex effort values are preferred controls. `oat-project-implement` caps them when a capped managed dispatch policy exists, selects them directly under managed `Uncapped`, and maps selected efforts to pinned implementer variants when available. Codex provider default effort is informational only for explicit inherit/default behavior or base/unpinned fallback paths.
-
----
-
-RED/GREEN/Refactor is the recommended default where work is testable, not a validator requirement. Other task-body shapes, including non-TDD shapes, are allowed when appropriate, provided the plan preserves stable `pNN-tNN` IDs, per-task verification, and atomic commits.
-
-## Phase 1: {Phase Name}
-
-### Task p01-t01: {Task Name}
+### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
 **Files:**
 
-- Create: `{path/to/file.ts}`
-- Modify: `{path/to/existing.ts}`
+- Modify: `.agents/skills/oat-dispatch-subagents/SKILL.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Pin the three-way taxonomy (RED)**
 
-```typescript
-// {path/to/file.test.ts}
-describe('{feature}', () => {
-  it('{test case}', () => {
-    // Test implementation
-  });
-});
-```
+Add targeted assertions that distinguish forbidden accepted-launch route/model
+replacement, caller-authorized same-target bounded recovery, and
+scope-expanding/consequential recovery. Assert standing authority is
+default-deny for wave execution, autonomous projects, cloud-project
+orchestration, reviewers, and every consumer except `oat-project-implement`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
-Expected: Test fails (RED)
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: New assertions fail against the absolute "new explicit action" rule.
 
-**Step 2: Implement (GREEN)**
+**Step 2: Implement the authorization-aware dispatch contract (GREEN)**
 
-```typescript
-// {path/to/file.ts}
-// Implementation code or interface signatures
-```
+Update the shared acceptance/recovery section without weakening accepted-launch
+terminality. Permit standing recovery authority only when a caller-specific
+contract explicitly supplies scope, exact target, numeric budget, canonical
+recording, and stop conditions. Bump `oat-dispatch-subagents` once from `1.2.1`
+to `1.2.2`.
 
-Run: `pnpm --filter {package-name} exec vitest run {path/to/file.test.ts}`
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
 Expected: Test passes (GREEN)
 
-Use the actual runner command that scopes to the intended file or test target. Do not write a package-level shortcut unless it truly executes only the scope the task claims.
+**Step 3: Format**
 
-**Step 3: Refactor**
-
-{Any cleanup or improvements while tests stay green}
+Run: `pnpm format:fix`
+Expected: Canonical and test files are formatted without unrelated semantic
+changes.
 
 **Step 4: Verify**
 
-Run: `pnpm lint && pnpm type-check`
-Expected: No errors
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
+Expected: Dispatch contract, canonical skill validation, lint, and format pass.
 
 **Step 5: Commit**
 
-```bash
-git add {files}
-git commit -m "feat(p01-t01): {description}"
-```
+Commit: `fix(p01-t01): separate bounded recovery from fallback`
 
 ---
 
-### Task p01-t02: {Task Name}
+### Task p01-t02: Add Tiered Prevention and Bounded Phase Recovery
 
 **Files:**
 
-- {File list}
+- Modify: `.agents/agents/oat-phase-implementer.md`
+- Modify: `.agents/skills/oat-project-implement/SKILL.md`
+- Modify:
+  `.agents/skills/oat-project-implement/references/phase-execution.md`
+- Modify:
+  `.agents/skills/oat-project-implement/references/dispatch-and-dry-run.md`
+- Modify: `.oat/templates/state.md`
+- Modify: `packages/cli/src/validation/skills.test.ts`
 
-**Step 1: Write test (RED)**
+**Step 1: Add behavior-focused recovery scenarios (RED)**
 
-{Test code}
+Add contract assertions covering:
 
-**Step 2: Implement (GREEN)**
+- pre-commit formatting, declared verification, cheap checks, and scoped
+  build/test for emitted-output or build/test configuration changes;
+- dedicated `oat_phase_recovery_policy` defaults (`10`, per-phase `0`–`20`),
+  one no-edit flake rerun, elevated-volume warning at three, and exact numeric
+  exhaustion grants that never reset usage;
+- one append-only recovery commit per successful attempt, immutable task
+  commits, same-target/original-request provenance, and canonical recovery-event
+  fields;
+- automatic continuation for obvious in-scope lint/type/test/build/composition
+  defects; and
+- stops for ambiguity, architecture/security/product/requirements changes,
+  non-mechanical boundary widening, destructive work, retry exhaustion, dirty
+  history, or governance caps.
 
-{Implementation code or signatures}
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: New lifecycle scenarios fail.
 
-**Step 3: Refactor**
+**Step 2: Implement prevention, recovery, and bookkeeping contracts (GREEN)**
 
-{Optional cleanup}
+Update Phase Scope, report validation, commit-range validation, task-transition
+and phase verification flow, dispatch target continuity, and the canonical
+recovery-event shape. Keep review-fix/gate counters on
+`oat_orchestration_retry_limit`; do not change review-cycle, severity,
+protected-branch, credential, destructive-action, or security safeguards.
+Prevent route escalation from applying to implementation recovery. Add the new
+commented policy shape to the state template.
+
+Bump `oat-project-implement` once from `2.2.3` to `2.2.4` and the canonical
+phase agent from `1.0.10` to `1.0.11`.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts`
+Expected: Lifecycle scenarios pass.
+
+**Step 3: Format**
+
+Run: `pnpm format:fix`
+Expected: Canonical assets, template, and tests are formatted.
 
 **Step 4: Verify**
 
-Run: `{verification command}`
-Expected: {output}
-
-Verification commands should be behaviorally accurate. If the task claims a file-scoped or test-scoped check, use the concrete runner invocation that really scopes to that target.
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
+Expected: Focused contracts and canonical asset validation pass.
 
 **Step 5: Commit**
 
-```bash
-git add {files}
-git commit -m "feat(p01-t02): {description}"
-```
+Commit: `feat(p01-t02): authorize bounded phase recovery`
 
 ---
 
-## Phase 2: {Phase Name}
+**Phase 1 verification**
 
-### Task p02-t01: {Task Name}
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/validation/skills.test.ts && pnpm oat:validate-skills && pnpm lint && pnpm format`
 
-{Continue TDD pattern...}
+Expected: Canonical recovery semantics, prevention ordering, budget accounting,
+stop boundaries, skill versions, and non-consumer default-deny assertions pass.
+
+---
+
+## Phase 2: Provider Materialization and Parity
+
+### Task p02-t01: Regenerate and Validate Provider Agents
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/sync/index.test.ts`
+- Regenerate: `.claude/agents/oat-phase-implementer.md`
+- Regenerate: `.cursor/agents/oat-phase-implementer*.md`
+- Regenerate: `.codex/agents/oat-phase-implementer*.toml`
+- Regenerate: provider-linked skill views selected by `oat sync`
+- Regenerate: `.oat/sync/manifest.json`
+
+**Step 1: Add provider materialization assertions (RED)**
+
+Extend the existing sync/materialization suite to read generated Claude, Codex,
+base Cursor, and representative pinned Cursor phase agents. Assert equivalent
+prevention, dedicated budget, recovery-event, exact-target, exhaustion, and stop
+semantics, with no provider-specific fallback.
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts`
+Expected: New assertions fail before regeneration.
+
+**Step 2: Regenerate from canonical sources (GREEN)**
+
+Run: `oat sync --scope all`
+Expected: Provider views and manifest are regenerated from canonical assets; no
+provider copy is hand-edited.
+
+**Step 3: Format**
+
+Run: `pnpm format:fix`
+Expected: Generated and test assets are formatted.
+
+**Step 4: Verify**
+
+Run:
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/sync/index.test.ts && pnpm oat:validate-skills && oat status --scope project && pnpm lint && pnpm format`
+Expected: Provider materialization, canonical validation, sync parity, lint,
+and format pass.
+
+**Step 5: Commit**
+
+Commit: `test(p02-t01): enforce phase recovery provider parity`
+
+---
+
+## Phase 3: Public Recovery Documentation
+
+### Task p03-t01: Explain Prevention, Recovery, and Migration
+
+**Files:**
+
+- Modify:
+  `apps/oat-docs/docs/workflows/projects/implementation-execution.md`
+
+**Step 1: Update the authored workflow guide**
+
+Document task-local cheap checks and scoped build/test checks before commit;
+broad phase-level verification and automatic same-target repair; dedicated
+default-ten/per-phase recovery budgets; one no-edit flake rerun;
+elevated-volume reporting; numeric exhaustion grants; canonical recovery-event
+fields; the nine-event baseline; why append-only history does not require
+repeated approval; the fallback distinction; and migration commands
+`oat tools update` followed by `oat sync --scope all`.
+
+Do not add or move a page, so no navigation or generated root-index edit is
+needed.
+
+**Step 2: Cross-check every claim**
+
+Compare the documentation against the canonical phase agent, project
+implementation references, shared dispatch contract, state template, and
+approved design. Remove any claim not encoded in the shipped contract.
+
+**Step 3: Format**
+
+Run: `pnpm format:fix`
+Expected: The authored docs page is formatted.
+
+**Step 4: Verify**
+
+Run: `pnpm check && pnpm build:docs`
+Expected: Markdown/docs checks and the production docs build pass.
+
+**Step 5: Commit**
+
+Commit: `docs(p03-t01): explain bounded phase recovery`
+
+---
+
+## Phase 4: Lockstep Release and Full Verification
+
+### Task p04-t01: Bump Public Packages and Validate the Release
+
+**Files:**
+
+- Modify: `packages/cli/package.json`
+- Modify: `packages/control-plane/package.json`
+- Modify: `packages/docs-config/package.json`
+- Modify: `packages/docs-theme/package.json`
+- Modify: `packages/docs-transforms/package.json`
+- Modify: `packages/cli/assets/public-package-versions.json`
+
+**Step 1: Apply the lockstep version bump**
+
+Advance all five public packages and bundled public-package inventory together
+from `0.2.26` to `0.2.27`. Do not update unrelated dependency versions.
+
+**Step 2: Format**
+
+Run: `pnpm format:fix`
+Expected: Package and inventory JSON are formatted.
+
+**Step 3: Run surface-required checks**
+
+Run: `pnpm lint && pnpm format && pnpm build:docs`
+Expected: Skill/smoke lint and format plus docs production build pass.
+
+**Step 4: Run CI gates in repository order**
+
+Run: `pnpm check && pnpm type-check && pnpm test && pnpm build`
+Expected: All four CI gates pass in documented order.
+
+**Step 5: Run release and diff validation**
+
+Run: `pnpm release:validate && git diff --check`
+Expected: All five `0.2.27` tarballs validate and the diff has no whitespace
+errors.
+
+**Step 6: Commit**
+
+Commit: `chore(p04-t01): bump public packages for bounded recovery`
+
+---
+
+**Phase 4 verification**
+
+Run:
+`pnpm lint && pnpm format && pnpm build:docs && pnpm check && pnpm type-check && pnpm test && pnpm build && pnpm release:validate && git diff --check`
+
+Expected: Surface checks, CI gates, docs build, release validation, and diff
+validation all pass from a clean post-task tree.
 
 ---
 
 ## Reviews
 
-{Track reviews here after running the oat-project-review-provide and oat-project-review-receive skills.}
-
-{Keep both code + artifact rows below. Add additional code rows (p03, p04, etc.) as needed, but do not delete `spec`/`design`.}
-
-| Scope  | Type     | Status  | Date | Artifact | Reviewed Head | Invocation | Gate Target |
-| ------ | -------- | ------- | ---- | -------- | ------------- | ---------- | ----------- |
-| p01    | code     | pending | -    | -        | -             | -          | -           |
-| p02    | code     | pending | -    | -        | -             | -          | -           |
-| final  | code     | pending | -    | -        | -             | -          | -           |
-| spec   | artifact | pending | -    | -        | -             | -          | -           |
-| design | artifact | pending | -    | -        | -             | -          | -           |
+| Scope  | Type     | Status  | Date       | Artifact                         | Reviewed Head | Invocation | Gate Target |
+| ------ | -------- | ------- | ---------- | -------------------------------- | ------------- | ---------- | ----------- |
+| p01    | code     | pending | -          | -                                | -             | -          | -           |
+| p02    | code     | pending | -          | -                                | -             | -          | -           |
+| p03    | code     | pending | -          | -                                | -             | -          | -           |
+| p04    | code     | pending | -          | -                                | -             | -          | -           |
+| final  | code     | pending | -          | -                                | -             | -          | -           |
+| spec   | artifact | pending | -          | -                                | -             | -          | -           |
+| design | artifact | passed  | 2026-07-31 | user-approved lightweight design | -             | manual     | -           |
+| plan   | artifact | pending | -          | -                                | -             | -          | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;
@@ -195,10 +366,12 @@ cell; never truncate a widened row back to five columns.
 
 **Summary:**
 
-- Phase 1: {N} tasks - {Description}
-- Phase 2: {N} tasks - {Description}
+- Phase 1: 2 tasks - Canonical dispatch and phase recovery contracts
+- Phase 2: 1 task - Provider regeneration and semantic parity
+- Phase 3: 1 task - Public recovery and migration documentation
+- Phase 4: 1 task - Lockstep release bump and full verification
 
-**Total: {N} tasks**
+**Total: 5 tasks**
 
 Ready for code review and merge.
 
@@ -206,7 +379,9 @@ Ready for code review and merge.
 
 ## References
 
-- Design: `design.md` (required in spec-driven mode; optional in quick/import mode)
-- Spec: `spec.md` (required in spec-driven mode; optional in quick/import mode)
+- Design: `design.md`
+- Spec: N/A (quick workflow)
 - Discovery: `discovery.md`
-- Imported Source: `references/imported-plan.md` (when `oat_plan_source: imported`)
+- Historical intent: [PR #138](https://github.com/voxmedia/open-agent-toolkit/pull/138),
+  [PR #141](https://github.com/voxmedia/open-agent-toolkit/pull/141), and
+  [PR #187](https://github.com/voxmedia/open-agent-toolkit/pull/187)
