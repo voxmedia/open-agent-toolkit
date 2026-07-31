@@ -3945,7 +3945,7 @@ describe('validateOatSkills', () => {
     ];
 
     expect(engine).toMatch(/^name:\s*oat-dispatch-subagents$/m);
-    expect(engine).toMatch(/^version:\s*1\.2\.1$/m);
+    expect(engine).toMatch(/^version:\s*1\.2\.2$/m);
     expect(engine).toMatch(/^user-invocable:\s*false$/m);
     expect(adapter).toMatch(/^name:\s*oat-project-dispatch-subagents$/m);
     expect(adapter).toMatch(/^version:\s*1\.1\.3$/m);
@@ -3991,6 +3991,35 @@ describe('validateOatSkills', () => {
       expect(content, path).toContain(adapterPath);
       expect(content, path).toContain(enginePath);
     }
+  });
+
+  it('separates accepted-launch fallback from caller-authorized recovery', async () => {
+    const engine = await readRepoFile(
+      '.agents/skills/oat-dispatch-subagents/SKILL.md',
+    );
+    const recovery = engine.slice(engine.indexOf('## Acceptance and Recovery'));
+
+    expect(recovery).toMatch(
+      /accepted launch[\s\S]{0,180}terminal for automatic replacement eligibility/i,
+    );
+    expect(recovery).toMatch(
+      /route[\s\S]{0,80}model[\s\S]{0,80}provider[\s\S]{0,160}replacement[\s\S]{0,160}forbidden fallback/i,
+    );
+    expect(recovery).toMatch(
+      /same-target[\s\S]{0,180}bounded recovery[\s\S]{0,220}continuation/i,
+    );
+    expect(recovery).toMatch(
+      /caller-specific lifecycle contract[\s\S]{0,280}scope[\s\S]{0,120}exact target[\s\S]{0,120}numeric budget[\s\S]{0,120}(?:canonical )?record[\s\S]{0,120}stop conditions/i,
+    );
+    expect(recovery).toMatch(
+      /scope-expanding[\s\S]{0,160}consequential[\s\S]{0,200}(?:operator|user) direction/i,
+    );
+    expect(recovery).toMatch(
+      /default-deny[\s\S]{0,220}oat-project-implement[\s\S]{0,400}wave[\s\S]{0,80}execution[\s\S]{0,160}autonomous projects[\s\S]{0,160}cloud-project[\s\S]{0,80}orchestration[\s\S]{0,160}reviewers/i,
+    );
+    expect(recovery).toMatch(
+      /no post-acceptance outcome[\s\S]{0,180}(?:another|replacement) route eligible/i,
+    );
   });
 
   it('loads generic guidance and exactly one active-provider mechanics reference', async () => {
