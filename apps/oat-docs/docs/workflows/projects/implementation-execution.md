@@ -82,7 +82,10 @@ once, and directly executes each task in plan order. For every task it:
 6. verifies the commit, file boundary, tests, and clean worktree.
 
 After all tasks, it runs phase-wide verification and returns a compact report.
-It does not dispatch the phase reviewer or mutate project bookkeeping.
+It does not dispatch the phase reviewer or mutate general project bookkeeping.
+While it owns the worktree, it may atomically update only the active phase's
+authoritative `oat_phase_recovery_policy.phase_attempt_usage.<pNN>` entry. The
+root validates that ledger entry and later clears a reconciled pending marker.
 
 ## Prevent Defects Before Commit
 
