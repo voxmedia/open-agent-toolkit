@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-30
-oat_current_task_id: p02-t44
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | in_progress | 49    | 43/49     |
-| Phase 3 | pending     | 5     | 0/5       |
-| Phase 4 | pending     | 8     | 0/8       |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | in_review | 49    | 49/49     |
+| Phase 3 | pending   | 5     | 0/5       |
+| Phase 4 | pending   | 8     | 0/8       |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 56/95 tasks completed
+**Total:** 62/95 tasks completed
 
 ## Execution Configuration
 
@@ -178,7 +178,7 @@ fix commit `40fa861f`.
 
 ## Phase 2: ChangeMap and Validation Runtime
 
-**Status:** blocked
+**Status:** in_review
 **Started:** 2026-07-30
 
 ### Task p02-t01: Normalize authoritative review paths
@@ -415,36 +415,40 @@ workspace type-checks pass.
 
 ### Task p02-t44: (review2 C1) Broker validation authority outside reviewer processes
 
-**Status:** in_progress
+**Status:** completed
 **Commit:** `5f8e9ca0`
-**Concern:** Fifty-two focused broker/security tests pass, but type-aware lint
-rejects the async socket callback because `createServer` requires a void-return
-handler.
+**Recovery:** `aad97d13` safely handles asynchronous broker callbacks; focused
+security tests, lint, and type-check pass.
 
 ### Task p02-t45: (review2 I1) Fence stale-lock reclamation
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `080fb3ca`
 
 ### Task p02-t46: (review2 I2) Strictly parse prepare-context input
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `5d0cb201`
 
 ### Task p02-t47: (review2 I3) Preserve active loader arguments
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ed8f6602`
+**Note:** The commit subject says “preserve source loader commands” instead of
+the planned “preserve active cli loader args”; content and file boundary match
+the task.
 
 ### Task p02-t48: (review2 I4) Align command invocation design models
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ba7be5a9`
 
 ### Task p02-t49: (review2 M1) Strictly parse persisted telemetry state
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `e9973a00`
+**Recovery:** `f179344b` preserved valid no-telemetry lifecycle state while
+retaining strict telemetry parsing and coherence checks.
 
 ### Review Received: p02
 
@@ -917,6 +921,41 @@ None in this run entry.
 
 - Complete the p02-t44 callback recovery, then continue p02-t45 through
   p02-t49 under pre-commit focused, lint, and type-check gates.
+
+### Run 12 — 2026-07-31T04:04:00Z {#run-12}
+
+**Branch:** `review-plan-workflow`
+**Tier:** Tier 1 Cursor subagents
+**Policy:** managed `high`
+
+#### Phase Outcomes
+
+| Phase | Verdict        | Task Commits                                               | Review  | Fixes                             |
+| ----- | -------------- | ---------------------------------------------------------- | ------- | --------------------------------- |
+| p02   | review_pending | `080fb3ca`, `5d0cb201`, `ed8f6602`, `ba7be5a9`, `e9973a00` | pending | recoveries `aad97d13`, `f179344b` |
+
+#### Dispatch Notes
+
+- The standing narrow-recovery authorization produced broker callback recovery
+  `aad97d13` and telemetry compatibility recovery `f179344b`; both remained
+  within their originating task files.
+- p02-t45 through p02-t49 each passed focused verification, package lint, and
+  package type-check before commit.
+- Final verification passed: 3,783 CLI tests, all ten workspace type-check
+  tasks, package lint, range diff-check, and worktree cleanliness.
+- p02-t47's commit subject differs from the planned wording but accurately
+  describes the task and was not rewritten.
+- Dispatch stamp:
+  - `Dispatch: scope=p02-review-fix2-recovery1 action=fix role=implementer producer=oat-reviewer-gpt-5-6-sol-high provenance=same-accepted-handle model_axis=selected:gpt-5.6-sol-high effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=gpt-5.6-sol-high target=oat-phase-implementer-gpt-5-6-sol-high`
+
+#### Parallel Groups
+
+None in this run entry.
+
+#### Outstanding Items
+
+- Run the third and final automatic Phase 2 review cycle against p02-t44 through
+  p02-t49 and both bounded recoveries.
 
 <!-- orchestration-runs-end -->
 
