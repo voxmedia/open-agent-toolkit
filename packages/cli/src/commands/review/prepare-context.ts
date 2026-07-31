@@ -1,3 +1,4 @@
+import { currentGateCliLaunch } from '@commands/gate/branch-local-cli';
 import { allocateReviewTimeBudget } from '@review/budget';
 import {
   type PrepareReviewContextDependencies,
@@ -34,6 +35,8 @@ interface PrepareContextCommandDependencies {
   brokerPrepare: typeof launchValidationAuthorityBroker;
 }
 
+const activeLaunch = currentGateCliLaunch();
+
 const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   stdin: process.stdin,
   write: (output) => process.stdout.write(output),
@@ -42,8 +45,8 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
   },
   prepare: prepareReviewContext,
   launcherInvocation: {
-    executable: process.execPath,
-    argvPrefix: process.argv[1] ? [process.argv[1]] : [],
+    executable: activeLaunch.command,
+    argvPrefix: activeLaunch.args,
   },
   createDependencies: (_input, _launcherInvocation) => {
     throw new Error('direct preparation dependencies must be injected');

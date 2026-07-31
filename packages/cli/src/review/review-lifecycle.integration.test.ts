@@ -2,6 +2,7 @@ import { mkdtemp, realpath, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
+import { currentGateCliLaunch } from '@commands/gate/branch-local-cli';
 import { afterEach, describe, expect, it } from 'vitest';
 
 import {
@@ -127,11 +128,17 @@ describe('review validation lifecycle integration', () => {
     );
     roots.push(root);
     const store = new ValidationStore(join(root, 'private-store'));
-    const branchCandidate = join(root, 'branch-candidate.cjs');
+    const branchCandidate = join(root, 'branch-candidate.ts');
     await writeFile(
       branchCandidate,
-      "process.stdin.resume(); process.stdin.on('end', () => process.stdout.write(JSON.stringify({ candidate: __filename, argv: process.argv.slice(2) })));",
+      "import { fileURLToPath } from 'node:url'; const candidate: string = fileURLToPath(import.meta.url); process.stdin.resume(); process.stdin.on('end', () => process.stdout.write(JSON.stringify({ candidate, argv: process.argv.slice(2) })));",
     );
+    const activeLaunch = currentGateCliLaunch({
+      argv: [process.execPath, branchCandidate],
+      execArgv: ['--import', 'tsx'],
+      execPath: process.execPath,
+      cwd: root,
+    });
     const git: GitChangeMapAdapter = {
       nameStatus: async () => Buffer.from('M\0src/example.ts\0'),
       numstat: async () => Buffer.from('2\t1\tsrc/example.ts\0'),
@@ -168,8 +175,8 @@ describe('review validation lifecycle integration', () => {
         git,
         telemetryAdapter: null,
         telemetryAdapterId: null,
-        commandExecutable: process.execPath,
-        commandArgvPrefix: [branchCandidate],
+        commandExecutable: activeLaunch.command,
+        commandArgvPrefix: activeLaunch.args,
         clock,
       },
     );
