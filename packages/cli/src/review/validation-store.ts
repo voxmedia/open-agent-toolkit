@@ -5,10 +5,12 @@ import {
   lstat,
   mkdir,
   open,
+  readdir,
   readFile,
   realpath,
   rename,
   rm,
+  rmdir,
   stat,
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
@@ -299,10 +301,11 @@ export class ValidationStore {
     await chmod(this.root, 0o700);
   }
 
-  private async withLock<T>(operation: () => Promise<T>): Promise<T> {
+  private async withLock<T>(
+    operation: (assertOwnership: () => Promise<void>) => Promise<T>,
+  ): Promise<T> {
     await this.ensureRoot();
     const lockPath = join(this.root, '.store.lock');
-    let handle;
     const owner = {
       schemaVersion: 1,
       pid: process.pid,
@@ -310,11 +313,9 @@ export class ValidationStore {
       acquiredAtMs: Date.now(),
       leaseMs: LOCK_LEASE_MS,
     };
-    for (let attempt = 0; attempt < 100; attempt++) {
+    for (;;) {
       try {
-        handle = await open(lockPath, EXCLUSIVE_WRITE, 0o600);
-        await handle.writeFile(`${JSON.stringify(owner)}\n`, 'utf8');
-        await handle.sync();
+        await mkdir(lockPath, { mode: 0o700 });
         break;
       } catch (error) {
         if (
@@ -325,25 +326,56 @@ export class ValidationStore {
         ) {
           throw error;
         }
+        const info = await lstat(lockPath);
+        if (info.isDirectory()) break;
         try {
-          const existing = JSON.parse(await readFile(lockPath, 'utf8')) as {
+          await rm(lockPath);
+        } catch (removeError) {
+          if (
+            typeof removeError !== 'object' ||
+            removeError === null ||
+            !('code' in removeError) ||
+            !['ENOENT', 'EISDIR', 'EPERM'].includes(String(removeError.code))
+          ) {
+            throw removeError;
+          }
+        }
+      }
+    }
+    const claimPath = join(lockPath, `${owner.nonce}.claim`);
+    await writeExclusive(claimPath, `${JSON.stringify(owner)}\n`);
+    let acquired = false;
+    for (let attempt = 0; attempt < 100; attempt++) {
+      const liveClaims: Array<{ acquiredAtMs: number; nonce: string }> = [];
+      for (const name of await readdir(lockPath)) {
+        if (!name.endsWith('.claim')) continue;
+        const candidatePath = join(lockPath, name);
+        try {
+          const existing = JSON.parse(
+            await readFile(candidatePath, 'utf8'),
+          ) as {
             schemaVersion?: unknown;
             pid?: unknown;
+            nonce?: unknown;
             acquiredAtMs?: unknown;
             leaseMs?: unknown;
           };
           const stale =
             existing.schemaVersion !== 1 ||
             !Number.isSafeInteger(existing.pid) ||
+            typeof existing.nonce !== 'string' ||
+            `${existing.nonce}.claim` !== name ||
             !Number.isSafeInteger(existing.acquiredAtMs) ||
             !Number.isSafeInteger(existing.leaseMs) ||
-            Date.now() - (existing.acquiredAtMs as number) >
-              (existing.leaseMs as number) ||
             !processIsAlive(existing.pid as number);
           if (stale) {
-            await rm(lockPath, { force: true });
+            await rm(candidatePath, { force: true });
             continue;
           }
+          liveClaims.push({
+            acquiredAtMs: existing.acquiredAtMs as number,
+            nonce: existing.nonce as string,
+          });
         } catch (readError) {
           if (
             typeof readError === 'object' &&
@@ -353,43 +385,65 @@ export class ValidationStore {
           ) {
             continue;
           }
-          const info = await stat(lockPath);
+          const info = await stat(candidatePath);
           if (Date.now() - info.mtimeMs > LOCK_LEASE_MS) {
-            await rm(lockPath, { force: true });
+            await rm(candidatePath, { force: true });
             continue;
           }
-          await delay(10);
-          continue;
+          liveClaims.push({
+            acquiredAtMs: info.mtimeMs,
+            nonce: name.slice(0, -'.claim'.length),
+          });
         }
-        await delay(10);
       }
+      liveClaims.sort(
+        (left, right) =>
+          left.acquiredAtMs - right.acquiredAtMs ||
+          left.nonce.localeCompare(right.nonce),
+      );
+      if (liveClaims[0]?.nonce === owner.nonce) {
+        acquired = true;
+        break;
+      }
+      await delay(10);
     }
-    if (!handle) throw new Error('validation store lock timeout');
+    if (!acquired) {
+      await rm(claimPath, { force: true });
+      throw new Error('validation store lock timeout');
+    }
+    const assertOwnership = async () => {
+      try {
+        const current = JSON.parse(await readFile(claimPath, 'utf8')) as {
+          pid?: unknown;
+          nonce?: unknown;
+        };
+        if (current.pid === owner.pid && current.nonce === owner.nonce) return;
+      } catch {
+        // A missing or malformed owner claim is a lost fencing token.
+      }
+      throw new Error('validation store lock fencing token was superseded');
+    };
     let outcome: { ok: true; value: T } | { ok: false; error: unknown };
     try {
-      outcome = { ok: true, value: await operation() };
+      await assertOwnership();
+      outcome = { ok: true, value: await operation(assertOwnership) };
     } catch (error) {
       outcome = { ok: false, error };
     }
     let cleanupError: unknown;
     try {
-      await handle.close();
+      await rm(claimPath);
     } catch (error) {
       cleanupError = error;
     }
     try {
-      const current = JSON.parse(await readFile(lockPath, 'utf8')) as {
-        nonce?: unknown;
-      };
-      if (current.nonce === owner.nonce) {
-        await rm(lockPath, { force: true });
-      }
+      await rmdir(lockPath);
     } catch (error) {
       if (
         (typeof error !== 'object' ||
           error === null ||
           !('code' in error) ||
-          error.code !== 'ENOENT') &&
+          !['ENOENT', 'ENOTEMPTY', 'EEXIST'].includes(String(error.code))) &&
         cleanupError === undefined
       ) {
         cleanupError = error;
@@ -535,7 +589,7 @@ export class ValidationStore {
     runId: string,
     update: (state: ValidationRunState) => ValidationRunState,
   ): Promise<StoredValidationRun> {
-    return this.withLock(async () => {
+    return this.withLock(async (assertOwnership) => {
       const current = await this.readRun(runId);
       const next = update(structuredClone(current.state));
       if (
@@ -550,6 +604,7 @@ export class ValidationStore {
         `.state-${randomUUID()}.tmp`,
       );
       await writeExclusive(temporaryPath, this.#authority.seal(next));
+      await assertOwnership();
       await rename(temporaryPath, current.statePath);
       return this.readRun(runId);
     });
@@ -560,7 +615,7 @@ export class ValidationStore {
     launchAttemptId: string,
     runId: string,
   ): Promise<void> {
-    await this.withLock(async () => {
+    await this.withLock(async (assertOwnership) => {
       const run = await this.readRun(runId);
       if (
         run.state.preparation.correlation.gateRunId !== gateRunId ||
@@ -568,6 +623,7 @@ export class ValidationStore {
       ) {
         throw new Error('gate correlation does not match validation state');
       }
+      await assertOwnership();
       await writeExclusive(
         this.correlationPath(gateRunId, launchAttemptId),
         `${JSON.stringify({
@@ -619,9 +675,10 @@ export class ValidationStore {
   }
 
   async deleteRun(runId: string): Promise<void> {
-    await this.withLock(async () => {
+    await this.withLock(async (assertOwnership) => {
       const run = await this.readRun(runId, new Date(0));
       const correlation = run.state.preparation.correlation;
+      await assertOwnership();
       if (correlation.gateRunId !== null) {
         await rm(
           this.correlationPath(

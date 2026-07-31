@@ -1,4 +1,5 @@
-import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
+import { readdirSync, rmSync } from 'node:fs';
+import { access, mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -82,6 +83,87 @@ describe('validation recovery integration', () => {
       }),
     ).resolves.toMatchObject({
       state: { acceptedHandleDigest: 'recovered' },
+    });
+  });
+
+  it('serializes concurrent reclaimers without removing a new owner', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-lock-race-'));
+    roots.push(root);
+    const store = new ValidationStore(join(root, 'private-store'));
+    const run = await store.createRun({
+      preparation: preparation('concurrentclaims1', '2098-01-01T02:00:00.000Z'),
+      artifactDraft: false,
+    });
+    const lockDirectory = join(store.root, '.store.lock');
+    await mkdir(lockDirectory);
+    await writeFile(
+      join(lockDirectory, 'dead-owner.claim'),
+      JSON.stringify({
+        schemaVersion: 1,
+        pid: 2_147_483_647,
+        nonce: 'dead-owner',
+        acquiredAtMs: Date.now(),
+        leaseMs: 30_000,
+      }),
+    );
+
+    await Promise.all(
+      [1, 2].map(() =>
+        store.updateRun(run.runId, (state) => {
+          state.planValidationAttempts++;
+          return state;
+        }),
+      ),
+    );
+    await expect(store.readRun(run.runId)).resolves.toMatchObject({
+      state: { planValidationAttempts: 2 },
+    });
+  });
+
+  it('does not expire a live owner and fences a superseded writer', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-live-lock-'));
+    roots.push(root);
+    const store = new ValidationStore(join(root, 'private-store'));
+    const run = await store.createRun({
+      preparation: preparation('liveownerclaims1', '2098-01-01T02:00:00.000Z'),
+      artifactDraft: false,
+    });
+    const lockDirectory = join(store.root, '.store.lock');
+    await mkdir(lockDirectory);
+    const liveClaim = join(lockDirectory, 'live-owner.claim');
+    await writeFile(
+      liveClaim,
+      JSON.stringify({
+        schemaVersion: 1,
+        pid: process.pid,
+        nonce: 'live-owner',
+        acquiredAtMs: 0,
+        leaseMs: 1,
+      }),
+    );
+    const waiting = store.updateRun(run.runId, (state) => {
+      state.planValidationAttempts++;
+      return state;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 30));
+    await expect(access(liveClaim)).resolves.toBeUndefined();
+    await rm(liveClaim);
+    await expect(waiting).resolves.toMatchObject({
+      state: { planValidationAttempts: 1 },
+    });
+
+    await expect(
+      store.updateRun(run.runId, (state) => {
+        const ownClaim = readdirSync(lockDirectory).find((name) =>
+          name.endsWith('.claim'),
+        )!;
+        rmSync(join(lockDirectory, ownClaim));
+        state.planValidationAttempts++;
+        return state;
+      }),
+    ).rejects.toThrow(/fencing/);
+    await expect(store.readRun(run.runId)).resolves.toMatchObject({
+      state: { planValidationAttempts: 1 },
     });
   });
 
