@@ -80,6 +80,10 @@ Operator authorized narrow revision phase p-rev2 for autonomy inventory coverage
 
 Phase p-rev2 outcome PASS after one task commit and root-owned review cycle 1/3; zero Critical, Important, Medium, or Minor findings; fix-loop count 0; review artifact reviews/p-rev2-review-2026-07-31T213539Z.md; reconnaissance not attempted.
 
+### 2026-07-31 · structural · oat-project-implement · p04-outcome
+
+Phase p04 outcome PASS after one authorized rerun task commit and root-owned review cycle 1/3; zero Critical, Important, Medium, or Minor findings; fix-loop count 0; review artifact reviews/p04-review-2026-07-31T215112Z.md; reconnaissance not attempted; all five 0.2.27 public tarballs validated.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.

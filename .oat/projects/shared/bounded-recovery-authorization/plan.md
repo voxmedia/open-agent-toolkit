@@ -527,7 +527,7 @@ validation all pass from a clean post-task tree.
 | p02    | code     | passed   | 2026-07-31 | reviews/p02-review-2026-07-31T193213Z.md    | 395fca50e96ec4f895d3b9ad828b0900f67ce95e | auto       | -           |
 | p03    | code     | passed   | 2026-07-31 | reviews/p03-review-2026-07-31T200025Z.md    | 4f6d934b955b030dfacb06ae91e2e81d92c3b30a | auto       | -           |
 | p-rev2 | code     | passed   | 2026-07-31 | reviews/p-rev2-review-2026-07-31T213539Z.md | 0adcee7f8e143221e14b6f50579ab35e9bc0425a | auto       | -           |
-| p04    | code     | pending  | -          | -                                           | -                                        | -          | -           |
+| p04    | code     | passed   | 2026-07-31 | reviews/p04-review-2026-07-31T215112Z.md    | 0fe8d0d9c154f56ab6a36bba2c9547d83f9a6d3c | auto       | -           |
 | final  | code     | pending  | -          | -                                           | -                                        | -          | -           |
 | spec   | artifact | pending  | -          | -                                           | -                                        | -          | -           |
 | design | artifact | passed   | 2026-07-31 | user-approved lightweight design            | -                                        | manual     | -           |
