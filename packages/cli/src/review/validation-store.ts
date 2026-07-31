@@ -250,10 +250,10 @@ function parseValidationRunState(
   if (!Array.isArray(state.workerCoverage)) {
     throw new Error('validation worker coverage must be an array');
   }
-  const workerCoverage = state.workerCoverage.map((value, index) => {
+  const workerCoverage = state.workerCoverage.map((entry, index) => {
     const pointer = `validation worker coverage ${index}`;
     const coverage = exactKeys(
-      value,
+      entry,
       [
         'validationRunId',
         'planDigest',
