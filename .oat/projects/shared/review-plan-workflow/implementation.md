@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p04-t11
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | completed   | 10    | 10/10     |
-| Phase 4 | in_progress | 17    | 10/17     |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | completed | 10    | 10/10     |
+| Phase 4 | in_review | 17    | 17/17     |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 88/115 tasks completed
+**Total:** 95/115 tasks completed
 
 ## Execution Configuration
 
@@ -642,7 +642,7 @@ independent root verification without authorizing another review cycle.
 
 ## Phase 3: Reviewer Plan and Evidence Contract
 
-**Status:** review_fixes_pending
+**Status:** in_review
 **Started:** 2026-07-31
 **Completed:** -
 
@@ -873,38 +873,40 @@ review-help snapshot without unrelated churn.
 
 ### Task p04-t11: (review C1) Keep final artifact paths launcher-private
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ebdb2b1b`
 
 ### Task p04-t12: (review C2) Enforce the final verification boundary
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `4f19431e`
 
 ### Task p04-t13: (review C3) Require exact assignment bucket identities
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `94708cb2`
 
 ### Task p04-t14: (review C4) Derive coverage through permitted contingency
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `6247aa6e`
 
 ### Task p04-t15: (review C5) Persist immutable same-handle output repair
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `8a0bad25`
 
 ### Task p04-t16: (review I1) Publish through a descriptor-safe atomic rename
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `77d71503`
 
 ### Task p04-t17: (review C6) Bind publication to the accepted snapshot
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `ef671f23`
+**Recovery:** `055b5b21` preserved autonomy inventory wording compatibility
+without changing the launcher-private publication behavior.
 
 ### Phase Verification
 
@@ -922,6 +924,12 @@ review-help snapshot without unrelated churn.
   diff-check passed.
 - Root independently reran the 105 ownership, remote-wrapper, project-rail,
   command-inventory, and help-snapshot tests.
+- Review-fix adversarial/compatibility union passed 367 tests.
+- Full CLI passed 3,896 tests; workspace tests and 129 smoke tests passed.
+- Workspace check, type-check, lint, formatting, build, and range diff-check
+  passed.
+- Root independently reran 60 focused output, publication, store, coordinator,
+  local-rail, and ownership tests.
 
 ### Review Received: p04
 
@@ -949,8 +957,7 @@ review-help snapshot without unrelated churn.
 - I1 (publication reopens and hard-links an untrusted pathname) → p04-t16
 - C6 (validation discards the only accepted artifact snapshot) → p04-t17
 
-**Next:** Resume the original Phase 4 handle with the bounded fix tasks, then
-independently re-review the updated range.
+**Next:** Independently re-review the Phase 4 fix range.
 
 ---
 

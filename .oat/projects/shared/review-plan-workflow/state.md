@@ -1,6 +1,6 @@
 ---
-oat_current_task: p04-t11
-oat_last_commit: 9d199314f0956290c70babcc3139c7edebb36869
+oat_current_task: null
+oat_last_commit: 055b5b2132de9f4077c2ba52c9aceee421b83805
 oat_blockers: []
 associated_issues:
   - type: backlog
@@ -75,7 +75,7 @@ oat_pr_status: null # null | ready | open | closed | merged — actual PR state 
 oat_pr_url: null # null | string — tracked PR URL when a PR exists
 oat_project_created: '2026-07-29T14:47:39.499Z' # ISO 8601 UTC timestamp — set once at project creation
 oat_project_completed: null # ISO 8601 UTC timestamp — set when project is completed/archived
-oat_project_state_updated: '2026-07-31T16:00:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
+oat_project_state_updated: '2026-07-31T16:36:00Z' # ISO 8601 UTC timestamp — updated on every state.md mutation
 oat_generated: false
 oat_project_explainer:
   decision: skip
@@ -85,15 +85,15 @@ oat_project_explainer:
 
 # Project State: review-plan-workflow
 
-**Status:** Phase 4 review fixes in progress
+**Status:** Phase 4 fix re-review in progress
 **Started:** 2026-07-29
 **Last Updated:** 2026-07-31
 
 ## Current Phase
 
-Phases 1 through 3 are complete. The first independent Phase 4 review found six
-Critical acceptance gaps and one Important publication race. Root confirmed
-the findings and bounded them as p04-t11 through p04-t17.
+Phases 1 through 3 are complete. Phase 4 review fixes p04-t11 through p04-t17
+and one bounded wording recovery are complete with all package/workspace gates
+passing. The exact fix range is ready for independent re-review.
 
 ## Artifacts
 
@@ -177,7 +177,9 @@ the findings and bounded them as p04-t11 through p04-t17.
 - ✓ Corrected full CLI and workspace smoke gates passed
 - ⚠ Independent Phase 4 review failed with 6 Critical and 1 Important finding
 - ✓ Root confirmed and converted all findings to p04-t11 through p04-t17
-- → Execute the first Phase 4 review-fix iteration
+- ✓ p04-t11 through p04-t17 and bounded recovery completed
+- ✓ Full CLI, workspace, smoke, build, and root-focused verification passed
+- → Independent Phase 4 fix-range re-review
 
 ## Blockers
 
@@ -185,4 +187,4 @@ None.
 
 ## Next Milestone
 
-Complete p04-t11 through p04-t17 and independently re-review the fix range.
+Receive the independent Phase 4 fix-range re-review and route its disposition.
