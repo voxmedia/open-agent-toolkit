@@ -1,6 +1,6 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
 
-import { ValidationStore } from './validation-store';
+import { type ValidationRunState, ValidationStore } from './validation-store';
 
 export interface IssuedCommandCapabilities {
   checkpointToken: string;
@@ -56,32 +56,48 @@ export async function consumeCommandCapability(
   token: string,
 ): Promise<void> {
   await store.updateRun(runId, (state) => {
-    if (state.acceptedHandleDigest === null) {
-      throw new Error('accepted handle must be bound before mutation');
-    }
-    if (state.capabilities === null) {
-      throw new Error('command capabilities were not issued');
-    }
-    const expected =
-      kind === 'checkpoint'
-        ? state.capabilities.checkpointDigest
-        : state.capabilities.planDigest;
-    const used =
-      kind === 'checkpoint'
-        ? state.capabilities.checkpointUsed
-        : state.capabilities.planUsed;
-    const actual = digest(token);
-    if (
-      used ||
-      expected.length !== actual.length ||
-      !timingSafeEqual(Buffer.from(expected), Buffer.from(actual))
-    ) {
-      throw new Error(`invalid or consumed ${kind} capability`);
-    }
-    if (kind === 'checkpoint') state.capabilities.checkpointUsed = true;
-    else state.capabilities.planUsed = true;
+    verifyAndConsumeCommandCapability(state, kind, token);
     return state;
   });
+}
+
+export function verifyAndConsumeCommandCapability(
+  state: ValidationRunState,
+  kind: 'checkpoint' | 'plan',
+  token: string,
+): void {
+  verifyCommandCapability(state, kind, token);
+  if (kind === 'checkpoint') state.capabilities!.checkpointUsed = true;
+  else state.capabilities!.planUsed = true;
+}
+
+export function verifyCommandCapability(
+  state: ValidationRunState,
+  kind: 'checkpoint' | 'plan',
+  token: string,
+): void {
+  if (state.acceptedHandleDigest === null) {
+    throw new Error('accepted handle must be bound before mutation');
+  }
+  if (state.capabilities === null) {
+    throw new Error('command capabilities were not issued');
+  }
+  const expected =
+    kind === 'checkpoint'
+      ? state.capabilities.checkpointDigest
+      : state.capabilities.planDigest;
+  const used =
+    kind === 'checkpoint'
+      ? state.capabilities.checkpointUsed
+      : state.capabilities.planUsed;
+  const actual = digest(token);
+  if (
+    used ||
+    expected.length !== actual.length ||
+    !timingSafeEqual(Buffer.from(expected), Buffer.from(actual))
+  ) {
+    throw new Error(`invalid or consumed ${kind} capability`);
+  }
 }
 
 function quoteArgument(argument: string): string {

@@ -2,7 +2,10 @@ import { randomBytes } from 'node:crypto';
 
 import { buildContextBudget } from './budget';
 import { hashCanonicalJson } from './canonical-json';
-import { consumeCommandCapability } from './command-capabilities';
+import {
+  verifyAndConsumeCommandCapability,
+  verifyCommandCapability,
+} from './command-capabilities';
 import {
   projectValidatedAssignments,
   type PlanValidationError,
@@ -30,13 +33,8 @@ export async function checkpointArtifactsLoaded(
   input: { runId: string; checkpointToken: string },
   dependencies: ReviewLifecycleDependencies,
 ): Promise<PreparedReviewContextV1> {
-  await consumeCommandCapability(
-    dependencies.store,
-    input.runId,
-    'checkpoint',
-    input.checkpointToken,
-  );
   const run = await dependencies.store.readRun(input.runId);
+  verifyCommandCapability(run.state, 'checkpoint', input.checkpointToken);
   if (
     run.state.phase !== 'prepared' ||
     run.state.context !== null ||
@@ -80,6 +78,11 @@ export async function checkpointArtifactsLoaded(
     if (state.phase !== 'prepared' || state.context !== null) {
       throw new Error('artifact checkpoint was already sealed');
     }
+    verifyAndConsumeCommandCapability(
+      state,
+      'checkpoint',
+      input.checkpointToken,
+    );
     state.telemetry.push(evidence);
     state.context = structuredClone(context);
     state.phase = 'artifacts_loaded';
@@ -96,6 +99,7 @@ export async function validateAndReceiptPlan(
   | { valid: false; errors: PlanValidationError[] }
 > {
   const run = await dependencies.store.readRun(input.runId);
+  verifyCommandCapability(run.state, 'plan', input.commandToken);
   if (run.state.phase !== 'artifacts_loaded' || run.state.context === null) {
     throw new Error('plan validation requires a sealed artifact checkpoint');
   }
@@ -117,27 +121,20 @@ export async function validateAndReceiptPlan(
     return { valid: false, errors };
   }
 
-  await consumeCommandCapability(
-    dependencies.store,
-    input.runId,
-    'plan',
-    input.commandToken,
-  );
-  const acceptedRun = await dependencies.store.readRun(input.runId);
   const projection = projectValidatedAssignments(input.plan);
   const now = (dependencies.clock ?? (() => new Date()))().toISOString();
   const receipt: PlanValidationReceiptV1 = {
     token: randomBytes(32).toString('base64url'),
     validationRunId: input.runId,
-    gateRunId: acceptedRun.state.preparation.correlation.gateRunId,
-    launchAttemptId: acceptedRun.state.preparation.correlation.launchAttemptId,
-    acceptedHandleDigest: acceptedRun.state.acceptedHandleDigest!,
+    gateRunId: run.state.preparation.correlation.gateRunId,
+    launchAttemptId: run.state.preparation.correlation.launchAttemptId,
+    acceptedHandleDigest: run.state.acceptedHandleDigest!,
     contractVersion: 1,
-    contextDigest: acceptedRun.state.context!.contextDigest,
+    contextDigest: run.state.context.contextDigest,
     planDigest: hashCanonicalJson(input.plan),
     assignmentDigest: hashCanonicalJson(projection),
     validatedAt: now,
-    expiresAt: acceptedRun.state.preparation.expiresAt,
+    expiresAt: run.state.preparation.expiresAt,
   };
   await dependencies.store.updateRun(input.runId, (state) => {
     if (
@@ -147,6 +144,7 @@ export async function validateAndReceiptPlan(
     ) {
       throw new Error('plan validation state changed before receipt issuance');
     }
+    verifyAndConsumeCommandCapability(state, 'plan', input.commandToken);
     state.planValidationAttempts++;
     state.plan = structuredClone(input.plan);
     state.assignment = structuredClone(projection);

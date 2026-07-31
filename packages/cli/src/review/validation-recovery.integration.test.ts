@@ -1,4 +1,4 @@
-import { access, mkdtemp, rm } from 'node:fs/promises';
+import { access, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -55,6 +55,36 @@ function preparation(runId: string, expiresAt: string): ReviewPreparationV1 {
 }
 
 describe('validation recovery integration', () => {
+  it('recovers from a process death while the store lock is held', async () => {
+    const root = await mkdtemp(join(tmpdir(), 'oat-validation-lock-recovery-'));
+    roots.push(root);
+    const store = new ValidationStore(join(root, 'private-store'));
+    const run = await store.createRun({
+      preparation: preparation('lockrecoveryrun1', '2098-01-01T02:00:00.000Z'),
+      artifactDraft: false,
+    });
+    await writeFile(
+      join(store.root, '.store.lock'),
+      JSON.stringify({
+        schemaVersion: 1,
+        pid: 2_147_483_647,
+        nonce: 'crashed-process',
+        acquiredAtMs: Date.now(),
+        leaseMs: 30_000,
+      }),
+      { mode: 0o600 },
+    );
+
+    await expect(
+      store.updateRun(run.runId, (state) => {
+        state.acceptedHandleDigest = 'recovered';
+        return state;
+      }),
+    ).resolves.toMatchObject({
+      state: { acceptedHandleDigest: 'recovered' },
+    });
+  });
+
   it('never resolves an unbound tuple that shares its legacy filename', async () => {
     const root = await mkdtemp(join(tmpdir(), 'oat-validation-correlation-'));
     roots.push(root);

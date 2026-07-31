@@ -9,6 +9,7 @@ import {
   consumeCommandCapability,
   issueCommandCapabilities,
   renderReviewCommands,
+  verifyAndConsumeCommandCapability,
 } from './command-capabilities';
 import type { ReviewPreparationV1 } from './types';
 import { ValidationStore } from './validation-store';
@@ -130,6 +131,31 @@ describe('review command capabilities', () => {
         firstTokens.checkpointToken,
       ),
     ).rejects.toThrow(/consumed/);
+  });
+
+  it('does not burn a capability when its atomic mutation aborts', async () => {
+    const store = await setup();
+    const issued = await issueCommandCapabilities(store, 'capabilityrun0001');
+    await bindAcceptedHandle(store, 'capabilityrun0001', 'handle');
+    await expect(
+      store.updateRun('capabilityrun0001', (state) => {
+        verifyAndConsumeCommandCapability(
+          state,
+          'checkpoint',
+          issued.checkpointToken,
+        );
+        throw new Error('simulated transition crash');
+      }),
+    ).rejects.toThrow(/simulated/);
+
+    await expect(
+      consumeCommandCapability(
+        store,
+        'capabilityrun0001',
+        'checkpoint',
+        issued.checkpointToken,
+      ),
+    ).resolves.toBeUndefined();
   });
 
   it('renders launcher-owned arguments with safe quoting', () => {

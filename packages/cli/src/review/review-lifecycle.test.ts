@@ -245,6 +245,45 @@ describe('post-artifact review checkpoint', () => {
       ),
     ).rejects.toThrow(/current phase/);
   });
+
+  it('keeps the checkpoint capability live when preparation crashes', async () => {
+    const { store, tokens } = await setup('lifecyclerun0004');
+    await bindAcceptedHandle(store, 'lifecyclerun0004', 'handle');
+    let clockCalls = 0;
+    const crashingClock = () => {
+      if (clockCalls++ === 2) throw new Error('simulated transition crash');
+      return new Date(Date.UTC(2026, 0, 1, 0, 0, 0, clockCalls - 1));
+    };
+    await expect(
+      checkpointArtifactsLoaded(
+        {
+          runId: 'lifecyclerun0004',
+          checkpointToken: tokens.checkpointToken,
+        },
+        {
+          store,
+          telemetryAdapter: { observe: async () => observation },
+          telemetryAdapterId: 'host',
+          clock: crashingClock,
+        },
+      ),
+    ).rejects.toThrow(/simulated/);
+
+    await expect(
+      checkpointArtifactsLoaded(
+        {
+          runId: 'lifecyclerun0004',
+          checkpointToken: tokens.checkpointToken,
+        },
+        {
+          store,
+          telemetryAdapter: { observe: async () => observation },
+          telemetryAdapterId: 'host',
+          clock: clock(),
+        },
+      ),
+    ).resolves.toMatchObject({ runId: 'lifecyclerun0004' });
+  });
 });
 
 describe('receipt-bound evidence authorization', () => {

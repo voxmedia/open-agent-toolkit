@@ -75,6 +75,21 @@ const NOFOLLOW =
   'O_NOFOLLOW' in constants ? constants.O_NOFOLLOW : (0 as number);
 const EXCLUSIVE_WRITE =
   constants.O_CREAT | constants.O_EXCL | constants.O_WRONLY | NOFOLLOW;
+const LOCK_LEASE_MS = 30_000;
+
+function processIsAlive(pid: number): boolean {
+  try {
+    process.kill(pid, 0);
+    return true;
+  } catch (error) {
+    return (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      error.code === 'EPERM'
+    );
+  }
+}
 
 function exactKeys(
   value: unknown,
@@ -288,9 +303,18 @@ export class ValidationStore {
     await this.ensureRoot();
     const lockPath = join(this.root, '.store.lock');
     let handle;
+    const owner = {
+      schemaVersion: 1,
+      pid: process.pid,
+      nonce: randomUUID(),
+      acquiredAtMs: Date.now(),
+      leaseMs: LOCK_LEASE_MS,
+    };
     for (let attempt = 0; attempt < 100; attempt++) {
       try {
         handle = await open(lockPath, EXCLUSIVE_WRITE, 0o600);
+        await handle.writeFile(`${JSON.stringify(owner)}\n`, 'utf8');
+        await handle.sync();
         break;
       } catch (error) {
         if (
@@ -301,6 +325,42 @@ export class ValidationStore {
         ) {
           throw error;
         }
+        try {
+          const existing = JSON.parse(await readFile(lockPath, 'utf8')) as {
+            schemaVersion?: unknown;
+            pid?: unknown;
+            acquiredAtMs?: unknown;
+            leaseMs?: unknown;
+          };
+          const stale =
+            existing.schemaVersion !== 1 ||
+            !Number.isSafeInteger(existing.pid) ||
+            !Number.isSafeInteger(existing.acquiredAtMs) ||
+            !Number.isSafeInteger(existing.leaseMs) ||
+            Date.now() - (existing.acquiredAtMs as number) >
+              (existing.leaseMs as number) ||
+            !processIsAlive(existing.pid as number);
+          if (stale) {
+            await rm(lockPath, { force: true });
+            continue;
+          }
+        } catch (readError) {
+          if (
+            typeof readError === 'object' &&
+            readError !== null &&
+            'code' in readError &&
+            readError.code === 'ENOENT'
+          ) {
+            continue;
+          }
+          const info = await stat(lockPath);
+          if (Date.now() - info.mtimeMs > LOCK_LEASE_MS) {
+            await rm(lockPath, { force: true });
+            continue;
+          }
+          await delay(10);
+          continue;
+        }
         await delay(10);
       }
     }
@@ -309,7 +369,23 @@ export class ValidationStore {
       return await operation();
     } finally {
       await handle.close();
-      await rm(lockPath, { force: true });
+      try {
+        const current = JSON.parse(await readFile(lockPath, 'utf8')) as {
+          nonce?: unknown;
+        };
+        if (current.nonce === owner.nonce) {
+          await rm(lockPath, { force: true });
+        }
+      } catch (error) {
+        if (
+          typeof error !== 'object' ||
+          error === null ||
+          !('code' in error) ||
+          error.code !== 'ENOENT'
+        ) {
+          throw error;
+        }
+      }
     }
   }
 

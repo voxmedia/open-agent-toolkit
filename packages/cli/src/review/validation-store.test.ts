@@ -1,4 +1,5 @@
 import {
+  access,
   lstat,
   link,
   mkdir,
@@ -152,6 +153,36 @@ describe('validation state and gate correlation', () => {
       phase: 'artifacts_loaded',
     }));
     expect(updated.state.phase).toBe('artifacts_loaded');
+  });
+
+  it('recovers a lock whose owning process has died', async () => {
+    const parent = await mkdtemp(join(tmpdir(), 'oat-validation-'));
+    roots.push(parent);
+    const store = new ValidationStore(join(parent, 'store'));
+    await store.createRun({
+      preparation: preparation(),
+      artifactDraft: false,
+    });
+    await writeFile(
+      join(store.root, '.store.lock'),
+      JSON.stringify({
+        schemaVersion: 1,
+        pid: 2_147_483_647,
+        nonce: 'dead-owner',
+        acquiredAtMs: Date.now(),
+        leaseMs: 30_000,
+      }),
+      { mode: 0o600 },
+    );
+
+    await expect(
+      store.updateRun('abcdefghijklmnop', (state) => state),
+    ).resolves.toMatchObject({ runId: 'abcdefghijklmnop' });
+    await expect(access(join(store.root, '.store.lock'))).rejects.toMatchObject(
+      {
+        code: 'ENOENT',
+      },
+    );
   });
 
   it('rejects schema corruption, expiry, and changed draft identity', async () => {
