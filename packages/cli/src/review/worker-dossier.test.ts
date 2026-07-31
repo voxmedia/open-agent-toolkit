@@ -51,7 +51,12 @@ function plan(): ReviewPlanV1 {
       decision: 'delegate',
     },
     verificationBoundary: {
-      requiredClaims: [],
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
       positiveCoverage: {
         mode: 'sample',
         laneIds: ['lane-1'],

@@ -122,7 +122,12 @@ function plan(context: PreparedReviewContextV1): ReviewPlanV1 {
       decision: 'inline',
     },
     verificationBoundary: {
-      requiredClaims: [],
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
       positiveCoverage: {
         mode: 'sample',
         laneIds: ['primary'],

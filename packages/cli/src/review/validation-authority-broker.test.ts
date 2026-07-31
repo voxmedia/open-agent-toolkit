@@ -180,7 +180,12 @@ function plan(
       decision: 'inline',
     },
     verificationBoundary: {
-      requiredClaims: [{ kind: 'promoted-finding', mode: 'direct' }],
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
       positiveCoverage: {
         mode: 'sample',
         laneIds: ['lane-1'],
