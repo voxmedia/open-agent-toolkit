@@ -5,7 +5,61 @@ import { describe, expect, it, vi } from 'vitest';
 
 import { createReviewValidatePlanCommand } from './validate-plan';
 
-const plan = { schemaVersion: 1, runId: 'run-1' } as ReviewPlanV1;
+const plan = {
+  schemaVersion: 1,
+  runId: 'run-1',
+  contextDigest: 'context-digest',
+  strategy: 'selective-inline',
+  lanes: [
+    {
+      id: 'lane-1',
+      paths: ['src/example.ts'],
+      primaryObligationIds: ['p02-t01'],
+      seamObligationIds: [],
+      risk: 'low',
+      evidenceClass: 'semantic',
+      strategy: 'path-diff',
+      checks: ['inspect'],
+      delegated: false,
+      independenceRationale: null,
+      substantial: false,
+      substantialityRationale: null,
+      deadlineMs: null,
+      dossier: { contractVersion: 1, partialAllowed: true },
+      replay: 'direct-verify',
+      primaryContingency: { allowed: false, paths: [], obligationIds: [] },
+    },
+  ],
+  classifications: [],
+  crossLaneInvariants: [],
+  delegationEconomics: {
+    independentLaneIds: [],
+    nonReplayedLaneIds: [],
+    expectedSavings: [],
+    coordinationCosts: [],
+    decisionRationale: 'inline',
+    decision: 'inline',
+  },
+  verificationBoundary: {
+    requiredClaims: [{ kind: 'promoted-finding', mode: 'direct' }],
+    positiveCoverage: {
+      mode: 'sample',
+      laneIds: ['lane-1'],
+      rationale: 'sample',
+    },
+    deterministicAcceptance: {
+      mode: 'provenance',
+      requiredFields: ['command', 'cwd', 'scopeRefs', 'provenance', 'result'],
+    },
+  },
+  wholeDiff: {
+    allowed: false,
+    estimatedTokens: 30,
+    evidenceBudgetTokens: null,
+    reason: 'No sealed context budget.',
+  },
+  timeAllocation: null,
+} satisfies ReviewPlanV1;
 
 describe('createReviewValidatePlanCommand', () => {
   it('returns a receipt for a valid plan', async () => {
@@ -80,7 +134,7 @@ describe('createReviewValidatePlanCommand', () => {
     });
   });
 
-  it('requires stdin mode and rejects a non-plan JSON document', async () => {
+  it('requires stdin mode and rejects malformed ReviewPlanV1 documents', async () => {
     const missingStdin = createReviewValidatePlanCommand({
       stdin: Readable.from([JSON.stringify(plan)]),
       write: vi.fn(),
@@ -101,31 +155,43 @@ describe('createReviewValidatePlanCommand', () => {
       ]),
     ).rejects.toMatchObject({ code: 'commander.missingMandatoryOptionValue' });
 
-    const write = vi.fn();
-    const validate = vi.fn();
-    const invalidPlan = createReviewValidatePlanCommand({
-      stdin: Readable.from(['null']),
-      write,
-      setExitCode: vi.fn(),
-      validate,
-      lifecycle: {} as never,
-    });
-    await invalidPlan.parseAsync([
-      'node',
-      'oat',
-      'validate-plan',
-      '--run-id',
-      'run-1',
-      '--command-token',
-      'plan-token',
-      '--stdin',
-      '--json',
-    ]);
+    for (const malformed of [
+      null,
+      { ...plan, unknown: true },
+      {
+        ...plan,
+        verificationBoundary: {
+          ...plan.verificationBoundary,
+          requiredClaims: ['not-a-claim'],
+        },
+      },
+    ]) {
+      const write = vi.fn();
+      const validate = vi.fn();
+      const invalidPlan = createReviewValidatePlanCommand({
+        stdin: Readable.from([JSON.stringify(malformed)]),
+        write,
+        setExitCode: vi.fn(),
+        validate,
+        lifecycle: {} as never,
+      });
+      await invalidPlan.parseAsync([
+        'node',
+        'oat',
+        'validate-plan',
+        '--run-id',
+        'run-1',
+        '--command-token',
+        'plan-token',
+        '--stdin',
+        '--json',
+      ]);
 
-    expect(validate).not.toHaveBeenCalled();
-    expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
-      ok: false,
-      error: { category: 'input', code: 'invalid-validate-plan-input' },
-    });
+      expect(validate).not.toHaveBeenCalled();
+      expect(JSON.parse(write.mock.calls[0]?.[0] as string)).toMatchObject({
+        ok: false,
+        error: { category: 'input', code: 'review-plan-schema-invalid' },
+      });
+    }
   });
 });

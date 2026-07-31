@@ -4,6 +4,7 @@ import {
   type ReviewLifecycleDependencies,
   validateAndReceiptPlan,
 } from '@review/review-lifecycle';
+import { parseReviewPlanV1, ReviewSchemaError } from '@review/schemas';
 import type { ReviewPlanV1 } from '@review/types';
 import { ValidationStore } from '@review/validation-store';
 import { Command } from 'commander';
@@ -36,12 +37,15 @@ const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
   },
 };
 
-function assertReviewPlan(value: unknown): asserts value is ReviewPlanV1 {
-  if (typeof value !== 'object' || value === null) {
+function parseReviewPlan(value: unknown): ReviewPlanV1 {
+  try {
+    return parseReviewPlanV1(value);
+  } catch (error) {
+    if (!(error instanceof ReviewSchemaError)) throw error;
     throw new ReviewJsonCommandError({
       category: 'input',
-      code: 'invalid-validate-plan-input',
-      message: 'validate-plan stdin must be a ReviewPlanV1 JSON object',
+      code: 'review-plan-schema-invalid',
+      message: 'validate-plan stdin does not match ReviewPlanV1',
     });
   }
 }
@@ -60,8 +64,9 @@ export function createReviewValidatePlanCommand(
       const exitCode = await runReviewJsonCommand({
         write: dependencies.write,
         operation: async () => {
-          const plan = await readBoundedJsonStdin(dependencies.stdin);
-          assertReviewPlan(plan);
+          const plan = parseReviewPlan(
+            await readBoundedJsonStdin(dependencies.stdin),
+          );
           const result = await dependencies.validate(
             {
               runId: options.runId,

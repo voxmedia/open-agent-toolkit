@@ -16,6 +16,7 @@ import {
   checkpointArtifactsLoaded,
   validateAndReceiptPlan,
 } from './review-lifecycle';
+import { parseReviewPlanV1 } from './schemas';
 import type { PreparedReviewContextV1, ReviewPlanV1 } from './types';
 import { ValidationStore } from './validation-store';
 
@@ -75,7 +76,12 @@ function reviewPlan(context: PreparedReviewContextV1): ReviewPlanV1 {
       decision: 'inline',
     },
     verificationBoundary: {
-      requiredClaims: ['p02-t01 is implemented'],
+      requiredClaims: [
+        { kind: 'promoted-finding', mode: 'direct' },
+        { kind: 'consequential-absence', mode: 'direct' },
+        { kind: 'worker-conflict', mode: 'direct' },
+        { kind: 'cross-lane-gap', mode: 'direct' },
+      ],
       positiveCoverage: {
         mode: 'sample',
         laneIds: ['primary'],
@@ -170,7 +176,7 @@ describe('review validation lifecycle integration', () => {
           prepared.commands.validatePlan,
           '--command-token',
         ),
-        plan: reviewPlan(context),
+        plan: parseReviewPlanV1(reviewPlan(context)),
       },
       { store, clock },
     );
