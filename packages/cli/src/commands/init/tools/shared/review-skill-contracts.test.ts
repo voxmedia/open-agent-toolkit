@@ -183,6 +183,23 @@ describe('review skill contracts', () => {
     }
   });
 
+  it('keeps the Tier 1 final artifact path launcher-private', () => {
+    const content = readRepoFile(
+      '.agents/skills/oat-project-review-provide/SKILL.md',
+    );
+    const tier1 =
+      content.match(
+        /\*\*Step 6b: Tier 1[\s\S]*?(?=\*\*Step 6c: Tier 2)/,
+      )?.[0] ?? '';
+    expect(tier1).toContain('Pass only `artifactDraftPath`');
+    expect(tier1).toContain(
+      'Do not include the pre-computed final publication path',
+    );
+    expect(tier1).not.toContain(
+      'Include the pre-computed artifact path for the subagent to write to',
+    );
+  });
+
   it('keeps remote structured tiers behind terminal validation', () => {
     const content = readRepoFile(
       '.agents/skills/oat-project-review-provide-remote/SKILL.md',

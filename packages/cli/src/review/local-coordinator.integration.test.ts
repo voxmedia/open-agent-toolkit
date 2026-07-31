@@ -58,6 +58,17 @@ describe('local review coordinator integration contract', () => {
     }
   });
 
+  it('passes only the private artifact draft path to Tier 1', () => {
+    const tier1 = section('**Step 6b: Tier 1', '**Step 6c: Tier 2');
+    expect(tier1).toContain('Pass only `artifactDraftPath`');
+    expect(tier1).toContain(
+      'Do not include the pre-computed final publication path',
+    );
+    expect(tier1).not.toContain(
+      'Include the pre-computed artifact path for the subagent to write to',
+    );
+  });
+
   it('keeps blocked output non-actionable across every local sink side effect', () => {
     for (const rail of [
       section('**Step 6b: Tier 1', '**Step 6c: Tier 2'),
