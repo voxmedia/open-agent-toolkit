@@ -542,6 +542,7 @@ describe('CLI command integration', () => {
       'validate-plan',
       'begin-evidence',
       'validate-output',
+      'publish-output',
     ]);
   });
 

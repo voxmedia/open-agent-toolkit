@@ -641,6 +641,8 @@ describe('help output snapshots', () => {
         begin-evidence [options]        Begin receipt-authorized review evidence
         validate-output [options]       Validate complete reviewer output from JSON
                                         stdin
+        publish-output [options]        Publish the accepted review artifact snapshot
+                                        once
         help [command]                  display help for command
       "
     `);
@@ -671,6 +673,20 @@ describe('help output snapshots', () => {
         --cwd <path>          Override working directory
       "
     `);
+  });
+
+  it('review publish-output --help pins launcher-owned publication arguments', () => {
+    const program = createRegisteredProgram();
+    const help = getCommandByPath(program, [
+      'review',
+      'publish-output',
+    ]).helpInformation();
+    expect(help).toContain('Usage: oat review publish-output [options]');
+    expect(help).toContain('--run-id <id>         Validation run identifier');
+    expect(help).toContain(
+      '--destination <path>  Launcher-owned destination path',
+    );
+    expect(help).toContain('--json                Emit one JSON envelope');
   });
 
   it('doctor --help matches snapshot', () => {

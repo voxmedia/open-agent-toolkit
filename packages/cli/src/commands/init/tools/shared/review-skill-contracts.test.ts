@@ -165,7 +165,7 @@ describe('review skill contracts', () => {
         'begin-evidence',
         'validate-output',
         'same-handle accounting repair',
-        'publishAcceptedArtifact',
+        'publish-output',
         'bookkeeping',
       ];
       let prior = -1;

@@ -88,6 +88,7 @@ describe('ValidationStore.createRun', () => {
       phase: 'prepared',
       draft: { device: draft.dev, inode: draft.ino },
       output: { immutableSubstanceDigest: null, attempts: 0 },
+      acceptedSnapshot: null,
     });
   });
 

@@ -30,11 +30,15 @@ describe('local review coordinator integration contract', () => {
   ])('%s validates before publishing or bookkeeping', (_, start, end) => {
     const rail = section(start, end).replace(/\s+/g, ' ');
     const validation = rail.indexOf('validate-output');
-    const publication = rail.indexOf('publishAcceptedArtifact');
+    const publication = rail.indexOf('publish-output');
     const bookkeeping = rail.indexOf('bookkeeping');
     expect(validation).toBeGreaterThanOrEqual(0);
     expect(publication).toBeGreaterThan(validation);
     expect(bookkeeping).toBeGreaterThan(publication);
+    expect(rail).toContain(
+      'oat review publish-output --run-id <id> --destination <final-path> --json',
+    );
+    expect(rail).toContain('never reads or re-snapshots the reviewer draft');
   });
 
   it('retains accepted continuations and forbids fallback after acceptance', () => {

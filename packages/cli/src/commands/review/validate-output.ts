@@ -1,7 +1,10 @@
+import { randomBytes } from 'node:crypto';
+
 import { extractArtifactFindingProjection } from '@review/artifact-accounting';
 import {
   snapshotArtifactDraft,
   type ArtifactDraft,
+  type ArtifactSnapshot,
 } from '@review/artifact-staging';
 import {
   immutableReviewSubstanceDigest,
@@ -74,6 +77,7 @@ export async function validateStoredReviewOutput(
 
   let artifactFindingProjection: ArtifactFindingProjectionV1 | undefined;
   let artifactBytesBase64: string | undefined;
+  let artifactSnapshot: ArtifactSnapshot | undefined;
   let artifactError: OutputValidationResult | null = null;
   if (
     input.terminal.status === 'complete' &&
@@ -107,6 +111,7 @@ export async function validateStoredReviewOutput(
           Buffer.from(snapshot.bytesBase64, 'base64'),
         );
         artifactBytesBase64 = snapshot.bytesBase64;
+        artifactSnapshot = snapshot;
       } catch {
         artifactError = {
           valid: false,
@@ -189,7 +194,21 @@ export async function validateStoredReviewOutput(
         input.terminal,
       );
     if (result.valid) {
-      current.phase = 'accepted';
+      current.phase =
+        input.terminal.status === 'complete' ? 'accepted' : 'terminal';
+      if (
+        input.terminal.status === 'complete' &&
+        artifactSnapshot !== undefined
+      ) {
+        current.acceptedSnapshot = {
+          id: randomBytes(32).toString('hex'),
+          bytesBase64: artifactSnapshot.bytesBase64,
+          digest: artifactSnapshot.digest,
+          accounting: structuredClone(artifactSnapshot.accounting),
+          publication: 'available',
+        };
+        current.draft = null;
+      }
     } else {
       const repairable =
         current.output.attempts < 3 &&

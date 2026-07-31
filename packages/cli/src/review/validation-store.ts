@@ -17,6 +17,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 
+import { extractReviewAccounting } from './artifact-accounting';
 import { canonicalizeJson, hashCanonicalJson } from './canonical-json';
 import { projectValidatedAssignments } from './plan-validator';
 import {
@@ -66,6 +67,13 @@ export interface ValidationRunState {
     immutableSubstanceDigest: string | null;
     attempts: number;
   };
+  acceptedSnapshot: {
+    id: string;
+    bytesBase64: string;
+    digest: string;
+    accounting: import('./types').ReviewAccountingV1;
+    publication: 'available' | 'consuming' | 'consumed';
+  } | null;
 }
 
 export interface StoredValidationRun {
@@ -133,6 +141,7 @@ function parseValidationRunState(
       'receipt',
       'planValidationAttempts',
       'output',
+      'acceptedSnapshot',
     ],
     'validation state',
   );
@@ -312,6 +321,52 @@ function parseValidationRunState(
   ) {
     throw new Error('validation output phase is incoherent');
   }
+  let acceptedSnapshot: ValidationRunState['acceptedSnapshot'] = null;
+  if (state.acceptedSnapshot !== null) {
+    const snapshot = exactKeys(
+      state.acceptedSnapshot,
+      ['id', 'bytesBase64', 'digest', 'accounting', 'publication'],
+      'accepted artifact snapshot',
+    );
+    if (
+      typeof snapshot.id !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(snapshot.id) ||
+      typeof snapshot.bytesBase64 !== 'string' ||
+      typeof snapshot.digest !== 'string' ||
+      !/^[0-9a-f]{64}$/.test(snapshot.digest) ||
+      !['available', 'consuming', 'consumed'].includes(
+        snapshot.publication as string,
+      )
+    ) {
+      throw new Error('accepted artifact snapshot schema is invalid');
+    }
+    const bytes = Buffer.from(snapshot.bytesBase64, 'base64');
+    if (
+      bytes.toString('base64') !== snapshot.bytesBase64 ||
+      createHash('sha256').update(bytes).digest('hex') !== snapshot.digest
+    ) {
+      throw new Error('accepted artifact snapshot digest is invalid');
+    }
+    const accounting = extractReviewAccounting(bytes);
+    if (
+      canonicalizeJson(accounting) !== canonicalizeJson(snapshot.accounting)
+    ) {
+      throw new Error('accepted artifact snapshot accounting is invalid');
+    }
+    acceptedSnapshot = {
+      id: snapshot.id,
+      bytesBase64: snapshot.bytesBase64,
+      digest: snapshot.digest,
+      accounting,
+      publication: snapshot.publication as
+        | 'available'
+        | 'consuming'
+        | 'consumed',
+    };
+  }
+  if (acceptedSnapshot !== null && phase !== 'accepted') {
+    throw new Error('accepted artifact snapshot phase is incoherent');
+  }
   return {
     schemaVersion: 1,
     preparation,
@@ -326,6 +381,7 @@ function parseValidationRunState(
     receipt,
     planValidationAttempts: state.planValidationAttempts as number,
     output: { immutableSubstanceDigest, attempts },
+    acceptedSnapshot,
   };
 }
 
@@ -588,6 +644,7 @@ export class ValidationStore {
         receipt: null,
         planValidationAttempts: 0,
         output: { immutableSubstanceDigest: null, attempts: 0 },
+        acceptedSnapshot: null,
       };
       const statePath = join(runDirectory, 'state.json');
       await writeExclusive(statePath, this.#authority.seal(state));

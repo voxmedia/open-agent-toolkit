@@ -118,6 +118,13 @@ function validationState() {
       classifications: [],
     },
     output: { immutableSubstanceDigest: null, attempts: 0 },
+    acceptedSnapshot: null as {
+      id: string;
+      bytesBase64: string;
+      digest: string;
+      accounting: ReviewAccountingV1;
+      publication: 'available' | 'consuming' | 'consumed';
+    } | null,
   };
 }
 
@@ -263,6 +270,18 @@ describe('validate-output command', () => {
         store as never,
       ),
     ).toMatchObject({ valid: true });
+    expect(store.state).toMatchObject({
+      phase: 'accepted',
+      draft: null,
+      acceptedSnapshot: {
+        id: expect.stringMatching(/^[0-9a-f]{64}$/),
+        digest: expect.stringMatching(/^[0-9a-f]{64}$/),
+        publication: 'available',
+      },
+    });
+    const acceptedBytes = store.state.acceptedSnapshot?.bytesBase64;
+    await writeFile(draft.path, '# changed after acceptance');
+    expect(store.state.acceptedSnapshot?.bytesBase64).toBe(acceptedBytes);
 
     value.reviewAccounting.receipt = 'different';
     const mismatchStore = fakeStore({ ...validationState(), draft });

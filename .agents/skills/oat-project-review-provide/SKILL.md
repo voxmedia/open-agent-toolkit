@@ -822,9 +822,11 @@ After the subagent completes:
   at most two same-handle accounting repair turns through the retained handle.
   Substance mutation or exhausted repair yields
   `review_complete_accounting_invalid`.
-- Only an accepted complete terminal may call `publishAcceptedArtifact` with
-  the immutable validated snapshot and final Step 7 path. After publication,
-  continue to Step 8.5 and then the Step 9/9.5 bookkeeping.
+- Only an accepted complete artifact terminal may invoke launcher-owned
+  `oat review publish-output --run-id <id> --destination <final-path> --json`.
+  The command consumes the private accepted snapshot once and never reads or
+  re-snapshots the reviewer draft. After publication, continue to Step 8.5 and
+  then the Step 9/9.5 bookkeeping.
 - Blocked or accounting-invalid output remains non-actionable. No discoverable
   artifact, Reviews row, project log, or bookkeeping commit may be created.
   Delete the private draft and stop. Never infer a pass from absent findings.
@@ -912,9 +914,12 @@ Use this exact contract:
     turns in this accepted inline continuation. Preserve the immutable substance
     digest and never launch a replacement after accepted timeout, blocked,
     malformed, or accounting-invalid output.
-11. **Acceptance side effects** — Only accepted complete output may invoke
-    `publishAcceptedArtifact` for the final Step 7 path and then continue with
-    artifact orchestration validation and bookkeeping. Blocked or
+11. **Acceptance side effects** — Only accepted complete artifact output may
+    invoke launcher-owned
+    `oat review publish-output --run-id <id> --destination <final-path> --json`
+    for the final Step 7 path and then continue with artifact orchestration
+    validation and bookkeeping. The command consumes the exact private accepted
+    snapshot once and never reads or re-snapshots the reviewer draft. Blocked or
     accounting-invalid output remains non-actionable. No discoverable artifact,
     Reviews row, project log, or bookkeeping commit may be created; delete the
     private draft and stop.
