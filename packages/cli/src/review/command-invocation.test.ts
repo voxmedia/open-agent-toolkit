@@ -33,4 +33,24 @@ describe('portable command invocation', () => {
       }),
     ).rejects.toThrow(/stdin is required/);
   });
+
+  it('never exposes validation signing authority to reviewer children', async () => {
+    const result = await executeCommandInvocation(
+      {
+        executable: process.execPath,
+        argv: [
+          '-e',
+          "process.stdout.write(process.env.OAT_REVIEW_AUTHORITY_KEY ?? 'absent')",
+        ],
+        stdin: 'none',
+      },
+      {
+        environment: {
+          ...process.env,
+          OAT_REVIEW_AUTHORITY_KEY: 'synthetic-secret',
+        },
+      },
+    );
+    expect(result).toMatchObject({ exitCode: 0, stdout: 'absent' });
+  });
 });

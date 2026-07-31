@@ -91,6 +91,32 @@ export function launcherValidationStoreAuthority(
   return new ValidationStoreAuthority(Buffer.from(encoded, 'base64url'));
 }
 
+export function consumeLauncherValidationAuthorityKey(
+  environment: NodeJS.ProcessEnv = process.env,
+): Buffer {
+  const encoded = environment[AUTHORITY_KEY_ENV];
+  if (!encoded) {
+    throw new Error(
+      `${AUTHORITY_KEY_ENV} is required for review state authority`,
+    );
+  }
+  delete environment[AUTHORITY_KEY_ENV];
+  const key = Buffer.from(encoded, 'base64url');
+  if (key.byteLength < 32) {
+    key.fill(0);
+    throw new Error('validation authority key must contain at least 32 bytes');
+  }
+  return key;
+}
+
+export function reviewerSafeEnvironment(
+  environment: NodeJS.ProcessEnv = process.env,
+): NodeJS.ProcessEnv {
+  const safe = { ...environment };
+  delete safe[AUTHORITY_KEY_ENV];
+  return safe;
+}
+
 export function launcherValidationStoreRoot(
   input: {
     repoRoot?: string;

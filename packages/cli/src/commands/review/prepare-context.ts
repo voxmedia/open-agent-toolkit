@@ -1,15 +1,10 @@
-import { DefaultGitChangeMapAdapter } from '@review/change-map';
 import {
   type PrepareReviewContextDependencies,
   type PrepareReviewContextInput,
   prepareReviewContext,
 } from '@review/prepare-context';
 import type { PrepareReviewContextResultV1 } from '@review/types';
-import { ValidationStore } from '@review/validation-store';
-import {
-  launcherValidationStoreAuthority,
-  launcherValidationStoreRoot,
-} from '@review/validation-store-authority';
+import { launchValidationAuthorityBroker } from '@review/validation-authority-broker';
 import { Command } from 'commander';
 
 import {
@@ -31,6 +26,7 @@ interface PrepareContextCommandDependencies {
     launcherInvocation: { executable: string; argvPrefix: string[] },
   ) => PrepareReviewContextDependencies;
   launcherInvocation: { executable: string; argvPrefix: string[] };
+  brokerPrepare: typeof launchValidationAuthorityBroker;
 }
 
 const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
@@ -44,17 +40,10 @@ const DEFAULT_DEPENDENCIES: PrepareContextCommandDependencies = {
     executable: process.execPath,
     argvPrefix: process.argv[1] ? [process.argv[1]] : [],
   },
-  createDependencies: (input, launcherInvocation) => ({
-    store: new ValidationStore(
-      launcherValidationStoreRoot({ repoRoot: input.repoRoot }),
-      launcherValidationStoreAuthority(),
-    ),
-    git: new DefaultGitChangeMapAdapter(),
-    telemetryAdapter: null,
-    telemetryAdapterId: null,
-    commandExecutable: launcherInvocation.executable,
-    commandArgvPrefix: launcherInvocation.argvPrefix,
-  }),
+  createDependencies: (_input, _launcherInvocation) => {
+    throw new Error('direct preparation dependencies must be injected');
+  },
+  brokerPrepare: launchValidationAuthorityBroker,
 };
 
 function assertPrepareInput(
@@ -114,6 +103,7 @@ export function createReviewPrepareContextCommand(
   overrides: Partial<PrepareContextCommandDependencies> = {},
 ): Command {
   const dependencies = { ...DEFAULT_DEPENDENCIES, ...overrides };
+  const useBroker = overrides.prepare === undefined;
   return new Command('prepare-context')
     .description('Prepare authoritative review context from JSON stdin')
     .action(async () => {
@@ -123,13 +113,18 @@ export function createReviewPrepareContextCommand(
           const input = await readBoundedJsonStdin(dependencies.stdin);
           assertPrepareInput(input);
           return projectPrepareResult(
-            await dependencies.prepare(
-              input,
-              dependencies.createDependencies(
-                input,
-                dependencies.launcherInvocation,
-              ),
-            ),
+            useBroker
+              ? await dependencies.brokerPrepare({
+                  preparationInput: input,
+                  launcherInvocation: dependencies.launcherInvocation,
+                })
+              : await dependencies.prepare(
+                  input,
+                  dependencies.createDependencies(
+                    input,
+                    dependencies.launcherInvocation,
+                  ),
+                ),
           );
         },
       });

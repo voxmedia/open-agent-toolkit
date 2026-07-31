@@ -2,11 +2,7 @@ import {
   beginEvidence,
   type ReviewLifecycleDependencies,
 } from '@review/review-lifecycle';
-import { ValidationStore } from '@review/validation-store';
-import {
-  launcherValidationStoreAuthority,
-  launcherValidationStoreRoot,
-} from '@review/validation-store-authority';
+import { requestValidationAuthorityBroker } from '@review/validation-authority-broker';
 import { Command } from 'commander';
 
 import { runReviewJsonCommand } from './review-json';
@@ -25,12 +21,9 @@ const DEFAULT_DEPENDENCIES: BeginEvidenceCommandDependencies = {
     process.exitCode = code;
   },
   begin: beginEvidence,
-  createLifecycle: () => ({
-    store: new ValidationStore(
-      launcherValidationStoreRoot(),
-      launcherValidationStoreAuthority(),
-    ),
-  }),
+  createLifecycle: () => {
+    throw new Error('validation authority broker is required');
+  },
 };
 
 export function createReviewBeginEvidenceCommand(
@@ -41,16 +34,39 @@ export function createReviewBeginEvidenceCommand(
     .description('Begin receipt-authorized review evidence')
     .requiredOption('--run-id <id>', 'Validation run identifier')
     .requiredOption('--receipt <receipt>', 'Validated review plan receipt')
-    .requiredOption('--json', 'Emit one JSON envelope')
-    .action(async (options: { runId: string; receipt: string }) => {
-      const exitCode = await runReviewJsonCommand({
-        write: dependencies.write,
-        operation: () =>
-          dependencies.begin(
-            { runId: options.runId, receipt: options.receipt },
-            dependencies.lifecycle ?? dependencies.createLifecycle(),
-          ),
-      });
-      dependencies.setExitCode(exitCode);
-    });
+    .option('--json', 'Emit one JSON envelope')
+    .option('--broker-socket <path>', 'Launcher-owned authority broker socket')
+    .action(
+      async (
+        options: {
+          runId: string;
+          receipt: string;
+          brokerSocket?: string;
+        },
+        command,
+      ) => {
+        if (!command.optsWithGlobals().json) {
+          command.error("error: required option '--json' not specified");
+        }
+        const exitCode = await runReviewJsonCommand({
+          write: dependencies.write,
+          operation: () => {
+            const lifecycleInput = {
+              runId: options.runId,
+              receipt: options.receipt,
+            };
+            return options.brokerSocket
+              ? requestValidationAuthorityBroker(options.brokerSocket, {
+                  action: 'begin',
+                  ...lifecycleInput,
+                })
+              : dependencies.begin(
+                  lifecycleInput,
+                  dependencies.lifecycle ?? dependencies.createLifecycle(),
+                );
+          },
+        });
+        dependencies.setExitCode(exitCode);
+      },
+    );
 }

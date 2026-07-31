@@ -1,6 +1,7 @@
 import { spawn } from 'node:child_process';
 
 import type { ReviewCommandInvocationV1 } from './types';
+import { reviewerSafeEnvironment } from './validation-store-authority';
 
 export interface CommandInvocationResult {
   exitCode: number | null;
@@ -25,7 +26,7 @@ export async function executeCommandInvocation(
   }
   const child = spawn(invocation.executable, invocation.argv, {
     cwd: options.cwd,
-    env: options.environment,
+    env: reviewerSafeEnvironment(options.environment),
     shell: false,
     stdio: ['pipe', 'pipe', 'pipe'],
   });

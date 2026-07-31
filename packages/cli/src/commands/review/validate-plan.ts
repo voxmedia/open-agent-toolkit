@@ -4,11 +4,7 @@ import {
 } from '@review/review-lifecycle';
 import { parseReviewPlanV1, ReviewSchemaError } from '@review/schemas';
 import type { ReviewPlanV1 } from '@review/types';
-import { ValidationStore } from '@review/validation-store';
-import {
-  launcherValidationStoreAuthority,
-  launcherValidationStoreRoot,
-} from '@review/validation-store-authority';
+import { requestValidationAuthorityBroker } from '@review/validation-authority-broker';
 import { Command } from 'commander';
 
 import {
@@ -33,12 +29,9 @@ const DEFAULT_DEPENDENCIES: ValidatePlanCommandDependencies = {
     process.exitCode = code;
   },
   validate: validateAndReceiptPlan,
-  createLifecycle: () => ({
-    store: new ValidationStore(
-      launcherValidationStoreRoot(),
-      launcherValidationStoreAuthority(),
-    ),
-  }),
+  createLifecycle: () => {
+    throw new Error('validation authority broker is required');
+  },
 };
 
 function parseReviewPlan(value: unknown): ReviewPlanV1 {
@@ -63,34 +56,55 @@ export function createReviewValidatePlanCommand(
     .requiredOption('--run-id <id>', 'Validation run identifier')
     .requiredOption('--command-token <token>', 'Plan validation capability')
     .requiredOption('--stdin', 'Read the complete review plan from stdin')
-    .requiredOption('--json', 'Emit one JSON envelope')
-    .action(async (options: { runId: string; commandToken: string }) => {
-      const exitCode = await runReviewJsonCommand({
-        write: dependencies.write,
-        operation: async () => {
-          const plan = parseReviewPlan(
-            await readBoundedJsonStdin(dependencies.stdin),
-          );
-          const result = await dependencies.validate(
-            {
+    .option('--json', 'Emit one JSON envelope')
+    .option('--broker-socket <path>', 'Launcher-owned authority broker socket')
+    .action(
+      async (
+        options: {
+          runId: string;
+          commandToken: string;
+          brokerSocket?: string;
+        },
+        command,
+      ) => {
+        if (!command.optsWithGlobals().json) {
+          command.error("error: required option '--json' not specified");
+        }
+        const exitCode = await runReviewJsonCommand({
+          write: dependencies.write,
+          operation: async () => {
+            const plan = parseReviewPlan(
+              await readBoundedJsonStdin(dependencies.stdin),
+            );
+            const lifecycleInput = {
               runId: options.runId,
               commandToken: options.commandToken,
               plan,
-            },
-            dependencies.lifecycle ?? dependencies.createLifecycle(),
-          );
-          if (!result.valid) {
-            throw new ReviewJsonCommandError({
-              category: 'validation',
-              code: 'invalid-review-plan',
-              message: 'review plan failed validation',
-              details: { errorCount: result.errors.length },
-              result,
-            });
-          }
-          return result;
-        },
-      });
-      dependencies.setExitCode(exitCode);
-    });
+            };
+            const result = options.brokerSocket
+              ? await requestValidationAuthorityBroker<
+                  Awaited<ReturnType<typeof validateAndReceiptPlan>>
+                >(options.brokerSocket, {
+                  action: 'validate',
+                  ...lifecycleInput,
+                })
+              : await dependencies.validate(
+                  lifecycleInput,
+                  dependencies.lifecycle ?? dependencies.createLifecycle(),
+                );
+            if (!result.valid) {
+              throw new ReviewJsonCommandError({
+                category: 'validation',
+                code: 'invalid-review-plan',
+                message: 'review plan failed validation',
+                details: { errorCount: result.errors.length },
+                result,
+              });
+            }
+            return result;
+          },
+        });
+        dependencies.setExitCode(exitCode);
+      },
+    );
 }

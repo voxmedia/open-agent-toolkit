@@ -52,6 +52,35 @@ const prepared = {
 } as unknown as PrepareReviewContextResultV1;
 
 describe('createReviewPrepareContextCommand', () => {
+  it('uses the launcher broker by default without constructing local authority', async () => {
+    const brokerPrepare = vi.fn(async () => prepared);
+    const createDependencies = vi.fn();
+    const write = vi.fn();
+    const command = createReviewPrepareContextCommand({
+      stdin: Readable.from([JSON.stringify(baseInput)]),
+      write,
+      setExitCode: vi.fn(),
+      brokerPrepare,
+      createDependencies,
+      launcherInvocation: {
+        executable: process.execPath,
+        argvPrefix: ['/branch/oat.js'],
+      },
+    });
+
+    await command.parseAsync(['node', 'oat', 'prepare-context']);
+
+    expect(brokerPrepare).toHaveBeenCalledWith({
+      preparationInput: baseInput,
+      launcherInvocation: {
+        executable: process.execPath,
+        argvPrefix: ['/branch/oat.js'],
+      },
+    });
+    expect(createDependencies).not.toHaveBeenCalled();
+    expect(JSON.parse(write.mock.calls[0]?.[0] as string).ok).toBe(true);
+  });
+
   it('pairs budgets and emits metadata without numeric telemetry', async () => {
     const write = vi.fn();
     const prepare = vi.fn(async () => prepared);

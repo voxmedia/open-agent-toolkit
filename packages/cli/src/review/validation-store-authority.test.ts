@@ -3,8 +3,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 
 import {
+  consumeLauncherValidationAuthorityKey,
   launcherValidationStoreAuthority,
   launcherValidationStoreRoot,
+  reviewerSafeEnvironment,
   ValidationStoreAuthority,
 } from './validation-store-authority';
 
@@ -46,5 +48,21 @@ describe('ValidationStoreAuthority', () => {
         },
       }),
     ).toThrow(/outside/);
+  });
+
+  it('consumes launcher authority and removes it from reviewer environments', () => {
+    const environment = {
+      OAT_REVIEW_AUTHORITY_KEY: Buffer.alloc(32, 5).toString('base64url'),
+      SAFE: 'visible',
+    };
+    const key = consumeLauncherValidationAuthorityKey(environment);
+    expect(key).toEqual(Buffer.alloc(32, 5));
+    expect(environment).not.toHaveProperty('OAT_REVIEW_AUTHORITY_KEY');
+    expect(
+      reviewerSafeEnvironment({
+        OAT_REVIEW_AUTHORITY_KEY: 'must-not-leak',
+        SAFE: 'visible',
+      }),
+    ).toEqual({ SAFE: 'visible' });
   });
 });

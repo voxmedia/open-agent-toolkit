@@ -536,6 +536,7 @@ describe('CLI command integration', () => {
 
     expect(review?.commands.map((command) => command.name())).toEqual([
       'latest',
+      'authority-broker',
       'prepare-context',
       'checkpoint-artifacts',
       'validate-plan',
