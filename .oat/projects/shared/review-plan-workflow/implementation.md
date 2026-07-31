@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p03-t09
+oat_current_task_id: null
 oat_generated: false
 ---
 
@@ -24,17 +24,17 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase   | Status      | Tasks | Completed |
-| ------- | ----------- | ----- | --------- |
-| Phase 1 | completed   | 13    | 13/13     |
-| Phase 2 | completed   | 55    | 55/55     |
-| Phase 3 | in_progress | 10    | 8/10      |
-| Phase 4 | pending     | 8     | 0/8       |
-| Phase 5 | pending     | 7     | 0/7       |
-| Phase 6 | pending     | 7     | 0/7       |
-| Phase 7 | pending     | 6     | 0/6       |
+| Phase   | Status    | Tasks | Completed |
+| ------- | --------- | ----- | --------- |
+| Phase 1 | completed | 13    | 13/13     |
+| Phase 2 | completed | 55    | 55/55     |
+| Phase 3 | in_review | 10    | 10/10     |
+| Phase 4 | pending   | 8     | 0/8       |
+| Phase 5 | pending   | 7     | 0/7       |
+| Phase 6 | pending   | 7     | 0/7       |
+| Phase 7 | pending   | 6     | 0/6       |
 
-**Total:** 76/106 tasks completed
+**Total:** 78/106 tasks completed
 
 ## Execution Configuration
 
@@ -699,13 +699,18 @@ the mandatory direct-claim set without weakening production validation.
 
 ### Task p03-t09: (re-review C1) Require provenance evidence in accepted dossiers
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `c165ac67`
+**Outcome:** Bound complete accepted-provenance dossiers to non-empty,
+strategy-appropriate command or inventory evidence.
 
 ### Task p03-t10: (re-review C2) Produce operation traces from validated execution
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** `9d395231`
+**Outcome:** Bound operation metrics to traces emitted by the validated
+production strategy executor and rejected fixture-authored or evidence-empty
+traces.
 
 ### Phase Verification
 
@@ -720,6 +725,10 @@ the mandatory direct-claim set without weakening production validation.
   repository formatting, and a 265-test adversarial union passed.
 - Root independently reran 110 focused validator, schema, dossier, and
   operation-metrics tests after receiving the fix range.
+- Final fix verification: 3,833 CLI tests, workspace type-check 10/10, CLI
+  lint, repository formatting, and a 141-test adversarial union passed.
+- Root independently reran 50 focused plan, dossier, and operation-metrics
+  tests after receiving p03-t09 and p03-t10.
 
 ### Review Received: p03
 

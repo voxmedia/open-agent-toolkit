@@ -2988,7 +2988,7 @@ B post-publication bookkeeping PR.
 | p02    | code     | fixes_completed | 2026-07-31 | reviews/archived/p02-review-2026-07-31T040400Z.md           | f179344bdc12d0edc397d526f8665572826a9ad1 | auto       | -           |
 | p02    | code     | passed          | 2026-07-31 | reviews/archived/p02-review-2026-07-31T051943Z.md           | a2605f967a543f4772833e0af90cb0ef35ad93df | manual     | -           |
 | p03    | code     | fixes_completed | 2026-07-31 | reviews/archived/p03-review-2026-07-31T140054Z.md           | 4243aeb6bc992543f0da5ebe88f03b83dfd9db77 | auto       | -           |
-| p03    | code     | fixes_added     | 2026-07-31 | reviews/p03-review-2026-07-31T143803Z.md                    | 46cc835170ab90aa7f016c5c698d3bf4772e010b | auto       | -           |
+| p03    | code     | fixes_completed | 2026-07-31 | reviews/p03-review-2026-07-31T143803Z.md                    | 46cc835170ab90aa7f016c5c698d3bf4772e010b | auto       | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p06    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
