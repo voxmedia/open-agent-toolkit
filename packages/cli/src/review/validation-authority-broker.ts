@@ -150,7 +150,18 @@ export async function startPreparedValidationAuthorityBroker(input: {
     await rm(input.socketPath, { force: true });
     resolveClosed();
   };
-  const server = createServer({ allowHalfOpen: true }, async (socket) => {
+  const server = createServer({ allowHalfOpen: true });
+  const closeBroker = () =>
+    new Promise<void>((resolve, reject) => {
+      server.close((error) => {
+        if (error) {
+          reject(error);
+          return;
+        }
+        finish().then(resolve, reject);
+      });
+    });
+  const handleConnection = async (socket: Socket) => {
     let response: BrokerResponse;
     let closeAfterResponse = false;
     try {
@@ -191,10 +202,18 @@ export async function startPreparedValidationAuthorityBroker(input: {
     }
     socket.end(JSON.stringify(response));
     if (closeAfterResponse) {
-      server.close(() => {
-        void finish();
-      });
+      await closeBroker();
     }
+  };
+  server.on('connection', (socket) => {
+    handleConnection(socket).catch((error: unknown) => {
+      const response: BrokerResponse = {
+        ok: false,
+        error: error instanceof Error ? error.message : 'broker request failed',
+      };
+      if (socket.destroyed) return;
+      socket.end(JSON.stringify(response));
+    });
   });
   await new Promise<void>((resolve, reject) => {
     server.once('error', reject);
@@ -205,25 +224,14 @@ export async function startPreparedValidationAuthorityBroker(input: {
     Date.parse(preparation.preparation.expiresAt) - Date.now(),
   );
   const expiry = setTimeout(() => {
-    server.close(() => {
-      void finish();
-    });
+    closeBroker().catch(() => undefined);
   }, expiresInMs);
   expiry.unref();
   closed.finally(() => clearTimeout(expiry)).catch(() => undefined);
   return {
     preparation,
     closed,
-    close: () =>
-      new Promise<void>((resolve, reject) => {
-        server.close((error) => {
-          if (error) {
-            reject(error);
-            return;
-          }
-          void finish().then(resolve, reject);
-        });
-      }),
+    close: closeBroker,
   };
 }
 
