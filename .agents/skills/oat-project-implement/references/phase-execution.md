@@ -142,7 +142,7 @@ all errors are within the closed encoding allowlist, offer at most two
 same-handle accounting repair turns with immutable review substance. Only an
 accepted complete terminal may call `publishAcceptedArtifact` with the
 validated immutable snapshot. After publication, continue to artifact
-confirmation, orchestration checks, and project bookkeeping. Blocked or
+integrity validation, orchestration checks, and project bookkeeping. Blocked or
 accounting-invalid output remains non-actionable: delete the private draft,
 create no discoverable review artifact or ledger/log entry, and stop without a
 replacement reviewer.
