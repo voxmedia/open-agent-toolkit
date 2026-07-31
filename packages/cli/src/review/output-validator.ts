@@ -47,6 +47,39 @@ function commandResultDigest(command: ReviewCommandEvidenceV1): string {
   });
 }
 
+function validateExactBucketIds(
+  actualIds: readonly string[],
+  expectedIds: readonly string[],
+  pointer: string,
+  errors: AccountingValidationError[],
+): void {
+  const seen = new Set<string>();
+  actualIds.forEach((id, index) => {
+    if (seen.has(id)) {
+      add(
+        errors,
+        'duplicate-assignment-bucket',
+        `${pointer}/${index}/id`,
+        `assignment bucket ${id} is duplicated`,
+      );
+    }
+    seen.add(id);
+  });
+  const expected = new Set(expectedIds);
+  if (
+    seen.size !== expected.size ||
+    [...seen].some((id) => !expected.has(id)) ||
+    [...expected].some((id) => !seen.has(id))
+  ) {
+    add(
+      errors,
+      'assignment-mismatch',
+      pointer,
+      'accounting bucket identities differ from the validated assignment',
+    );
+  }
+}
+
 function validateIdentity(
   context: ReviewOutputValidationContext,
   accounting: ReviewAccountingV1,
@@ -99,6 +132,20 @@ function validateIdentity(
       'accounting bucket count differs from the validated plan',
     );
   }
+  validateExactBucketIds(
+    accounting.lanes.map((lane) => lane.id),
+    context.assignment.lanes.map((lane) => lane.id),
+    '/reviewAccounting/lanes',
+    errors,
+  );
+  validateExactBucketIds(
+    accounting.classifications.map((classification) => classification.id),
+    context.assignment.classifications.map(
+      (classification) => classification.id,
+    ),
+    '/reviewAccounting/classifications',
+    errors,
+  );
   const expectedLanes = new Map(
     context.assignment.lanes.map((lane) => [lane.id, lane]),
   );

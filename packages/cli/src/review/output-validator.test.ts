@@ -251,6 +251,85 @@ describe('review output validation', () => {
     );
   });
 
+  it('rejects duplicate, missing, and substituted lane bucket identities', () => {
+    const { context, terminal } = fixture();
+    const expectedLane = structuredClone(context.assignment.lanes[0]!);
+    expectedLane.id = 'lane-2';
+    expectedLane.paths = ['src/second.ts'];
+    context.assignment.lanes.push(expectedLane);
+    const second = structuredClone(terminal.reviewAccounting.lanes[0]!);
+    second.id = 'lane-2';
+    second.paths = ['src/second.ts'];
+    terminal.reviewAccounting.lanes.push(second);
+
+    terminal.reviewAccounting.lanes[1] = structuredClone(
+      terminal.reviewAccounting.lanes[0]!,
+    );
+    expect(errorCodes(context, terminal)).toEqual(
+      expect.arrayContaining([
+        'duplicate-assignment-bucket',
+        'assignment-mismatch',
+      ]),
+    );
+
+    terminal.reviewAccounting.lanes = [
+      structuredClone(terminal.reviewAccounting.lanes[0]!),
+    ];
+    expect(errorCodes(context, terminal)).toContain('assignment-mismatch');
+
+    terminal.reviewAccounting.lanes.push({
+      ...structuredClone(second),
+      id: 'substituted',
+    });
+    expect(errorCodes(context, terminal)).toContain('assignment-mismatch');
+  });
+
+  it('rejects duplicate and missing classification bucket identities', () => {
+    const { context, terminal } = fixture();
+    const classification = {
+      id: 'classification-1',
+      kind: 'bookkeeping' as const,
+      reason: 'generated bookkeeping',
+      paths: ['generated.json'],
+      disposition: 'inspect' as const,
+      strategy: 'manifest-check' as const,
+      checks: ['inspect manifest'],
+      exclusionAuthority: null,
+    };
+    context.assignment.classifications = [
+      classification,
+      { ...classification, id: 'classification-2', paths: ['other.json'] },
+    ];
+    const accountingClassification = {
+      id: 'classification-1',
+      kind: 'bookkeeping' as const,
+      reason: 'generated bookkeeping',
+      paths: ['generated.json'],
+      planDisposition: 'inspect' as const,
+      strategy: 'manifest-check' as const,
+      plannedChecks: ['inspect manifest'],
+      exclusionAuthority: null,
+      outcome: 'complete' as const,
+      inspectionCoverage: 'all' as const,
+      uninspectedPathIndexes: [],
+      commands: [],
+      uncertainty: [],
+    };
+    terminal.reviewAccounting.classifications = [
+      accountingClassification,
+      structuredClone(accountingClassification),
+    ];
+    expect(errorCodes(context, terminal)).toEqual(
+      expect.arrayContaining([
+        'duplicate-assignment-bucket',
+        'assignment-mismatch',
+      ]),
+    );
+
+    terminal.reviewAccounting.classifications.pop();
+    expect(errorCodes(context, terminal)).toContain('assignment-mismatch');
+  });
+
   it.each([
     ['command', 'duplicate-command-id'],
     ['evidence', 'duplicate-evidence-id'],
