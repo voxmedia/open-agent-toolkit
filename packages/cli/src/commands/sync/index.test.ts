@@ -1532,6 +1532,46 @@ describe('createSyncCommand', () => {
     }
   });
 
+  it('preserves bounded phase recovery semantics across generated provider agents', async () => {
+    const repoRoot = join(import.meta.dirname, '../../../../..');
+    const generatedAgentPaths = [
+      '.claude/agents/oat-phase-implementer.md',
+      '.cursor/agents/oat-phase-implementer.md',
+      '.cursor/agents/oat-phase-implementer-gpt-5-6-sol-medium.md',
+      '.codex/agents/oat-phase-implementer.toml',
+      '.codex/agents/oat-phase-implementer-gpt-5-6-sol-medium.toml',
+    ];
+
+    for (const relativePath of generatedAgentPaths) {
+      const content = (await readFile(join(repoRoot, relativePath), 'utf8'))
+        .replaceAll('`', '')
+        .replaceAll(/\s+/g, ' ');
+
+      expect(content, relativePath).toContain(
+        'Prevention is the first recovery control.',
+      );
+      expect(content, relativePath).toContain(
+        'phase_recovery_attempts_used < phase_recovery_limit',
+      );
+      expect(content, relativePath).toContain(
+        'Continue and settle that same reserved attempt without incrementing used_attempts or creating another reservation, even when the existing count equals the limit.',
+      );
+      expect(content, relativePath).toContain(
+        'With limit=1, used=1, and no pending_attempt, stop direction-required before edit with no new reservation and no fallback.',
+      );
+      expect(content, relativePath).toContain('### Canonical Recovery Event');
+      expect(content, relativePath).toContain(
+        '- Authorization: phase-standing | operator-extension | operator-scope',
+      );
+      expect(content, relativePath).toContain(
+        'stays equal to the launcher-owned dispatch target',
+      );
+      expect(content, relativePath).toContain(
+        'No stop condition authorizes fallback or another model, provider, route, or worker.',
+      );
+    }
+  });
+
   it('exits 0 on success, 1 on partial failure', async () => {
     const successHarness = createHarness({
       plans: [createPlan('create_symlink')],
