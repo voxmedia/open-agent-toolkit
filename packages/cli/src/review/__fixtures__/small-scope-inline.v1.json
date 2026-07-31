@@ -3,11 +3,32 @@
   "fixture": "small-scope-compact-review-plan",
   "changedFiles": 3,
   "strategy": "whole-diff-inline",
-  "operations": [
-    { "kind": "content-diff", "count": 1 },
-    { "kind": "full-file-read", "count": 0 },
-    { "kind": "semantic-replay", "count": 0 },
-    { "kind": "tool-step", "count": 5 }
+  "producer": "review-operation-recorder/v1",
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "content-diff",
+      "source": "strategy",
+      "pathIndexes": [0, 1, 2]
+    },
+    {
+      "sequence": 1,
+      "kind": "tool-step",
+      "source": "strategy",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 2,
+      "kind": "tool-step",
+      "source": "evidence",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 3,
+      "kind": "tool-step",
+      "source": "output",
+      "pathIndexes": []
+    }
   ],
   "completion": "complete",
   "accountingBytes": 2048

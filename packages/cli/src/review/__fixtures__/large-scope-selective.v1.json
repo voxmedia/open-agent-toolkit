@@ -3,11 +3,56 @@
   "fixture": "large-scope-selective-review-plan",
   "changedFiles": 237,
   "strategy": "selective-inline",
-  "operations": [
-    { "kind": "content-diff", "count": 0 },
-    { "kind": "full-file-read", "count": 18 },
-    { "kind": "semantic-replay", "count": 12 },
-    { "kind": "tool-step", "count": 55 }
+  "producer": "review-operation-recorder/v1",
+  "events": [
+    {
+      "sequence": 0,
+      "kind": "full-file-read",
+      "source": "evidence",
+      "pathIndexes": [0]
+    },
+    {
+      "sequence": 1,
+      "kind": "full-file-read",
+      "source": "evidence",
+      "pathIndexes": [42]
+    },
+    {
+      "sequence": 2,
+      "kind": "semantic-replay",
+      "source": "reconciliation",
+      "pathIndexes": [0]
+    },
+    {
+      "sequence": 3,
+      "kind": "tool-step",
+      "source": "strategy",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 4,
+      "kind": "tool-step",
+      "source": "evidence",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 5,
+      "kind": "tool-step",
+      "source": "evidence",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 6,
+      "kind": "tool-step",
+      "source": "reconciliation",
+      "pathIndexes": []
+    },
+    {
+      "sequence": 7,
+      "kind": "tool-step",
+      "source": "output",
+      "pathIndexes": []
+    }
   ],
   "completion": "complete",
   "accountingBytes": 32768
