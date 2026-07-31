@@ -3,7 +3,7 @@ oat_status: in_progress
 oat_ready_for: null
 oat_blockers: []
 oat_last_updated: 2026-07-31
-oat_current_task_id: p03-t02
+oat_current_task_id: p04-t01
 oat_generated: false
 ---
 
@@ -24,15 +24,15 @@ oat_generated: false
 
 ## Progress Overview
 
-| Phase        | Status        | Tasks | Completed |
-| ------------ | ------------- | ----- | --------- |
-| Phase 1      | review_failed | 2     | 2/2       |
-| Phase p-rev1 | passed        | 1     | 1/1       |
-| Phase 2      | passed        | 1     | 1/1       |
-| Phase 3      | in_progress   | 2     | 1/2       |
-| Phase 4      | pending       | 1     | 0/1       |
+| Phase        | Status         | Tasks | Completed |
+| ------------ | -------------- | ----- | --------- |
+| Phase 1      | review_failed  | 2     | 2/2       |
+| Phase p-rev1 | passed         | 1     | 1/1       |
+| Phase 2      | passed         | 1     | 1/1       |
+| Phase 3      | review_pending | 2     | 2/2       |
+| Phase 4      | pending        | 1     | 0/1       |
 
-**Total:** 5/7 tasks completed
+**Total:** 6/7 tasks completed
 
 ---
 
@@ -197,7 +197,7 @@ oat_generated: false
 
 ## Phase 3: Public Recovery Documentation
 
-**Status:** in_progress
+**Status:** review_pending
 **Started:** 2026-07-31
 
 ### Review Received: p03 cycle 1/3
@@ -220,8 +220,13 @@ oat_generated: false
 
 **New tasks added:** `p03-t02`
 
-**Next:** Execute the bounded fix through the original Phase 3 implementation
-handle, then run fresh review cycle 2/3.
+**Fix outcome:**
+
+- `p03-t02` committed at
+  `4f6d934b955b030dfacb06ae91e2e81d92c3b30a`.
+- Root reran check, docs build, protected-path, commit-integrity, clean-tree, and
+  diff verification successfully.
+- Fresh review cycle 2/3 pending.
 
 ### Task p03-t01: Explain Prevention, Recovery, and Migration
 
@@ -243,8 +248,13 @@ handle, then run fresh review cycle 2/3.
 
 ### Task p03-t02: (review) Clarify Recovery Ledger Ownership
 
-**Status:** pending
-**Commit:** -
+**Status:** completed
+**Commit:** 4f6d934b955b030dfacb06ae91e2e81d92c3b30a
+
+**Outcome:**
+
+- Qualified the general bookkeeping prohibition with the exact active-phase
+  attempt-ledger exception and root reconciliation responsibility.
 
 ---
 
@@ -406,8 +416,12 @@ _- Outstanding Items_
   - Mode/scope: `fix` / `p03-t02`
   - Review/finding: cycle 1/3 / I1
   - Issued: `2026-07-31T19:55:25Z`
-  - Status: issued after the same accepted handle returned `NEEDS_CONTEXT`
-    without edit because the prior packet omitted this identifier
+  - Initial status: issued after the same accepted handle returned
+    `NEEDS_CONTEXT` without edit because the prior packet omitted this
+    identifier
+  - Completion: `DONE` at
+    `4f6d934b955b030dfacb06ae91e2e81d92c3b30a`; no phase recovery attempt or
+    recovery event
 - Dispatch stamp:
   `Dispatch: scope=p03 action=implementation role=implementer producer=unknown provenance=unknown model_axis=selected:gpt-5.6-sol-medium effort_axis=not-applicable dispatch_policy=high dispatch_ceiling=high target=oat-phase-implementer-gpt-5-6-sol-medium`
 
@@ -452,13 +466,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Execute Phase 3 review fix `p03-t02`.
+- Run fresh Phase 3 review cycle 2/3.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 3 review fix pending
+**Session End:** Phase 3 re-review pending
 
 ---
 
