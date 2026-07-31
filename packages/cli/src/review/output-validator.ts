@@ -607,48 +607,145 @@ function validateRegistries(
 }
 
 function validateOutcomes(
+  context: ReviewOutputValidationContext,
   terminal: ReviewerTerminalV1,
   errors: AccountingValidationError[],
 ): void {
   const accounting = terminal.reviewAccounting;
+  const expectedLanes = new Map(
+    context.assignment.lanes.map((lane) => [lane.id, lane]),
+  );
   let incomplete = false;
   accounting.lanes.forEach((lane, index) => {
     const pointer = `/reviewAccounting/lanes/${index}`;
-    const allIndexes = lane.paths.map((_, pathIndex) => pathIndex);
-    const coverageValid =
-      (lane.inspectionCoverage === 'all' &&
-        lane.uninspectedPathIndexes.length === 0 &&
-        lane.uncoveredObligationIds.length === 0) ||
-      (lane.inspectionCoverage === 'partial' &&
-        lane.uninspectedPathIndexes.length > 0 &&
-        lane.uninspectedPathIndexes.length < lane.paths.length &&
-        lane.uncoveredObligationIds.length > 0) ||
-      (lane.inspectionCoverage === 'none' &&
-        same(lane.uninspectedPathIndexes, allIndexes) &&
-        same(
-          [...lane.uncoveredObligationIds].sort(),
-          [...lane.primaryObligationIds].sort(),
-        ));
-    const workerValid =
-      (lane.workerOutcome === 'not-delegated' &&
-        lane.dossierDigest === null &&
-        lane.primaryCompletion.outcome === 'not-needed') ||
-      (lane.workerOutcome === 'complete' &&
-        lane.dossierDigest !== null &&
-        lane.inspectionCoverage === 'all' &&
-        lane.primaryCompletion.outcome === 'not-needed') ||
-      ((lane.workerOutcome === 'partial' ||
-        lane.workerOutcome === 'uncovered') &&
-        (lane.workerOutcome === 'partial'
-          ? lane.dossierDigest !== null
-          : lane.dossierDigest === null) &&
-        ['complete', 'partial', 'not-attempted', 'not-permitted'].includes(
-          lane.primaryCompletion.outcome,
-        ));
-    if (!coverageValid || !workerValid) {
-      add(errors, 'invalid-outcome', pointer, 'lane outcome matrix is invalid');
+    const expected = expectedLanes.get(lane.id);
+    if (expected === undefined) return;
+    const contingency = expected.primaryContingency;
+    const contingencyPathIndexes = contingency.paths.map((path) =>
+      lane.paths.indexOf(path),
+    );
+    const completedPathIndexes = new Set(
+      lane.primaryCompletion.completedPathIndexes,
+    );
+    const completedObligationIds = new Set(
+      lane.primaryCompletion.completedObligationIds,
+    );
+    const expectedPathIndexes = new Set(contingencyPathIndexes);
+    const expectedObligationIds = new Set(contingency.obligationIds);
+    const completedSubsetValid =
+      completedPathIndexes.size ===
+        lane.primaryCompletion.completedPathIndexes.length &&
+      completedObligationIds.size ===
+        lane.primaryCompletion.completedObligationIds.length &&
+      [...completedPathIndexes].every((item) =>
+        expectedPathIndexes.has(item),
+      ) &&
+      [...completedObligationIds].every((item) =>
+        expectedObligationIds.has(item),
+      );
+    const exactCompletion =
+      completedSubsetValid &&
+      completedPathIndexes.size === expectedPathIndexes.size &&
+      completedObligationIds.size === expectedObligationIds.size;
+    const hasCompletionEvidence =
+      lane.primaryCompletion.evidenceRefIds.length > 0;
+    const hasCompletionCommands = lane.primaryCompletion.commands.length > 0;
+    const primaryOutcomeValid =
+      (lane.primaryCompletion.outcome === 'not-needed' &&
+        (lane.workerOutcome === 'not-delegated' ||
+          lane.workerOutcome === 'complete') &&
+        completedPathIndexes.size === 0 &&
+        completedObligationIds.size === 0 &&
+        !hasCompletionCommands &&
+        !hasCompletionEvidence) ||
+      (lane.primaryCompletion.outcome === 'not-permitted' &&
+        !contingency.allowed &&
+        (lane.workerOutcome === 'partial' ||
+          lane.workerOutcome === 'uncovered') &&
+        completedPathIndexes.size === 0 &&
+        completedObligationIds.size === 0 &&
+        !hasCompletionCommands &&
+        !hasCompletionEvidence) ||
+      (lane.primaryCompletion.outcome === 'not-attempted' &&
+        contingency.allowed &&
+        (lane.workerOutcome === 'partial' ||
+          lane.workerOutcome === 'uncovered') &&
+        completedPathIndexes.size === 0 &&
+        completedObligationIds.size === 0 &&
+        !hasCompletionCommands &&
+        !hasCompletionEvidence) ||
+      (lane.primaryCompletion.outcome === 'complete' &&
+        contingency.allowed &&
+        (lane.workerOutcome === 'partial' ||
+          lane.workerOutcome === 'uncovered') &&
+        exactCompletion &&
+        hasCompletionEvidence) ||
+      (lane.primaryCompletion.outcome === 'partial' &&
+        contingency.allowed &&
+        (lane.workerOutcome === 'partial' ||
+          lane.workerOutcome === 'uncovered') &&
+        completedSubsetValid &&
+        hasCompletionEvidence &&
+        (completedPathIndexes.size > 0 || completedObligationIds.size > 0) &&
+        !exactCompletion);
+    if (!primaryOutcomeValid) {
+      add(
+        errors,
+        'invalid-contingency',
+        `${pointer}/primaryCompletion`,
+        'primary completion does not match the permitted contingency',
+      );
     }
-    if (lane.inspectionCoverage !== 'all') incomplete = true;
+
+    const workerIdentityValid =
+      (lane.workerOutcome === 'not-delegated' && lane.dossierDigest === null) ||
+      (lane.workerOutcome === 'complete' && lane.dossierDigest !== null) ||
+      (lane.workerOutcome === 'partial' && lane.dossierDigest !== null) ||
+      (lane.workerOutcome === 'uncovered' && lane.dossierDigest === null);
+    if (!workerIdentityValid) {
+      add(errors, 'invalid-outcome', pointer, 'lane worker outcome is invalid');
+    }
+
+    const remainingPathIndexes =
+      lane.workerOutcome === 'not-delegated' ||
+      lane.workerOutcome === 'complete'
+        ? []
+        : contingencyPathIndexes.filter(
+            (pathIndex) => !completedPathIndexes.has(pathIndex),
+          );
+    const remainingObligationIds =
+      lane.workerOutcome === 'not-delegated' ||
+      lane.workerOutcome === 'complete'
+        ? []
+        : contingency.obligationIds.filter(
+            (obligationId) => !completedObligationIds.has(obligationId),
+          );
+    const derivedCoverage =
+      remainingPathIndexes.length === 0 && remainingObligationIds.length === 0
+        ? 'all'
+        : remainingPathIndexes.length === lane.paths.length &&
+            remainingObligationIds.length === lane.primaryObligationIds.length
+          ? 'none'
+          : 'partial';
+    if (
+      lane.inspectionCoverage !== derivedCoverage ||
+      !same(
+        [...lane.uninspectedPathIndexes].sort((left, right) => left - right),
+        [...remainingPathIndexes].sort((left, right) => left - right),
+      ) ||
+      !same(
+        [...lane.uncoveredObligationIds].sort(),
+        [...remainingObligationIds].sort(),
+      )
+    ) {
+      add(
+        errors,
+        'contingency-coverage-mismatch',
+        pointer,
+        'reported coverage does not match worker and primary evidence',
+      );
+    }
+    if (derivedCoverage !== 'all') incomplete = true;
   });
 
   accounting.classifications.forEach((classification, index) => {
@@ -717,7 +814,7 @@ export function validateReviewOutput(
   const errors: AccountingValidationError[] = [];
   validateIdentity(context, terminal.reviewAccounting, errors);
   validateRegistries(context, terminal, errors);
-  validateOutcomes(terminal, errors);
+  validateOutcomes(context, terminal, errors);
   return errors.length === 0
     ? { valid: true, outputDigest: hashCanonicalJson(terminal) }
     : { valid: false, errors };
