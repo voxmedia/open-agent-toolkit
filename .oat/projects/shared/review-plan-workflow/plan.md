@@ -2554,7 +2554,11 @@ Expected: publication-temp replacement cannot publish unverified bytes.
 - Modify: `packages/cli/src/review/validation-store.test.ts`
 - Modify: `packages/cli/src/commands/review/validate-output.ts`
 - Modify: `packages/cli/src/commands/review/validate-output.test.ts`
+- Create: `packages/cli/src/commands/review/publish-output.ts`
+- Create: `packages/cli/src/commands/review/publish-output.test.ts`
 - Modify: `packages/cli/src/commands/review/index.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+- Modify: `packages/cli/src/commands/help-snapshots.test.ts`
 - Modify: `.agents/skills/oat-project-review-provide/SKILL.md`
 - Modify: `packages/cli/src/commands/init/tools/shared/review-skill-contracts.test.ts`
 - Modify: `packages/cli/src/review/local-coordinator.integration.test.ts`
@@ -2565,15 +2569,17 @@ post-validation bytes.
 
 **Step 2: Implement** Persist an opaque accepted-snapshot identity and immutable
 bytes/digest in launcher-owned private state, atomically bind it to the accepted
-terminal, and expose a launcher-only one-shot publication path that consumes
-exactly that snapshot. Publication must never re-snapshot reviewer-controlled
-draft bytes after validation; blocked/invalid output deletes or leaves no
+terminal, and add a launcher-only
+`oat review publish-output --run-id <id> --destination <path> --json` command
+that consumes exactly that snapshot once. Keep the destination launcher-owned,
+update exact command/help contracts, and never re-snapshot reviewer-controlled
+draft bytes after validation. Blocked/invalid output deletes or leaves no
 discoverable artifact.
 
 **Step 3: Format** Run `pnpm format:fix`.
 
 **Step 4: Verify** Run
-`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-staging.test.ts src/review/validation-store.test.ts src/commands/review/validate-output.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/review/local-coordinator.integration.test.ts`.
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/artifact-staging.test.ts src/review/validation-store.test.ts src/commands/review/validate-output.test.ts src/commands/review/publish-output.test.ts src/commands/commands.integration.test.ts src/commands/help-snapshots.test.ts src/commands/init/tools/shared/review-skill-contracts.test.ts src/review/local-coordinator.integration.test.ts`.
 Expected: only the once-consumed accepted snapshot reaches the discoverable
 review path.
 
