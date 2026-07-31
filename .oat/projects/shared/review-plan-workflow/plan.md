@@ -1439,6 +1439,200 @@ Expected: trailing non-heading content rejects even after blank lines.
 
 **Step 5: Commit** `fix(p02-t43): reject trailing requirement content`
 
+### Task p02-t44: (review2 C1) Broker validation authority outside reviewer processes
+
+**Files:**
+
+- Create: `packages/cli/src/review/validation-authority-broker.ts`
+- Create: `packages/cli/src/review/validation-authority-broker.test.ts`
+- Create: `packages/cli/src/commands/review/authority-broker.ts`
+- Create: `packages/cli/src/commands/review/authority-broker.test.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/command-invocation.ts`
+- Modify: `packages/cli/src/review/command-invocation.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.ts`
+- Modify: `packages/cli/src/commands/review/checkpoint-artifacts.test.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.ts`
+- Modify: `packages/cli/src/commands/review/validate-plan.test.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.ts`
+- Modify: `packages/cli/src/commands/review/begin-evidence.test.ts`
+- Modify: `packages/cli/src/commands/review/index.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Reproduce** Spawn an arbitrary reviewer-side child, prove it cannot
+read the authority key or re-sign modified state, and prove trusted follow-up
+commands still authenticate across separate processes.
+
+**Step 2: Implement** Keep the state-authentication key exclusively in a
+launcher-owned broker process/service. Route capability-bearing operations
+through that authority without placing the key or an administrative signing
+capability in reviewer environment variables, argv, stdin, files, or returned
+command objects. Preserve one-shot run-bound capabilities, short TTL, cleanup,
+and shell-free command invocation.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-authority-broker.test.ts src/commands/review/authority-broker.test.ts src/review/validation-store-authority.test.ts src/review/validation-store.test.ts src/review/command-invocation.test.ts src/commands/review/prepare-context.test.ts src/commands/review/checkpoint-artifacts.test.ts src/commands/review/validate-plan.test.ts src/commands/review/begin-evidence.test.ts src/review/review-lifecycle.integration.test.ts src/commands/commands.integration.test.ts`.
+Expected: reviewer processes cannot obtain signing authority or forge state,
+while every trusted lifecycle command composes through the broker.
+
+**Step 5: Commit** `fix(p02-t44): broker validation state authority`
+
+### Task p02-t45: (review2 I1) Fence stale-lock reclamation
+
+**Files:**
+
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+- Modify: `packages/cli/src/review/validation-recovery.integration.test.ts`
+
+**Step 1: Reproduce** Deterministically interleave two stale-lock reclaimers so
+one acquires before the delayed remover acts, and hold a live owner beyond the
+current lease.
+
+**Step 2: Implement** Reclaim only when inode and nonce still match the observed
+stale owner, fence writes from superseded owners, and renew leases or otherwise
+prevent a live operation from expiring. Preserve operation-over-cleanup error
+precedence.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/validation-store.test.ts src/review/validation-recovery.integration.test.ts`.
+Expected: delayed reclaimers cannot remove a new lock and live owners retain
+exclusive mutation authority.
+
+**Step 5: Commit** `fix(p02-t45): fence stale lock recovery`
+
+### Task p02-t46: (review2 I2) Strictly parse prepare-context input
+
+**Files:**
+
+- Modify: `packages/cli/src/review/types.ts`
+- Modify: `packages/cli/src/review/types.test.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/budget.ts`
+- Modify: `packages/cli/src/review/budget.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+
+**Step 1: Reproduce** Add malformed nested range, budget, scope,
+obligation-source, correlation, unknown-key, and budget-floor cases at the
+actual command boundary.
+
+**Step 2: Implement** Strictly parse the complete versioned preparation input
+before production use and translate every deterministic range, budget, scope,
+source, and correlation rejection to stable safe exit-1 input/contract errors.
+Reserve exit 2 for I/O, corruption, and unexpected failures.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/types.test.ts src/review/schemas.test.ts src/review/prepare-context.test.ts src/review/budget.test.ts src/commands/review/prepare-context.test.ts`.
+Expected: malformed or policy-invalid preparation never reaches production and
+never emits a system-error envelope.
+
+**Step 5: Commit** `fix(p02-t46): parse preparation input strictly`
+
+### Task p02-t47: (review2 I3) Preserve active loader arguments
+
+**Files:**
+
+- Modify: `packages/cli/src/commands/gate/branch-local-cli.ts`
+- Modify: `packages/cli/src/commands/gate/branch-local-cli.test.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.ts`
+- Modify: `packages/cli/src/commands/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/prepare-context.ts`
+- Modify: `packages/cli/src/review/prepare-context.test.ts`
+- Modify: `packages/cli/src/review/review-lifecycle.integration.test.ts`
+- Modify: `packages/cli/src/commands/commands.integration.test.ts`
+
+**Step 1: Reproduce** Invoke the documented `pnpm run cli:source` path, obtain
+all returned commands, and show that dropping `process.execArgv` loader
+arguments fails on the TypeScript entrypoint.
+
+**Step 2: Implement** Reuse the canonical branch-local launch resolver so the
+review command prefix preserves resolved `--require`/`--import` loader
+arguments and the exact active candidate entrypoint.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/commands/gate/branch-local-cli.test.ts src/commands/review/prepare-context.test.ts src/review/prepare-context.test.ts src/review/review-lifecycle.integration.test.ts src/commands/commands.integration.test.ts`.
+Expected: every trusted follow-up command spawned from source mode executes the
+same checkout successfully.
+
+**Step 5: Commit** `fix(p02-t47): preserve active cli loader args`
+
+### Task p02-t48: (review2 I4) Align command invocation design models
+
+**Files:**
+
+- Modify: `.oat/projects/shared/review-plan-workflow/design.md`
+- Modify: `.oat/projects/shared/review-plan-workflow/implementation.md`
+
+**Step 1: Confirm** Treat the shell-free `ReviewCommandInvocationV1`
+executable, argv, and stdin discriminant as the authoritative shipped contract.
+
+**Step 2: Align artifacts** Add the versioned invocation model to the design,
+replace all three string command fields and flow prose with structured
+invocation semantics, and record the accepted alignment in the canonical
+deviations table.
+
+**Step 3: Format** Run `pnpm exec oxfmt --write` on both modified Markdown
+files.
+
+**Step 4: Verify** Run `git diff --check` and confirm no design passage still
+defines trusted review commands as shell strings.
+
+**Step 5: Commit** `docs(p02-t48): align command invocation models`
+
+### Task p02-t49: (review2 M1) Strictly parse persisted telemetry state
+
+**Files:**
+
+- Modify: `packages/cli/src/review/canonical-json.ts`
+- Modify: `packages/cli/src/review/canonical-json.test.ts`
+- Modify: `packages/cli/src/review/schemas.ts`
+- Modify: `packages/cli/src/review/schemas.test.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.ts`
+- Modify: `packages/cli/src/review/validation-store-authority.test.ts`
+- Modify: `packages/cli/src/review/validation-store.ts`
+- Modify: `packages/cli/src/review/validation-store.test.ts`
+
+**Step 1: Reproduce** Add duplicate-key/trailing-value authenticated envelopes,
+malformed adapter IDs/timestamps/rejection reasons/observations, and
+phase-incoherent persisted states.
+
+**Step 2: Implement** Expose and use the repository's duplicate-key and
+trailing-value rejecting JSON boundary, strictly parse complete
+`HostTelemetryEvidenceV1` entries and phase-dependent state coherence, and
+reject malformed authenticated state before lifecycle use.
+
+**Step 3: Format** Run
+`pnpm --filter @open-agent-toolkit/cli format:fix`.
+
+**Step 4: Verify** Run
+`pnpm --filter @open-agent-toolkit/cli exec vitest run src/review/canonical-json.test.ts src/review/schemas.test.ts src/review/validation-store-authority.test.ts src/review/validation-store.test.ts`.
+Expected: no malformed or duplicate-key authenticated state crosses the
+persisted-schema boundary.
+
+**Step 5: Commit** `fix(p02-t49): parse persisted telemetry strictly`
+
 ---
 
 ## Phase 3: Reviewer Plan and Evidence Contract
@@ -2453,6 +2647,7 @@ B post-publication bookkeeping PR.
 | p01    | code     | fixes_completed | 2026-07-30 | reviews/archived/p01-review-2026-07-30T213813Z.md           | 6f119c18ed8aa2c5aa12a4184206fdad0db16321 | auto       | -           |
 | p01    | code     | passed          | 2026-07-30 | reviews/archived/p01-review-2026-07-30T215327Z.md           | 40fa861fe199f755f66cce784feafbc1e0ff68c1 | auto       | -           |
 | p02    | code     | fixes_completed | 2026-07-30 | reviews/archived/p02-review-2026-07-30T234200Z.md           | d6c204514b076d57eaf2ee277d72e6de9a995a53 | auto       | -           |
+| p02    | code     | fixes_added     | 2026-07-31 | reviews/archived/p02-review-2026-07-31T014800Z.md           | f7452e5b6fc64256f24d12c2a323be7494bbf08a | auto       | -           |
 | p03    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p04    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
 | p05    | code     | pending         | -          | -                                                           | -                                        | -          | -           |
@@ -2480,14 +2675,14 @@ rewriting either historical result as passed.
 **Summary:**
 
 - Phase 1: 13 tasks - baseline, contracts, portability seams
-- Phase 2: 43 tasks - authoritative metadata, validation runtime, and review fixes
+- Phase 2: 49 tasks - authoritative metadata, validation runtime, and review fixes
 - Phase 3: 5 tasks - reviewer planning and selective evidence
 - Phase 4: 8 tasks - accounting, repair, and coordinator adoption
 - Phase 5: 7 tasks - gate diagnostics, timeout, and compatibility mode
 - Phase 6: 7 tasks - docs, sync, Stage A release and soak
 - Phase 7: 6 tasks - gated enforce-default Stage B release
 
-**Total: 89 tasks**
+**Total: 95 tasks**
 
 Phase 6 ends at a real release/soak boundary. Phase 7 is a later release and
 must not begin until its rollout gate passes.

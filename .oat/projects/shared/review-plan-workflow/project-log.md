@@ -80,6 +80,10 @@ All p02 review-fix code tasks completed with focused checks and lint passing, bu
 
 All fourteen Phase p02 review-fix tasks and two append-only recoveries are complete. Focused checks, 3,756 CLI tests, workspace type-check, lint, and diff-check pass; fresh independent fix-range re-review is pending.
 
+### 2026-07-31 · structural · oat-project-implement · p02-review-fix-1-rereview
+
+Phase p02 fix re-review resolved nine prior findings but failed with 1 Critical, 4 Important, 1 Medium, and 0 Minor findings. Added p02-t44 through p02-t49 with no deferrals; review cycle 2 of 3.
+
 ## End-of-run synthesis (pending — do not skip at project completion)
 
 Summarize the overall verdict, adopted adjustments, and entries graduated to the repo ledger or backlog. Roll up durable observations into tracked surfaces before archiving this project log.
