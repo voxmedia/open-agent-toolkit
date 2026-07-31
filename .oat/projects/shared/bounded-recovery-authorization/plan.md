@@ -366,16 +366,16 @@ validation all pass from a clean post-task tree.
 
 ## Reviews
 
-| Scope  | Type     | Status      | Date       | Artifact                                 | Reviewed Head                            | Invocation | Gate Target |
-| ------ | -------- | ----------- | ---------- | ---------------------------------------- | ---------------------------------------- | ---------- | ----------- |
-| p01    | code     | fixes_added | 2026-07-31 | reviews/p01-review-2026-07-31T174038Z.md | 61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f | auto       | -           |
-| p02    | code     | pending     | -          | -                                        | -                                        | -          | -           |
-| p03    | code     | pending     | -          | -                                        | -                                        | -          | -           |
-| p04    | code     | pending     | -          | -                                        | -                                        | -          | -           |
-| final  | code     | pending     | -          | -                                        | -                                        | -          | -           |
-| spec   | artifact | pending     | -          | -                                        | -                                        | -          | -           |
-| design | artifact | passed      | 2026-07-31 | user-approved lightweight design         | -                                        | manual     | -           |
-| plan   | artifact | passed      | 2026-07-31 | structured review rounds 1-3             | -                                        | auto       | -           |
+| Scope  | Type     | Status          | Date       | Artifact                                 | Reviewed Head                            | Invocation | Gate Target |
+| ------ | -------- | --------------- | ---------- | ---------------------------------------- | ---------------------------------------- | ---------- | ----------- |
+| p01    | code     | fixes_completed | 2026-07-31 | reviews/p01-review-2026-07-31T174038Z.md | 61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f | auto       | -           |
+| p02    | code     | pending         | -          | -                                        | -                                        | -          | -           |
+| p03    | code     | pending         | -          | -                                        | -                                        | -          | -           |
+| p04    | code     | pending         | -          | -                                        | -                                        | -          | -           |
+| final  | code     | pending         | -          | -                                        | -                                        | -          | -           |
+| spec   | artifact | pending         | -          | -                                        | -                                        | -          | -           |
+| design | artifact | passed          | 2026-07-31 | user-approved lightweight design         | -                                        | manual     | -           |
+| plan   | artifact | passed          | 2026-07-31 | structured review rounds 1-3             | -                                        | auto       | -           |
 
 For code-review events, `Reviewed Head` is the full 40-character SHA at the
 head of the reviewed range. `Invocation` records `manual`, `auto`, or `gate`;

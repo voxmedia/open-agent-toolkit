@@ -78,6 +78,12 @@ oat_generated: false
 - Reconnaissance: not attempted
 - Finding: make handle continuity an explicit same-handle/fresh-recover
   alternative while keeping exact-target continuity mandatory
+- Fix continuation:
+  `a2d875bb379941301c3ed811b40cfee7a40148e8`
+- Continuation event:
+  `bounded-recovery-authorization-p01-review2-fix2`
+- Fix verification: 129 focused tests, 61 skills, lint, format, diff, and
+  isolation checks passed
 
 ### Task p01-t01: Separate Standing Recovery Authority from Fallback
 
@@ -169,6 +175,8 @@ _- Outstanding Items_
 - Phase 1 fix round 1: done at
   `61c9a7c9f89c8ab9af01e2b5c8d65d68626c545f`; re-review pending
 - Phase 1 review round 2: 1 Important finding; fix continuation pending
+- Phase 1 fix round 2: done at
+  `a2d875bb379941301c3ed811b40cfee7a40148e8`; final review cycle pending
 
 <!-- orchestration-runs-end -->
 
@@ -193,6 +201,7 @@ Chronological log of implementation progress.
   HiLL checkpoint, and disabled optional phase gate.
 - Completed and root-validated both Phase 1 task commits.
 - Completed and root-validated one append-only Phase 1 review-fix commit.
+- Completed and root-validated the second append-only Phase 1 review-fix commit.
 
 **Decisions:**
 
@@ -202,14 +211,13 @@ Chronological log of implementation progress.
 
 **Follow-ups / TODO:**
 
-- Resume the exact Phase 1 target for the one bounded review-round-2 fix, then
-  run the third and final root-owned Phase 1 review cycle.
+- Run the third and final root-owned Phase 1 review cycle.
 
 **Blockers:**
 
 - None.
 
-**Session End:** Phase 1 review-round-2 fix pending
+**Session End:** Phase 1 final review cycle pending
 
 ---
 
@@ -227,7 +235,7 @@ Track test execution during implementation.
 
 | Phase | Tests Run                                                  | Passed                | Failed | Coverage                     |
 | ----- | ---------------------------------------------------------- | --------------------- | ------ | ---------------------------- |
-| 1     | skills.test.ts; skill validation; lint; format; diff check | 128 tests + 61 skills | 0      | Canonical recovery contracts |
+| 1     | skills.test.ts; skill validation; lint; format; diff check | 129 tests + 61 skills | 0      | Canonical recovery contracts |
 | 2     | -                                                          | -                     | -      | -                            |
 | 3     | -                                                          | -                     | -      | -                            |
 | 4     | -                                                          | -                     | -      | -                            |
